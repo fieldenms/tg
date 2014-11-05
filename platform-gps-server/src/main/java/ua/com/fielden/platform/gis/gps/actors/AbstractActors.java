@@ -50,7 +50,7 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule, ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>, MACHINE_ACTOR extends AbstractAvlMachineActor<MESSAGE, MACHINE>, MODULE_ACTOR extends AbstractAvlModuleActor<MESSAGE, MACHINE, MODULE, ASSOCIATION>> implements IModuleLookup<MODULE> {
+public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule, ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>, MACHINE_ACTOR extends AbstractAvlMachineActor<MESSAGE, MACHINE>, MODULE_ACTOR extends AbstractAvlModuleActor<MESSAGE, MACHINE, MODULE, ASSOCIATION>, VIO_RESOLVER_ACTOR extends AbstractViolatingMessageResolverActor<MESSAGE>> implements IModuleLookup<MODULE> {
     private final static Logger logger = Logger.getLogger(AbstractActors.class);
 
     private final ActorSystem system;
@@ -60,6 +60,8 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
     // an actors that represent module processors
     private final Map<String, Pair<MODULE, ActorRef>> moduleActors; // by IMEI
     private final ActorRef modulesCounter;
+
+    private final ActorRef violatingMessageResolver;
 
     private final Map<MACHINE, MESSAGE> machinesWithLastMessages;
     private final Map<MODULE, List<ASSOCIATION>> modulesWithAssociations;
@@ -83,6 +85,8 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
         this.injector = injector;
 
         this.system = ActorSystem.create("actors");
+
+        this.violatingMessageResolver = createViolatingMessageResolverActorRef(system);
 
         this.machinesWithLastMessages = new HashMap<MACHINE, MESSAGE>(machinesWithLastMessages);
         machinesCounter = MachinesCounterActor.create(system, keys(this.machinesWithLastMessages.keySet()), this);
@@ -114,7 +118,7 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
      * @param injector
      * @return
      */
-    public AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> startActorSystem() {
+    public AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR, VIO_RESOLVER_ACTOR> startActorSystem() {
         logger.info("\tModule actors starting...");
         for (final Entry<MODULE, List<ASSOCIATION>> moduleAssociations : this.modulesWithAssociations.entrySet()) {
             registerAndStartModuleActor(moduleAssociations.getKey(), moduleAssociations.getValue());
@@ -140,7 +144,7 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
      * @param moduleAssociations
      */
     public void registerAndStartMachineActor(final MACHINE machine, final MESSAGE lastMessage) {
-        this.machineActors.put(machine.getId(), create(injector, system, machine, lastMessage, machinesCounter));
+        this.machineActors.put(machine.getId(), create(injector, system, machine, lastMessage, machinesCounter, violatingMessageResolver));
     }
 
     /**
@@ -171,16 +175,33 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
      * @param machineAndMessage
      * @return
      */
-    protected final ActorRef create(final Injector injector, final ActorSystem system, final MACHINE machine, final MESSAGE lastMessage, final ActorRef machinesCounterRef) {
+    protected final ActorRef create(final Injector injector, final ActorSystem system, final MACHINE machine, final MESSAGE lastMessage, final ActorRef machinesCounterRef, final ActorRef violatingMessageResolverRef) {
         final ActorRef machineActorRef = system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = -6677642334839003771L;
 
             @Override
             public UntypedActor create() {
-                return createMachineActor(injector, machine, lastMessage, machinesCounterRef);
+                return createMachineActor(injector, machine, lastMessage, machinesCounterRef, violatingMessageResolverRef);
             }
         }), createName(machine));
         return machineActorRef;
+    }
+
+    /**
+     * Creates an actor that resolves violating messages.
+     *
+     * @return
+     */
+    protected final ActorRef createViolatingMessageResolverActorRef(final ActorSystem system) {
+        final ActorRef actRef = system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = -6677642334839003771L;
+
+            @Override
+            public UntypedActor create() {
+                return createViolatingMessageResolverActor(injector);
+            }
+        }), "violating_message_resolver_actor");
+        return actRef;
     }
 
     /**
@@ -190,7 +211,7 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
      * @param machineAndMessage
      * @return
      */
-    protected abstract MACHINE_ACTOR createMachineActor(final Injector injector, final MACHINE machine, final MESSAGE lastMessage, final ActorRef machinesCounterRef);
+    protected abstract MACHINE_ACTOR createMachineActor(final Injector injector, final MACHINE machine, final MESSAGE lastMessage, final ActorRef machinesCounterRef, final ActorRef violatingMessageResolverRef);
 
     /**
      * Creates an instance of concrete {@link AbstractAvlMachineActor} implementation.
@@ -200,6 +221,14 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
      * @return
      */
     protected abstract MODULE_ACTOR createModuleActor(final Injector injector, final MODULE module, final List<ASSOCIATION> associations, final ActorRef modulesCounterRef);
+
+    /**
+     * Creates an instance of concrete {@link AbstractViolatingMessageResolverActor} implementation.
+     *
+     * @param injector
+     * @return
+     */
+    protected abstract VIO_RESOLVER_ACTOR createViolatingMessageResolverActor(final Injector injector);
 
     /**
      * Creates a machine actor name using a transliterated version of machine's key.
@@ -248,10 +277,7 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
         if (actor != null) { // the module is registered
             actor.tell(data, null);
         } else {
-            logger.warn("The module with imei [" + imei + "] is no longer registered. " +
-                    "This is most likely caused by the changes of IMEI for the module. " +
-                    "As soon as old cached message channel with old IMEI will be dead and new channel will handle login -- " +
-                    "you will see the regular 'Unrecognised IMEI' message.");
+            logger.warn("The module with imei [" + imei + "] is no longer registered. " + "This is most likely caused by the changes of IMEI for the module. " + "As soon as old cached message channel with old IMEI will be dead and new channel will handle login -- " + "you will see the regular 'Unrecognised IMEI' message.");
         }
     }
 
@@ -294,8 +320,7 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
         try {
             final Map<Long, List<MESSAGE>> result = (Map<Long, List<MESSAGE>>) Await.result(future, timeout.duration());
             final Period p = new Period(st, new DateTime());
-            logger.info("Last messages [" + result.size() + "] for " + machinesTiming.size() + " machines retrieved in " + (p.getHours() == 0 ? "" : p.getHours() + " h ")
-                    + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms.");
+            logger.info("Last messages [" + result.size() + "] for " + machinesTiming.size() + " machines retrieved in " + (p.getHours() == 0 ? "" : p.getHours() + " h ") + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms.");
             return result;
         } catch (final Exception e) {
             logger.error(e);
@@ -314,9 +339,7 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
         try {
             final Map<Long, MachineServerState> result = (Map<Long, MachineServerState>) Await.result(future, timeout.duration());
             final Period p = new Period(st, new DateTime());
-            getLogger().info("New server states [" + result.size() + "] for " + serverStatesRequest.size() + " machines retrieved in "
-                    + (p.getHours() == 0 ? "" : p.getHours() + " h ")
-                    + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms.");
+            getLogger().info("New server states [" + result.size() + "] for " + serverStatesRequest.size() + " machines retrieved in " + (p.getHours() == 0 ? "" : p.getHours() + " h ") + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms.");
             return result;
         } catch (final Exception e) {
             getLogger().error(e);
@@ -349,7 +372,7 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
         InternalLoggerFactory.setDefaultFactory(new Log4JLoggerFactory());
         final ChannelGroup allChannels = new DefaultChannelGroup("gps-server");
         final ConcurrentHashMap<String, Channel> existingConnections = new ConcurrentHashMap<>();
-        final ServerTeltonika serverTeltonika = new ServerTeltonika(gpsHost, gpsPort, existingConnections, allChannels, new DefaultGpsHandlerFactory<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR>(existingConnections, allChannels, this)) {
+        final ServerTeltonika serverTeltonika = new ServerTeltonika(gpsHost, gpsPort, existingConnections, allChannels, new DefaultGpsHandlerFactory<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR, VIO_RESOLVER_ACTOR>(existingConnections, allChannels, this)) {
             @Override
             public void run() {
                 super.run();
@@ -399,8 +422,7 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
         try {
             final Object result = Await.result(future, timeout.duration());
             final Period p = new Period(st, new DateTime());
-            logger.info("Operation has been done in " + (p.getHours() == 0 ? "" : p.getHours() + " h ") + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds()
-                    + " s " + p.getMillis() + " ms.");
+            logger.info("Operation has been done in " + (p.getHours() == 0 ? "" : p.getHours() + " h ") + (p.getMinutes() == 0 ? "" : p.getMinutes() + " m ") + p.getSeconds() + " s " + p.getMillis() + " ms.");
 
             if (result instanceof Exception) {
                 final Exception ex = (Exception) result;

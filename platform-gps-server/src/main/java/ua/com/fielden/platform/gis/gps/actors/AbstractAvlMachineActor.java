@@ -43,10 +43,12 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
     private MESSAGE lastProcessedMessage;
     private final HibernateUtil hibUtil;
     private ActorRef machinesCounterRef;
+    private final ActorRef violatingMessageResolverRef;
     private final boolean emergencyMode;
 
-    public AbstractAvlMachineActor(final EntityFactory factory, final MACHINE machine, final MESSAGE lastMessage, final HibernateUtil hibUtil, final ActorRef machinesCounterRef, final boolean emergencyMode, final int windowSize, final int windowSize2, final int windowSize3, final double averagePacketSizeThreshould, final double averagePacketSizeThreshould2) {
+    public AbstractAvlMachineActor(final EntityFactory factory, final MACHINE machine, final MESSAGE lastMessage, final HibernateUtil hibUtil, final ActorRef machinesCounterRef, final ActorRef violatingMessageResolverRef, final boolean emergencyMode, final int windowSize, final int windowSize2, final int windowSize3, final double averagePacketSizeThreshould, final double averagePacketSizeThreshould2) {
         this.machinesCounterRef = machinesCounterRef;
+        this.violatingMessageResolverRef = violatingMessageResolverRef;
 
         messagesComparator = new MessagesComparator<MESSAGE>();
         blackout = new Blackout<MESSAGE>(messagesComparator);
@@ -76,8 +78,6 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
     protected abstract void processTempMessages(final MACHINE machine) throws Exception;
 
     protected abstract void persistTemporarily(final Packet<MESSAGE> packet) throws Exception;
-
-    protected abstract void persistError(final Packet<MESSAGE> packet) throws Exception;
 
     protected abstract void persist(final Collection<MESSAGE> messages, final MESSAGE latestPersistedMessage) throws Exception;
 
@@ -115,7 +115,9 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
             final Pair<Packet<MESSAGE>, Packet<MESSAGE>> categorisedByViolations = categoriseByViolations(originalPacket, lastProcessedMessage);
             final Packet<MESSAGE> packetWithViolatingMessages = categorisedByViolations.getValue();
             if (packetWithViolatingMessages != null && !packetWithViolatingMessages.isEmpty()) {
-                persistError(packetWithViolatingMessages);
+
+                // if there are some violating messages -- send them to ViolatingMessageResolverActor
+                violatingMessageResolverRef.tell(packetWithViolatingMessages, getSelf());
             }
 
             final Packet<MESSAGE> packet = categorisedByViolations.getKey();
@@ -248,7 +250,7 @@ public abstract class AbstractAvlMachineActor<MESSAGE extends AbstractAvlMessage
         return copy;
     }
 
-    protected final BigDecimal calcDistance(final MESSAGE prevMessage, final MESSAGE currMessage) {
+    public final static <MESSAGE extends AbstractAvlMessage> BigDecimal calcDistance(final MESSAGE prevMessage, final MESSAGE currMessage) {
         return new BigDecimal(MapUtils.calcDistance(prevMessage.getX(), //
                 prevMessage.getY(), //
                 currMessage.getX(), //

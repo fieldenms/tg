@@ -13,6 +13,7 @@ import ua.com.fielden.platform.gis.gps.AbstractAvlModule;
 import ua.com.fielden.platform.gis.gps.actors.AbstractActors;
 import ua.com.fielden.platform.gis.gps.actors.AbstractAvlMachineActor;
 import ua.com.fielden.platform.gis.gps.actors.AbstractAvlModuleActor;
+import ua.com.fielden.platform.gis.gps.actors.AbstractViolatingMessageResolverActor;
 
 import com.google.inject.Injector;
 
@@ -22,7 +23,7 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-public abstract class ApplicationConfigurationUtil<MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule, ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>, MACHINE_ACTOR extends AbstractAvlMachineActor<MESSAGE, MACHINE>, MODULE_ACTOR extends AbstractAvlModuleActor<MESSAGE, MACHINE, MODULE, ASSOCIATION>> {
+public abstract class ApplicationConfigurationUtil<MESSAGE extends AbstractAvlMessage, MACHINE extends AbstractAvlMachine<MESSAGE>, MODULE extends AbstractAvlModule, ASSOCIATION extends AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>, MACHINE_ACTOR extends AbstractAvlMachineActor<MESSAGE, MACHINE>, MODULE_ACTOR extends AbstractAvlModuleActor<MESSAGE, MACHINE, MODULE, ASSOCIATION>, VIO_RESOLVER_ACTOR extends AbstractViolatingMessageResolverActor<MESSAGE>> {
     private final static Logger logger = Logger.getLogger(ApplicationConfigurationUtil.class);
 
     /** An utility class to start GPS server services (like Netty GPS server and Module + Machine actors). */
@@ -32,16 +33,16 @@ public abstract class ApplicationConfigurationUtil<MESSAGE extends AbstractAvlMe
         // thus a concurrent map is used to synchronize read/write operations
 
         // create and start all actors responsible for message handling
-        final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> actors = createActors(fetchMachinesWithLastMessages(injector), fetchModulesWithAssociations(injector));
+        final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR, VIO_RESOLVER_ACTOR> actors = createActors(fetchMachinesWithLastMessages(injector), fetchModulesWithAssociations(injector));
         actors.startActorSystem();
 
         promoteActors(injector, actors);
     }
 
-    protected abstract void promoteActors(final Injector injector, final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> actors);
+    protected abstract void promoteActors(final Injector injector, final AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR, VIO_RESOLVER_ACTOR> actors);
 
     /** Creates specific {@link AbstractActors} implementation. */
-    protected abstract AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR> createActors(final Map<MACHINE, MESSAGE> machinesWithLastMessages, final Map<MODULE, List<ASSOCIATION>> modulesWithAssociations);
+    protected abstract AbstractActors<MESSAGE, MACHINE, MODULE, ASSOCIATION, MACHINE_ACTOR, MODULE_ACTOR, VIO_RESOLVER_ACTOR> createActors(final Map<MACHINE, MESSAGE> machinesWithLastMessages, final Map<MODULE, List<ASSOCIATION>> modulesWithAssociations);
 
     /** Fetches all machines with their last messages to be used for processing. */
     protected abstract Map<MACHINE, MESSAGE> fetchMachinesWithLastMessages(final Injector injector);
