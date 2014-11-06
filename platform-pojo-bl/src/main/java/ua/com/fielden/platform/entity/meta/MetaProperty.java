@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javassist.util.proxy.ProxyFactory;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -696,6 +698,15 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      */
     public final T getValue() {
         return entity.<T> get(name);
+    }
+
+    /**
+     * Returns <code>true</code> if the property value is a proxy.
+     *
+     * @return
+     */
+    public boolean isProxy() {
+        return ProxyFactory.isProxyClass(getValue().getClass());
     }
 
     /**
