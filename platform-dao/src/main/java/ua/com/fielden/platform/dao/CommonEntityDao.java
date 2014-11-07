@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.dao;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -11,8 +11,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -24,6 +26,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -44,7 +47,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -250,8 +252,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // Check any concurrent modification
         // TODO This is where automatic conflict resolution should be implemented (refer #83)
         if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion()) {
-            throw new Result(entity, new IllegalStateException("Cannot save a stale entity " + entity.getKey() + " ("
-                    + TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey() + ") -- another user has changed it."));
+            throw new Result(entity, new IllegalStateException(format("Cannot save a stale entity %s (%s) -- another user has changed it.", entity.getKey(), TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey())));
         }
         // if there are changes persist them
         // Setting modified values triggers any associated validation.
@@ -280,7 +281,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         } else {
             throw res;
         }
-        // set incremented version
+        // set incremented version for the entity that is going to be returned from method save
         try {
             final Method setVersion = Reflector.getMethod(entity/* .getType() */, "setVersion", Long.class);
             setVersion.setAccessible(true);
@@ -317,8 +318,67 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new IllegalStateException("Could not assign transaction user properties.", e);
         }
 
+        // new entity might be activatable, but this has no effect on its refCount -- should be zero as no other entity could yet reference it
+        // however, it might reference other activatable entities, which warrants update to their refCount.
+        final boolean shouldProcessActivatableProperties;
+        if (entity instanceof ActivatableAbstractEntity) {
+            final ActivatableAbstractEntity<?> activatable = (ActivatableAbstractEntity<?>) entity;
+            shouldProcessActivatableProperties = activatable.isActive();
+        } else {
+            shouldProcessActivatableProperties = true;
+        }
+
+  /*      if (shouldProcessActivatableProperties) {
+            final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableDirtyProperties = collectActivatableDirtyProperties(entity);
+
+            for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableDirtyProperties) {
+                final Result result = prop.revalidate(false); // for activatable entities amongst other things it checks if referenced entity is active
+                if (!result.isSuccessful()) {
+                    throw result;
+                } else if (prop.getValue() != null) {
+                    // need to update refCount for the activatable entity
+                    final ActivatableAbstractEntity<?> value = prop.getValue();
+                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(value.getType(), value.getId());
+                    // TODO This is where automatic conflict resolution should be implemented (refer #83)
+                    if (persistedValue.getVersion() != null && persistedValue.getVersion() > value.getVersion()) {
+                        throw new Result(entity,
+                                new IllegalStateException(format("Cannot update an activatable stale entity \"%s\" (%s).", value.getKey(), TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey())));
+                    }
+                    getSession().save(persistedValue.incRefCount());
+                    // update property with the latest changes pertaining to version and refCount
+                    // this update is safe(!) as the property value would not have passed the staleness check above if it was outdated
+//                    value.beginInitialising();
+//                    value.set(ActivatableAbstractEntity.VERSION, persistedValue.getVersion());
+//                    value.set(ActivatableAbstractEntity.REF_COUNT, persistedValue.getRefCount());
+//                    value.endInitialising();
+                    entity.beginInitialising();
+                    entity.set(prop.getName(), persistedValue);
+                    entity.endInitialising();
+                }
+            }
+        }*/
+
         // save the entity
         getSession().save(entity);
+    }
+
+    /**
+     * Collects properties that represent dirty activatable entities.
+     *
+     * @param entity
+     * @return
+     */
+    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableDirtyProperties(final T entity) {
+        final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> dirtyActivatable = new HashSet<>();
+        for (final MetaProperty<?> prop : entity.getProperties().values()) {
+            if (prop.isDirty() && ActivatableAbstractEntity.class.isAssignableFrom(prop.getType())) {
+                // null values correspond to dereferencing and should be allowed only for already persisted entities
+                if (prop.getValue() != null || entity.isPersisted()) {
+                    dirtyActivatable.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
+                }
+            }
+        }
+        return dirtyActivatable;
     }
 
     private List<String> toStringList(final List<MetaProperty<?>> dirtyProperties) {

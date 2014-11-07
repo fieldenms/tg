@@ -20,7 +20,7 @@ public interface IBindingEntity {
      * @param propertyName
      * @param value
      */
-    void set(final String propertyName, final Object value);
+    IBindingEntity set(final String propertyName, final Object value);
 
     /**
      * Dynamic getter for accessing property value.

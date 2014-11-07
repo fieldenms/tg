@@ -30,6 +30,20 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     @Title(value = "Selfy", desc = "Desc")
     private TgCategory parent; // is property is introduced to test activation/deactivation of self referenced
 
+    @IsProperty
+    @Title(value = "Dummy non persistent", desc = "Desc")
+    private Integer dummy;
+
+    @Observable
+    public TgCategory setDummy(final Integer dummy) {
+        this.dummy = dummy;
+        return this;
+    }
+
+    public Integer getDummy() {
+        return dummy;
+    }
+
     @Observable
     public TgCategory setParent(final TgCategory parent) {
         this.parent = parent;

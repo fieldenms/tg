@@ -19,7 +19,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 
 /**
  * This an XStream converter for marshaling and unmarshaling {@link AbstractEntity} descendants.
- * 
+ *
  * TODO: In order to be able to reuse validation results performed by client at the server-end need to implement conversion of meta-properties. Specifically, need to marshal the
  * result of failed validation associated with each meta-property.
  * <p>
@@ -28,9 +28,9 @@ import com.thoughtworks.xstream.io.HierarchicalStreamReader;
  * Another important converter feature is assignment of the original values to meta-properties during unmarshaling. Currently it is considered that the use of original values is
  * needed only at the client-side and thus any item coming from the server would have original and current property values equal at the unmarshling stage. It is however possible
  * that at some point in time it should be necessary to specifically marshal original values as well as current ones.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractEntityConverter implements Converter {
     /**
@@ -63,7 +63,7 @@ public abstract class AbstractEntityConverter implements Converter {
                 setVersion.invoke(entity, ver);
 
                 // unmarshal entity properties
-                entity.setInitialising(true); // switches entity into initialising mode
+                entity.beginInitialising(); // switches entity into initialising mode
                 while (reader.hasMoreChildren()) {
                     reader.moveDown();
 
@@ -95,7 +95,7 @@ public abstract class AbstractEntityConverter implements Converter {
                     }
                 }
 
-                entity.setInitialising(false); // switches off the initialising mode for an entity
+                entity.endInitialising(); // switches off the initialising mode for an entity
                 return entity;
             }
         } catch (final Exception ex) {

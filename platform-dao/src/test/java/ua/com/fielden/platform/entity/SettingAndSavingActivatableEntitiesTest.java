@@ -18,14 +18,8 @@ import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 
-public class ActivatableEntityExistsValidationTest extends AbstractDomainDrivenTestCase {
+public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrivenTestCase {
 
-    @Test
-    public void entity_exists_validator_should_be_assigned_automatically() {
-        final TgCategory newCat = new_(TgCategory.class, "NEW");
-        assertNotNull(newCat);
-        assertNotNull(newCat.getProperty("parent").getValidators().get(ValidationAnnotation.ENTITY_EXISTS));
-    }
 
     @Test
     @Ignore

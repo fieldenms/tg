@@ -27,7 +27,10 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
@@ -72,6 +75,9 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     private final IAfterChangeEventHandler<T> aceHandler;
     private final boolean key;
     private final boolean collectional;
+    private final boolean retrievable;
+    private final boolean isEntity;
+
     /**
      * This property indicates whether a corresponding property was modified. This is similar to <code>dirty</code> property at the entity level.
      */
@@ -166,6 +172,12 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.entity = entity;
         this.name = field.getName();
         this.type = type;
+        this.isEntity = AbstractEntity.class.isAssignableFrom(type);
+        this.retrievable = entity.isPersistent() &&
+                           field.isAnnotationPresent(Calculated.class) ||
+                           (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                           (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                           (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class));
         this.key = isKey;
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
@@ -1174,6 +1186,14 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public void setCollectionPrevSize(final Number collectionPrevSize) {
         this.collectionPrevSize = collectionPrevSize;
+    }
+
+    public boolean isRetrievable() {
+        return retrievable;
+    }
+
+    public boolean isEntity() {
+        return isEntity;
     }
 
 }

@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -248,7 +249,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @MapTo("_ID")
     private Long id;
     @MapTo("_VERSION")
-    private long version = 0L;
+    private Long version = 0L;
     @IsProperty
     @UpperCase
     @MapTo("KEY_")
@@ -477,6 +478,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
+     * Returns <code>true</code> if entity has a composite key.
+     *
+     * @return
+     */
+    public boolean isComposite() {
+        return DynamicEntityKey.class.isAssignableFrom(getKeyType());
+    }
+
+    /**
      * Registers property change listener.<br>
      * <br>
      * Note : Please, refer also to {@link PropertyChangeOrIncorrectAttemptListener} JavaDocs.
@@ -575,7 +585,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param value
      */
     @Override
-    public void set(final String propertyName, final Object value) {
+    public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
             final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
             final Method setter = Reflector.getMethod(/* getType() */this, "set" + propertyName.toUpperCase().charAt(0) + propertyName.substring(1), propertyType);
@@ -589,6 +599,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             setter.invoke(valueToInvokeOn, value);
             // reverting changes to 'accessible' property of Method class
             setter.setAccessible(isAccessible);
+            return this;
         } catch (final Exception e) {
             throw new IllegalStateException(e.getCause());
         }
@@ -1124,8 +1135,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         return initialising;
     }
 
-    public final void setInitialising(final boolean initialising) {
-        this.initialising = initialising;
+    public final AbstractEntity<K> beginInitialising() {
+        this.initialising = true;
+        return this;
+    }
+
+    public final AbstractEntity<K> endInitialising() {
+        this.initialising = false;
+        return this;
     }
 
     public final boolean hasCompositeKey() {
@@ -1142,13 +1159,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         return !getDirtyProperties().isEmpty() || !isPersisted();
     }
 
-    public final void setDirty(final boolean dirty) {
+    public final AbstractEntity<K> setDirty(final boolean dirty) {
         // reset dirty state for properties in case where entity becomes not dirty
         if (!dirty) {
             for (final MetaProperty<?> prop : getDirtyProperties()) {
                 prop.setDirty(false);
             }
         }
+        return this;
     }
 
     /**
@@ -1208,7 +1226,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * Restores state of all properties to original, which includes setting original values and removal of all validation errors.
      */
     public AbstractEntity<K> restoreToOriginal() {
-        setInitialising(true);
+        beginInitialising();
         try {
             // restore property value state to original
             for (final MetaProperty<?> property : getProperties().values()) {
@@ -1221,7 +1239,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 }
             }
         } finally {
-            setInitialising(false);
+            endInitialising();
         }
         return this;
     }
@@ -1258,7 +1276,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     public final <COPY extends AbstractEntity> COPY copyTo(final COPY copy) {
-        copy.setInitialising(true);
+        copy.beginInitialising();
         // Under certain circumstances copying happens for a non-instrumented entity instance
         // In such cases there would be no meta-properties, and copying would not happen.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
@@ -1277,7 +1295,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 }
             }
         });
-        copy.setInitialising(false);
+        copy.endInitialising();
         return copy;
     }
 
@@ -1335,6 +1353,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             return false;
         }
 
+    }
+
+    /**
+     * Indicates if entity represents an instance of a persistent type.
+     *
+     * @return
+     */
+    public boolean isPersistent() {
+        return getClass().isAnnotationPresent(MapEntityTo.class);
     }
 
 }

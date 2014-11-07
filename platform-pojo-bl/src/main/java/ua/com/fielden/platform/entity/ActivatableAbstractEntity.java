@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.ActivePropertyValidator;
+import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 
 public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends AbstractEntity<K> {
     private static final long serialVersionUID = 1L;
@@ -25,10 +26,21 @@ public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends
     @MapTo
     @Title(value = "Ref Count", desc = "The count of active entities pointing to this entity.")
     @Readonly
+    @GreaterOrEqual(0)
     private Integer refCount = 0;
 
+    public ActivatableAbstractEntity<K> incRefCount() {
+        setRefCount(getRefCount() + 1);
+        return this;
+    }
+
+    public ActivatableAbstractEntity<K> decRefCount() {
+        setRefCount(getRefCount() - 1);
+        return this;
+    }
+
     @Observable
-    public ActivatableAbstractEntity<K> setRefCount(final Integer refCount) {
+    protected ActivatableAbstractEntity<K> setRefCount(final Integer refCount) {
         this.refCount = refCount;
         return this;
     }
