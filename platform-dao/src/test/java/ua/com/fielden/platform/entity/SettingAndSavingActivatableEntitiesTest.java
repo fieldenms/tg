@@ -22,8 +22,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
 
 
     @Test
-    @Ignore
-    public void active_entity_with_active_references_should_not_becove_inactive() {
+    public void active_entity_with_active_references_should_not_be_allowed_to_become_inactive() {
         final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
         cat1.setActive(false);
 

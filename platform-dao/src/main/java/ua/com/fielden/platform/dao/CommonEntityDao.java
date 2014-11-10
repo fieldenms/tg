@@ -31,6 +31,7 @@ import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -328,38 +329,38 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             shouldProcessActivatableProperties = true;
         }
 
-  /*      if (shouldProcessActivatableProperties) {
+        if (shouldProcessActivatableProperties) {
             final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableDirtyProperties = collectActivatableDirtyProperties(entity);
 
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableDirtyProperties) {
-                final Result result = prop.revalidate(false); // for activatable entities amongst other things it checks if referenced entity is active
-                if (!result.isSuccessful()) {
-                    throw result;
-                } else if (prop.getValue() != null) {
+                if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
                     final ActivatableAbstractEntity<?> value = prop.getValue();
-                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(value.getType(), value.getId());
-                    // TODO This is where automatic conflict resolution should be implemented (refer #83)
-                    if (persistedValue.getVersion() != null && persistedValue.getVersion() > value.getVersion()) {
-                        throw new Result(entity,
-                                new IllegalStateException(format("Cannot update an activatable stale entity \"%s\" (%s).", value.getKey(), TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey())));
-                    }
-                    getSession().save(persistedValue.incRefCount());
-                    // update property with the latest changes pertaining to version and refCount
-                    // this update is safe(!) as the property value would not have passed the staleness check above if it was outdated
-//                    value.beginInitialising();
-//                    value.set(ActivatableAbstractEntity.VERSION, persistedValue.getVersion());
-//                    value.set(ActivatableAbstractEntity.REF_COUNT, persistedValue.getRefCount());
-//                    value.endInitialising();
+                    final IEntityDao co = getCoFinder().find(value.getType());
+
+                    // get the latest value from the database, reassign it and update its ref count
+                    final fetch fetch = FetchModelReconstructor.reconstruct(value);
+                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) co.findById(value.getId(), fetch);
                     entity.beginInitialising();
                     entity.set(prop.getName(), persistedValue);
                     entity.endInitialising();
+                    final Result assignmentResult = prop.revalidate(false);
+
+                    if (!assignmentResult.isSuccessful()) {
+                        throw assignmentResult;
+                    }
+                    co.save(persistedValue.incRefCount());
                 }
             }
-        }*/
+        }
 
         // save the entity
-        getSession().save(entity);
+        final Result result = entity.isValid();
+        if (result.isSuccessful()) {
+            getSession().save(entity);
+        } else {
+            throw result;
+        }
     }
 
     /**

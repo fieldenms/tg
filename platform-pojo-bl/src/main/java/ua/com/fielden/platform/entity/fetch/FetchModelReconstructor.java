@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
  * @author TG Team
  *
  */
-public class FetchModelReconstructor<T extends AbstractEntity<?>> {
+public class FetchModelReconstructor {
 
     /**
      * Uses the DFS algorithm for reconstruction of a fetch model based on the provided entity instance. Graph traversal stops at <code>proxy</code> or <code>null</code> property
@@ -33,7 +33,7 @@ public class FetchModelReconstructor<T extends AbstractEntity<?>> {
      * @param entity
      * @return
      */
-    public fetch<T> reconstruct(final T entity) {
+    public static <T extends AbstractEntity<?>> fetch<T> reconstruct(final T entity) {
         if (entity == null) {
             throw new IllegalArgumentException("Entity instance cannot be null");
         }
@@ -63,7 +63,7 @@ public class FetchModelReconstructor<T extends AbstractEntity<?>> {
      * @param exploredFetchModels
      * @return
      */
-    private fetch<?> explore(
+    private static fetch<?> explore(
             final Deque<AbstractEntity<?>> frontier,
             final Set<Integer> explored,
             final Map<Integer, fetch<?>> exploredFetchModels) {

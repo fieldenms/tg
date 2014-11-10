@@ -39,8 +39,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
         final fetch<TgVehicle> fetch = fetchOnly(TgVehicle.class).with("id").with("key").with("desc");
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
-        final FetchModelReconstructor<TgVehicle> fmr = new FetchModelReconstructor<TgVehicle>();
-        final fetch<TgVehicle> reconFetch = fmr.reconstruct(vehicle);
+        final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
 
         assertSuperSet(fetch, reconFetch);
     }
@@ -50,8 +49,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
         final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("replacedBy", fetch(TgVehicle.class));
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
-        final FetchModelReconstructor<TgVehicle> fmr = new FetchModelReconstructor<TgVehicle>();
-        final fetch<TgVehicle> reconFetch = fmr.reconstruct(vehicle);
+        final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
 
         assertSuperSet(fetch, reconFetch);
     }
@@ -62,8 +60,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
         // However, once this is fixed, a proper model should be provided.
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(null, "CAR1");
 
-        final FetchModelReconstructor<TgVehicle> fmr = new FetchModelReconstructor<TgVehicle>();
-        final fetch<TgVehicle> reconFetch = fmr.reconstruct(vehicle);
+        final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
 
         assertFalse(reconFetch.getIncludedPropsWithModels().containsKey("replacedBy"));
         assertFalse(reconFetch.getIncudedProps().contains("replacedBy"));
