@@ -174,10 +174,12 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.type = type;
         this.isEntity = AbstractEntity.class.isAssignableFrom(type);
         this.retrievable = entity.isPersistent() &&
+                           (
                            field.isAnnotationPresent(Calculated.class) ||
                            (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
                            (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
-                           (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class));
+                           (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
+                           );
         this.key = isKey;
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;

@@ -1361,7 +1361,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     public boolean isPersistent() {
-        return getClass().isAnnotationPresent(MapEntityTo.class);
+        return getType().isAnnotationPresent(MapEntityTo.class);
     }
 
 }
