@@ -7,10 +7,13 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 /**
@@ -30,7 +33,7 @@ public class FetchModelReconstructor<T extends AbstractEntity<?>> {
      * @param entity
      * @return
      */
-    public fetch<?> reconstruct(final T entity) {
+    public fetch<T> reconstruct(final T entity) {
         if (entity == null) {
             throw new IllegalArgumentException("Entity instance cannot be null");
         }
@@ -49,7 +52,7 @@ public class FetchModelReconstructor<T extends AbstractEntity<?>> {
         // initialize data structures
         frontier.push(entity);
 
-        return explore(frontier, explored, exploredFetchModels);
+        return (fetch<T>) explore(frontier, explored, exploredFetchModels);
     }
 
     /**
@@ -74,29 +77,29 @@ public class FetchModelReconstructor<T extends AbstractEntity<?>> {
             return exploredFetchModels.get(identity);
         }
 
-        final fetch<?> fetchModel = fetchOnly(entity.getType());
+        fetch<?> fetchModel = fetchOnly(entity.getType()).with(AbstractEntity.ID).with(AbstractEntity.VERSION);
         explored.add(identity);
         exploredFetchModels.put(identity, fetchModel);
 
-        entity.getProperties().values().stream().
-                filter(p -> p.isRetrievable()).
-                forEach(prop -> {
-                    if (prop.isEntity()) { // handle entity type properties
-                        if (!prop.isProxy()) { // proxies are skipped
-                            final AbstractEntity<?> value = (AbstractEntity<?>) prop.getValue();
-                            if (value != null) {
-                                // produce fetch
-                                frontier.push(value);
-                                fetchModel.with(prop.getName(), explore(frontier, explored, exploredFetchModels));
-                            } else {
-                                // fetch cannot be identified from null, so the default fetch is used
-                                fetchModel.with(prop.getName());
-                            }
-                        }
-                    } else { // handle ordinary type properties
-                        fetchModel.with(prop.getName());
-                    }
-                });
+        final List<MetaProperty<?>> retrievableNotProxiedProperties = entity.getProperties().values().stream().
+                filter(p -> p.isRetrievable() && !p.isProxy()).
+                collect(Collectors.toList());
+
+        for (final MetaProperty<?> prop : retrievableNotProxiedProperties) {
+            if (prop.isEntity()) { // handle entity type properties
+                final AbstractEntity<?> value = (AbstractEntity<?>) prop.getValue();
+                if (value != null) {
+                    // produce fetch
+                    frontier.push(value);
+                    fetchModel = fetchModel.with(prop.getName(), explore(frontier, explored, exploredFetchModels));
+                } else {
+                    // fetch cannot be identified from null, so the default fetch is used
+                    fetchModel = fetchModel.with(prop.getName());
+                }
+            } else { // handle ordinary type properties
+                fetchModel = fetchModel.with(prop.getName());
+            }
+        }
 
         return fetchModel;
     }

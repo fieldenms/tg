@@ -1,18 +1,19 @@
-package ua.com.fielden.platform.entity.proxy;
+package ua.com.fielden.platform.entity.fetch;
 
-import static org.junit.Assert.assertEquals;
+import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import javassist.util.proxy.ProxyFactory;
+import java.util.Map.Entry;
 
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
@@ -29,90 +30,51 @@ import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
 
-public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
+public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
 
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
 
     @Test
-    public void lazily_loaded_vehicle_should_have_all_entity_props_proxied() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR1").getId());
+    public void reconstruction_of_fetch_model_without_sub_models_should_succeed() {
+        final fetch<TgVehicle> fetch = fetchOnly(TgVehicle.class).with("id").with("key").with("desc");
+        final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
-        assertNull("Should be null", vehicle.getStation());
-        assertTrue("Should be proxy", vehicle.getProperty("model").isProxy());
-        assertTrue("Should be proxy", vehicle.getProperty("replacedBy").isProxy());
+        final FetchModelReconstructor<TgVehicle> fmr = new FetchModelReconstructor<TgVehicle>();
+        final fetch<TgVehicle> reconFetch = fmr.reconstruct(vehicle);
+
+        assertSuperSet(fetch, reconFetch);
     }
 
     @Test
-    public void normally_loaded_vehicle_should_have_all_entity_props_proxied() {
-        final TgVehicle vehicle = vehicleDao.findById(vehicleDao.findByKey("CAR1").getId());
+    public void reconstruction_of_fetch_model_with_sub_models_should_succeed() {
+        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("replacedBy", fetch(TgVehicle.class));
+        final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
-        assertNull("Should be null", vehicle.getStation());
-        assertTrue("Should be proxy", vehicle.getProperty("model").isProxy());
-        assertTrue("Should be proxy", vehicle.getProperty("replacedBy").isProxy());
+        final FetchModelReconstructor<TgVehicle> fmr = new FetchModelReconstructor<TgVehicle>();
+        final fetch<TgVehicle> reconFetch = fmr.reconstruct(vehicle);
+
+        assertSuperSet(fetch, reconFetch);
     }
 
     @Test
-    public void null_valued_properties_should_not_have_proxies_for_now() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
+    public void reconstructed_fetch_model_should_not_contain_submodels_for_proxied_properties() {
+        // FIXME At this stage fetch model do not work reliably, which makes it required to pass null fetch model at this stage.
+        // However, once this is fixed, a proper model should be provided.
+        final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(null, "CAR1");
 
-        assertNull("Should be null", vehicle.getReplacedBy());
+        final FetchModelReconstructor<TgVehicle> fmr = new FetchModelReconstructor<TgVehicle>();
+        final fetch<TgVehicle> reconFetch = fmr.reconstruct(vehicle);
+
+        assertFalse(reconFetch.getIncludedPropsWithModels().containsKey("replacedBy"));
+        assertFalse(reconFetch.getIncudedProps().contains("replacedBy"));
     }
 
-    @Test
-    public void accessing_lazily_loaded_property_model_should_initialise_it_with_lazy_proxy_properties() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR1").getId());
+    public void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel) {
+        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncudedProps().containsAll(origModel.getIncudedProps()));
 
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(vehicle.getModel().getClass()));
-
-        final TgVehicleMake make = vehicle.getModel().getMake();
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(vehicle.getModel().getClass()));
-
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(make.getClass()));
-    }
-
-    @Test
-    public void accessing_lazily_loaded_property_station_with_composite_key_should_be_initialised_with_non_proxied_key_members() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
-
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
-
-        final TgOrgUnit4 zone = vehicle.getStation().getParent();
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
-
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(zone.getClass()));
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(zone.getParent().getClass()));
-    }
-
-    @Test
-    public void accessing_lazily_loaded_property_station_should_be_initialised_with_lazy_proxies_for_non_key_entity_props() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
-
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
-
-        final TgFuelType fuelType = vehicle.getStation().getFuelType();
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
-
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(fuelType.getClass()));
-    }
-
-    @Test
-    public void deep_nested_access_to_lazily_loaded_property_should_work() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
-
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
-
-        final String fuelTypeCode = vehicle.getStation().getFuelType().getKey();
-        assertEquals("Unexpected key value", "P", fuelTypeCode);
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getFuelType().getClass()));
-    }
-
-
-    @Test
-    public void not_fetched_calculated_property_should_be_proxied_and_loaded_on_demand() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
-
-        assertTrue(ProxyFactory.isProxyClass(vehicle.getLastFuelUsage().getClass()));
-        assertEquals("P", vehicle.getLastFuelUsage().getFuelType().getKey());
+        for (final Entry<String, fetch<? extends AbstractEntity<?>>> pair : origModel.getIncludedPropsWithModels().entrySet()) {
+            assertSuperSet(pair.getValue(), superModel.getIncludedPropsWithModels().get(pair.getKey()));
+        }
     }
 
     @Override
@@ -155,7 +117,6 @@ public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
                 setActive(true).
                 setLeased(false).
                 setReplacedBy(car2));
-
         save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 
         save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
