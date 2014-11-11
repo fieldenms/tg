@@ -49,7 +49,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     /**
      * This default constructor is required purely for Kryo serialisation.
      */
-    protected DynamicEntityKey(){
+    protected DynamicEntityKey() {
         KEY_MEMBERS_SEPARATOR = null;
         entity = null;
     }
@@ -94,7 +94,6 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
      * @param memberIndex
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Object value(final int memberIndex) {
         return entity.get(memberNames.get(memberIndex));
     }
@@ -181,12 +180,19 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
 
     @Override
     public final String toString() {
-        final StringBuilder buffer = new StringBuilder();
+        // collect not null values of composite key members to simplify stringification
+        final List<Object> notNullValues = new ArrayList<>();
         for (int index = 0; index < memberNames.size(); index++) {
             final Object value = value(index);
             if (value != null) {
-                buffer.append(convertToString(value) + (index + 1 < memberNames.size() ? KEY_MEMBERS_SEPARATOR : ""));
+                notNullValues.add(value);
             }
+        }
+
+        // stringify the key
+        final StringBuilder buffer = new StringBuilder();
+        for (int index = 0; index < notNullValues.size(); index++) {
+            buffer.append(convertToString(notNullValues.get(index)) + (index + 1 < notNullValues.size() ? KEY_MEMBERS_SEPARATOR : ""));
         }
         return buffer.toString();
     }
