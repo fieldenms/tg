@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
@@ -41,15 +40,22 @@ public class DomainMetadataExpressionsGenerator {
         return expressionModelInProgress.otherwise().val(null).end().model();
     }
 
-    ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) {
-        final List<Field> keyMembers = Finder.getKeyMembers(entityType);
-        final Iterator<Field> iterator = keyMembers.iterator();
-        IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().concat().prop(getKeyMemberConcatenationExpression(iterator.next()));
-        for (; iterator.hasNext();) {
-            expressionModelInProgress = expressionModelInProgress.with().val(Reflector.getKeyMemberSeparator(entityType));
-            expressionModelInProgress = expressionModelInProgress.with().prop(getKeyMemberConcatenationExpression(iterator.next()));
-        }
-        return expressionModelInProgress.end().model();
+//    ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final List<Pair<Field, Boolean>> keyMembers) {
+//        final Iterator<Pair<Field, Boolean>> iterator = keyMembers.iterator();
+//        final Pair<Field, Boolean> firstMember = iterator.next();
+//        IConcatFunctionWith<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = firstMember.getValue() ? //
+//        expr().concat().prop(getKeyMemberConcatenationExpression(firstMember.getKey()))
+//                :
+//                expr().concat().prop(getKeyMemberConcatenationExpression(firstMember.getKey()));
+//        for (; iterator.hasNext();) {
+//            expressionModelInProgress = expressionModelInProgress.with().val(Reflector.getKeyMemberSeparator(entityType));
+//            expressionModelInProgress = expressionModelInProgress.with().prop(getKeyMemberConcatenationExpression(iterator.next().getKey()));
+//        }
+//        return expressionModelInProgress.end().model();
+//    }
+
+    ExpressionModel getVirtualKeyPropForEntityWithCompositeKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final List<Pair<Field, Boolean>> keyMembers) {
+        return composeExpression(keyMembers, Reflector.getKeyMemberSeparator(entityType));
     }
 
     private String getKeyMemberConcatenationExpression(final Field keyMember) {
@@ -57,6 +63,53 @@ public class DomainMetadataExpressionsGenerator {
             return keyMember.getName() + ".key";
         } else {
             return keyMember.getName();
+        }
+    }
+
+    private ExpressionModel composeExpression(final List<Pair<Field, Boolean>> original, final String separator) {
+        ExpressionModel currExp = null;
+        Boolean currExpIsOptional = null;
+
+        for (final Pair<Field, Boolean> originalField : original) {
+            currExp = composeTwo(new Pair<ExpressionModel, Boolean>(currExp, currExpIsOptional), originalField, separator);
+            currExpIsOptional = currExpIsOptional != null ? currExpIsOptional && originalField.getValue() : originalField.getValue();
+        }
+
+        return currExp;
+    }
+
+    private ExpressionModel concatTwo(final ExpressionModel first, final String secondPropName, final String separator) {
+        return expr().concat().expr(first).with().val(separator).with().prop(secondPropName).end().model();
+    }
+
+    private ExpressionModel composeTwo(final Pair<ExpressionModel, Boolean> first, final Pair<Field, Boolean> second, final String separator) {
+        final ExpressionModel firstModel = first.getKey();
+        final Boolean firstIsOptional = first.getValue();
+
+        final String secondPropName = getKeyMemberConcatenationExpression(second.getKey());
+        final boolean secondPropIsOptional = second.getValue();
+
+        if (first.getKey() == null) {
+            return expr().prop(secondPropName).model();
+        } else {
+            if (firstIsOptional) {
+                if (secondPropIsOptional) {
+                    return expr().caseWhen().expr(firstModel).isNotNull().and().prop(secondPropName).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
+                    when().expr(firstModel).isNotNull().and().prop(secondPropName).isNull().then().expr(firstModel). //
+                    when().prop(secondPropName).isNotNull().then().prop(secondPropName). //
+                    otherwise().val(null).end().model();
+                } else {
+                    return expr().caseWhen().expr(firstModel).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
+                    otherwise().prop(secondPropName).end().model();
+                }
+            } else {
+                if (secondPropIsOptional) {
+                    return expr().caseWhen().prop(secondPropName).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
+                    otherwise().expr(firstModel).end().model();
+                } else {
+                    return concatTwo(firstModel, secondPropName, separator);
+                }
+            }
         }
     }
 

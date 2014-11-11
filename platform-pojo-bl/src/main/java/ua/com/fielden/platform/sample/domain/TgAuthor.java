@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -11,12 +13,11 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyTitle("Author")
 @KeyType(DynamicEntityKey.class)
@@ -36,6 +37,23 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     @Title("Surname")
     @CompositeKeyMember(2)
     private String surname;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Patronymic", desc = "Desc")
+    @Optional
+    @CompositeKeyMember(3)
+    private String patronymic;
+
+    @Observable
+    public TgAuthor setPatronymic(final String patronymic) {
+        this.patronymic = patronymic;
+        return this;
+    }
+
+    public String getPatronymic() {
+        return patronymic;
+    }
 
     @IsProperty
     @Readonly

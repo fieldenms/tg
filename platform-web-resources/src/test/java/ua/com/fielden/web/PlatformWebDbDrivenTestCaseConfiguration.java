@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.DomainMetadata;
@@ -56,8 +55,6 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
     static {
-        hibTypeDefaults.put(boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Boolean.class, YesNoType.class);
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, MoneyUserType.class);
     }
