@@ -1,0 +1,111 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+<link rel="import" href="/resources/accordion/accordion-element.html">
+<link rel="import" href="/resources/polymer/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+
+<polymer-element name="entity-centre" attributes="centreName">
+    <template>
+        <style>
+            .entity-center {
+                width: 90%;
+                height: 90%;
+            }
+            paper-button {
+                border: 1px solid #ddd;
+                border-radius: 6px;
+            }
+            .btn-group > .btn:not(:first-child):not(:last-child) {
+                border-radius: 0;
+                margin-left: 0;
+                margin-right: 0;
+            }
+            .btn-group > .btn:not(:first-child) {
+                border-left-width: 0;
+            }
+            .btn-group > .btn:first-child:not(:last-child) {
+                margin-left: 0;
+                margin-right: 0;
+                border-top-right-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+            .btn-group > .btn:last-child:not(:first-child) {
+                border-top-left-radius: 0;
+                border-bottom-left-radius: 0;
+                margin-left: 0;
+            }
+        </style>
+        <core-ajax id="config_retriever" url="/users/SU/centre/{{centreName}}" handleas="json" response="{{config}}" on-core-error="{{onConfigLoadError}}" auto></core-ajax>
+        <core-ajax id="run" url="/users/SU/QueryRunner" method="POST" handleas="json" on-core-response="{{onResponse}}" on-core-error="{{onError}}"></core-ajax>
+        <div layout vertical center center-justified fit>
+            <div class="entity-center">
+                <accordion-element heading="Selection Criteria">
+                    <span>{{centreName}}</span>
+                    <span>{{config.centreConfig.criteria.columns}}</span>
+                </accordion-element>
+                <div layout horizontal justified center>
+                    <div layout horizontal center>
+                        <div class="btn-group" layout horizontal>
+                            <paper-button class="btn" on-click="{{firstPage}}">Run</paper-button>
+                            <paper-button class="btn" on-click="{{prevPage}}">Run</paper-button>
+                            <paper-button class="btn" on-click="{{nextPage}}">Run</paper-button>
+                            <paper-button class="btn" on-click="{{lastPage}}">Run</paper-button>
+                        </div>
+                        <span>{{"page: " + (paginator.page.numberOfPages == 0 ? 0 : paginator.page.pageNo + 1) + " of " + paginator.page.numberOfPages}}</span>
+                    </div>
+                    <div horizontal center>
+                        <paper-dropdown-menu selected="{{pageCapacity}}" valueattr="label">
+                            <paper-item label="5"></paper-item>
+                            <paper-item label="10"></paper-item>
+                            <paper-item label="20"></paper-item>
+                            <paper-item label="25"></paper-item>
+                            <paper-item label="50"></paper-item>
+                        </paper-dropdown-menu>
+                        <paper-button style="margin-right: 0px" on-click="{{runAction}}">Run</paper-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script>
+        (function () {
+            var emptyPage = {
+                pageNo: 0,
+                numberOfPages: 0,
+                summary: {},
+                results: []
+            };
+
+            Polymer({
+                pageCapacity: "5",
+                paginator: {
+                    page: emptyPage
+                },
+                runAction: function () {
+                    //Setting initial parameters for page.
+                    this.paginator.query = JSON.parse(JSON.stringify(this.config.query));
+                    this.paginator.pageCapacity = this.pageCapacity;
+                    //Creating queryRunner instance as a body for post request to the server.
+                    var queryRunner = {};
+                    queryRunner.key = "QueryRunner";
+                    queryRunner["@entityType"] = "ua.com.fielden.platform.entity.functional.centre.QueryRunner";
+                    queryRunner.pageCapacity = this.paginator.pageCapacity;
+                    queryRunner.query = this.paginator.query;
+                    //running a query.
+                    this.$.run.body = JSON.stringify(queryRunner);
+                    this.$.run.go()
+                },
+                onResponse: function (e, detail, sender) {
+                    this.paginator.page = detail.response.instance.page;
+                },
+                onError: function (e, detail, sender) {
+                    alert("Error happened");
+                },
+                onConfigLoadError: function (e, detail, sender) {
+                    alert("Error happened");
+                }
+            });
+        })();
+    </script>
+</polymer-element>

@@ -23,7 +23,7 @@ public class SingleDomElement extends DomElement {
      * Throws the {@link UnsupportedOperationException} as far as {@link SingleDomElement} can not have children.
      */
     @Override
-    public DomElement add(final DomElement element) {
+    public DomElement add(final DomElement... element) {
 	throw new UnsupportedOperationException("It is impossible to add an element to single dom element");
     }
 

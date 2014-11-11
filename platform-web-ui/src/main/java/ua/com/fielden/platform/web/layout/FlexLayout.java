@@ -17,7 +17,7 @@ public class FlexLayout implements ILayout<String>{
     }
 
     @Override
-    public DomElement render(final DomElement parent) {
+    public DomElement render() {
 	// TODO Auto-generated method stub
 	return null;
     }

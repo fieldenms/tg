@@ -47,7 +47,7 @@ public class FileResource extends ServerResource {
             final String filePath = generateFileName(getReference().getRemainingPart());
             final String extension = getReference().getExtensions();
             if (StringUtils.isEmpty(filePath)) {
-        	throw new FileNotFoundException("The requested resource wasn't faound.");
+        	throw new FileNotFoundException("The requested resource (" + getReference().getRemainingPart() + " + " + extension + ") wasn't found.");
             } else {
         	final InputStream stream = ResourceLoader.getStream(filePath);
 		final MediaType mediaType = determineMediaType(extension);
@@ -85,6 +85,7 @@ public class FileResource extends ServerResource {
 	case "png":
 	    return MediaType.IMAGE_PNG;
 	case "js":
+	case "min.js":
 	case "json":
 	    return MediaType.TEXT_JAVASCRIPT;
 	case "html":

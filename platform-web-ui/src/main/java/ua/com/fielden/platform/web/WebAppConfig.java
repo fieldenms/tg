@@ -11,7 +11,6 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.master.EntityMaster;
-import ua.com.fielden.platform.web.model.WebModel;
 import ua.com.fielden.platform.web.view.AbstractWebView;
 
 /**
@@ -39,9 +38,9 @@ public class WebAppConfig{
     /*
      * The properties below represent essential tg views: entity centres, entity masters. Also it is possible to specify custom view.
      */
-    private final Map<String, WebModel> webModels = new LinkedHashMap<>();
     private final List<EntityMaster> masters = new ArrayList<>();
     private final Map<String, AbstractWebView<?>> customViews = new LinkedHashMap<>();
+    private String defaultRoute = null;
 
     /**
      * Creates web application instance and initialises it with application name.
@@ -132,7 +131,27 @@ public class WebAppConfig{
      * @param centre
      */
     public void addCentre(final EntityCentre centre) {
+	addCentre(centre, false);
+    }
+
+    /**
+     * Adds new {@link EntityCentre} instance to this web application configuration.
+     *
+     * @param centre
+     */
+    public void addCentre(final EntityCentre centre, final boolean isDefault) {
 	centres.put(centre.getMenuItemType().getName(), centre);
+	if (isDefault) {
+	    defaultRoute = generateCentreHash(centre);
+	}
+    }
+
+    private String generateCentreHash(final EntityCentre centre) {
+	return "centre/" + centre.getMenuItemType().getName();
+    }
+
+    public void addCustomView(final AbstractWebView<?> webView) {
+	addCustomView(webView, false);
     }
 
     /**
@@ -140,9 +159,15 @@ public class WebAppConfig{
      *
      * @param webView
      */
-    public void addCustomView(final AbstractWebView<?> webView) {
-	customViews.put(webView.getClass().getSimpleName(), webView);
-	webModels.put(webView.getWebModel().getClass().getSimpleName(), webView.getWebModel());
+    public void addCustomView(final AbstractWebView<?> webView, final boolean isDefault) {
+	customViews.put(WebUtils.polymerTagName(webView), webView);
+	if (isDefault) {
+	    defaultRoute = generateCustomViewHash(webView);
+	}
+    }
+
+    private String generateCustomViewHash(final AbstractWebView<?> webView) {
+	return "webview/" + WebUtils.polymerTagName(webView);
     }
 
     /**
@@ -164,15 +189,6 @@ public class WebAppConfig{
     }
 
     /**
-     * Returns registered web models.
-     *
-     * @return
-     */
-    public Map<String, WebModel> getWebModels() {
-	return Collections.unmodifiableMap(webModels);
-    }
-
-    /**
      * Runs the web application by sending the html file for this application.
      *
      * @return
@@ -180,57 +196,28 @@ public class WebAppConfig{
     public String run() {
 	// TODO should check whether user is authentic first.
 	return ResourceLoader.getText("ua/com/fielden/platform/web/app.html").
-		replace("@appName", appName).
-		replace("@menuItems", generateMenu());
+		replaceAll("@defaultView", defaultRoute == null ? "0" : "'" + defaultRoute + "'").
+		replaceAll("@appName", appName).
+		replaceAll("@pages", generatePages());
     }
 
-    /**
-     * Generates the menu for the application. This generation of menu items is based on the information about the entity centres.
-     *
-     * @return
-     */
-    private String generateMenu() {
-	// TODO generate menu on entity masters and custom views (not only entity centre).
-	// TODO consider the ability to create menu item template for menu generator.
-	final List<String> menuBuilder = new ArrayList<>();
-	centres.forEach((key, value) -> {
-	   menuBuilder.add("<li ng-class=\"navClass('centre/" + key + "')\" class=\"list-group-item\"><a href=\"#/centre/" + key + "\">" + value.getName() + "</a></li>");
-	});
+    private String generatePages() {
+	final List<String> pagesBuilder = new ArrayList<>();
+
 	customViews.forEach((key, value) -> {
-	    menuBuilder.add("<li ng-class=\"navClass('webview/" + key + "')\" class=\"list-group-item\"><a href=\"#/webview/" + key + "\">" + value.getName() + "</a></li>");
+	    pagesBuilder.add("{ name: '" + value.getName() + "'," +
+		    	       "hash: '" + generateCustomViewHash(value) + "',"+
+		    	       "url: '/webview/" + key + "',"+
+		    	       "lazyLoad: false}");
 	});
-	return StringUtils.join(menuBuilder, "\n");
+	centres.forEach((key, value) -> {
+	    pagesBuilder.add("{ name: '" + value.getName() + "',"+
+		    	       "hash: '" + generateCentreHash(value) + "',"+
+		    	       "url: '/resources/centre/entity-centre.html'," +
+		    	       "attributes: {centreName: '" + key + "'}," +
+		    	       "lazyLoad: false}");
+	});
+
+	return "[\n" + StringUtils.join(pagesBuilder, ",\n") + "\n]";
     }
-
-//    /**
-//     * Initialises web model resources.
-//     *
-//     * @param customWebModel
-//     */
-//    public <WM extends WebModel> void initWebModel(final WM webModel) {
-//	final String jsString = webModel.generate();
-//
-//    }
-
-//    /**
-//     * Renders the componentToShow component and wraps it into html page with configured dependencies routes and screens.
-//     *
-//     * @param componentToShow
-//     * @return
-//     */
-//    public String run(final WebComponent componentToShow) {
-//	//See whether screen configurations are correct: desktopMinWidth < tabletMaxWidth < tabletMinWidth < phoneMaxWidth.
-//	if (desktopMinWidth < tabletMaxWidth) {
-//	    throw new IllegalStateException("The desktop screen width can not be less then tablet screen width: " + desktopMinWidth + " < " + tabletMaxWidth);
-//	}
-//	if (tabletMinWidth < phoneMaxWidth) {
-//	    throw new IllegalStateException("The tablet screen width can not be less then phone screen width: " + tabletMinWidth + " < " + phoneMaxWidth);
-//	}
-//	final DomElement head = new DomElement("head").
-//		add(new SingleDomElement("meta").attr("charset", "UTF-8"));
-//	final DomElement body = componentToShow.render(new DomElement("body"));
-//	return new SingleDomElement("!DOCTYPE").attr("html", null).toString() + "\n"
-//		+ new DomElement("html").attr("ng-app", "tgAppModule").
-//		add(head).add(body);
-//    }
 }
