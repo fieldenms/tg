@@ -69,13 +69,12 @@ public class DomainMetadataExpressionsGenerator {
     private ExpressionModel composeExpression(final List<Pair<Field, Boolean>> original, final String separator) {
         ExpressionModel currExp = null;
         Boolean currExpIsOptional = null;
-        
+
         for (final Pair<Field, Boolean> originalField : original) {
-            System.out.println(originalField.getKey().getName() + " : " + originalField.getValue());
             currExp = composeTwo(new Pair<ExpressionModel, Boolean>(currExp, currExpIsOptional), originalField, separator);
-            currExpIsOptional = currExpIsOptional != null ? currExpIsOptional && originalField.getValue() : originalField.getValue(); 
+            currExpIsOptional = currExpIsOptional != null ? currExpIsOptional && originalField.getValue() : originalField.getValue();
         }
-        
+
         return currExp;
     }
 
@@ -96,7 +95,7 @@ public class DomainMetadataExpressionsGenerator {
             if (firstIsOptional) {
                 if (secondPropIsOptional) {
                     return expr().caseWhen().expr(firstModel).isNotNull().and().prop(secondPropName).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
-                    when().expr(firstModel).isNotNull().and().prop(secondPropName).isNull().then().expr(firstModel). // 
+                    when().expr(firstModel).isNotNull().and().prop(secondPropName).isNull().then().expr(firstModel). //
                     when().prop(secondPropName).isNotNull().then().prop(secondPropName). //
                     otherwise().val(null).end().model();
                 } else {
