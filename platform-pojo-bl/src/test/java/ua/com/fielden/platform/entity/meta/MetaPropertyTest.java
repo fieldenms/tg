@@ -9,9 +9,11 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.entities.EntityWithBce;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
@@ -117,4 +119,12 @@ public class MetaPropertyTest {
         assertTrue(entity.getProperty("property2").isChangedFromOriginal());
     }
 
+    @Test
+    public void required_property_with_custom_error_msg_should_use_it_in_validation_result() {
+        entity.setPropRequired(13);
+        entity.setPropRequired(null);
+        assertFalse(entity.getProperty("propRequired").isValid());
+        assertEquals(Finder.findFieldByName(entity.getType(), "propRequired").getAnnotation(Required.class).value(), entity.getProperty("propRequired").getFirstFailure().getMessage());
+    }
+    
 }

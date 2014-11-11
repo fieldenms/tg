@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +13,9 @@ import org.joda.time.DateTime;
 import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.Response;
+import org.restlet.data.Encoding;
 import org.restlet.data.MediaType;
+import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.engine.header.Header;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
@@ -26,13 +29,17 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
 import ua.com.fielden.platform.snappy.SnappyQuery;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.inject.Inject;
 
 /**
  * This is a convenience class providing some common routines used in the implementation of web-resources.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class RestServerUtil {
 
@@ -42,8 +49,13 @@ public class RestServerUtil {
     /** An application wide private key */
     private String appWidePrivateKey;
 
-    public RestServerUtil(final ISerialiser serialiser) {
+    // TODO will move to seriliser.
+    private final TgObjectMapper jsonSerialiser;
+
+    @Inject
+    public RestServerUtil(final ISerialiser serialiser, final TgObjectMapper jsonSerialiser) {
         this.serialiser = serialiser;
+        this.jsonSerialiser = jsonSerialiser;
     }
 
     private final Logger logger = Logger.getLogger(RestServerUtil.class);
@@ -65,7 +77,7 @@ public class RestServerUtil {
 
     /**
      * Creates a response header entry.
-     * 
+     *
      * @param response
      * @param headerEntry
      * @param value
@@ -76,7 +88,7 @@ public class RestServerUtil {
 
     /**
      * Returns a header entry value if present. Otherwise, null.
-     * 
+     *
      * @param response
      * @param headerEntry
      * @return
@@ -87,8 +99,28 @@ public class RestServerUtil {
     }
 
     /**
+     * Creates a JSON representation of {@link Result} reporting a cause of some error that could have occurred during request processing.
+     *
+     * @param string
+     * @return
+     * @throws JsonProcessingException
+     */
+    public Representation errorJSONRepresentation(final String string){
+        logger.debug("Start building error JSON representation:" + new DateTime());
+        //final byte[] bytes = serialiser.serialise(new Result(null, new Exception(string)), SerialiserEngine.JACKSON);
+        byte[] bytes = new byte[0];
+	try {
+	    bytes = jsonSerialiser.writeValueAsBytes(new Result(null, new Exception(string)));
+	} catch (final JsonProcessingException e) {
+	    e.printStackTrace();
+	}
+        logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length */);
+    }
+
+    /**
      * Creates a representation of {@link Result} reporting a cause of some error that could have occurred during request processing.
-     * 
+     *
      * @param string
      * @return
      */
@@ -101,7 +133,7 @@ public class RestServerUtil {
 
     /**
      * Creates a representation of {@link Result} reporting a cause of some error that could have occurred during request processing.
-     * 
+     *
      * @param string
      * @return
      */
@@ -113,8 +145,23 @@ public class RestServerUtil {
     }
 
     /**
+     * Creates a JSON representation of {@link Result} reporting a cause of some error that could have occurred during request processing.
+     *
+     * @param string
+     * @return
+     * @throws JsonProcessingException
+     */
+    public Representation errorJSONRepresentation(final Exception ex) throws JsonProcessingException {
+        logger.debug("Start building error JSON representation:" + new DateTime());
+        //final byte[] bytes = serialiser.serialise(new Result(ex), SerialiserEngine.JACKSON);
+        final byte[] bytes = jsonSerialiser.writeValueAsBytes(new Result(ex));
+        logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/ );
+    }
+
+    /**
      * Creates a representation of {@link Result}.
-     * 
+     *
      * @param string
      * @return
      */
@@ -126,8 +173,23 @@ public class RestServerUtil {
     }
 
     /**
+     * Creates a JSON representation of {@link Result}.
+     *
+     * @param string
+     * @return
+     * @throws JsonProcessingException
+     */
+    public Representation resultJSONRepresentation(final Result result) throws JsonProcessingException {
+        logger.debug("Start building result JSON representation:" + new DateTime());
+        //final byte[] bytes = serialiser.serialise(result, SerialiserEngine.JACKSON);
+        final byte[] bytes = jsonSerialiser.writeValueAsBytes(result);
+        logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM /* , bytes.length */);
+    }
+
+    /**
      * Creates a representation of {@link Result}.
-     * 
+     *
      * @param string
      * @return
      */
@@ -146,7 +208,7 @@ public class RestServerUtil {
 
     /**
      * Composes representation of a list of entities.
-     * 
+     *
      * @return
      */
     public <T extends AbstractEntity> Representation listRepresentation(final List<T> entities) {
@@ -165,7 +227,7 @@ public class RestServerUtil {
 
     /**
      * Composes representation of a map.
-     * 
+     *
      * @return
      */
     public Representation mapRepresentation(final Map<?, ?> map) {
@@ -184,7 +246,7 @@ public class RestServerUtil {
 
     /**
      * Composes representation of a lifecycle data.
-     * 
+     *
      * @return
      */
     public <T extends AbstractEntity> Representation lifecycleRepresentation(final LifecycleModel<T> lifecycleModel) {
@@ -202,8 +264,8 @@ public class RestServerUtil {
     }
 
     /**
-     * Composes representation of an entity.
-     * 
+     * Composes KRYO representation of an entity.
+     *
      * @return
      */
     public <T extends AbstractEntity> Representation singleRepresentation(final T entity) {
@@ -219,8 +281,27 @@ public class RestServerUtil {
     }
 
     /**
+     * Composes JACKSON representation of an entity.
+     *
+     * @return
+     * @throws JsonProcessingException
+     */
+    public <T extends AbstractEntity> Representation singleJSONRepresentation(final T entity) throws JsonProcessingException {
+        try {
+            // create a Result enclosing entity list
+            final Result result = entity != null ? new Result(entity, "OK") : new Result(null, new Exception("Could not find entity."));
+            //final byte[] bytes = serialiser.serialise(result, SerialiserEngine.JACKSON);
+            final byte[] bytes = jsonSerialiser.writeValueAsBytes(result);
+            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/ );
+        } catch (final Exception ex) {
+            logger.error(ex);
+            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+        }
+    }
+
+    /**
      * Converts representation of {@link QueryExecutionModel} to an actual instance.
-     * 
+     *
      * @param representation
      * @return
      * @throws Exception
@@ -231,7 +312,7 @@ public class RestServerUtil {
 
     /**
      * Converts representation of {@link DynamicallyTypedQueryContainer} to an instance of {@link QueryExecutionModel}.
-     * 
+     *
      * @param <T>
      * @param representation
      * @return
@@ -243,7 +324,7 @@ public class RestServerUtil {
 
     /**
      * Converts representation to an instance of {@link LifecycleQueryContainer}.
-     * 
+     *
      * @param representation
      * @return
      * @throws Exception
@@ -258,7 +339,7 @@ public class RestServerUtil {
 
     /**
      * Converts representation of the export request representation in to a list.
-     * 
+     *
      * @param representation
      * @return
      * @throws Exception
@@ -269,7 +350,7 @@ public class RestServerUtil {
 
     /**
      * Converts representation of an entity to an actual instance.
-     * 
+     *
      * @param <T>
      * @param <K>
      * @param representation
@@ -282,8 +363,22 @@ public class RestServerUtil {
     }
 
     /**
+     * Converts JSON representation of an entity to an actual instance.
+     *
+     * @param <T>
+     * @param <K>
+     * @param representation
+     * @param type
+     * @return
+     * @throws Exception
+     */
+    public <T extends AbstractEntity> T restoreJSONEntity(final Representation representation, final Class<T> type) throws Exception {
+	return jsonSerialiser.readValue(representation.getStream(), type);
+    }
+
+    /**
      * Deserialises representation into a special map.
-     * 
+     *
      * @param representation
      * @return
      * @throws Exception
@@ -310,6 +405,17 @@ public class RestServerUtil {
 
     public ISerialiser getSerialiser() {
         return serialiser;
+    }
+
+    /**
+     * Creates representation (encoded by GZIP) for some input stream with particular media type.
+     *
+     * @param stream
+     * @param mediaType
+     * @return
+     */
+    public static Representation encodedRepresentation(final InputStream stream, final MediaType mediaType) {
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(stream, mediaType));
     }
 
 }

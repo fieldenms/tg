@@ -2,24 +2,14 @@ require.config({
 	// baseUrl: should be set at the earlier stage
 	paths: {
 		// external library modules:
-		'text': '/require/text', // AMD-compliant
-		'async': '/require/async', // AMD-compliant
-		'css': '/require/css', // AMD-compliant
-		'angular': '/angular/angular', // why angular.min does not work?
-		'angular.route': '/angular/angular-route',
+		'text': 'resources/require/text', // AMD-compliant
+		'async': 'resources/require/async', // AMD-compliant
+		'css': 'resources/require/css', // AMD-compliant
 
 		// internal modules:
-		'log': '/logging/log'
+		'log': 'resources/logging/log'
 	},
-	shim: { // used for non-AMD modules
-		'angular': {
-			deps: [],
-			exports: 'angular'
-		},
-
-		'angular.route': {
-			deps: ['angular'],
-			exports: 'angularRoute'
-		}
+	shim: { 
+		// used for non-AMD modules
 	}
 });

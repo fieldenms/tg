@@ -1,0 +1,45 @@
+<div ng-controller='TaskBarController'>
+	<accordion  close-others='false'>
+		<accordion-group is-open='status.isOpen' heading='Selection criteria'>
+			<accordion-heading>
+				Selection criteria <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.isOpen, 'glyphicon-chevron-right': !status.isOpen}"></i>
+			</accordion-heading>
+			<tg-selection-criteria centre="centre"></tg-selection-criteria>
+		</accordion-group>
+	</accordion>
+</div>
+<div class="form-inline" style="margin-bottom:20px">
+	<div class="btn-group" style="display:inline-block">
+		<button class="btn btn-default" ng-click="pageData.first()" ng-disabled="!pageData.hasPrev()">
+			<i class="glyphicon glyphicon-fast-backward"></i>
+		</button>
+		<button class="btn btn-default" ng-click="pageData.prev()" ng-disabled="!pageData.hasPrev()">
+			<i class="glyphicon glyphicon-backward"></i>
+		</button>
+		<button class="btn btn-default" ng-click="pageData.next()" ng-disabled="!pageData.hasNext()">
+			<i class="glyphicon glyphicon-forward"></i>
+		</button>
+		<button class="btn btn-default" ng-click="pageData.last()" ng-disabled="!pageData.hasNext()">
+			<i class="glyphicon glyphicon-fast-forward"></i>
+		</button>
+	</div> 
+	<div style="display:inline-block">{{pageData.getPageFeedBack()}}</div>
+	<div style="float:right;display:inline-block">
+		<select class="form-control" style="margin-bottom:0px;width:auto" ng-model="pageCapacity">
+			<option>5</option>
+			<option>10</option>
+			<option>20</option>
+			<option>25</option>
+			<option>50</option>
+		</select>
+		<button ng-click="run()" class="btn btn-default">Run</button>
+	</div>
+</div>
+<table class="table table-striped table-bordered">
+	<tr>
+		<th ng-repeat="prop in centre.centreConfig.resultProperties">{{prop.title}}</th>
+	</tr>
+	<tr ng-repeat="entity in pageData.page.results">
+		<td ng-repeat="prop in centre.centreConfig.resultProperties">{{getValueForEntityGrid(entity, prop)}}</td>
+	</tr>
+</table>

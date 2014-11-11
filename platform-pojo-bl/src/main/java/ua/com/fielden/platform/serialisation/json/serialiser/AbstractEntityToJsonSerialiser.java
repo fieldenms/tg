@@ -14,10 +14,11 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 @SuppressWarnings("rawtypes")
 public class AbstractEntityToJsonSerialiser extends JsonSerializer<AbstractEntity> {
 
-    @SuppressWarnings("unchecked")
     @Override
     public void serialize(final AbstractEntity entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
         generator.writeStartObject();
+        generator.writeFieldName("@entityType");
+        generator.writeObject(entity.getType().getName());
         for (final Field propertyField : Finder.findRealProperties(entity.getType())) {
             generator.writeFieldName(propertyField.getName());
 

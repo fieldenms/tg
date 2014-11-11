@@ -5,11 +5,10 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Entity with {@link DynamicEntityKey} for testing purposes
- * 
+ *
  * @author Yura, Jhou
  */
 @SuppressWarnings("serial")
@@ -37,7 +36,6 @@ public class EntityWithDynamicEntityKey extends AbstractEntity<DynamicEntityKey>
         return key1;
     }
 
-    @NotNull
     @Final
     @Observable
     public void setKey1(final Integer key1) {
@@ -48,7 +46,6 @@ public class EntityWithDynamicEntityKey extends AbstractEntity<DynamicEntityKey>
         return key2;
     }
 
-    @NotNull
     @Final
     @Observable
     public void setKey2(final String key2) {
@@ -59,7 +56,6 @@ public class EntityWithDynamicEntityKey extends AbstractEntity<DynamicEntityKey>
         return key3;
     }
 
-    @NotNull
     @Final
     @Observable
     public void setKey3(final Entity key3) {

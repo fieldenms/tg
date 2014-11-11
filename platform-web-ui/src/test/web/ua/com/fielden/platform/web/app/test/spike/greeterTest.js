@@ -1,4 +1,4 @@
-define(['app/testspike/greeter', 'app/testspike/customLib', 'app/testspike/customNonAmdLib', 'angular', 'angular.mocks'], function(greeter, customLib, CustomNonAmdLib, angular, angularMocks) {
+define(['app/testspike/greeter', 'app/testspike/customLib', 'app/testspike/customNonAmdLib'], function(greeter, customLib, CustomNonAmdLib) {
     describe('Greeter module', function () {
         
         it(" must return 'Hello, World' for 'World' parameter.", function() {
@@ -16,21 +16,5 @@ define(['app/testspike/greeter', 'app/testspike/customLib', 'app/testspike/custo
             expect(' Jhou '.trim()).toBe('Jhou');
         });
 
-        it(" invokes angular simple function.", function() {
-            expect(angular.module("example", [])).not.toBeNull();
-        });
-
-        it(" invokes angular-mocks simple function.", function() {
-            angular.module("example", []);
-
-            // module("example");
-
-
-            expect(typeof module).toBe("function");
-            expect(module).not.toBe(angular.module);
-            
-
-            //expect(module("example")).not.toThrow();
-        });
     });
 });

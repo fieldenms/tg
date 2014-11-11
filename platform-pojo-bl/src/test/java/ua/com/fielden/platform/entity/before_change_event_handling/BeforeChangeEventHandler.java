@@ -13,11 +13,11 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * BCE event handler for testing purposes.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class BeforeChangeEventHandler implements IBeforeChangeEventHandler<Object> {
+public class BeforeChangeEventHandler implements IBeforeChangeEventHandler<String> {
 
     private String strParam;
     private int intParam1;
@@ -28,11 +28,12 @@ public class BeforeChangeEventHandler implements IBeforeChangeEventHandler<Objec
     private DateTime dateTimeParam;
     private Controller controllerParam;
     private Class<?> classParam;
+    private EnumForParams enumParam;
 
     private boolean invoked = false;
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<String> property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
         if (controllerParam != null) {
             controllerParam.run();
         }
@@ -119,6 +120,10 @@ public class BeforeChangeEventHandler implements IBeforeChangeEventHandler<Objec
 
     public void setClassParam(final Class<?> classParam) {
         this.classParam = classParam;
+    }
+
+    public EnumForParams getEnumParam() {
+        return enumParam;
     }
 
 }

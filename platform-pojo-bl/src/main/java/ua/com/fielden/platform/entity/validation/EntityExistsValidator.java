@@ -10,11 +10,11 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Validator that checks entity value for existence using an {@link IEntityDao} instance.
- * 
+ *
  * IMPORTANT: value null is considered valid.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> {
 
@@ -29,7 +29,7 @@ public class EntityExistsValidator implements IBeforeChangeEventHandler<Object> 
 
     @SuppressWarnings("unchecked")
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
         if (companionObject == null) {
             throw new IllegalStateException("Entity exists validator is not fully initialise: companion object is missing");
         }

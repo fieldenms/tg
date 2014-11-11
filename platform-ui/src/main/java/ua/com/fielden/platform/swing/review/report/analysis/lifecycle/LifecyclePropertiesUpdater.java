@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 @KeyType(String.class)
 public class LifecyclePropertiesUpdater extends AbstractEntity<String> {
@@ -52,7 +51,6 @@ public class LifecyclePropertiesUpdater extends AbstractEntity<String> {
 
     @Observable
     @LeProperty("to")
-    @NotNull
     public void setFrom(final Date from) {
         this.from = from;
     }
@@ -63,7 +61,6 @@ public class LifecyclePropertiesUpdater extends AbstractEntity<String> {
 
     @Observable
     @GeProperty("from")
-    @NotNull
     public void setTo(final Date to) {
         this.to = to;
     }

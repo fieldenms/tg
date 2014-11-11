@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.gis.gps;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -18,8 +20,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 @KeyType(String.class)
 @EntityTitle(value = "Машина", desc = "Автомобіль, або спецтехніка.")
@@ -97,7 +97,6 @@ public abstract class AbstractAvlMachine<T extends AbstractAvlMessage> extends A
     public abstract T getLastMessage();
 
     @Override
-    @NotNull
     @Observable
     public AbstractAvlMachine<T> setKey(final String key) {
         super.setKey(key);

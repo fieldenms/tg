@@ -18,16 +18,15 @@ import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity class used for binding testing.
- * 
+ *
  * @author Jhou
- * 
+ *
  */
 @KeyType(String.class)
 @DisplayDescription
@@ -75,9 +74,9 @@ public class Entity extends AbstractEntity<String> {
 
     /**
      * Enum for radioButton property Strategy
-     * 
+     *
      * @author jhou
-     * 
+     *
      */
     public enum Strategy {
         COMMIT("commit"), REVERT("revert"), REVERT_ON_INVALID("revert on invalid"), COMMIT_ON_VALID("commit on valid");
@@ -123,7 +122,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @DomainValidation
     public Entity setString(final String string) {
         this.string = string;
@@ -137,7 +135,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     public Entity setPassword(final String password) {
         this.password = password;
         System.out.print("entity = " + getString() + " ");
@@ -172,7 +169,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @GreaterOrEqual(-100)
     @Max(2000)
     @DomainValidation
@@ -188,7 +184,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @GreaterOrEqual(-100)
     @Max(2000)
     @DomainValidation
@@ -204,7 +199,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @GreaterOrEqual(-100)
     @Max(2000)
     @DomainValidation
@@ -220,7 +214,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @DomainValidation
     public Entity setBool(final Boolean bool) {
         this.bool = bool;
@@ -234,7 +227,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @DomainValidation
     public Entity setStrategy(final Strategy strategy) {
         this.strategy = strategy;
@@ -248,9 +240,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    // Note : NotNull validator does not filter empty list setting!
-    // TODO : create smth. like NotEmpty validator related only to collection properties
-    @NotNull
     @DomainValidation
     // IMPORTANT : EntityExists annotation should be defined! to get appropriate autocompleter behaviour
     //@EntityExists(entityType = DemoEntity.class, keyType = String.class)
@@ -270,7 +259,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @DomainValidation
     // IMPORTANT : EntityExists annotation should be defined! to get appropriate autocompleter behaviour
     //@EntityExists(entityType = DemoEntity.class, keyType = String.class)
@@ -287,9 +275,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    // Note : NotNull validator does not filter empty list setting!
-    // TODO : create smth. like NotEmpty validator related only to collection properties
-    @NotNull
     @DomainValidation
     // IMPORTANT : EntityExists annotation should be defined! to get appropriate autocompleter behaviour
     //@EntityExists(entityType = DemoEntity.class, keyType = String.class)
@@ -302,7 +287,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     public Entity addToBicycles(final Bicycle value) {
         bicycles.add(value);
         return this;
@@ -336,7 +320,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    //    @NotNull
     @DomainValidation
     public Entity setDate(final Date date) {
         this.date = date;
@@ -351,7 +334,6 @@ public class Entity extends AbstractEntity<String> {
 
     @Observable
     // need not any validation! because cannot set null, only can set empty list!
-    @NotNull
     public Entity setStringList(final ArrayList<String> stringList) {
         this.stringList = stringList;
         System.out.print("entity = " + getString() + " ");
@@ -364,7 +346,6 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     //@EntityExists(entityType = DemoAbstractEntity.class, keyType = String.class)
     public Entity setStringDemoEntity(final String stringDemoEntity) {
         this.stringDemoEntity = stringDemoEntity;

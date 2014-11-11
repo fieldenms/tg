@@ -20,8 +20,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.NotEmpty;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.equery.lifecycle.Categorizer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -36,7 +34,7 @@ import ua.com.fielden.platform.types.Money;
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
 @DescTitle(value = "Description", desc = "Description Property")
-@DescRequired
+@DescRequired("Property \"{{prop-title}}\" in entity \"{{entity-title}}\" does not permit blank values.")
 public class Entity extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
@@ -49,6 +47,7 @@ public class Entity extends AbstractEntity<String> {
     private Integer firstProperty = null;
     @IsProperty
     @Title("Observable Property")
+    @Required(NOT_NULL_MSG)
     private Double observableProperty = 0.0;
     @IsProperty
     @Monitoring(Categorizer.class)
@@ -59,6 +58,7 @@ public class Entity extends AbstractEntity<String> {
     @Invisible
     private Double finalProperty;
     @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")
+    @Required
     private List<Double> doubles = new ArrayList<Double>();
     @IsProperty(Entity.class)
     private List<Entity> entities = new ArrayList<Entity>();
@@ -85,189 +85,183 @@ public class Entity extends AbstractEntity<String> {
     private PropertyDescriptor<Entity> propertyDescriptor;
 
     public Integer getFirstProperty() {
-	return firstProperty;
+        return firstProperty;
     }
 
-    @NotNull
     @GreaterOrEqual(50)
     @DomainValidation
     @Observable
     public Entity setFirstProperty(final Integer property) {
-	this.firstProperty = property;
-	return this;
+        this.firstProperty = property;
+        return this;
     }
 
     public Double getObservableProperty() {
-	return observableProperty;
+        return observableProperty;
     }
 
     @Observable
-    @NotNull(NOT_NULL_MSG)
     public Entity setObservableProperty(final Double observableProperty) {
-	this.observableProperty = observableProperty;
-	return this;
+        this.observableProperty = observableProperty;
+        return this;
     }
 
     public Double getFinalProperty() {
-	return finalProperty;
+        return finalProperty;
     }
 
     @Final
     @Observable
     public void setFinalProperty(final Double finalProperty) {
-	this.finalProperty = finalProperty;
+        this.finalProperty = finalProperty;
     }
 
     public List<Double> getDoubles() {
-	return doubles;
+        return doubles;
     }
 
     @Observable
-    @NotNull
     @DomainValidation
     public Entity setDoubles(final List<Double> doubles) {
-	this.doubles.clear();
-	this.doubles.addAll(doubles);
-	return this;
+        this.doubles.clear();
+        this.doubles.addAll(doubles);
+        return this;
     }
 
     @Observable
-    @NotNull
     public Entity addToDoubles(final Double value) {
-	doubles.add(value);
-	return this;
+        doubles.add(value);
+        return this;
     }
 
     @Observable
     @DomainValidation
     public Entity removeFromDoubles(final Double value) {
-	doubles.remove(value);
-	return this;
+        doubles.remove(value);
+        return this;
     }
 
     public List<Entity> getEntities() {
-	return entities;
+        return entities;
     }
 
     @Observable
     public void setEntities(final List<Entity> entities) {
-	this.entities.clear();
-	this.entities.addAll(entities);
+        this.entities.clear();
+        this.entities.addAll(entities);
     }
 
     public Double getObservablePropertyInitialisedAsNull() {
-	return observablePropertyInitialisedAsNull;
+        return observablePropertyInitialisedAsNull;
     }
 
     @Observable
-    @NotNull
     public void setObservablePropertyInitialisedAsNull(final Double observablePropertyInitialisedAsNull) {
-	this.observablePropertyInitialisedAsNull = observablePropertyInitialisedAsNull;
+        this.observablePropertyInitialisedAsNull = observablePropertyInitialisedAsNull;
     }
 
     public Entity getEntity() {
-	return entity;
+        return entity;
     }
 
     @Observable
     public void setEntity(final Entity entity) {
-	this.entity = entity;
+        this.entity = entity;
     }
 
     public Date getDate() {
-	return date;
+        return date;
     }
 
     @Observable
     public void setDate(final Date date) {
-	this.date = date;
+        this.date = date;
     }
 
     public Money getMoney() {
-	return money;
+        return money;
     }
 
     @Observable
     public void setMoney(final Money money) {
-	this.money = money;
+        this.money = money;
     }
 
     public Integer getNumber() {
-	return number;
+        return number;
     }
 
     @Observable
     @DomainValidation
     public void setNumber(final Integer number) throws Result {
-	number.toString(); // need to enforce NPE when number is null for testing purposes
-	if (number.equals(50)) { // causes IllegalArgumentException :
-	    throw new IllegalArgumentException("The value of 50 is not permitted");
-	}
-	if (number.equals(100)) { // DYNAMIC validation :
-	    throw new Result("The value of 100 is not permitted", new Exception("The value of 100 is not permitted"));
-	}
-	this.number = number;
-	if (number.equals(777)) { // DYNAMIC warning generation :
-	    throw new Warning("DYNAMIC validation : The value of 777 is dangerous.");
-	}
+        number.toString(); // need to enforce NPE when number is null for testing purposes
+        if (number.equals(50)) { // causes IllegalArgumentException :
+            throw new IllegalArgumentException("The value of 50 is not permitted");
+        }
+        if (number.equals(100)) { // DYNAMIC validation :
+            throw new Result("The value of 100 is not permitted", new Exception("The value of 100 is not permitted"));
+        }
+        this.number = number;
+        if (number.equals(777)) { // DYNAMIC warning generation :
+            throw new Warning("DYNAMIC validation : The value of 777 is dangerous.");
+        }
     }
 
     public Integer getDependent() {
-	return dependent;
+        return dependent;
     }
 
     @Observable
     public void setDependent(final Integer dependent) throws Result {
-	if (main != null && dependent != null && dependent > main) {
-	    throw new Result("", new Exception("The property [dependent] cannot be > [main]"));
-	}
-	this.dependent = dependent;
+        if (main != null && dependent != null && dependent > main) {
+            throw new Result("", new Exception("The property [dependent] cannot be > [main]"));
+        }
+        this.dependent = dependent;
     }
 
     public Integer getMain() {
-	return main;
+        return main;
     }
 
     @Observable
     public void setMain(final Integer main) {
-	this.main = main;
+        this.main = main;
     }
 
     @Observable
-    @NotEmpty
     public void setStrProp(final String strProp) {
-	this.strProp = strProp;
+        this.strProp = strProp;
     }
 
     public String getStrProp() {
-	return strProp;
+        return strProp;
     }
 
     public PropertyDescriptor<Entity> getPropertyDescriptor() {
-	return propertyDescriptor;
+        return propertyDescriptor;
     }
 
     @Observable
     public void setPropertyDescriptor(final PropertyDescriptor<Entity> propertyDescriptor) {
-	this.propertyDescriptor = propertyDescriptor;
+        this.propertyDescriptor = propertyDescriptor;
     }
 
     public ClassWithMap getClassWithMapProp() {
-	return classWithMapProp;
+        return classWithMapProp;
     }
 
     @Observable
     public void setClassWithMapProp(final ClassWithMap classWithMapProp) {
-	this.classWithMapProp = classWithMapProp;
+        this.classWithMapProp = classWithMapProp;
     }
 
     public String getMonitoring() {
-	return monitoring;
+        return monitoring;
     }
 
     @Observable
     public void setMonitoring(final String monitoring) {
-	this.monitoring = monitoring;
+        this.monitoring = monitoring;
     }
 
 }

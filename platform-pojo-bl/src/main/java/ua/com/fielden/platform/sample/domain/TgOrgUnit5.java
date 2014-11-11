@@ -4,6 +4,7 @@ import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -12,7 +13,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
@@ -33,6 +34,22 @@ public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Name", desc = "Desc")
     @CompositeKeyMember(2)
     private String name;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Fuel Type", desc = "Desc")
+    private TgFuelType fuelType;
+
+    @Observable
+    @EntityExists(TgFuelType.class)
+    public TgOrgUnit5 setFuelType(final TgFuelType fuelType) {
+        this.fuelType = fuelType;
+        return this;
+    }
+
+    public TgFuelType getFuelType() {
+        return fuelType;
+    }
 
     @Observable
     public TgOrgUnit5 setName(final String name) {

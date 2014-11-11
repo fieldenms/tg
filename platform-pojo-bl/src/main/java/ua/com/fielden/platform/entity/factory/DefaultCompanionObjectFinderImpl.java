@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.factory;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 
 import com.google.inject.Injector;
 
