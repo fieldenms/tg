@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -77,6 +78,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     private final boolean collectional;
     private final boolean retrievable;
     private final boolean isEntity;
+    private final boolean activatable;
 
     /**
      * This property indicates whether a corresponding property was modified. This is similar to <code>dirty</code> property at the entity level.
@@ -180,6 +182,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                            (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
                            (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
                            );
+        this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type);
         this.key = isKey;
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
@@ -1197,6 +1200,10 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public boolean isEntity() {
         return isEntity;
+    }
+
+    public boolean isActivatable() {
+        return activatable;
     }
 
 }
