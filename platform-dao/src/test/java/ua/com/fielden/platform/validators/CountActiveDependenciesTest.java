@@ -60,10 +60,10 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
 
     @Override
     protected void populateDomain() {
-        final TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
-        save(cat1.setParent(cat1));
-        final TgCategory cat2 = save(new_(TgCategory.class, "Cat2").setActive(true));
-        save(cat2.setParent(cat1));
+        TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
+        cat1 = save(cat1.setParent(cat1));
+        TgCategory cat2 = save(new_(TgCategory.class, "Cat2").setActive(true));
+        cat2 = save(cat2.setParent(cat1));
         final TgCategory cat3 = save(new_(TgCategory.class, "Cat3").setActive(true));
 
         save(new_(TgSystem.class, "Sys1").setActive(true).setCategory(cat1));

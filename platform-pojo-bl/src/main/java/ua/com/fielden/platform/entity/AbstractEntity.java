@@ -1184,10 +1184,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         return dirtyProperties;
     }
 
-    public final void resetMetaState() {
+    public AbstractEntity<?> resetMetaState() {
         for (final MetaProperty<?> property : properties.values()) {
             property.resetState();
         }
+        return this;
     }
 
     public final void resetMetaValue() {

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 import java.util.Deque;
 import java.util.HashMap;
@@ -77,7 +77,7 @@ public class FetchModelReconstructor {
             return exploredFetchModels.get(identity);
         }
 
-        fetch<?> fetchModel = fetchOnly(entity.getType()).with(AbstractEntity.ID).with(AbstractEntity.VERSION);
+        fetch<?> fetchModel = fetch(entity.getType()).with(AbstractEntity.ID).with(AbstractEntity.VERSION);
         explored.add(identity);
         exploredFetchModels.put(identity, fetchModel);
 

@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -46,7 +45,6 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -180,20 +178,26 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Saves the provided entity. This method checks entity version and throws StaleObjectStateException if the provided entity is stale.
+     * Saves the provided entity. This method checks entity version and throws StaleObjectStateException if the provided entity is stale. There is no in-memory referential
+     * integrity guarantee -- the returned instance is always a different instance. However, from the perspective of data loading, it is guaranteed that the object graph of the
+     * returned instance contains the object graph of the passed in entity as its subgraph.
      */
     @Override
     @SessionRequired
     public T save(final T entity) {
         if (entity == null) {
-            throw new IllegalArgumentException("Entity should not be null when saving.");
+            throw new IllegalArgumentException(format("Null reference to entity of type %s cannot be saved.", getEntityType()));
+        } else if (!entity.isDirty()) {
+            logger.debug(format("Entity %s is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
+            return findById(entity.getId(), FetchModelReconstructor.reconstruct(entity));
         }
-        logger.debug("Start saving entity " + entity + " (ID = " + entity.getId() + ")");
+        logger.debug(format("Start saving entity %s (ID = %s)", entity, entity.getId()));
 
         // need to capture names of dirty properties before the actual saving takes place and makes all properties not dirty
         // this is needed for executing after save event handler
         final List<String> dirtyProperties = toStringList(entity.getDirtyProperties());
 
+        final T resultantEntity;
         // let's try to save entity
         try {
             // firstly validate the entity
@@ -201,30 +205,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             if (!isValid.isSuccessful()) {
                 throw isValid;
             }
-
-            // entity is valid and we should proceed with saving, but only if there are some changes
-            if (entity.isDirty()) { // is there anything to save?
-                // new and previously saved entities are handled differently
-                if (!entity.isPersisted()) { // is it a new entity?
-                    saveNewEntity(entity);
-                } else { // so, this is a modified entity
-                    saveModifiedEntity(entity);
-
-                }
-                // in both cases (new or modified) need to resent entity meta state as if it was just fetched
-                entity.resetMetaState();
+            // entity is valid and we should proceed with saving
+            // new and previously saved entities are handled differently
+            if (!entity.isPersisted()) { // is it a new entity?
+                resultantEntity = saveNewEntity(entity);
+            } else { // so, this is a modified entity
+                resultantEntity = saveModifiedEntity(entity);
             }
         } finally {
             logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
-        getSession().flush();
-        getSession().clear();
-
         // this call never throws any exceptions
-        processAfterSaveEvent(entity, dirtyProperties);
+        processAfterSaveEvent(resultantEntity, dirtyProperties);
 
-        return entity;
+        return resultantEntity;
     }
 
     /**
@@ -232,7 +227,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *
      * @param entity
      */
-    private void saveModifiedEntity(final T entity) {
+    private T saveModifiedEntity(final T entity) {
         // let's make sure that entity is not a duplicate
         final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
         final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getEntities(from(model).model());
@@ -243,31 +238,48 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     new IllegalArgumentException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey())));
         }
 
-        // If entity with id exists then the returned instance is proxied since it is retrieved using standard Hibernate session get method,
-        // and thus is associated with current Hibernate session.
-        // This is required to ensure correct entity re-validation where all necessary values would we loaded automatically (i.e. without any fetch model) using Hibernate's lazy-loading mechanism.
-
-        // Load existing entity version by id
-        final T persistedEntity = (T) getSession().load(getEntityType(), entity.getId());
-
-        // Check any concurrent modification
-        // TODO This is where automatic conflict resolution should be implemented (refer #83)
-        if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion()) {
-            throw new Result(entity, new IllegalStateException(format("Cannot save a stale entity %s (%s) -- another user has changed it.", entity.getKey(), TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey())));
+        // load the entity directly from the session
+        final T persistedEntity = (T) getSession().load(entity.getType(), entity.getId());
+        // check for data staleness and try to resolve the conflict is possible (refer #83)
+        if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion() && !canResolveConflict(entity, persistedEntity)) {
+            throw Result.failure(entity, new IllegalStateException(format("Could not resolve conflicting changes. Entity %s (%s) could not be saved.", entity.getKey(), TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey())));
         }
-        // if there are changes persist them
-        // Setting modified values triggers any associated validation.
-        // An interesting case is with validation based on associative properties such as a work order for purchase order item.
-        // If a purchase order item is being persisted some of its property validation might depend on the state of the associated work order.
-        // When this purchase order item was validated at the client side it might have been using a stale work order.
-        // In here revalidation occurs, which would definitely work with the latest data.
-        for (final Object obj : entity.getDirtyProperties()) {
-            final String propName = ((MetaProperty<?>) obj).getName();
-            // logger.error("is dirty: " + propName + " of " + getEntityType().getSimpleName() + " old = " + ((MetaProperty) obj).getOriginalValue() + " new = " + ((MetaProperty) obj).getValue());
-            final Object value = entity.get(propName);
+
+        // reconstruct entity fetch model for future retrieval at the end of the method call
+        final fetch<T> entityFetch = FetchModelReconstructor.reconstruct(entity);
+        // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
+        final boolean isActivatable = entity instanceof ActivatableAbstractEntity;
+
+        for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
+            final String propName = prop.getName();
+            final Object value = prop.getValue();
+
             // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
             // the easiest way to do that is to load entity by id using the current session
-            if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
+
+            if (false) { // prop.isActivatable()
+                // if value is null then an activatable entity has been dereferenced and its refCount needs to be decremented
+                if (value == null) {
+                    // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
+                    // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
+                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
+                    getSession().update(persistedValue.decRefCount());
+
+                    // assign null as the property value to actually dereference activatable
+                    persistedEntity.set(propName, null);
+                } else { // otherwise there could be either referencing or a reference change
+                    if (persistedEntity.<AbstractEntity<?>> get(propName) != null) { // need to decrement refCount for the dereferenced entity
+                        final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
+                        getSession().update(persistedValue.decRefCount());
+                    }
+                    // also need increment refCount for a newly referenced activatable
+                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), ((AbstractEntity<?>) value).getId());
+                    getSession().update(persistedValue.incRefCount());
+
+                    // assign updated activatable as the property value
+                    persistedEntity.set(propName, persistedValue);
+                }
+            } else if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
                 persistedEntity.set(propName, getSession().load(((AbstractEntity<?>) value).getType(), ((AbstractEntity<?>) value).getId()));
             } else {
                 persistedEntity.set(propName, value);
@@ -276,20 +288,36 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // check if entity is valid after changes
         final Result res = persistedEntity.isValid();
         if (res.isSuccessful()) {
-            // during the update a StaleObjectStateException might be thrown.
-            // getSession().flush();
             getSession().update(persistedEntity);
+            getSession().flush();
+            getSession().clear();
         } else {
             throw res;
         }
-        // set incremented version for the entity that is going to be returned from method save
-        try {
-            final Method setVersion = Reflector.getMethod(entity/* .getType() */, "setVersion", Long.class);
-            setVersion.setAccessible(true);
-            setVersion.invoke(entity, entity.getVersion() + 1);
-        } catch (final Exception e) {
-            throw new IllegalStateException("Could not set updated entity version.");
+
+        return findById(persistedEntity.getId(), entityFetch);
+    }
+
+    /**
+     * Determines whether automatic conflict resolves between the two entity instance is possible. The ability to resolve conflict automatically is based strictly on dirty
+     * properties -- if dirty properties in <code>entity</code> are equals to the same properties in <code>persistedEntity</code> then the conflict can be resolved.
+     *
+     * @param entity
+     * @param persistedEntity
+     * @return
+     */
+    private boolean canResolveConflict(final T entity, final T persistedEntity) {
+        // comparison of property values is most likely to trigger lazy loading
+        for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
+            final String name = prop.getName();
+            if ((persistedEntity.get(name) == null && entity.get(name) != null) ||
+                    (persistedEntity.get(name) != null && entity.get(name) == null) ||
+                    !persistedEntity.get(name).equals(entity.get(name))) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     /**
@@ -297,7 +325,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *
      * @param entity
      */
-    private void saveNewEntity(final T entity) {
+    private T saveNewEntity(final T entity) {
         // let's make sure that entity is not a duplicate
         final Integer count = count(createQueryByKey(entity.getKey()), Collections.<String, Object> emptyMap());
         if (count > 0) {
@@ -306,6 +334,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     new IllegalArgumentException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey())));
         }
 
+        // reconstruct entity fetch model for future retrieval at the end of the method call
+        final fetch<T> entityFetch = FetchModelReconstructor.reconstruct(entity);
         // check and assign properties annotated with @TransactionDate
         try {
             assignTransactionDate(entity);
@@ -358,9 +388,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final Result result = entity.isValid();
         if (result.isSuccessful()) {
             getSession().save(entity);
+            getSession().flush();
+            getSession().clear();
         } else {
             throw result;
         }
+
+        return (T) entity.resetMetaState(); //findById(entity.getId(), entityFetch);
     }
 
     /**
