@@ -44,6 +44,6 @@ public class WebViewResource extends ServerResource {
 
     @Override
     protected Representation get() throws ResourceException {
-	return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(IOUtils.toInputStream(webView.render(null).toString()), MediaType.TEXT_HTML));
+	return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(IOUtils.toInputStream(webView.render().toString()), MediaType.TEXT_HTML));
     }
 }

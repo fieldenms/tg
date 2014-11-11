@@ -120,15 +120,8 @@ public class DeviceSensitiveLayout implements IRenderable{
     }
 
     @Override
-    public DomElement render(final DomElement parent) {
-	parent.attr("tg-media-layout", null);
-	for (final Map.Entry<Map.Entry<Device, Orientation>, LayoutWrapper> entry : layouts.entrySet()) {
-	    final DomElement mediaElement = new DomElement("div").attr("tg-when-media", entry.getKey().getKey().toString());
-	    if (entry.getKey().getValue() != null) {
-		mediaElement.attr("tg-when-orintation", entry.getKey().getValue().toString());
-		parent.add(entry.getValue().layout.render(mediaElement));
-	    }
-	}
-	return parent;
+    public DomElement render() {
+	//TODO implement this.
+	return null;
     }
 }

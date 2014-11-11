@@ -1,8 +1,0 @@
-.debug {
-    border: 1px solid red;
-}
-
-.container{
-    display: flex;
-    flex-direction: column;
-}

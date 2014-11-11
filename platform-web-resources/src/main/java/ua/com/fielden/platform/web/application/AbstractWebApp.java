@@ -20,9 +20,7 @@ import ua.com.fielden.platform.web.FileResourceFactory;
 import ua.com.fielden.platform.web.FunctionalEntityResourceFactory;
 import ua.com.fielden.platform.web.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.WebAppConfig;
-import ua.com.fielden.platform.web.WebModelResourceFactory;
 import ua.com.fielden.platform.web.WebViewResourceFactory;
-import ua.com.fielden.platform.web.model.WebModel;
 
 import com.google.inject.Injector;
 
@@ -74,7 +72,6 @@ public abstract class AbstractWebApp extends Application {
             final String author,
             final String username) {
         super(context);
-        WebModel.setAppSpecificResourcePath(resourcePaths[0]);
         //        this.platformJsScriptsLocation = "../../tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
         //        this.platformVendorJsScriptsLocation = "../../tg/platform-web-ui/src/main/resources/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
@@ -142,7 +139,6 @@ public abstract class AbstractWebApp extends Application {
      */
     private void attachCustomWebViewResources(final Router router, final WebAppConfig webAppConfig) {
         logger.info("\t\tWeb models resources (generated) attaching...");
-        router.attach("/webmodel/{modelName}", new WebModelResourceFactory(webAppConfig.getWebModels()));
         router.attach("/webview/{webViewName}", new WebViewResourceFactory(webAppConfig.getCustomViews()));
     }
 

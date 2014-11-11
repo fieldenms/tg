@@ -25,16 +25,11 @@ public class DomElement {
     /**
      * Children of this {@link DomElement} instance.
      */
-    private final List<DomElement> children = new ArrayList<>();
+    protected final List<DomElement> children = new ArrayList<>();
     /**
      * The reference on the parent {@link DomElement}.
      */
     private DomElement parent = null;
-
-    /**
-     * Represent the inner html text.
-     */
-    private String text;
 
     /**
      * Creates new {@link DomElement} instance with specified tag name.
@@ -51,9 +46,11 @@ public class DomElement {
      * @param element - the element to add to child list.
      * @return
      */
-    public DomElement add(final DomElement element) {
-	children.add(element);
-	element.parent = this;
+    public DomElement add(final DomElement... elements) {
+	for (final DomElement element : elements) {
+	    children.add(element);
+	    element.parent = this;
+	}
 	return this;
     }
 
@@ -104,17 +101,6 @@ public class DomElement {
     }
 
     /**
-     * Set the inner text for this {@link DomElement}.
-     *
-     * @param text
-     * @return
-     */
-    public DomElement text(final String text) {
-	this.text = text;
-	return this;
-    }
-
-    /**
      * Set the id for this {@link DomElement}.
      *
      * @param id
@@ -142,7 +128,7 @@ public class DomElement {
      * @param include - indicates whether to add or remove class name value.
      * @return
      */
-    public DomElement cLass(final String className, final boolean include) {
+    public DomElement clazz(final String className, final boolean include) {
 	ClassAttribute clazz = (ClassAttribute)attrs.get("class");
 	if (clazz == null) {
 	    clazz = new ClassAttribute();
@@ -162,7 +148,7 @@ public class DomElement {
      * @param classNames - the class names to add.
      * @return
      */
-    public DomElement cLass(final String... classNames) {
+    public DomElement clazz(final String... classNames) {
     	attrs.put("class", new ClassAttribute().values(classNames));
     	return this;
     }
@@ -237,7 +223,7 @@ public class DomElement {
     public DomElement attr(final String name, final Object value) {
 	switch (name) {
 	case "class":
-	    cLass(value.toString());
+	    clazz(value.toString());
 	    break;
 	case "style":
 	    style(value.toString());
@@ -274,7 +260,7 @@ public class DomElement {
     public String toString() {
 	final String attributes = StringUtils.join(attrs.values(), " ");
 	return "<" + tagName + (StringUtils.isEmpty(attributes) ? "" : (" " + attributes)) + ">"
-		+ (children.isEmpty() ? "" : "\n" + StringUtils.join(children, "\n") + "\n") + (StringUtils.isEmpty(text) ? "" : text)
+		+ (children.isEmpty() ? "" : "\n" + StringUtils.join(children, "\n") + "\n")
 		+"</" + tagName + ">";
     };
 }

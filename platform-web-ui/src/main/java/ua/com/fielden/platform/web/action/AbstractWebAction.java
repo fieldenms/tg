@@ -13,18 +13,24 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 public abstract class AbstractWebAction<F extends IFunctionalEntity> {
 
     private final Class<F> funcEntityClass;
+    private final String caption;
 
     /**
      * Creates new instance of {@link AbstractWebAction} for specified {@link IFunctionalEntity}.
      *
      * @param funcEntityClass
      */
-    public AbstractWebAction(final Class<F> funcEntityClass) {
+    public AbstractWebAction(final String caption, final Class<F> funcEntityClass) {
+	this.caption = caption;
 	this.funcEntityClass = funcEntityClass;
     }
 
     public Class<F> getFuncEntityClass() {
 	return funcEntityClass;
+    }
+
+    public String getCaption() {
+	return caption;
     }
 
     /**
@@ -34,7 +40,7 @@ public abstract class AbstractWebAction<F extends IFunctionalEntity> {
 
     /**
      * Will be invoked after receiving result from {@link IFunctionalEntity} server resource.
-     * The name of the result should be 'result' by convenience.
+     * The name of the result should be 'detail.response' by convenience.
      */
     public abstract JsCode postAction();
 
@@ -43,14 +49,4 @@ public abstract class AbstractWebAction<F extends IFunctionalEntity> {
      * The name of the error should be 'error' by convenience.
      */
     public abstract JsCode onError();
-
-    /**
-     * The generated counterpart of this method sets the <code>result</code> value for the scope object's property with the specified <code>propertyName</code>.
-     *
-     * @param propertyName
-     * @param result
-     */
-    protected void setScopeProperty(final String propertyName, final F result) {
-	// TODO Auto-generated method stub
-    }
 }

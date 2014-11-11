@@ -15,5 +15,5 @@ public interface IRenderable {
      *
      * @return
      */
-    DomElement render(DomElement parent);
+    DomElement render();
 }
