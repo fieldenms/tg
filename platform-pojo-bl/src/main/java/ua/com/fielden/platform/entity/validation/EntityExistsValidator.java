@@ -60,7 +60,14 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 final Class<T> entityType = co.getEntityType();
                 final fetch<T> fm = fetchOnly(entityType).with(ACTIVE);
                 final T ent = co.findByEntityAndFetch(fm, newValue);
-                exists = (ent != null && ent.<Boolean>get(ACTIVE));
+                // two possible cases:
+                // 1. if this entity is inactive activatable then an inactive value is appropriate for the activatable property
+                // 2. otherwise, the activatable value should also be active
+                if (entity instanceof ActivatableAbstractEntity && !entity.<Boolean>get(ACTIVE)) {
+                    exists = (ent != null);
+                } else {
+                    exists = (ent != null && ent.<Boolean>get(ACTIVE));
+                }
             } else {
                 exists = co.entityExists(newValue);
             }
