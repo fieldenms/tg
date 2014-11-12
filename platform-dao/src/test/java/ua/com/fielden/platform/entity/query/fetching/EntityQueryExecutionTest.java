@@ -1436,6 +1436,11 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(query).with(orderBy().prop("key").asc().model()).model());
         assertEquals("Incorrect key", "CAR1", vehicles.get(0).getKey());
     }
+    
+    @Test
+    public void test_that_optional_composite_key_members_have_correct_join_type() {
+        //final EntityResultQueryModel<TgAuthor> query = select(TgVehicle.class).where().negatedCondition(cond().prop("model.make.key").eq().val("MERC").model()).model();
+    }
 
     @Override
     protected void populateDomain() {
@@ -1522,7 +1527,10 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         save(new_composite(UserAndRoleAssociation.class, user3, warehouseOperatorRole));
 
         final TgPersonName chris = save(new_(TgPersonName.class, "Chris", "Chris"));
-        save(new_composite(TgAuthor.class, chris, "Date"));
+        save(new_composite(TgAuthor.class, chris, "Date", null));
+
+        final TgPersonName yurij = save(new_(TgPersonName.class, "Yurij", "Yurij"));
+        save(new_composite(TgAuthor.class, yurij, "Shcherbyna", "Mykolajovych"));
 
         System.out.println("\n   DATA POPULATED SUCCESSFULLY\n\n\n\n\n\n\n\n\n");
     }

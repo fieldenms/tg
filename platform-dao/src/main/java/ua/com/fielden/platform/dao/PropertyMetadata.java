@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -241,7 +242,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     public String toString() {
         return "\nname = " + name + " javaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + " hibType = "
                 + (hibType != null ? hibType/*.getClass().getSimpleName()*/: hibType) + " type = " + type + "\ncolumn(s) = " + columns + " nullable = " + nullable
-                + " calculated = " + isCalculated();
+                + " calculated = " + isCalculated() + (isCalculated() ? " exprModel = " + expressionModel : "");
     }
 
     @Override
