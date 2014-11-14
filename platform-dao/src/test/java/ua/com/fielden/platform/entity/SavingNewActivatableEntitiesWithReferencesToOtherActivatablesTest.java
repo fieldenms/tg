@@ -38,6 +38,15 @@ public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest e
     }
 
     @Test
+    public void saving_new_inactive_with_self_reference_should_succeed() {
+        final TgCategory cat5 = save(new_(TgCategory.class, "Cat5").setActive(false));
+        final TgCategory savedCat5 = save(cat5.setParent(cat5));
+
+        assertFalse(savedCat5.isActive());
+        assertFalse(savedCat5.getParent().isActive());
+    }
+
+    @Test
     public void saving_new_active_entity_with_stale_reference_should_succeed() {
         final TgCategory cat1_1 = ao(TgCategory.class).findByKey("Cat1");
         final TgCategory cat1_2 = ao(TgCategory.class).findByKey("Cat1");

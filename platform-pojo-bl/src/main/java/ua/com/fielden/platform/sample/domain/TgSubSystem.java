@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -23,28 +23,36 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 @CompanionObject(ITgSubSystem.class)
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
-public class TgSubSystem extends ActivatableAbstractEntity<String> {
+public class TgSubSystem extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
     @Title("Category")
-    private TgCategory category;
+    private TgCategory firstCategory;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Second Category", desc = "Desc")
+    private TgCategory secondCategory;
 
     @Observable
-    @EntityExists(TgCategory.class)
-    public TgSubSystem setCategory(final TgCategory category) {
-        this.category = category;
+    public TgSubSystem setSecondCategory(final TgCategory secondCategory) {
+        this.secondCategory = secondCategory;
         return this;
     }
 
-    public TgCategory getCategory() {
-        return category;
+    public TgCategory getSecondCategory() {
+        return secondCategory;
     }
 
-    @Override
     @Observable
-    public TgSubSystem setActive(final boolean active) {
-        super.setActive(active);
+    public TgSubSystem setFirstCategory(final TgCategory category) {
+        this.firstCategory = category;
         return this;
     }
+
+    public TgCategory getFirstCategory() {
+        return firstCategory;
+    }
+
 }

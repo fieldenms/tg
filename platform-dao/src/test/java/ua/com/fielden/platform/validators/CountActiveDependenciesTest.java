@@ -71,11 +71,11 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
         save(new_(TgSystem.class, "Sys3").setActive(false).setCategory(cat3));
         save(new_(TgSystem.class, "Sys4").setActive(false).setCategory(cat3));
 
-        save(new_(TgSubSystem.class, "SubSys1").setActive(true).setCategory(cat1));
-        save(new_(TgSubSystem.class, "SubSys2").setActive(false).setCategory(cat1));
-        save(new_(TgSubSystem.class, "SubSys3").setActive(true).setCategory(cat2));
-        save(new_(TgSubSystem.class, "SubSys4").setActive(false).setCategory(cat3));
-        save(new_(TgSubSystem.class, "SubSys5").setActive(false).setCategory(cat3));
+        save(new_(TgSystem.class, "Sys5").setActive(true).setCategory(cat1));
+        save(new_(TgSystem.class, "Sys6").setActive(false).setCategory(cat1));
+        save(new_(TgSystem.class, "Sys7").setActive(true).setCategory(cat2));
+        save(new_(TgSystem.class, "Sys8").setActive(false).setCategory(cat3));
+        save(new_(TgSystem.class, "Sys9").setActive(false).setCategory(cat3));
     }
 
     @Override
