@@ -9,7 +9,6 @@ require.config({
 		// internal modules:
 		'log': 'resources/logging/log'
 	},
-	shim: { 
-		// used for non-AMD modules
+	shim: { // used for non-AMD modules
 	}
 });
