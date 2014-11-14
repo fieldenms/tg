@@ -19,6 +19,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
+import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 
@@ -128,24 +129,37 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
 
     @Test
     public void changing_activatable_properties_should_lead_to_decrement_of_dereferenced_instances_and_increment_of_just_referenced_ones() {
-        final TgSubSystem sys1 = ao(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "Sys1");
-        final TgCategory cat1BeforeChange = sys1.getFirstCategory();
+        final TgSystem sys1 = ao(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+        final TgCategory cat1BeforeChange = sys1.getCategory();
         assertEquals(Integer.valueOf(2), cat1BeforeChange.getRefCount());
         final TgCategory cat6 = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
 
-        final TgSubSystem savedSys1 = save(sys1.setFirstCategory(cat6));
+        final TgSystem savedSys1 = save(sys1.setCategory(cat6));
         assertEquals(cat1BeforeChange.getRefCount() - 1, ao(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
-        assertEquals(cat6.getRefCount() + 1, savedSys1.getFirstCategory().getRefCount() + 0);
+        assertEquals(cat6.getRefCount() + 1, savedSys1.getCategory().getRefCount() + 0);
     }
 
     @Test
+    public void non_activatable_entities_should_not_effect_ref_count_of_referenced_activatables() {
+        final TgSubSystem subSys1 = ao(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SubSys1");
+        final TgCategory cat6BeforeChange = subSys1.getFirstCategory();
+        assertEquals(Integer.valueOf(2), cat6BeforeChange.getRefCount());
+        final TgCategory cat1 = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+
+        final TgSubSystem savedSubSys1 = save(subSys1.setFirstCategory(cat1).setSecondCategory(null));
+        assertEquals(cat6BeforeChange.getRefCount(), ao(TgCategory.class).findByKey("Cat6").getRefCount());
+        assertEquals(cat1.getRefCount(), savedSubSys1.getFirstCategory().getRefCount());
+    }
+
+
+    @Test
     public void changing_and_unsetting_activatable_properties_should_lead_to_decrement_of_dereferenced_instances_and_increment_of_just_referenced_ones() {
-        final TgSubSystem sys2 = ao(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "Sys2");
+        final TgSystem sys2 = ao(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
         final TgCategory cat6BeforeChange = sys2.getFirstCategory();
         assertEquals(Integer.valueOf(2), cat6BeforeChange.getRefCount());
         final TgCategory cat1 = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
 
-        final TgSubSystem savedSys2 = save(sys2.setFirstCategory(cat1).setSecondCategory(null));
+        final TgSystem savedSys2 = save(sys2.setFirstCategory(cat1).setSecondCategory(null));
         assertEquals(cat6BeforeChange.getRefCount() - 2, ao(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
         assertEquals(cat1.getRefCount() + 1, savedSys2.getFirstCategory().getRefCount() + 0);
     }
@@ -175,13 +189,13 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
     @Test
     public void concurrent_referencing_of_activatable_that_has_just_became_inactive_should_have_been_prevented() {
         final TgCategory cat7 = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
-        final TgSubSystem subSystem = new_(TgSubSystem.class, "Sys3").setFirstCategory(cat7);
+        final TgSystem sys3 = new_(TgSystem.class, "Sys3").setActive(true).setFirstCategory(cat7);
 
         // let's make concurrent deactivation of just referenced cat7
         save(cat7.setActive(false));
 
         try {
-            save(subSystem);
+            save(sys3);
             fail("An attempt to save successfully associated, but alread inactive activatable should fail.");
         } catch (final Result ex) {
             assertEquals("EntityExists validator: Could not find entity Cat7", ex.getMessage());
@@ -198,10 +212,12 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
         final TgCategory cat5 = save(new_(TgCategory.class, "Cat5").setActive(true));
         save(cat5.setParent(cat5));
 
-        save(new_(TgSubSystem.class, "Sys1").setFirstCategory(cat1));
+        save(new_(TgSystem.class, "Sys1").setActive(true).setCategory(cat1));
         final TgCategory cat6 = save(new_(TgCategory.class, "Cat6").setActive(true));
         final TgCategory cat7 = save(new_(TgCategory.class, "Cat7").setActive(true));
-        save(new_(TgSubSystem.class, "Sys2").setFirstCategory(cat6).setSecondCategory(cat6));
+        save(new_(TgSubSystem.class, "SubSys1").setFirstCategory(cat6).setSecondCategory(cat6));
+
+        save(new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat6).setSecondCategory(cat6));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 import java.util.List;
@@ -9,7 +10,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgSubSystem;
+import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 
@@ -58,9 +59,9 @@ public class AutomaticConflictResolutionTest extends AbstractDomainDrivenTestCas
     public void concurrent_setting_of_activatable_property_should_not_lead_to_conflict_resolution_errors() {
         final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
 
-        save(new_(TgSubSystem.class, "Sys2").setFirstCategory(cat1));
+        save(new_(TgSystem.class, "Sys2").setActive(true).setCategory(cat1));
         try {
-            save(new_(TgSubSystem.class, "Sys3").setFirstCategory(cat1));
+            save(new_(TgSystem.class, "Sys3").setActive(true).setCategory(cat1));
             assertEquals(Integer.valueOf(3), ao(TgCategory.class).findByKey("Cat1").getRefCount());
         } catch (final Result ex) {
             fail("saving should have been successful");
@@ -73,7 +74,7 @@ public class AutomaticConflictResolutionTest extends AbstractDomainDrivenTestCas
         TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
         cat1 = save(cat1.setParent(cat1));
 
-        save(new_(TgSubSystem.class, "Sys1").setFirstCategory(cat1));
+        save(new_(TgSystem.class, "Sys1").setActive(true).setCategory(cat1));
     }
 
     @Override

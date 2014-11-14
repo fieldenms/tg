@@ -30,8 +30,42 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @Title("Category")
     private TgCategory category;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "First Cat", desc = "Desc")
+    private TgCategory firstCategory;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Second Cat", desc = "Desc")
+    private TgCategory secondCategory;
+
     @Observable
     @EntityExists(TgCategory.class)
+    public TgSystem setSecondCategory(final TgCategory secondCategory) {
+        this.secondCategory = secondCategory;
+        return this;
+    }
+
+    public TgCategory getSecondCategory() {
+        return secondCategory;
+    }
+
+
+
+
+    @Observable
+    public TgSystem setFirstCategory(final TgCategory firstCategory) {
+        this.firstCategory = firstCategory;
+        return this;
+    }
+
+    public TgCategory getFirstCategory() {
+        return firstCategory;
+    }
+
+
+    @Observable
     public TgSystem setCategory(final TgCategory category) {
         this.category = category;
         return this;

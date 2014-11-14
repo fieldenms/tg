@@ -50,12 +50,12 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    public void incorrect_number_of_active_dependencies_for_cat3() {
+    public void cat3_is_referenced_twice_by_the_same_active_entity_which_should_be_counted_as_one_dependency() {
         final TgCategory cat3 = ao(TgCategory.class).findByKey("Cat3");
         assertNotNull(cat3);
 
         final long count = Validators.countActiveDependencies(domainProvider.entityTypes(), cat3, coAggregates);
-        assertEquals(0, count);
+        assertEquals(1, count);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
         save(new_(TgSystem.class, "Sys3").setActive(false).setCategory(cat3));
         save(new_(TgSystem.class, "Sys4").setActive(false).setCategory(cat3));
 
-        save(new_(TgSystem.class, "Sys5").setActive(true).setCategory(cat1));
+        save(new_(TgSystem.class, "Sys5").setActive(true).setCategory(cat1).setFirstCategory(cat3).setSecondCategory(cat3));
         save(new_(TgSystem.class, "Sys6").setActive(false).setCategory(cat1));
         save(new_(TgSystem.class, "Sys7").setActive(true).setCategory(cat2));
         save(new_(TgSystem.class, "Sys8").setActive(false).setCategory(cat3));

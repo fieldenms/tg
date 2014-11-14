@@ -257,24 +257,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
             // the easiest way to do that is to load entity by id using the current session
             // also, need to handle activatable properties in a special way that manages their refCount and refCount of any previously referenced instance
-            if (prop.isActivatable()) {
+            // but only if the entity being saving is an activatable
+            if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity) {
                 // if value is null then an activatable entity has been dereferenced and its refCount needs to be decremented
-                // but only if the dereferenced value is an active activatable and
-                // the entity being saved is not an activatable that is being just made active -- so previously it was not counted as a reference
+                // but only if the dereferenced value is an active activatable and the entity being saved is not being made active -- thus previously it was not counted as a reference
                 if (value == null) {
-                    final boolean activatableCondition;
-                    if (entity instanceof ActivatableAbstractEntity) {
-                        final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
-                        activatableCondition = activeProp.isDirty() && activeProp.getValue();
-                    } else {
-                        activatableCondition = false;
-                    }
+                    final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
+                    final boolean beingActivated = activeProp.isDirty() && activeProp.getValue();
                     // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
                     // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
                     final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
                     // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
                     // refCount > 0 condition is used here due to Hibernates inability to load boolean value for property active (ordinary property)
-                    if (!activatableCondition && persistedValue.getRefCount() > 0 && !entity.equals(persistedValue)) { // avoid counting self-references
+                    if (!beingActivated && persistedValue.getRefCount() > 0 && !entity.equals(persistedValue)) { // avoid counting self-references
                         getSession().update(persistedValue.decRefCount());
                     }
 
@@ -290,16 +285,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     // also need increment refCount for a newly referenced activatable
                     final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), ((AbstractEntity<?>) value).getId());
                     if (!entity.equals(persistedValue)) { // avoid counting self-references
-                        // now let's check if the entity itself is activatable
+                        // now let's check if the entity itself is an active activatable
                         // as this influences the decision to increment refCount for the newly referenced activatable
-                        if (entity instanceof ActivatableAbstractEntity) {
-                            // is entity active?
-                            // because, if it's not then there is no reason to increment refCout for the referenced instance
-                            // in other words, inactive entity does not count as an active referencer
-                            if (entity.<Boolean> get(ACTIVE) == true) {
-                                getSession().update(persistedValue.incRefCount());
-                            }
-                        } else {
+                        // because, if it's not then there is no reason to increment refCout for the referenced instance
+                        // in other words, inactive entity does not count as an active referencer
+                        if (entity.<Boolean> get(ACTIVE) == true) {
                             getSession().update(persistedValue.incRefCount());
                         }
                     }
@@ -421,8 +411,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         if (entity instanceof ActivatableAbstractEntity) {
             final ActivatableAbstractEntity<?> activatable = (ActivatableAbstractEntity<?>) entity;
             shouldProcessActivatableProperties = activatable.isActive();
-        } else {
-            shouldProcessActivatableProperties = true;
+        } else { // refCount should not be updated if referenced by non-activatable
+            shouldProcessActivatableProperties = false; // setting true would enable refCount update in case of saving non-activatable
         }
 
         if (shouldProcessActivatableProperties) {

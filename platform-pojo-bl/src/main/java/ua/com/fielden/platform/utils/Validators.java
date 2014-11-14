@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere1;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -49,7 +50,7 @@ public final class Validators {
      * @return <i>true</i> if there is at least one overlapped entity.
      */
     public static <T extends AbstractEntity<?>> boolean overlaps(//
-            /*    */final T entity, //
+    /*    */final T entity, //
             final IEntityDao<T> controller, //
             final String fromDateProperty, //
             final String toDateProperty, //
@@ -71,7 +72,7 @@ public final class Validators {
      * @return
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
-            /*    */final T entity, //
+    /*    */final T entity, //
             final fetch<T> fetchModel,//
             final IEntityDao<T> controller, //
             final String fromDateProperty, //
@@ -96,7 +97,7 @@ public final class Validators {
      * @return
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
-            /*    */final T entity, //
+    /*    */final T entity, //
             final IEntityDao<T> controller, //
             final String fromDateProperty, //
             final String toDateProperty, //
@@ -105,8 +106,8 @@ public final class Validators {
     }
 
     /**
-     * Analyses all entity types on the subject of having an active dependency on the specified value.
-     * This implementation assumes that all involved entities have boolean property "active".
+     * Analyses all entity types on the subject of having an active dependency on the specified value. This implementation assumes that all involved entities have boolean property
+     * "active".
      *
      * @param entityTypes
      * @param entityType
@@ -138,7 +139,7 @@ public final class Validators {
             IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(mkQueryToCountReferencesInType(firstDependentEntityType, propsForFirstEntityType));
 
             // need to do the same operation with other dependent types in case there are more than one
-            while(iter.hasNext()) {
+            while (iter.hasNext()) {
                 final Class<? extends AbstractEntity<?>> nextDependentEntityType = iter.next();
                 final List<Field> propsForNextEntityType = Finder.findPropertiesOfSpecifiedType(nextDependentEntityType, entityType);
                 expressionModelInProgress = expressionModelInProgress.add().model(mkQueryToCountReferencesInType(nextDependentEntityType, propsForNextEntityType));
@@ -153,7 +154,8 @@ public final class Validators {
     }
 
     /**
-     * Makes an EQL model that counts all instances of the specified entity <code>entityType</code> that contain references to the entity of interest that are expressed as properties <code>props</code>.
+     * Makes an EQL model that counts all instances of the specified entity <code>entityType</code> that contain references to the entity of interest that are expressed as
+     * properties <code>props</code>.
      *
      * @param entityType
      * @param props
@@ -164,21 +166,43 @@ public final class Validators {
             final List<Field> props // properties of the owning entity
     ) {
         final Iterator<Field> iter = props.iterator();
-        final Field firstProp = iter.next();
-        ICompoundCondition0<? extends AbstractEntity<?>> cond =
-                select(entityType).
-                where().
-                    prop("id").ne().extProp("id").and(). // this is to prevent counting self-references, relies on throughout ID
-                    prop("active").eq().val(true).and().
-                    prop(firstProp.getName()).eq().extProp("id");
+        if (props.size() == 1) {
+            final Field firstProp = iter.next();
+            final ICompoundCondition0<? extends AbstractEntity<?>> cond =
+                    select(entityType).
+                            where().
+                            prop("id").ne().extProp("id").and(). // this is to prevent counting self-references, relies on throughout ID
+                            prop("active").eq().val(true).and().
+                            prop(firstProp.getName()).eq().extProp("id");
 
-        // need to add conditions to cover all properties of the referenced type in case there are more than one
-        while(iter.hasNext()) {
-            cond = cond.and().prop(iter.next().getName()).eq().extProp("id");
+            return cond.yield().countAll().modelAsPrimitive();
+
+        } else {
+            // need to add conditions to cover all properties of the referenced type using OR operation in case there are more than one
+            final Field firstProp = iter.next();
+            IWhere1<? extends AbstractEntity<?>> where =
+                    select(entityType).
+                            where().
+                            prop("id").ne().extProp("id").and(). // this is to prevent counting self-references, relies on throughout ID
+                            prop("active").eq().val(true).and().
+                            begin().
+                                prop(firstProp.getName()).eq().extProp("id").or();
+
+
+            ICompoundCondition0<? extends AbstractEntity<?>> cond = null;
+            do {
+                final Field prop = iter.next();
+                if (iter.hasNext()) {
+                    where = where.prop(prop.getName()).eq().extProp("id").or();
+                } else {
+                    cond = where.prop(prop.getName()).eq().extProp("id").end();
+                }
+
+            } while (iter.hasNext());
+
+            // yield count
+            return cond.yield().countAll().modelAsPrimitive();
         }
-
-        // yield count
-        return cond.yield().countAll().modelAsPrimitive();
     }
 
     /**
@@ -219,8 +243,8 @@ public final class Validators {
 
         // Condition for the end of the period for potentially overlapped existing entities
         condition_1: cc = cc.and().//
-                /*              */begin().//
-                /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
+        /*              */begin().//
+        /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
                 /*                  */or().//
                 /*                  */prop(toDateProperty).gt().val(entity.get(fromDateProperty))./* the end of the potentially overlapped entity is AFTER the fromDateProperty value of the entity under test */
                 /*              */end();//.
@@ -232,8 +256,8 @@ public final class Validators {
         // Closed ended period does require an additional condition to ensure the beginning of the potentially overlapped entity if BEFORE that end value of the entity under test
         condition_2: if (entity.get(toDateProperty) != null) {
             cc = cc.and().//
-                    /*    */begin().//
-                    /*        */prop(fromDateProperty).lt().val(entity.get(toDateProperty))./* the beginning of the potentially overlapped entity is BEFORE the toDateProperty value of the entity under test */
+            /*    */begin().//
+            /*        */prop(fromDateProperty).lt().val(entity.get(toDateProperty))./* the beginning of the potentially overlapped entity is BEFORE the toDateProperty value of the entity under test */
                     /*    */end();
         }
 
