@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -33,6 +34,21 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     @IsProperty
     @Title(value = "Dummy non persistent", desc = "Desc")
     private Integer dummy;
+
+
+    @Override
+    @Observable
+    public TgCategory setKey(final String key) {
+        super.setKey(key);
+        return this;
+    }
+
+    @Override
+    @Observable
+    public TgCategory setDesc(final String desc) {
+        super.setDesc(desc);
+        return this;
+    }
 
     @Observable
     public TgCategory setDummy(final Integer dummy) {

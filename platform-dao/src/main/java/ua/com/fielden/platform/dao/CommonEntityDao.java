@@ -371,9 +371,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // comparison of property values is most likely to trigger lazy loading
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
             final String name = prop.getName();
-            if ((persistedEntity.get(name) == null && entity.get(name) != null) ||
-                    (persistedEntity.get(name) != null && entity.get(name) == null) ||
-                    !persistedEntity.get(name).equals(entity.get(name))) {
+            final Object oldValue = prop.getOriginalValue();
+            final Object newValue = prop.getValue();
+            final Object persistedValue = persistedEntity.get(name);
+            if ((persistedValue == null && oldValue != null && newValue != null) ||
+                (persistedValue != null && oldValue == null && newValue == null) ||
+                (persistedValue != null && !persistedValue.equals(oldValue) && !persistedValue.equals(newValue))) {
                 return false;
             }
         }

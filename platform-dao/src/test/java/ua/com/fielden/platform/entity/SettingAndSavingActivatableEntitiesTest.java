@@ -171,6 +171,23 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
         assertEquals(cat1.getRefCount() - 1, ao(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
     }
 
+
+    @Test
+    public void concurrent_referencing_of_activatable_that_has_just_became_inactive_should_have_been_prevented() {
+        final TgCategory cat7 = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
+        final TgSubSystem subSystem = new_(TgSubSystem.class, "Sys3").setFirstCategory(cat7);
+
+        // let's make concurrent deactivation of just referenced cat7
+        save(cat7.setActive(false));
+
+        try {
+            save(subSystem);
+            fail("An attempt to save successfully associated, but alread inactive activatable should fail.");
+        } catch (final Result ex) {
+            assertEquals("EntityExists validator: Could not find entity Cat7", ex.getMessage());
+        }
+    }
+
     @Override
     protected void populateDomain() {
         TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
