@@ -2,46 +2,98 @@
 
 <polymer-element name="tg-serialiser" hidden>
     <script>
-        //define(['angular'], function (angular) {
-         //    'use strict';
-         //    return angular.module('tgSerialiser').factory('serialiser', function () {
-         //        return {
-         //            serialise: function (envelop) {
-         //
-         //            },
-         //
-         //            deserialise: function (envelop) {
-         //                var objectMap = {},
-         //                    objectWithRefId = [],
-         //                    deserialiseObject = function (obj, propName) {
-         //                        var idType;
-         //                        if (obj['@id']) {
-         //                            objectMap[obj['@id']] = obj;
-         //                            idType = obj['@id'].split('#');
-         //                            if (idType.length !== 2) {
-         //                                idType = obj['@id'].split('#');
-         //                            }
-         //                        }
-         //                    };
-         //                if (Array.isArray(envelop)) {
-         //                    envelop.forEach(function (elem) {
-         //                        this.deserialise(elem);
-         //                    });
-         //                    return envelop;
-         //                } else if (typeof envelop === 'object') {
-         //                    return deserialiseObject(envelop);
-         //                }
-         //            }
-         //        };
-         //    });
-         //});
-        Polymer({
-            serialise: function (envelope) {
-                return "serialise";
-            },
-            deserialise: function (envelope) {
-                return "deserialise";
-            }
-        });
+        (function () {
+            var convertToType = function (value) {
+                var v = Number(value);
+                return !isNaN(v) ? v :
+                    value === "undefined" ? undefined : value === "null" ? null : value === "true" ? true : value === "false" ? false : value;
+            };
+            Polymer({
+                serialise: function (envelope) {
+                    var objectMap = {},
+                        serialise = function (obj) {
+                            var serialisedObj,
+                                hash,
+                                property;
+                            // Determine the type of the obj to serilise.
+                            if (Array.isArray(obj)) {
+                                // If the type of obj is array then create new array and push into it each deserialised element.
+                                serialisedObj = [];
+                                obj.forEach(function (elem) {
+                                    serialisedObj.push(serialise(elem));
+                                });
+                            } else if (obj && typeof obj === 'object') {
+                                serialisedObj = {};
+                                // If the type is an object and if it has _id and _type properties then it is an entity.
+                                if (obj.hasOwnProperty("_id") && obj.hasOwnProperty("_type")) {
+                                    hash = obj["_type"] + "#" + obj["_id"];
+                                    //Find the object with hash in the object map. If it is there then return it.
+                                    if (objectMap[hash]) {
+                                        serialisedObj["@ref_id"] = hash;
+                                        return serialisedObj;
+                                    } else {
+                                        // If obj wasn't found in object map then
+                                        // create object and add property "@id" to that object, also add created object to object map with key "@id".
+                                        // That object map caontains entity references in order to use it later for initialising cross referenced objects. 
+                                        serialisedObj["@id"] = obj["_type"] + "#" + obj["_id"];
+                                        objectMap[serialisedObj["@id"]] = serialisedObj;
+                                    }
+                                }
+                                // All object properties will be copied to new object. Just skip "_id" and "_type" properties.
+                                for (property in obj) {
+                                    if (property !== "_id" && property !== "_type") {
+                                        serialisedObj[property] = serialise(obj[property]);
+                                    }
+                                }
+                            } else {
+                                //All other type of objects will be just copied.
+                                serialisedObj = obj;
+                            }
+                            return serialisedObj;
+                        };
+                    return serialise(envelope);
+                },
+                deserialise: function (envelope) {
+                    var objectMap = {},
+                        deserialise = function (obj) {
+                            var deserialisedObject,
+                                hash,
+                                property;
+                            // Determine the type of object to deserialise.
+                            if (Array.isArray(obj)) {
+                                // If it is an array then create new array and add deserialised eleemnts to that array.
+                                deserialisedObject = [];
+                                obj.forEach(function (elem) {
+                                    deserialisedObject.push(deserialise(elem));
+                                });
+                            } else if (obj && typeof obj === 'object') {
+                                deserialisedObject = {};
+                                // If it is an object with "@ref_id" property then find it in object map and return.
+                                // Object map contains previously deserialised objects. This map provides the support for cross reference.
+                                if (obj.hasOwnProperty("@ref_id")) {
+                                    return objectMap[obj["@ref_id"]];
+                                } else if (obj.hasOwnProperty("@id")) {
+                                    // If it is an object with "@id" property then create new object with "_id" and "_type" properties and add to the object map.
+                                    hash = obj["@id"].split("#");
+                                    deserialisedObject["_id"] = convertToType(hash[1]);
+                                    deserialisedObject["_type"] = convertToType(hash[0]);
+                                    objectMap[obj["@id"]] = deserialisedObject;
+                                }
+                                // Copy all properties from obj to new deserialised object. Skip "@id" proeprty.
+                                for (property in obj) {
+                                    if (property !== "@id") {
+                                        deserialisedObject[property] = deserialise(obj[property]);
+                                    }
+                                }
+                            } else {
+                                deserialisedObject = obj;
+                            }
+                            return deserialisedObject;
+                        };
+                    return deserialise(envelope);
+                }
+
+            });
+        })();
     </script>
 </polymer-element>

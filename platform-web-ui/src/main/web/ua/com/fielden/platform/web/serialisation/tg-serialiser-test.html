@@ -25,9 +25,91 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <script>
         document.addEventListener('polymer-ready', function () {
-            var serialiser = document.querySelector('#seriliser');
-            // assert.equal(serialiser.deserialise({}), {}, "does not equal");
-            assert.equal(serialiser.deserialise([]), [], "does not equal");
+            var inst1 = {
+                    _id: 1,
+                    _type: 12,
+                    key: "entity key",
+                    desc: "entity description",
+                    detail: {
+                        _id: 2,
+                        _type: 13,
+                        key: inst1
+                    }
+                },
+                inst2 = {
+                    _id: 3,
+                    _type: 12,
+                    key: "entity key1",
+                    desc: "entity description1",
+                    detail: {
+                        _id: 4,
+                        _type: 13,
+                        key: inst2
+                    }
+                },
+                objToSerialise = {
+                    cause: "Testing purposes",
+                    ex: "No exception",
+                    instance: {
+                        _id: null,
+                        _type: 11,
+                        key: "QueryRunner",
+                        desc: "QueryRunner description",
+                        page: {
+                            _id: null,
+                            _type: 10,
+                            key: "Page",
+                            desc: "Page description",
+                            numberOfPages: 1,
+                            pageNo: 0,
+                            results: [
+                                inst1,
+                                inst2
+                            ],
+                            summary: {
+                                _id: null,
+                                _type: 12,
+                                total: 2
+                                
+                            }
+                        },
+                        pageCapacity: 25,
+                        query: null
+                    }
+                },
+                serialiser = document.querySelector('#seriliser'),
+                restoredObj = serialiser.deserialise(serialiser.serialise(objToSerialise));
+            assert.equal(restoredObj.cause, objToSerialise.cause, "does not equal cause");
+            assert.equal(restoredObj.ex, objToSerialise.ex, "does not equal ex");
+            assert.equal(restoredObj.instance._id, objToSerialise.instance._id, "does not equal instance id");
+            assert.equal(restoredObj.instance._type, objToSerialise.instance._type, "does not equal instance type");
+            assert.equal(restoredObj.instance.key, objToSerialise.instance.key, "does not equal instance key");
+            assert.equal(restoredObj.instance.desc, objToSerialise.instance.desc, "does not equal instance desc");
+            assert.equal(restoredObj.instance.pageCapacity, objToSerialise.instance.pageCapacity, "does not equal instance page capacity");
+            assert.equal(restoredObj.instance.query, objToSerialise.instance.query, "does not equal instance query");
+            assert.equal(restoredObj.instance.page._id, objToSerialise.instance.page._id, "does not equal page id");
+            assert.equal(restoredObj.instance.page._type, objToSerialise.instance.page._type, "does not equal page type");
+            assert.equal(restoredObj.instance.page.key, objToSerialise.instance.page.key, "does not equal page key");
+            assert.equal(restoredObj.instance.page.desc, objToSerialise.instance.page.desc, "does not equal page desc");
+            assert.equal(restoredObj.instance.page.numberOfPages, objToSerialise.instance.page.numberOfPages, "does not equal number of pages");
+            assert.equal(restoredObj.instance.page.pageNo, objToSerialise.instance.page.pageNo, "does not equal page number");
+            assert.equal(restoredObj.instance.page.results[0]._id, objToSerialise.instance.page.results[0]._id, "does not equal first result id");
+            assert.equal(restoredObj.instance.page.results[0]._type, objToSerialise.instance.page.results[0]._type, "does not equal first result type");
+            assert.equal(restoredObj.instance.page.results[0].key, restoredObj.instance.page.results[0].key, "does not equal first result key");
+            assert.equal(restoredObj.instance.page.results[0].desc, restoredObj.instance.page.results[0].desc, "does not equal first result desc");
+            assert.equal(restoredObj.instance.page.results[0].detail._id, restoredObj.instance.page.results[0].detail._id, "does not equal first result detail id");
+            assert.equal(restoredObj.instance.page.results[0].detail._type, restoredObj.instance.page.results[0].detail._type, "does not equal first result detail type");
+            assert.equal(restoredObj.instance.page.results[0].detail.key, restoredObj.instance.page.results[0].detail.key, "does not equal first result detail key");
+            assert.equal(restoredObj.instance.page.results[1]._id, objToSerialise.instance.page.results[1]._id, "does not equal second result id");
+            assert.equal(restoredObj.instance.page.results[1]._type, objToSerialise.instance.page.results[1]._type, "does not equal second result type");
+            assert.equal(restoredObj.instance.page.results[1].key, restoredObj.instance.page.results[1].key, "does not equal second result key");
+            assert.equal(restoredObj.instance.page.results[1].desc, restoredObj.instance.page.results[1].desc, "does not equal second result desc");
+            assert.equal(restoredObj.instance.page.results[1].detail._id, restoredObj.instance.page.results[1].detail._id, "does not equal second result detail id");
+            assert.equal(restoredObj.instance.page.results[1].detail._type, restoredObj.instance.page.results[1].detail._type, "does not equal second result detail type");
+            assert.equal(restoredObj.instance.page.results[1].detail.key, restoredObj.instance.page.results[1].detail.key, "does not equal second result detail key");
+            assert.equal(restoredObj.instance.page.summary._id, objToSerialise.instance.page.summary._id, "does not equal page summary id");
+            assert.equal(restoredObj.instance.page.summary._type, objToSerialise.instance.page.summary._type, "does not equal page summary type");
+            assert.equal(restoredObj.instance.page.summary.total, objToSerialise.instance.page.summary.total, "does not equal page summary totals");
             done();
         });
     </script>
