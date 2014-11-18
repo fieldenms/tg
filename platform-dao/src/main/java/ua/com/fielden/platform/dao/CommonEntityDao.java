@@ -268,8 +268,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
                     final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
                     // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
-                    // refCount > 0 condition is used here due to Hibernates inability to load boolean value for property active (ordinary property)
-                    if (!beingActivated && persistedValue.getRefCount() > 0 && !entity.equals(persistedValue)) { // avoid counting self-references
+                    if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
                         getSession().update(persistedValue.decRefCount());
                     }
 
@@ -317,17 +316,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (value != null) { // if there is actually some value
                         // load activatable value
                         final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), value.getId());
+
                         // if activatable property value is not a self-reference
                         // then need to check if it is active and if so increment its refCount
                         // otherwise, if activatable is not active then we've got an erroneous situation that should prevent activation of entity
                         if (!entity.equals(persistedValue)) {
                             if (activeProp.getValue()) { // is entity being activated?
-                                if (persistedValue.getRefCount() == 0) { // if activatable is not active then this is an error
+                                if (!persistedValue.isActive()) { // if activatable is not active then this is an error
                                     throw Result.failure(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, prop.getType()));
                                 } else { // otherwise, increment refCount
                                     getSession().update(persistedValue.incRefCount());
                                 }
-                            } else if (persistedValue.getRefCount() > 0) { // is entity being deactivated, but is referencing an active activatable?
+                            } else if (persistedValue.isActive()) { // is entity being deactivated, but is referencing an active activatable?
                                 getSession().update(persistedValue.decRefCount());
                             }
                         }

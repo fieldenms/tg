@@ -55,7 +55,7 @@ public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends
         return this;
     }
 
-    public final boolean isActive() {
+    public boolean isActive() {
         return active;
     }
 

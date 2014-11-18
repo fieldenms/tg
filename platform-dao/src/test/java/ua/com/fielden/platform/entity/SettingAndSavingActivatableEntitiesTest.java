@@ -82,7 +82,11 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
     public void activating_entity_that_is_referenced_by_inactive_should_be_permitted_but_not_change_its_ref_count_and_also_update_referenced_not_dirty_active_activatables() {
         final TgCategory cat3 = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat3");
         assertEquals(Integer.valueOf(0), cat3.getRefCount());
+        final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
+        assertTrue(cat1.isActive());
+
         final TgCategory savedCat3 = save(cat3.setActive(true));
+        assertTrue(ao(TgCategory.class).findByKey("Cat1").isActive());
         assertEquals("RefCount should not change", cat3.getRefCount(), savedCat3.getRefCount());
         assertEquals("RefCount of the referenced non-dirty activatable should have increated by 1.", cat3.getParent().getRefCount() + 1, savedCat3.getParent().getRefCount() + 0);
     }
