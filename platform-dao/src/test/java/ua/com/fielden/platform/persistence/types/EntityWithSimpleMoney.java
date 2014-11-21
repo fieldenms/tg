@@ -1,25 +1,28 @@
 package ua.com.fielden.platform.persistence.types;
 
+import ua.com.fielden.platform.dao.EntityWithSimpleMoneyDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
 /**
  * This is a test entity, which is currently used for testing of class {@link Money} in simple (without currency) mapping configuration.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @KeyType(String.class)
 @DescTitle("Description")
 @MapEntityTo("SIMPLE_MONEY_CLASS_TABLE")
+@CompanionObject(EntityWithSimpleMoneyDao.class)
 public class EntityWithSimpleMoney extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

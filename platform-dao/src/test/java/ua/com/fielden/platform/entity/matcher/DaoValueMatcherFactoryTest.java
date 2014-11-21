@@ -1,13 +1,19 @@
 package ua.com.fielden.platform.entity.matcher;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+
 import java.util.List;
 
 import org.junit.Test;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgWagon;
@@ -17,25 +23,20 @@ import ua.com.fielden.platform.sample.domain.TgWoStatusRequiredField;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 /**
  * Test the ability of the ValueMatcherFactory to correctly provide value matchers.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
-    private DaoFactory daoFactory = getInstance(DaoFactory.class);
+    private ICompanionObjectFinder coFinder = getInstance(ICompanionObjectFinder.class);
     private EntityFactory entityFactory = getInstance(EntityFactory.class);
 
     @Test
     public void test_instantiation() {
-        final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
+        final IValueMatcherFactory vmFactory = new ValueMatcherFactory(coFinder, entityFactory);
 
         final IValueMatcher<?> matcher = vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
         assertNotNull("Should have constructed a value matcher.", matcher);
@@ -45,7 +46,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_matcher_usage_with_model() {
-        final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
+        final IValueMatcherFactory vmFactory = new ValueMatcherFactory(coFinder, entityFactory);
 
         final IValueMatcher<TgWagonClass> matcher = (IValueMatcher<TgWagonClass>) vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
         //matcher.setQueryModel(select(WagonClass.class).with("compatibles", select(WagonClassCompatibility.class).model()));
@@ -65,7 +66,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_instantiation_error_handling() {
-        final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
+        final IValueMatcherFactory vmFactory = new ValueMatcherFactory(coFinder, entityFactory);
         try {
             vmFactory.getValueMatcher(TgWagon.class, "serialNo");
             fail("Matcher creation exception is expected due to incorrect property type -- String.");
@@ -81,7 +82,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_property_descriptor_matcher() {
-        final IValueMatcherFactory vmFactory = new ValueMatcherFactory(daoFactory, entityFactory);
+        final IValueMatcherFactory vmFactory = new ValueMatcherFactory(coFinder, entityFactory);
         final IValueMatcher<PropertyDescriptor<TgWorkOrder>> matcher = (IValueMatcher<PropertyDescriptor<TgWorkOrder>>) vmFactory.getValueMatcher(TgWoStatusRequiredField.class, "requiredProperty");
         assertNotNull("Value matcher for property descriptor should have been created.", matcher);
         assertEquals("Incorrect number of matches for '*'.", 7, matcher.findMatches("*").size());

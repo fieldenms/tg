@@ -6,7 +6,6 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 import org.restlet.routing.Router;
 
-import ua.com.fielden.platform.dao.DynamicEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -40,7 +39,6 @@ public class GeneratedEntityQueryExportResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.POST.equals(request.getMethod())) {
-            final DynamicEntityDao dao = injector.getInstance(DynamicEntityDao.class);
 
             final String username = (String) request.getAttributes().get("username");
             injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));

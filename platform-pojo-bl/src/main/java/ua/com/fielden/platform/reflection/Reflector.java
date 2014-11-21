@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -23,9 +24,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This is a helper class to provide some commonly used method for retrieval of RTTI not provided directly by the Java reflection package.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class Reflector {
     private final static Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new HashMap<>();
@@ -49,7 +50,7 @@ public final class Reflector {
 
     /**
      * This is a helper method used to walk along class hierarchy in search of the specified method.
-     * 
+     *
      * @param startWithClass
      * @param method
      * @param arguments
@@ -88,7 +89,7 @@ public final class Reflector {
 
     /**
      * Returns method specified with methodName from {@code startWithClass} class.
-     * 
+     *
      * @param startWithClass
      * @param methodName
      * @param arguments
@@ -195,7 +196,7 @@ public final class Reflector {
 
     /**
      * Returns constructor specified from {@code startWithClass} class.
-     * 
+     *
      * @param startWithClass
      * @param methodName
      * @param arguments
@@ -218,7 +219,7 @@ public final class Reflector {
 
     /**
      * Returns the method specified with methodName and the array of it's arguments. In order to determine correct method it uses instances instead of classes.
-     * 
+     *
      * @param instance
      * @param methodName
      * @param arguments
@@ -242,7 +243,7 @@ public final class Reflector {
 
     /**
      * Depending on the type of the field, the getter may start not with ''get'' but with ''is''. This method tries to determine a correct getter.
-     * 
+     *
      * @param propertyName
      * @param entity
      * @return
@@ -260,7 +261,7 @@ public final class Reflector {
     /**
      * Tries to obtain property setter for property, specified using dot-notation. Heavily uses
      * {@link PropertyTypeDeterminator#determinePropertyTypeWithoutKeyTypeDetermination(Class, String)} to obtain penult property in dot-notation
-     * 
+     *
      * @param entityClass
      * @param dotNotationExp
      * @return
@@ -281,7 +282,7 @@ public final class Reflector {
     /**
      * A contract for determining if the property of specified type <code>propertyType</code> could be sortable or not. For now - only property of AE type with composite key could
      * not be sortable.
-     * 
+     *
      * @param propertyType
      * @return
      */
@@ -292,7 +293,7 @@ public final class Reflector {
 
     /**
      * Returns min and max possible values for property.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -302,7 +303,7 @@ public final class Reflector {
         Comparable<?> min = null, max = null;
         for (final Field field : fields) { // for each property field
             if (field.getName().equals(propertyName)) { //
-                final List<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
+                final Set<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
                 for (final Annotation annotation : propertyValidationAnotations) {
                     if (annotation instanceof GreaterOrEqual) {
                         min = ((GreaterOrEqual) annotation).value();
@@ -323,7 +324,7 @@ public final class Reflector {
 
     /**
      * Indicates whether specified class is synthetic entity or not.
-     * 
+     *
      * @param clazz
      * @return
      */
@@ -333,7 +334,7 @@ public final class Reflector {
 
     /**
      * Returns a list of parameters declared for the specified annotation type. An empty list is returned in case where there are no parameter declarations.
-     * 
+     *
      * @param annotationType
      * @return
      */
@@ -347,7 +348,7 @@ public final class Reflector {
 
     /**
      * Obtains and returns a pair of parameter type and its value for the specified annotation parameter.
-     * 
+     *
      * @param annotation
      * @param paramName
      * @return parameter value
@@ -365,7 +366,7 @@ public final class Reflector {
 
     /**
      * Converts a relative property path to an absolute path with respect to the provided context.
-     * 
+     *
      * @param context
      *            -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param relativePropertyPath
@@ -398,7 +399,7 @@ public final class Reflector {
 
     /**
      * A helper function, which recursively determines the depth of the context path in comparison to the relative property path provide.
-     * 
+     *
      * @return
      */
     private static String pathFromRoot(final String context, final int relativePathLength) {
@@ -421,7 +422,7 @@ public final class Reflector {
 
     /**
      * Converts an absolute property path to a relative one in respect to the provided context.
-     * 
+     *
      * @param context
      *            the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param absolutePropertyPath
@@ -466,7 +467,7 @@ public final class Reflector {
 
     /**
      * Calculate the property depth in the type tree based on the number of "." separators.
-     * 
+     *
      * @param propertyPath
      * @return
      */
@@ -480,7 +481,7 @@ public final class Reflector {
     /**
      * Converts a relative property path to an absolute path with respect to the provided context. Unlike relative2Absolute this method inverts the path making the context property
      * to be the first node in the path.
-     * 
+     *
      * @param type
      * @param contextProperty
      * @param dotNotaionalExp
@@ -524,7 +525,7 @@ public final class Reflector {
 
     /**
      * A convenient method returning a separator that is used to represent a composite entity as a single string value.
-     * 
+     *
      * @param type
      * @return
      */

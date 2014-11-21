@@ -7,7 +7,6 @@ import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
-import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
@@ -79,9 +78,9 @@ import com.google.inject.TypeLiteral;
 
 /**
  * Guice injector module for Hibernate related injections for testing purposes.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DaoTestHibernateModule extends CommonFactoryModule {
 
@@ -136,7 +135,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IMigrationRunDao.class).to(MigrationRunDao.class);
         bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
 
-        bind(IDaoFactory.class).toInstance(getDaoFactory());
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
 
         bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {

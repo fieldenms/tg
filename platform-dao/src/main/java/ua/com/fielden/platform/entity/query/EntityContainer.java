@@ -60,7 +60,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public R instantiate(final EntityFactory entFactory, final boolean userViewOnly, final ProxyMode proxyMode) {
         entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
-        entity.setInitialising(true);
+        entity.beginInitialising();
         final boolean unionEntity = isUnionEntityType(resultType);
 
         for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {
@@ -87,7 +87,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
             EntityUtils.handleMetaProperties(entity);
         }
 
-        entity.setInitialising(false);
+        entity.endInitialising();
 
         return entity;
     }

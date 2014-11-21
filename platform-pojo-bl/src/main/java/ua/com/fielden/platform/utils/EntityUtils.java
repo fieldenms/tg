@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -53,7 +54,7 @@ public class EntityUtils {
 
     /**
      * Convenient method for value to {@link String} conversion
-     * 
+     *
      * @param value
      * @param valueType
      * @return
@@ -80,7 +81,7 @@ public class EntityUtils {
 
     /**
      * Invokes method {@link #toString(Object, Class)} with the second argument being assigned as value's class.
-     * 
+     *
      * @param value
      * @return
      */
@@ -93,7 +94,7 @@ public class EntityUtils {
 
     /**
      * Null-safe comparator.
-     * 
+     *
      * @param o1
      * @param o2
      * @return
@@ -112,7 +113,7 @@ public class EntityUtils {
 
     /**
      * Null-safe equals.
-     * 
+     *
      * @param o1
      * @param o2
      * @return
@@ -126,7 +127,7 @@ public class EntityUtils {
 
     /**
      * Null-safe equals based on the {@link AbstractEntity}'s id property. If id property is not present in both entities then default equals for entities will be called.
-     * 
+     *
      * @param entity1
      * @param entity2
      * @return
@@ -144,7 +145,7 @@ public class EntityUtils {
 
     /**
      * Returns value that indicates whether entity is among entities. The equality comparison is based on {@link #areEquals(AbstractEntity, AbstractEntity)} method
-     * 
+     *
      * @param entities
      * @param entity
      * @return
@@ -160,7 +161,7 @@ public class EntityUtils {
 
     /**
      * Returns index of the entity in the entities list. The equality comparison is based on the {@link #areEquals(AbstractEntity, AbstractEntity)} method.
-     * 
+     *
      * @param entities
      * @param entity
      * @return
@@ -177,7 +178,7 @@ public class EntityUtils {
     /**
      * This method chooses appropriate Converter for any types of property. Even for properties of [AbstractEntity's descendant type] or List<[AbstractEntity's descendant type]> or
      * List<String>
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -190,7 +191,7 @@ public class EntityUtils {
     /**
      * this method chooses appropriate Converter for any types of property. Even for properties of [AbstractEntity's descendant type] or List<[AbstractEntity's descendant type]> or
      * List<String>
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -230,7 +231,7 @@ public class EntityUtils {
 
     /**
      * Does the same as {@link #chooseConverterBasedUponPropertyType(AbstractEntity, String)}
-     * 
+     *
      * @param metaProperty
      * @return
      */
@@ -240,7 +241,7 @@ public class EntityUtils {
 
     /**
      * Obtains {@link MetaProperty} using {@link #findFirstFailedMetaProperty(AbstractEntity, String)} and returns {@link #getLabelText(MetaProperty, boolean)}
-     * 
+     *
      * @return the subject's text value
      * @throws MissingConverterException
      * @throws ClassCastException
@@ -258,7 +259,7 @@ public class EntityUtils {
 
     /**
      * Gets converter for passed {@link MetaProperty} with showKeyOnly param and returns {@link #getLabelText(MetaProperty, Converter)}
-     * 
+     *
      * @param metaProperty
      * @param showKeyOnly
      * @return
@@ -270,12 +271,12 @@ public class EntityUtils {
 
     /**
      * Returns text value for passed {@link MetaProperty} using passed {@link Converter}.
-     * 
+     *
      * @param returnEmptyStringIfInvalid
      *            - if {@link Boolean#TRUE} passed as this parameter, then empty string will be returned if passed {@link MetaProperty} is invalid (converter is not used at all in
      *            this case). Otherwise {@link MetaProperty#getLastInvalidValue()} will be obtained from invalid {@link MetaProperty}, converted using passed {@link Converter} and
      *            returned.
-     * 
+     *
      * @return the subject's text value
      * @throws MissingConverterException
      * @throws ClassCastException
@@ -298,7 +299,7 @@ public class EntityUtils {
 
     /**
      * Returns label text representation of value using specified converter.
-     * 
+     *
      * @param value
      * @param converter
      * @return
@@ -313,7 +314,7 @@ public class EntityUtils {
 
     /**
      * Formats passeed value according to its type.
-     * 
+     *
      * @param value
      * @param valueType
      * @return
@@ -336,7 +337,7 @@ public class EntityUtils {
 
     /**
      * Checks and answers if the two objects are both {@code null} or equal.
-     * 
+     *
      * <pre>
      * #equals(null, null)  == true
      * #equals(&quot;Hi&quot;, &quot;Hi&quot;)  == true
@@ -344,7 +345,7 @@ public class EntityUtils {
      * #equals(null, &quot;Hi&quot;)  == false
      * #equals(&quot;Hi&quot;, &quot;Ho&quot;)  == false
      * </pre>
-     * 
+     *
      * @param o1
      *            the first object to compare
      * @param o2
@@ -359,7 +360,7 @@ public class EntityUtils {
      * Returns current value(if property is valid, then its value, otherwise last incorrect value of corresponding meta-property) of property of passed entity.<br>
      * <br>
      * Note : does not support dot-notated property names.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -376,7 +377,7 @@ public class EntityUtils {
     /**
      * Returns either {@link MetaProperty} corresponding to last property in <code>propertyName</code> if all previous {@link MetaProperty}ies are valid and without warnings, or
      * first failed {@link MetaProperty} or one with warning.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -388,7 +389,7 @@ public class EntityUtils {
 
     /**
      * Does the same as method {@link #findFirstFailedMetaProperty(AbstractEntity, String)} but already on the provided list of {@link MetaProperty}s.
-     * 
+     *
      * @param metaProperties
      * @return
      */
@@ -406,7 +407,7 @@ public class EntityUtils {
 
     /**
      * This method throws Result (so can be used to specify DYNAMIC validation inside the date setters) when the specified finish/start dates are invalid together.
-     * 
+     *
      * @param start
      * @param finish
      * @param fieldPrefix
@@ -434,7 +435,7 @@ public class EntityUtils {
 
     /**
      * This method throws Result (so can be used to specify DYNAMIC validation inside the date setters) when the specified finish/start date times are invalid together.
-     * 
+     *
      * @param start
      * @param finish
      * @param fieldPrefix
@@ -465,7 +466,7 @@ public class EntityUtils {
      * <p>
      * Note, the use use Of Number is not possible because it does not implement interface Comparable due to valid reasons. See
      * http://stackoverflow.com/questions/480632/why-doesnt-java-lang-number-implement-comparable from more.
-     * 
+     *
      * @param start
      * @param finish
      * @param startProperty
@@ -492,7 +493,7 @@ public class EntityUtils {
 
     /**
      * A convenient method for validating two double properties that form a range [from;to].
-     * 
+     *
      * @param start
      * @param finish
      * @param startProperty
@@ -519,7 +520,7 @@ public class EntityUtils {
 
     /**
      * A convenient method for validating two money properties that form a range [from;to].
-     * 
+     *
      * @param start
      * @param finish
      * @param startProperty
@@ -546,7 +547,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents enumeration.
-     * 
+     *
      * @param type
      * @return
      */
@@ -556,7 +557,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents "rangable" values like {@link Number}, {@link Money} or {@link Date}.
-     * 
+     *
      * @param type
      * @return
      */
@@ -566,7 +567,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents boolean values.
-     * 
+     *
      * @param type
      * @return
      */
@@ -576,7 +577,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents date values.
-     * 
+     *
      * @param type
      * @return
      */
@@ -586,7 +587,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents {@link DateTime} values.
-     * 
+     *
      * @param type
      * @return
      */
@@ -596,7 +597,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents string values.
-     * 
+     *
      * @return
      */
     public static boolean isString(final Class<?> type) {
@@ -605,7 +606,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents {@link AbstractEntity}-typed values.
-     * 
+     *
      * @return
      */
     public static boolean isEntityType(final Class<?> type) {
@@ -618,7 +619,7 @@ public class EntityUtils {
 
     /**
      * Indicates that given entity type is mapped to database.
-     * 
+     *
      * @return
      */
     public static boolean isPersistedEntityType(final Class<?> type) {
@@ -626,8 +627,26 @@ public class EntityUtils {
     }
 
     /**
+     * Identifies whether the entity type represent a composite entity.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> boolean isCompositeEntity(final Class<T> entityType) {
+        // this was the old implementation:
+        // return Finder.getKeyMembers(entityType).size() > 1;
+
+        final KeyType keyAnnotation = AnnotationReflector.getAnnotation(entityType, KeyType.class);
+
+        if (keyAnnotation != null) {
+            return DynamicEntityKey.class.isAssignableFrom(keyAnnotation.value());
+        } else {
+            return false;
+        }
+    }
+    /**
      * Indicates that given entity type is based on query model.
-     * 
+     *
      * @return
      */
     public static <ET extends AbstractEntity<?>> boolean isQueryBasedEntityType(final Class<ET> type) {
@@ -636,7 +655,7 @@ public class EntityUtils {
 
     /**
      * Returns list of query models, which given entity type is based on (assuming it is after all).
-     * 
+     *
      * @param entityType
      * @return
      */
@@ -661,7 +680,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents {@link Collection}-typed values.
-     * 
+     *
      * @return
      */
     public static boolean isCollectional(final Class<?> type) {
@@ -670,7 +689,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents {@link PropertyDescriptor}-typed values.
-     * 
+     *
      * @return
      */
     public static boolean isPropertyDescriptor(final Class<?> type) {
@@ -679,7 +698,7 @@ public class EntityUtils {
 
     /**
      * Indicates whether type represents {@link AbstractUnionEntity}-typed values.
-     * 
+     *
      * @return
      */
     public static boolean isUnionEntityType(final Class<?> type) {
@@ -689,14 +708,14 @@ public class EntityUtils {
     /**
      * Returns a deep copy of an object (all hierarchy of properties will be copied).<br>
      * <br>
-     * 
+     *
      * <b>Important</b> : Depending on {@link ISerialiser} implementation, all classes that are used in passed object hierarchy should correspond some contract. For e.g. Kryo based
      * serialiser requires all the classes to be registered and to have default constructor, simple java serialiser requires all the classes to implement {@link Serializable} etc.
-     * 
+     *
      * @param oldObj
      * @param serialiser
      * @return -- <code>null</code> if <code>oldObj</code> is <code>null</code>, otherwise a deep copy of <code>oldObj</code>.
-     * 
+     *
      */
     public static <T> T deepCopy(final T oldObj, final ISerialiser serialiser) {
         if (oldObj == null) { // obviously return null if oldObj == null
@@ -738,7 +757,7 @@ public class EntityUtils {
 
     /**
      * Returns the not enhanced copy of the specified enhancedEntity.
-     * 
+     *
      * @param enhancedEntity
      * @return
      */
@@ -749,7 +768,7 @@ public class EntityUtils {
 
     /**
      * Returns the not enhanced copy of the list of enhanced entities.
-     * 
+     *
      * @param enhancedEntities
      * @return
      */
@@ -773,7 +792,7 @@ public class EntityUtils {
 
     /**
      * A convenient method for extracting type information from all enum value for a specified enum type.
-     * 
+     *
      * @param <E>
      * @param type
      * @return
@@ -790,7 +809,7 @@ public class EntityUtils {
 
     /**
      * Performs {@link AbstractEntity} instance's post-creation actions such as original values setting, definers invoking, dirtiness resetting etc.
-     * 
+     *
      * @param instance
      * @return
      */
@@ -821,7 +840,7 @@ public class EntityUtils {
 
     /**
      * Splits dot.notated property in two parts: first level property and the rest of subproperties.
-     * 
+     *
      * @param dotNotatedPropName
      * @return
      */
@@ -836,7 +855,7 @@ public class EntityUtils {
 
     /**
      * Splits dot.notated property in two parts: last subproperty (as second part) and prior subproperties.
-     * 
+     *
      * @param dotNotatedPropName
      * @return
      */
@@ -860,7 +879,7 @@ public class EntityUtils {
 
     /**
      * Returns true if the provided <code>dotNotationProp</code> is a valid property in the specified entity type.
-     * 
+     *
      * @param type
      * @param dotNotationProp
      * @return
@@ -875,7 +894,7 @@ public class EntityUtils {
 
     /**
      * Retrieves all persisted properties fields within given entity type
-     * 
+     *
      * @param entityType
      * @return
      */
@@ -897,7 +916,7 @@ public class EntityUtils {
 
     /**
      * Retrieves all collectional properties fields within given entity type
-     * 
+     *
      * @param entityType
      * @return
      */
@@ -918,7 +937,7 @@ public class EntityUtils {
 
     /**
      * Produces list of props that should be added to order model instead of composite key.
-     * 
+     *
      * @param entityType
      * @param prefix
      * @return
@@ -950,7 +969,7 @@ public class EntityUtils {
 
     /**
      * A convenient method for constructing a pair of property and its title as defined at the entity type level.
-     * 
+     *
      * @param entityType
      * @param propName
      * @return

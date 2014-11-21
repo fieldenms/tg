@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
@@ -40,7 +41,7 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
     @Test
     public void testThatNullCannotBeAssigned() throws Exception {
         final Entity entity = new_(Entity.class, "entity-key");
-        final MetaProperty property = entity.getProperty("property");
+        final MetaProperty<EntityWithMoney> property = entity.getProperty("property");
         assertNotNull("Property instance should have been setup.", property);
         final EntityWithMoney entityFromDb = dao.findByKey("key1");
         entity.setProperty(entityFromDb);
@@ -60,25 +61,19 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
     @Test
     public void testThatNonExistingEntityCannotBeAssigned() throws Exception {
         final Entity entity = new_(Entity.class, "entity-key");
+        assertNotNull(entity.getProperty("property").getValidators().get(ValidationAnnotation.ENTITY_EXISTS));
         entity.setProperty(new EntityWithMoney("some key", "some desc", new Money("20.00")));
-        assertFalse("Should not be possible to set valid entity.", entity.getProperty("property").isValid());
+        assertFalse("Should not be possible to set non-existing entity.", entity.getProperty("property").isValid());
         assertNull("Property value should not have been set.", entity.getProperty());
     }
 
     @Test
-    public void testThatExistingEntityKeyCanBeAssigned() throws Exception {
+    public void there_should_be_no_entity_exists_validator_associated_with_ordinar_property() throws Exception {
         final Entity entity = new_(Entity.class, "entity-key");
+        assertNull(entity.getProperty("propertyThree").getValidators().get(ValidationAnnotation.ENTITY_EXISTS));
         entity.setPropertyThree("key1");
         assertTrue("Should be possible to set valid entity.", entity.getProperty("propertyThree").isValid());
         assertEquals("Values should match.", "key1", entity.getPropertyThree());
-    }
-
-    @Test
-    public void testThatNonExistingEntityKeyCannotBeAssigned() throws Exception {
-        final Entity entity = new_(Entity.class, "entity-key");
-        entity.setPropertyThree("some key");
-        assertFalse("Should not be possible to set valid entity.", entity.getProperty("propertyThree").isValid());
-        assertNull("Property value should not have been set.", entity.getPropertyThree());
     }
 
     @Test
@@ -123,7 +118,7 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
     }
 
     /**
-     * This is a test entity class that two properties, which are entities -- one with an ordinary key, another with a composite key.
+     * This is a test entity class that has two properties, which are entities -- one with an ordinary key, another with a composite key.
      *
      * @author 01es
      *
@@ -167,7 +162,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return propertyThree;
         }
 
-        @EntityExists(EntityWithMoney.class)
         @Observable
         public void setPropertyThree(final String entityWithMoneyKey) {
             this.propertyThree = entityWithMoneyKey;

@@ -24,41 +24,35 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 public class TgSubSystem extends AbstractEntity<String> {
-    @IsProperty
-    @MapTo
-    @Title("Active?")
-    private boolean active;
 
     @IsProperty
     @MapTo
     @Title("Category")
-    private TgCategory category;
+    private TgCategory firstCategory;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Second Category", desc = "Desc")
+    private TgCategory secondCategory;
 
     @Observable
-    @EntityExists(TgCategory.class)
-    public TgSubSystem setCategory(final TgCategory category) {
-        this.category = category;
+    public TgSubSystem setSecondCategory(final TgCategory secondCategory) {
+        this.secondCategory = secondCategory;
         return this;
     }
 
-    public TgCategory getCategory() {
-        return category;
+    public TgCategory getSecondCategory() {
+        return secondCategory;
     }
 
-
-
-
     @Observable
-    public TgSubSystem setActive(final boolean active) {
-        this.active = active;
+    public TgSubSystem setFirstCategory(final TgCategory category) {
+        this.firstCategory = category;
         return this;
     }
 
-    public boolean isActive() {
-        return active;
+    public TgCategory getFirstCategory() {
+        return firstCategory;
     }
-
-
-
 
 }

@@ -32,7 +32,7 @@ public class HandlerAnnotation {
     private MoneyParam[] money = new MoneyParam[] {};
     private EnumParam[] enumeration = new EnumParam[] {};
 
-    public HandlerAnnotation(final Class<? extends IBeforeChangeEventHandler<?>> value) {
+    public <T extends IBeforeChangeEventHandler<?>> HandlerAnnotation(final Class<T> value) {
         this.value = value;
     }
 

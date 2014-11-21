@@ -31,6 +31,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -39,6 +40,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -167,7 +169,7 @@ public class CriteriaGeneratorTest {
                     add("B");
                 }
             });
-            put("topLevelEntity_critSingleEntity", entityFactory.newByKey(LastLevelEntity.class, "EntityKey"));
+            put("topLevelEntity_critSingleEntity", entityFactory.newByKey(LastLevelEntity.class, "EntityKey").set(AbstractEntity.ID, 1L).setDirty(false));
             put("topLevelEntity_critRangeEntity", new ArrayList<String>() {
                 {
                     add("A");
@@ -518,8 +520,8 @@ public class CriteriaGeneratorTest {
         assertNotNull(classParams);
         assertEquals("The number of class params is incorrect", 1, classParams.length);
         final ClassParam classParam = classParams[0];
-        assertEquals("The name of class param property is incorrect", "companionObject", classParam.name());
-        assertEquals("The value of class param annottion is incorrect", ILastLevelEntity.class, classParam.value());
+        assertEquals("The name of class param property is incorrect", "coFinder", classParam.name());
+        assertEquals("The value of class param annottion is incorrect", ICompanionObjectFinder.class, classParam.value());
     }
 
     @Test
@@ -529,7 +531,8 @@ public class CriteriaGeneratorTest {
         final Result res = criteriaEntity.isValid();
         assertFalse(res.isSuccessful());
         assertNull("The value for crit only single entity property is incorrect", cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSingleEntity"));
-        criteriaEntity.set("topLevelEntity_critSingleEntity", entityFactory.newByKey(LastLevelEntity.class, "EntityKey"));
+        final AbstractEntity<?> value = entityFactory.newByKey(LastLevelEntity.class, "EntityKey").set(AbstractEntity.ID, 1L).setDirty(false);
+        criteriaEntity.set("topLevelEntity_critSingleEntity", value);
         final Result newRes = criteriaEntity.isValid();
         assertTrue(newRes.isSuccessful());
         assertEquals("The value for crit only single entity property is incorrect", "EntityKey", ((LastLevelEntity) cdtm.getFirstTick().getValue(TopLevelEntity.class, "critSingleEntity")).getKey());

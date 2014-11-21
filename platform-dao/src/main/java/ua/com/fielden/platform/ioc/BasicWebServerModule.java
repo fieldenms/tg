@@ -10,7 +10,6 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.EntityAttachmentAssociationDao;
-import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -164,7 +163,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IFetchProp.class).to(FetchPropDao.class);
 
         // bind value matcher factory to support autocompleters
-        bind(IDaoFactory.class).toInstance(getDaoFactory());
         // TODO is this binding really needed for the server side???
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
     }

@@ -7,15 +7,14 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
-import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
  * Hibernate driven module required for correct instantiation of entities.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CommonFactoryModule extends PropertyFactoryModule {
 
@@ -32,7 +31,4 @@ public class CommonFactoryModule extends PropertyFactoryModule {
         return entityFactory;
     }
 
-    protected DaoFactory getDaoFactory() {
-        return daoFactory;
-    }
 }
