@@ -14,6 +14,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
+import ua.com.fielden.platform.sample.domain.TgAuthoriser;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgOriginator;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
@@ -102,6 +104,8 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgSystem.class);
         add(TgSubSystem.class);
         add(TgCategory.class);
+        add(TgAuthoriser.class);
+        add(TgOriginator.class);
     }
 
     @Override

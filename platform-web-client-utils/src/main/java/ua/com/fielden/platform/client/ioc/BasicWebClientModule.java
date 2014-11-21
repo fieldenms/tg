@@ -7,7 +7,6 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
-import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -19,7 +18,6 @@ import ua.com.fielden.platform.ioc.CommonRestFactoryModule;
 import ua.com.fielden.platform.rao.EntityAggregatesRao;
 import ua.com.fielden.platform.rao.GeneratedEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.rao.factory.RaoFactory;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.RestAuthorisationModel;
 import ua.com.fielden.platform.security.SecurityTokenControllerRao;
@@ -59,7 +57,7 @@ import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for client web applications, which should be enhanced by the application specific IoC module.
- * 
+ *
  * This IoC provides all the necessary bindings for:
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
@@ -68,9 +66,9 @@ import com.google.inject.name.Names;
  * {@link IAuthorisationModel} and more;
  * <li>Provides workflow sensitive application main menu configuration related bindings.
  * </ul>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class BasicWebClientModule extends CommonRestFactoryModule {
     protected final Properties props;
@@ -112,7 +110,6 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
         bind(IEntityAggregatesDao.class).to(EntityAggregatesRao.class).in(Scopes.SINGLETON);
         bind(IGeneratedEntityController.class).to(GeneratedEntityRao.class); // should not be a singleton
         // bind value matcher factory to support autocompleters and entity master factory
-        bind(IDaoFactory.class).to(RaoFactory.class).in(Scopes.SINGLETON);
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
         // security and user management
         bind(IUserDao.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
@@ -143,7 +140,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * Additionally, initialises the REST utility instance with {@link ISerialiser} and {@link IUserController}.
      */
     @Override

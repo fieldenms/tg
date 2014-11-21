@@ -2,8 +2,9 @@ package ua.com.fielden.platform.sample.domain;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -28,7 +29,8 @@ import ua.com.fielden.platform.security.user.User;
 @DescTitle(value = "Full Name", desc = "Person's full name - e.g. the first name followed by the middle initial followed by the surname.")
 @MapEntityTo("CRAFT")
 @CompanionObject(ITgPerson.class)
-public class TgPerson extends AbstractEntity<String> {
+@DeactivatableDependencies({TgAuthoriser.class, TgOriginator.class})
+public class TgPerson extends ActivatableAbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -137,6 +139,13 @@ public class TgPerson extends AbstractEntity<String> {
             throw new IllegalArgumentException("User " + basedOnUser.getKey() + " is not a base user and thus cannot be used for inheritance.");
         }
         this.basedOnUser = basedOnUser;
+        return this;
+    }
+
+    @Override
+    @Observable
+    public TgPerson setActive(final boolean active) {
+        super.setActive(active);
         return this;
     }
 

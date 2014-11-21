@@ -20,9 +20,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * This test case ensures correct implementation of the common DAO functionality in conjunction with Session injection by means of method intercepter.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CommonEntityDaoTest extends DbDrivenTestCase {
     private final EntityWithMoneyDao dao = injector.getInstance(EntityWithMoneyDao.class);
@@ -262,13 +262,13 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     }
 
     public void test_that_version_is_updated() {
-        final EntityWithMoney entity = dao.findByKey("key1");
+        EntityWithMoney entity = dao.findByKey("key1");
 
         hibernateUtil.getSessionFactory().getCurrentSession().close();
 
         assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
         entity.setDesc("new desc");
-        dao.save(entity);
+        entity = dao.save(entity);
         assertEquals("Incorrect curr version", Long.valueOf(1), entity.getVersion());
 
         hibernateUtil.getSessionFactory().getCurrentSession().close();

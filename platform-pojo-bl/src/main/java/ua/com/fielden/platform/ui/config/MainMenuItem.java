@@ -28,9 +28,9 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
  * Property <code>parent</code> should be used for specifying parent/child relationships between menu items in order to build menu hierarchy.
  * <p>
  * Menu items cannot be deleted as the result of a user action. Menu items are defined by the system integrators most likely as part of the deployment.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 @KeyTitle("Menu item type")
@@ -60,7 +60,7 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
 
     /**
      * A helper setter to convert menu item type to the string key value.
-     * 
+     *
      * @param menuItemType
      */
     public MainMenuItem setMenuItemType(final Class<?> menuItemType) {
@@ -70,7 +70,7 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
 
     /**
      * A helper getter to obtain menu item type from key's string value.
-     * 
+     *
      * @return
      */
     public Class<?> getMenuItemType() {
@@ -103,9 +103,9 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
         if (!containsChild(child)) {
             children.add(child);
             // need to enforce resetting of the parent even in case of the same value (i.e. equals) to have the correct reference
-            child.setInitialising(true);
+            child.beginInitialising();
             child.setParent(this);
-            child.setInitialising(false);
+            child.endInitialising();
         }
         return this;
     }

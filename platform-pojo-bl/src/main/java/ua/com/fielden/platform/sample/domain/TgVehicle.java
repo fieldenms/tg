@@ -184,6 +184,12 @@ public class TgVehicle extends AbstractEntity<String> {
         return lastFuelUsage;
     }
 
+    @Observable
+    protected TgVehicle setLastFuelUsage(final TgFuelUsage fu) {
+        this.lastFuelUsage = fu;
+        return this;
+    }
+
     public Integer getConstValueProp() {
         return constValueProp;
     }

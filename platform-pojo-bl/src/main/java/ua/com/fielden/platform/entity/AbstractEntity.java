@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
@@ -23,6 +25,9 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Dependent;
@@ -43,6 +48,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
+import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
@@ -55,6 +61,7 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -244,7 +251,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @MapTo("_ID")
     private Long id;
     @MapTo("_VERSION")
-    private long version = 0L;
+    private Long version = 0L;
     @IsProperty
     @UpperCase
     @MapTo("KEY_")
@@ -350,6 +357,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         if (keyType == null) {
             throw new IllegalStateException("Type " + this.getClass().getName() + " is not fully defined.");
         }
+
+        if(!(this instanceof ActivatableAbstractEntity) && getType().isAnnotationPresent(DeactivatableDependencies.class)) {
+            throw new IllegalStateException("Non-activatable entity cannot have deactivatable dependencies.");
+        }
+
 
         logger = Logger.getLogger(this.getType());
 
@@ -473,6 +485,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
+     * Returns <code>true</code> if entity has a composite key.
+     *
+     * @return
+     */
+    public boolean isComposite() {
+        return DynamicEntityKey.class.isAssignableFrom(getKeyType());
+    }
+
+    /**
      * Registers property change listener.<br>
      * <br>
      * Note : Please, refer also to {@link PropertyChangeOrIncorrectAttemptListener} JavaDocs.
@@ -571,7 +592,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param value
      */
     @Override
-    public void set(final String propertyName, final Object value) {
+    public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
             final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
             final Method setter = Reflector.getMethod(/* getType() */this, "set" + propertyName.toUpperCase().charAt(0) + propertyName.substring(1), propertyType);
@@ -585,6 +606,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             setter.invoke(valueToInvokeOn, value);
             // reverting changes to 'accessible' property of Method class
             setter.setAccessible(isAccessible);
+            return this;
         } catch (final Exception e) {
             throw new IllegalStateException(e.getCause());
         }
@@ -619,6 +641,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             logger.error("Property factory can be assigned only once.");
             throw new IllegalStateException("Property factory can be assigned only once.");
         }
+
         this.metaPropertyFactory = metaPropertyFactory;
         final List<Field> keyMembers = Finder.getKeyMembers(getType());
 
@@ -714,7 +737,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      *
      * @param metaPropertyFactory
      * @param field
-     * @param type
+     * @param properyType
      * @param isCollectional
      * @return map of validators
      * @throws Exception
@@ -722,7 +745,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> collectValidators(
             final IMetaPropertyFactory metaPropertyFactory,
             final Field field,
-            final Class<?> type,
+            final Class<?> properyType,
             final boolean isCollectional,
             final Set<Annotation> validationAnnotations)
             throws Exception {
@@ -731,11 +754,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = new EnumMap<>(ValidationAnnotation.class);
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
-            final List<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, type, isCollectional);
+            final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, properyType, isCollectional);
             for (final Annotation annotation : propertyValidationAnotations) {
                 final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
                 // if property factory cannot instantiate a validator for the specified annotation then null is returned;
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), type);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), properyType);
                 if (annotationValidators.length > 0) {
                     final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
                     for (final IBeforeChangeEventHandler<?> handler : annotationValidators) {
@@ -744,6 +767,24 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                     validators.put(validationAnnotation, handlersAndResults);
                 }
             }
+
+            // now let's see if we need to add EntityExists validation
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(getType(), field.getName(), properyType)) {
+                final EntityExists eeAnnotation = new EntityExistsAnnotation((Class<? extends AbstractEntity<?>>) properyType).newInstance();
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
+
+                if (annotationValidators.length != 1) {
+                    throw new IllegalStateException(format("Unexpexted number of EntityExists validators (expected 1, but actual %s) during entity \"%s\" instantiation.", annotationValidators.length, getType().getName()));
+                }
+
+                propertyValidationAnotations.add(eeAnnotation);
+                final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
+                final IBeforeChangeEventHandler<?> handler = annotationValidators[0];
+                handlersAndResults.put(handler, null);
+
+                validators.put(ValidationAnnotation.ENTITY_EXISTS, handlersAndResults);
+            }
+
             // logger.debug("Finished collecting validators for property " + field.getName() + ".");
             validationAnnotations.addAll(propertyValidationAnotations);
 
@@ -752,6 +793,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             logger.error("Exception during collection of validators for property " + field.getName() + ".", ex);
             throw ex;
         }
+    }
+
+    /**
+     * Determines whether entity exists validation is applicable for the provided type.
+     *
+     * @param propName
+     * @param propType
+     * @return
+     */
+    private boolean isEntityExistsValidationApplicable(final Class<?> entityType, final String propName, final Class<?> propType) {
+        return !AnnotationReflector.isPropertyAnnotationPresent(SkipEntityExistsValidation.class, entityType, propName) && EntityUtils.isPersistedEntityType(propType);
     }
 
     /**
@@ -839,8 +891,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      * @throws NoSuchMethodException
      */
-    public List<Annotation> extractValidationAnnotationForProperty(final Field field, final Class<?> type, final boolean isCollectional) {
-        final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+    public Set<Annotation> extractValidationAnnotationForProperty(final Field field, final Class<?> type, final boolean isCollectional) {
+        final Set<Annotation> propertyValidationAnotations = new HashSet<>();
         // try to obtain setter
         propertyValidationAnotations.addAll(extractSetterAnnotations(field, type));
         propertyValidationAnotations.addAll(extractFieldBeforeChangeAnnotations(field));
@@ -863,10 +915,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private List<Annotation> extractDecrementorAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractDecrementorAnnotations(final Field field, final Class<?> type) {
         try {
             final Method decrementor = Reflector.getMethod(/* getType() */this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-            final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
+            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
             if (annotations.size() > 0 && AnnotationReflector.getAnnotation(decrementor, Observable.class) == null) {
                 throw new IllegalStateException("Property " + field.getName() + " in " + getType()
                         + " requires validation, but corresponding decrementor is not observable (no Observable annotation).");
@@ -875,7 +927,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         } catch (final NoSuchMethodException e) {
             // do nothing if decrementor does not exist
         }
-        return new ArrayList<Annotation>();
+        return new HashSet<>();
     }
 
     /**
@@ -886,10 +938,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private List<Annotation> extractIncrementorAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractIncrementorAnnotations(final Field field, final Class<?> type) {
         try {
             final Method incremetor = Reflector.getMethod(/* getType() */this, "addTo" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-            final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
+            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
             if (annotations.size() > 0 && AnnotationReflector.getAnnotation(incremetor, Observable.class) == null) {
                 throw new IllegalStateException("Property " + field.getName() + " in " + getType()
                         + " requires validation, but corresponding incremetor is not observable (no Observable annotation).");
@@ -898,7 +950,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         } catch (final NoSuchMethodException e1) {
             // do nothing if incrementor does not exist
         }
-        return new ArrayList<Annotation>();
+        return new HashSet<>();
     }
 
     /**
@@ -908,7 +960,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private List<Annotation> extractSetterAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractSetterAnnotations(final Field field, final Class<?> type) {
         //logger.debug("Extracting validation annotations for property " + field.getName() + ".");
         try {
             final Method setter = Reflector.getMethod(this, "set" + Character.toUpperCase(field.getName().charAt(0)) + field.getName().substring(1), type);
@@ -917,14 +969,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 logger.error(errorMsg);
                 throw new IllegalStateException(errorMsg);
             }
-            final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(setter);
+            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(setter);
             //logger.debug("Number of validation annotations for property " + field.getName() + ": " + annotations.size());
             return annotations;
         } catch (final NoSuchMethodException e1) {
             // do nothing if setter does not exist
             logger.debug("There is no setter for property " + field.getName() + ".");
         }
-        return new ArrayList<Annotation>();
+        return new HashSet<>();
     }
 
     /**
@@ -1094,8 +1146,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         return initialising;
     }
 
-    public final void setInitialising(final boolean initialising) {
-        this.initialising = initialising;
+    public final AbstractEntity<K> beginInitialising() {
+        this.initialising = true;
+        return this;
+    }
+
+    public final AbstractEntity<K> endInitialising() {
+        this.initialising = false;
+        return this;
     }
 
     public final boolean hasCompositeKey() {
@@ -1109,16 +1167,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     public final boolean isDirty() {
-        return getDirtyProperties().size() != 0 || !isPersisted();
+        return !getDirtyProperties().isEmpty() || !isPersisted();
     }
 
-    public final void setDirty(final boolean dirty) {
+    public final AbstractEntity<K> setDirty(final boolean dirty) {
         // reset dirty state for properties in case where entity becomes not dirty
         if (!dirty) {
             for (final MetaProperty<?> prop : getDirtyProperties()) {
                 prop.setDirty(false);
             }
         }
+        return this;
     }
 
     /**
@@ -1136,10 +1195,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         return dirtyProperties;
     }
 
-    public final void resetMetaState() {
+    public AbstractEntity<?> resetMetaState() {
         for (final MetaProperty<?> property : properties.values()) {
             property.resetState();
         }
+        return this;
     }
 
     public final void resetMetaValue() {
@@ -1178,7 +1238,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * Restores state of all properties to original, which includes setting original values and removal of all validation errors.
      */
     public AbstractEntity<K> restoreToOriginal() {
-        setInitialising(true);
+        beginInitialising();
         try {
             // restore property value state to original
             for (final MetaProperty<?> property : getProperties().values()) {
@@ -1191,7 +1251,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 }
             }
         } finally {
-            setInitialising(false);
+            endInitialising();
         }
         return this;
     }
@@ -1228,7 +1288,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     public final <COPY extends AbstractEntity> COPY copyTo(final COPY copy) {
-        copy.setInitialising(true);
+        copy.beginInitialising();
         // Under certain circumstances copying happens for a non-instrumented entity instance
         // In such cases there would be no meta-properties, and copying would not happen.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
@@ -1247,7 +1307,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 }
             }
         });
-        copy.setInitialising(false);
+        copy.endInitialising();
         return copy;
     }
 
@@ -1305,6 +1365,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             return false;
         }
 
+    }
+
+    /**
+     * Indicates if entity represents an instance of a persistent type.
+     *
+     * @return
+     */
+    public boolean isPersistent() {
+        return getType().isAnnotationPresent(MapEntityTo.class);
     }
 
 }

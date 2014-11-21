@@ -30,11 +30,11 @@ public class ProxyTestCase {
 
         final EntityForProxy prop1Proxy = epf.create(10L, owner, "prop1", null, ProxyMode.STRICT);
 
-        owner.setInitialising(true);
+        owner.beginInitialising();
         owner.setProp1(prop1Proxy);
-        owner.setInitialising(false);
+        owner.endInitialising();
 
-        assertTrue(ProxyFactory.isProxyClass(owner.getProp1().getClass()));
+        assertTrue(owner.getProperty("prop1").isProxy());
     }
 
     @Test
@@ -45,9 +45,9 @@ public class ProxyTestCase {
 
         final EntityForProxy prop1Proxy = epf.create(10L, owner, "prop1", null, ProxyMode.STRICT);
 
-        owner.setInitialising(true);
+        owner.beginInitialising();
         owner.setProp1(prop1Proxy);
-        owner.setInitialising(false);
+        owner.endInitialising();
 
         assertEquals(10L, owner.getProp1().getId(), 0);
     }
@@ -60,9 +60,9 @@ public class ProxyTestCase {
 
         final EntityForProxy prop1Proxy = epf.create(10L, owner, "prop1", null, ProxyMode.STRICT);
 
-        owner.setInitialising(true);
+        owner.beginInitialising();
         owner.setProp1(prop1Proxy);
-        owner.setInitialising(false);
+        owner.endInitialising();
 
         // the following line should result in proxy strict mode exception
         owner.getProp1().getDesc();
@@ -76,9 +76,9 @@ public class ProxyTestCase {
 
         final EntityForProxy prop1Proxy = epf.create(10L, owner, "prop1", null, ProxyMode.STRICT);
 
-        owner.setInitialising(true);
+        owner.beginInitialising();
         owner.setProp1(prop1Proxy);
-        owner.setInitialising(false);
+        owner.endInitialising();
 
         // the following line should result in proxy strict mode exception
         owner.getProp1().toString();
@@ -89,17 +89,17 @@ public class ProxyTestCase {
         final EntityProxyFactory<EntityForProxy> epf = new EntityProxyFactory<>(EntityForProxy.class);
 
         final OwnerEntity owner = factory.newByKey(OwnerEntity.class, "OWN1");
-        
+
         // need to mock a companion object
         final IEntityForProxy coEntityForProxy = mock(IEntityForProxy.class);
         when(coEntityForProxy.lazyLoad(10L)).thenReturn(factory.newByKey(EntityForProxy.class, "REAL!"));
 
         final EntityForProxy prop1Proxy = epf.create(10L, owner, "prop1", coEntityForProxy, ProxyMode.LAZY);
 
-        owner.setInitialising(true);
+        owner.beginInitialising();
         owner.setProp1(prop1Proxy);
-        owner.setInitialising(false);
-        
+        owner.beginInitialising();
+
         assertEquals("REAL!", owner.getProp1().getKey());
         assertFalse(ProxyFactory.isProxyClass(owner.getProp1().getClass()));
     }

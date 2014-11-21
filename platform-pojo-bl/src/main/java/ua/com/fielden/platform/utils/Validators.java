@@ -8,6 +8,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -15,18 +17,22 @@ import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere1;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.TypeFilter;
-import ua.com.fielden.platform.reflection.TypeFilter.EntityHasPropertyOfType;
+import ua.com.fielden.platform.reflection.filtering.ActivatableEntityHasPropertyOfTypePredicate;
+import ua.com.fielden.platform.reflection.filtering.TypeFilter;
 
 public final class Validators {
     private Validators() {
@@ -49,7 +55,7 @@ public final class Validators {
      * @return <i>true</i> if there is at least one overlapped entity.
      */
     public static <T extends AbstractEntity<?>> boolean overlaps(//
-            /*    */final T entity, //
+    /*    */final T entity, //
             final IEntityDao<T> controller, //
             final String fromDateProperty, //
             final String toDateProperty, //
@@ -71,7 +77,7 @@ public final class Validators {
      * @return
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
-            /*    */final T entity, //
+    /*    */final T entity, //
             final fetch<T> fetchModel,//
             final IEntityDao<T> controller, //
             final String fromDateProperty, //
@@ -96,7 +102,7 @@ public final class Validators {
      * @return
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(//
-            /*    */final T entity, //
+    /*    */final T entity, //
             final IEntityDao<T> controller, //
             final String fromDateProperty, //
             final String toDateProperty, //
@@ -105,30 +111,43 @@ public final class Validators {
     }
 
     /**
-     * Analyses all entity types on the subject of having an active dependency on the specified value.
-     * This implementation assumes that all involved entities have boolean property "active".
+     * Analyses all entity types on the subject of having an active dependency on the specified value. This implementation assumes that all involved entities have boolean property
+     * "active".
      *
      * @param entityTypes
      * @param entityType
      * @return
      */
     public static <T extends AbstractEntity<?>> long countActiveDependencies(final List<Class<? extends AbstractEntity<?>>> entityTypes, final T entity, final IEntityAggregatesDao coAggregate) {
-        final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getType();
-        final List<Class<? extends AbstractEntity<?>>> relevantTypes = TypeFilter.filter(entityTypes, new EntityHasPropertyOfType(entityType));
+        // there should be exactly 0 active and persisted dependencies to not yet persisted entity
+        if (!entity.isPersisted()) {
+            return 0;
+        }
 
-        if (!entity.isPersisted() || relevantTypes.isEmpty()) {
+        // otherwise let's count
+        final Class<? extends AbstractEntity<?>> entityType = entity.getType();
+        // first analyse the domain tree
+        final List<Class<? extends AbstractEntity<?>>> relevantTypes = TypeFilter.filter(entityTypes, new ActivatableEntityHasPropertyOfTypePredicate(entityType));
+        // if there are no dependent entity types then there is no reason to check the actual persisted entity instances
+        if (relevantTypes.isEmpty()) {
             return 0;
         } else {
+            // otherwise, need to compose a complex query that would count active dependencies
+            // one important thing here is not to count self-references...
             final Iterator<Class<? extends AbstractEntity<?>>> iter = relevantTypes.iterator();
-            final Class<? extends AbstractEntity<?>> firstEntityType = iter.next();
+            final Class<? extends AbstractEntity<?>> firstDependentEntityType = iter.next();
 
-            final List<Field> propsForFirstEntityType = Finder.findPropertiesOfSpecifiedType(firstEntityType, entityType);
-            IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(getReferenceCountForSingleProp(firstEntityType, propsForFirstEntityType));
+            // let's start with making counting query for the first dependent entity type -- there is at least one if this code was reached
+            // first obtain list of properties of the type that matches the entity type of interest
+            final List<Field> propsForFirstEntityType = Finder.findPropertiesOfSpecifiedType(firstDependentEntityType, entityType);
+            // then actually make a counting query based on the obtained list
+            IStandAloneExprOperationAndClose expressionModelInProgress = expr().model(mkQueryToCountReferencesInType(firstDependentEntityType, propsForFirstEntityType));
 
-            for (; iter.hasNext();) {
-                final Class<? extends AbstractEntity<?>> nextEntityType = iter.next();
-                final List<Field> propsForNextEntityType = Finder.findPropertiesOfSpecifiedType(nextEntityType, entityType);
-                expressionModelInProgress = expressionModelInProgress.add().model(getReferenceCountForSingleProp(nextEntityType, propsForNextEntityType));
+            // need to do the same operation with other dependent types in case there are more than one
+            while (iter.hasNext()) {
+                final Class<? extends AbstractEntity<?>> nextDependentEntityType = iter.next();
+                final List<Field> propsForNextEntityType = Finder.findPropertiesOfSpecifiedType(nextDependentEntityType, entityType);
+                expressionModelInProgress = expressionModelInProgress.add().model(mkQueryToCountReferencesInType(nextDependentEntityType, propsForNextEntityType));
             }
 
             final AggregatedResultQueryModel query = select(entityType).where().prop("id").eq().val(entity).yield().expr(expressionModelInProgress.model()).as("kount").modelAsAggregate();
@@ -139,14 +158,99 @@ public final class Validators {
         }
     }
 
-    private static <T extends AbstractEntity<?>> PrimitiveResultQueryModel getReferenceCountForSingleProp(final Class<? extends AbstractEntity<?>> entityType, final List<Field> props) {
-        final Iterator<Field> iter = props.iterator();
-        final Field firstProp = iter.next();
-        ICompoundCondition0<? extends AbstractEntity<?>> cond = select(entityType).where().prop("active").eq().val(true).and().prop(firstProp.getName()).eq().extProp("id");
-        for (; iter.hasNext();) {
-            cond = cond.and().prop(iter.next().getName()).eq().extProp("id");
+    /**
+     * Finds active deactivatable dependencies for the specified entity.
+     *
+     * @param entity
+     * @return
+     */
+    public static <T extends ActivatableAbstractEntity<?>> List<? extends ActivatableAbstractEntity<?>> findActiveDeactivatableDependencies(final T entity, final ICompanionObjectFinder coFinder) {
+        final List<? extends ActivatableAbstractEntity<?>> result = new ArrayList<>();
+        final DeactivatableDependencies annotation = entity.getType().getAnnotation(DeactivatableDependencies.class);
+        if (annotation == null) {
+            return result;
         }
-        return cond.yield().countAll().modelAsPrimitive();
+        final Class<? extends AbstractEntity<?>> entityType = entity.getType();
+        final List<Class<? extends ActivatableAbstractEntity<?>>> relevantTypes = Arrays.asList(annotation.value());
+
+        for (final Class<? extends ActivatableAbstractEntity<?>> dependentType : relevantTypes) {
+            // only those properties that are key members are of interest
+            final List<Field> props = new ArrayList<>();
+            final List<Field> keyMembers = Finder.getKeyMembers(dependentType);
+            for(final Field keyMember : keyMembers) {
+                if (entityType.isAssignableFrom(keyMember.getType())) {
+                    props.add(keyMember);
+                }
+            }
+            if (!props.isEmpty()) { // most likely this means an invalid dependency
+                fetch fetch = fetch(dependentType);
+                IWhere1<? extends ActivatableAbstractEntity<?>> inProgress = select(dependentType).where().prop(ActivatableAbstractEntity.ACTIVE).eq().val(true).and().begin();
+                for (int index  = 0; index < props.size() - 1; index++) {
+                    final String propName = props.get(index).getName();
+                    fetch = fetch.with(propName);
+                    inProgress = inProgress.prop(propName).eq().val(entity).or();
+                }
+                final String propName = props.get(props.size() - 1).getName();
+                fetch = fetch.with(propName);
+                final EntityResultQueryModel<? extends ActivatableAbstractEntity<?>> query = inProgress.prop(propName).eq().val(entity).end().model();
+                final QueryExecutionModel<? extends ActivatableAbstractEntity<?>, ?> qem = from(query).with(fetch).model();
+                final IEntityDao co = coFinder.find(dependentType);
+                result.addAll(co.getAllEntities(qem));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Makes an EQL model that counts all instances of the specified entity <code>entityType</code> that contain references to the entity of interest that are expressed as
+     * properties <code>props</code>.
+     *
+     * @param entityType
+     * @param props
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> PrimitiveResultQueryModel mkQueryToCountReferencesInType(
+            final Class<? extends AbstractEntity<?>> entityType, // property owner
+            final List<Field> props // properties of the owning entity
+    ) {
+        final Iterator<Field> iter = props.iterator();
+        if (props.size() == 1) {
+            final Field firstProp = iter.next();
+            final ICompoundCondition0<? extends AbstractEntity<?>> cond =
+                    select(entityType).
+                            where().
+                            prop("id").ne().extProp("id").and(). // this is to prevent counting self-references, relies on throughout ID
+                            prop("active").eq().val(true).and().
+                            prop(firstProp.getName()).eq().extProp("id");
+
+            return cond.yield().countAll().modelAsPrimitive();
+
+        } else {
+            // need to add conditions to cover all properties of the referenced type using OR operation in case there are more than one
+            final Field firstProp = iter.next();
+            IWhere1<? extends AbstractEntity<?>> where =
+                    select(entityType).
+                            where().
+                            prop("id").ne().extProp("id").and(). // this is to prevent counting self-references, relies on throughout ID
+                            prop("active").eq().val(true).and().
+                            begin().
+                                prop(firstProp.getName()).eq().extProp("id").or();
+
+
+            ICompoundCondition0<? extends AbstractEntity<?>> cond = null;
+            do {
+                final Field prop = iter.next();
+                if (iter.hasNext()) {
+                    where = where.prop(prop.getName()).eq().extProp("id").or();
+                } else {
+                    cond = where.prop(prop.getName()).eq().extProp("id").end();
+                }
+
+            } while (iter.hasNext());
+
+            // yield count
+            return cond.yield().countAll().modelAsPrimitive();
+        }
     }
 
     /**
@@ -187,8 +291,8 @@ public final class Validators {
 
         // Condition for the end of the period for potentially overlapped existing entities
         condition_1: cc = cc.and().//
-                /*              */begin().//
-                /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
+        /*              */begin().//
+        /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
                 /*                  */or().//
                 /*                  */prop(toDateProperty).gt().val(entity.get(fromDateProperty))./* the end of the potentially overlapped entity is AFTER the fromDateProperty value of the entity under test */
                 /*              */end();//.
@@ -200,8 +304,8 @@ public final class Validators {
         // Closed ended period does require an additional condition to ensure the beginning of the potentially overlapped entity if BEFORE that end value of the entity under test
         condition_2: if (entity.get(toDateProperty) != null) {
             cc = cc.and().//
-                    /*    */begin().//
-                    /*        */prop(fromDateProperty).lt().val(entity.get(toDateProperty))./* the beginning of the potentially overlapped entity is BEFORE the toDateProperty value of the entity under test */
+            /*    */begin().//
+            /*        */prop(fromDateProperty).lt().val(entity.get(toDateProperty))./* the beginning of the potentially overlapped entity is BEFORE the toDateProperty value of the entity under test */
                     /*    */end();
         }
 
