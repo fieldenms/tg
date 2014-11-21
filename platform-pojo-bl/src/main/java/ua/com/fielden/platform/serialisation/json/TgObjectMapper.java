@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -20,20 +22,19 @@ import ua.com.fielden.platform.serialisation.json.serialiser.AbstractEntityToJso
 import ua.com.fielden.platform.serialisation.json.serialiser.CentreManagerToJsonSerialiser;
 import ua.com.fielden.platform.serialisation.json.serialiser.PageToJsonSerialiser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 
 public class TgObjectMapper extends ObjectMapper implements ISerialiserEngine {
-
     private static final long serialVersionUID = 8131371701442950310L;
+    private final Logger logger = Logger.getLogger(getClass());
 
     private final TgModule module;
     private final EntityFactory factory;
 
-    @Inject
     public TgObjectMapper(final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
         this(new SimpleDateFormat("dd/MM/yyyy hh:mma"), entityFactory, provider);
     }
@@ -96,8 +97,13 @@ public class TgObjectMapper extends ObjectMapper implements ISerialiserEngine {
 
     @Override
     public byte[] serialise(final Object obj) {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            final String json = writeValueAsString(obj);
+            return json.getBytes();
+        } catch (final JsonProcessingException e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

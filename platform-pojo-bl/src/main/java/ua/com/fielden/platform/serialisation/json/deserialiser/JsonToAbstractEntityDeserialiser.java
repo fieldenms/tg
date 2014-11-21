@@ -21,63 +21,61 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.google.inject.Inject;
 
 public class JsonToAbstractEntityDeserialiser<T extends AbstractEntity<?>> extends JsonDeserializer<T> {
 
     private final EntityFactory entityFactory;
     private final TgObjectMapper mapper;
 
-    @Inject
     public JsonToAbstractEntityDeserialiser(final TgObjectMapper mapper, final EntityFactory entityFactory) {
-	this.entityFactory = entityFactory;
-	this.mapper = mapper;
+        this.entityFactory = entityFactory;
+        this.mapper = mapper;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public T deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
-	//TODO Right now it is a QueryRunner deserialiser but in the future when json object will have _type property it can be deserilised in to any type.
-	try {
-	    final JsonNode node = jp.readValueAsTree();
-	    final Class<T> entityType = (Class<T>) findClass(node.get("@entityType").asText());
-	    final T entity = entityFactory.newEntity(entityType);
-//	    entity.setInitialising(true);
-	    for (final Field propertyField : Finder.findRealProperties(entity.getType())) {
-		final JsonNode propNode = node.get(propertyField.getName());
-		if (propNode != null) {
-		    propertyField.setAccessible(true);
-		    if (AbstractEntity.KEY.equals(propertyField.getName())) {
-			final Class<?> fieldType = AnnotationReflector.getKeyType(entityType);
-			propertyField.set(entity, node.get(propertyField.getName()).traverse(mapper).readValueAs(fieldType));
-		    } else {
-			propertyField.set(entity, mapper.readValue(node.get(propertyField.getName()).traverse(mapper), constructType(mapper.getTypeFactory(), propertyField)));
-			// node.get(propertyField.getName()).traverse(mapper).readValueAs());
-		    }
+        //TODO Right now it is a QueryRunner deserialiser but in the future when json object will have _type property it can be deserilised in to any type.
+        try {
+            final JsonNode node = jp.readValueAsTree();
+            final Class<T> entityType = (Class<T>) findClass(node.get("@entityType").asText());
+            final T entity = entityFactory.newEntity(entityType);
+            //	    entity.setInitialising(true);
+            for (final Field propertyField : Finder.findRealProperties(entity.getType())) {
+                final JsonNode propNode = node.get(propertyField.getName());
+                if (propNode != null) {
+                    propertyField.setAccessible(true);
+                    if (AbstractEntity.KEY.equals(propertyField.getName())) {
+                        final Class<?> fieldType = AnnotationReflector.getKeyType(entityType);
+                        propertyField.set(entity, node.get(propertyField.getName()).traverse(mapper).readValueAs(fieldType));
+                    } else {
+                        propertyField.set(entity, mapper.readValue(node.get(propertyField.getName()).traverse(mapper), constructType(mapper.getTypeFactory(), propertyField)));
+                        // node.get(propertyField.getName()).traverse(mapper).readValueAs());
+                    }
 
-		}
-	    }
-//	    entity.setInitialising(false);
-	    return entity;
-	} catch (final Exception e) {
-	    e.printStackTrace();
-	    throw new RuntimeException("Error while deserialising");
-	}
+                }
+            }
+            //	    entity.setInitialising(false);
+            return entity;
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error while deserialising");
+        }
     }
 
     private ResolvedType constructType(final TypeFactory typeFactory, final Field propertyField) {
-	final Class<?> fieldType = PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
+        final Class<?> fieldType = PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
 
-	if (Map.class.isAssignableFrom(fieldType)) {
-	    final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
-	    final Class<?> keyClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[0]);
-	    final Class<?> valueClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[1]);
+        if (Map.class.isAssignableFrom(fieldType)) {
+            final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
+            final Class<?> keyClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[0]);
+            final Class<?> valueClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[1]);
 
-	    return typeFactory.constructMapType((Class<? extends Map>) fieldType, keyClass, valueClass);
-	} else {
-	    // TODO no other collectional types are supported at this stage -- should be added one by one
-	    return typeFactory.constructType(PropertyTypeDeterminator.stripIfNeeded(propertyField.getType()));
-	}
+            return typeFactory.constructMapType((Class<? extends Map>) fieldType, keyClass, valueClass);
+        } else {
+            // TODO no other collectional types are supported at this stage -- should be added one by one
+            return typeFactory.constructType(PropertyTypeDeterminator.stripIfNeeded(propertyField.getType()));
+        }
     }
 
 }

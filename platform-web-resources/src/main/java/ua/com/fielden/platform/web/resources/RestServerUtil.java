@@ -29,7 +29,7 @@ import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.snappy.SnappyQuery;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -49,13 +49,9 @@ public class RestServerUtil {
     /** An application wide private key */
     private String appWidePrivateKey;
 
-    // TODO will move to seriliser.
-    private final TgObjectMapper jsonSerialiser;
-
     @Inject
-    public RestServerUtil(final ISerialiser serialiser, final TgObjectMapper jsonSerialiser) {
+    public RestServerUtil(final ISerialiser serialiser) {
         this.serialiser = serialiser;
-        this.jsonSerialiser = jsonSerialiser;
     }
 
     private final Logger logger = Logger.getLogger(RestServerUtil.class);
@@ -105,15 +101,10 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation errorJSONRepresentation(final String string){
+    public Representation errorJSONRepresentation(final String string) {
         logger.debug("Start building error JSON representation:" + new DateTime());
-        //final byte[] bytes = serialiser.serialise(new Result(null, new Exception(string)), SerialiserEngine.JACKSON);
         byte[] bytes = new byte[0];
-	try {
-	    bytes = jsonSerialiser.writeValueAsBytes(new Result(null, new Exception(string)));
-	} catch (final JsonProcessingException e) {
-	    e.printStackTrace();
-	}
+        bytes = serialiser.serialise(new Result(null, new Exception(string)), SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length */);
     }
@@ -153,10 +144,9 @@ public class RestServerUtil {
      */
     public Representation errorJSONRepresentation(final Exception ex) throws JsonProcessingException {
         logger.debug("Start building error JSON representation:" + new DateTime());
-        //final byte[] bytes = serialiser.serialise(new Result(ex), SerialiserEngine.JACKSON);
-        final byte[] bytes = jsonSerialiser.writeValueAsBytes(new Result(ex));
+        final byte[] bytes = serialiser.serialise(new Result(ex), SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/ );
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
 
     /**
@@ -181,8 +171,7 @@ public class RestServerUtil {
      */
     public Representation resultJSONRepresentation(final Result result) throws JsonProcessingException {
         logger.debug("Start building result JSON representation:" + new DateTime());
-        //final byte[] bytes = serialiser.serialise(result, SerialiserEngine.JACKSON);
-        final byte[] bytes = jsonSerialiser.writeValueAsBytes(result);
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM /* , bytes.length */);
     }
@@ -290,9 +279,8 @@ public class RestServerUtil {
         try {
             // create a Result enclosing entity list
             final Result result = entity != null ? new Result(entity, "OK") : new Result(null, new Exception("Could not find entity."));
-            //final byte[] bytes = serialiser.serialise(result, SerialiserEngine.JACKSON);
-            final byte[] bytes = jsonSerialiser.writeValueAsBytes(result);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/ );
+            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
         } catch (final Exception ex) {
             logger.error(ex);
             return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
@@ -373,7 +361,7 @@ public class RestServerUtil {
      * @throws Exception
      */
     public <T extends AbstractEntity> T restoreJSONEntity(final Representation representation, final Class<T> type) throws Exception {
-	return jsonSerialiser.readValue(representation.getStream(), type);
+        return serialiser.deserialise(representation.getStream(), type, SerialiserEngines.JACKSON);
     }
 
     /**

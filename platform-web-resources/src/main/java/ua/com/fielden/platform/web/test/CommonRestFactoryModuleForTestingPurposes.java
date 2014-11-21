@@ -5,8 +5,8 @@ import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.kryo.Serialiser;
-import ua.com.fielden.platform.serialisation.kryo.Serialiser0;
+import ua.com.fielden.platform.serialisation.api.Serialiser;
+import ua.com.fielden.platform.serialisation.api.Serialiser0;
 
 import com.google.inject.Scopes;
 

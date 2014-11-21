@@ -20,8 +20,8 @@ import ua.com.fielden.platform.domaintree.testing.SerialiserForDomainTreesTestin
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Injector;
 
 public class CentreManagerToJsonSerialisationTest {
@@ -70,7 +70,8 @@ public class CentreManagerToJsonSerialisationTest {
         cdtm.getSecondTick().check(TopLevelEntity.class, "entityProp.entityProp.simpleEntityProp", true);
     }
 
-    private final TgObjectMapper tgToJson = injector.getInstance(TgObjectMapper.class);
+    // private final TgObjectMapper tgToJson = injector.getInstance(TgObjectMapper.class);
+    // private final ISerialiser serialiser = injector.getInstance(ISerialiser.class);
 
     @Test
     @Ignore
@@ -81,8 +82,9 @@ public class CentreManagerToJsonSerialisationTest {
                     + "\"stringProp\"," + "\"\"," + "\"entityProp\"," + "\"entityProp.entityProp.dateProp\"," + "\"entityProp.entityProp.simpleEntityProp\"" + "],"
                     + "\"resultProperties\":[" + "\"integerProp\"," + "\"moneyProp\"," + "\"booleanProp\"," + "\"stringProp\"," + "\"\"," + "\"entityProp\","
                     + "\"entityProp.entityProp.dateProp\"," + "\"entityProp.entityProp.simpleEntityProp\"" + "]" + "}";
-            Assert.assertEquals("The serialised object isn't correct", expectedJson, tgToJson.writeValueAsString(cdtm));
-        } catch (final JsonProcessingException e) {
+            Assert.assertEquals("The serialised object isn't correct", expectedJson, /* tgToJson.writeValueAsString(cdtm) */
+                    serialiser.serialise(cdtm, SerialiserEngines.JACKSON).toString());
+        } catch (final Exception e) {
             e.printStackTrace();
             fail("The json serialisation doesn't work!");
         }

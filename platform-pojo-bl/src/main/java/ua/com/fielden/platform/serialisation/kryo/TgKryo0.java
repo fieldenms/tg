@@ -110,6 +110,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.serialisation.api.Serialiser0;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ClassSerialiser;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ColorSerializer;
@@ -169,7 +170,7 @@ public class TgKryo0 extends Kryo implements ISerialiserEngine {
         }
     }
 
-    private final ISerialiser0 serialiser;
+    private final Serialiser0 serialiser;
     private final EntityFactory factory;
     private final ISerialisationClassProvider provider;
 
@@ -214,14 +215,14 @@ public class TgKryo0 extends Kryo implements ISerialiserEngine {
     private final Serializer dynamicallyTypedQueryContainerSerialiser;
     private final Serializer lifecycleQueryContainerSerialiser;
 
-    public TgKryo0(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialiser0 serialiser) {
+    public TgKryo0(final EntityFactory factory, final ISerialisationClassProvider provider, final Serialiser0 serialiser) {
         setRegistrationOptional(true);
         setClassLoader(ClassLoader.getSystemClassLoader());
 
         this.factory = factory;
         this.provider = provider;
         this.serialiser = serialiser;
-        ((Serialiser) this.serialiser).setEngine(SerialiserEngines.KRYO, this);
+        this.serialiser.setEngine(SerialiserEngines.KRYO, this);
 
         moneySerialiser = new MoneySerialiser(this);
         resultSerialiser = new ResultSerialiser(this);

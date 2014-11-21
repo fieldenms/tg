@@ -1,18 +1,15 @@
-package ua.com.fielden.platform.serialisation.kryo;
+package ua.com.fielden.platform.serialisation.api;
 
 import java.io.InputStream;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
+import ua.com.fielden.platform.serialisation.kryo.TgKryo;
 
 import com.google.inject.Inject;
 
 /**
- *
+ * The default implementation for {@link ISerialiser} with two engines: KRYO (default) and JACKSON.
  *
  * @author TG Team
  *

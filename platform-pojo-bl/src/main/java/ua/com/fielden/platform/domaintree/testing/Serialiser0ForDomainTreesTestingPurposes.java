@@ -3,11 +3,14 @@ package ua.com.fielden.platform.domaintree.testing;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
-import ua.com.fielden.platform.serialisation.kryo.Serialiser0;
+import ua.com.fielden.platform.serialisation.api.Serialiser0;
+
+import com.google.inject.Inject;
 
 @Deprecated
 public class Serialiser0ForDomainTreesTestingPurposes extends Serialiser0 {
 
+    @Inject
     @Deprecated
     public Serialiser0ForDomainTreesTestingPurposes(final EntityFactory factory, final ISerialisationClassProvider provider) {
         super(factory, provider);

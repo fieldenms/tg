@@ -21,7 +21,7 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.GeneratedEntityRao;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.kryo.Serialiser;
+import ua.com.fielden.platform.serialisation.api.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.resources.RouterHelper;

@@ -3,7 +3,8 @@ package ua.com.fielden.platform.serialisation.api;
 import java.io.InputStream;
 
 /**
- * API for serialising and deserialising entities and entity queries.
+ * API for serialising and deserialising entities, queries and other TG objects. There are multiple {@link SerialiserEngines} to be used for serialisation / deserialisation.
+ * {@link SerialiserEngines#KRYO} can be used as the default engine.
  *
  * @author TG Team
  *

@@ -7,8 +7,7 @@ import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1.
 import ua.com.fielden.platform.domaintree.testing.DomainTreeRepresentation1.DomainTreeRepresentationForTestSerialiser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.kryo.Serialiser;
+import ua.com.fielden.platform.serialisation.api.Serialiser;
 import ua.com.fielden.platform.serialisation.kryo.TgKryo;
 
 import com.esotericsoftware.kryo.Serializer;
@@ -21,7 +20,7 @@ import com.esotericsoftware.kryo.Serializer;
  */
 public class TgKryoForDomainTreesTestingPurposes extends TgKryo {
 
-    public TgKryoForDomainTreesTestingPurposes(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialiser serialiser) {
+    public TgKryoForDomainTreesTestingPurposes(final EntityFactory factory, final ISerialisationClassProvider provider, final Serialiser serialiser) {
         super(factory, provider, serialiser);
     }
 

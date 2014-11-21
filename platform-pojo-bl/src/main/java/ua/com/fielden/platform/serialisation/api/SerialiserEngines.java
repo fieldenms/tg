@@ -8,11 +8,11 @@ package ua.com.fielden.platform.serialisation.api;
  */
 public enum SerialiserEngines {
     /**
-     * Serialisation engine for Java TG Client. This engine is used for Java TG client, which deserialises back to Java objects.
+     * Serialisation engine for Java TG Client. This engine is used for Java TG client application, where the byte array deserialises back to Java objects.
      */
     KRYO,
     /**
-     * Serialisation engine for HTML5/JS TG Client. This engine is used for web-browser TG client application, which deserialises to JavaScript objects (from JSON).
+     * Serialisation engine for HTML5/JS TG Client. This engine is used for web-browser TG client application, where the byte array deserialises to JavaScript objects (from JSON).
      */
     JACKSON
 }

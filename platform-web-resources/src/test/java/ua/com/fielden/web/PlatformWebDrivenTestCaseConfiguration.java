@@ -8,7 +8,6 @@ import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.test.CommonRestFactoryModuleForTestingPurposes;
@@ -30,7 +29,7 @@ public class PlatformWebDrivenTestCaseConfiguration implements IWebDrivenTestCas
     private final ISerialiser clientSerialiser;
     private RestServerUtil restServerUtil;
 
-    private ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class });
+    private final ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class });
 
     public PlatformWebDrivenTestCaseConfiguration() {
         restClientUtil = new RestClientUtil(Protocol.HTTP, "localhost", PORT, "v1", "test");
@@ -62,7 +61,7 @@ public class PlatformWebDrivenTestCaseConfiguration implements IWebDrivenTestCas
 
     @Override
     public void setDbDrivenTestConfiguration(final IDbDrivenTestCaseConfiguration config) {
-        restServerUtil = new RestServerUtil(config.getInjector().getInstance(ISerialiser.class), config.getInjector().getInstance(TgObjectMapper.class));
+        restServerUtil = new RestServerUtil(config.getInjector().getInstance(ISerialiser.class));
     }
 
 }
