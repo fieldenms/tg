@@ -15,7 +15,6 @@ import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
-import org.hibernate.type.BooleanType;
 import org.hibernate.type.Type;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -27,7 +26,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.proxy.ProxyMode;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
@@ -88,9 +86,14 @@ public class EntityFetcher {
 
     private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
         final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, universalConstants);
-        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem);
+        final FetchModel<T> fm = qem.getFetchModel() == null ? //
+              (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? null : new FetchModel(fetch(qem.getQueryModel().getResultType()), domainMetadataAnalyser)) : // 
+                  new FetchModel(qem.getFetchModel(), domainMetadataAnalyser); 
+        
+        
+        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getQueryModel().getResultType(), fm, qem.getParamValues());
         final String sql = entQuery.sql();
-        return new QueryModelResult<T>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
+        return new QueryModelResult<T>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), fm);
     }
 
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
@@ -105,6 +108,7 @@ public class EntityFetcher {
             throws Exception {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(getDomainMetadata());
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, getFilter(), getUsername());
+
         if (modelResult.idOnlyQuery()) {
             return listContainers(from(select(modelResult.getResultType()).where().prop("id").in().model((SingleResultQueryModel) queryModel.getQueryModel()).model()). //
             lightweight(queryModel.isLightweight()). //
@@ -113,10 +117,8 @@ public class EntityFetcher {
             with(queryModel.getParamValues()).model(), pageNumber, pageCapacity);
         }
         final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
-        final fetch<E> fetchModel = queryModel.getFetchModel() != null ? queryModel.getFetchModel() : fetch(modelResult.getResultType());
-        final FetchModel<E> entFetch = new FetchModel<E>(/*queryModel.getFetchModel()*/fetchModel, domainMetadataAnalyser);
-        logger.info("Fetch model:\n" + entFetch);
-        return new EntityEnhancer<E>(this, domainMetadataAnalyser).enhance(result, entFetch);
+        logger.info("Fetch model:\n" + modelResult.getFetchModel());
+        return new EntityEnhancer<E>(this, domainMetadataAnalyser).enhance(result, modelResult.getFetchModel());
     }
 
     protected Query produceHibernateQuery(final String sql, final SortedSet<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {

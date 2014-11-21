@@ -49,6 +49,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
 
     private Pair<TokenCategory, Object> getResultForEntityTypeAsSource() {
         final Class<AbstractEntity<?>> resultType = (Class) firstValue();
+        System.out.println("        ------------- getResultForEntityTypeAsSource() resultType = : " +  resultType);
         final AbstractEntityMetadata entityMetadata = getQueryBuilder().getDomainMetadataAnalyser().getEntityMetadata(resultType);
         if (entityMetadata instanceof PersistedEntityMetadata) {
             return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new TypeBasedSource((PersistedEntityMetadata) entityMetadata, (String) secondValue(), getQueryBuilder().getDomainMetadataAnalyser()));
@@ -65,7 +66,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         final Class resultType = readyResultType != null ? readyResultType : null;
         final List<EntQuery> queries = new ArrayList<EntQuery>();
         for (final QueryModel qryModel : models) {
-            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues(), resultType));
+            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues(), resultType != null ? resultType : qryModel.getResultType()));
         }
 
         return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource(alias, getQueryBuilder().getDomainMetadataAnalyser(), queries.toArray(new EntQuery[] {})));
@@ -76,6 +77,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         if (isEntityTypeAsSourceTest() || isEntityTypeAsSourceWithoutAliasTest()) {
             return getResultForEntityTypeAsSource();
         } else if (isEntityModelAsSourceTest() || isEntityModelAsSourceWithoutAliasTest()) {
+            System.out.println("--------------------HA-HA-HA");
             return getResultForEntityModelAsSource(null, null, null);
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");

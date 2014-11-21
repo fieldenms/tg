@@ -4,13 +4,12 @@ import java.util.Iterator;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBys;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryCategory;
@@ -36,23 +35,24 @@ public class EntQueryGenerator {
         this.universalConstants = universalConstants;
     }
 
-    public EntQuery generateEntQueryAsResultQuery(final QueryExecutionModel<?, ?> qem) {
-        qem.getParamValues().put(NOW, universalConstants.now().toDate());
-
-        return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), qem.getParamValues(), QueryCategory.RESULT_QUERY, filter, username);
+    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery generateEntQueryAsResultQuery(final Q query, final OrderingModel orderModel, final Class<T> resultType, final FetchModel<T> fetchModel, final Map<String, Object> paramValues) {
+        paramValues.put(NOW, universalConstants.now().toDate());
+        
+        return generateEntQuery(query, orderModel, resultType, fetchModel, paramValues, QueryCategory.RESULT_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final Class resultType) {
+        System.out.println(" =========================== generateEntQueryAsSourceQuery(..) resultType = : " + resultType);
         return generateEntQuery(qryModel, null, resultType, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsSubquery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
-        return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SUB_QUERY, filter, username);
+        return generateEntQuery(qryModel, null, qryModel.getResultType(), null, paramValues, QueryCategory.SUB_QUERY, filter, username);
     }
 
     public EntQueryBlocks parseTokensIntoComponents(final QueryModel<?> qryModel, //
             final OrderingModel orderModel, //
-            final fetch fetchModel, //
+            //final fetch fetchModel, //
             final Map<String, Object> paramValues) {
         final QrySourcesBuilder from = new QrySourcesBuilder(this, paramValues);
         final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues);
@@ -99,23 +99,34 @@ public class EntQueryGenerator {
     private EntQuery generateEntQuery(final QueryModel<?> qryModel, //
             final OrderingModel orderModel, //
             final Class resultType, //
-            final fetch fetchModel, //
+            final FetchModel fetchModel, //
             final Map<String, Object> paramValues, //
             final QueryCategory category, //
             final IFilter filter, //
             final String username) {
-        final Class actualResultType = resultType != null ? resultType : qryModel.getResultType();
-//        FetchModel actualFetchModel = fetchModel == null ? (actualResultType.equals(EntityAggregates.class) ? null : new FetchModel(fetch(actualResultType), domainMetadataAnalyser)) : new FetchModel(fetchModel, domainMetadataAnalyser); 
+        //final Class actualResultType = resultType != null ? resultType : qryModel.getResultType();
+        System.out.println("___________1: fetchModel = " + fetchModel);
+        System.out.println("___________2: resultType = " + resultType);
+        //if (resultType == null) {
+            System.out.println("___________3: qryModel = " + qryModel);
+            System.out.println("___________4: category = " + category);
+    //}
+        
+//        final FetchModel actualFetchModel = fetchModel == null ? 
+//                (category != QueryCategory.RESULT_QUERY || actualResultType.equals(EntityAggregates.class) ? null : new FetchModel(fetch(actualResultType), domainMetadataAnalyser)) : 
+//                    new FetchModel(fetchModel, domainMetadataAnalyser); 
         return new EntQuery( //
         qryModel.isFilterable(), //
-        parseTokensIntoComponents(qryModel, orderModel, fetchModel, paramValues), //
-        actualResultType, //
+        parseTokensIntoComponents(qryModel, orderModel, /*fetchModel,*/ paramValues), //
+        resultType, //
         category, //
         domainMetadataAnalyser, //
         filter, //
         username, //
         this, //
-        fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //actualFetchModel, //
+        //fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //
+        //actualFetchModel, //
+        fetchModel,
         paramValues);
     }
 
