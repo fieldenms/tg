@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>fielden</groupId>
 		<artifactId>platform-parent</artifactId>
-		<version>1.2-SNAPSHOT</version>
+		<version>1.3-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>platform-dao</artifactId>
@@ -13,6 +13,8 @@
 	<name>Trident Genesis Platform DAO</name>
 	<description>
            The platform module that provide database communication logic fully compatible with the Fractal Objects design pattern."
+           This includes base DAO implementation logic for data-aware companion object.
+        </description>
 	<dependencies>
 		<!-- inner module dependencies -->
 		<dependency>
@@ -46,11 +48,6 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-c3p0</artifactId>
 			<version>3.6.10.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>javassist</groupId>
-			<artifactId>javassist</artifactId>
-			<version>3.12.0.GA</version>
 		</dependency>
 
 	</dependencies>

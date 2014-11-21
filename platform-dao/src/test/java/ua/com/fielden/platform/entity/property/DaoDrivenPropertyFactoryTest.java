@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.entity.property;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -11,26 +17,21 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * A test case for validating DAO driven {@link IMetaPropertyFactory} implementation.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
     private final EntityWithMoneyDao dao = getInstance(EntityWithMoneyDao.class);
@@ -123,15 +124,16 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
 
     /**
      * This is a test entity class that two properties, which are entities -- one with an ordinary key, another with a composite key.
-     * 
+     *
      * @author 01es
-     * 
+     *
      */
     @KeyType(String.class)
     public static class Entity extends AbstractEntity<String> {
         private static final long serialVersionUID = 1L;
 
         @IsProperty
+        @Required
         private EntityWithMoney property;
         @IsProperty
         private EntityWithDynamicCompositeKey propertyTwo;
@@ -145,7 +147,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return property;
         }
 
-        @NotNull
         @EntityExists(EntityWithMoney.class)
         @Observable
         public void setProperty(final EntityWithMoney property) {
@@ -156,7 +157,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return propertyTwo;
         }
 
-        @NotNull
         @EntityExists(EntityWithDynamicCompositeKey.class)
         @Observable
         public void setPropertyTwo(final EntityWithDynamicCompositeKey property) {
@@ -167,7 +167,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return propertyThree;
         }
 
-        @NotNull
         @EntityExists(EntityWithMoney.class)
         @Observable
         public void setPropertyThree(final String entityWithMoneyKey) {

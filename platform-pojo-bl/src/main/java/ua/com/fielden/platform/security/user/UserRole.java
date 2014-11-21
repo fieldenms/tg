@@ -2,11 +2,11 @@ package ua.com.fielden.platform.security.user;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Represents a concept of a user role. Multiple users may have the same role. At this stage user role has only key and description.

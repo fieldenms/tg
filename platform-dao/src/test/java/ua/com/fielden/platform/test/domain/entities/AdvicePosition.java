@@ -11,14 +11,13 @@ import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 
 /**
  * Position within an advice that may or may no contain a rotable.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
@@ -55,7 +54,7 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
 
     /**
      * The main constructor.
-     * 
+     *
      * @param advice
      */
     public AdvicePosition(final Advice advice, final Integer position) {
@@ -69,7 +68,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return advice;
     }
 
-    @NotNull
     @Final
     @Observable
     protected void setAdvice(final Advice advice) {
@@ -80,7 +78,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return position;
     }
 
-    @NotNull
     @Final
     @GreaterOrEqual(1)
     @Observable
@@ -92,7 +89,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return rotable;
     }
 
-    @NotNull
     @Final
     @EntityExists(Rotable.class)
     @DomainValidation
@@ -106,7 +102,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return sendingWorkshop;
     }
 
-    @NotNull
     @Final
     @EntityExists(Workshop.class)
     @Observable
@@ -119,7 +114,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return receivingWorkshop;
     }
 
-    @NotNull
     @EntityExists(Workshop.class)
     @Observable
     public AdvicePosition setReceivingWorkshop(final Workshop receivingWorkshop) throws Result {
@@ -135,7 +129,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return placementDate;
     }
 
-    @NotNull
     @Final
     @Observable
     public AdvicePosition setPlacementDate(final Date placementDate) {
@@ -159,7 +152,7 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
 
     /**
      * Returns true if the rotable is assigned, but not received -- this means receiving is pending.
-     * 
+     *
      * @return
      */
     public boolean isPending() {
@@ -181,7 +174,7 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
 
     /**
      * Determines if this position can have anything placed on it.
-     * 
+     *
      * @return
      */
     public boolean isVacant() {

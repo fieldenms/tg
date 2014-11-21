@@ -10,7 +10,6 @@ import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.AttachmentInstanceResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -18,9 +17,9 @@ import com.google.inject.Injector;
 
 /**
  * Factory for instantiating {@link Attachment} instance specific resource.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AttachmentInstanceResourceFactory extends Restlet {
     private final Injector injector;
@@ -31,7 +30,7 @@ public class AttachmentInstanceResourceFactory extends Restlet {
     public AttachmentInstanceResourceFactory(final String location, final Injector injector, final EntityFactory factory) {
         this.injector = injector;
         this.factory = factory;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
         this.location = location;
     }
 

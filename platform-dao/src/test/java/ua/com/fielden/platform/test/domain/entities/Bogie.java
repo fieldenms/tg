@@ -5,13 +5,12 @@ import java.util.List;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Bogie rotable business entity
- * 
+ *
  * @author nc
- * 
+ *
  */
 public class Bogie extends Rotable {
 
@@ -38,7 +37,7 @@ public class Bogie extends Rotable {
 
     /**
      * Gets slot by slot position.
-     * 
+     *
      * @param slotPosition
      * @return
      * @throws Exception
@@ -53,7 +52,7 @@ public class Bogie extends Rotable {
 
     /**
      * Tests compatibility of the given wheelset with this bogie.
-     * 
+     *
      * @param rotable
      * @return
      */
@@ -67,7 +66,6 @@ public class Bogie extends Rotable {
     }
 
     @Override
-    @NotNull
     @EntityExists(BogieClass.class)
     @Observable
     public Bogie setRotableClass(final RotableClass klass) {

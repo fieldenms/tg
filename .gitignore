@@ -1,3 +1,4 @@
+*.synctex.gz
 *.orig
 *.aux
 *.db
@@ -21,13 +22,14 @@
 target
 .classpath
 .project
+.idea
 .settings
 *.class
 *.dtd
 *.nav
 *.snm
 *.vrb
-
+*.old
 
 # Package Files #
 *.jar

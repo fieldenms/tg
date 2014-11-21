@@ -8,7 +8,6 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.UserRoleAssociationResource;
 
@@ -16,9 +15,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct instantiation of {@link UserRoleAssociationResource}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class UserRoleAssociationResourceFactory extends Restlet {
     private final Injector injector;
@@ -29,7 +28,7 @@ public class UserRoleAssociationResourceFactory extends Restlet {
      */
     public UserRoleAssociationResourceFactory(final Injector injector) {
         this.injector = injector;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override

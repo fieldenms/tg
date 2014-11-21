@@ -8,7 +8,6 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.resources.EntityAggregatesQueryResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -16,9 +15,9 @@ import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for instantiation of EntityAggregatesQueryResource.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntityAggregatesQueryResourceFactory extends Restlet {
     private final Injector injector;
@@ -29,7 +28,7 @@ public class EntityAggregatesQueryResourceFactory extends Restlet {
      */
     public EntityAggregatesQueryResourceFactory(final Injector injector) {
         this.injector = injector;
-        this.restUtil = new RestServerUtil(injector.getInstance(ISerialiser.class));
+        this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override

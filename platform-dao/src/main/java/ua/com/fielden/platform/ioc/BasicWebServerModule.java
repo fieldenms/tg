@@ -14,13 +14,25 @@ import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
+import ua.com.fielden.platform.entity.functional.CritPropDao;
+import ua.com.fielden.platform.entity.functional.FetchPropDao;
+import ua.com.fielden.platform.entity.functional.QueryEntityDao;
+import ua.com.fielden.platform.entity.functional.QueryRunnerDao;
+import ua.com.fielden.platform.entity.functional.centre.ICritProp;
+import ua.com.fielden.platform.entity.functional.centre.IFetchProp;
+import ua.com.fielden.platform.entity.functional.centre.IQueryEntity;
+import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
+import ua.com.fielden.platform.entity.functional.paginator.IPage;
+import ua.com.fielden.platform.entity.functional.paginator.PageDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.NoAuthorisation;
+import ua.com.fielden.platform.security.ServerAuthorisationModel;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
@@ -57,7 +69,7 @@ import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
- * 
+ *
  * This IoC provides all the necessary bindings for:
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
@@ -66,9 +78,9 @@ import com.google.inject.name.Names;
  * {@link IAuthorisationModel} and more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class BasicWebServerModule extends CommonFactoryModule {
 
@@ -130,6 +142,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
         bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
+        bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
 
         // user security related bindings
         bind(IUserRoleDao.class).to(UserRoleDao.class);
@@ -141,7 +154,14 @@ public class BasicWebServerModule extends CommonFactoryModule {
         if (tokenProvider != null) {
             bind(SecurityTokenProvider.class).toInstance(tokenProvider);
         }
-        bind(IAuthorisationModel.class).to(NoAuthorisation.class);
+        bind(IAuthorisationModel.class).to(ServerAuthorisationModel.class);
+
+        // bind functional entities dao.
+        bind(IQueryRunner.class).to(QueryRunnerDao.class);
+        bind(IPage.class).to(PageDao.class);
+        bind(IQueryEntity.class).to(QueryEntityDao.class);
+        bind(ICritProp.class).to(CritPropDao.class);
+        bind(IFetchProp.class).to(FetchPropDao.class);
 
         // bind value matcher factory to support autocompleters
         bind(IDaoFactory.class).toInstance(getDaoFactory());

@@ -8,13 +8,12 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Represents a work order status required field.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 public class TgWoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
@@ -37,7 +36,7 @@ public class TgWoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
 
     /**
      * The main constructor.
-     * 
+     *
      * @param
      */
     public TgWoStatusRequiredField(final TgWorkOrderStatus woStatus, final PropertyDescriptor<TgWorkOrder> requiredField) {
@@ -51,7 +50,6 @@ public class TgWoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
         return woStatus;
     }
 
-    @NotNull
     @Final
     @Observable
     public void setWoStatus(final TgWorkOrderStatus woStatus) {
@@ -62,7 +60,6 @@ public class TgWoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
         return requiredProperty;
     }
 
-    @NotNull
     @Final
     @Observable
     public void setRequiredProperty(final PropertyDescriptor<TgWorkOrder> requiredField) {

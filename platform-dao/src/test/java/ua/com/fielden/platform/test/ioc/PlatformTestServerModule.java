@@ -30,6 +30,7 @@ import ua.com.fielden.platform.sample.domain.ITgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.ITgPersonName;
 import ua.com.fielden.platform.sample.domain.ITgSubSystem;
 import ua.com.fielden.platform.sample.domain.ITgSystem;
@@ -58,6 +59,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2Dao;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3Dao;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4Dao;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5Dao;
+import ua.com.fielden.platform.sample.domain.TgPersonDao;
 import ua.com.fielden.platform.sample.domain.TgPersonNameDao;
 import ua.com.fielden.platform.sample.domain.TgSubSystemDao;
 import ua.com.fielden.platform.sample.domain.TgSystemDao;
@@ -73,6 +75,7 @@ import ua.com.fielden.platform.sample.domain.TgWagonSlotDao;
 import ua.com.fielden.platform.sample.domain.TgWorkshopDao;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.UserProviderForTesting;
 
@@ -108,7 +111,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     protected void configure() {
         super.configure();
 
-        bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
+        bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
+        // bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
 
         // bind DAO
         //	bind(IWheelsetDao.class).to(WheelsetDao.class);
@@ -148,6 +152,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(IMigrationErrorDao.class).to(MigrationErrorDao.class);
         bind(IMigrationRunDao.class).to(MigrationRunDao.class);
         bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
+        bind(ITgPerson.class).to(TgPersonDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);

@@ -5,21 +5,24 @@ import java.text.SimpleDateFormat;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.functional.centre.CritProp;
+import ua.com.fielden.platform.entity.functional.centre.FetchProp;
+import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
+import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
+import ua.com.fielden.platform.entity.functional.paginator.Page;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToCentreConfigDeserialiser;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToCentreConfigDeserialiser.LightweightCentre;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToCriteriaDeserialiser;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToCriteriaDeserialiser.CritProp;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToResultDeserialiser;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToResultDeserialiser.ResultProperty;
+import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToAbstractEntityDeserialiser;
 import ua.com.fielden.platform.serialisation.json.serialiser.AbstractEntityToJsonSerialiser;
-import ua.com.fielden.platform.serialisation.json.serialiser.CentreMangerToJsonSerialiser;
+import ua.com.fielden.platform.serialisation.json.serialiser.CentreManagerToJsonSerialiser;
 import ua.com.fielden.platform.serialisation.json.serialiser.PageToJsonSerialiser;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 
 public class TgObjectMapper extends ObjectMapper {
 
@@ -27,13 +30,14 @@ public class TgObjectMapper extends ObjectMapper {
 
     private final TgModule module;
 
-    public TgObjectMapper() {
-        this(new SimpleDateFormat("dd/MM/yyyy hh:mma"));
+    @Inject
+    public TgObjectMapper(final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
+        this(new SimpleDateFormat("dd/MM/yyyy hh:mma"), entityFactory, provider);
     }
 
-    public TgObjectMapper(final DateFormat dateFormat) {
+    public TgObjectMapper(final DateFormat dateFormat, final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
         super();
-        module = new TgModule();
+        this.module = new TgModule();
 
         // Configuring type specific parameters.
         setDateFormat(dateFormat);
@@ -41,14 +45,22 @@ public class TgObjectMapper extends ObjectMapper {
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
 
         //Configuring serialiser.
-        addSerialiser(ICentreDomainTreeManagerAndEnhancer.class, new CentreMangerToJsonSerialiser());
+        addSerialiser(ICentreDomainTreeManagerAndEnhancer.class, new CentreManagerToJsonSerialiser(entityFactory));
         addSerialiser(IPage.class, new PageToJsonSerialiser());
         registerAbstractEntitySerialiser();
 
         //Configuring deserialiser.
-        addDeserialiser(LightweightCentre.class, new JsonToCentreConfigDeserialiser(this));
-        addDeserialiser(CritProp.class, new JsonToCriteriaDeserialiser(this));
-        addDeserialiser(ResultProperty.class, new JsonToResultDeserialiser(this));
+        addDeserialiser(QueryRunner.class, new JsonToAbstractEntityDeserialiser<QueryRunner>(this, entityFactory));
+        addDeserialiser(Page.class, new JsonToAbstractEntityDeserialiser<Page>(this, entityFactory));
+        addDeserialiser(CritProp.class, new JsonToAbstractEntityDeserialiser<CritProp>(this, entityFactory));
+        addDeserialiser(FetchProp.class, new JsonToAbstractEntityDeserialiser<FetchProp>(this, entityFactory));
+        addDeserialiser(QueryEntity.class, new JsonToAbstractEntityDeserialiser<QueryEntity>(this, entityFactory));
+
+        for (final Class<?> type : provider.classes()) {
+            if (AbstractEntity.class.isAssignableFrom(type)) {
+        	addDeserialiser((Class<AbstractEntity<?>>)type, new JsonToAbstractEntityDeserialiser<AbstractEntity<?>>(this, entityFactory));
+            }
+        }
 
         //Registering module.
         registerModule(module);

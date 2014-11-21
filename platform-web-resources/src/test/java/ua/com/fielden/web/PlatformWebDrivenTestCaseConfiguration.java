@@ -8,6 +8,7 @@ import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.test.CommonRestFactoryModuleForTestingPurposes;
@@ -18,9 +19,9 @@ import com.google.inject.Injector;
 
 /**
  * A platform specific implementation for web-driven test configuration.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PlatformWebDrivenTestCaseConfiguration implements IWebDrivenTestCaseConfiguration {
     private final RestClientUtil restClientUtil;
@@ -61,7 +62,7 @@ public class PlatformWebDrivenTestCaseConfiguration implements IWebDrivenTestCas
 
     @Override
     public void setDbDrivenTestConfiguration(final IDbDrivenTestCaseConfiguration config) {
-        restServerUtil = new RestServerUtil(config.getInjector().getInstance(ISerialiser.class));
+        restServerUtil = new RestServerUtil(config.getInjector().getInstance(ISerialiser.class), config.getInjector().getInstance(TgObjectMapper.class));
     }
 
 }

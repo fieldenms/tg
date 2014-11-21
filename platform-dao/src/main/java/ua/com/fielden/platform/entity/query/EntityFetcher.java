@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.query;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -11,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.type.BooleanType;
 import org.hibernate.type.Type;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -20,6 +25,8 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -27,30 +34,37 @@ import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYield
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 public class EntityFetcher {
     private final Session session;
     private final EntityFactory entityFactory;
+    private final ICompanionObjectFinder coFinder;
+    public ICompanionObjectFinder getCoFinder() {
+        return coFinder;
+    }
+
     private final DomainMetadata domainMetadata;
     private final IFilter filter;
     private final String username;
     private final Logger logger = Logger.getLogger(this.getClass());
 
-    public EntityFetcher(final Session session, final EntityFactory entityFactory, final DomainMetadata domainMetadata, final IFilter filter, final String username) {
+    private final IUniversalConstants universalConstants;
+
+    public EntityFetcher(final Session session, final EntityFactory entityFactory, final ICompanionObjectFinder coFinder, final DomainMetadata domainMetadata, final IFilter filter, final String username, final IUniversalConstants universalConstants) {
         this.session = session;
         this.entityFactory = entityFactory;
+        this.coFinder = coFinder;
         this.domainMetadata = domainMetadata;
         this.filter = filter;
         this.username = username;
+        this.universalConstants = universalConstants;
     }
 
-    public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+    private <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity, final ProxyMode proxyMode) {
         try {
             final DateTime st = new DateTime();
-            final List<E> result = instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight());
+            final List<E> result = instantiateFromContainers(listContainers(queryModel, pageNumber, pageCapacity), queryModel.isLightweight(), proxyMode);
             final Period pd = new Period(st, new DateTime());
             logger.info("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + result.size());
             return result;
@@ -60,12 +74,20 @@ public class EntityFetcher {
         }
     }
 
+    public <E extends AbstractEntity<?>> List<E> getLazyEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+        return getEntitiesOnPage(queryModel, pageNumber, pageCapacity, ProxyMode.LAZY);
+    }
+
+    public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+        return getEntitiesOnPage(queryModel, pageNumber, pageCapacity, ProxyMode.STRICT);
+    }
+
     public <E extends AbstractEntity<?>> List<E> getEntities(final QueryExecutionModel<E, ?> queryModel) {
         return getEntitiesOnPage(queryModel, null, null);
     }
 
     private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username);
+        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, universalConstants);
         final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem);
         final String sql = entQuery.sql();
         return new QueryModelResult<T>(entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams());
@@ -152,10 +174,10 @@ public class EntityFetcher {
         return result;
     }
 
-    protected <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final boolean userViewOnly) {
+    protected <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final boolean userViewOnly,  final ProxyMode proxyMode) {
         final List<E> result = new ArrayList<E>();
         for (final EntityContainer<E> entityContainer : containers) {
-            result.add(entityContainer.instantiate(getEntityFactory(), userViewOnly));
+            result.add(entityContainer.instantiate(getEntityFactory(), userViewOnly, proxyMode));
         }
         return result;
     }
@@ -172,7 +194,7 @@ public class EntityFetcher {
             setMaxResults(pageCapacity);
         }
 
-        return new EntityRawResultConverter<E>(getEntityFactory()).transformFromNativeResult(resultTree, query.list());
+        return new EntityRawResultConverter<E>(getEntityFactory(), getCoFinder()).transformFromNativeResult(resultTree, query.list());
     }
 
     public Session getSession() {

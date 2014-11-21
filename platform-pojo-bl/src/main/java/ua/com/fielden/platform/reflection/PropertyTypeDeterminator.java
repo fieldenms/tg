@@ -155,7 +155,7 @@ public class PropertyTypeDeterminator {
      * @param type
      * @return
      */
-    protected static Class<?> classFrom(final Type type) {
+    public static Class<?> classFrom(final Type type) {
         if (type instanceof ParameterizedType) {
             return classFrom(((ParameterizedType) type).getRawType());
         } else if (type instanceof TypeVariable) {

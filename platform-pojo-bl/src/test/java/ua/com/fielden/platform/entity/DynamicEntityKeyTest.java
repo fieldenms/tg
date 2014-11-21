@@ -62,18 +62,18 @@ public class DynamicEntityKeyTest {
     public void test_that_composite_key_is_determined_correctly() {
         final CorrectEntityWithDynamicEntityKey instance = new CorrectEntityWithDynamicEntityKey();
         final DynamicEntityKey key = new DynamicEntityKey(instance);
-        assertEquals("Incorrect number of properties.", 2, key.getPropertyExpressions().size());
-        assertEquals("Incorrect order of properties.", "entity.property1", key.getPropertyExpressions().get(0).getExpression());
-        assertEquals("Incorrect order of properties.", "entity.property2", key.getPropertyExpressions().get(1).getExpression());
+        assertEquals("Incorrect number of properties.", 2, key.getMemberNames().size());
+        assertEquals("Incorrect order of properties.", "property1", key.getMemberNames().get(0));
+        assertEquals("Incorrect order of properties.", "property2", key.getMemberNames().get(1));
     }
 
     @Test
     public void test_that_composite_key_is_determined_correctly_for_entity_with_reversed_declaration_order() {
         final CorrectEntityWithReversedOrder instance = new CorrectEntityWithReversedOrder();
         final DynamicEntityKey key = new DynamicEntityKey(instance);
-        assertEquals("Incorrect number of properties.", 2, key.getPropertyExpressions().size());
-        assertEquals("Incorrect order of properties.", "entity.property2", key.getPropertyExpressions().get(0).getExpression());
-        assertEquals("Incorrect order of properties.", "entity.property1", key.getPropertyExpressions().get(1).getExpression());
+        assertEquals("Incorrect number of properties.", 2, key.getMemberNames().size());
+        assertEquals("Incorrect order of properties.", "property2", key.getMemberNames().get(0));
+        assertEquals("Incorrect order of properties.", "property1", key.getMemberNames().get(1));
     }
 
     @Test
@@ -100,8 +100,8 @@ public class DynamicEntityKeyTest {
     public void test_that_creation_of_the_key_failes_for_entity_with_single_key_member() {
         final EntityWithSingleKeyMemver instance = new EntityWithSingleKeyMemver();
         final DynamicEntityKey key = new DynamicEntityKey(instance);
-        assertEquals("Incorrect number of key members.", 1, key.getPropertyExpressions().size());
-        assertEquals("Incorrect key member.", "entity.property1", key.getPropertyExpressions().get(0).getExpression());
+        assertEquals("Incorrect number of key members.", 1, key.getMemberNames().size());
+        assertEquals("Incorrect key member.", "property1", key.getMemberNames().get(0));
     }
 
     @Test

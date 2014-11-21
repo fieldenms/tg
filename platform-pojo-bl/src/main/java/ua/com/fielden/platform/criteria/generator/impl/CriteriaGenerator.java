@@ -45,6 +45,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -64,9 +65,9 @@ import com.google.inject.Inject;
 
 /**
  * The implementation of the {@link ICriteriaGenerator} that generates {@link EntityQueryCriteria} with criteria properties.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CriteriaGenerator implements ICriteriaGenerator {
 
@@ -146,7 +147,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     /**
      * Generates criteria properties for specified list of properties and their root type.
-     * 
+     *
      * @param root
      * @param propertyName
      * @return
@@ -169,7 +170,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     /**
      * Generates criteria property with appropriate annotations.
-     * 
+     *
      * @param root
      * @param managedType
      * @param propertyType
@@ -213,7 +214,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     /**
      * Generates two criteria properties for range properties (i. e. number, money, date or boolean properties).
-     * 
+     *
      * @param root
      * @param managedType
      * @param propertyType
@@ -243,7 +244,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     /**
      * Synchronises entity query criteria property values with domain tree model.
-     * 
+     *
      * @param entity
      */
     private static <T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> void synchroniseWithModel(final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity) {

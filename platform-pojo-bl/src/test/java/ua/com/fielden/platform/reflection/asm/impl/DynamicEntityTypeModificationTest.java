@@ -49,9 +49,9 @@ import com.google.inject.Injector;
 
 /**
  * A test case to ensure correct dynamic modification of entity types by means of changing existing properties.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DynamicEntityTypeModificationTest {
@@ -249,9 +249,9 @@ public class DynamicEntityTypeModificationTest {
     public void test_observation_of_setter_for_new_property_in_instance_of_generated_entity_type_used_for_property_in_higher_order_type() throws Exception {
         // get the enhanced EntityBeingEnhanced type
         final Class<? extends AbstractEntity> entityBeingEnhancedEnhancedType = (Class<? extends AbstractEntity>) cl.startModification(EntityBeingEnhanced.class.getName()).addProperties(pd).endModification();
-        module.getDomainMetaPropertyConfig().setDefiner(entityBeingEnhancedEnhancedType, NEW_PROPERTY, new IAfterChangeEventHandler() {
+        module.getDomainMetaPropertyConfig().setDefiner(entityBeingEnhancedEnhancedType, NEW_PROPERTY, new IAfterChangeEventHandler<Object>() {
             @Override
-            public void handle(final MetaProperty property, final Object entityPropertyValue) {
+            public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
                 observed = true;
             }
         });
@@ -315,9 +315,9 @@ public class DynamicEntityTypeModificationTest {
         final NewProperty collectionalPropModification = NewProperty.changeTypeSignature("prop1", entityBeingEnhancedEnhancedType);
         final Class<? extends AbstractEntity> modifiedType = (Class<? extends AbstractEntity>) cl.startModification(EntityWithCollectionalPropety.class.getName()).modifyProperties(collectionalPropModification).endModification();
         // get the enhanced EntityBeingEnhanced type
-        module.getDomainMetaPropertyConfig().setDefiner(modifiedType, "prop1", new IAfterChangeEventHandler() {
+        module.getDomainMetaPropertyConfig().setDefiner(modifiedType, "prop1", new IAfterChangeEventHandler<Object>() {
             @Override
-            public void handle(final MetaProperty property, final Object entityPropertyValue) {
+            public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
                 observed = true;
             }
         });

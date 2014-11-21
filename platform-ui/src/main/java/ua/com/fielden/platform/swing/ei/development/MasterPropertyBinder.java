@@ -27,9 +27,9 @@ import ua.com.fielden.platform.swing.review.report.centre.binder.PropertyBinderE
 
 /**
  * Property binder which can bind external editors.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class MasterPropertyBinder<T extends AbstractEntity> implements ILightweightPropertyBinder<T> {
 
@@ -67,9 +67,9 @@ public class MasterPropertyBinder<T extends AbstractEntity> implements ILightwei
     public Map<String, IPropertyEditor> bind(final T entity) {
         final Date curr = new Date();
         final Map<String, IPropertyEditor> newPropertyEditors = new HashMap<String, IPropertyEditor>();
-        final SortedSet<MetaProperty> metaProps = Finder.getMetaProperties(entity);
+        final SortedSet<MetaProperty<?>> metaProps = Finder.getMetaProperties(entity);
         // iterate through the meta-properties and create appropriate editors
-        for (final MetaProperty metaProp : metaProps) {
+        for (final MetaProperty<?> metaProp : metaProps) {
             if (metaProp.isVisible() && !propertiesToIgnor.contains(metaProp.getName())) { // should include only visible properties
                 if (AbstractEntity.class.isAssignableFrom(metaProp.getType())) { // property is of entity type
                     final IPropertyEditor editor = createEntityPropertyEditor(entity, metaProp.getName(), valueMatcherFactory.getValueMatcher(entity.getType(), metaProp.getName()));
@@ -103,8 +103,9 @@ public class MasterPropertyBinder<T extends AbstractEntity> implements ILightwei
     protected IPropertyEditor createEntityPropertyEditor(final T entity, final String name, final IValueMatcher<?> valueMatcher) {
         if (PropertyBinderType.WITH_LOCATOR == propertyBinderType) {
             return EntityPropertyEditorWithLocator.createEntityPropertyEditorWithLocatorForMaster(entity, name, masterManager, criteriaGenerator, valueMatcherFactory.getValueMatcher(entity.getType(), name));
-        } else if (PropertyBinderType.WITHOUT_LOCATOR == propertyBinderType)
+        } else if (PropertyBinderType.WITHOUT_LOCATOR == propertyBinderType) {
             return EntityPropertyEditor.createEntityPropertyEditorForMaster(entity, name, valueMatcherFactory.getValueMatcher(entity.getType(), name));
+        }
         return null;
     }
 

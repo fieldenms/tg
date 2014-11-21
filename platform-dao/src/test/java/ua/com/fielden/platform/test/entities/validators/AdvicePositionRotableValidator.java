@@ -11,14 +11,14 @@ import ua.com.fielden.platform.test.domain.entities.Rotable;
 
 /**
  * Domain validator for property <code>rotable</code> of {@link AdvicePosition}.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class AdvicePositionRotableValidator implements IBeforeChangeEventHandler<Rotable> {
 
     @Override
-    public Result handle(final MetaProperty property, final Rotable newValue, final Rotable oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Rotable> property, final Rotable newValue, final Rotable oldValue, final Set<Annotation> mutatorAnnotations) {
         final AdvicePosition pos = (AdvicePosition) property.getEntity();
         if (!newValue.equals(oldValue)) {
             if (pos.getAdvice().rotables().contains(newValue)) {

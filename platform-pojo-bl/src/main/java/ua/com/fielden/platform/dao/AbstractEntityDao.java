@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
@@ -7,28 +12,21 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides common implementation shared between Hibernate and REST implementation of DAOs.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements IEntityDao<T> {
 
@@ -42,7 +40,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     /**
      * A principle constructor, which requires entity type that should be managed by this DAO instance. Entity's key type is determined automatically.
-     * 
+     *
      * @param entityType
      */
     protected AbstractEntityDao() {
@@ -98,14 +96,14 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     /**
      * Method checks whether the key of the entity type associated with this DAO if composite or not.
-     * 
+     *
      * If composite then <code>WHERE</code> statement is build using composite key members and the passed values. The number of values should match the number of composite key
      * members.
-     * 
+     *
      * Otherwise, <code>WHERE</code> statement is build using only property <code>key</code>.
-     * 
+     *
      * The created query expects a unique result, and throws a runtime exception if this is not the case.
-     * 
+     *
      * TODO Need to consider the case of polymorphic associations such as Rotable, which can be both Bogie and/or Wheelset.
      */
     @Override
@@ -139,7 +137,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     /**
      * Convenient method for composing a query to select an entity by key value.
-     * 
+     *
      * @param keyValues
      * @return
      */
@@ -187,11 +185,6 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         } else {
             return cond().prop(propName).eq().val(propValue).model();
         }
-    }
-
-    @Override
-    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
-        throw new UnsupportedOperationException("Not implemented.");
     }
 
     @Override

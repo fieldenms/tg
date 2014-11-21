@@ -158,9 +158,9 @@ public class Finder {
      * @return
      * @throws RuntimeException
      */
-    public static SortedSet<MetaProperty> getMetaProperties(final AbstractEntity<?> entity) {
+    public static SortedSet<MetaProperty<?>> getMetaProperties(final AbstractEntity<?> entity) {
         final List<Field> properties = findRealProperties(entity.getType());
-        final SortedSet<MetaProperty> metaProperties = new TreeSet<MetaProperty>();
+        final SortedSet<MetaProperty<?>> metaProperties = new TreeSet<>();
         for (final Field property : properties) {
             metaProperties.add(entity.getProperty(property.getName()));
         }
@@ -176,10 +176,10 @@ public class Finder {
      * @return
      * @throws RuntimeException
      */
-    public static List<MetaProperty> getCollectionalMetaProperties(final AbstractEntity<?> entity, final Class<?> collectionType) {
-        final SortedSet<MetaProperty> metaProperties = getMetaProperties(entity);
-        final List<MetaProperty> collectional = new ArrayList<MetaProperty>();
-        for (final MetaProperty metaProperty : metaProperties) {
+    public static List<MetaProperty<?>> getCollectionalMetaProperties(final AbstractEntity<?> entity, final Class<?> collectionType) {
+        final SortedSet<MetaProperty<?>> metaProperties = getMetaProperties(entity);
+        final List<MetaProperty<?>> collectional = new ArrayList<>();
+        for (final MetaProperty<?> metaProperty : metaProperties) {
             if (metaProperty.isCollectional() && metaProperty.getPropertyAnnotationType() == collectionType) {
                 collectional.add(metaProperty);
             }
@@ -413,7 +413,7 @@ public class Finder {
      * @return
      * @throws Exception
      */
-    public static Object findFieldValueByName(final Object instance, final String dotNotationExp) throws Exception {
+    public static <T> T findFieldValueByName(final Object instance, final String dotNotationExp) throws Exception {
         if (instance == null) {
             return null;
         }
@@ -425,7 +425,7 @@ public class Finder {
                 return null;
             }
         }
-        return value;
+        return (T) value;
     }
 
     /**
@@ -746,7 +746,7 @@ public class Finder {
      * @param entityTypes
      * @return
      */
-    public static List<String> findCommonProperties(final List<Class<? extends AbstractEntity>> entityTypes) {
+    public static List<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
         final List<List<Field>> propertiesSet = new ArrayList<List<Field>>();
         for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
             final List<Field> fields = new ArrayList<Field>();
