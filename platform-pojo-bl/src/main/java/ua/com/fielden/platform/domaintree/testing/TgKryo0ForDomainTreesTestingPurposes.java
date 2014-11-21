@@ -6,8 +6,8 @@ import ua.com.fielden.platform.domaintree.testing.DomainTreeManager1.DomainTreeM
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1.DomainTreeManagerAndEnhancerForTestSerialiser;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeRepresentation1.DomainTreeRepresentationForTestSerialiser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.TgKryo0;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.kryo.TgKryo0;
 
 import com.esotericsoftware.kryo.Serializer;
 

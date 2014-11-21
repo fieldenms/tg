@@ -13,7 +13,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
+import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 
 import com.esotericsoftware.kryo.Kryo;
 

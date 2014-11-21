@@ -7,8 +7,8 @@ import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
 import com.google.inject.Injector;

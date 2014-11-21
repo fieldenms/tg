@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
+import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
 
 import com.google.inject.Inject;
 

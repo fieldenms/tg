@@ -26,7 +26,7 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
+import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;

@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.entity.functional.paginator.Page;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToAbstractEntityDeserialiser;
 import ua.com.fielden.platform.serialisation.json.serialiser.AbstractEntityToJsonSerialiser;
 import ua.com.fielden.platform.serialisation.json.serialiser.CentreManagerToJsonSerialiser;

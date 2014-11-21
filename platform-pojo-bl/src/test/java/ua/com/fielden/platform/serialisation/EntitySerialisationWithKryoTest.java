@@ -25,13 +25,13 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.entity.BaseEntity;
 import ua.com.fielden.platform.serialisation.entity.EntityWithPolymorphicProperty;
 import ua.com.fielden.platform.serialisation.entity.EntityWithQueryProperty;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity2;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.serialisation.kryo.TgKryo;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 

@@ -2,11 +2,11 @@ package ua.com.fielden.platform.web.test;
 
 import ua.com.fielden.platform.ioc.CommonRestFactoryModule;
 import ua.com.fielden.platform.rao.RestClientUtil;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
-import ua.com.fielden.platform.serialisation.impl.TgKryo0;
+import ua.com.fielden.platform.serialisation.kryo.TgKryo;
+import ua.com.fielden.platform.serialisation.kryo.TgKryo0;
 
 import com.google.inject.Scopes;
 

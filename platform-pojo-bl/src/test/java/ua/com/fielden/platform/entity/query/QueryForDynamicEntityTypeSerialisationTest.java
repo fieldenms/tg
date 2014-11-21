@@ -24,8 +24,8 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.kryo.TgKryo;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
