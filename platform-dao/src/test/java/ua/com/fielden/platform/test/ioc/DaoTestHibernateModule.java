@@ -46,8 +46,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo0;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser0;
 import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
@@ -79,9 +79,9 @@ import com.google.inject.TypeLiteral;
 
 /**
  * Guice injector module for Hibernate related injections for testing purposes.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DaoTestHibernateModule extends CommonFactoryModule {
 
@@ -149,7 +149,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
                 return new ArrayList<>();
             }
         });
-        bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
-        bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
+        bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
+        bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON);
     }
 }

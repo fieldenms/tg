@@ -17,7 +17,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.CompactWriter;
@@ -26,11 +26,11 @@ import com.thoughtworks.xstream.io.xml.CompactWriter;
  * A base class for XML serialisation of class instances, which is based on {@link XStream}.
  * <p>
  * Provides custom toXml conversion and supports a converter for {@link AbstractEntity} descendants out of the box.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public abstract class XStreamSerialiser extends XStream implements ISerialiser {
+public abstract class XStreamSerialiser extends XStream implements ISerialiserEngine {
     private final boolean compact;
 
     protected XStreamSerialiser(final boolean compact) {
@@ -97,5 +97,4 @@ public abstract class XStreamSerialiser extends XStream implements ISerialiser {
         final GZIPInputStream zIn = new GZIPInputStream(content);
         return type.cast(fromXML(new BufferedReader(new InputStreamReader(zIn, "UTF-8"))));
     }
-
 }

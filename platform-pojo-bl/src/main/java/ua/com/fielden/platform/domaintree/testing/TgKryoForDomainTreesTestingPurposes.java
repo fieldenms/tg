@@ -7,34 +7,36 @@ import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1.
 import ua.com.fielden.platform.domaintree.testing.DomainTreeRepresentation1.DomainTreeRepresentationForTestSerialiser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
 import ua.com.fielden.platform.serialisation.kryo.TgKryo;
 
 import com.esotericsoftware.kryo.Serializer;
 
 /**
- * {@link TgKryo} descendant for Domain Tree testing.
- * 
+ * {@link Serialiser} descendant for Domain Tree testing.
+ *
  * @author TG Team
- * 
+ *
  */
 public class TgKryoForDomainTreesTestingPurposes extends TgKryo {
 
-    public TgKryoForDomainTreesTestingPurposes(final EntityFactory factory, final ISerialisationClassProvider provider) {
-        super(factory, provider);
+    public TgKryoForDomainTreesTestingPurposes(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialiser serialiser) {
+        super(factory, provider, serialiser);
     }
 
     @Override
     public Serializer newSerializer(final Class type) {
         if (DomainTreeManager1.class.isAssignableFrom(type)) {
-            return new DomainTreeManagerForTestSerialiser(this);
+            return new DomainTreeManagerForTestSerialiser(getSerialiser());
         } else if (DomainTreeManagerAndEnhancer1.class.isAssignableFrom(type)) {
-            return new DomainTreeManagerAndEnhancerForTestSerialiser(this);
+            return new DomainTreeManagerAndEnhancerForTestSerialiser(getSerialiser());
         } else if (DomainTreeRepresentation1.class.isAssignableFrom(type)) {
-            return new DomainTreeRepresentationForTestSerialiser(this);
+            return new DomainTreeRepresentationForTestSerialiser(getSerialiser());
         } else if (AbstractAnalysisDomainTreeManager1.class.isAssignableFrom(type)) {
-            return new AbstractAnalysisDomainTreeManager1Serialiser(this);
+            return new AbstractAnalysisDomainTreeManager1Serialiser(getSerialiser());
         } else if (AbstractAnalysisDomainTreeRepresentation1.class.isAssignableFrom(type)) {
-            return new AbstractAnalysisDomainTreeRepresentation1Serialiser(this);
+            return new AbstractAnalysisDomainTreeRepresentation1Serialiser(getSerialiser());
         } else {
             return super.newSerializer(type);
         }

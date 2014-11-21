@@ -1,5 +1,13 @@
 package ua.com.fielden.platform.serialisation;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.nio.ByteBuffer;
@@ -26,11 +34,13 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.entity.BaseEntity;
 import ua.com.fielden.platform.serialisation.entity.EntityWithPolymorphicProperty;
 import ua.com.fielden.platform.serialisation.entity.EntityWithQueryProperty;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.entity.SubBaseEntity2;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
 import ua.com.fielden.platform.serialisation.kryo.TgKryo;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
@@ -38,27 +48,19 @@ import ua.com.fielden.platform.types.Money;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 /**
  * Unit tests to ensure correct serialised/deserialised of {@link AbstractEntity} descendants.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntitySerialisationWithKryoTest {
     private boolean observed = false; // used
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class));
-    private final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class));
+    private final TgKryo kryoWriter = (TgKryo) new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class)).getEngine(SerialiserEngines.KRYO);
+    private final TgKryo kryoReader = (TgKryo) new Serialiser(factory, new ProvidedSerialisationClassProvider(Entity.class, ClassWithMap.class, EntityWithPolymorphicProperty.class, BaseEntity.class, SubBaseEntity1.class, SubBaseEntity2.class, EntityWithByteArray.class, EntityWithQueryProperty.class)).getEngine(SerialiserEngines.KRYO);
     private Entity entity;
     private Entity entityForResult;
     private Entity entForProp;

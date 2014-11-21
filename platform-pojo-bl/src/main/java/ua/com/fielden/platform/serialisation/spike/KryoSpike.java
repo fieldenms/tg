@@ -11,6 +11,8 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
 import ua.com.fielden.platform.serialisation.kryo.TgKryo;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
@@ -25,8 +27,9 @@ public class KryoSpike {
         final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
         final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
-        final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(DomainType1.class));
-        final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(DomainType1.class));
+        final ProvidedSerialisationClassProvider provider = new ProvidedSerialisationClassProvider(DomainType1.class);
+        final TgKryo kryoWriter = (TgKryo) (new Serialiser(factory, provider).getEngine(SerialiserEngines.KRYO));
+        final TgKryo kryoReader = (TgKryo) (new Serialiser(factory, provider).getEngine(SerialiserEngines.KRYO));
 
         System.out.print("Creating objects...");
         final List<DomainType1> list = new ArrayList<DomainType1>(1000);

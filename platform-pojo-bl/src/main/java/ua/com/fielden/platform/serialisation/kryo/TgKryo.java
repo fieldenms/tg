@@ -109,6 +109,8 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ClassSerialiser;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ColorSerializer;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.DateTimeSerializer;
@@ -143,19 +145,17 @@ import com.esotericsoftware.kryo.serialize.IntSerializer;
 import com.esotericsoftware.kryo.serialize.LongSerializer;
 import com.esotericsoftware.kryo.serialize.ReferenceFieldSerializer;
 import com.esotericsoftware.kryo.serialize.StringSerializer;
-import com.google.inject.Inject;
 
 /**
  * The descendant of {@link Kryo} with TG specific logic to correctly assign serialisers and recognise descendants of {@link AbstractEntity}. This covers correct determination of
  * the underlying entity type for dynamic CGLIB proxies.
  * <p>
- * All classes have to be registered with an instance of {@link TgKryo} at the server and client sides in the same order.
+ * All classes have to be registered with an instance of {@link Serialiser} at the server and client sides in the same order.
  *
  * @author TG Team
  *
  */
-public class TgKryo extends Kryo implements ISerialiser {
-
+public class TgKryo extends Kryo implements ISerialiserEngine {
     public static final String ENTITY_REFERENCES = "entity-references";
 
     /** Default buffer sizes for */
@@ -171,6 +171,7 @@ public class TgKryo extends Kryo implements ISerialiser {
         }
     }
 
+    private final ISerialiser serialiser;
     private final EntityFactory factory;
     private final ISerialisationClassProvider provider;
 
@@ -215,13 +216,14 @@ public class TgKryo extends Kryo implements ISerialiser {
     private final Serializer dynamicallyTypedQueryContainerSerialiser;
     private final Serializer lifecycleQueryContainerSerialiser;
 
-    @Inject
-    public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider) {
+    public TgKryo(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialiser serialiser) {
         setRegistrationOptional(true);
         setClassLoader(ClassLoader.getSystemClassLoader());
 
         this.factory = factory;
         this.provider = provider;
+        this.serialiser = serialiser;
+        ((Serialiser) this.serialiser).setEngine(SerialiserEngines.KRYO, this);
 
         moneySerialiser = new MoneySerialiser(this);
         resultSerialiser = new ResultSerialiser(this);
@@ -239,27 +241,27 @@ public class TgKryo extends Kryo implements ISerialiser {
         colorSerializer = new ColorSerializer();
         sortKeySerialiser = new SortKeySerialiser(this);
         // "domain trees" serialisers
-        locatorManagerSerialiser = new LocatorManagerSerialiser(this);
-        domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(this);
-        centreDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(this);
-        pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(this);
-        analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(this);
-        sentinelDomainTreeRepresentationSerialiser = new SentinelDomainTreeRepresentationSerialiser(this);
-        lifecycleDomainTreeRepresentationSerialiser = new LifecycleDomainTreeRepresentationSerialiser(this);
-        multipleDecDomainTreeRepresentationSerialiser = new MultipleDecDomainTreeRepresentationSerialiser(this);
-        locatorDomainTreeManagerSerialiser = new LocatorDomainTreeManagerSerialiser(this);
-        centreDomainTreeManagerSerialiser = new CentreDomainTreeManagerSerialiser(this);
-        masterDomainTreeManagerSerialiser = new MasterDomainTreeManagerSerialiser(this);
-        locatorDomainTreeRepresentationSerialiser = new LocatorDomainTreeRepresentationSerialiser(this);
-        addToCriteriaTickManagerForLocatorSerialiser = new AddToCriteriaTickManagerForLocatorSerialiser(this);
-        addToCriteriaTickManagerSerialiser = new AddToCriteriaTickManagerSerialiser(this);
-        pivotDomainTreeManagerSerialiser = new PivotDomainTreeManagerSerialiser(this);
-        analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(this);
-        sentinelDomainTreeManagerSerialiser = new SentinelDomainTreeManagerSerialiser(this);
-        lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(this);
-        multipleDecDomainTreeManagerSerialiser = new MultipleDecDomainTreeManagerSerialiser(this);
-        locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(this);
-        centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new CentreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(this);
+        locatorManagerSerialiser = new LocatorManagerSerialiser(serialiser);
+        domainTreeEnhancerSerialiser = new DomainTreeEnhancerSerialiser(serialiser);
+        centreDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(serialiser);
+        pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(serialiser);
+        analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(serialiser);
+        sentinelDomainTreeRepresentationSerialiser = new SentinelDomainTreeRepresentationSerialiser(serialiser);
+        lifecycleDomainTreeRepresentationSerialiser = new LifecycleDomainTreeRepresentationSerialiser(serialiser);
+        multipleDecDomainTreeRepresentationSerialiser = new MultipleDecDomainTreeRepresentationSerialiser(serialiser);
+        locatorDomainTreeManagerSerialiser = new LocatorDomainTreeManagerSerialiser(serialiser);
+        centreDomainTreeManagerSerialiser = new CentreDomainTreeManagerSerialiser(serialiser);
+        masterDomainTreeManagerSerialiser = new MasterDomainTreeManagerSerialiser(serialiser);
+        locatorDomainTreeRepresentationSerialiser = new LocatorDomainTreeRepresentationSerialiser(serialiser);
+        addToCriteriaTickManagerForLocatorSerialiser = new AddToCriteriaTickManagerForLocatorSerialiser(serialiser);
+        addToCriteriaTickManagerSerialiser = new AddToCriteriaTickManagerSerialiser(serialiser);
+        pivotDomainTreeManagerSerialiser = new PivotDomainTreeManagerSerialiser(serialiser);
+        analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(serialiser);
+        sentinelDomainTreeManagerSerialiser = new SentinelDomainTreeManagerSerialiser(serialiser);
+        lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(serialiser);
+        multipleDecDomainTreeManagerSerialiser = new MultipleDecDomainTreeManagerSerialiser(serialiser);
+        locatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(serialiser);
+        centreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser = new CentreDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(serialiser);
         dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
         lifecycleQueryContainerSerialiser = new LifecycleQueryContainerSerialiser(this);
 
@@ -535,14 +537,14 @@ public class TgKryo extends Kryo implements ISerialiser {
 
     @Override
     public byte[] serialise(final Object obj) {
-        //	int size;
-        //	if (obj instanceof IQueryOrderedModel) {
-        //	    size = BUFFER_SIZE.QUERY.size;
-        //	} else if (((obj instanceof Result) && ((Result) obj).getInstance() instanceof List) || obj instanceof Collection) {
-        //	    size = BUFFER_SIZE.DATA.size;
-        //	} else {
-        //	    size = BUFFER_SIZE.INSTANCE.size;
-        //	}
+        //  int size;
+        //  if (obj instanceof IQueryOrderedModel) {
+        //      size = BUFFER_SIZE.QUERY.size;
+        //  } else if (((obj instanceof Result) && ((Result) obj).getInstance() instanceof List) || obj instanceof Collection) {
+        //      size = BUFFER_SIZE.DATA.size;
+        //  } else {
+        //      size = BUFFER_SIZE.INSTANCE.size;
+        //  }
 
         final ByteBuffer writeBuffer = safeWrite(ByteBuffer.allocate(BUFFER_SIZE.DATA.size), obj);
         writeBuffer.flip();
@@ -644,5 +646,9 @@ public class TgKryo extends Kryo implements ISerialiser {
     @Override
     public EntityFactory factory() {
         return factory;
+    }
+
+    protected ISerialiser getSerialiser() {
+        return serialiser;
     }
 }

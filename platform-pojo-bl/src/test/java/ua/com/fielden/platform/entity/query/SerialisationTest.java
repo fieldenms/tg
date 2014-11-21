@@ -25,7 +25,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
@@ -51,8 +51,8 @@ public class SerialisationTest {
         types.add(TgOrgUnit5.class);
     }
 
-    private final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
-    private final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
+    private final Serialiser kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
+    private final Serialiser kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
 
     @Test
     public void seralisation_of_simple_query_should_not_have_failed() {

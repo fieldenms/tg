@@ -16,7 +16,7 @@ import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurpose
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.domaintree.testing.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -40,7 +40,7 @@ public class DynamicFetchBuilderTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
     private static final Class<? extends AbstractEntity<?>> masterKlass, slaveKlass, evenSlaveKlass, stringKeyKlass, mutableKeyType;
@@ -74,12 +74,12 @@ public class DynamicFetchBuilderTest {
     @Test
     public void test_that_fetch_first_level_properties_works() {
         final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "integerProp", //
-                "doubleProp", //
-                "bigDecimalProp", //
-                "moneyProp", //
-                "dateProp", //
-                "booleanProp", //
-                "stringProp"//
+        "doubleProp", //
+        "bigDecimalProp", //
+        "moneyProp", //
+        "dateProp", //
+        "booleanProp", //
+        "stringProp"//
         }));
         final fetch<? extends AbstractEntity<?>> fetchModel = fetchOnly(masterKlass).with("integerProp").with("doubleProp")//
         .with("bigDecimalProp").with("moneyProp").with("dateProp").with("booleanProp").with("stringProp");
@@ -89,8 +89,8 @@ public class DynamicFetchBuilderTest {
     @Test
     public void test_that_entity_propertie_fetch_works() {
         final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "", //
-                "stringProp", //
-                "entityProp"//
+        "stringProp", //
+        "entityProp"//
         }));
         final fetch<? extends AbstractEntity<?>> slaveEntityFetch = fetchOnly(slaveKlass).with("key").with("desc");
         final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("key").with("stringProp").//
@@ -101,11 +101,11 @@ public class DynamicFetchBuilderTest {
     @Test
     public void test_that_second_and_higher_level_fetch_works() {
         final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "", //
-                "stringProp", //
-                "entityProp.mutablyCheckedProp", //
-                "entityProp.mutablyCheckedProp.integerProp",//
-                "entityProp.entityProp.simpleEntityProp",//
-                "entityProp.entityProp.simpleEntityProp.integerProp"//
+        "stringProp", //
+        "entityProp.mutablyCheckedProp", //
+        "entityProp.mutablyCheckedProp.integerProp",//
+        "entityProp.entityProp.simpleEntityProp",//
+        "entityProp.entityProp.simpleEntityProp.integerProp"//
         }));
         final fetch<? extends AbstractEntity<?>> slaveSimpleFetch = fetchOnly(mutableKeyType).with("key").with("desc").with("integerProp");
         final fetch<? extends AbstractEntity<?>> stringKeyfetch = fetchOnly(stringKeyKlass).with("key").with("desc").with("integerProp");
@@ -120,14 +120,14 @@ public class DynamicFetchBuilderTest {
     @Test
     public void test_that_calculated_properties_fetch_works() {
         final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "", //
-                "stringProp", //
-                "firstCalc", //
-                "entityProp.mutablyCheckedProp", //
-                "entityProp.mutablyCheckedProp.integerProp", //
-                "entityProp.mutablyCheckedProp.secondCalc", //
-                "entityProp.entityProp.simpleEntityProp", //
-                "entityProp.entityProp.simpleEntityProp.integerProp", //
-                "entityProp.entityProp.simpleEntityProp.thirdCalc",//
+        "stringProp", //
+        "firstCalc", //
+        "entityProp.mutablyCheckedProp", //
+        "entityProp.mutablyCheckedProp.integerProp", //
+        "entityProp.mutablyCheckedProp.secondCalc", //
+        "entityProp.entityProp.simpleEntityProp", //
+        "entityProp.entityProp.simpleEntityProp.integerProp", //
+        "entityProp.entityProp.simpleEntityProp.thirdCalc",//
         }));
         final fetch<? extends AbstractEntity<?>> slaveSimpleFetch = fetchOnly(mutableKeyType).with("key").with("desc").with("integerProp").with("secondCalc");
         final fetch<? extends AbstractEntity<?>> stringKeyfetch = fetchOnly(stringKeyKlass).with("key").with("desc").with("integerProp").with("thirdCalc");
@@ -142,11 +142,11 @@ public class DynamicFetchBuilderTest {
     @Test
     public void test_that_total_properties_were_fetch_correctly() {
         final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "sumInt", //
-                "avgInt", //
-                "mutIntSum", //
-                "propIntSum", //
-                "propIntAvg", //
-                "propIntMin", //
+        "avgInt", //
+        "mutIntSum", //
+        "propIntSum", //
+        "propIntAvg", //
+        "propIntMin", //
         }));
         final fetch<? extends AbstractEntity<?>> masterEntityFetch = fetchOnly(masterKlass).with("sumInt").with("avgInt").with("mutIntSum")//
         .with("propIntSum").with("propIntAvg").with("propIntMin").without("id").without("version");

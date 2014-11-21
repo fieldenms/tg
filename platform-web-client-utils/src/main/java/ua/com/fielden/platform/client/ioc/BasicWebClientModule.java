@@ -32,8 +32,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo0;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser0;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigRao;
@@ -59,7 +59,7 @@ import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for client web applications, which should be enhanced by the application specific IoC module.
- * 
+ *
  * This IoC provides all the necessary bindings for:
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
@@ -68,9 +68,9 @@ import com.google.inject.name.Names;
  * {@link IAuthorisationModel} and more;
  * <li>Provides workflow sensitive application main menu configuration related bindings.
  * </ul>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class BasicWebClientModule extends CommonRestFactoryModule {
     protected final Properties props;
@@ -104,8 +104,8 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
         bind(IReferenceDependancyController.class).to(ReferenceDependancyController.class);
         // serialisation related binding
         bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON);
-        bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
-        bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
+        bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
+        bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON);
         /////////////////////////////////////////////////////////////////////////
         /////////////// bind some required platform specific RAOs ///////////////
         /////////////////////////////////////////////////////////////////////////
@@ -143,7 +143,7 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * Additionally, initialises the REST utility instance with {@link ISerialiser} and {@link IUserController}.
      */
     @Override

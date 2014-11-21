@@ -131,8 +131,8 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
          * 
          */
         public static class AddToCriteriaTickManagerForLocatorSerialiser extends AddToCriteriaTickManagerSerialiser {
-            public AddToCriteriaTickManagerForLocatorSerialiser(final ISerialiser kryo) {
-                super(kryo);
+            public AddToCriteriaTickManagerForLocatorSerialiser(final ISerialiser serialiser) {
+                super(serialiser);
             }
 
             @Override
@@ -149,7 +149,7 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
                 final EnhancementPropertiesMap<Boolean> propertiesNots = readValue(buffer, EnhancementPropertiesMap.class);
                 final Integer columnsNumber = readValue(buffer, Integer.class);
                 final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
-                return new AddToCriteriaTickManagerForLocator(checkedProperties, kryo(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
+                return new AddToCriteriaTickManagerForLocator(checkedProperties, serialiser(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
             }
         }
     }
@@ -161,8 +161,8 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
      * 
      */
     public static class LocatorDomainTreeManagerSerialiser extends AbstractDomainTreeManagerSerialiser<LocatorDomainTreeManager> {
-        public LocatorDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public LocatorDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -173,7 +173,7 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
             final Boolean runAutomatically = readValue(buffer, Boolean.class);
             final Boolean useForAutocompletion = readValue(buffer, Boolean.class);
             final SearchBy searchBy = readValue(buffer, SearchBy.class);
-            return new LocatorDomainTreeManager(kryo(), dtr, firstTick, secondTick, runAutomatically, useForAutocompletion, searchBy);
+            return new LocatorDomainTreeManager(serialiser(), dtr, firstTick, secondTick, runAutomatically, useForAutocompletion, searchBy);
         }
 
         @Override

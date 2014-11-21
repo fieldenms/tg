@@ -5,16 +5,16 @@ import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo0;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser0;
 
 import com.google.inject.Scopes;
 
 /**
  * Module for REST test clients.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CommonRestFactoryModuleForTestingPurposes extends CommonRestFactoryModule {
 
@@ -30,7 +30,7 @@ public class CommonRestFactoryModuleForTestingPurposes extends CommonRestFactory
         super.configure();
 
         bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
-        bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
-        bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
+        bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
+        bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON);
     }
 }

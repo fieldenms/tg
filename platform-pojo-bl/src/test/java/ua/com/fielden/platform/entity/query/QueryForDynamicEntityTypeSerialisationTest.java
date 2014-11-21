@@ -25,7 +25,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
@@ -52,8 +52,8 @@ public class QueryForDynamicEntityTypeSerialisationTest {
         types.add(TgOrgUnit5.class);
     }
 
-    private final TgKryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
-    private final TgKryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
+    private final Serialiser kryoWriter = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
+    private final Serialiser kryoReader = new Serialiser(factory, new ProvidedSerialisationClassProvider(types.toArray(new Class[] {})));
 
     private static final String NEW_PROPERTY_DESC = "Description  for new money property";
     private static final String NEW_PROPERTY_TITLE = "New money property";

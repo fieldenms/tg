@@ -35,14 +35,15 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * WARNING: this is an OLD version!
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @Deprecated
 public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDomainTreeEnhancer {
@@ -59,10 +60,10 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Constructs a new instance of domain enhancer with clean, not enhanced, domain.
-     * 
+     *
      * @param rootTypes
      *            -- root types
-     * 
+     *
      */
     public DomainTreeEnhancer0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
         this(serialiser, rootTypes, new HashMap<Class<?>, Map<String, ByteArray>>());
@@ -72,7 +73,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
      * Constructs a new instance of domain enhancer with full information about containing root types (<b>enhanced</b> or not). This primary constructor should be used for
      * serialisation and copying. Please also note that calculated property changes, that were not applied, will be disappeared! So every enhancer should be carefully applied (or
      * discarded) before serialisation.
-     * 
+     *
      */
     public DomainTreeEnhancer0(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, Map<String, ByteArray>> originalTypesAndEnhancedArrays) {
         super(serialiser);
@@ -102,7 +103,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Creates a map of [original -> original & emptyArrays] for provided <code>rootTypes</code>.
-     * 
+     *
      * @param rootTypes
      * @return
      */
@@ -147,7 +148,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Fully generates a new hierarchy of "originalAndEnhancedRootTypes" that conform to "calculatedProperties".
-     * 
+     *
      * @param rootTypes
      * @param calculatedProperties
      * @return
@@ -238,7 +239,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Groups calc props into the map by its domain paths.
-     * 
+     *
      * @param calculatedProperties
      * @return
      */
@@ -271,7 +272,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Propagates recursively the <code>enhancedType</code> from place [root; path] to place [root; ""].
-     * 
+     *
      * @param enhancedType
      *            -- the type to replace the current type of property "path" in "root" type
      * @param root
@@ -318,7 +319,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Extracts all calculated properties from enhanced root types.
-     * 
+     *
      * @param dte
      * @return
      */
@@ -335,7 +336,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Extracts recursively contextual <code>calculatedProperties</code> from enhanced domain <code>type</code>.
-     * 
+     *
      * @param type
      *            -- enhanced type to load properties
      * @param root
@@ -379,7 +380,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Checks whether calculated property with the suggested name exists (if it does not exist throws {@link IncorrectCalcPropertyException}) and return it.
-     * 
+     *
      * @param root
      * @param pathAndName
      * @return
@@ -394,7 +395,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Iterates through the set of calculated properties to find appropriate calc property.
-     * 
+     *
      * @param root
      * @param pathAndName
      * @return
@@ -405,7 +406,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Iterates through the set of calculated properties to find appropriate calc property.
-     * 
+     *
      * @param root
      * @param pathAndName
      * @return
@@ -423,7 +424,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Validates and adds calc property to a calculatedProperties.
-     * 
+     *
      * @param calculatedProperty
      * @param calculatedProperties
      */
@@ -496,7 +497,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Extracts only <b>enhanced</b> type's arrays mapped to original types.
-     * 
+     *
      * @return
      */
     private Map<Class<?>, Map<String, ByteArray>> originalTypesAndEnhancedArrays() {
@@ -511,7 +512,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * A current snapshot of calculated properties, possibly not applied.
-     * 
+     *
      * @return
      */
     @Override
@@ -521,21 +522,21 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * WARNING: this is an OLD version!
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     @Deprecated
     public static class DomainTreeEnhancer0Serialiser extends AbstractDomainTreeSerialiser<DomainTreeEnhancer0> {
         /**
          * WARNING: this is an OLD version!
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         @Deprecated
-        public DomainTreeEnhancer0Serialiser(final ISerialiser kryo) {
-            super(kryo);
+        public DomainTreeEnhancer0Serialiser(final ISerialiser0 serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -545,7 +546,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
             // So they should be used for serialisation, comparison and hashCode() implementation.
             final Set<Class<?>> rootTypes = readValue(buffer, HashSet.class);
             final Map<Class<?>, Map<String, ByteArray>> originalTypesAndEnhancedArrays = readValue(buffer, HashMap.class);
-            return new DomainTreeEnhancer0(kryo(), rootTypes, originalTypesAndEnhancedArrays);
+            return new DomainTreeEnhancer0(serialiser(), rootTypes, originalTypesAndEnhancedArrays);
         }
 
         @Override
@@ -555,6 +556,11 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
             // So they should be used for serialisation, comparison and hashCode() implementation.
             writeValue(buffer, domainTreeEnhancer.rootTypes());
             writeValue(buffer, domainTreeEnhancer.originalTypesAndEnhancedArrays());
+        }
+
+        @Override
+        protected ISerialiser0 serialiser() {
+            return (ISerialiser0) super.serialiser();
         }
     }
 
@@ -572,12 +578,15 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final DomainTreeEnhancer0 other = (DomainTreeEnhancer0) obj;
         // IMPORTANT : rootTypes() and originalTypesAndEnhancedArrays() are the mirror for "originalAndEnhancedRootTypesAndArrays".
         // They have no enhanced classes, but have their byte arrays.
@@ -592,7 +601,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
 
     /**
      * Returns an entity factory that is essential for inner {@link AbstractEntity} instances (e.g. calculated properties) creation.
-     * 
+     *
      * @return
      */
     @Override

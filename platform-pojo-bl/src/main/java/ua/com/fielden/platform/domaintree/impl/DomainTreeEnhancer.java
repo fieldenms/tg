@@ -652,8 +652,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * 
      */
     public static class DomainTreeEnhancerSerialiser extends AbstractDomainTreeSerialiser<DomainTreeEnhancer> {
-        public DomainTreeEnhancerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public DomainTreeEnhancerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -662,7 +662,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             // So they should be used for serialisation, comparison and hashCode() implementation.
             final Set<Class<?>> rootTypes = readValue(buffer, LinkedHashSet.class);
             final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo = readValue(buffer, LinkedHashMap.class);
-            return new DomainTreeEnhancer(kryo(), rootTypes, calculatedPropertiesInfo);
+            return new DomainTreeEnhancer(serialiser(), rootTypes, calculatedPropertiesInfo);
         }
 
         @Override

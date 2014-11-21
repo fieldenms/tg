@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.json;
 
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.entity.functional.paginator.Page;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToAbstractEntityDeserialiser;
 import ua.com.fielden.platform.serialisation.json.serialiser.AbstractEntityToJsonSerialiser;
 import ua.com.fielden.platform.serialisation.json.serialiser.CentreManagerToJsonSerialiser;
@@ -24,11 +26,12 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
-public class TgObjectMapper extends ObjectMapper {
+public class TgObjectMapper extends ObjectMapper implements ISerialiserEngine {
 
     private static final long serialVersionUID = 8131371701442950310L;
 
     private final TgModule module;
+    private final EntityFactory factory;
 
     @Inject
     public TgObjectMapper(final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
@@ -38,6 +41,7 @@ public class TgObjectMapper extends ObjectMapper {
     public TgObjectMapper(final DateFormat dateFormat, final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
         super();
         this.module = new TgModule();
+        this.factory = entityFactory;
 
         // Configuring type specific parameters.
         setDateFormat(dateFormat);
@@ -58,7 +62,7 @@ public class TgObjectMapper extends ObjectMapper {
 
         for (final Class<?> type : provider.classes()) {
             if (AbstractEntity.class.isAssignableFrom(type)) {
-        	addDeserialiser((Class<AbstractEntity<?>>)type, new JsonToAbstractEntityDeserialiser<AbstractEntity<?>>(this, entityFactory));
+                addDeserialiser((Class<AbstractEntity<?>>) type, new JsonToAbstractEntityDeserialiser<AbstractEntity<?>>(this, entityFactory));
             }
         }
 
@@ -78,4 +82,26 @@ public class TgObjectMapper extends ObjectMapper {
         module.addDeserializer(clazz, deserializer);
     }
 
+    @Override
+    public <T> T deserialise(final byte[] content, final Class<T> type) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public byte[] serialise(final Object obj) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public EntityFactory factory() {
+        return factory;
+    }
 }

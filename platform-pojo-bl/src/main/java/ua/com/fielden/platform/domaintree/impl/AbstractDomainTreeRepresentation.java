@@ -1032,8 +1032,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * 
      */
     protected abstract static class AbstractDomainTreeRepresentationSerialiser<T extends AbstractDomainTreeRepresentation> extends AbstractDomainTreeSerialiser<T> {
-        public AbstractDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public AbstractDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override

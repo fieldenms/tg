@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
@@ -37,7 +37,7 @@ public class FindLinkPropertyInGeneratedTypeTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
-    private final ISerialiser serialiser = new TgKryo(factory, new ProvidedSerialisationClassProvider(new Class[] { MasterEntityWithOneToOneAssociation.class,
+    private final ISerialiser serialiser = new Serialiser(factory, new ProvidedSerialisationClassProvider(new Class[] { MasterEntityWithOneToOneAssociation.class,
             MasterEntityWithOneToManyAssociation.class }));
     private final Set<Class<?>> rootTypes = new HashSet<Class<?>>() {
         {

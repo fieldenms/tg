@@ -16,9 +16,10 @@ import ua.com.fielden.platform.criteria.generator.impl.ThirdLevelEntity;
 import ua.com.fielden.platform.criteria.generator.impl.TopLevelEntity;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
-import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.domaintree.testing.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Injector;
@@ -31,7 +32,9 @@ public class CentreManagerToJsonSerialisationTest {
         module.setInjector(injector);
     }
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
-    TgKryoForDomainTreesTestingPurposes serialiser = new TgKryoForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes(TopLevelEntity.class, LastLevelEntity.class, SecondLevelEntity.class, ThirdLevelEntity.class));
+
+    private final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes(TopLevelEntity.class, LastLevelEntity.class, SecondLevelEntity.class, ThirdLevelEntity.class);
+    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider);
 
     @SuppressWarnings("serial")
     private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {

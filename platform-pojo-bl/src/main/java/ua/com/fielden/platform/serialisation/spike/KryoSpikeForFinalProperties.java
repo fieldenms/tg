@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
 import ua.com.fielden.platform.serialisation.kryo.TgKryo;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
@@ -19,8 +21,9 @@ public class KryoSpikeForFinalProperties {
         final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
         final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
-        final Kryo kryoWriter = new TgKryo(factory, new ProvidedSerialisationClassProvider(DomainType1.class, TypeWithFinalProperty.class));
-        final Kryo kryoReader = new TgKryo(factory, new ProvidedSerialisationClassProvider(DomainType1.class, TypeWithFinalProperty.class));
+        final ProvidedSerialisationClassProvider provider = new ProvidedSerialisationClassProvider(DomainType1.class, TypeWithFinalProperty.class);
+        final Kryo kryoWriter = (TgKryo) (new Serialiser(factory, provider).getEngine(SerialiserEngines.KRYO));
+        final Kryo kryoReader = (TgKryo) (new Serialiser(factory, provider).getEngine(SerialiserEngines.KRYO));
 
         final TypeWithFinalProperty finalInstance = new TypeWithFinalProperty(25);
 

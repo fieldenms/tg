@@ -109,6 +109,8 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
+import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ClassSerialiser;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ColorSerializer;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.DateTimeSerializer;
@@ -143,7 +145,6 @@ import com.esotericsoftware.kryo.serialize.IntSerializer;
 import com.esotericsoftware.kryo.serialize.LongSerializer;
 import com.esotericsoftware.kryo.serialize.ReferenceFieldSerializer;
 import com.esotericsoftware.kryo.serialize.StringSerializer;
-import com.google.inject.Inject;
 
 /**
  * WARNING: this is an OLD version!
@@ -152,8 +153,7 @@ import com.google.inject.Inject;
  *
  */
 @Deprecated
-public class TgKryo0 extends Kryo implements ISerialiser0 {
-
+public class TgKryo0 extends Kryo implements ISerialiserEngine {
     public static final String ENTITY_REFERENCES = "entity-references";
 
     /** Default buffer sizes for */
@@ -169,6 +169,7 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
         }
     }
 
+    private final ISerialiser0 serialiser;
     private final EntityFactory factory;
     private final ISerialisationClassProvider provider;
 
@@ -213,13 +214,14 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
     private final Serializer dynamicallyTypedQueryContainerSerialiser;
     private final Serializer lifecycleQueryContainerSerialiser;
 
-    @Inject
-    public TgKryo0(final EntityFactory factory, final ISerialisationClassProvider provider) {
+    public TgKryo0(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialiser0 serialiser) {
         setRegistrationOptional(true);
         setClassLoader(ClassLoader.getSystemClassLoader());
 
         this.factory = factory;
         this.provider = provider;
+        this.serialiser = serialiser;
+        ((Serialiser) this.serialiser).setEngine(SerialiserEngines.KRYO, this);
 
         moneySerialiser = new MoneySerialiser(this);
         resultSerialiser = new ResultSerialiser(this);
@@ -237,27 +239,27 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
         colorSerializer = new ColorSerializer();
         sortKeySerialiser = new SortKeySerialiser(this);
         // "domain trees" serialisers
-        locatorManager0Serialiser = new LocatorManager0Serialiser(this);
-        domainTreeEnhancer0Serialiser = new DomainTreeEnhancer0Serialiser(this);
-        centreDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(this);
-        pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(this);
-        analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(this);
-        sentinelDomainTreeRepresentationSerialiser = new SentinelDomainTreeRepresentationSerialiser(this);
-        lifecycleDomainTreeRepresentationSerialiser = new LifecycleDomainTreeRepresentationSerialiser(this);
-        multipleDecDomainTreeRepresentationSerialiser = new MultipleDecDomainTreeRepresentationSerialiser(this);
-        locatorDomainTreeManager0Serialiser = new LocatorDomainTreeManager0Serialiser(this);
-        centreDomainTreeManager0Serialiser = new CentreDomainTreeManager0Serialiser(this);
-        masterDomainTreeManager0Serialiser = new MasterDomainTreeManager0Serialiser(this);
-        locatorDomainTreeRepresentationSerialiser = new LocatorDomainTreeRepresentationSerialiser(this);
-        addToCriteriaTickManagerForLocator0Serialiser = new AddToCriteriaTickManagerForLocator0Serialiser(this);
-        addToCriteriaTickManager0Serialiser = new AddToCriteriaTickManager0Serialiser(this);
-        pivotDomainTreeManagerSerialiser = new PivotDomainTreeManagerSerialiser(this);
-        analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(this);
-        sentinelDomainTreeManagerSerialiser = new SentinelDomainTreeManagerSerialiser(this);
-        lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(this);
-        multipleDecDomainTreeManagerSerialiser = new MultipleDecDomainTreeManagerSerialiser(this);
-        locatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser = new LocatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(this);
-        centreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser = new CentreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(this);
+        locatorManager0Serialiser = new LocatorManager0Serialiser(serialiser);
+        domainTreeEnhancer0Serialiser = new DomainTreeEnhancer0Serialiser(serialiser);
+        centreDomainTreeRepresentationSerialiser = new CentreDomainTreeRepresentationSerialiser(serialiser);
+        pivotDomainTreeRepresentationSerialiser = new PivotDomainTreeRepresentationSerialiser(serialiser);
+        analysisDomainTreeRepresentationSerialiser = new AnalysisDomainTreeRepresentationSerialiser(serialiser);
+        sentinelDomainTreeRepresentationSerialiser = new SentinelDomainTreeRepresentationSerialiser(serialiser);
+        lifecycleDomainTreeRepresentationSerialiser = new LifecycleDomainTreeRepresentationSerialiser(serialiser);
+        multipleDecDomainTreeRepresentationSerialiser = new MultipleDecDomainTreeRepresentationSerialiser(serialiser);
+        locatorDomainTreeManager0Serialiser = new LocatorDomainTreeManager0Serialiser(serialiser);
+        centreDomainTreeManager0Serialiser = new CentreDomainTreeManager0Serialiser(serialiser);
+        masterDomainTreeManager0Serialiser = new MasterDomainTreeManager0Serialiser(serialiser);
+        locatorDomainTreeRepresentationSerialiser = new LocatorDomainTreeRepresentationSerialiser(serialiser);
+        addToCriteriaTickManagerForLocator0Serialiser = new AddToCriteriaTickManagerForLocator0Serialiser(serialiser);
+        addToCriteriaTickManager0Serialiser = new AddToCriteriaTickManager0Serialiser(serialiser);
+        pivotDomainTreeManagerSerialiser = new PivotDomainTreeManagerSerialiser(serialiser);
+        analysisDomainTreeManagerSerialiser = new AnalysisDomainTreeManagerSerialiser(serialiser);
+        sentinelDomainTreeManagerSerialiser = new SentinelDomainTreeManagerSerialiser(serialiser);
+        lifecycleDomainTreeManagerSerialiser = new LifecycleDomainTreeManagerSerialiser(serialiser);
+        multipleDecDomainTreeManagerSerialiser = new MultipleDecDomainTreeManagerSerialiser(serialiser);
+        locatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser = new LocatorDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(serialiser);
+        centreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser = new CentreDomainTreeManagerAndEnhancer0WithTransientAnalysesSerialiser(serialiser);
         dynamicallyTypedQueryContainerSerialiser = new DynamicallyTypedQueryContainerSerialiser(this);
         lifecycleQueryContainerSerialiser = new LifecycleQueryContainerSerialiser(this);
 
@@ -640,5 +642,9 @@ public class TgKryo0 extends Kryo implements ISerialiser0 {
     @Override
     public EntityFactory factory() {
         return factory;
+    }
+
+    protected ISerialiser0 getSerialiser() {
+        return serialiser;
     }
 }

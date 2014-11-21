@@ -30,7 +30,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
-import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.domaintree.testing.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -45,6 +45,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Money;
@@ -60,7 +61,9 @@ public class CriteriaGeneratorTest {
     }
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
-    TgKryoForDomainTreesTestingPurposes serialiser = new TgKryoForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes(TopLevelEntity.class, LastLevelEntity.class, SecondLevelEntity.class, ThirdLevelEntity.class));
+
+    private final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes(TopLevelEntity.class, LastLevelEntity.class, SecondLevelEntity.class, ThirdLevelEntity.class);
+    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, provider);
 
     @SuppressWarnings("serial")
     private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {

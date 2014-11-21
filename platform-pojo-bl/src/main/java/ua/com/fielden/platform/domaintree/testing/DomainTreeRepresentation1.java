@@ -44,8 +44,8 @@ public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation 
      * 
      */
     public static class DomainTreeRepresentationForTestSerialiser extends AbstractDomainTreeRepresentationSerialiser<DomainTreeRepresentation1> {
-        public DomainTreeRepresentationForTestSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public DomainTreeRepresentationForTestSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -54,7 +54,7 @@ public class DomainTreeRepresentation1 extends AbstractDomainTreeRepresentation 
             final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
             final TickRepresentationForTest firstTick = readValue(buffer, TickRepresentationForTest.class);
             final TickRepresentationForTest secondTick = readValue(buffer, TickRepresentationForTest.class);
-            return new DomainTreeRepresentation1(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+            return new DomainTreeRepresentation1(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

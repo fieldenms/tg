@@ -22,6 +22,8 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager0;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -32,9 +34,9 @@ import com.esotericsoftware.kryo.Kryo;
 
 /**
  * WARNING: this is an OLD version!
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @Deprecated
 public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implements ICentreDomainTreeManager {
@@ -42,17 +44,17 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
     /**
      * A <i>manager</i> constructor for the first time instantiation.
-     * 
+     *
      * @param serialiser
      * @param rootTypes
      */
-    public CentreDomainTreeManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+    public CentreDomainTreeManager0(final ISerialiser0 serialiser, final Set<Class<?>> rootTypes) {
         this(serialiser, new CentreDomainTreeRepresentation(serialiser, rootTypes), new AddToCriteriaTickManager0(serialiser, rootTypes), new AddToResultTickManager(), null);
     }
 
     /**
      * A <i>manager</i> constructor.
-     * 
+     *
      * @param serialiser
      * @param dtr
      * @param firstTick
@@ -116,9 +118,9 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
     /**
      * WARNING: this is an OLD version!
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     @Deprecated
     public static class AddToCriteriaTickManager0 extends TickManager implements IAddToCriteriaTickManager, ILocatorManager {
@@ -147,16 +149,16 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
          * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser"
          * fields.
          */
-        public AddToCriteriaTickManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+        public AddToCriteriaTickManager0(final ISerialiser0 serialiser, final Set<Class<?>> rootTypes) {
             this(AbstractDomainTree.<List<String>> createRootsMap(), serialiser, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), null, new LocatorManager0(serialiser, rootTypes));
         }
 
         /**
          * A tick <i>manager</i> constructor.
-         * 
+         *
          * @param serialiser
          */
-        protected AddToCriteriaTickManager0(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager0 locatorManager) {
+        protected AddToCriteriaTickManager0(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser0 serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager0 locatorManager) {
             super(checkedProperties);
             this.serialiser = serialiser;
 
@@ -594,7 +596,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         /**
          * Removes the rows of placeholders in the matrix of checked properties to form a matrix without empty rows.
-         * 
+         *
          * @param root
          */
         protected final void cropEmptyRows(final Class<?> root) {
@@ -634,7 +636,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         /**
          * Adds the placeholders to the end of the checked properties list to form a full matrix with a columns number defined in {@link #getColumnsNumber()}.
-         * 
+         *
          * @param root
          */
         protected final void supplementTheMatrixWithPlaceholders(final Class<?> root) {
@@ -675,28 +677,28 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         /**
          * WARNING: this is an OLD version!
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         @Deprecated
         public static class AddToCriteriaTickManager0Serialiser extends TgSimpleSerializer<AddToCriteriaTickManager0> {
-            private final ISerialiser kryo;
+            private final ISerialiser0 serialiser;
 
             /**
              * WARNING: this is an OLD version!
-             * 
+             *
              * @author TG Team
-             * 
+             *
              */
             @Deprecated
-            public AddToCriteriaTickManager0Serialiser(final ISerialiser kryo) {
-                super((Kryo) kryo);
-                this.kryo = kryo;
+            public AddToCriteriaTickManager0Serialiser(final ISerialiser0 serialiser) {
+                super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
+                this.serialiser = serialiser;
             }
 
-            protected ISerialiser kryo() {
-                return kryo;
+            protected ISerialiser0 serialiser() {
+                return serialiser;
             }
 
             @Override
@@ -713,7 +715,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
                 final EnhancementPropertiesMap<Boolean> propertiesNots = readValue(buffer, EnhancementPropertiesMap.class);
                 final Integer columnsNumber = readValue(buffer, Integer.class);
                 final LocatorManager0 locatorManager = readValue(buffer, LocatorManager0.class);
-                return new AddToCriteriaTickManager0(checkedProperties, kryo(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
+                return new AddToCriteriaTickManager0(checkedProperties, serialiser(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager);
             }
 
             @Override
@@ -901,21 +903,21 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
     /**
      * WARNING: this is an OLD version!
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     @Deprecated
     public static class CentreDomainTreeManager0Serialiser extends AbstractDomainTreeManagerSerialiser<CentreDomainTreeManager0> {
         /**
          * WARNING: this is an OLD version!
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         @Deprecated
-        public CentreDomainTreeManager0Serialiser(final ISerialiser kryo) {
-            super(kryo);
+        public CentreDomainTreeManager0Serialiser(final ISerialiser0 serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -924,13 +926,18 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
             final AddToCriteriaTickManager0 firstTick = readValue(buffer, AddToCriteriaTickManager0.class);
             final AddToResultTickManager secondTick = readValue(buffer, AddToResultTickManager.class);
             final Boolean runAutomatically = readValue(buffer, Boolean.class);
-            return new CentreDomainTreeManager0(kryo(), dtr, firstTick, secondTick, runAutomatically);
+            return new CentreDomainTreeManager0(serialiser(), dtr, firstTick, secondTick, runAutomatically);
         }
 
         @Override
         public void write(final ByteBuffer buffer, final CentreDomainTreeManager0 manager) {
             super.write(buffer, manager);
             writeValue(buffer, manager.runAutomatically);
+        }
+
+        @Override
+        protected ISerialiser0 serialiser() {
+            return (ISerialiser0) super.serialiser();
         }
     }
 

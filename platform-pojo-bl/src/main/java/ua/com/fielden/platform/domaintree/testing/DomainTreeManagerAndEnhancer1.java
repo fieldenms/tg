@@ -8,6 +8,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -27,13 +28,13 @@ public class DomainTreeManagerAndEnhancer1 extends AbstractDomainTreeManagerAndE
 
     /**
      * A specific Kryo serialiser for {@link DomainTreeManagerAndEnhancer1}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class DomainTreeManagerAndEnhancerForTestSerialiser extends TgSimpleSerializer<DomainTreeManagerAndEnhancer1> {
-        public DomainTreeManagerAndEnhancerForTestSerialiser(final ISerialiser kryo) {
-            super((Kryo) kryo);
+        public DomainTreeManagerAndEnhancerForTestSerialiser(final ISerialiser serialiser) {
+            super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
         }
 
         @Override

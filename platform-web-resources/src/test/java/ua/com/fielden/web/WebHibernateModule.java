@@ -23,8 +23,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo0;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser;
+import ua.com.fielden.platform.serialisation.kryo.Serialiser0;
 import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntityDao;
@@ -34,9 +34,9 @@ import com.google.inject.name.Names;
 
 /**
  * Guice injector module for Hibernate related injections, which are specific to testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class WebHibernateModule extends CommonFactoryModule {
 
@@ -55,8 +55,8 @@ public class WebHibernateModule extends CommonFactoryModule {
         super.configure();
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
         bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
-        bind(ISerialiser0.class).to(TgKryo0.class);
-        bind(ISerialiser.class).to(TgKryo.class);
+        bind(ISerialiser0.class).to(Serialiser0.class);
+        bind(ISerialiser.class).to(Serialiser.class);
         // bind DAO
         bind(IInspectedEntityDao.class).to(InspectedEntityDao.class);
         bind(IUserRoleDao.class).to(UserRoleDao.class);

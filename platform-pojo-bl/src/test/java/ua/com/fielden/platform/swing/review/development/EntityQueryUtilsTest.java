@@ -13,7 +13,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.domaintree.testing.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -39,7 +39,7 @@ public class EntityQueryUtilsTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
     static {

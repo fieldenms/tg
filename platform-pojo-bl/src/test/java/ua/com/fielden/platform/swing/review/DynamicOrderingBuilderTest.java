@@ -17,7 +17,7 @@ import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Orderin
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.domaintree.testing.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -41,7 +41,7 @@ public class DynamicOrderingBuilderTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
     private static final Class<? extends AbstractEntity<?>> masterKlass;

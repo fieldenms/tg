@@ -14,6 +14,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -22,9 +23,9 @@ import com.esotericsoftware.kryo.Kryo;
 
 /**
  * A base class for representations and managers with useful utility methods.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractDomainTree {
     private final transient ISerialiser serialiser;
@@ -42,7 +43,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Constructs base domain tree with a <code>serialiser</code> and <code>factory</code> instances.
-     * 
+     *
      * @param serialiser
      * @param factory
      */
@@ -52,7 +53,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns an instance of serialiser for persistence and copying.
-     * 
+     *
      * @return
      */
     protected ISerialiser getSerialiser() {
@@ -61,7 +62,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns an entity factory that is essential for inner {@link AbstractEntity} instances (e.g. calculated properties) creation.
-     * 
+     *
      * @return
      */
     protected EntityFactory getFactory() {
@@ -70,7 +71,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Validates root types for raw domain tree creation. Root types should be 1) {@link AbstractEntity} descendants 2) NOT enhanced types.
-     * 
+     *
      * @param rootTypes
      */
     public static Set<Class<?>> validateRootTypes(final Set<Class<?>> rootTypes) {
@@ -82,7 +83,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Validates root type for raw domain tree creation. Root types should be 1) {@link AbstractEntity} descendants 2) NOT enhanced types.
-     * 
+     *
      * @param rootTypes
      */
     public static void validateRootType(final Class<?> klass) {
@@ -99,7 +100,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns <code>true</code> if the "property" represents just a marker for <i>not loaded children</i> of its parent property.
-     * 
+     *
      * @param property
      * @return
      */
@@ -109,7 +110,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns <code>true</code> if the "property" represents a root of common properties branch.
-     * 
+     *
      * @param property
      * @return
      */
@@ -119,7 +120,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns <code>true</code> if the "property" represents a placeholder.
-     * 
+     *
      * @param string
      * @return
      */
@@ -129,7 +130,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Creates a common branch "property" under the specified property.
-     * 
+     *
      * @param property
      * @return
      */
@@ -139,7 +140,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Creates a dummy marker "property" under the specified property, which sub-properties are not supposed to be loaded.
-     * 
+     *
      * @param property
      * @return
      */
@@ -150,7 +151,7 @@ public abstract class AbstractDomainTree {
     /**
      * Converts a property in Entity Tree naming contract (with ".common-properties" suffixes) into a property that TG Reflection API understands. "Dummy" property will be
      * converted to its parent property.
-     * 
+     *
      * @param property
      * @return
      */
@@ -160,7 +161,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Throws an {@link IllegalArgumentException} if the property is unchecked.
-     * 
+     *
      * @param tm
      * @param root
      * @param property
@@ -174,7 +175,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Throws an {@link IllegalArgumentException} if the property can not represent a "double criterion".
-     * 
+     *
      * @param root
      * @param property
      * @param message
@@ -187,7 +188,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Throws an {@link IllegalArgumentException} if the property can not represent a "double criterion".
-     * 
+     *
      * @param root
      * @param property
      * @param message
@@ -200,7 +201,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Throws an {@link IllegalArgumentException} if the property is unused.
-     * 
+     *
      * @param tm
      * @param root
      * @param property
@@ -214,7 +215,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Throws an {@link IllegalArgumentException} if the property type is not legal.
-     * 
+     *
      * @param root
      * @param property
      * @param message
@@ -237,7 +238,7 @@ public abstract class AbstractDomainTree {
     /**
      * Creates a set of linked (ordered) roots. This set will correctly handle "enhanced" root types. It can be used with enhanced types, but inner mechanism will "persist" not
      * enhanced ones.
-     * 
+     *
      * @return
      */
     public static EnhancementLinkedRootsSet createLinkedRootsSet() {
@@ -247,7 +248,7 @@ public abstract class AbstractDomainTree {
     /**
      * Creates a set of properties (pairs root+propertyName). This set will correctly handle "enhanced" root types. It can be used with enhanced types, but inner mechanism will
      * "persist" not enhanced ones.
-     * 
+     *
      * @return
      */
     public static EnhancementSet createSet() {
@@ -257,7 +258,7 @@ public abstract class AbstractDomainTree {
     /**
      * Creates a map of properties => values (pairs root+propertyName). This map will correctly handle "enhanced" root types. It can be used with enhanced types, but inner
      * mechanism will "persist" not enhanced ones.
-     * 
+     *
      * @param <T>
      *            -- a type of values in map
      * @return
@@ -269,7 +270,7 @@ public abstract class AbstractDomainTree {
     /**
      * Creates a map of properties => values (pairs root+propertyName). This map will correctly handle "enhanced" root types. It can be used with enhanced types, but inner
      * mechanism will "persist" not enhanced ones.
-     * 
+     *
      * @param <T>
      *            -- a type of values in map
      * @return
@@ -280,7 +281,7 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns a key pair for [root + property].
-     * 
+     *
      * @param root
      * @param property
      * @return
@@ -291,22 +292,22 @@ public abstract class AbstractDomainTree {
 
     /**
      * A specific Kryo serialiser for {@link AbstractDomainTree}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected abstract static class AbstractDomainTreeSerialiser<T> extends TgSimpleSerializer<T> {
-        private final ISerialiser kryo;
+        private final ISerialiser serialiser;
         private final EntityFactory factory;
 
-        public AbstractDomainTreeSerialiser(final ISerialiser kryo) {
-            super((Kryo) kryo);
-            this.kryo = kryo;
-            this.factory = kryo.factory();
+        public AbstractDomainTreeSerialiser(final ISerialiser serialiser) {
+            super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
+            this.serialiser = serialiser;
+            this.factory = serialiser.factory();
         }
 
-        protected ISerialiser kryo() {
-            return kryo;
+        protected ISerialiser serialiser() {
+            return serialiser;
         }
 
         protected EntityFactory factory() {
@@ -316,9 +317,9 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
-     * 
+     *
      * TODO unit test.
-     * 
+     *
      * @param root
      *            -- a root type that contains property.
      * @param property
@@ -333,9 +334,9 @@ public abstract class AbstractDomainTree {
 
     /**
      * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
-     * 
+     *
      * TODO unit test.
-     * 
+     *
      * @param root
      *            -- a root type that contains property.
      * @param property
