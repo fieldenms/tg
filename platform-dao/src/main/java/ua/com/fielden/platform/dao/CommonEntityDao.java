@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,8 +29,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.TransactionDate;
-import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
@@ -456,18 +453,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final fetch<T> entityFetch = FetchModelReconstructor.reconstruct(entity);
-        // check and assign properties annotated with @TransactionDate
-        try {
-            assignTransactionDate(entity);
-        } catch (final Exception e) {
-            throw new IllegalStateException("Could not assign transaction date properties.", e);
-        }
-        // check and assign properties annotated with @TransactionUser
-        try {
-            assignTransactionUser(entity);
-        } catch (final Exception e) {
-            throw new IllegalStateException("Could not assign transaction user properties.", e);
-        }
+        // process transactional assignments
+        processTansactionalProperties(entity);
 
         // new entity might be activatable, but this has no effect on its refCount -- should be zero as no other entity could yet reference it
         // however, it might reference other activatable entities, which warrants update to their refCount.
@@ -600,52 +587,54 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
-    private void assignTransactionDate(final T entity) throws Exception {
-        final List<Field> transactionDateProperties = Finder.findRealProperties(entity.getType(), TransactionDate.class);
+    private void processTansactionalProperties(final T entity) {
+        final List<MetaProperty<?>> transactionDateProperties = entity.getProperties().values().stream().
+                filter(p -> p.isTransactional()).collect(Collectors.toList());
         if (!transactionDateProperties.isEmpty()) {
             final DateTime now = universalConstants.now();
             if (now == null) {
                 throw new IllegalArgumentException("The now() constant has not been assigned!");
             }
-            for (final Field property : transactionDateProperties) {
-                property.setAccessible(true);
-                final Object value = property.get(entity);
+
+            for (final MetaProperty property : transactionDateProperties) {
+                final Object value = property.getValue();
                 if (value == null) {
-                    if (Date.class.isAssignableFrom(property.getType())) {
-                        property.set(entity, now.toDate());
+                    if (User.class.isAssignableFrom(property.getType())) {
+                        final User user = getUser();
+                        if (user == null) {
+                            throw new IllegalArgumentException("The user could not be determined!");
+                        }
+                        property.setValue(user);
+                    } else if (String.class.isAssignableFrom(property.getType())) {
+                        final User user = getUser();
+                        if (user == null) {
+                            throw new IllegalArgumentException("The user could not be determined!");
+                        }
+                        property.setValue(user.getKey());
+                    } else if (Date.class.isAssignableFrom(property.getType())) {
+                        property.setValue(now.toDate());
                     } else if (DateTime.class.isAssignableFrom(property.getType())) {
-                        property.set(entity, now);
+                        property.setValue(now);
                     } else {
-                        throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
-                                + " is not valid for annotation TransactionDate.");
+                        assignTransactionalProperty(property);
+                    }
+
+                    if (property.getValue() == null) {
+                        throw new IllegalArgumentException(format("Property %s@%s is marked as tranactional, but no value could be determined.", property.getName(), entity.getType().getName()));
                     }
                 }
             }
         }
     }
 
-    private void assignTransactionUser(final T entity) throws Exception {
-        final List<Field> transactionUserProperties = Finder.findRealProperties(entity.getType(), TransactionUser.class);
-        if (!transactionUserProperties.isEmpty()) {
-            final User user = getUser();
-            if (user == null) {
-                throw new IllegalArgumentException("The user could not be determined!");
-            }
-            for (final Field property : transactionUserProperties) {
-                property.setAccessible(true);
-                final Object value = property.get(entity);
-                if (value == null) {
-                    if (User.class.isAssignableFrom(property.getType())) {
-                        property.set(entity, user);
-                    } else if (String.class.isAssignableFrom(property.getType())) {
-                        property.set(entity, user.getKey());
-                    } else {
-                        throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
-                                + " is not valid for annotation TransactionUser.");
-                    }
-                }
-            }
-        }
+    /**
+     * A method for assigning a value to a domain specific transactional property.
+     * This method does nothing by default, and should be overridden by companion objects in order to provide domain specific behaviour.
+     *
+     * @param prop
+     */
+    protected void assignTransactionalProperty(final MetaProperty<?> prop) {
+
     }
 
     @Override

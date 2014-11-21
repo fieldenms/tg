@@ -16,8 +16,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.TransactionDate;
-import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
@@ -25,9 +23,9 @@ import ua.com.fielden.platform.security.user.User;
 
 /**
  * One-2-Many entity object.
- * 
+ *
  * @author Developers
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Прив'язка машини з модулем", desc = "Прив'язка машини з модулем")
@@ -63,9 +61,8 @@ public abstract class AbstractAvlMachineModuleTemporalAssociation<MESSAGE extend
     @Title(value = "До", desc = "Дата до якої модуль був прив'язаний до машини")
     private Date to;
 
-    @IsProperty
+    @IsProperty(transactional = true)
     @MapTo
-    @TransactionDate
     @Title(value = "Дата створення", desc = "Дата створення асоціації")
     private Date created;
 
@@ -74,10 +71,9 @@ public abstract class AbstractAvlMachineModuleTemporalAssociation<MESSAGE extend
     @Title(value = "Дата зміни", desc = "Дата зміни асоціації")
     private Date changed;
 
-    @IsProperty
+    @IsProperty(transactional = true)
     @MapTo
     @Title(value = "Прив'язувач", desc = "Користувач, що провів асоціацію Машини з Модулем в часі")
-    @TransactionUser
     @Readonly
     private User createdBy;
 

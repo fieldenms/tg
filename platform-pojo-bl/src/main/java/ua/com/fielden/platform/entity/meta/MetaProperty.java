@@ -721,6 +721,15 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     /**
+     * A convenient method to set property value, which in turn accesses entity to set the propery.
+     *
+     * @param value
+     */
+    public final void setValue(final T value) {
+        entity.set(name, value);
+    }
+
+    /**
      * Returns <code>true</code> if the property value is a proxy.
      *
      * @return

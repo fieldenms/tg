@@ -25,11 +25,9 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.DescReadonly;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
@@ -39,14 +37,14 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyReadonly;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.TransactionDate;
-import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -851,7 +849,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
             // TODO may need to relax this condition for composite key member in order to support empty composite members
             // As part of issue #28 need to relax requiredness for composite key members in case they have transactional nature
-            if (AnnotationReflector.isAnnotationPresent(field, TransactionUser.class) || AnnotationReflector.isAnnotationPresent(field, TransactionDate.class)) {
+            if (metaProperty.isTransactional()) {
                 metaProperty.setRequired(false);
             } else {
                 metaProperty.setRequired(
