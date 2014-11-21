@@ -254,108 +254,23 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final fetch<T> entityFetch = FetchModelReconstructor.reconstruct(entity);
 
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
+        // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
+        // the easiest way to do that is to load entity by id using the current session
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
-            final String propName = prop.getName();
             final Object value = prop.getValue();
-
-            // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
-            // the easiest way to do that is to load entity by id using the current session
-            // also, need to handle activatable properties in a special way that manages their refCount and refCount of any previously referenced instance
-            // but only if the entity being saving is an activatable that does not fall into the category of
-            // those with type that governs deactivatable dependency of the entity being saved
             if (shouldProcessAsActivatable(entity, prop)) {
-                // if value is null then an activatable entity has been dereferenced and its refCount needs to be decremented
-                // but only if the dereferenced value is an active activatable and the entity being saved is not being made active -- thus previously it was not counted as a reference
-                if (value == null) {
-                    final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
-                    final boolean beingActivated = activeProp.isDirty() && activeProp.getValue();
-                    // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
-                    // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
-                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
-                    // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
-                    if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
-                        getSession().update(persistedValue.decRefCount());
-                    }
-
-                    // assign null as the property value to actually dereference activatable
-                    persistedEntity.set(propName, null);
-                } else { // otherwise there could be either referencing (i.e. before property was null) or a reference change (i.e. from one value to some other)
-                    // need to process previous property value
-                    final AbstractEntity<?> prevValue = persistedEntity.<AbstractEntity<?>> get(propName);
-                    if (prevValue != null && !entity.equals(prevValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
-                        final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
-                        getSession().update(persistedValue.decRefCount());
-                    }
-                    // also need increment refCount for a newly referenced activatable
-                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), ((AbstractEntity<?>) value).getId());
-                    if (!entity.equals(persistedValue)) { // avoid counting self-references
-                        // now let's check if the entity itself is an active activatable
-                        // as this influences the decision to increment refCount for the newly referenced activatable
-                        // because, if it's not then there is no reason to increment refCout for the referenced instance
-                        // in other words, inactive entity does not count as an active referencer
-                        if (entity.<Boolean> get(ACTIVE) == true) {
-                            getSession().update(persistedValue.incRefCount());
-                        }
-                    }
-
-                    // assign updated activatable as the property value
-                    persistedEntity.set(propName, persistedValue);
-                }
+                handleDirtyActivatableProperty(entity, persistedEntity, prop, value);
             } else if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
-                persistedEntity.set(propName, getSession().load(((AbstractEntity<?>) value).getType(), ((AbstractEntity<?>) value).getId()));
+                persistedEntity.set(prop.getName(), getSession().load(((AbstractEntity<?>) value).getType(), ((AbstractEntity<?>) value).getId()));
             } else {
-                persistedEntity.set(propName, value);
+                persistedEntity.set(prop.getName(), value);
             }
         } // end of processing dirty properties
 
-        // in case entity is activatable and has just been activated or deactivated,
-        // we also need to make sure that all previously referenced activatables, which did not fall into the dirty category and are active
-        // get their refCount increment or decremented accordingly
+        // handle ref counts of non-dirty activatable properties
         if (entity instanceof ActivatableAbstractEntity) {
-            final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
-            // was activatable entity just activated?
-            if (activeProp.isDirty()) {
-                // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
-                final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
-                for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : collectActivatableNotDirtyProperties(entity, keyMembers)) { // deliberately not-typed
-                    final AbstractEntity<?> value = persistedEntity.get(prop.getName()); // value from persisted version of entity
-                    if (value != null) { // if there is actually some value
-                        // load activatable value
-                        final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), value.getId());
-
-                        // if activatable property value is not a self-reference
-                        // then need to check if it is active and if so increment its refCount
-                        // otherwise, if activatable is not active then we've got an erroneous situation that should prevent activation of entity
-                        if (!entity.equals(persistedValue)) {
-                            if (activeProp.getValue()) { // is entity being activated?
-                                if (!persistedValue.isActive()) { // if activatable is not active then this is an error
-                                    throw Result.failure(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, prop.getType()));
-                                } else { // otherwise, increment refCount
-                                    getSession().update(persistedValue.incRefCount());
-                                }
-                            } else if (persistedValue.isActive()) { // is entity being deactivated, but is referencing an active activatable?
-                                getSession().update(persistedValue.decRefCount());
-                            }
-                        }
-                    }
-                }
-
-                // separately need to perform de-activation of deactivatable dependencies in case where the entity being saved is deactivated
-                if (!activeProp.getValue()) {
-                    final List<? extends ActivatableAbstractEntity<?>> deactivatables = Validators.findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, getCoFinder());
-                    for (final ActivatableAbstractEntity<?> deactivatable : deactivatables) {
-                        deactivatable.set(ACTIVE, false);
-                        final Result result = deactivatable.isValid();
-                        if (result.isSuccessful()) {
-                            final IEntityDao co = getCoFinder().find(deactivatable.getType());
-                            co.save(deactivatable);
-                        } else {
-                            throw result;
-                        }
-                    }
-                }
-            }
-        } // end of processing activatable non-dirty properties in case of activating of the activatable entity
+            handleNonDirtyActivatableIfNecessary(entity, persistedEntity);
+        }
 
         // check if entity is valid after all the changes above
         final Result res = persistedEntity.isValid();
@@ -368,6 +283,111 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
 
         return findById(persistedEntity.getId(), entityFetch);
+    }
+
+    /**
+     * Handles dirty activatable property in a special way that manages refCount of its current and previous values,
+     * but only if the entity being saving is an activatable that does not fall into the category of those with type that governs deactivatable dependency of the entity being saved.
+     *
+     * @param entity
+     * @param persistedEntity
+     * @param prop
+     * @param value
+     */
+    private void handleDirtyActivatableProperty(final T entity, final T persistedEntity, final MetaProperty<?> prop, final Object value) {
+        final String propName = prop.getName();
+        // if value is null then an activatable entity has been dereferenced and its refCount needs to be decremented
+        // but only if the dereferenced value is an active activatable and the entity being saved is not being made active -- thus previously it was not counted as a reference
+        if (value == null) {
+            final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
+            final boolean beingActivated = activeProp.isDirty() && activeProp.getValue();
+            // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
+            // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
+            // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
+            if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
+                getSession().update(persistedValue.decRefCount());
+            }
+
+            // assign null as the property value to actually dereference activatable
+            persistedEntity.set(propName, null);
+        } else { // otherwise there could be either referencing (i.e. before property was null) or a reference change (i.e. from one value to some other)
+            // need to process previous property value
+            final AbstractEntity<?> prevValue = persistedEntity.<AbstractEntity<?>> get(propName);
+            if (prevValue != null && !entity.equals(prevValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
+                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
+                getSession().update(persistedValue.decRefCount());
+            }
+            // also need increment refCount for a newly referenced activatable
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), ((AbstractEntity<?>) value).getId());
+            if (!entity.equals(persistedValue)) { // avoid counting self-references
+                // now let's check if the entity itself is an active activatable
+                // as this influences the decision to increment refCount for the newly referenced activatable
+                // because, if it's not then there is no reason to increment refCout for the referenced instance
+                // in other words, inactive entity does not count as an active referencer
+                if (entity.<Boolean> get(ACTIVE) == true) {
+                    getSession().update(persistedValue.incRefCount());
+                }
+            }
+
+            // assign updated activatable as the property value
+            persistedEntity.set(propName, persistedValue);
+        }
+    }
+
+    /**
+     * In case entity is activatable and has just been activated or deactivated, it is also necessary to make sure that all previously referenced activatables, which did not fall
+     * into the dirty category and are active get their refCount increment or decremented accordingly
+     *
+     * @param entity
+     * @param persistedEntity
+     */
+    private void handleNonDirtyActivatableIfNecessary(final T entity, final T persistedEntity) {
+        final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
+        // was activatable entity just activated?
+        if (activeProp.isDirty()) {
+            // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
+            final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
+            for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : collectActivatableNotDirtyProperties(entity, keyMembers)) {
+                final AbstractEntity<?> value = persistedEntity.get(prop.getName()); // value from persisted version of entity
+                if (value != null) { // if there is actually some value
+                    // load activatable value
+                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), value.getId());
+
+                    // if activatable property value is not a self-reference
+                    // then need to check if it is active and if so increment its refCount
+                    // otherwise, if activatable is not active then we've got an erroneous situation that should prevent activation of entity
+                    if (!entity.equals(persistedValue)) {
+                        if (activeProp.getValue()) { // is entity being activated?
+                            if (!persistedValue.isActive()) { // if activatable is not active then this is an error
+                                throw Result.failure(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, prop.getType()));
+                            } else { // otherwise, increment refCount
+                                getSession().update(persistedValue.incRefCount());
+                            }
+                        } else if (persistedValue.isActive()) { // is entity being deactivated, but is referencing an active activatable?
+                            getSession().update(persistedValue.decRefCount());
+                        }
+                    }
+                }
+            }
+
+            // separately need to perform de-activation of deactivatable dependencies in case where the entity being saved is deactivated
+            if (!activeProp.getValue()) {
+                final List<? extends ActivatableAbstractEntity<?>> deactivatables = Validators.findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, getCoFinder());
+                for (final ActivatableAbstractEntity<?> deactivatable : deactivatables) {
+                    deactivatable.set(ACTIVE, false);
+                    final Result result = deactivatable.isValid();
+                    if (result.isSuccessful()) {
+                        // persisting of deactivatables should go through the logic of companion save
+                        // and cannot be persisted by just using a call to Hibernate Session
+                        final IEntityDao co = getCoFinder().find(deactivatable.getType());
+                        co.save(deactivatable);
+                    } else {
+                        throw result;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -504,29 +524,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param entity
      * @return
      */
-    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableDirtyProperties(final T entity,  final Set<String> keyMembers) {
-        final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> dirtyActivatable = new HashSet<>();
+    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableDirtyProperties(final T entity, final Set<String> keyMembers) {
+        final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
-            if (prop.isDirty() && ActivatableAbstractEntity.class.isAssignableFrom(prop.getType())) {
-                // let's first identify whether entity belongs to the deactivatable type of the referenced property type
-                // if so, it should not inflict any ref counts for this property
-                final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
-                final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
-                boolean belongsToDeactivatableDependencies;
-                if (ddAnnotation != null) {
-                    // if the main type belongs to dependent deactivatables of the type for the current property,
-                    // and that property is a key member then such property should be excluded from standard processing of dirty activatables
-                    belongsToDeactivatableDependencies = keyMembers.contains(prop.getName()) && Arrays.asList(ddAnnotation.value()).contains(entity.getType());
-                } else {
-                    belongsToDeactivatableDependencies = false;
-                }
-                // null values correspond to dereferencing and should be allowed only for already persisted entities
-                if (!belongsToDeactivatableDependencies && (prop.getValue() != null || entity.isPersisted())) {
-                    dirtyActivatable.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
-                }
+            if (prop.isDirty() && prop.isActivatable()) {
+                addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
             }
         }
-        return dirtyActivatable;
+        return result;
     }
 
     /**
@@ -538,27 +543,38 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
         final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
-            if (!prop.isDirty() &&
-                ActivatableAbstractEntity.class.isAssignableFrom(prop.getType())) {
-                // let's first identify whether entity belongs to the deactivatable type of the referenced property type
-                // if so, it should not inflict any ref counts for this property
-                final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
-                final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
-                boolean belongsToDeactivatableDependencies;
-                if (ddAnnotation != null) {
-                    // if the main type belongs to dependent deactivatables of the type for the current property,
-                    // and that property is a key member then such property should be excluded from standard processing of dirty activatables
-                    belongsToDeactivatableDependencies = keyMembers.contains(prop.getName()) && Arrays.asList(ddAnnotation.value()).contains(entity.getType());
-                } else {
-                    belongsToDeactivatableDependencies = false;
-                }
-
-                if (!belongsToDeactivatableDependencies) {
-                    result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
-                }
+            if (!prop.isDirty() && prop.isActivatable()) {
+                addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
             }
         }
         return result;
+    }
+
+    /**
+     * A helper method to determine of the provided property should be handled upon save from the perspective of activatable entity logic (update of refCount).
+     *
+     * @param entity
+     * @param keyMembers
+     * @param result
+     * @param prop
+     */
+    private void addToResultIfApplicableFromActivatablePerspective(final T entity, final Set<String> keyMembers, final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result, final MetaProperty<?> prop) {
+        // let's first identify whether entity belongs to the deactivatable type of the referenced property type
+        // if so, it should not inflict any ref counts for this property
+        final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
+        final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
+        boolean belongsToDeactivatableDependencies;
+        if (ddAnnotation != null) {
+            // if the main type belongs to dependent deactivatables of the type for the current property,
+            // and that property is a key member then such property should be excluded from standard processing of dirty activatables
+            belongsToDeactivatableDependencies = keyMembers.contains(prop.getName()) && Arrays.asList(ddAnnotation.value()).contains(entity.getType());
+        } else {
+            belongsToDeactivatableDependencies = false;
+        }
+        // null values correspond to dereferencing and should be allowed only for already persisted entities
+        if (!belongsToDeactivatableDependencies && (prop.getValue() != null || entity.isPersisted())) {
+            result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
+        }
     }
 
     private List<String> toStringList(final List<MetaProperty<?>> dirtyProperties) {

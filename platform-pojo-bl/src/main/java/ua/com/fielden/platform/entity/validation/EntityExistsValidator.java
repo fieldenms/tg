@@ -53,23 +53,23 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 throw Result.failure(entity, format("EntityExists validator: dirty entity %s is not acceptable.", newValue));
             }
 
-            // entity value should either be an actual entity instance or an instance of a corresponding key
+            // the notion of existence is different for activatable and non-activatable entities,
+            // where for activatable entities to exists mens also to be active
             final boolean exists;
-            if (newValue instanceof ActivatableAbstractEntity) {
-                // if entity is activatable then it should both exists and be active to pass validation
+            if (!property.isActivatable()) { // is property value represents non-activatable?
+                exists = co.entityExists(newValue);
+            } else { // otherwise, property value is activatable
                 final Class<T> entityType = co.getEntityType();
                 final fetch<T> fm = fetchOnly(entityType).with(ACTIVE);
                 final T ent = co.findByEntityAndFetch(fm, newValue);
                 // two possible cases:
-                // 1. if this entity is inactive activatable then an inactive value is appropriate for the activatable property
+                // 1. if the property owning entity is itself an inactive activatable then the inactive property value is appropriate
                 // 2. otherwise, the activatable value should also be active
                 if (entity instanceof ActivatableAbstractEntity && !entity.<Boolean>get(ACTIVE)) {
                     exists = (ent != null);
                 } else {
                     exists = (ent != null && ent.<Boolean>get(ACTIVE));
                 }
-            } else {
-                exists = co.entityExists(newValue);
             }
 
             if (!exists) {
