@@ -454,7 +454,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final fetch<T> entityFetch = FetchModelReconstructor.reconstruct(entity);
         // process transactional assignments
-        processTansactionalProperties(entity);
+        assignPropertiesBeforeSave(entity);
 
         // new entity might be activatable, but this has no effect on its refCount -- should be zero as no other entity could yet reference it
         // however, it might reference other activatable entities, which warrants update to their refCount.
@@ -587,9 +587,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
-    private void processTansactionalProperties(final T entity) {
+    private void assignPropertiesBeforeSave(final T entity) {
         final List<MetaProperty<?>> transactionDateProperties = entity.getProperties().values().stream().
-                filter(p -> p.isTransactional()).collect(Collectors.toList());
+                filter(p -> p.shouldAssignBeforeSave()).collect(Collectors.toList());
         if (!transactionDateProperties.isEmpty()) {
             final DateTime now = universalConstants.now();
             if (now == null) {
@@ -616,7 +616,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     } else if (DateTime.class.isAssignableFrom(property.getType())) {
                         property.setValue(now);
                     } else {
-                        assignTransactionalProperty(property);
+                        assignBeforeSave(property);
                     }
 
                     if (property.getValue() == null) {
@@ -633,7 +633,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *
      * @param prop
      */
-    protected void assignTransactionalProperty(final MetaProperty<?> prop) {
+    protected void assignBeforeSave(final MetaProperty<?> prop) {
 
     }
 

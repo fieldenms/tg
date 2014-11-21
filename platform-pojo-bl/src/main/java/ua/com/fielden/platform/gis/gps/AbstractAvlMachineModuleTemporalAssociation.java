@@ -61,7 +61,7 @@ public abstract class AbstractAvlMachineModuleTemporalAssociation<MESSAGE extend
     @Title(value = "До", desc = "Дата до якої модуль був прив'язаний до машини")
     private Date to;
 
-    @IsProperty(transactional = true)
+    @IsProperty(assignBeforeSave = true)
     @MapTo
     @Title(value = "Дата створення", desc = "Дата створення асоціації")
     private Date created;
@@ -71,7 +71,7 @@ public abstract class AbstractAvlMachineModuleTemporalAssociation<MESSAGE extend
     @Title(value = "Дата зміни", desc = "Дата зміни асоціації")
     private Date changed;
 
-    @IsProperty(transactional = true)
+    @IsProperty(assignBeforeSave = true)
     @MapTo
     @Title(value = "Прив'язувач", desc = "Користувач, що провів асоціацію Машини з Модулем в часі")
     @Readonly

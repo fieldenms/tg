@@ -708,7 +708,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                         type,
                         isKey,
                         isCollectional,
-                        isPropertyAnnotation.transactional(),
+                        isPropertyAnnotation.assignBeforeSave(),
                         propertyAnnotationType,
                         AnnotationReflector.isAnnotationPresent(field, Calculated.class),
                         isUpperCase,
@@ -849,7 +849,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
             // TODO may need to relax this condition for composite key member in order to support empty composite members
             // As part of issue #28 need to relax requiredness for composite key members in case they have transactional nature
-            if (metaProperty.isTransactional()) {
+            if (metaProperty.shouldAssignBeforeSave()) { // this should really be strictly for not yet persisted entities!
                 metaProperty.setRequired(false);
             } else {
                 metaProperty.setRequired(

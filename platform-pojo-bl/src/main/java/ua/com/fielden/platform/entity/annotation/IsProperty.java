@@ -122,9 +122,9 @@ public @interface IsProperty {
     String linkProperty() default stubForLinkProperty;
 
     /**
-     * Declares property as transactional.
+     * Declares property as such that should be assigned automatically before entity is saved for the first time.
      *
      * @return
      */
-    boolean transactional() default false;
+    boolean assignBeforeSave() default false;
 }

@@ -10,13 +10,13 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
  */
 public class IsPropertyAnnotation {
     private Class<?> value = Void.class;
-    private final boolean transactional;
+    private final boolean assignBeforeSave;
     private final String linkProperty;
 
-    public IsPropertyAnnotation(final Class<?> value, final String linkProperty, final boolean transactional) {
+    public IsPropertyAnnotation(final Class<?> value, final String linkProperty, final boolean assignBeforeSave) {
         this.value = value;
         this.linkProperty = linkProperty;
-        this.transactional = transactional;
+        this.assignBeforeSave = assignBeforeSave;
     }
 
     public IsPropertyAnnotation(final Class<?> value, final String linkProperty) {
@@ -55,8 +55,8 @@ public class IsPropertyAnnotation {
             }
 
             @Override
-            public boolean transactional() {
-                return transactional;
+            public boolean assignBeforeSave() {
+                return assignBeforeSave;
             }
         };
     }
@@ -80,8 +80,8 @@ public class IsPropertyAnnotation {
             }
 
             @Override
-            public boolean transactional() {
-                return original.transactional();
+            public boolean assignBeforeSave() {
+                return original.assignBeforeSave();
             }
         };
     }

@@ -22,13 +22,13 @@ import ua.com.fielden.platform.security.user.User;
 @KeyType(DynamicEntityKey.class)
 public class CompositionalEntityWithTransactionalKeyMembers extends AbstractEntity<DynamicEntityKey> {
 
-    @IsProperty(transactional = true)
+    @IsProperty(assignBeforeSave = true)
     @MapTo
     @Title(value = "Transaction Date", desc = "Desc")
     @CompositeKeyMember(1)
     private Date date;
 
-    @IsProperty(transactional = true)
+    @IsProperty(assignBeforeSave = true)
     @MapTo
     @Title(value = "User", desc = "Desc")
     @CompositeKeyMember(2)

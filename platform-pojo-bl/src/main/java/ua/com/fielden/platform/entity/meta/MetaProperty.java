@@ -79,7 +79,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     private final boolean retrievable;
     private final boolean isEntity;
     private final boolean activatable;
-    private final boolean transactional;
+    private final boolean shouldAssignBeforeSave;
 
     /**
      * This property indicates whether a corresponding property was modified. This is similar to <code>dirty</code> property at the entity level.
@@ -165,7 +165,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
             final Class<?> type,
             final boolean isKey,
             final boolean isCollectional,
-            final boolean isTransactional,
+            final boolean shouldAssignBeforeSave,
             final Class<?> propertyAnnotationType,
             final boolean calculated,
             final boolean upperCase,//
@@ -190,7 +190,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.validators = validators;
         this.aceHandler = aceHandler;
         this.collectional = isCollectional;
-        this.transactional = isTransactional;
+        this.shouldAssignBeforeSave = shouldAssignBeforeSave;
         this.propertyAnnotationType = propertyAnnotationType;
         this.calculated = calculated;
         this.upperCase = upperCase;
@@ -1218,8 +1218,8 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         return activatable;
     }
 
-    public boolean isTransactional() {
-        return transactional;
+    public boolean shouldAssignBeforeSave() {
+        return shouldAssignBeforeSave;
     }
 
 }

@@ -48,7 +48,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @Calculated
     private BigDecimal calculatedProperty;
 
-    @IsProperty(transactional = true)
+    @IsProperty(assignBeforeSave = true)
     @MapTo("TRANS_DATE_TIME")
     private Date transDate;
 
