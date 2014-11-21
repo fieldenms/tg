@@ -8,6 +8,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -15,6 +17,9 @@ import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
@@ -151,6 +156,49 @@ public final class Validators {
             final BigInteger kount = (BigInteger) coAggregate.getEntity(qem).get("kount");
             return kount.longValue();
         }
+    }
+
+    /**
+     * Finds active deactivatable dependencies for the specified entity.
+     *
+     * @param entity
+     * @return
+     */
+    public static <T extends ActivatableAbstractEntity<?>> List<? extends ActivatableAbstractEntity<?>> findActiveDeactivatableDependencies(final T entity, final ICompanionObjectFinder coFinder) {
+        final List<? extends ActivatableAbstractEntity<?>> result = new ArrayList<>();
+        final DeactivatableDependencies annotation = entity.getType().getAnnotation(DeactivatableDependencies.class);
+        if (annotation == null) {
+            return result;
+        }
+        final Class<? extends AbstractEntity<?>> entityType = entity.getType();
+        final List<Class<? extends ActivatableAbstractEntity<?>>> relevantTypes = Arrays.asList(annotation.value());
+
+        for (final Class<? extends ActivatableAbstractEntity<?>> dependentType : relevantTypes) {
+            // only those properties that are key members are of interest
+            final List<Field> props = new ArrayList<>();
+            final List<Field> keyMembers = Finder.getKeyMembers(dependentType);
+            for(final Field keyMember : keyMembers) {
+                if (entityType.isAssignableFrom(keyMember.getType())) {
+                    props.add(keyMember);
+                }
+            }
+            if (!props.isEmpty()) { // most likely this means an invalid dependency
+                fetch fetch = fetch(dependentType);
+                IWhere1<? extends ActivatableAbstractEntity<?>> inProgress = select(dependentType).where().prop(ActivatableAbstractEntity.ACTIVE).eq().val(true).and().begin();
+                for (int index  = 0; index < props.size() - 1; index++) {
+                    final String propName = props.get(index).getName();
+                    fetch = fetch.with(propName);
+                    inProgress = inProgress.prop(propName).eq().val(entity).or();
+                }
+                final String propName = props.get(props.size() - 1).getName();
+                fetch = fetch.with(propName);
+                final EntityResultQueryModel<? extends ActivatableAbstractEntity<?>> query = inProgress.prop(propName).eq().val(entity).end().model();
+                final QueryExecutionModel<? extends ActivatableAbstractEntity<?>, ?> qem = from(query).with(fetch).model();
+                final IEntityDao co = coFinder.find(dependentType);
+                result.addAll(co.getAllEntities(qem));
+            }
+        }
+        return result;
     }
 
     /**

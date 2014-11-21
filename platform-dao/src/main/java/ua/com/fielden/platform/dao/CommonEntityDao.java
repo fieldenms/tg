@@ -9,12 +9,14 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -27,6 +29,7 @@ import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.TransactionDate;
 import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -50,6 +53,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.Validators;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -257,8 +261,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
             // the easiest way to do that is to load entity by id using the current session
             // also, need to handle activatable properties in a special way that manages their refCount and refCount of any previously referenced instance
-            // but only if the entity being saving is an activatable
-            if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity) {
+            // but only if the entity being saving is an activatable that does not fall into the category of
+            // those with type that governs deactivatable dependency of the entity being saved
+            if (shouldProcessAsActivatable(entity, prop)) {
                 // if value is null then an activatable entity has been dereferenced and its refCount needs to be decremented
                 // but only if the dereferenced value is an active activatable and the entity being saved is not being made active -- thus previously it was not counted as a reference
                 if (value == null) {
@@ -311,7 +316,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             // was activatable entity just activated?
             if (activeProp.isDirty()) {
                 // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
-                for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : collectActivatableNotDirtyProperties(entity)) { // deliberately not-typed
+                final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
+                for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : collectActivatableNotDirtyProperties(entity, keyMembers)) { // deliberately not-typed
                     final AbstractEntity<?> value = persistedEntity.get(prop.getName()); // value from persisted version of entity
                     if (value != null) { // if there is actually some value
                         // load activatable value
@@ -333,6 +339,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                         }
                     }
                 }
+
+                // separately need to perform de-activation of deactivatable dependencies in case where the entity being saved is deactivated
+                if (!activeProp.getValue()) {
+                    final List<? extends ActivatableAbstractEntity<?>> deactivatables = Validators.findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, getCoFinder());
+                    for (final ActivatableAbstractEntity<?> deactivatable : deactivatables) {
+                        deactivatable.set(ACTIVE, false);
+                        final Result result = deactivatable.isValid();
+                        if (result.isSuccessful()) {
+                            final IEntityDao co = getCoFinder().find(deactivatable.getType());
+                            co.save(deactivatable);
+                        } else {
+                            throw result;
+                        }
+                    }
+                }
             }
         } // end of processing activatable non-dirty properties in case of activating of the activatable entity
 
@@ -347,6 +368,29 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
 
         return findById(persistedEntity.getId(), entityFetch);
+    }
+
+    /**
+     * This is a convenient predicate method that identifies whether the specified property need to be processed as an activatable reference.
+     *
+     * @param entity
+     * @param prop
+     * @return
+     */
+    private boolean shouldProcessAsActivatable(final T entity, final MetaProperty<?> prop) {
+        boolean shouldProcessAsActivatable;
+        if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity) {
+            final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
+            final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
+            if (ddAnnotation != null && prop.isKey()) {
+                shouldProcessAsActivatable = !Arrays.asList(ddAnnotation.value()).contains(entity.getType());
+            } else {
+                shouldProcessAsActivatable = true;
+            }
+        } else {
+            shouldProcessAsActivatable = false;
+        }
+        return shouldProcessAsActivatable;
     }
 
     /**
@@ -365,8 +409,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             final Object newValue = prop.getValue();
             final Object persistedValue = persistedEntity.get(name);
             if ((persistedValue == null && oldValue != null && newValue != null) ||
-                (persistedValue != null && oldValue == null && newValue == null) ||
-                (persistedValue != null && !persistedValue.equals(oldValue) && !persistedValue.equals(newValue))) {
+                    (persistedValue != null && oldValue == null && newValue == null) ||
+                    (persistedValue != null && !persistedValue.equals(oldValue) && !persistedValue.equals(newValue))) {
                 return false;
             }
         }
@@ -416,7 +460,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
 
         if (shouldProcessActivatableProperties) {
-            final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableDirtyProperties = collectActivatableDirtyProperties(entity);
+            final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
+            final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableDirtyProperties = collectActivatableDirtyProperties(entity, keyMembers);
 
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableDirtyProperties) {
                 if (prop.getValue() != null) {
@@ -454,17 +499,29 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Collects properties that represent dirty activatable entities.
+     * Collects properties that represent dirty activatable entities that should have their ref counts updated.
      *
      * @param entity
      * @return
      */
-    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableDirtyProperties(final T entity) {
+    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableDirtyProperties(final T entity,  final Set<String> keyMembers) {
         final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> dirtyActivatable = new HashSet<>();
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
             if (prop.isDirty() && ActivatableAbstractEntity.class.isAssignableFrom(prop.getType())) {
+                // let's first identify whether entity belongs to the deactivatable type of the referenced property type
+                // if so, it should not inflict any ref counts for this property
+                final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
+                final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
+                boolean belongsToDeactivatableDependencies;
+                if (ddAnnotation != null) {
+                    // if the main type belongs to dependent deactivatables of the type for the current property,
+                    // and that property is a key member then such property should be excluded from standard processing of dirty activatables
+                    belongsToDeactivatableDependencies = keyMembers.contains(prop.getName()) && Arrays.asList(ddAnnotation.value()).contains(entity.getType());
+                } else {
+                    belongsToDeactivatableDependencies = false;
+                }
                 // null values correspond to dereferencing and should be allowed only for already persisted entities
-                if (prop.getValue() != null || entity.isPersisted()) {
+                if (!belongsToDeactivatableDependencies && (prop.getValue() != null || entity.isPersisted())) {
                     dirtyActivatable.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
                 }
             }
@@ -478,12 +535,27 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param entity
      * @return
      */
-    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotDirtyProperties(final T entity) {
+    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
         final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
             if (!prop.isDirty() &&
-                    ActivatableAbstractEntity.class.isAssignableFrom(prop.getType())) {
-                result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
+                ActivatableAbstractEntity.class.isAssignableFrom(prop.getType())) {
+                // let's first identify whether entity belongs to the deactivatable type of the referenced property type
+                // if so, it should not inflict any ref counts for this property
+                final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
+                final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
+                boolean belongsToDeactivatableDependencies;
+                if (ddAnnotation != null) {
+                    // if the main type belongs to dependent deactivatables of the type for the current property,
+                    // and that property is a key member then such property should be excluded from standard processing of dirty activatables
+                    belongsToDeactivatableDependencies = keyMembers.contains(prop.getName()) && Arrays.asList(ddAnnotation.value()).contains(entity.getType());
+                } else {
+                    belongsToDeactivatableDependencies = false;
+                }
+
+                if (!belongsToDeactivatableDependencies) {
+                    result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
+                }
             }
         }
         return result;

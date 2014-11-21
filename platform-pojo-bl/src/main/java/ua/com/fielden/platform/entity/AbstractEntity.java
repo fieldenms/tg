@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -356,6 +357,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             throw new IllegalStateException("Type " + this.getClass().getName() + " is not fully defined.");
         }
 
+        if(!(this instanceof ActivatableAbstractEntity) && getType().isAnnotationPresent(DeactivatableDependencies.class)) {
+            throw new IllegalStateException("Non-activatable entity cannot have deactivatable dependencies.");
+        }
+
+
         logger = Logger.getLogger(this.getType());
 
         compositeKey = DynamicEntityKey.class.equals(keyType); //Finder.getKeyMembers(getType()).size() > 1;
@@ -634,6 +640,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             logger.error("Property factory can be assigned only once.");
             throw new IllegalStateException("Property factory can be assigned only once.");
         }
+
         this.metaPropertyFactory = metaPropertyFactory;
         final List<Field> keyMembers = Finder.getKeyMembers(getType());
 
