@@ -704,7 +704,20 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 //logger.debug("Creating meta-property for " + field.getName());
                 final boolean isUpperCase = AnnotationReflector.isAnnotationPresent(field, UpperCase.class);
                 //logger.debug("IS_UPPERCASE (" + field.getName() + ") : " + isUpperCase);
-                final MetaProperty<?> metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, AnnotationReflector.isAnnotationPresent(field, Calculated.class), isUpperCase, declatedValidationAnnotations, validators, definer, extractDependentProperties(field, fields));
+                final MetaProperty<?> metaProperty = new MetaProperty(
+                        this,
+                        field,
+                        type,
+                        isKey,
+                        isCollectional,
+                        isPropertyAnnotation.transactional(),
+                        propertyAnnotationType,
+                        AnnotationReflector.isAnnotationPresent(field, Calculated.class),
+                        isUpperCase,
+                        declatedValidationAnnotations,
+                        validators,
+                        definer,
+                        extractDependentProperties(field, fields));
                 // define meta-property properties used most commonly for UI construction: required, editable, title and desc //
                 //logger.debug("Initialising meta-property for " + field.getName());
                 initProperty(keyMembers, field, metaProperty);
@@ -844,7 +857,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 metaProperty.setRequired(
                         AnnotationReflector.isAnnotationPresent(field, Required.class) ||
                         (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) &&
-                         !AnnotationReflector.isAnnotationPresent(field, Optional.class)));
+                        !AnnotationReflector.isAnnotationPresent(field, Optional.class)));
             }
 
             if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
