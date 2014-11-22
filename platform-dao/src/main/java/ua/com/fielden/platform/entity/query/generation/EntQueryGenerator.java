@@ -42,7 +42,6 @@ public class EntQueryGenerator {
     }
 
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final Class resultType) {
-        System.out.println(" =========================== generateEntQueryAsSourceQuery(..) resultType = : " + resultType);
         return generateEntQuery(qryModel, null, resultType, null, paramValues, QueryCategory.SOURCE_QUERY, filter, username);
     }
 
@@ -52,7 +51,6 @@ public class EntQueryGenerator {
 
     public EntQueryBlocks parseTokensIntoComponents(final QueryModel<?> qryModel, //
             final OrderingModel orderModel, //
-            //final fetch fetchModel, //
             final Map<String, Object> paramValues) {
         final QrySourcesBuilder from = new QrySourcesBuilder(this, paramValues);
         final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues);
@@ -104,17 +102,6 @@ public class EntQueryGenerator {
             final QueryCategory category, //
             final IFilter filter, //
             final String username) {
-        //final Class actualResultType = resultType != null ? resultType : qryModel.getResultType();
-        System.out.println("___________1: fetchModel = " + fetchModel);
-        System.out.println("___________2: resultType = " + resultType);
-        //if (resultType == null) {
-            System.out.println("___________3: qryModel = " + qryModel);
-            System.out.println("___________4: category = " + category);
-    //}
-        
-//        final FetchModel actualFetchModel = fetchModel == null ? 
-//                (category != QueryCategory.RESULT_QUERY || actualResultType.equals(EntityAggregates.class) ? null : new FetchModel(fetch(actualResultType), domainMetadataAnalyser)) : 
-//                    new FetchModel(fetchModel, domainMetadataAnalyser); 
         return new EntQuery( //
         qryModel.isFilterable(), //
         parseTokensIntoComponents(qryModel, orderModel, /*fetchModel,*/ paramValues), //
@@ -124,8 +111,6 @@ public class EntQueryGenerator {
         filter, //
         username, //
         this, //
-        //fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //
-        //actualFetchModel, //
         fetchModel,
         paramValues);
     }

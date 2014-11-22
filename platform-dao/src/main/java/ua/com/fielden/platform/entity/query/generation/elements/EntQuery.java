@@ -125,9 +125,6 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean idPropYieldEnhancementRequired() {
-        System.out.println("  1: " + (yields.size() == 0));
-        System.out.println("  2: " + persistedType);
-        System.out.println("  3: " + isSubQuery());
         return yields.size() == 0 && persistedType && isSubQuery();
     }
 
