@@ -611,12 +611,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                             throw new IllegalArgumentException("The user could not be determined!");
                         }
                         property.setValue(user);
-                    } else if (String.class.isAssignableFrom(property.getType())) {
-                        final User user = getUser();
-                        if (user == null) {
-                            throw new IllegalArgumentException("The user could not be determined!");
-                        }
-                        property.setValue(user.getKey());
                     } else if (Date.class.isAssignableFrom(property.getType())) {
                         property.setValue(now.toDate());
                     } else if (DateTime.class.isAssignableFrom(property.getType())) {
