@@ -32,6 +32,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
@@ -184,7 +185,16 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                            (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
                            (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
                            );
-        this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type);
+        // let's identify whether property represents an activatable entity in the current context
+        final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
+        boolean skipActiveOnly;
+        if (seevAnnotation != null) {
+            skipActiveOnly = seevAnnotation.skipActiveOnly();
+        } else {
+            skipActiveOnly = false;
+        }
+        this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type) && !skipActiveOnly;
+
         this.key = isKey;
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;

@@ -780,7 +780,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             }
 
             // now let's see if we need to add EntityExists validation
-            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(getType(), field.getName(), properyType)) {
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(getType(), field, properyType)) {
                 final EntityExists eeAnnotation = new EntityExistsAnnotation((Class<? extends AbstractEntity<?>>) properyType).newInstance();
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
 
@@ -813,8 +813,18 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param propType
      * @return
      */
-    private boolean isEntityExistsValidationApplicable(final Class<?> entityType, final String propName, final Class<?> propType) {
-        return !AnnotationReflector.isPropertyAnnotationPresent(SkipEntityExistsValidation.class, entityType, propName) && EntityUtils.isPersistedEntityType(propType);
+    private boolean isEntityExistsValidationApplicable(final Class<?> entityType, final Field field, final Class<?> propType) {
+
+        final SkipEntityExistsValidation seevAnnotation =  AnnotationReflector.getAnnotation(field, SkipEntityExistsValidation.class);
+        boolean skipEntityExistsValidation;
+        if (seevAnnotation != null) {
+            skipEntityExistsValidation = !seevAnnotation.skipActiveOnly();
+        } else {
+            skipEntityExistsValidation = false;
+        }
+
+        return !skipEntityExistsValidation &&
+                EntityUtils.isPersistedEntityType(propType);
     }
 
     /**

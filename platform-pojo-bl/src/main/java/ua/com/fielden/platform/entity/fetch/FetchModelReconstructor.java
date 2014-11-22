@@ -77,7 +77,7 @@ public class FetchModelReconstructor {
             return exploredFetchModels.get(identity);
         }
 
-        fetch<?> fetchModel = fetch(entity.getType()).with(AbstractEntity.ID).with(AbstractEntity.VERSION);
+        fetch<?> fetchModel = fetch(entity.getType()).with(AbstractEntity.ID);
         explored.add(identity);
         exploredFetchModels.put(identity, fetchModel);
 

@@ -202,7 +202,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
             save(sys3);
             fail("An attempt to save successfully associated, but alread inactive activatable should fail.");
         } catch (final Result ex) {
-            assertEquals("EntityExists validator: Could not find entity Cat7", ex.getMessage());
+            assertEquals("EntityExists validator: Could not find entity Cat7 (ua.com.fielden.platform.sample.domain.TgCategory)", ex.getMessage());
         }
     }
 

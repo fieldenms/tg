@@ -2,8 +2,13 @@ package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.IOException;
@@ -40,6 +45,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
@@ -502,7 +508,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw result;
         }
 
-        return (T) entity.resetMetaState(); //findById(entity.getId(), entityFetch);
+        return findById(entity.getId(), entityFetch);
     }
 
     /**
@@ -620,7 +626,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     }
 
                     if (property.getValue() == null) {
-                        throw new IllegalArgumentException(format("Property %s@%s is marked as tranactional, but no value could be determined.", property.getName(), entity.getType().getName()));
+                        throw new IllegalArgumentException(format("Property %s@%s is marked as assignable before save, but no value could be determined.", property.getName(), entity.getType().getName()));
                     }
                 }
             }
