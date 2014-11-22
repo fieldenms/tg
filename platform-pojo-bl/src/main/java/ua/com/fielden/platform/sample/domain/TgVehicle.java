@@ -149,10 +149,12 @@ public class TgVehicle extends AbstractEntity<String> {
     private TgVehicleModel calcModel;
     private static final ExpressionModel calcModel_ = expr().prop("model").model();
 
+
     @IsProperty
     @Title(value = "Financial details", desc = "Fin Details")
     private TgVehicleFinDetails finDetails;
-
+    
+    //   FIXME
     //    @IsProperty @Calculated @Title("Calc Make")
     //    private TgVehicleMake calcMake;
     //    private static final ExpressionModel calcMake_ = expr().prop("model.make").model();
@@ -163,6 +165,7 @@ public class TgVehicle extends AbstractEntity<String> {
     //  public BigDecimal getAggregated() {
     //	return aggregated;
     //  }
+    
 
     /**
      * Constructor for (@link EntityFactory}.

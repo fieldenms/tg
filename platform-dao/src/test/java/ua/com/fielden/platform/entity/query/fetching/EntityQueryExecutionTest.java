@@ -116,49 +116,71 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
-    //    @Test
-    //    public void test_query_111() {
-    //  final EntityResultQueryModel<TgVehicle> qry = select(select(TgVehicle.class).model()).
-    //      where().prop("key").eq().val("CAR1").
-    //      model();
-    //  final TgVehicle vehicle1 = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
-    //      with("key"). //
-    //      with("purchasePrice")).model());
-    //  assertEquals(new Money(new BigDecimal(10)), vehicle1.getPurchasePrice());
-    //
-    //  final TgVehicle vehicle2 = vehicleDao.getEntity(from(qry). //
-    //      with(fetchOnly(TgVehicle.class). //
-    //          with("aggregated"). //
-    //          without("id"). //
-    //          without("version")). //
-    //      model());
-    //  assertEquals(new BigDecimal("10.0000"), vehicle2.getAggregated());
-    //    }
-    //
-    //    @Test
-    //    public void test_query_for_complex_calc_prop() {
-    //	final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).
-    //		where().prop("calcMake.key").eq().val("MERC").
-    //		model();
-    //	final TgVehicle vehicle1 = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
-    //		with("key"). //
-    //		with("desc"). //
-    //		with("model", fetchOnly(TgVehicleModel.class).with("key").with("make", fetchOnly(TgVehicleMake.class).with("key")))).model());
-    //	assertEquals("316", vehicle1.getModel().getKey());
-    //    }
-    //
-    //    @Test
-    //    public void test_query_for_complex_calc_prop2() {
-    //	final EntityResultQueryModel<TgVehicle> qry = select(select(TgVehicle.class).where().prop("key").notLike().val("A%").model()). //
-    //		join(TgVehicleModel.class).as("model").on().prop("model").eq().prop("model.id"). //
-    //		join(TgVehicleMake.class).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
-    //		where().prop("model.make.key").eq().val("MERC").model();
-    //	final TgVehicle vehicle1 = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
-    //		with("key"). //
-    //		with("desc"). //
-    //		with("model", fetchOnly(TgVehicleModel.class).with("key").with("make", fetchOnly(TgVehicleMake.class).with("key")))).model());
-    //	assertEquals("316", vehicle1.getModel().getKey());
-    //    }
+    /////////////////////////////////////// WITHOUT ASSERTIONS /////////////////////////////////////////
+
+    @Test
+    public void test_query_based_entities_with_composite_props() {
+        final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).model();
+        makeCountDao.getAllEntities(from(qry).with(fetch(TgMakeCount.class)).model());
+    }
+
+    @Test
+    public void test_ordering_by_yielded_prop() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).groupBy().prop("model.make.key"). //
+        yield().prop("model.make.key").as("makeKey"). //
+        yield().countAll().as("count"). //
+        modelAsAggregate();
+
+        final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).with(orderBy().yield("count").desc().model()).model());
+    }
+
+    @Ignore
+    @Test
+    public void test_query_query_with_grouping_and_aggregation1() {
+        final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).as("AAA").where().prop("make.key").eq().val("AA").model();
+        final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(qry).model());
+    }
+
+    @Test
+    public void test_query_union_entity_implied_query_model_with_ordering() {
+        final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).model();
+        System.out.println(bogieLocationDao.getAllEntities(from(qry).with(fetchAll(TgBogieLocation.class)).with(orderBy().prop("key").asc().model()).model()));
+    }
+
+    @Test
+    public void test_query_union_entity_implied_query_model_with_ordering_by_yield() {
+        final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).model();
+        System.out.println(bogieLocationDao.getAllEntities(from(qry).with(fetchAll(TgBogieLocation.class).with("key")).with(orderBy().yield("key").asc().model()).model()));
+    }
+
+    @Test
+    public void test_query_union_entityA_() {
+        final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").modelAsEntity(TgBogieLocation.class);
+        final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry1).with(fetchAll(TgBogieLocation.class)).model());
+    }
+
+    @Test
+    public void test_case_when_function() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").then().prop("key").end().isNotNull().model();
+        final IFunctionCompoundCondition0<IComparisonOperator0<TgVehicle>, TgVehicle> qry2 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --");
+        final EntityResultQueryModel<TgVehicle> qry3 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
+        then().prop("key").//
+        when().prop("a").isNotNull().then().prop("a").end().isNotNull().model();
+
+        final EntityResultQueryModel<TgVehicle> qry4 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
+        then().prop("key").//
+        when().prop("a").isNotNull().then().prop("a").otherwise().prop("a").end(). //
+        isNotNull().model();
+
+        final EntityResultQueryModel<TgVehicle> qry5 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
+        then().prop("key").//
+        when().prop("a").isNotNull().then().prop("a").otherwise().prop("a").end(). //
+        isNotNull().model();
+
+        final EntityResultQueryModel<TgVehicle> qry6 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x"). //
+        then().prop("key").otherwise().prop("a").end(). //
+        isNotNull().model();
+    }
 
     /////////////////////////////////////// QUERING KEYS OF ENTITIES WITH COMPOSITE KEYS /////////////////////////////////////////
 
@@ -179,14 +201,26 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    public void test_query_based_entities_with_composite_props() {
-        final EntityResultQueryModel<TgMakeCount> qry = select(TgMakeCount.class).model();
-        makeCountDao.getAllEntities(from(qry).with(fetch(TgMakeCount.class)).model());
+    public void test_query_for_correct_fetch_model_autoenhancement_in_case_of_composite_user_type_with_single_subproperty() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        final TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
+        with("key"). //
+        with("purchasePrice")).model());
+        assertEquals(new Money(new BigDecimal(10)), vehicle.getPurchasePrice());
+        
+        //  final TgVehicle vehicle2 = vehicleDao.getEntity(from(qry). //
+        //      with(fetchOnly(TgVehicle.class). //
+        //          with("aggregated"). //
+        //          without("id"). //
+        //          without("version")). //
+        //      model());
+        //  assertEquals(new BigDecimal("10.0000"), vehicle2.getAggregated());
     }
 
     @Test
-    public void test_query_for_correct_fetch_model_autoenhancement_in_case_of_composite_user_type_with_single_subproperty() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+    public void test_query_for_correct_fetch_model_autoenhancement_in_case_of_composite_user_type_with_single_subproperty_in() {
+        final EntityResultQueryModel<TgVehicle> qry = select(select(TgVehicle.class).model()).
+                where().prop("key").eq().val("CAR1").model();
         final TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
         with("key"). //
         with("purchasePrice")).model());
@@ -201,16 +235,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         with("desc"). //
         with("model", fetchOnly(TgVehicleModel.class).with("key").with("make", fetchOnly(TgVehicleMake.class).with("key")))).model());
         assertNotNull(vehicle1.getModel().getMake().getKey());
-    }
-
-    @Test
-    public void test_ordering_by_yielded_prop() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).groupBy().prop("model.make.key"). //
-        yield().prop("model.make.key").as("makeKey"). //
-        yield().countAll().as("count"). //
-        modelAsAggregate();
-
-        final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).with(orderBy().yield("count").desc().model()).model());
     }
 
     @Test
@@ -255,26 +279,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         System.out.println(cond().round().prop("a").to(3).eq().val(0).and().beginExpr().prop("a").endExpr().isNotNull().and().now().eq().val(1).and().exists(null).and().condition(null).and().concat().prop("a").with().prop("b").with().prop("c").end().eq().all(null).and().condition(null).model().getTokens());
     }
 
-    @Ignore
-    @Test
-    public void test_query_query_with_grouping_and_aggregation1() {
-        final EntityResultQueryModel<TgVehicleModel> qry = select(TgVehicleModel.class).as("AAA").where().prop("make.key").eq().val("AA").model();
-        final List<TgVehicleModel> models = vehicleModelDao.getAllEntities(from(qry).model());
-    }
-
     ////////////////////////////////////////////////////////////////   UNION ENTITIES ////////////////////////////////////////////////////////////
-    @Test
-    public void test_query_union_entity_implied_query_model_with_ordering() {
-        final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).model();
-        System.out.println(bogieLocationDao.getAllEntities(from(qry).with(fetchAll(TgBogieLocation.class)).with(orderBy().prop("key").asc().model()).model()));
-    }
-
-    @Test
-    public void test_query_union_entity_implied_query_model_with_ordering_by_yield() {
-        final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).model();
-        System.out.println(bogieLocationDao.getAllEntities(from(qry).with(fetchAll(TgBogieLocation.class).with("key")).with(orderBy().yield("key").asc().model()).model()));
-    }
-
     @Test
     public void test_query_union_entity_implied_query_model() {
         final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).model();
@@ -397,12 +402,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals("Incorrect key", 13, models.size());
     }
 
-    @Test
-    public void test_query_union_entityA_() {
-        final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").modelAsEntity(TgBogieLocation.class);
-        final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry1).with(fetchAll(TgBogieLocation.class)).model());
-    }
-
     ////////////////////////////////////////////////////////////////   SYNTHETIC ENTITIES ////////////////////////////////////////////////////////////
 
     @Test
@@ -517,6 +516,32 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
+    public void test_query_for_complex_calc_prop() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).
+                where().prop("calcMake.key").eq().val("MERC").
+                model();
+        final TgVehicle vehicle1 = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
+        with("key"). //
+        with("desc"). //
+        with("model", fetchOnly(TgVehicleModel.class).with("key").with("make", fetchOnly(TgVehicleMake.class).with("key")))).model());
+        assertEquals("316", vehicle1.getModel().getKey());
+    }
+
+    @Test
+    public void test_query_for_complex_calc_prop2() {
+        final EntityResultQueryModel<TgVehicle> qry = select(select(TgVehicle.class).where().prop("key").notLike().val("A%").model()). //
+        join(TgVehicleModel.class).as("model").on().prop("model").eq().prop("model.id"). //
+        join(TgVehicleMake.class).as("model.make").on().prop("model.make").eq().prop("model.make.id"). //
+        where().prop("model.make.key").eq().val("MERC").model();
+        final TgVehicle vehicle1 = vehicleDao.getEntity(from(qry).with(fetchOnly(TgVehicle.class). //
+        with("key"). //
+        with("desc"). //
+        with("model", fetchOnly(TgVehicleModel.class).with("key").with("make", fetchOnly(TgVehicleMake.class).with("key")))).model());
+        assertEquals("316", vehicle1.getModel().getKey());
+    }
+
+    @Test
     public void test0_0() {
         final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").yield().prop("lastFuelUsageQty").as("lq").modelAsAggregate();
         final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).model());
@@ -624,29 +649,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         final EntityResultQueryModel<TgWagonSlot> qry = select(TgWagonSlot.class).where().concat().prop("wagon.key").with().val(2).end().eq().val("WAGON22").model();
         final List<TgWagonSlot> models = wagonSlotDao.getAllEntities(from(qry).with(fetchAll(TgWagonSlot.class)).model());
         assertEquals("Incorrect key", 3, models.size());
-    }
-
-    @Test
-    public void test_case_when_function() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --").then().prop("key").end().isNotNull().model();
-        final IFunctionCompoundCondition0<IComparisonOperator0<TgVehicle>, TgVehicle> qry2 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --");
-        final EntityResultQueryModel<TgVehicle> qry3 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
-        then().prop("key").//
-        when().prop("a").isNotNull().then().prop("a").end().isNotNull().model();
-
-        final EntityResultQueryModel<TgVehicle> qry4 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
-        then().prop("key").//
-        when().prop("a").isNotNull().then().prop("a").otherwise().prop("a").end(). //
-        isNotNull().model();
-
-        final EntityResultQueryModel<TgVehicle> qry5 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x'; DROP TABLE members; --"). //
-        then().prop("key").//
-        when().prop("a").isNotNull().then().prop("a").otherwise().prop("a").end(). //
-        isNotNull().model();
-
-        final EntityResultQueryModel<TgVehicle> qry6 = select(TgVehicle.class).where().caseWhen().prop("finDetails.capitalWorksNo").eq().val("x"). //
-        then().prop("key").otherwise().prop("a").end(). //
-        isNotNull().model();
     }
 
     ////////////////////////////////////////////////////////////////   OTHERS  ////////////////////////////////////////////////////////////
@@ -803,11 +805,10 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("key").eq().val("316").model();
 
         final TgVehicleModel vehModel = vehicleModelDao.getEntity(from(model).with(fetch(TgVehicleModel.class).with("make")).model());
-        
+
         assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
     }
-   
-    
+
     ///////////////////////////////////////////////////// EXPERIMENTING WITH RE-YIELDING (FULL/PARTIAL) OF PERSISTED ENTITY TYPES ////////////////////////////////////////////////
 
     @Test
@@ -823,7 +824,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         yield().prop("make.key").as("make.key"). //
         yield().prop("make.desc").as("make.desc"). //
         modelAsEntity(TgVehicleModel.class);
-        
+
         final TgVehicleModel vehModel = vehicleModelDao.getEntity(from(model).with(fetch(TgVehicleModel.class).with("make")).model());
 
         assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -840,8 +841,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
         final EntityResultQueryModel<TgVehicleModel> model2 = select(model).where().prop("key").eq().val("316").model();
 
-        final TgVehicleModel vehModel  = vehicleModelDao.getEntity(from(model2).with(fetchAll(TgVehicleModel.class)).model());
-        
+        final TgVehicleModel vehModel = vehicleModelDao.getEntity(from(model2).with(fetchAll(TgVehicleModel.class)).model());
+
         assertEquals("Incorrect key", "316", vehModel.getKey());
     }
 
@@ -855,7 +856,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         yield().prop("make.key").as("make.key"). //
         yield().prop("make.desc").as("make.desc"). //
         modelAsAggregate();
-        
+
         final EntityAggregates vehModel = aggregateDao.getEntity(from(model).model());
         assertEquals("Incorrect key", "316", vehModel.get("key"));
         assertEquals("Incorrect key", "MERC", ((EntityAggregates) vehModel.get("make")).get("key"));
@@ -870,7 +871,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         yield().prop("key").as("key"). //
         yield().prop("desc").as("desc"). //
         modelAsEntity(TgVehicleModel.class);
-        
+
         final TgVehicleModel vehModel = vehicleModelDao.getEntity(from(model).with(fetchAll(TgVehicleModel.class)).model());
         assertEquals("Incorrect key", "316", vehModel.getKey());
         assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
@@ -910,13 +911,13 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         yield().prop("make.key").as("make.key"). //
         yield().prop("make.desc").as("make.desc"). //
         modelAsEntity(TgVehicleModel.class);
-        
+
         final TgVehicleModel vehModel = vehicleModelDao.getEntity(from(model).with(fetch(TgVehicleModel.class).with("make")).model());
-        
+
         assertEquals("Incorrect key", "316", vehModel.getKey());
         assertEquals("Incorrect key", "MERC", vehModel.getMake().getKey());
     }
-    
+
     @Test
     public void test4() {
         final EntityResultQueryModel<TgVehicleModel> model = select(TgVehicleModel.class).where().prop("make").eq().model(select(TgVehicleMake.class).where().prop("key").eq().val("MERC").yield().prop("id").modelAsPrimitive()). //
@@ -951,7 +952,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals("Incorrect count", 2, models.size());
     }
 
-    
     @Test
     @Ignore
     public void test_with_empty_values() {
@@ -1494,10 +1494,10 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_negated_standalone_condition() {
         final EntityResultQueryModel<TgVehicle> query = select(TgVehicle.class).where().negatedCondition(cond().prop("model.make.key").eq().val("MERC").model()).model();
-        final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(query).with(orderBy().prop("key").asc().model()).model());
-        assertEquals("Incorrect key", "CAR1", vehicles.get(0).getKey());
+        final TgVehicle vehicle = vehicleDao.getEntity(from(query).model());
+        assertEquals("Incorrect key", "CAR1", vehicle.getKey());
     }
-    
+
     @Test
     public void property_outside_fetch_model_should_be_proxied() {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
@@ -1596,7 +1596,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         save(new_composite(TgAuthor.class, yurij, "Shcherbyna", "Mykolajovych"));
 
         System.out.println("\n\n\n\n\n\n\n\n\n   =====  DATA POPULATED SUCCESSFULLY   =====\n\n\n\n\n\n\n\n\n");
-   }
+    }
 
     @Override
     protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
