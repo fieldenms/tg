@@ -50,7 +50,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             if (newValue == null) {
                 return Result.successful(entity);
             } else if (newValue.isDirty()) {
-                throw Result.failure(entity, format("EntityExists validator: dirty entity %s is not acceptable.", newValue));
+                return Result.failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, newValue.getType().getName()));
             }
 
             // the notion of existence is different for activatable and non-activatable entities,
@@ -73,7 +73,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             }
 
             if (!exists) {
-                return Result.failure(entity, format("EntityExists validator: Could not find entity %s", newValue));
+                return Result.failure(entity, format("EntityExists validator: Could not find entity %s (%s)", newValue, newValue.getType().getName()));
             } else {
                 return Result.successful(entity);
             }

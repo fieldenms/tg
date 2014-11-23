@@ -32,6 +32,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
@@ -79,6 +80,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     private final boolean retrievable;
     private final boolean isEntity;
     private final boolean activatable;
+    private final boolean shouldAssignBeforeSave;
 
     /**
      * This property indicates whether a corresponding property was modified. This is similar to <code>dirty</code> property at the entity level.
@@ -164,6 +166,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
             final Class<?> type,
             final boolean isKey,
             final boolean isCollectional,
+            final boolean shouldAssignBeforeSave,
             final Class<?> propertyAnnotationType,
             final boolean calculated,
             final boolean upperCase,//
@@ -182,12 +185,22 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                            (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
                            (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
                            );
-        this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type);
+        // let's identify whether property represents an activatable entity in the current context
+        final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
+        boolean skipActiveOnly;
+        if (seevAnnotation != null) {
+            skipActiveOnly = seevAnnotation.skipActiveOnly();
+        } else {
+            skipActiveOnly = false;
+        }
+        this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type) && !skipActiveOnly;
+
         this.key = isKey;
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
         this.aceHandler = aceHandler;
         this.collectional = isCollectional;
+        this.shouldAssignBeforeSave = shouldAssignBeforeSave;
         this.propertyAnnotationType = propertyAnnotationType;
         this.calculated = calculated;
         this.upperCase = upperCase;
@@ -718,6 +731,15 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     /**
+     * A convenient method to set property value, which in turn accesses entity to set the propery.
+     *
+     * @param value
+     */
+    public final void setValue(final Object value) {
+        entity.set(name, value);
+    }
+
+    /**
      * Returns <code>true</code> if the property value is a proxy.
      *
      * @return
@@ -1204,6 +1226,10 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public boolean isActivatable() {
         return activatable;
+    }
+
+    public boolean shouldAssignBeforeSave() {
+        return shouldAssignBeforeSave;
     }
 
 }

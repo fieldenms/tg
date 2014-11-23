@@ -25,11 +25,9 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.DescReadonly;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
@@ -39,14 +37,14 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyReadonly;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.TransactionDate;
-import ua.com.fielden.platform.entity.annotation.TransactionUser;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -704,7 +702,20 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 //logger.debug("Creating meta-property for " + field.getName());
                 final boolean isUpperCase = AnnotationReflector.isAnnotationPresent(field, UpperCase.class);
                 //logger.debug("IS_UPPERCASE (" + field.getName() + ") : " + isUpperCase);
-                final MetaProperty<?> metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, AnnotationReflector.isAnnotationPresent(field, Calculated.class), isUpperCase, declatedValidationAnnotations, validators, definer, extractDependentProperties(field, fields));
+                final MetaProperty<?> metaProperty = new MetaProperty(
+                        this,
+                        field,
+                        type,
+                        isKey,
+                        isCollectional,
+                        isPropertyAnnotation.assignBeforeSave(),
+                        propertyAnnotationType,
+                        AnnotationReflector.isAnnotationPresent(field, Calculated.class),
+                        isUpperCase,
+                        declatedValidationAnnotations,
+                        validators,
+                        definer,
+                        extractDependentProperties(field, fields));
                 // define meta-property properties used most commonly for UI construction: required, editable, title and desc //
                 //logger.debug("Initialising meta-property for " + field.getName());
                 initProperty(keyMembers, field, metaProperty);
@@ -769,7 +780,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             }
 
             // now let's see if we need to add EntityExists validation
-            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(getType(), field.getName(), properyType)) {
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(getType(), field, properyType)) {
                 final EntityExists eeAnnotation = new EntityExistsAnnotation((Class<? extends AbstractEntity<?>>) properyType).newInstance();
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
 
@@ -802,8 +813,18 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param propType
      * @return
      */
-    private boolean isEntityExistsValidationApplicable(final Class<?> entityType, final String propName, final Class<?> propType) {
-        return !AnnotationReflector.isPropertyAnnotationPresent(SkipEntityExistsValidation.class, entityType, propName) && EntityUtils.isPersistedEntityType(propType);
+    private boolean isEntityExistsValidationApplicable(final Class<?> entityType, final Field field, final Class<?> propType) {
+
+        final SkipEntityExistsValidation seevAnnotation =  AnnotationReflector.getAnnotation(field, SkipEntityExistsValidation.class);
+        boolean skipEntityExistsValidation;
+        if (seevAnnotation != null) {
+            skipEntityExistsValidation = !seevAnnotation.skipActiveOnly();
+        } else {
+            skipEntityExistsValidation = false;
+        }
+
+        return !skipEntityExistsValidation &&
+                EntityUtils.isPersistedEntityType(propType);
     }
 
     /**
@@ -838,13 +859,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
             // TODO may need to relax this condition for composite key member in order to support empty composite members
             // As part of issue #28 need to relax requiredness for composite key members in case they have transactional nature
-            if (AnnotationReflector.isAnnotationPresent(field, TransactionUser.class) || AnnotationReflector.isAnnotationPresent(field, TransactionDate.class)) {
+            if (metaProperty.shouldAssignBeforeSave()) { // this should really be strictly for not yet persisted entities!
                 metaProperty.setRequired(false);
             } else {
                 metaProperty.setRequired(
                         AnnotationReflector.isAnnotationPresent(field, Required.class) ||
                         (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) &&
-                         !AnnotationReflector.isAnnotationPresent(field, Optional.class)));
+                        !AnnotationReflector.isAnnotationPresent(field, Optional.class)));
             }
 
             if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {

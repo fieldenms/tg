@@ -22,9 +22,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class TgBogie extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    protected TgBogie() {
-    }
-
     @IsProperty
     @MapTo
     @Title(value = "Location", desc = "Location")

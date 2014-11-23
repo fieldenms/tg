@@ -18,7 +18,7 @@ public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends
 
     @IsProperty
     @MapTo("ACTIVE_FLAG_")
-    @Title(value = "Active", desc = "Designates whether an entity instance is active or not.")
+    @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
     @BeforeChange(@Handler(ActivePropertyValidator.class))
     private boolean active;
 

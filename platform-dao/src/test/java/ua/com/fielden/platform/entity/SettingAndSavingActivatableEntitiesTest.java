@@ -18,8 +18,11 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.TgCategory;
+import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
+import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 
@@ -202,12 +205,19 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
             save(sys3);
             fail("An attempt to save successfully associated, but alread inactive activatable should fail.");
         } catch (final Result ex) {
-            assertEquals("EntityExists validator: Could not find entity Cat7", ex.getMessage());
+            assertEquals("EntityExists validator: Could not find entity Cat7 (ua.com.fielden.platform.sample.domain.TgCategory)", ex.getMessage());
         }
     }
 
     @Override
     protected void populateDomain() {
+        // set up logged in person, which is needed for TgSubSystem
+        final String loggedInUser = "LOGGED IN USER";
+        save(new_(TgPerson.class, loggedInUser).setUsername(loggedInUser).setBase(true));
+        final IUserProvider up = getInstance(IUserProvider.class);
+        up.setUsername(loggedInUser, getInstance(IUserController.class));
+
+        // now the test data
         TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
         cat1 = save(cat1.setParent(cat1));
         final TgCategory cat2 = save(new_(TgCategory.class, "Cat2").setActive(true).setParent(cat1));

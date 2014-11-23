@@ -2,12 +2,16 @@ package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,8 +34,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.TransactionDate;
-import ua.com.fielden.platform.entity.annotation.TransactionUser;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
@@ -43,6 +46,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
@@ -233,6 +237,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param entity
      */
     private T saveModifiedEntity(final T entity) {
+        // let's first prevent not permissibly modifications that could not be checked any earlier than this,
+        // which pertain to required and marked as assign before save properties that must have values
+        checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
         final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
         final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getEntities(from(model).model());
@@ -286,8 +293,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Handles dirty activatable property in a special way that manages refCount of its current and previous values,
-     * but only if the entity being saving is an activatable that does not fall into the category of those with type that governs deactivatable dependency of the entity being saved.
+     * Handles dirty activatable property in a special way that manages refCount of its current and previous values, but only if the entity being saving is an activatable that does
+     * not fall into the category of those with type that governs deactivatable dependency of the entity being saved.
      *
      * @param entity
      * @param persistedEntity
@@ -456,18 +463,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final fetch<T> entityFetch = FetchModelReconstructor.reconstruct(entity);
-        // check and assign properties annotated with @TransactionDate
-        try {
-            assignTransactionDate(entity);
-        } catch (final Exception e) {
-            throw new IllegalStateException("Could not assign transaction date properties.", e);
-        }
-        // check and assign properties annotated with @TransactionUser
-        try {
-            assignTransactionUser(entity);
-        } catch (final Exception e) {
-            throw new IllegalStateException("Could not assign transaction user properties.", e);
-        }
+        // process transactional assignments
+        assignPropertiesBeforeSave(entity);
 
         // new entity might be activatable, but this has no effect on its refCount -- should be zero as no other entity could yet reference it
         // however, it might reference other activatable entities, which warrants update to their refCount.
@@ -515,7 +512,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw result;
         }
 
-        return (T) entity.resetMetaState(); //findById(entity.getId(), entityFetch);
+        return findById(entity.getId(), entityFetch);
     }
 
     /**
@@ -600,52 +597,72 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
-    private void assignTransactionDate(final T entity) throws Exception {
-        final List<Field> transactionDateProperties = Finder.findRealProperties(entity.getType(), TransactionDate.class);
-        if (!transactionDateProperties.isEmpty()) {
+    /**
+     * Assigns values to all properties marked for assignment before save.
+     * This method should be used only during saving of new entities.
+     *
+     * @param entity
+     */
+    private void assignPropertiesBeforeSave(final T entity) {
+        final List<MetaProperty<?>> props = entity.getProperties().values().stream().
+                filter(p -> p.shouldAssignBeforeSave()).collect(Collectors.toList());
+        if (!props.isEmpty()) {
             final DateTime now = universalConstants.now();
             if (now == null) {
                 throw new IllegalArgumentException("The now() constant has not been assigned!");
             }
-            for (final Field property : transactionDateProperties) {
-                property.setAccessible(true);
-                final Object value = property.get(entity);
+
+            for (final MetaProperty<?> prop : props) {
+                final Object value = prop.getValue();
                 if (value == null) {
-                    if (Date.class.isAssignableFrom(property.getType())) {
-                        property.set(entity, now.toDate());
-                    } else if (DateTime.class.isAssignableFrom(property.getType())) {
-                        property.set(entity, now);
+                    if (User.class.isAssignableFrom(prop.getType())) {
+                        final User user = getUser();
+                        if (user == null) {
+                            throw new IllegalArgumentException("The user could not be determined!");
+                        }
+                        prop.setValue(user);
+                    } else if (Date.class.isAssignableFrom(prop.getType())) {
+                        prop.setValue(now.toDate());
+                    } else if (DateTime.class.isAssignableFrom(prop.getType())) {
+                        prop.setValue(now);
                     } else {
-                        throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
-                                + " is not valid for annotation TransactionDate.");
+                        assignBeforeSave(prop);
+                    }
+
+                    if (prop.getValue() == null) {
+                        throw new IllegalArgumentException(format("Property %s@%s is marked as assignable before save, but no value could be determined.", prop.getName(), entity.getType().getName()));
                     }
                 }
             }
         }
     }
 
-    private void assignTransactionUser(final T entity) throws Exception {
-        final List<Field> transactionUserProperties = Finder.findRealProperties(entity.getType(), TransactionUser.class);
-        if (!transactionUserProperties.isEmpty()) {
-            final User user = getUser();
-            if (user == null) {
-                throw new IllegalArgumentException("The user could not be determined!");
-            }
-            for (final Field property : transactionUserProperties) {
-                property.setAccessible(true);
-                final Object value = property.get(entity);
-                if (value == null) {
-                    if (User.class.isAssignableFrom(property.getType())) {
-                        property.set(entity, user);
-                    } else if (String.class.isAssignableFrom(property.getType())) {
-                        property.set(entity, user.getKey());
-                    } else {
-                        throw new IllegalArgumentException("The type of property " + entity.getType().getName() + "@" + property.getName()
-                                + " is not valid for annotation TransactionUser.");
-                    }
+    /**
+     * This method is used during saving of the modified entity, which has been persisted previously, and ensures that no removal of required assignable before save properties has happened.
+     *
+     * @param entity
+     */
+    private void checkDirtyMarkedForAssignmentBeforeSaveProperties(final T entity) {
+        final List<MetaProperty<?>> props = entity.getDirtyProperties().stream().
+                filter(p -> p.shouldAssignBeforeSave() && null != AnnotationReflector.getPropertyAnnotation(Required.class, entity.getType(), p.getName())).
+                collect(Collectors.toList());
+        if (!props.isEmpty()) {
+            for (final MetaProperty<?> prop : props) {
+                if (prop.getValue() == null) {
+                    throw new IllegalArgumentException(format("Property %s@%s is marked as assignable before save, but had its value removed.", prop.getName(), entity.getType().getName()));
                 }
             }
         }
+    }
+
+    /**
+     * A method for assigning a value to a domain specific transactional property. This method does nothing by default, and should be overridden by companion objects in order to
+     * provide domain specific behaviour.
+     *
+     * @param prop
+     */
+    protected void assignBeforeSave(final MetaProperty<?> prop) {
+
     }
 
     @Override
