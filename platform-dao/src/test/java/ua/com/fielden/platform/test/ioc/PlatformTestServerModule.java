@@ -81,6 +81,7 @@ import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
@@ -113,6 +114,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     @Override
     protected void configure() {
         super.configure();
+
+        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
         // bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);

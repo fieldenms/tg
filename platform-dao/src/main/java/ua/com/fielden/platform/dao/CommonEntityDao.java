@@ -34,6 +34,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
@@ -236,6 +237,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param entity
      */
     private T saveModifiedEntity(final T entity) {
+        // let's first prevent not permissibly modifications that could not be checked any earlier than this,
+        // which pertain to required and marked as assign before save properties that must have values
+        checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
         final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
         final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getEntities(from(model).model());
@@ -289,8 +293,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Handles dirty activatable property in a special way that manages refCount of its current and previous values,
-     * but only if the entity being saving is an activatable that does not fall into the category of those with type that governs deactivatable dependency of the entity being saved.
+     * Handles dirty activatable property in a special way that manages refCount of its current and previous values, but only if the entity being saving is an activatable that does
+     * not fall into the category of those with type that governs deactivatable dependency of the entity being saved.
      *
      * @param entity
      * @param persistedEntity
@@ -593,34 +597,40 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
+    /**
+     * Assigns values to all properties marked for assignment before save.
+     * This method should be used only during saving of new entities.
+     *
+     * @param entity
+     */
     private void assignPropertiesBeforeSave(final T entity) {
-        final List<MetaProperty<?>> transactionDateProperties = entity.getProperties().values().stream().
+        final List<MetaProperty<?>> props = entity.getProperties().values().stream().
                 filter(p -> p.shouldAssignBeforeSave()).collect(Collectors.toList());
-        if (!transactionDateProperties.isEmpty()) {
+        if (!props.isEmpty()) {
             final DateTime now = universalConstants.now();
             if (now == null) {
                 throw new IllegalArgumentException("The now() constant has not been assigned!");
             }
 
-            for (final MetaProperty property : transactionDateProperties) {
-                final Object value = property.getValue();
+            for (final MetaProperty<?> prop : props) {
+                final Object value = prop.getValue();
                 if (value == null) {
-                    if (User.class.isAssignableFrom(property.getType())) {
+                    if (User.class.isAssignableFrom(prop.getType())) {
                         final User user = getUser();
                         if (user == null) {
                             throw new IllegalArgumentException("The user could not be determined!");
                         }
-                        property.setValue(user);
-                    } else if (Date.class.isAssignableFrom(property.getType())) {
-                        property.setValue(now.toDate());
-                    } else if (DateTime.class.isAssignableFrom(property.getType())) {
-                        property.setValue(now);
+                        prop.setValue(user);
+                    } else if (Date.class.isAssignableFrom(prop.getType())) {
+                        prop.setValue(now.toDate());
+                    } else if (DateTime.class.isAssignableFrom(prop.getType())) {
+                        prop.setValue(now);
                     } else {
-                        assignBeforeSave(property);
+                        assignBeforeSave(prop);
                     }
 
-                    if (property.getValue() == null) {
-                        throw new IllegalArgumentException(format("Property %s@%s is marked as assignable before save, but no value could be determined.", property.getName(), entity.getType().getName()));
+                    if (prop.getValue() == null) {
+                        throw new IllegalArgumentException(format("Property %s@%s is marked as assignable before save, but no value could be determined.", prop.getName(), entity.getType().getName()));
                     }
                 }
             }
@@ -628,8 +638,26 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * A method for assigning a value to a domain specific transactional property.
-     * This method does nothing by default, and should be overridden by companion objects in order to provide domain specific behaviour.
+     * This method is used during saving of the modified entity, which has been persisted previously, and ensures that no removal of required assignable before save properties has happened.
+     *
+     * @param entity
+     */
+    private void checkDirtyMarkedForAssignmentBeforeSaveProperties(final T entity) {
+        final List<MetaProperty<?>> props = entity.getDirtyProperties().stream().
+                filter(p -> p.shouldAssignBeforeSave() && null != AnnotationReflector.getPropertyAnnotation(Required.class, entity.getType(), p.getName())).
+                collect(Collectors.toList());
+        if (!props.isEmpty()) {
+            for (final MetaProperty<?> prop : props) {
+                if (prop.getValue() == null) {
+                    throw new IllegalArgumentException(format("Property %s@%s is marked as assignable before save, but had its value removed.", prop.getName(), entity.getType().getName()));
+                }
+            }
+        }
+    }
+
+    /**
+     * A method for assigning a value to a domain specific transactional property. This method does nothing by default, and should be overridden by companion objects in order to
+     * provide domain specific behaviour.
      *
      * @param prop
      */

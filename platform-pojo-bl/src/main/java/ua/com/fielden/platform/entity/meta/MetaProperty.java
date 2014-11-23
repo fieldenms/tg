@@ -735,7 +735,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      *
      * @param value
      */
-    public final void setValue(final T value) {
+    public final void setValue(final Object value) {
         entity.set(name, value);
     }
 
