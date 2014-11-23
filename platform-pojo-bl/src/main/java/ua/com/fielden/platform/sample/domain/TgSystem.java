@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
@@ -38,10 +39,26 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Second Cat", desc = "Desc")
+    @SkipEntityExistsValidation
     private TgCategory secondCategory;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Third Cat", desc = "Desc")
+    @SkipEntityExistsValidation(skipActiveOnly = true)
+    private TgCategory thirdCategory;
+
     @Observable
-    @EntityExists(TgCategory.class)
+    public TgSystem setThirdCategory(final TgCategory thirdCategory) {
+        this.thirdCategory = thirdCategory;
+        return this;
+    }
+
+    public TgCategory getThirdCategory() {
+        return thirdCategory;
+    }
+
+    @Observable
     public TgSystem setSecondCategory(final TgCategory secondCategory) {
         this.secondCategory = secondCategory;
         return this;
@@ -50,9 +67,6 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     public TgCategory getSecondCategory() {
         return secondCategory;
     }
-
-
-
 
     @Observable
     public TgSystem setFirstCategory(final TgCategory firstCategory) {
@@ -63,7 +77,6 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     public TgCategory getFirstCategory() {
         return firstCategory;
     }
-
 
     @Observable
     public TgSystem setCategory(final TgCategory category) {
