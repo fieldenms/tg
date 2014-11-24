@@ -41,4 +41,20 @@ public class EntQueryBlocks {
     public OrderBys getOrderings() {
         return orderings;
     }
+    
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append("\n  sources: ");
+        sb.append(sources);
+        sb.append("\n  conditions: ");
+        sb.append(conditions);
+        sb.append("\n  groups: ");
+        sb.append(groups);
+        sb.append("\n  yields: ");
+        sb.append(yields);
+        sb.append("\n  orderings: ");
+        sb.append(orderings);
+        return sb.toString();
+    }
 }

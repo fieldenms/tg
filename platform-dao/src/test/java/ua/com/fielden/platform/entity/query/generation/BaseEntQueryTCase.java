@@ -3,13 +3,11 @@ package ua.com.fielden.platform.entity.query.generation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -114,46 +112,47 @@ public class BaseEntQueryTCase {
     private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null, Guice.createInjector(new HibernateUserTypesModule()).getInstance(IUniversalConstants.class));
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
-        return qb.generateEntQueryAsSourceQuery(qryModel, Collections.EMPTY_MAP, null);
+        return qb.generateEntQueryAsSourceQuery(qryModel, new HashMap<String, Object>(), qryModel.getResultType());
     }
 
     protected static EntQuery entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-        return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);
+        return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, qryModel.getResultType());
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
+            return qb.generateEntQueryAsResultQuery((EntityResultQueryModel) qryModel, null, qryModel.getResultType(), null, new HashMap<String, Object>());
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
+            return qb.generateEntQueryAsResultQuery((AggregatedResultQueryModel) qryModel, null, qryModel.getResultType(), null, new HashMap<String, Object>());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
     }
 
     protected static EntQuery entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
-        return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());
+        return qb.generateEntQueryAsResultQuery(qryModel, orderModel, qryModel.getResultType(), null, new HashMap<String, Object>());
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-        if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).with(paramValues).model());
-        } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).with(paramValues).model());
+        if (qryModel instanceof EntityResultQueryModel || qryModel instanceof AggregatedResultQueryModel) {
+            return qb.generateEntQueryAsResultQuery(qryModel, null, qryModel.getResultType(), null, paramValues);
+//        } 
+//        else if (qryModel instanceof AggregatedResultQueryModel) {
+//            return qb.generateEntQueryAsResultQuery(qryModel).with(paramValues).model());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
     }
 
     protected static EntQuery entSubQry(final QueryModel qryModel) {
-        return qb.generateEntQueryAsSubquery(qryModel, Collections.EMPTY_MAP);
+        return qb.generateEntQueryAsSubquery(qryModel, new HashMap<String, Object>());
     }
 
     protected static EntQuery entResultQryWithUserFilter(final QueryModel qryModel) {
-        if (qryModel instanceof EntityResultQueryModel) {
-            return qbwf.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
-        } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qbwf.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
+        if (qryModel instanceof EntityResultQueryModel || qryModel instanceof AggregatedResultQueryModel) {
+            return qbwf.generateEntQueryAsResultQuery(qryModel, null, qryModel.getResultType(), null, new HashMap<String, Object>());
+//        } else if (qryModel instanceof AggregatedResultQueryModel) {
+//            return qbwf.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }

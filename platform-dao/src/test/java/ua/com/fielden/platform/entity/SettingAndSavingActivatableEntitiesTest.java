@@ -56,7 +56,6 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
     @Test
     public void inactive_activatable_should_not_become_active_due_to_references_to_other_inactive_activatables_save_test() {
         final TgCategory cat4 = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class).without("parent"), "Cat4");
-        assertNull(cat4.getParent());
         cat4.setActive(true);
         assertTrue(cat4.isValid().isSuccessful());
 

@@ -12,12 +12,15 @@ public final class QueryModelResult<T extends AbstractEntity<?>> {
     private String sql;
     private Map<String, Object> paramValues;
     private final SortedSet<ResultQueryYieldDetails> yieldedPropsInfo;
+    private final FetchModel<T> fetchModel;
 
-    public QueryModelResult(final Class<T> resultType, final String sql, final SortedSet<ResultQueryYieldDetails> yieldedPropsInfo, final Map<String, Object> paramValues) {
+
+    public QueryModelResult(final Class<T> resultType, final String sql, final SortedSet<ResultQueryYieldDetails> yieldedPropsInfo, final Map<String, Object> paramValues, final FetchModel<T> fetchModel) {
         this.resultType = resultType;
         this.sql = sql;
         this.paramValues = paramValues;
         this.yieldedPropsInfo = yieldedPropsInfo;
+        this.fetchModel = fetchModel;
     }
 
     public Class<T> getResultType() {
@@ -34,6 +37,10 @@ public final class QueryModelResult<T extends AbstractEntity<?>> {
 
     public SortedSet<ResultQueryYieldDetails> getYieldedPropsInfo() {
         return yieldedPropsInfo;
+    }
+    
+    public FetchModel<T> getFetchModel() {
+        return fetchModel;
     }
 
     public boolean idOnlyQuery() {
