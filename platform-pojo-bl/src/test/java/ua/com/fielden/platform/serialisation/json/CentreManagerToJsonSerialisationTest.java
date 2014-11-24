@@ -16,11 +16,11 @@ import ua.com.fielden.platform.criteria.generator.impl.ThirdLevelEntity;
 import ua.com.fielden.platform.criteria.generator.impl.TopLevelEntity;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
-import ua.com.fielden.platform.domaintree.testing.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 
 import com.google.inject.Injector;
 
@@ -69,9 +69,6 @@ public class CentreManagerToJsonSerialisationTest {
         cdtm.getSecondTick().check(TopLevelEntity.class, "entityProp.entityProp.dateProp", true);
         cdtm.getSecondTick().check(TopLevelEntity.class, "entityProp.entityProp.simpleEntityProp", true);
     }
-
-    // private final TgObjectMapper tgToJson = injector.getInstance(TgObjectMapper.class);
-    // private final ISerialiser serialiser = injector.getInstance(ISerialiser.class);
 
     @Test
     @Ignore

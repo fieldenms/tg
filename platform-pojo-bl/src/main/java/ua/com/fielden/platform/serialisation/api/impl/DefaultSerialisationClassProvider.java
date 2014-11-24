@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.api;
+package ua.com.fielden.platform.serialisation.api.impl;
 
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 
@@ -9,6 +9,7 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 
 import com.google.inject.Inject;
 

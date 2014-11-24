@@ -1,10 +1,12 @@
-package ua.com.fielden.platform.serialisation.api;
+package ua.com.fielden.platform.serialisation.api.impl;
 
 import java.io.InputStream;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 
 import com.google.inject.Inject;
 
@@ -17,13 +19,13 @@ import com.google.inject.Inject;
 public class Serialiser implements ISerialiser {
     private final EntityFactory factory;
     private ISerialiserEngine tgKryo;
-    private ISerialiserEngine tgObjectMapper;
+    private ISerialiserEngine tgJackson;
 
     @Inject
     public Serialiser(final EntityFactory factory, final ISerialisationClassProvider provider) {
         this.factory = factory;
         createTgKryo(factory, provider); // the serialiser engine will be set automatically
-        this.tgObjectMapper = new TgObjectMapper(factory, provider);
+        this.tgJackson = new TgJackson(factory, provider);
     }
 
     protected ISerialiserEngine createTgKryo(final EntityFactory factory, final ISerialisationClassProvider provider) {
@@ -32,17 +34,17 @@ public class Serialiser implements ISerialiser {
 
     @Override
     public <T> T deserialise(final byte[] content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception {
-        return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo.deserialise(content, type) : tgObjectMapper.deserialise(content, type);
+        return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo.deserialise(content, type) : tgJackson.deserialise(content, type);
     }
 
     @Override
     public <T> T deserialise(final InputStream content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception {
-        return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo.deserialise(content, type) : tgObjectMapper.deserialise(content, type);
+        return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo.deserialise(content, type) : tgJackson.deserialise(content, type);
     }
 
     @Override
     public byte[] serialise(final Object obj, final SerialiserEngines serialiserEngine) {
-        return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo.serialise(obj) : tgObjectMapper.serialise(obj);
+        return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo.serialise(obj) : tgJackson.serialise(obj);
     }
 
     @Override
@@ -67,14 +69,14 @@ public class Serialiser implements ISerialiser {
 
     @Override
     public ISerialiserEngine getEngine(final SerialiserEngines serialiserEngine) {
-        return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo : tgObjectMapper;
+        return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo : tgJackson;
     }
 
     public ISerialiser setEngine(final SerialiserEngines serialiserEngine, final ISerialiserEngine engine) {
         if (SerialiserEngines.KRYO.equals(serialiserEngine)) {
             tgKryo = engine;
         } else {
-            tgObjectMapper = engine;
+            tgJackson = engine;
         }
         return this;
     }

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.json.serialiser;
+package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 @SuppressWarnings("rawtypes")
-public class PageToJsonSerialiser extends JsonSerializer<IPage> {
+public class PageSerialiser extends JsonSerializer<IPage> {
 
     @Override
     public void serialize(final IPage page, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {

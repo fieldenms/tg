@@ -8,17 +8,19 @@ import java.nio.channels.ReadableByteChannel;
 
 /**
  * A helper class to simplify streaming and byte array/buffer operations.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class IoHelper {
+    public static final String ENTITY_REFERENCES = "entity-references";
+
     /* Block size that is read at once.*/
     private static final int READ_BLOCK = 8192;
 
     /**
      * Reads everything from the input stream using NIO and returns an array of bytes.
-     * 
+     *
      * @param source
      *            input stream
      * @return resultant byte array
@@ -35,7 +37,7 @@ public class IoHelper {
 
     /**
      * Reads everything from the input stream using NIO and returns a byte buffer.
-     * 
+     *
      * @param source
      *            input stream
      * @return resultant byte buffer
@@ -54,7 +56,7 @@ public class IoHelper {
 
     /**
      * A helper method to resize byte buffer upon read.
-     * 
+     *
      * @param in
      * @return
      */

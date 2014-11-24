@@ -14,8 +14,8 @@ import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.api.Serialiser;
-import ua.com.fielden.platform.serialisation.api.Serialiser0;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 
 /**
  * A test case for {@link DomainTreeVersionMaintainer}.

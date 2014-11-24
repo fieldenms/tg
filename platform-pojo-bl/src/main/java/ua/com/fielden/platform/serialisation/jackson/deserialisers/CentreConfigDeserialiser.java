@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.json.deserialiser;
+package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 
@@ -13,10 +13,9 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToCentreConfigDeserialiser.LightweightCentre;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToCriteriaDeserialiser.CritProp;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToResultDeserialiser.ResultProperty;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.CentreConfigDeserialiser.LightweightCentre;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.CriteriaDeserialiser.CritProp;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultDeserialiser.ResultProperty;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -27,30 +26,31 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonToCentreConfigDeserialiser extends JsonDeserializer<LightweightCentre> {
+public class CentreConfigDeserialiser extends JsonDeserializer<LightweightCentre> {
 
-    private final TgObjectMapper mapper;
+    private final ObjectMapper mapper;
 
-    public JsonToCentreConfigDeserialiser(final TgObjectMapper mapper) {
+    public CentreConfigDeserialiser(final ObjectMapper mapper) {
         this.mapper = mapper;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public LightweightCentre deserialize(final JsonParser parser, final DeserializationContext context) throws IOException, JsonProcessingException {
-	final JsonNode node = parser.readValueAsTree();
-	final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) findClass(node.get("entityType").asText());
-	final Map<String, CritProp> criteriaProperties = node//
-		.path("criteria")//
-		.traverse(mapper).readValueAs(
-			new TypeReference<Map<String, CritProp>>() {
-		});
-	final Map<String, ResultProperty> resultProperties = node//
-		.path("fetch").traverse(mapper).readValueAs(
-			new TypeReference<Map<String, ResultProperty>>() {
-		});
-	return new LightweightCentre(entityType, criteriaProperties, resultProperties);
+        final JsonNode node = parser.readValueAsTree();
+        final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) findClass(node.get("entityType").asText());
+        final Map<String, CritProp> criteriaProperties = node//
+        .path("criteria")//
+        .traverse(mapper).readValueAs(
+                new TypeReference<Map<String, CritProp>>() {
+                });
+        final Map<String, ResultProperty> resultProperties = node//
+        .path("fetch").traverse(mapper).readValueAs(
+                new TypeReference<Map<String, ResultProperty>>() {
+                });
+        return new LightweightCentre(entityType, criteriaProperties, resultProperties);
     }
 
     public static class LightweightCentre {

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.json.deserialiser;
+package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 
@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,14 +19,15 @@ import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
-public class JsonToAbstractEntityDeserialiser<T extends AbstractEntity<?>> extends JsonDeserializer<T> {
+public class EntityDeserialiser<T extends AbstractEntity<?>> extends JsonDeserializer<T> {
 
     private final EntityFactory entityFactory;
-    private final TgObjectMapper mapper;
+    private final ObjectMapper mapper;
 
-    public JsonToAbstractEntityDeserialiser(final TgObjectMapper mapper, final EntityFactory entityFactory) {
+    public EntityDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory) {
         this.entityFactory = entityFactory;
         this.mapper = mapper;
     }

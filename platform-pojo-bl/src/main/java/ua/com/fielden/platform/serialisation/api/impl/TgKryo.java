@@ -1,4 +1,6 @@
-package ua.com.fielden.platform.serialisation.kryo;
+package ua.com.fielden.platform.serialisation.api.impl;
+
+import static ua.com.fielden.platform.serialisation.kryo.IoHelper.ENTITY_REFERENCES;
 
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
@@ -110,8 +112,8 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
-import ua.com.fielden.platform.serialisation.api.Serialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.kryo.IoHelper;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ClassSerialiser;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.ColorSerializer;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.DateTimeSerializer;
@@ -156,9 +158,7 @@ import com.esotericsoftware.kryo.serialize.StringSerializer;
  * @author TG Team
  *
  */
-public class TgKryo extends Kryo implements ISerialiserEngine {
-    public static final String ENTITY_REFERENCES = "entity-references";
-
+class TgKryo extends Kryo implements ISerialiserEngine {
     /** Default buffer sizes for */
     private enum BUFFER_SIZE {
         QUERY(1024), // 1Kb

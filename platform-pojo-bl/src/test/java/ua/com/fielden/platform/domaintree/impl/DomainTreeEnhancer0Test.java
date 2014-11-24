@@ -24,7 +24,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPrope
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
-import ua.com.fielden.platform.domaintree.testing.Serialiser0ForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -32,6 +31,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser0ForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**

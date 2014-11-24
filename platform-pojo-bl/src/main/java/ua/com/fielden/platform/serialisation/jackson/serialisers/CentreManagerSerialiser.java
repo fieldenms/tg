@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.json.serialiser;
+package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,11 +32,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-public class CentreManagerToJsonSerialiser extends JsonSerializer<ICentreDomainTreeManagerAndEnhancer> {
+public class CentreManagerSerialiser extends JsonSerializer<ICentreDomainTreeManagerAndEnhancer> {
 
     private final EntityFactory entityFactory;
 
-    public CentreManagerToJsonSerialiser(final EntityFactory entityFactory) {
+    public CentreManagerSerialiser(final EntityFactory entityFactory) {
 	this.entityFactory = entityFactory;
     }
 

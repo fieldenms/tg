@@ -1,12 +1,11 @@
-package ua.com.fielden.platform.serialisation.json.deserialiser;
+package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToResultDeserialiser.ResultProperty;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultDeserialiser.ResultProperty;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,12 +13,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonToResultDeserialiser extends JsonDeserializer<ResultProperty> {
+public class ResultDeserialiser extends JsonDeserializer<ResultProperty> {
 
-    private final TgObjectMapper mapper;
+    private final ObjectMapper mapper;
 
-    public JsonToResultDeserialiser(final TgObjectMapper mapper) {
+    public ResultDeserialiser(final ObjectMapper mapper) {
         this.mapper = mapper;
     }
 

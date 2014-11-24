@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.json.serialiser;
+package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -11,8 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-@SuppressWarnings("rawtypes")
-public class AbstractEntityToJsonSerialiser extends JsonSerializer<AbstractEntity> {
+public class EntitySerialiser extends JsonSerializer<AbstractEntity> {
 
     @Override
     public void serialize(final AbstractEntity entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {

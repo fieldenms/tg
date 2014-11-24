@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.serialisation.kryo.serialisers;
 
-import static ua.com.fielden.platform.serialisation.kryo.TgKryo.ENTITY_REFERENCES;
+import static ua.com.fielden.platform.serialisation.kryo.IoHelper.ENTITY_REFERENCES;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

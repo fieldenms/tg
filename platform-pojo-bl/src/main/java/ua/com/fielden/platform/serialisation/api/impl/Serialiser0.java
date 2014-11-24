@@ -1,7 +1,9 @@
-package ua.com.fielden.platform.serialisation.api;
+package ua.com.fielden.platform.serialisation.api.impl;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo0;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
+import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 
 import com.google.inject.Inject;
 

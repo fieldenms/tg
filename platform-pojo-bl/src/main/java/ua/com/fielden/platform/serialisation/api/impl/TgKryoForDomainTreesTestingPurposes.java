@@ -1,5 +1,10 @@
-package ua.com.fielden.platform.domaintree.testing;
+package ua.com.fielden.platform.serialisation.api.impl;
 
+import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1;
+import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeRepresentation1;
+import ua.com.fielden.platform.domaintree.testing.DomainTreeManager1;
+import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
+import ua.com.fielden.platform.domaintree.testing.DomainTreeRepresentation1;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeManager1.AbstractAnalysisDomainTreeManager1Serialiser;
 import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeRepresentation1.AbstractAnalysisDomainTreeRepresentation1Serialiser;
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManager1.DomainTreeManagerForTestSerialiser;
@@ -7,8 +12,6 @@ import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1.
 import ua.com.fielden.platform.domaintree.testing.DomainTreeRepresentation1.DomainTreeRepresentationForTestSerialiser;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.api.Serialiser;
-import ua.com.fielden.platform.serialisation.kryo.TgKryo;
 
 import com.esotericsoftware.kryo.Serializer;
 

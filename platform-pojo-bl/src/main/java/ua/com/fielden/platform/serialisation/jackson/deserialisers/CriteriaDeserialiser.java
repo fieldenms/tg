@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.json.deserialiser;
+package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import java.io.IOException;
 import java.util.Date;
@@ -6,8 +6,7 @@ import java.util.List;
 
 import javax.activation.UnsupportedDataTypeException;
 
-import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
-import ua.com.fielden.platform.serialisation.json.deserialiser.JsonToCriteriaDeserialiser.CritProp;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.CriteriaDeserialiser.CritProp;
 import ua.com.fielden.platform.types.Money;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -16,12 +15,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonToCriteriaDeserialiser extends JsonDeserializer<CritProp> {
+public class CriteriaDeserialiser extends JsonDeserializer<CritProp> {
 
-    private final TgObjectMapper mapper;
+    private final ObjectMapper mapper;
 
-    public JsonToCriteriaDeserialiser(final TgObjectMapper mapper) {
+    public CriteriaDeserialiser(final ObjectMapper mapper) {
         this.mapper = mapper;
     }
 
