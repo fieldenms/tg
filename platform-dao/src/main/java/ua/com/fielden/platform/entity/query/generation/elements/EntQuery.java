@@ -231,7 +231,7 @@ public class EntQuery implements ISingleOperand {
             for (final Yield yield : yields.getYields()) {
                 if (!fetchModel.containsProp(yield.getAlias())) {
                     if (determineYieldJavaType(yield) == null || !AbstractEntity.class.isAssignableFrom(determineYieldJavaType(yield))) {
-                        System.out.println("--------------------- removing according to fetch: " + yield.getAlias());
+                        //System.out.println("--------------------- removing according to fetch: " + yield.getAlias());
                         //System.out.println("--------------------- determineYieldJavaType(yield): " + determineYieldJavaType(yield) + " " + determineYieldJavaType(yield).isAssignableFrom(AbstractEntity.class));
                         toBeRemoved.add(yield);    
                     }

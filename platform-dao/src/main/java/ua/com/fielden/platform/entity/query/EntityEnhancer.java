@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.query;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,8 +21,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class EntityEnhancer<E extends AbstractEntity<?>> {
     private final EntityFetcher fetcher;
@@ -37,8 +38,11 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             for (final Map.Entry<String, fetch<?>> entry : propertiesFetchModels.entrySet()) {
                 final String propName = entry.getKey();
                 final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
+
                 if (fetchModel.getEntityType() != EntityAggregates.class) {
                     final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
+                    //System.out.println("*** ENHANCING entity [" + fetchModel.getEntityType().getSimpleName() + "] property [" + propName +"] with fetch: " + propFetchModel + " ppi = " + ppi.getType());
+
                     if (ppi == null || ppi.isCollection()) {
                         // TODO replace with EntityTree metadata (wrt collectional properties retrieval)
                         final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
@@ -49,15 +53,24 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
                                 enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel);
                             }
                         }
-                    } else if (ppi.isEntityOfPersistedType() || ppi.isOne2OneId() || ppi.isUnionEntity()) {
-                        enhanceProperty(entities, propName, propFetchModel);
                     } else {
-                        // do notshing
+
+                        if (ppi.isUnionEntity()) {
+                            enhanceProperty(entities, propName, propFetchModel);
+                        } else {
+                            try {
+                                final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
+                                enhancePropertyWithLinkToParent(entities, propName, propFetchModel, linkPropName);
+                            } catch (final Exception e) {
+                                if (ppi.isEntityOfPersistedType() || ppi.isOne2OneId()) {
+                                    enhanceProperty(entities, propName, propFetchModel);
+                                }
+                            }
+                        }
                     }
                 } else {
                     enhanceProperty(entities, propName, propFetchModel);
                 }
-
             }
         }
 
@@ -93,6 +106,36 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             }
         }
         return propValues;
+    }
+
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final fetch<T> fetchModel, final String linkPropName)
+            throws Exception {
+        // Obtaining map between property id and list of entities where this property occurs
+        final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
+
+        if (propertyValuesIds.size() > 0) {
+            // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
+            final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
+            // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
+            final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
+            getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
+                    : //
+                    new EntityEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, new FetchModel(fetchModel, domainMetadataAnalyser));
+
+            // Replacing in entities the proxies of properties with properly enhanced property instances.
+            for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
+                final List<EntityContainer<E>> thisPropertyEntities = propertyValuesIds.get(enhancedPropInstance.getId());
+                for (final EntityContainer<E> thisPropertyEntity : thisPropertyEntities) {
+                    // replace with parent container if types are the same (the cases of transitive linkage exist but are not supported here
+                    if (enhancedPropInstance.getEntities().get(linkPropName).getResultType().equals(thisPropertyEntity.getResultType())) {
+                        enhancedPropInstance.getEntities().put(linkPropName, thisPropertyEntity);
+                    }
+                    thisPropertyEntity.getEntities().put(propertyName, enhancedPropInstance);
+                }
+            }
+        }
+
+        return entities;
     }
 
     private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final fetch<T> fetchModel)
