@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.dao;
 
 import static ua.com.fielden.platform.dao.DomainMetadata.specialProps;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -13,7 +16,6 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import static ua.com.fielden.platform.entity.AbstractEntity.*;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.

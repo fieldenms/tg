@@ -1,5 +1,11 @@
 package ua.com.fielden.web.test;
 
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,11 +37,6 @@ import ua.com.fielden.web.entities.InspectedEntity;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
-
-import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides a unit test to ensure correct interaction with IPage summary model.
@@ -93,9 +94,10 @@ public class WebResourceForGeneratedTypeQueryTestCase extends WebBasedTestCase {
         final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
         rao.setEntityType(type);
         final EntityResultQueryModel model = select(type).model();
-        firstPage = rao.firstPage(from(model).model(), 15, toByteArray(binaryTypes));
-        allEntitiesCount = rao.getAllEntities(from(model).model(), toByteArray(binaryTypes)).size();
-        firstEntitiesCount = rao.getFirstEntities(from(model).model(), ENT_COUNT, toByteArray(binaryTypes)).size();
+
+        firstPage = rao.firstPage(from(model).with(fetch(type).with("calculatedProperty")).model(), 15, toByteArray(binaryTypes));
+        allEntitiesCount = rao.getAllEntities(from(model).with(fetch(type).with("calculatedProperty")).model(), toByteArray(binaryTypes)).size();
+        firstEntitiesCount = rao.getFirstEntities(from(model).with(fetch(type).with("calculatedProperty")).model(), ENT_COUNT, toByteArray(binaryTypes)).size();
     }
 
     private List<byte[]> toByteArray(final List<ByteArray> list) {

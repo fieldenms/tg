@@ -4,7 +4,6 @@ import static ua.com.fielden.platform.dao.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyCategory.COMPONENT_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
-import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION_COMMON;
 import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
@@ -117,9 +116,9 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return type.equals(COLLECTIONAL);
     }
 
-    public boolean isCommonCalculated() {
-        return type.equals(EXPRESSION_COMMON);
-    }
+//    public boolean isCommonCalculated() {
+//        return type.equals(EXPRESSION_COMMON);
+//    }
 
     public boolean isOne2OneId() {
         return type.equals(ONE2ONE_ID);

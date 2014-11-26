@@ -60,7 +60,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     public static final String HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER = "BCE/ACE handlers should not have a another BCE/ACE handler as its parameter.";
 
     protected final FinalValidator finalValidator = new FinalValidator();
-    protected final Map<Class<? extends AbstractEntity<?>>, EntityExistsValidator> entityExistsValidators = Collections.synchronizedMap(new HashMap<>());
+    protected final Map<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = Collections.synchronizedMap(new HashMap<>());
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = Collections.synchronizedMap(new HashMap<Integer, GreaterOrEqualValidator>());
     protected final Map<Integer, MaxLengthValidator> maxLengthValidators = Collections.synchronizedMap(new HashMap<Integer, MaxLengthValidator>());
     protected final Map<Integer, MaxValueValidator> maxValueValidators = Collections.synchronizedMap(new HashMap<Integer, MaxValueValidator>());
@@ -82,7 +82,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     @Override
     public IBeforeChangeEventHandler<?>[] create(//
-    final Annotation annotation,//
+            final Annotation annotation,//
             final AbstractEntity<?> entity,//
             final String propertyName,//
             final Class<?> propertyType) throws Exception {
@@ -94,6 +94,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         for (final ValidationAnnotation validationAnnotation : ValidationAnnotation.values()) {
             if (validationAnnotation.getType().equals(annotation.annotationType())) {
                 value = validationAnnotation;
+                break;
             }
         }
         // check whether it can be recognised as a valid annotation permitted for validation purpose

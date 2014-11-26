@@ -3,6 +3,7 @@ package ua.com.fielden.web.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -101,8 +102,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
         yield().prop("intPropertySum").as("intPropertySum").//
         yield().prop("minimaxDiff").as("minimaxDiff").//
         modelAsEntity(type);
-        page = rao.firstPage(from(model).model(), from(summaryModel).model(), 15, binaryTypes);
-
+        page = rao.firstPage(from(model).model(), from(summaryModel).with(fetch(type).with("intPropertySum").with("minimaxDiff")).model(), 15, binaryTypes);
     }
 
     @Test

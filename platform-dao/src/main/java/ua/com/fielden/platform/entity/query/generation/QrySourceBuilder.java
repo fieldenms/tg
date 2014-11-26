@@ -65,7 +65,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         final Class resultType = readyResultType != null ? readyResultType : null;
         final List<EntQuery> queries = new ArrayList<EntQuery>();
         for (final QueryModel qryModel : models) {
-            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues(), resultType));
+            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, getParamValues(), resultType != null ? resultType : qryModel.getResultType()));
         }
 
         return new Pair<TokenCategory, Object>(TokenCategory.QRY_SOURCE, new QueryBasedSource(alias, getQueryBuilder().getDomainMetadataAnalyser(), queries.toArray(new EntQuery[] {})));

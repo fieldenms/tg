@@ -45,7 +45,6 @@ import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -75,14 +74,14 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
     private final EntityFactory entityFactory;
 
-    private final ICompanionObjectFinder controllerProvider;
+    private final ICompanionObjectFinder coFinder;
 
     private final Map<ICentreDomainTreeManager, Class<?>> generatedClasses;
 
     @Inject
     public CriteriaGenerator(final EntityFactory entityFactory, final ICompanionObjectFinder controllerProvider) {
         this.entityFactory = entityFactory;
-        this.controllerProvider = controllerProvider;
+        this.coFinder = controllerProvider;
         this.generatedClasses = new WeakHashMap<>();
     }
 
@@ -123,7 +122,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
             final boolean isDaoAccessable = daoField.isAccessible();
             daoField.setAccessible(true);
-            daoField.set(entity, controllerProvider.find(root));
+            daoField.set(entity, coFinder.find(root));
             daoField.setAccessible(isDaoAccessable);
 
             //Set domain tree manager for entity query criteria.
@@ -203,8 +202,13 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             annotations.add(new RequiredAnnotation().newInstance());
         }
         if (isEntity && isSingle && finalHasEntityExists) {
-            final Class<? extends IEntityDao<?>> controllerType = CompanionObjectAutobinder.companionObjectType((Class<? extends AbstractEntity<?>>) newPropertyType);
-            annotations.add(new BeforeChangeAnnotation(new Handler[] { new HandlerAnnotation(EntityExistsValidator.class).non_ordinary(new ClassParam[] { ParamAnnotation.classParam("companionObject", controllerType) }).newInstance() }).newInstance());
+            annotations.add(new BeforeChangeAnnotation(
+                    new Handler[] {
+                            new HandlerAnnotation(EntityExistsValidator.class).
+                            non_ordinary(new ClassParam[] { ParamAnnotation.classParam("coFinder", ICompanionObjectFinder.class) }).
+                            clazz(new ClassParam[] { ParamAnnotation.classParam("type", newPropertyType) }).
+                            newInstance() }
+                    ).newInstance());
         }
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());

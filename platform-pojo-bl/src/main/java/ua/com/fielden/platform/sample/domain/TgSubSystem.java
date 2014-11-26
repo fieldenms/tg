@@ -9,8 +9,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.security.user.User;
 
 /**
  * Master entity object.
@@ -24,41 +25,70 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 public class TgSubSystem extends AbstractEntity<String> {
-    @IsProperty
-    @MapTo
-    @Title("Active?")
-    private boolean active;
 
     @IsProperty
     @MapTo
     @Title("Category")
-    private TgCategory category;
+    private TgCategory firstCategory;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Second Category", desc = "Desc")
+    private TgCategory secondCategory;
+
+
+    @IsProperty(assignBeforeSave = true)
+    @MapTo
+    @Title(value = "User", desc = "Desc")
+    @Required
+    private User user;
+
+    @IsProperty(assignBeforeSave = true)
+    @MapTo
+    @Title(value = "Explanation", desc = "Desc")
+    private String explanation;
 
     @Observable
-    @EntityExists(TgCategory.class)
-    public TgSubSystem setCategory(final TgCategory category) {
-        this.category = category;
+    public TgSubSystem setExplanation(final String explanation) {
+        this.explanation = explanation;
         return this;
     }
 
-    public TgCategory getCategory() {
-        return category;
+    public String getExplanation() {
+        return explanation;
     }
 
 
 
 
     @Observable
-    public TgSubSystem setActive(final boolean active) {
-        this.active = active;
+    public TgSubSystem setUser(final User user) {
+        this.user = user;
         return this;
     }
 
-    public boolean isActive() {
-        return active;
+    public User getUser() {
+        return user;
     }
 
+    @Observable
+    public TgSubSystem setSecondCategory(final TgCategory secondCategory) {
+        this.secondCategory = secondCategory;
+        return this;
+    }
 
+    public TgCategory getSecondCategory() {
+        return secondCategory;
+    }
 
+    @Observable
+    public TgSubSystem setFirstCategory(final TgCategory category) {
+        this.firstCategory = category;
+        return this;
+    }
+
+    public TgCategory getFirstCategory() {
+        return firstCategory;
+    }
 
 }

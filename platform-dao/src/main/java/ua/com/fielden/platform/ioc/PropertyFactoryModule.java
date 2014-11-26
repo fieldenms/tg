@@ -9,7 +9,6 @@ import org.hibernate.SessionFactory;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.dao.factory.DaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -28,7 +27,6 @@ import com.google.inject.Scopes;
  */
 public class PropertyFactoryModule extends TransactionalModule {
 
-    protected final DaoFactory daoFactory;
     protected final EntityFactory entityFactory;
     protected final DefaultCompanionObjectFinderImpl defaultControllerProvider;
 
@@ -36,7 +34,6 @@ public class PropertyFactoryModule extends TransactionalModule {
             throws Exception {
         super(props, defaultHibernateTypes, applicationEntityTypes);
         entityFactory = new EntityFactory() {};
-        daoFactory = new DaoFactory() {};
         defaultControllerProvider = new DefaultCompanionObjectFinderImpl();
 
         initHibernateConfig(entityFactory);
@@ -44,8 +41,6 @@ public class PropertyFactoryModule extends TransactionalModule {
 
     public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
         super(sessionFactory, domainMetadata);
-        daoFactory = new DaoFactory() {
-        };
         entityFactory = new EntityFactory() {
         };
         defaultControllerProvider = new DefaultCompanionObjectFinderImpl();
@@ -55,8 +50,6 @@ public class PropertyFactoryModule extends TransactionalModule {
     protected void configure() {
         super.configure();
         bind(EntityFactory.class).toInstance(entityFactory);
-        // bind DaoFactory, which is needed purely for MetaPropertyFactory
-        bind(DaoFactory.class).toInstance(daoFactory);
         // bind provider for default entity controller
         bind(ICompanionObjectFinder.class).toInstance(defaultControllerProvider);
         // bind property factory
@@ -69,7 +62,6 @@ public class PropertyFactoryModule extends TransactionalModule {
     @Override
     public void setInjector(final Injector injector) {
         super.setInjector(injector);
-        daoFactory.setInjector(injector);
         entityFactory.setInjector(injector);
         defaultControllerProvider.setInjector(injector);
         final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);

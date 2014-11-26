@@ -618,7 +618,7 @@ class TgKryo0 extends Kryo implements ISerialiserEngine {
 
                 // interested only in instances of the enhanced AbstractEntity.
                 if (obj instanceof AbstractEntity) {
-                    refs.add((AbstractEntity) obj);
+                    refs.add((AbstractEntity<?>) obj);
                 }
             }
             // explicit reset in order to make the reason for the above snippet more explicit
@@ -626,16 +626,15 @@ class TgKryo0 extends Kryo implements ISerialiserEngine {
 
             // iterate through all locally cached entity instances and execute respective definers
             for (final AbstractEntity<?> entity : refs) {
-                entity.setInitialising(true);
-                for (final Object mt : entity.getProperties().values()) {
-                    final MetaProperty prop = (MetaProperty) mt;
+                entity.beginInitialising();
+                for (final MetaProperty<?> prop : entity.getProperties().values()) {
                     if (prop != null) {
                         if (!prop.isCollectional()) {
-                            prop.define(prop.getOriginalValue());
+                            prop.defineForOriginalValue();
                         }
                     }
                 }
-                entity.setInitialising(false);
+                entity.endInitialising();
             }
         }
     }

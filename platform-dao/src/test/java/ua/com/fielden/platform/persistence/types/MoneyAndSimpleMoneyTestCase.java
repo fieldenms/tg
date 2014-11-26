@@ -7,15 +7,16 @@ import java.util.Currency;
 import java.util.Locale;
 
 import org.hibernate.Session;
+import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.factory.DaoFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
  * Test Hibernate interaction with {@link Money} type and instrumented entities. Also test correctness of instrumented entities being handled by XStream.
- * 
+ *
  * @author Yura
  * @author 01es
  */
@@ -28,18 +29,19 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
         changeIndicator = false;
     }
 
-    @SuppressWarnings("unchecked")
+    @Test
     public void testThatCanSaveAndRetrieveEntityWithMoney() {
         final EntityWithMoney instance = entityFactory.newEntity(EntityWithMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance("USD")));
         // saving instance of MoneyClass
-        final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithMoney.class);
+        final IEntityDao<EntityWithMoney> dao = injector.getInstance(ICompanionObjectFinder.class).find(EntityWithMoney.class);
         dao.save(instance);
         // retrieve saved instance
-        final EntityWithMoney instance2 = (EntityWithMoney) dao.findByKey("name");
+        final EntityWithMoney instance2 = dao.findByKey("name");
         assertEquals(instance, instance2);
     }
 
+    @Test
     public void testThatRetrievedEntityWithMoneyIsObservable() {
         final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
         final EntityWithMoney instance = (EntityWithMoney) session.createQuery("from " + EntityWithMoney.class.getName() + " where id = 1").uniqueResult();
@@ -54,15 +56,15 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
         assertEquals("Change was not observed.", true, changeIndicator);
     }
 
-    @SuppressWarnings("unchecked")
+    @Test
     public void testThatCanSaveAndRetrieveEntityWithSimpleMoney() {
         final EntityWithSimpleMoney instance = entityFactory.newEntity(EntityWithSimpleMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance(Locale.getDefault())));
         // saving instance of MoneyClass
-        final IEntityDao dao = injector.getInstance(DaoFactory.class).newDao(EntityWithSimpleMoney.class);
+        final IEntityDao<EntityWithSimpleMoney> dao = injector.getInstance(ICompanionObjectFinder.class).find(EntityWithSimpleMoney.class);
         dao.save(instance);
         // retrieve saved instance
-        final EntityWithSimpleMoney instance2 = (EntityWithSimpleMoney) dao.findByKey("name");
+        final EntityWithSimpleMoney instance2 = dao.findByKey("name");
 
         assertEquals(instance, instance2);
         assertEquals("Incorrect number of entities with simple money.", 2, dao.getPage(0, 25).data().size());

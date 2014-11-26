@@ -7,7 +7,6 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
-import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -19,7 +18,6 @@ import ua.com.fielden.platform.ioc.CommonRestFactoryModule;
 import ua.com.fielden.platform.rao.EntityAggregatesRao;
 import ua.com.fielden.platform.rao.GeneratedEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.rao.factory.RaoFactory;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.RestAuthorisationModel;
 import ua.com.fielden.platform.security.SecurityTokenControllerRao;
@@ -112,7 +110,6 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
         bind(IEntityAggregatesDao.class).to(EntityAggregatesRao.class).in(Scopes.SINGLETON);
         bind(IGeneratedEntityController.class).to(GeneratedEntityRao.class); // should not be a singleton
         // bind value matcher factory to support autocompleters and entity master factory
-        bind(IDaoFactory.class).to(RaoFactory.class).in(Scopes.SINGLETON);
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
         // security and user management
         bind(IUserDao.class).to(UserControllerRao.class).in(Scopes.SINGLETON);

@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.Pair;
@@ -30,7 +31,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes {
-
+    private final IsPropertyAnnotation isPropertyAnnotation = new IsPropertyAnnotation();
     /**
      * Properties to be added.
      */
@@ -143,22 +144,7 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
 	// the generated field should correspond to a property
 	// thus it should have annotation IsProperty, but the annotation descriptor list may already contain it
 	// therefore add IsProperty just in case -- it will not be added if already present
-	pd.addAnnotation(new IsProperty() {
-	    @Override
-	    public Class<IsProperty> annotationType() {
-		return IsProperty.class;
-	    }
-
-	    @Override
-	    public Class<?> value() {
-		return Void.class;
-	    }
-
-	    @Override
-	    public String linkProperty() {
-		return "----dummy-property----";
-	    }
-	});
+	pd.addAnnotation(isPropertyAnnotation.newInstance());
 	// the same goes about the Title annotation as property should have title and description
 	pd.addAnnotation(new Title() {
 	    @Override

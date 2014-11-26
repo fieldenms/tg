@@ -12,7 +12,6 @@ import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY;
 import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_AS_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION;
-import static ua.com.fielden.platform.dao.PropertyCategory.EXPRESSION_COMMON;
 import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
@@ -458,9 +457,9 @@ public class DomainMetadata {
         return new PropertyMetadata.Builder("key", String.class, true).expression(dmeg.getVirtualKeyPropForEntityWithCompositeKey(entityType, keyMembersWithOptionality)).hibType(H_STRING).type(VIRTUAL_OVERRIDE).build();
     }
 
-    private PropertyMetadata getVirtualPropInfoForReferenceCount(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
-        return new PropertyMetadata.Builder("referencesCount", Long.class, true).expression(dmeg.getReferencesCountPropForEntity(getReferences(entityType))).hibType(H_LONG).type(EXPRESSION_COMMON).build();
-    }
+//    private PropertyMetadata getVirtualPropInfoForReferenceCount(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+//        return new PropertyMetadata.Builder("referencesCount", Long.class, true).expression(dmeg.getReferencesCountPropForEntity(getReferences(entityType))).hibType(H_LONG).type(EXPRESSION_COMMON).build();
+//    }
 
     public Set<Pair<Class<? extends AbstractEntity<?>>, String>> getReferences(final Class<? extends AbstractEntity<?>> entityType) {
         final Set<Pair<Class<? extends AbstractEntity<?>>, String>> result = new HashSet<>();

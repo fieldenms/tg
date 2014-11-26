@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.persistence.types;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -8,25 +10,23 @@ import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.TransactionDate;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyUserType;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * This is a test entity, which is currently used for testing of classes {@link Money} and {@link HibernateValueMatcher}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 @DescTitle("Description")
@@ -48,8 +48,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @Calculated
     private BigDecimal calculatedProperty;
 
-    @IsProperty
-    @TransactionDate
+    @IsProperty(assignBeforeSave = true)
     @MapTo("TRANS_DATE_TIME")
     private Date transDate;
 

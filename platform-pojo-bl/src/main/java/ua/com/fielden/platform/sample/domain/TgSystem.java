@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
@@ -23,19 +24,61 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 @CompanionObject(ITgSystem.class)
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
-public class TgSystem extends AbstractEntity<String> {
-    @IsProperty
-    @MapTo
-    @Title("Active?")
-    private boolean active;
+public class TgSystem extends ActivatableAbstractEntity<String> {
 
     @IsProperty
     @MapTo
     @Title("Category")
     private TgCategory category;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "First Cat", desc = "Desc")
+    private TgCategory firstCategory;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Second Cat", desc = "Desc")
+    @SkipEntityExistsValidation
+    private TgCategory secondCategory;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Third Cat", desc = "Desc")
+    @SkipEntityExistsValidation(skipActiveOnly = true)
+    private TgCategory thirdCategory;
+
     @Observable
-    @EntityExists(TgCategory.class)
+    public TgSystem setThirdCategory(final TgCategory thirdCategory) {
+        this.thirdCategory = thirdCategory;
+        return this;
+    }
+
+    public TgCategory getThirdCategory() {
+        return thirdCategory;
+    }
+
+    @Observable
+    public TgSystem setSecondCategory(final TgCategory secondCategory) {
+        this.secondCategory = secondCategory;
+        return this;
+    }
+
+    public TgCategory getSecondCategory() {
+        return secondCategory;
+    }
+
+    @Observable
+    public TgSystem setFirstCategory(final TgCategory firstCategory) {
+        this.firstCategory = firstCategory;
+        return this;
+    }
+
+    public TgCategory getFirstCategory() {
+        return firstCategory;
+    }
+
+    @Observable
     public TgSystem setCategory(final TgCategory category) {
         this.category = category;
         return this;
@@ -45,20 +88,11 @@ public class TgSystem extends AbstractEntity<String> {
         return category;
     }
 
-
-
-
+    @Override
     @Observable
     public TgSystem setActive(final boolean active) {
-        this.active = active;
+        super.setActive(active);
         return this;
     }
-
-    public boolean getActive() {
-        return active;
-    }
-
-
-
 
 }

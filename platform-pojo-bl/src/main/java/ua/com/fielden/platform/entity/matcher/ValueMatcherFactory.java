@@ -9,10 +9,10 @@ import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.EntityQueryValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.EnumValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
-import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -24,18 +24,18 @@ import com.google.inject.Inject;
 
 /**
  * Provides a generic implementation based on IDaoFactory (thus supporting DAO and RAO) for instantiation of value matchers based on the type of concrete properties.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ValueMatcherFactory implements IValueMatcherFactory {
     private final Map<Class, Map<String, IValueMatcher>> map = new HashMap<Class, Map<String, IValueMatcher>>();
-    private final IDaoFactory daoFactory;
+    private final ICompanionObjectFinder coFinder;
     private final EntityFactory entityFactory;
 
     @Inject
-    public ValueMatcherFactory(final IDaoFactory daoFactory, final EntityFactory entityFactory) {
-        this.daoFactory = daoFactory;
+    public ValueMatcherFactory(final ICompanionObjectFinder coFinder, final EntityFactory entityFactory) {
+        this.coFinder = coFinder;
         this.entityFactory = entityFactory;
     }
 
@@ -55,7 +55,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 
     /**
      * Instantiates a value matcher based on the passed parameters, caches it and return is method's result.
-     * 
+     *
      * @param propertyOwnerEntityType
      * @param propertyName
      * @param entityEntry
@@ -83,7 +83,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
             if (PropertyDescriptor.class.isAssignableFrom(propType)) {
                 createPropertyDescriptorMatcher(propertyOwnerEntityType, propertyName, entityEntry);
             } else {
-                entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao((Class<AbstractEntity<?>>) propType)));
+                entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(coFinder.find((Class<AbstractEntity<?>>) propType)));
             }
         } else if (AnnotationReflector.isAnnotationPresent(propField, EntityType.class)) {
             final EntityType elType = AnnotationReflector.getAnnotation(propField, EntityType.class);
@@ -100,9 +100,9 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
                 final Class<?> keyType = AnnotationReflector.getKeyType(elType.value());
                 final Class<? extends AbstractEntity<?>> notEnhancedElType = DynamicEntityClassLoader.getOriginalType(elType.value());
                 if (keyType != null && AbstractEntity.class.isAssignableFrom(keyType)) {
-                    entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao(notEnhancedElType), "key.key", "key.key"));
+                    entityEntry.put(propertyName, new EntityQueryValueMatcher(coFinder.find(notEnhancedElType), "key.key", "key.key"));
                 } else {
-                    entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao(notEnhancedElType)));
+                    entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(coFinder.find(notEnhancedElType)));
                 }
             }
         } else if (propType.isEnum()) {
@@ -124,11 +124,11 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 
         final Class<?> keyType = AnnotationReflector.getKeyType(propType);
         if (keyType != null && AbstractEntity.class.isAssignableFrom(keyType)) {
-            entityEntry.put(propertyName, new EntityQueryValueMatcher(daoFactory.newDao((Class<? extends AbstractEntity<?>>) propType), "key.key", "key.key"));
+            entityEntry.put(propertyName, new EntityQueryValueMatcher(coFinder.find((Class<? extends AbstractEntity<?>>) propType), "key.key", "key.key"));
         } else if (PropertyDescriptor.class.isAssignableFrom(propType)) {
             createPropertyDescriptorMatcher(propertyOwnerEntityType, propertyName, entityEntry);
         } else {
-            entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(daoFactory.newDao((Class<? extends AbstractEntity<?>>) propType)));
+            entityEntry.put(propertyName, EntityQueryValueMatcher.matchByKey(coFinder.find((Class<? extends AbstractEntity<?>>) propType)));
         }
     }
 
@@ -156,7 +156,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 
     /**
      * Determines whether specified class is criteria class or not.
-     * 
+     *
      * @param propertyOwnerEntityType
      * @return
      */
@@ -166,7 +166,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 
     /**
      * Determines whether specified class is entity class or not.
-     * 
+     *
      * @param propertyOwnerEntityType
      * @return
      */
@@ -176,7 +176,7 @@ public class ValueMatcherFactory implements IValueMatcherFactory {
 
     /**
      * Returns the type of specified property in the propertOwnerEntityType class.
-     * 
+     *
      * @param propertyOwnerEntityType
      * @param propertyField
      * @return

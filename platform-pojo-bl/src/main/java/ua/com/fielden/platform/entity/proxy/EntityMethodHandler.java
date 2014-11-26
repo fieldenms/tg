@@ -27,7 +27,7 @@ public class EntityMethodHandler implements MethodHandler {
     private final IEntityDao<?> coForProxy;
 
     public EntityMethodHandler(
-            final Class<? extends AbstractEntity<?>> type, 
+            final Class<? extends AbstractEntity<?>> type,
             final IEntityDao<?> coForProxy,
             final AbstractEntity<?> owner,
             final String propertyName,
@@ -51,25 +51,24 @@ public class EntityMethodHandler implements MethodHandler {
     @Override
     public Object invoke(final Object self, final Method thisMethod, final Method proceed, final Object[] args) throws Throwable {
         // System.out.printf("Owner %s of type %s for entity %s of type %s executing method %s in mode %s\n", owner.getId(), owner.getType(), proxy.getId(), proxy.getType(), thisMethod.getName(), mode);
-        
+
         if (getProxy() == null) {
             throw new IllegalStateException("This method handler should not be used as the instance it proxies is null (most likely is has been converted to a non-proxied entity).");
         }
-        
+
         switch (mode) {
         case STRICT:
-//            System.out.printf("--- STRICT Attempting to invoke method %s on proxy for type type %s; owner: %s; ownerId: %s; ownerClass: %s; isOwnerProxy: %s; selfId: %s; selfClass: %s; \n", 
+//            System.out.printf("--- STRICT Attempting to invoke method %s on proxy for type type %s; owner: %s; ownerId: %s; ownerClass: %s; isOwnerProxy: %s; selfId: %s; selfClass: %s; \n",
 //                    proceed.getName(), type.getName(), owner, owner.getClass(), owner.getId(), ProxyFactory.isProxyClass(owner.getClass()), ((AbstractEntity) self).getId(), self.getClass());
             throw new StrictProxyException(owner, self, format("Attempting to invoke method %s on proxy for type type %s.", proceed.getName(), type.getName()));
         case LAZY:
-            // TODO Call to findById should be change to load -- yet to be introduced method
             final AbstractEntity<?> entity = coForProxy.lazyLoad(proxy.getId());
             // obtain the invoked method for just instantiated real entity
             final Method method = entity.getType().getMethod(thisMethod.getName(), thisMethod.getParameterTypes());
-            // TODO It's not quite clear what should be done with meta-property original and previos values in this case...
-            owner.setInitialising(true);
+            // TODO It's not quite clear what should be done with meta-property original and previous values in this case...
+            owner.beginInitialising();
             owner.set(propertyName, entity);
-            owner.setInitialising(false);
+            owner.endInitialising();
             setProxy(null);
             return method.invoke(entity, args);
         default:

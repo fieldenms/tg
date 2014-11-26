@@ -6,14 +6,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Validation annotation, which should be used to indicate that annotated setter can accept only values greater or equal to <code>value</code>. If applicable to properties of type
- * BigDecimal and Money.
- * 
+ * Validation annotation, which should be used to indicate that property can accept only values greater or equal to <code>value</code>.
+ * It is applicable to properties of type Integer, BigDecimal and Money.
+ *
  * @author TG Team
- * 
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.METHOD })
+@Target({ ElementType.METHOD, ElementType.FIELD })
 public @interface GreaterOrEqual {
     int value();
 }

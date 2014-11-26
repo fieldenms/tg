@@ -16,6 +16,7 @@ import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.ITgAuthor;
+import ua.com.fielden.platform.sample.domain.ITgAuthoriser;
 import ua.com.fielden.platform.sample.domain.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieClass;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.sample.domain.ITgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.ITgOriginator;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.ITgPersonName;
 import ua.com.fielden.platform.sample.domain.ITgSubSystem;
@@ -45,6 +47,7 @@ import ua.com.fielden.platform.sample.domain.ITgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.ITgWagonSlot;
 import ua.com.fielden.platform.sample.domain.ITgWorkshop;
 import ua.com.fielden.platform.sample.domain.TgAuthorDao;
+import ua.com.fielden.platform.sample.domain.TgAuthoriserDao;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsageDao;
 import ua.com.fielden.platform.sample.domain.TgBogieClassDao;
 import ua.com.fielden.platform.sample.domain.TgBogieDao;
@@ -59,6 +62,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2Dao;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3Dao;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4Dao;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5Dao;
+import ua.com.fielden.platform.sample.domain.TgOriginatorDao;
 import ua.com.fielden.platform.sample.domain.TgPersonDao;
 import ua.com.fielden.platform.sample.domain.TgPersonNameDao;
 import ua.com.fielden.platform.sample.domain.TgSubSystemDao;
@@ -77,7 +81,7 @@ import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
-import ua.com.fielden.platform.test.UserProviderForTesting;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
@@ -110,6 +114,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     @Override
     protected void configure() {
         super.configure();
+
+        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
         // bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
@@ -153,6 +159,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(IMigrationRunDao.class).to(MigrationRunDao.class);
         bind(IMigrationHistoryDao.class).to(MigrationHistoryDao.class);
         bind(ITgPerson.class).to(TgPersonDao.class);
+        bind(ITgAuthoriser.class).to(TgAuthoriserDao.class);
+        bind(ITgOriginator.class).to(TgOriginatorDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);

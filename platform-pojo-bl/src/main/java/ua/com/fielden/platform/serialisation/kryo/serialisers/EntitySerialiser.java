@@ -17,6 +17,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.esotericsoftware.kryo.Context;
 import com.esotericsoftware.kryo.Kryo;
@@ -57,7 +58,7 @@ public final class EntitySerialiser extends Serializer {
         versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
         versionField.setAccessible(true);
 
-        hasCompositeKey = Finder.getKeyMembers(type).size() > 1;
+        hasCompositeKey = EntityUtils.isCompositeEntity(type);
         // cache all properties annotated with @IsProperty
         properties = new ArrayList<CachedProperty>();
         for (final Field propertyField : Finder.findRealProperties(type)) {

@@ -19,13 +19,20 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javassist.util.proxy.ProxyFactory;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
@@ -70,6 +77,11 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     private final IAfterChangeEventHandler<T> aceHandler;
     private final boolean key;
     private final boolean collectional;
+    private final boolean retrievable;
+    private final boolean isEntity;
+    private final boolean activatable;
+    private final boolean shouldAssignBeforeSave;
+
     /**
      * This property indicates whether a corresponding property was modified. This is similar to <code>dirty</code> property at the entity level.
      */
@@ -154,6 +166,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
             final Class<?> type,
             final boolean isKey,
             final boolean isCollectional,
+            final boolean shouldAssignBeforeSave,
             final Class<?> propertyAnnotationType,
             final boolean calculated,
             final boolean upperCase,//
@@ -164,11 +177,30 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.entity = entity;
         this.name = field.getName();
         this.type = type;
+        this.isEntity = AbstractEntity.class.isAssignableFrom(type);
+        this.retrievable = entity.isPersistent() &&
+                           (
+                           field.isAnnotationPresent(Calculated.class) ||
+                           (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                           (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                           (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
+                           );
+        // let's identify whether property represents an activatable entity in the current context
+        final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
+        boolean skipActiveOnly;
+        if (seevAnnotation != null) {
+            skipActiveOnly = seevAnnotation.skipActiveOnly();
+        } else {
+            skipActiveOnly = false;
+        }
+        this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type) && !skipActiveOnly;
+
         this.key = isKey;
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
         this.aceHandler = aceHandler;
         this.collectional = isCollectional;
+        this.shouldAssignBeforeSave = shouldAssignBeforeSave;
         this.propertyAnnotationType = propertyAnnotationType;
         this.calculated = calculated;
         this.upperCase = upperCase;
@@ -699,6 +731,25 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     /**
+     * A convenient method to set property value, which in turn accesses entity to set the propery.
+     *
+     * @param value
+     */
+    public final void setValue(final Object value) {
+        entity.set(name, value);
+    }
+
+    /**
+     * Returns <code>true</code> if the property value is a proxy.
+     *
+     * @return
+     */
+    public boolean isProxy() {
+        final T value = getValue();
+        return value == null ? false : ProxyFactory.isProxyClass(value.getClass());
+    }
+
+    /**
      * Updates the previous value for the entity property. Increments the update counter and check if the original value should be updated as well.
      *
      * Please note that for collectional properties their size is used as previous and original values.
@@ -1163,6 +1214,22 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public void setCollectionPrevSize(final Number collectionPrevSize) {
         this.collectionPrevSize = collectionPrevSize;
+    }
+
+    public boolean isRetrievable() {
+        return retrievable;
+    }
+
+    public boolean isEntity() {
+        return isEntity;
+    }
+
+    public boolean isActivatable() {
+        return activatable;
+    }
+
+    public boolean shouldAssignBeforeSave() {
+        return shouldAssignBeforeSave;
     }
 
 }
