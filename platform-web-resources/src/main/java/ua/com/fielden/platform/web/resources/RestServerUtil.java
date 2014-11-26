@@ -173,7 +173,7 @@ public class RestServerUtil {
         logger.debug("Start building result JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM /* , bytes.length */);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* , bytes.length */);
     }
 
     /**

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.serialisation.json;
+package ua.com.fielden.platform.serialisation.jackson;
 
 import static junit.framework.Assert.fail;
 

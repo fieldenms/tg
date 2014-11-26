@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
  */
 public interface ISerialiserEngine {
     /**
-     * Serialises an object using {@link SerialiserEngines#KRYO} serialiser engine.
+     * Serialises an object.
      *
      * @param obj
      *
@@ -21,10 +21,10 @@ public interface ISerialiserEngine {
     byte[] serialise(final Object obj);
 
     /**
-     * Deserialises an object using {@link SerialiserEngines#KRYO} serialiser engine.
+     * Deserialises an object.
      *
      * @param content
-     *            - a KRYO byte array of the serialised object
+     *            - a byte array of the serialised object
      * @param type
      *            - the type of the deserialised object, which should be known when deserialisation happens
      * @return
@@ -33,10 +33,10 @@ public interface ISerialiserEngine {
     <T> T deserialise(final byte[] content, final Class<T> type) throws Exception;
 
     /**
-     * Deserialises an object using {@link SerialiserEngines#KRYO} serialiser engine.
+     * Deserialises an object.
      *
      * @param content
-     *            - a KRYO input stream of the serialised object
+     *            - an input stream of the serialised object
      * @param type
      *            - the type of the deserialised object, which should be known when deserialisation happens
      * @return

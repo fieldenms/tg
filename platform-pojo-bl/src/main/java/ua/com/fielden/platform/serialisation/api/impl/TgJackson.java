@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -17,17 +19,14 @@ import ua.com.fielden.platform.entity.functional.paginator.Page;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
-import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.CentreManagerSerialiser;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.PageSerialiser;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 
 /**
  * The descendant of {@link ObjectMapper} with TG specific logic to correctly assign serialisers and recognise descendants of {@link AbstractEntity}. This covers correct
@@ -58,58 +57,63 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         // Configuring type specific parameters.
         setDateFormat(dateFormat);
         // enable(SerializationFeature.INDENT_OUTPUT);
-        enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+        // enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
 
-        //Configuring serialiser.
-        addSerialiser(ICentreDomainTreeManagerAndEnhancer.class, new CentreManagerSerialiser(entityFactory));
-        addSerialiser(IPage.class, new PageSerialiser());
-        registerAbstractEntitySerialiser();
+        this.module.addSerializer(ICentreDomainTreeManagerAndEnhancer.class, new CentreManagerSerialiser(entityFactory));
+        this.module.addSerializer(IPage.class, new PageSerialiser());
 
-        //Configuring deserialiser.
-        addDeserialiser(QueryRunner.class, new EntityDeserialiser<QueryRunner>(this, entityFactory));
-        addDeserialiser(Page.class, new EntityDeserialiser<Page>(this, entityFactory));
-        addDeserialiser(CritProp.class, new EntityDeserialiser<CritProp>(this, entityFactory));
-        addDeserialiser(FetchProp.class, new EntityDeserialiser<FetchProp>(this, entityFactory));
-        addDeserialiser(QueryEntity.class, new EntityDeserialiser<QueryEntity>(this, entityFactory));
-
-        for (final Class<?> type : provider.classes()) {
-            if (AbstractEntity.class.isAssignableFrom(type)) {
-                addDeserialiser((Class<AbstractEntity<?>>) type, new EntityDeserialiser<AbstractEntity<?>>(this, entityFactory));
-            }
-        }
+        registerEntityTypes(provider, this.module);
 
         registerModule(module);
     }
 
-    protected void registerAbstractEntitySerialiser() {
-        addSerialiser(AbstractEntity.class, new EntitySerialiser());
+    /**
+     * Register all serialisers / deserialisers for entity types present in TG app.
+     */
+    protected void registerEntityTypes(final ISerialisationClassProvider provider, final TgJacksonModule module) {
+        // registerAbstractEntitySerialiser();
+
+        new EntitySerialiser<QueryRunner>(QueryRunner.class, this.module, this, this.factory);
+        new EntitySerialiser<Page>(Page.class, this.module, this, this.factory);
+        new EntitySerialiser<CritProp>(CritProp.class, this.module, this, this.factory);
+        new EntitySerialiser<FetchProp>(FetchProp.class, this.module, this, this.factory);
+        new EntitySerialiser<QueryEntity>(QueryEntity.class, this.module, this, this.factory);
+
+        for (final Class<?> type : provider.classes()) {
+            if (AbstractEntity.class.isAssignableFrom(type)) {
+                new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, this.module, this, this.factory);
+            }
+        }
     }
 
-    public <T> void addSerialiser(final Class<? extends T> clazz, final JsonSerializer<T> serializer) {
-        module.addSerializer(clazz, serializer);
-    }
-
-    public <T> void addDeserialiser(final Class<T> clazz, final JsonDeserializer<? extends T> deserializer) {
-        module.addDeserializer(clazz, deserializer);
-    }
+    //
+    //    protected void registerAbstractEntitySerialiser() {
+    //        addSerialiser(AbstractEntity.class, new EntitySerialiser());
+    //    }
 
     @Override
     public <T> T deserialise(final byte[] content, final Class<T> type) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        final ByteArrayInputStream bis = new ByteArrayInputStream(content);
+        return deserialise(bis, type);
     }
 
     @Override
     public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            return readValue(content, type);
+        } catch (final IOException e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public byte[] serialise(final Object obj) {
         try {
-            final String json = writeValueAsString(obj);
-            return json.getBytes();
+            final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
+            logger.error("Serialised pretty JSON = [" + writerWithDefaultPrettyPrinter().writeValueAsString(obj) + "]."); // TODO remove
+            logger.debug("Serialised JSON = [" + new String(bytes, Charsets.UTF_8) + "].");
+            return bytes;
         } catch (final JsonProcessingException e) {
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);

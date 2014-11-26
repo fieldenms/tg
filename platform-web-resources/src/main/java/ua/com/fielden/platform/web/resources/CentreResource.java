@@ -14,6 +14,8 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 
+import com.google.common.base.Charsets;
+
 /**
  * Represents web server resource that retrievers the entity centre configuration and returns it to the client..
  *
@@ -53,7 +55,7 @@ public class CentreResource extends ServerResource {
         gdtm.initEntityCentreManager(centre.getMenuItemType(), null);
         final ICentreDomainTreeManagerAndEnhancer cdtmae = gdtm.getEntityCentreManager(centre.getMenuItemType(), null);
 
-        final String centreString = serialiser.serialise(cdtmae, SerialiserEngines.JACKSON).toString();
+        final String centreString = new String(serialiser.serialise(cdtmae, SerialiserEngines.JACKSON), Charsets.UTF_8);
         return new JsonRepresentation(centreString);
     }
 }
