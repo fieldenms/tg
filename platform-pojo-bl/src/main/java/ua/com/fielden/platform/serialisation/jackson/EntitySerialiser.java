@@ -7,13 +7,13 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,11 +42,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     }
 
     public List<CachedProperty> createCachedProperties(final Class<T> type) {
-        //        final Class<? extends Comparable> keyType = AnnotationReflector.getKeyType(type);
-        //        if (keyType == null) {
-        //            throw new IllegalStateException("Type " + this.getClass().getName() + " is not fully defined.");
-        //        }
-        final boolean hasCompositeKey = DynamicEntityKey.class.equals(AnnotationReflector.getKeyType(type)); // Finder.getKeyMembers(type).size() > 1;
+        final boolean hasCompositeKey = EntityUtils.isCompositeEntity(type);
         final List<CachedProperty> properties = new ArrayList<CachedProperty>();
         for (final Field propertyField : Finder.findRealProperties(type)) {
             // take into account only persistent properties

@@ -42,7 +42,6 @@ public final class EntitySerialiser extends Serializer {
     private static final byte NOT_NULL_NOT_DIRTY = 3;
     private static final byte NOT_NULL_DIRTY = 4;
 
-    private final boolean hasCompositeKey;
     private final Class<AbstractEntity> type;
     private final Field versionField;
     private final List<CachedProperty> properties;
@@ -58,9 +57,13 @@ public final class EntitySerialiser extends Serializer {
         versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
         versionField.setAccessible(true);
 
-        hasCompositeKey = EntityUtils.isCompositeEntity(type);
         // cache all properties annotated with @IsProperty
-        properties = new ArrayList<CachedProperty>();
+        properties = createCachedProperties(type);
+    }
+
+    private List<CachedProperty> createCachedProperties(final Class<AbstractEntity> type) {
+        final boolean hasCompositeKey = EntityUtils.isCompositeEntity(type);
+        final List<CachedProperty> properties = new ArrayList<CachedProperty>();
         for (final Field propertyField : Finder.findRealProperties(type)) {
             // take into account only persistent properties
             //if (!propertyField.isAnnotationPresent(Calculated.class)) {
@@ -87,6 +90,7 @@ public final class EntitySerialiser extends Serializer {
             }
             //}
         }
+        return properties;
     }
 
     @Override
