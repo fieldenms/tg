@@ -3,8 +3,6 @@ package ua.com.fielden.platform.serialisation.api.impl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 import org.apache.log4j.Logger;
 
@@ -21,8 +19,11 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.MoneyJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.CentreManagerSerialiser;
+import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.PageSerialiser;
+import ua.com.fielden.platform.types.Money;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,18 +47,18 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     private final EntityFactory factory;
 
     public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
-        this(new SimpleDateFormat("dd/MM/yyyy hh:mma"), entityFactory, provider);
-    }
-
-    public TgJackson(final DateFormat dateFormat, final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
         super();
         this.module = new TgJacksonModule();
         this.factory = entityFactory;
 
         // Configuring type specific parameters.
-        setDateFormat(dateFormat);
+        // setDateFormat(dateFormat);
+
         // enable(SerializationFeature.INDENT_OUTPUT);
         // enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+
+        this.module.addSerializer(Money.class, new MoneyJsonSerialiser());
+        this.module.addDeserializer(Money.class, new MoneyJsonDeserialiser());
 
         this.module.addSerializer(ICentreDomainTreeManagerAndEnhancer.class, new CentreManagerSerialiser(entityFactory));
         this.module.addSerializer(IPage.class, new PageSerialiser());
