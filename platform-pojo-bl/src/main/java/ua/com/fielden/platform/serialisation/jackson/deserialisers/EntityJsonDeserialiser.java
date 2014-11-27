@@ -182,6 +182,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             return typeFactory.constructCollectionType((Class<? extends Collection>) fieldType, elementClass);
         } else if (Map.class.isAssignableFrom(fieldType)) {
             final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
+            // IMPORTANT: only simple Java types are supported for map keys (see http://stackoverflow.com/questions/6371092/can-not-find-a-map-key-deserializer-for-type-simple-type-class-com-comcast-i)
             final Class<?> keyClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[0]);
             final Class<?> valueClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[1]);
 

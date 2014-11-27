@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -343,13 +342,12 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    @Ignore
     public void entity_with_the_map_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
         final EntityWithMapOfEntities entity = factory.newEntity(EntityWithMapOfEntities.class, 1L, "key1", "description");
 
-        final Map<EntityWithMapOfEntities, EntityWithMapOfEntities> propVal = new LinkedHashMap<>();
-        propVal.put(factory.newEntity(EntityWithMapOfEntities.class, 2L, "key2", "description"), factory.newEntity(EntityWithMapOfEntities.class, 2L, "key3", "description"));
-        propVal.put(entity, entity);
+        final Map<String, EntityWithMapOfEntities> propVal = new LinkedHashMap<>();
+        propVal.put("19", factory.newEntity(EntityWithMapOfEntities.class, 2L, "key3", "description"));
+        propVal.put("4", entity);
         entity.setProp(propVal);
         assertTrue("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
 
@@ -364,15 +362,15 @@ public class EntitySerialisationWithJacksonTest {
 
         assertFalse("Restored prop should not be the same reference.", entity.getProp() == restoredEntity.getProp());
         assertEquals("Restored collection prop should have the same size.", entity.getProp().size(), restoredEntity.getProp().size());
-        final Iterator<Map.Entry<EntityWithMapOfEntities, EntityWithMapOfEntities>> propIter = entity.getProp().entrySet().iterator();
-        final Iterator<Map.Entry<EntityWithMapOfEntities, EntityWithMapOfEntities>> restoredPropIter = restoredEntity.getProp().entrySet().iterator();
+        final Iterator<Map.Entry<String, EntityWithMapOfEntities>> propIter = entity.getProp().entrySet().iterator();
+        final Iterator<Map.Entry<String, EntityWithMapOfEntities>> restoredPropIter = restoredEntity.getProp().entrySet().iterator();
         while (propIter.hasNext()) {
-            final Map.Entry<EntityWithMapOfEntities, EntityWithMapOfEntities> propEntry = propIter.next();
-            final Map.Entry<EntityWithMapOfEntities, EntityWithMapOfEntities> restoredPropEntry = restoredPropIter.next();
-            assertEquals("Incorrect collection element.", propEntry.getKey(), restoredPropEntry.getKey());
-            assertEquals("Incorrect collection element.", propEntry.getValue(), restoredPropEntry.getValue());
-            assertFalse("Incorrect collection element.", propEntry.getKey() == restoredPropEntry.getKey());
-            assertFalse("Incorrect collection element.", propEntry.getValue() == restoredPropEntry.getValue());
+            final Map.Entry<String, EntityWithMapOfEntities> propEntry = propIter.next();
+            final Map.Entry<String, EntityWithMapOfEntities> restoredPropEntry = restoredPropIter.next();
+            assertEquals("Incorrect key element.", propEntry.getKey(), restoredPropEntry.getKey());
+            assertEquals("Incorrect value element.", propEntry.getValue(), restoredPropEntry.getValue());
+            // assertFalse("Incorrect key element.", propEntry.getKey() == restoredPropEntry.getKey()); the reference is the same for equal strings?
+            assertFalse("Incorrect value element.", propEntry.getValue() == restoredPropEntry.getValue());
         }
 
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());

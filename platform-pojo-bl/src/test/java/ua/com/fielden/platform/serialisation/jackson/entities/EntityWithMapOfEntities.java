@@ -21,16 +21,16 @@ public class EntityWithMapOfEntities extends AbstractEntity<String> {
 
     @IsProperty(EntityWithMapOfEntities.class)
     @Title(value = "Title", desc = "Desc")
-    private final Map<EntityWithMapOfEntities, EntityWithMapOfEntities> prop = new LinkedHashMap<EntityWithMapOfEntities, EntityWithMapOfEntities>();
+    private final Map<String, EntityWithMapOfEntities> prop = new LinkedHashMap<>();
 
     @Observable
-    public EntityWithMapOfEntities setProp(final Map<EntityWithMapOfEntities, EntityWithMapOfEntities> prop) {
+    public EntityWithMapOfEntities setProp(final Map<String, EntityWithMapOfEntities> prop) {
         this.prop.clear();
         this.prop.putAll(prop);
         return this;
     }
 
-    public Map<EntityWithMapOfEntities, EntityWithMapOfEntities> getProp() {
+    public Map<String, EntityWithMapOfEntities> getProp() {
         return Collections.unmodifiableMap(prop);
     }
 
