@@ -15,6 +15,7 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import com.esotericsoftware.kryo.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  */
 public class EntitySerialiser<T extends AbstractEntity<?>> {
+    public static final String ENTITY_JACKSON_REFERENCES = "entity-references";
     private final EntityJsonSerialiser<T> serialiser;
     private final EntityJsonDeserialiser<T> deserialiser;
     private final List<CachedProperty> properties;
@@ -40,6 +42,13 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         module.addSerializer(type, serialiser);
         module.addDeserializer(type, deserialiser);
     }
+
+    static private ThreadLocal<JacksonContext> contextThreadLocal = new ThreadLocal<JacksonContext>() {
+        @Override
+        protected JacksonContext initialValue() {
+            return new JacksonContext();
+        }
+    };
 
     public List<CachedProperty> createCachedProperties(final Class<T> type) {
         final boolean hasCompositeKey = EntityUtils.isCompositeEntity(type);
@@ -98,5 +107,14 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         public Field field() {
             return field;
         }
+    }
+
+    /**
+     * Returns the thread local context for serialization and deserialization.
+     *
+     * @see Context
+     */
+    static public JacksonContext getContext() {
+        return contextThreadLocal.get();
     }
 }

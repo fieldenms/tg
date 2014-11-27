@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,6 +20,8 @@ import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
+import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBigDecimal;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBoolean;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
@@ -60,6 +61,8 @@ public class EntitySerialisationWithJacksonTest {
                 EntityWithOtherEntity.class,
                 EntityWithSameEntity.class,
                 OtherEntity.class,
+                Entity1WithEntity2.class,
+                Entity2WithEntity1.class,
                 EntityWithMoney.class //
         );
     }
@@ -78,6 +81,7 @@ public class EntitySerialisationWithJacksonTest {
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect id.", new Long(1L), restoredEntity.getId());
         assertEquals("Incorrect version.", new Long(0L), restoredEntity.getVersion());
 
@@ -93,6 +97,7 @@ public class EntitySerialisationWithJacksonTest {
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect id.", null, restoredEntity.getId());
         assertEquals("Incorrect version.", new Long(0L), restoredEntity.getVersion());
 
@@ -108,6 +113,7 @@ public class EntitySerialisationWithJacksonTest {
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect id.", new Long(1L), restoredEntity.getId());
         assertEquals("Incorrect version.", new Long(0L), restoredEntity.getVersion());
 
@@ -123,6 +129,7 @@ public class EntitySerialisationWithJacksonTest {
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect id.", new Long(1L), restoredEntity.getId());
         assertEquals("Incorrect version.", new Long(0L), restoredEntity.getVersion());
 
@@ -139,6 +146,7 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithBigDecimal restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBigDecimal.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", BigDecimal.TEN, restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
@@ -150,6 +158,7 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithInteger restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithInteger.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", new Integer(23), restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
@@ -161,6 +170,7 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
@@ -172,6 +182,7 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithBoolean restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBoolean.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", true, restoredEntity.isProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
@@ -184,6 +195,7 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithDate restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithDate.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", date, restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
@@ -195,6 +207,7 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithMoney restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithMoney.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", new Money("23.00", 20, Currency.getInstance("AUD")), restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
@@ -206,6 +219,7 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithOtherEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithOtherEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", factory.newEntity(OtherEntity.class, 1L, "other_key", "description"), restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
@@ -217,19 +231,47 @@ public class EntitySerialisationWithJacksonTest {
         final EntityWithSameEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSameEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", factory.newEntity(EntityWithSameEntity.class, 2L, "key2", "description"), restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
 
     @Test
-    @Ignore
     public void entity_with_the_same_entity_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
         final EntityWithSameEntity entity = factory.newEntity(EntityWithSameEntity.class, 1L, "key1", "description");
         entity.setProp(entity);
         final EntityWithSameEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSameEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", restoredEntity, restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
+
+    @Test
+    public void entity_with_the_other_entity_prop_and_double_circular_reference_should_be_restored() throws Exception {
+        final Entity1WithEntity2 entity1 = factory.newEntity(Entity1WithEntity2.class, 1L, "key1", "description");
+        final Entity2WithEntity1 entity2 = factory.newEntity(Entity2WithEntity1.class, 1L, "key2", "description");
+        entity1.setProp(entity2);
+        entity2.setProp(entity1);
+        final Entity1WithEntity2 restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity1), Entity1WithEntity2.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity1 == restoredEntity);
+        assertEquals("Incorrect prop.", entity1.getProp(), restoredEntity.getProp());
+        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+    }
+
+    //    @Test
+    //    public void test1() throws Exception {
+    //        final Identifiable ob1 = new Identifiable();
+    //        ob1.value = 13;
+    //        final Identifiable ob2 = new Identifiable();
+    //        ob2.value = 42;
+    //        // link as a cycle:
+    //        ob1.next = ob2;
+    //        ob2.next = ob1;
+    //
+    //        final Identifiable restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(ob1), Identifiable.class);
+    //    }
 }

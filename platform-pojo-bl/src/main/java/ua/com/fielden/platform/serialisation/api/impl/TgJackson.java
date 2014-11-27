@@ -101,7 +101,9 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     @Override
     public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
         try {
-            return readValue(content, type);
+            EntitySerialiser.getContext().reset();
+            final T val = readValue(content, type);
+            return val;
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);
@@ -111,9 +113,13 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     @Override
     public byte[] serialise(final Object obj) {
         try {
+            EntitySerialiser.getContext().reset();
+            logger.error("Serialised pretty JSON = [" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "]."); // TODO remove
+
+            EntitySerialiser.getContext().reset();
             final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
-            logger.error("Serialised pretty JSON = [" + writerWithDefaultPrettyPrinter().writeValueAsString(obj) + "]."); // TODO remove
-            logger.debug("Serialised JSON = [" + new String(bytes, Charsets.UTF_8) + "].");
+            // logger.error("Serialised JSON = [" + new String(bytes, Charsets.UTF_8) + "].");
+
             return bytes;
         } catch (final JsonProcessingException e) {
             logger.error(e.getMessage(), e);
