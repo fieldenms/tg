@@ -7,9 +7,17 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Currency;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -26,9 +34,12 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBigDecim
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBoolean;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEntities;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMoney;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -63,6 +74,9 @@ public class EntitySerialisationWithJacksonTest {
                 OtherEntity.class,
                 Entity1WithEntity2.class,
                 Entity2WithEntity1.class,
+                EntityWithSetOfEntities.class,
+                EntityWithListOfEntities.class,
+                EntityWithMapOfEntities.class,
                 EntityWithMoney.class //
         );
     }
@@ -262,16 +276,106 @@ public class EntitySerialisationWithJacksonTest {
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
 
-    //    @Test
-    //    public void test1() throws Exception {
-    //        final Identifiable ob1 = new Identifiable();
-    //        ob1.value = 13;
-    //        final Identifiable ob2 = new Identifiable();
-    //        ob2.value = 42;
-    //        // link as a cycle:
-    //        ob1.next = ob2;
-    //        ob2.next = ob1;
-    //
-    //        final Identifiable restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(ob1), Identifiable.class);
-    //    }
+    @Test
+    public void entity_with_the_set_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
+        final EntityWithSetOfEntities entity = factory.newEntity(EntityWithSetOfEntities.class, 1L, "key1", "description");
+
+        final Set<EntityWithSetOfEntities> propVal = new HashSet<>();
+        propVal.add(factory.newEntity(EntityWithSetOfEntities.class, 2L, "key2", "description"));
+        propVal.add(entity);
+        entity.setProp(propVal);
+        assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
+
+        final EntityWithSetOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSetOfEntities.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+
+        final Set<EntityWithSetOfEntities> resPropVal = new HashSet<>();
+        resPropVal.add(factory.newEntity(EntityWithSetOfEntities.class, 2L, "key2", "description"));
+        resPropVal.add(restoredEntity);
+
+        assertFalse("Restored prop should not be the same reference.", entity.getProp() == restoredEntity.getProp());
+        assertEquals("Restored collection prop should have the same size.", entity.getProp().size(), restoredEntity.getProp().size());
+        final Iterator<EntityWithSetOfEntities> propIter = entity.getProp().iterator();
+        final Iterator<EntityWithSetOfEntities> restoredPropIter = restoredEntity.getProp().iterator();
+        while (propIter.hasNext()) {
+            final EntityWithSetOfEntities propEntity = propIter.next();
+            final EntityWithSetOfEntities restoredPropEntity = restoredPropIter.next();
+            assertEquals("Incorrect collection element.", propEntity, restoredPropEntity);
+            assertFalse("Incorrect collection element.", propEntity == restoredPropEntity);
+        }
+
+        assertFalse("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+    }
+
+    @Test
+    public void entity_with_the_list_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
+        final EntityWithListOfEntities entity = factory.newEntity(EntityWithListOfEntities.class, 1L, "key1", "description");
+
+        final List<EntityWithListOfEntities> propVal = new ArrayList<>();
+        propVal.add(factory.newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"));
+        propVal.add(entity);
+        entity.setProp(propVal);
+        assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
+
+        final EntityWithListOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithListOfEntities.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+
+        final List<EntityWithListOfEntities> resPropVal = new ArrayList<>();
+        resPropVal.add(factory.newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"));
+        resPropVal.add(restoredEntity);
+
+        assertFalse("Restored prop should not be the same reference.", entity.getProp() == restoredEntity.getProp());
+        assertEquals("Restored collection prop should have the same size.", entity.getProp().size(), restoredEntity.getProp().size());
+        final Iterator<EntityWithListOfEntities> propIter = entity.getProp().iterator();
+        final Iterator<EntityWithListOfEntities> restoredPropIter = restoredEntity.getProp().iterator();
+        while (propIter.hasNext()) {
+            final EntityWithListOfEntities propEntity = propIter.next();
+            final EntityWithListOfEntities restoredPropEntity = restoredPropIter.next();
+            assertEquals("Incorrect collection element.", propEntity, restoredPropEntity);
+            assertFalse("Incorrect collection element.", propEntity == restoredPropEntity);
+        }
+
+        assertFalse("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+    }
+
+    @Test
+    @Ignore
+    public void entity_with_the_map_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
+        final EntityWithMapOfEntities entity = factory.newEntity(EntityWithMapOfEntities.class, 1L, "key1", "description");
+
+        final Map<EntityWithMapOfEntities, EntityWithMapOfEntities> propVal = new LinkedHashMap<>();
+        propVal.put(factory.newEntity(EntityWithMapOfEntities.class, 2L, "key2", "description"), factory.newEntity(EntityWithMapOfEntities.class, 2L, "key3", "description"));
+        propVal.put(entity, entity);
+        entity.setProp(propVal);
+        assertTrue("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
+
+        final EntityWithMapOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithMapOfEntities.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+
+        final Map<EntityWithMapOfEntities, EntityWithMapOfEntities> resPropVal = new LinkedHashMap<>();
+        resPropVal.put(factory.newEntity(EntityWithMapOfEntities.class, 2L, "key2", "description"), factory.newEntity(EntityWithMapOfEntities.class, 2L, "key3", "description"));
+        resPropVal.put(restoredEntity, restoredEntity);
+
+        assertFalse("Restored prop should not be the same reference.", entity.getProp() == restoredEntity.getProp());
+        assertEquals("Restored collection prop should have the same size.", entity.getProp().size(), restoredEntity.getProp().size());
+        final Iterator<Map.Entry<EntityWithMapOfEntities, EntityWithMapOfEntities>> propIter = entity.getProp().entrySet().iterator();
+        final Iterator<Map.Entry<EntityWithMapOfEntities, EntityWithMapOfEntities>> restoredPropIter = restoredEntity.getProp().entrySet().iterator();
+        while (propIter.hasNext()) {
+            final Map.Entry<EntityWithMapOfEntities, EntityWithMapOfEntities> propEntry = propIter.next();
+            final Map.Entry<EntityWithMapOfEntities, EntityWithMapOfEntities> restoredPropEntry = restoredPropIter.next();
+            assertEquals("Incorrect collection element.", propEntry.getKey(), restoredPropEntry.getKey());
+            assertEquals("Incorrect collection element.", propEntry.getValue(), restoredPropEntry.getValue());
+            assertFalse("Incorrect collection element.", propEntry.getKey() == restoredPropEntry.getKey());
+            assertFalse("Incorrect collection element.", propEntry.getValue() == restoredPropEntry.getValue());
+        }
+
+        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+    }
+
 }

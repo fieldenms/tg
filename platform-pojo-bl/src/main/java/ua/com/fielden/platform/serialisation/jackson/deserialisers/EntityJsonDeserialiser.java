@@ -5,8 +5,10 @@ import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ENT
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -173,8 +175,12 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
 
     private ResolvedType constructType(final TypeFactory typeFactory, final Field propertyField) {
         final Class<?> fieldType = PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
+        if (Set.class.isAssignableFrom(fieldType) || List.class.isAssignableFrom(fieldType)) {
+            final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
+            final Class<?> elementClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[0]);
 
-        if (Map.class.isAssignableFrom(fieldType)) {
+            return typeFactory.constructCollectionType((Class<? extends Collection>) fieldType, elementClass);
+        } else if (Map.class.isAssignableFrom(fieldType)) {
             final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
             final Class<?> keyClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[0]);
             final Class<?> valueClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[1]);
@@ -182,7 +188,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             return typeFactory.constructMapType((Class<? extends Map>) fieldType, keyClass, valueClass);
         } else {
             // TODO no other collectional types are supported at this stage -- should be added one by one
-            return typeFactory.constructType(PropertyTypeDeterminator.stripIfNeeded(propertyField.getType()));
+            return typeFactory.constructType(fieldType);
         }
     }
 
