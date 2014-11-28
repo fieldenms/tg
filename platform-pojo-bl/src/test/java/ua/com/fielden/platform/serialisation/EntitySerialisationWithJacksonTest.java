@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Currency;
@@ -17,15 +19,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
+import ua.com.fielden.platform.serialisation.entity.EntityWithPolymorphicProperty;
+import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
+import ua.com.fielden.platform.serialisation.entity.SubBaseEntity2;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
@@ -59,6 +67,7 @@ public class EntitySerialisationWithJacksonTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private final ISerialiserEngine jacksonSerialiser = new Serialiser(factory, createClassProvider()).getEngine(SerialiserEngines.JACKSON);
     private final ISerialiserEngine jacksonDeserialiser = new Serialiser(factory, createClassProvider()).getEngine(SerialiserEngines.JACKSON);
+    private boolean observed = false;
 
     private ProvidedSerialisationClassProvider createClassProvider() {
         return new ProvidedSerialisationClassProvider(
@@ -76,6 +85,10 @@ public class EntitySerialisationWithJacksonTest {
                 EntityWithSetOfEntities.class,
                 EntityWithListOfEntities.class,
                 EntityWithMapOfEntities.class,
+                EntityWithPolymorphicProperty.class,
+                // BaseEntity.class,
+                SubBaseEntity1.class,
+                SubBaseEntity2.class,
                 EntityWithMoney.class //
         );
     }
@@ -162,6 +175,28 @@ public class EntitySerialisationWithJacksonTest {
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", BigDecimal.TEN, restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+    }
+
+    @Test
+    public void entity_with_prop_should_be_restored_and_have_observable_property() throws Exception {
+        observed = false;
+        final EntityWithBigDecimal entity = factory.newEntity(EntityWithBigDecimal.class, 1L, "key", "description");
+        entity.setProp(BigDecimal.TEN);
+        final EntityWithBigDecimal restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBigDecimal.class);
+        restoredEntity.addPropertyChangeListener("prop", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                observed = true;
+            }
+        });
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", BigDecimal.TEN, restoredEntity.getProp());
+        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+
+        restoredEntity.setProp(BigDecimal.ONE);
+        assertTrue("Property 'prop' should have been observed.", observed);
     }
 
     @Test
@@ -376,4 +411,83 @@ public class EntitySerialisationWithJacksonTest {
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
 
+    @Test
+    public void successful_result_with_entity_should_be_restored() throws Exception {
+        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", null);
+        entity.setProp(new Integer(23));
+        final Result result = new Result(entity, "All cool.");
+        final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
+
+        assertNotNull("Restored result could not be null.", restoredResult);
+        assertTrue("Restored result should be successful.", restoredResult.isSuccessful());
+        assertTrue("Restored result should be successful without warning.", restoredResult.isSuccessfulWithoutWarning());
+        assertNull("Restored result should not have exception.", restoredResult.getEx());
+        assertNotNull("Restored result should have message.", restoredResult.getMessage());
+        assertNotNull("Restored result should have instance.", restoredResult.getInstance());
+        assertTrue("Entity should stay dirty after marshaling.", ((EntityWithInteger) restoredResult.getInstance()).isDirty());
+        assertFalse("Property should not be dirty.", ((EntityWithInteger) restoredResult.getInstance()).getProperty("desc").isDirty()); // has default value
+        assertTrue("Property should be dirty.", ((EntityWithInteger) restoredResult.getInstance()).getProperty("prop").isDirty());
+    }
+
+    @Test
+    public void unsuccessful_result_with_entity_and_exception_should_be_restored() throws Exception {
+        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", null);
+        entity.setProp(new Integer(23));
+        final Result result = new Result(entity, new Exception("exception message"));
+        final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
+
+        assertNotNull("Restored result could not be null", restoredResult);
+        assertNotNull("Restored result should have exception", restoredResult.getEx());
+        assertNotNull("Restored result should have message", restoredResult.getMessage());
+        assertNotNull("Restored result should have instance", restoredResult.getInstance());
+    }
+
+    @Test
+    public void successful_warning_with_entity_should_be_restored() throws Exception {
+        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", null);
+        entity.setProp(new Integer(23));
+        final Warning warning = new Warning(entity, "warning message");
+        final Warning restoredWarning = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(warning), Warning.class);
+
+        assertNotNull("Restored warning could not be null", restoredWarning);
+        assertTrue("Restored warning could not be null", restoredWarning.isWarning());
+        assertFalse("Restored warning could not be null", restoredWarning.isSuccessfulWithoutWarning());
+        assertNotNull("Restored warning should have message", restoredWarning.getMessage());
+        assertNotNull("Restored warning should have instance", restoredWarning.getInstance());
+        assertTrue("Entity should stay dirty after marshaling.", ((EntityWithInteger) restoredWarning.getInstance()).isDirty());
+        assertFalse("Property should not be dirty.", ((EntityWithInteger) restoredWarning.getInstance()).getProperty("desc").isDirty());
+        assertTrue("Property should be dirty.", ((EntityWithInteger) restoredWarning.getInstance()).getProperty("prop").isDirty());
+    }
+
+    @Test
+    @Ignore
+    public void entity_with_property_descriptor_prop_should_be_restored() throws Exception {
+    }
+
+    @Test
+    @Ignore
+    public void entity_with_byte_array_prop_should_be_restored() throws Exception {
+    }
+
+    // the next two cases are not supported at this stage
+    @Test
+    @Ignore
+    public void test_serialisation_of_entity_with_polymorphyc_property() throws Exception {
+        final EntityWithPolymorphicProperty entity = factory.newEntity(EntityWithPolymorphicProperty.class, 1L, "key", "description");
+        entity.setPolyProperty(factory.newEntity(SubBaseEntity1.class, 1L, "key", "description"));
+
+        jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithPolymorphicProperty.class);
+    }
+
+    @Test
+    @Ignore
+    public void test_deserialisation_when_specifying_ancestor_as_the_type() throws Exception {
+        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", "description");
+
+        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
+
+        assertNotNull("Restored entity could not be null", restoredEntity);
+        assertEquals("Incorrectly restored key.", "key", restoredEntity.getKey());
+        assertEquals("Incorrectly restored description.", "description", restoredEntity.getDesc());
+    }
 }

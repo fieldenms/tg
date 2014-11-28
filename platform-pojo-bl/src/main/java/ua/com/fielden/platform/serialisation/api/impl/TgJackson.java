@@ -14,15 +14,19 @@ import ua.com.fielden.platform.entity.functional.centre.FetchProp;
 import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.entity.functional.paginator.Page;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.MoneyJsonDeserialiser;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.CentreManagerSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.PageSerialiser;
+import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSerialiser;
 import ua.com.fielden.platform.types.Money;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -59,6 +63,11 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
         this.module.addSerializer(Money.class, new MoneyJsonSerialiser());
         this.module.addDeserializer(Money.class, new MoneyJsonDeserialiser());
+
+        this.module.addSerializer(Result.class, new ResultJsonSerialiser());
+        this.module.addDeserializer(Result.class, new ResultJsonDeserialiser<Result>(this));
+        this.module.addSerializer(Warning.class, new ResultJsonSerialiser());
+        this.module.addDeserializer(Warning.class, new ResultJsonDeserialiser<Warning>(this));
 
         this.module.addSerializer(ICentreDomainTreeManagerAndEnhancer.class, new CentreManagerSerialiser(entityFactory));
         this.module.addSerializer(IPage.class, new PageSerialiser());

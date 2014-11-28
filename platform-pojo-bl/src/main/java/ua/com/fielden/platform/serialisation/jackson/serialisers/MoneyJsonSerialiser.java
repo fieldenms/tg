@@ -6,8 +6,8 @@ import ua.com.fielden.platform.types.Money;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 /**
  * Serialiser for {@link Money} type.
@@ -15,7 +15,11 @@ import com.fasterxml.jackson.databind.SerializerProvider;
  * @author TG Team
  *
  */
-public class MoneyJsonSerialiser extends JsonSerializer<Money> {
+public class MoneyJsonSerialiser extends StdSerializer<Money> {
+
+    public MoneyJsonSerialiser() {
+        super(Money.class);
+    }
 
     @Override
     public void serialize(final Money money, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {

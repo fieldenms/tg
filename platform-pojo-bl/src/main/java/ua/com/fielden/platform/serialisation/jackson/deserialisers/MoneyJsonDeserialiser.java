@@ -9,10 +9,14 @@ import ua.com.fielden.platform.types.Money;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
-public class MoneyJsonDeserialiser extends JsonDeserializer<Money> {
+public class MoneyJsonDeserialiser extends StdDeserializer<Money> {
+
+    public MoneyJsonDeserialiser() {
+        super(Money.class);
+    }
 
     @Override
     public Money deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
