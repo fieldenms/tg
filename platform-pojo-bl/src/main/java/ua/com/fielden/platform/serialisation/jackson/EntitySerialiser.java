@@ -43,6 +43,20 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         module.addDeserializer(type, deserialiser);
     }
 
+    public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references) {
+        return typeId(entity) + "#" + newIdWithinTheType(entity, references);
+    }
+
+    public static <M extends AbstractEntity<?>> String typeId(final M entity) {
+        // TODO should use type table
+        return entity.getType().getName();
+    }
+
+    public static <M extends AbstractEntity<?>> String newIdWithinTheType(final M entity, final References references) {
+        final Long newId = references.addNewId(entity.getType());
+        return newId.toString();
+    }
+
     static private ThreadLocal<JacksonContext> contextThreadLocal = new ThreadLocal<JacksonContext>() {
         @Override
         protected JacksonContext initialValue() {

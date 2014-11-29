@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
-import ua.com.fielden.platform.serialisation.kryo.serialisers.References;
+import ua.com.fielden.platform.serialisation.jackson.References;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -46,19 +46,22 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
             }
             context.putTemp(ENTITY_JACKSON_REFERENCES, references);
         }
-        final Integer reference = references.objectToReference.get(entity);
+        final String reference = references.getReference(entity);
         if (reference != null) {
+            generator.writeStartObject();
+
+            generator.writeFieldName("@id_ref");
             generator.writeObject(reference);
+
+            generator.writeEndObject();
         } else {
-            // IntSerializer.put(buffer, 0, true);
-            references.referenceCount++;
-            references.objectToReference.put(entity, references.referenceCount);
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references);
+            references.putReference(entity, newReference);
 
             generator.writeStartObject();
 
-            // serialise entity type
-            generator.writeFieldName("@entityType");
-            generator.writeObject(entity.getType().getName());
+            generator.writeFieldName("@id");
+            generator.writeObject(newReference);
 
             // serialise id
             generator.writeFieldName(AbstractEntity.ID);

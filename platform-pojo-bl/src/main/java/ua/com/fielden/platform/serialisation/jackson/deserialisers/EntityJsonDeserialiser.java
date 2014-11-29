@@ -21,9 +21,8 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
-import ua.com.fielden.platform.serialisation.kryo.serialisers.References;
+import ua.com.fielden.platform.serialisation.jackson.References;
 
-import com.esotericsoftware.kryo.SerializationException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.ResolvedType;
@@ -70,13 +69,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         final JsonNode node = jp.readValueAsTree();
         // final int reference = IntSerializer.get(buffer, true);
 
-        if (node.isInt()) {
-            final Integer reference = node.intValue();
-            final T object = (T) references.referenceToObject.get(reference);
-            if (object == null) {
-                throw new SerializationException("Invalid object reference: " + reference);
-            }
-            return object;
+        if (node.isObject() && node.get("@id_ref") != null) {
+            final String reference = node.get("@id_ref").asText();
+            return (T) references.getEntity(reference);
         } else {
             //            // deserialise type
             //            final Class<T> type = (Class<T>) findClass(node.get("@entityType").asText());
@@ -93,8 +88,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 entity = factory.newEntity(type, id);
             }
 
-            references.referenceCount++;
-            references.referenceToObject.put(references.referenceCount, entity);
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references);
+            references.putEntity(newReference, entity);
 
             // deserialise version -- should never be null
             final JsonNode versionJsonNode = node.get(AbstractEntity.VERSION); // the node should not be null itself
