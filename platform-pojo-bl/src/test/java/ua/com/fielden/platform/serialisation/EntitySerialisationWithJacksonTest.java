@@ -224,6 +224,19 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
+    public void entity_with_non_editable_prop_should_be_restored() throws Exception {
+        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setEditable(false);
+        final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
+        assertFalse("Incorrect prop editability.", restoredEntity.getProperty("prop").isEditable());
+    }
+
+    @Test
     public void entity_with_boolean_prop_should_be_restored() throws Exception {
         final EntityWithBoolean entity = factory.newEntity(EntityWithBoolean.class, 1L, "key", "description");
         entity.setProp(true);

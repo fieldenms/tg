@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
@@ -110,6 +111,9 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                 // write actual property
                 generator.writeFieldName("@" + name);
                 generator.writeStartObject();
+
+                generator.writeFieldName(MetaProperty.EDITABLE_PROPERTY_NAME);
+                generator.writeObject(entity.getProperty(name) == null ? true : entity.getProperty(name).isEditable());
 
                 generator.writeFieldName("dirty");
                 generator.writeObject(dirty);

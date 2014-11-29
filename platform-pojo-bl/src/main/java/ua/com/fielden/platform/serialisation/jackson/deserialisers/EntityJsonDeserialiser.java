@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -123,14 +124,16 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     throw new IllegalStateException("EntitySerialiser has got null 'dirty' inside meta property '@" + prop.field().getName() + "' when reading entity of type [" + type.getName() + "].");
                 }
                 final boolean dirty = dirtyPropNode.asBoolean();
+                final JsonNode editablePropNode = metaPropNode.get(MetaProperty.EDITABLE_PROPERTY_NAME);
+                if (editablePropNode.isNull()) {
+                    throw new IllegalStateException("EntitySerialiser has got null 'editable' inside meta property '@" + prop.field().getName() + "' when reading entity of type [" + type.getName() + "].");
+                }
+                final boolean editable = editablePropNode.asBoolean();
 
                 final JsonNode propNode = node.get(prop.field().getName());
                 if (propNode.isNull()) {
                     if (!DynamicEntityClassLoader.isEnhanced(type)) {
                         entity.getProperty(prop.field().getName()).setOriginalValue(null);
-                        if (dirty) {
-                            entity.getProperty(prop.field().getName()).setDirty(true);
-                        }
                     }
                 } else {
                     final JsonParser jsonParser = node.get(prop.field().getName()).traverse(mapper);
@@ -156,10 +159,13 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
 
                     if (!DynamicEntityClassLoader.isEnhanced(type)) {
                         entity.getProperty(prop.field().getName()).setOriginalValue(value);
-                        if (dirty) {
-                            entity.getProperty(prop.field().getName()).setDirty(true);
-                        }
                     }
+                }
+                if (dirty) {
+                    entity.getProperty(prop.field().getName()).setDirty(true);
+                }
+                if (!editable) {
+                    entity.getProperty(prop.field().getName()).setEditable(false);
                 }
             }
             //      entity.setInitialising(false);
