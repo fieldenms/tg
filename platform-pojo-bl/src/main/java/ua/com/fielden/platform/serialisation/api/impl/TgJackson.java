@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
+import static ua.com.fielden.platform.serialisation.kryo.IoHelper.ENTITY_REFERENCES;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -14,12 +17,16 @@ import ua.com.fielden.platform.entity.functional.centre.FetchProp;
 import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.entity.functional.paginator.Page;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
+import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
+import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.MoneyJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser;
@@ -112,6 +119,9 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         try {
             EntitySerialiser.getContext().reset();
             final T val = readValue(content, type);
+            if (!DynamicEntityClassLoader.isEnhanced(type)) {
+                executeDefiners();
+            }
             return val;
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
@@ -139,5 +149,40 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     @Override
     public EntityFactory factory() {
         return factory;
+    }
+
+    /**
+     * All entity instances are cached during deserialisation.
+     *
+     * Once serialisation is completed it is necessary to execute respective definers for all cached instances.
+     *
+     * Definers cannot be executed inside {@link EntitySerialiser} due to the use of cache in conjunction with sub-requests issued by some of the definers leasing to an incorrect
+     * deserialisation (specifically, object identifiers in cache get mixed up with the ones from newly obtained stream of data).
+     *
+     */
+    private void executeDefiners() {
+        final JacksonContext context = EntitySerialiser.getContext();
+        final References references = (References) context.get(ENTITY_REFERENCES);
+        if (references != null) {
+            // references is thread local variable, which gets reset if a nested deserialisation happens
+            // therefore need to make a local cache of the present in references entities
+            final Set<AbstractEntity<?>> refs = references.getNotEnhancedEntities();
+
+            // explicit reset in order to make the reason for the above snippet more explicit
+            references.reset();
+
+            // iterate through all locally cached entity instances and execute respective definers
+            for (final AbstractEntity<?> entity : refs) {
+                entity.beginInitialising();
+                for (final MetaProperty<?> prop : entity.getProperties().values()) {
+                    if (prop != null) {
+                        if (!prop.isCollectional()) {
+                            prop.defineForOriginalValue();
+                        }
+                    }
+                }
+                entity.endInitialising();
+            }
+        }
     }
 }

@@ -40,6 +40,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBigDecimal;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBoolean;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDefiner;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
@@ -86,6 +87,7 @@ public class EntitySerialisationWithJacksonTest {
                 EntityWithListOfEntities.class,
                 EntityWithMapOfEntities.class,
                 EntityWithPolymorphicProperty.class,
+                EntityWithDefiner.class,
                 // BaseEntity.class,
                 SubBaseEntity1.class,
                 SubBaseEntity2.class,
@@ -234,6 +236,21 @@ public class EntitySerialisationWithJacksonTest {
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
         assertFalse("Incorrect prop editability.", restoredEntity.getProperty("prop").isEditable());
+    }
+
+    @Test
+    public void entity_with_definer_should_be_restored_and_invoke_definer_afterwards() throws Exception {
+        final EntityWithDefiner entity = factory.newEntity(EntityWithDefiner.class, 1L, "key", "description");
+        entity.beginInitialising();
+        entity.setProp("okay");
+        entity.endInitialising();
+        assertNull("Entity should have uninitialised prop2.", entity.getProp2());
+        final EntityWithDefiner restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithDefiner.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
+        assertEquals("Incorrect prop.", "okay_defined", restoredEntity.getProp2());
     }
 
     @Test
