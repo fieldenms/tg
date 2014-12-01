@@ -252,7 +252,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
         // load the entity directly from the session
         final T persistedEntity = (T) getSession().load(entity.getType(), entity.getId());
-        persistedEntity.setIgnoreEditableStateDuringSave(true);
+        persistedEntity.setIgnoreEditableState(true);
         // check for data staleness and try to resolve the conflict is possible (refer #83)
         if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion() && !canResolveConflict(entity, persistedEntity)) {
             throw Result.failure(entity, new IllegalStateException(format("Could not resolve conflicting changes. Entity %s (%s) could not be saved.", entity.getKey(), TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey())));
@@ -314,7 +314,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
             // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
             if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
-                persistedValue.setIgnoreEditableStateDuringSave(true);
+                persistedValue.setIgnoreEditableState(true);
                 getSession().update(persistedValue.decRefCount());
             }
 
@@ -325,7 +325,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             final AbstractEntity<?> prevValue = persistedEntity.<AbstractEntity<?>> get(propName);
             if (prevValue != null && !entity.equals(prevValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
                 final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
-                persistedValue.setIgnoreEditableStateDuringSave(true);
+                persistedValue.setIgnoreEditableState(true);
                 getSession().update(persistedValue.decRefCount());
             }
             // also need increment refCount for a newly referenced activatable
@@ -336,7 +336,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 // because, if it's not then there is no reason to increment refCout for the referenced instance
                 // in other words, inactive entity does not count as an active referencer
                 if (entity.<Boolean> get(ACTIVE) == true) {
-                    persistedValue.setIgnoreEditableStateDuringSave(true);
+                    persistedValue.setIgnoreEditableState(true);
                     getSession().update(persistedValue.incRefCount());
                 }
             }
@@ -364,7 +364,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 if (value != null) { // if there is actually some value
                     // load activatable value
                     final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), value.getId());
-                    persistedValue.setIgnoreEditableStateDuringSave(true);
+                    persistedValue.setIgnoreEditableState(true);
                     // if activatable property value is not a self-reference
                     // then need to check if it is active and if so increment its refCount
                     // otherwise, if activatable is not active then we've got an erroneous situation that should prevent activation of entity

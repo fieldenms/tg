@@ -313,8 +313,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     private transient boolean initialising = false;
 
-    /** True indicates that the editable state of entity should be ignored during entity saving for the loaded entity. */
-    private transient boolean ignoreEditableStateDuringSave = false;
+    /**
+     * True indicates that the editable state of entity should be ignored during entity mutation
+     * This property should be used with care. */
+    private transient boolean ignoreEditableState = false;
 
     /*
      * Block of fields responsible for synchronisation of validation for properties and entity itself.
@@ -1400,12 +1402,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         return getType().isAnnotationPresent(MapEntityTo.class);
     }
 
-    public boolean isIgnoreEditableStateDuringSave() {
-        return ignoreEditableStateDuringSave;
+    /** Indicates whether the editable state of the entity should be ignored durting mutation. */
+    public boolean isIgnoreEditableState() {
+        return ignoreEditableState;
     }
 
-    public void setIgnoreEditableStateDuringSave(final boolean ignoreEditableStateDuringSave) {
-        this.ignoreEditableStateDuringSave = ignoreEditableStateDuringSave;
+    /**
+     * The main intent of this method is to support entity modification in rare situation while it it being marked as read-only.
+     * Should be used with great care as it may alter the intended domain behaviour if used carelessly.
+     * At this stage there is no reason for this setter to be used as part of the domain logic. */
+    public void setIgnoreEditableState(final boolean ignoreEditableStateDuringSave) {
+        this.ignoreEditableState = ignoreEditableStateDuringSave;
     }
 
 }

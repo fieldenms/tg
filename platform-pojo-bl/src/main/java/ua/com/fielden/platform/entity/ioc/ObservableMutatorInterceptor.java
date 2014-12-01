@@ -77,7 +77,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         }
         // check if entity can be modified at all
         final Result editableResult = entity.isEditable();
-        if (!entity.isIgnoreEditableStateDuringSave() && !editableResult.isSuccessful()) {
+        if (!entity.isIgnoreEditableState() && !editableResult.isSuccessful()) {
             logger.warn(format("Entity is not editable and none of its properties should be modified.", entity));
             throw editableResult;
         }
