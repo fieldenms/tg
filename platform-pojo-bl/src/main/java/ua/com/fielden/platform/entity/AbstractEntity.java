@@ -313,6 +313,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     private transient boolean initialising = false;
 
+    /** True indicates that the editable state of entity should be ignored during entity saving for the loaded entity. */
+    private transient boolean ignoreEditableStateDuringSave = false;
+
     /*
      * Block of fields responsible for synchronisation of validation for properties and entity itself.
      */
@@ -1395,6 +1398,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     public boolean isPersistent() {
         return getType().isAnnotationPresent(MapEntityTo.class);
+    }
+
+    public boolean isIgnoreEditableStateDuringSave() {
+        return ignoreEditableStateDuringSave;
+    }
+
+    public void setIgnoreEditableStateDuringSave(final boolean ignoreEditableStateDuringSave) {
+        this.ignoreEditableStateDuringSave = ignoreEditableStateDuringSave;
     }
 
 }
