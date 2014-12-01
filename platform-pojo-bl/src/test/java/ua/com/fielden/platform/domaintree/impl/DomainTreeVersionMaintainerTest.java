@@ -14,14 +14,14 @@ import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
-import ua.com.fielden.platform.serialisation.impl.TgKryo0;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 
 /**
  * A test case for {@link DomainTreeVersionMaintainer}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DomainTreeVersionMaintainerTest extends AbstractDomainTreeTest {
     private static ISerialiser0 serialiser0;
@@ -70,11 +70,11 @@ public class DomainTreeVersionMaintainerTest extends AbstractDomainTreeTest {
     }
 
     private static ISerialiser0 createSerialiser0(final EntityFactory factory) {
-        return new TgKryo0(factory, new ClassProviderForTestingPurposes());
+        return new Serialiser0(factory, new ClassProviderForTestingPurposes());
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new TgKryo(factory, new ClassProviderForTestingPurposes());
+        return new Serialiser(factory, new ClassProviderForTestingPurposes());
     }
 
     public DomainTreeVersionMaintainerTest() {
@@ -88,7 +88,7 @@ public class DomainTreeVersionMaintainerTest extends AbstractDomainTreeTest {
 
     @Test
     public void testMaintainCentreVersion() throws Exception {
-        final CentreDomainTreeManagerAndEnhancer0 centre0 = new CentreDomainTreeManagerAndEnhancer0(serialiser(), createRootTypes());
+        final CentreDomainTreeManagerAndEnhancer0 centre0 = new CentreDomainTreeManagerAndEnhancer0(serialiser0, createRootTypes());
         final byte[] array0 = serialiser0.serialise(centre0);
         DomainTreeVersionMaintainer.retrieveCentre("ecc key", array0, serialiser, serialiser0);
     }
@@ -97,7 +97,7 @@ public class DomainTreeVersionMaintainerTest extends AbstractDomainTreeTest {
     public void testMaintainCentreVersion_for_centre_with_locators() throws Exception {
         // final GlobalDomainTreeManager mgr = createManagerForBaseUser();
 
-        final CentreDomainTreeManagerAndEnhancer0 centre0 = new CentreDomainTreeManagerAndEnhancer0(serialiser(), createRootTypes());
+        final CentreDomainTreeManagerAndEnhancer0 centre0 = new CentreDomainTreeManagerAndEnhancer0(serialiser0, createRootTypes());
 
         //	GlobalDomainTreeManager.initLocatorManagerCrossReferences((LocatorManager0) centre0.getFirstTick(), mgr.getGlobalRepresentation());
         //
@@ -111,14 +111,14 @@ public class DomainTreeVersionMaintainerTest extends AbstractDomainTreeTest {
 
     @Test
     public void testMaintainLocatorVersion() throws Exception {
-        final LocatorDomainTreeManagerAndEnhancer0 locator0 = new LocatorDomainTreeManagerAndEnhancer0(serialiser(), createRootTypes());
+        final LocatorDomainTreeManagerAndEnhancer0 locator0 = new LocatorDomainTreeManagerAndEnhancer0(serialiser0, createRootTypes());
         final byte[] array0 = serialiser0.serialise(locator0);
         DomainTreeVersionMaintainer.retrieveLocator("elc key", array0, serialiser, serialiser0);
     }
 
     @Test
     public void testMaintainMasterVersion() throws Exception {
-        final MasterDomainTreeManager0 locator0 = new MasterDomainTreeManager0(serialiser(), createRootTypes());
+        final MasterDomainTreeManager0 locator0 = new MasterDomainTreeManager0(serialiser0, createRootTypes());
         final byte[] array0 = serialiser0.serialise(locator0);
         DomainTreeVersionMaintainer.retrieveMaster("emc key", array0, serialiser, serialiser0);
     }

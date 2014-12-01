@@ -2,22 +2,57 @@ package ua.com.fielden.platform.serialisation.api;
 
 import java.io.InputStream;
 
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-
 /**
- * API for serialising and deserialising entities and entity queries.
- * 
+ * API for serialising and deserialising entities, queries and other TG objects. There are multiple {@link SerialiserEngines} to be used for serialisation / deserialisation.
+ * {@link SerialiserEngines#KRYO} can be used as the default engine.
+ *
  * @author TG Team
- * 
+ *
  */
-public interface ISerialiser {
+public interface ISerialiser extends ISerialiserEngine {
 
-    byte[] serialise(final Object obj);
+    /**
+     * Serialises an object using specified {@link SerialiserEngines}.
+     *
+     * @param obj
+     * @param serialiserEngine
+     *
+     * @return - a byte array for serialised object
+     */
+    byte[] serialise(final Object obj, final SerialiserEngines serialiserEngine);
 
-    <T> T deserialise(final byte[] content, Class<T> type) throws Exception;
+    /**
+     * Deserialises an object using specified {@link SerialiserEngines}.
+     *
+     * @param content
+     *            - a KRYO byte array of the serialised object
+     * @param type
+     *            - the type of the deserialised object, which should be known when deserialisation happens
+     * @param serialiserEngine
+     * @return
+     * @throws Exception
+     */
+    <T> T deserialise(final byte[] content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception;
 
-    <T> T deserialise(final InputStream content, Class<T> type) throws Exception;
+    /**
+     * Deserialises an object using specified {@link SerialiserEngines}.
+     *
+     * @param content
+     *            - a KRYO input stream of the serialised object
+     * @param type
+     *            - the type of the deserialised object, which should be known when deserialisation happens
+     * @param serialiserEngine
+     * @return
+     * @throws Exception
+     */
+    <T> T deserialise(final InputStream content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception;
 
-    EntityFactory factory();
-
+    /**
+     * Returns serialisation engine by its name.
+     *
+     * @param serialiserEngine
+     *
+     * @return
+     */
+    ISerialiserEngine getEngine(final SerialiserEngines serialiserEngine);
 }

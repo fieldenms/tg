@@ -338,8 +338,8 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
      * 
      */
     public static class PivotDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<PivotDomainTreeManager> {
-        public PivotDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public PivotDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -348,7 +348,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
             final PivotAddToDistributionTickManager firstTick = readValue(buffer, PivotAddToDistributionTickManager.class);
             final PivotAddToAggregationTickManager secondTick = readValue(buffer, PivotAddToAggregationTickManager.class);
             final Boolean visible = readValue(buffer, Boolean.class);
-            return new PivotDomainTreeManager(kryo(), dtr, visible, firstTick, secondTick);
+            return new PivotDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick);
         }
     }
 }

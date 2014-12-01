@@ -38,7 +38,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.javafx.gis.gps.IWebViewLoadedListener;
 import ua.com.fielden.platform.javafx.gis.gps.WebViewLoadEvent;
 import ua.com.fielden.platform.pagination.IPage;
@@ -48,8 +47,8 @@ import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
-import ua.com.fielden.platform.serialisation.json.serialiser.AbstractEntityToGeoJsonSerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.swing.dialogs.DialogWithDetails;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.utils.SwingUtilitiesEx;
@@ -85,7 +84,7 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
      *
      * @return
      */
-    public GisViewPanel2(final GpsGridAnalysisView2<T, ?> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder, final EntityFactory entityFactory) {
+    public GisViewPanel2(final GpsGridAnalysisView2<T, ?> parentView, final EntityGridInspector egi, final ListSelectionModel listSelectionModel, final PageHolder pageHolder, final ISerialiser serialiser /*, final EntityFactory entityFactory*/) {
         this.parentView = parentView;
         this.egi = egi;
 
@@ -149,15 +148,17 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
 
                                 try {
                                     final PrintWriter out0 = new PrintWriter("entities.js");
-                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(sdf, entityFactory, () -> new ArrayList<Class<?>>()) {
- 					private static final long serialVersionUID = 1L;
+                                    //                                    final TgJackson tgJackson = new TgJackson(sdf, entityFactory, () -> new ArrayList<Class<?>>()) {
+                                    //                                        private static final long serialVersionUID = 1L;
+                                    //
+                                    //                                        @Override
+                                    //                                        protected void registerAbstractEntitySerialiser() {
+                                    //                                            addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
+                                    //                                        }
+                                    //                                    };
+                                    //                                    final String entitiesString = tgJackson.writeValueAsString(((IPage<AbstractEntity<?>>) e.getNewPage()).data());
+                                    final String entitiesString = serialiser.serialise(((IPage<AbstractEntity<?>>) e.getNewPage()).data(), SerialiserEngines.JACKSON).toString();
 
-					@Override
-                                        protected void registerAbstractEntitySerialiser() {
-                                            addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
-                                        }
-                                    };
-                                    final String entitiesString = tgObjectMapper.writeValueAsString(((IPage<AbstractEntity<?>>) e.getNewPage()).data());
                                     logger.info("Saving entities to geo json file...");
                                     out0.println(entitiesString);
                                     logger.info("Saving entities to geo json file...done");
@@ -191,17 +192,18 @@ public abstract class GisViewPanel2<T extends AbstractEntity<?>> extends JFXPane
 
                                 try {
                                     final PrintWriter out0 = new PrintWriter("entityCentre.js");
-                                    final TgObjectMapper tgObjectMapper = new TgObjectMapper(entityFactory, () -> new ArrayList<Class<?>>()) {
-
-                                	private static final long serialVersionUID = 1L;
-
-					@Override
-                                        protected void registerAbstractEntitySerialiser() {
-                                            addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
-                                        }
-                                    };
+                                    //                                    final TgJackson tgJackson = new TgJackson(entityFactory, () -> new ArrayList<Class<?>>()) {
+                                    //
+                                    //                                        private static final long serialVersionUID = 1L;
+                                    //
+                                    //                                        @Override
+                                    //                                        protected void registerAbstractEntitySerialiser() {
+                                    //                                            addSerialiser(AbstractEntity.class, new AbstractEntityToGeoJsonSerialiser());
+                                    //                                        }
+                                    //                                    };
                                     final CentreDomainTreeManagerAndEnhancer entityCentre = (CentreDomainTreeManagerAndEnhancer) GisViewPanel2.this.parentView().getModel().getCdtme();
-                                    final String entityCentreString = tgObjectMapper.writeValueAsString(entityCentre);
+                                    //                                    final String entityCentreString = tgJackson.writeValueAsString(entityCentre);
+                                    final String entityCentreString = serialiser.serialise(entityCentre, SerialiserEngines.JACKSON).toString();
 
                                     logger.info("Saving entityCentre to geo json file...");
                                     out0.println(entityCentreString);

@@ -10,10 +10,11 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.serialisation.json.TgObjectMapper;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.base.Charsets;
 
 /**
  * Represents web server resource that retrievers the entity centre configuration and returns it to the client..
@@ -25,7 +26,7 @@ public class CentreResource extends ServerResource {
 
     private final EntityCentre centre;
     private final IGlobalDomainTreeManager gdtm;
-    private final TgObjectMapper jsonSeriliser;
+    private final ISerialiser serialiser;
 
     /**
      * Creates {@link CentreResource} and initialises it with {@link EntityCentre} instance.
@@ -37,29 +38,24 @@ public class CentreResource extends ServerResource {
      * @param gdtm
      */
     public CentreResource(//
-	    final EntityCentre centre,//
+    final EntityCentre centre,//
             final Context context, //
             final Request request, //
             final Response response, //
             final IGlobalDomainTreeManager gdtm,//
-            final TgObjectMapper jsonSeriliser) {
+            final ISerialiser serialiser) {
         init(context, request, response);
         this.centre = centre;
         this.gdtm = gdtm;
-        this.jsonSeriliser = jsonSeriliser;
+        this.serialiser = serialiser;
     }
 
     @Override
     protected Representation get() throws ResourceException {
-	try {
-	    gdtm.initEntityCentreManager(centre.getMenuItemType(), null);
-	    final ICentreDomainTreeManagerAndEnhancer cdtmae = gdtm.getEntityCentreManager(centre.getMenuItemType(), null);
+        gdtm.initEntityCentreManager(centre.getMenuItemType(), null);
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = gdtm.getEntityCentreManager(centre.getMenuItemType(), null);
 
-	    final String centreString =jsonSeriliser.writeValueAsString(cdtmae);
-	    return new JsonRepresentation(centreString);
-   	} catch(final JsonProcessingException jpe) {
-   	    jpe.printStackTrace();
-   	    throw new RuntimeException(jpe);
-	}
+        final String centreString = new String(serialiser.serialise(cdtmae, SerialiserEngines.JACKSON), Charsets.UTF_8);
+        return new JsonRepresentation(centreString);
     }
 }

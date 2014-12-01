@@ -240,8 +240,8 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
      * 
      */
     public static class LifecycleDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<LifecycleDomainTreeManager> {
-        public LifecycleDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public LifecycleDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -253,7 +253,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
             final Date from = readValue(buffer, Date.class);
             final Date to = readValue(buffer, Date.class);
             final Boolean total = readValue(buffer, Boolean.class);
-            return new LifecycleDomainTreeManager(kryo(), dtr, visible, firstTick, secondTick, from, to, total);
+            return new LifecycleDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, from, to, total);
         }
 
         @Override

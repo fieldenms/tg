@@ -13,15 +13,16 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.serialisers.TgSimpleSerializer;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 
 import com.esotericsoftware.kryo.Kryo;
 
 /**
  * Criteria (entity-centre) domain tree manager with "power" of managing domain with calculated properties. The calculated properties can be managed exactly as simple properties.<br>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManagerAndEnhancer implements ILocatorDomainTreeManagerAndEnhancer {
     public LocatorDomainTreeManagerAndEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
@@ -71,9 +72,9 @@ public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManager
 
     /**
      * Overridden to take into account calculated properties.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected class LocatorDomainTreeRepresentationAndEnhancer extends CentreDomainTreeRepresentationAndEnhancer implements ILocatorDomainTreeRepresentation {
         protected LocatorDomainTreeRepresentationAndEnhancer(final AbstractDomainTreeRepresentation base) {
@@ -83,13 +84,16 @@ public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManager
 
     /**
      * A specific Kryo serialiser for {@link LocatorDomainTreeManagerAndEnhancer}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser extends TgSimpleSerializer<LocatorDomainTreeManagerAndEnhancer> {
-        public LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(final ISerialiser kryo) {
-            super((Kryo) kryo);
+        private final ISerialiser serialiser;
+
+        public LocatorDomainTreeManagerAndEnhancerWithTransientAnalysesSerialiser(final ISerialiser serialiser) {
+            super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
+            this.serialiser = serialiser;
         }
 
         @Override
@@ -99,7 +103,7 @@ public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManager
             final Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses = readValue(buffer, HashMap.class);
             final Map<String, IAbstractAnalysisDomainTreeManager> currentAnalyses = readValue(buffer, HashMap.class);
             final Map<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses = readValue(buffer, HashMap.class);
-            return new LocatorDomainTreeManagerAndEnhancer((ISerialiser) kryo, base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
+            return new LocatorDomainTreeManagerAndEnhancer(serialiser(), base, enhancer, persistentAnalyses, currentAnalyses, freezedAnalyses);
         }
 
         @Override
@@ -109,6 +113,10 @@ public class LocatorDomainTreeManagerAndEnhancer extends CentreDomainTreeManager
             writeValue(buffer, manager.persistentAnalyses());
             writeValue(buffer, manager.currentAnalyses());
             writeValue(buffer, manager.freezedAnalyses());
+        }
+
+        public ISerialiser serialiser() {
+            return serialiser;
         }
     }
 }

@@ -4,23 +4,43 @@ import java.io.InputStream;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 
 public class StubSerialiser implements ISerialiser {
 
     @Override
-    public byte[] serialise(Object obj) {
+    public <T> T deserialise(final byte[] content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public <T> T deserialise(byte[] content, Class<T> type) throws Exception {
+    public <T> T deserialise(final InputStream content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public <T> T deserialise(InputStream content, Class<T> type) throws Exception {
+    public byte[] serialise(final Object obj, final SerialiserEngines serialiserEngine) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public byte[] serialise(final Object obj) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public <T> T deserialise(final byte[] content, final Class<T> type) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
         // TODO Auto-generated method stub
         return null;
     }
@@ -31,4 +51,9 @@ public class StubSerialiser implements ISerialiser {
         return null;
     }
 
+    @Override
+    public ISerialiserEngine getEngine(final SerialiserEngines serialiserEngine) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

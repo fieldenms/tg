@@ -25,14 +25,15 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * WARNING: this is an OLD version!
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @Deprecated
 public class LocatorManager0 extends AbstractDomainTree implements ILocatorManager {
@@ -50,7 +51,7 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
 
     /**
      * Returns a current locators for locator manager. It is lazily loaded by the very first invocation from "persistentLocators" by copying them.
-     * 
+     *
      * @return
      */
     private EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> currentLocators() {
@@ -92,16 +93,16 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
     /**
      * A locator <i>manager</i> constructor (save, int, discard locators, etc.) for the first time instantiation.
      */
-    public LocatorManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+    public LocatorManager0(final ISerialiser0 serialiser, final Set<Class<?>> rootTypes) {
         this(serialiser, rootTypes, AbstractDomainTree.<LocatorDomainTreeManagerAndEnhancer0> createPropertiesMap());
     }
 
     /**
      * A locator <i>manager</i> constructor (save, int, discard locators, etc.).
-     * 
+     *
      * @param serialiser
      */
-    protected LocatorManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Pair<Class<?>, String>, LocatorDomainTreeManagerAndEnhancer0> persistentLocators) {
+    protected LocatorManager0(final ISerialiser0 serialiser, final Set<Class<?>> rootTypes, final Map<Pair<Class<?>, String>, LocatorDomainTreeManagerAndEnhancer0> persistentLocators) {
         super(serialiser);
 
         // this instance should be initialised using Reflection when GlobalDomainTreeManager creates/deserialises the instance of LocatorManager
@@ -129,7 +130,7 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
 
     /**
      * Logs and throws an {@link IllegalArgumentException} error with specified message.
-     * 
+     *
      * @param message
      */
     private void error(final String message) {
@@ -139,7 +140,7 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
 
     /**
      * Logs and throws an {@link RuntimeException} error with specified message to indicate inner implementation errors.
-     * 
+     *
      * @param message
      */
     private void implementationError(final String message) {
@@ -165,7 +166,7 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
 
     private Phase phase(final Class<?> root, final String property) {
         return freezedLocators.get(key(root, property)) != null ? FREEZED_EDITING_PHASE //
-                : locatorsInEditingMode.contains(key(root, property)) ? EDITING_PHASE : USAGE_PHASE;
+        : locatorsInEditingMode.contains(key(root, property)) ? EDITING_PHASE : USAGE_PHASE;
     }
 
     private Type type(final Class<?> root, final String property) {
@@ -349,7 +350,7 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
 
     /**
      * Unfreezes the locator instance that is currently freezed.
-     * 
+     *
      * @param root
      * @param property
      */
@@ -359,21 +360,21 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
 
     /**
      * WARNING: this is an OLD version!
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     @Deprecated
     public static class LocatorManager0Serialiser extends AbstractDomainTreeSerialiser<LocatorManager0> {
         /**
          * WARNING: this is an OLD version!
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         @Deprecated
-        public LocatorManager0Serialiser(final ISerialiser kryo) {
-            super(kryo);
+        public LocatorManager0Serialiser(final ISerialiser0 serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -385,13 +386,18 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
             //		EntityUtils.deepCopy(loc, kryo());
             //	    }
 
-            return new LocatorManager0(kryo(), rootTypes, persistentLocators);
+            return new LocatorManager0(serialiser(), rootTypes, persistentLocators);
         }
 
         @Override
         public void write(final ByteBuffer buffer, final LocatorManager0 manager) {
             writeValue(buffer, manager.rootTypes);
             writeValue(buffer, manager.persistentLocators);
+        }
+
+        @Override
+        protected ISerialiser0 serialiser() {
+            return (ISerialiser0) super.serialiser();
         }
     }
 
@@ -411,23 +417,30 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final LocatorManager0 other = (LocatorManager0) obj;
         if (persistentLocators == null) {
-            if (other.persistentLocators != null)
+            if (other.persistentLocators != null) {
                 return false;
-        } else if (!persistentLocators.equals(other.persistentLocators))
+            }
+        } else if (!persistentLocators.equals(other.persistentLocators)) {
             return false;
+        }
         if (rootTypes == null) {
-            if (other.rootTypes != null)
+            if (other.rootTypes != null) {
                 return false;
-        } else if (!rootTypes.equals(other.rootTypes))
+            }
+        } else if (!rootTypes.equals(other.rootTypes)) {
             return false;
+        }
         return true;
     }
 

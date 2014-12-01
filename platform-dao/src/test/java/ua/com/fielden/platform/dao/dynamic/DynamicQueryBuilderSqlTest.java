@@ -26,7 +26,6 @@ import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedProperty
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
-import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -41,6 +40,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -70,7 +70,7 @@ public class DynamicQueryBuilderSqlTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
     private final String alias;
@@ -121,48 +121,48 @@ public class DynamicQueryBuilderSqlTest {
         hibConf.addXML(new HibernateMappingsGenerator().generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2)));
         final List<String> propertyNames = Arrays.asList(new String[] { //
         "integerProp", //
-                "doubleProp", //
-                "bigDecimalProp", //
-                "moneyProp", //
-                "dateProp", //
-                "booleanProp", //
-                "stringProp", //
-                "entityProp", //
-                "entityProp.masterEntityProp", //
-                "entityProp.integerProp", //
-                "entityProp.doubleProp", //
-                "entityProp.bigDecimalProp", //
-                "entityProp.moneyProp", //
-                "entityProp.dateProp", //
-                "entityProp.booleanProp", //
-                "entityProp.stringProp", //
-                "collection.masterEntityProp", //
-                "collection.integerProp", //
-                "collection.doubleProp", //
-                "collection.bigDecimalProp", //
-                "collection.dateProp", //
-                "collection.stringProp", //
-                "collection.booleanProp", //
-                "collection.anyOfMasterEntityProp", //
-                "collection.anyOfBigDecimalProp", //
-                "collection.anyOfDateProp", //
-                "collection.anyOfIntegerProp", //
-                "collection.anyOfMoneyProp", //
-                "collection.allOfMasterEntityProp", //
-                "collection.allOfBigDecimalProp", //
-                "collection.allOfDateProp", //
-                "entityProp.collection.slaveEntityProp", //
-                "entityProp.collection.integerProp", //
-                "entityProp.collection.doubleProp", //
-                "entityProp.collection.bigDecimalProp", //
-                "entityProp.collection.dateProp", //
-                "entityProp.collection.stringProp", //
-                "entityProp.collection.booleanProp", //
-                "entityProp.collection.allOfSlaveEntityProp", //
-                "entityProp.collection.allOfBigDecimalProp", //
-                "entityProp.collection.allOfDateProp", //
-                "entityProp.collection.anyOfIntegerProp", //
-                "entityProp.collection.anyOfMoneyProp" //
+        "doubleProp", //
+        "bigDecimalProp", //
+        "moneyProp", //
+        "dateProp", //
+        "booleanProp", //
+        "stringProp", //
+        "entityProp", //
+        "entityProp.masterEntityProp", //
+        "entityProp.integerProp", //
+        "entityProp.doubleProp", //
+        "entityProp.bigDecimalProp", //
+        "entityProp.moneyProp", //
+        "entityProp.dateProp", //
+        "entityProp.booleanProp", //
+        "entityProp.stringProp", //
+        "collection.masterEntityProp", //
+        "collection.integerProp", //
+        "collection.doubleProp", //
+        "collection.bigDecimalProp", //
+        "collection.dateProp", //
+        "collection.stringProp", //
+        "collection.booleanProp", //
+        "collection.anyOfMasterEntityProp", //
+        "collection.anyOfBigDecimalProp", //
+        "collection.anyOfDateProp", //
+        "collection.anyOfIntegerProp", //
+        "collection.anyOfMoneyProp", //
+        "collection.allOfMasterEntityProp", //
+        "collection.allOfBigDecimalProp", //
+        "collection.allOfDateProp", //
+        "entityProp.collection.slaveEntityProp", //
+        "entityProp.collection.integerProp", //
+        "entityProp.collection.doubleProp", //
+        "entityProp.collection.bigDecimalProp", //
+        "entityProp.collection.dateProp", //
+        "entityProp.collection.stringProp", //
+        "entityProp.collection.booleanProp", //
+        "entityProp.collection.allOfSlaveEntityProp", //
+        "entityProp.collection.allOfBigDecimalProp", //
+        "entityProp.collection.allOfDateProp", //
+        "entityProp.collection.anyOfIntegerProp", //
+        "entityProp.collection.anyOfMoneyProp" //
 
         });
         for (final String propertyName : propertyNames) {
@@ -1184,13 +1184,13 @@ public class DynamicQueryBuilderSqlTest {
     public void test_union_entity_query_composition() {
         final List<String> propertyNames = Arrays.asList(new String[] { //
         "", //
-                "desc", //
-                "location", //
-                "location.workshop", //
-                "location.workshop.desc", //
-                "location.wagonSlot", //
-                "location.wagonSlot.wagon", //
-                "location.wagonSlot.position", //
+        "desc", //
+        "location", //
+        "location.workshop", //
+        "location.workshop.desc", //
+        "location.wagonSlot", //
+        "location.wagonSlot.wagon", //
+        "location.wagonSlot.position", //
 
         });
         final Map<String, QueryProperty> unionProps = new LinkedHashMap<>();

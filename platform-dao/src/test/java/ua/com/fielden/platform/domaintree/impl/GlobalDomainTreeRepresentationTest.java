@@ -17,8 +17,6 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAn
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryo0ForDomainTreesTestingPurposes;
-import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.IUserController;
@@ -27,6 +25,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser0ForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -37,14 +37,14 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTestCase {
     private final EntityFactory entityFactory = getInstance(EntityFactory.class);
-    private final ISerialiser0 serialiser0 = new TgKryo0ForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
-    private final ISerialiser serialiser = new TgKryoForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
+    private final ISerialiser0 serialiser0 = new Serialiser0ForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
+    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
     private final IUserDao userDao = getInstance(IUserDao.class);
 
     protected GlobalDomainTreeManager createManagerForNonBaseUser2() {

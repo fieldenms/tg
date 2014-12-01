@@ -158,8 +158,8 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
      * 
      */
     public static class LifecycleDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<LifecycleDomainTreeRepresentation> {
-        public LifecycleDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public LifecycleDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -168,7 +168,7 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
             final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
             final LifecycleAddToDistributionTickRepresentation firstTick = readValue(buffer, LifecycleAddToDistributionTickRepresentation.class);
             final LifecycleAddToCategoriesTickRepresentation secondTick = readValue(buffer, LifecycleAddToCategoriesTickRepresentation.class);
-            return new LifecycleDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+            return new LifecycleDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

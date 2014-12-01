@@ -144,8 +144,8 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
      * 
      */
     public static class SentinelDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<SentinelDomainTreeManager> {
-        public SentinelDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public SentinelDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -155,7 +155,7 @@ public class SentinelDomainTreeManager extends AnalysisDomainTreeManager impleme
             final SentinelAddToAggregationTickManager secondTick = readValue(buffer, SentinelAddToAggregationTickManager.class);
             final Boolean visible = readValue(buffer, Boolean.class);
             final Integer visibleDistributedValuesNumber = readValue(buffer, Integer.class);
-            return new SentinelDomainTreeManager(kryo(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
+            return new SentinelDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
         }
 
         @Override

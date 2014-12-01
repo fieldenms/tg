@@ -24,7 +24,6 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPrope
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryo0ForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -32,13 +31,14 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser0ForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * WARNING: this is an OLD version!
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @Deprecated
 public class DomainTreeEnhancer0Test extends AbstractDomainTreeTest {
@@ -51,7 +51,7 @@ public class DomainTreeEnhancer0Test extends AbstractDomainTreeTest {
     }
 
     protected static ISerialiser createSerialiser_for_DomainTreeEnhancer0Test(final EntityFactory factory) {
-        return new TgKryo0ForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+        return new Serialiser0ForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
     }
 
     @BeforeClass
@@ -160,7 +160,7 @@ public class DomainTreeEnhancer0Test extends AbstractDomainTreeTest {
 
     /**
      * Ensures that specified property field exists with specified "calculated" parameters and that no field with specified "atomic" name exists on the hierarchy.
-     * 
+     *
      * @param type
      * @param prop
      * @param category
@@ -198,7 +198,7 @@ public class DomainTreeEnhancer0Test extends AbstractDomainTreeTest {
 
     /**
      * Ensures that the specified property field does not exist.
-     * 
+     *
      * @param type
      * @param prop
      */

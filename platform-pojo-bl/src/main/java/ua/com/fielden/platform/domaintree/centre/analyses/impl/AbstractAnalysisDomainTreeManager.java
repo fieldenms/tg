@@ -679,8 +679,8 @@ public abstract class AbstractAnalysisDomainTreeManager extends AbstractDomainTr
      * 
      */
     protected abstract static class AbstractAnalysisDomainTreeManagerSerialiser<T extends AbstractAnalysisDomainTreeManager> extends AbstractDomainTreeManagerSerialiser<T> {
-        public AbstractAnalysisDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public AbstractAnalysisDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override

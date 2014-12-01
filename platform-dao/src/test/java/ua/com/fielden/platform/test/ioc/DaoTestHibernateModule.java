@@ -42,11 +42,11 @@ import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.provider.UserController;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
-import ua.com.fielden.platform.serialisation.impl.TgKryo0;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
@@ -147,7 +147,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
                 return new ArrayList<>();
             }
         });
-        bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
-        bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
+        bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
+        bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON);
     }
 }
