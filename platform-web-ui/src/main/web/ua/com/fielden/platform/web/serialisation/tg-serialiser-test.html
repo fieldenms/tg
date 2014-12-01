@@ -26,7 +26,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <script>
         document.addEventListener('polymer-ready', function () {
             var inst1 = {
-                    _id: 1,
+                    id: 1,
                     _type: 12,
                     key: "entity key",
                     "@key": {
@@ -39,7 +39,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         readonly: false
                     },
                     detail: {
-                        _id: 2,
+                        id: 2,
                         _type: 13,
                         "@key": {
                             dirty: false,
@@ -52,7 +52,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     }
                 },
                 inst2 = {
-                    _id: 3,
+                    id: 3,
                     _type: 12,
                     key: "entity key1",
                     "@key": {
@@ -65,7 +65,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         readonly: false
                     },
                     detail: {
-                        _id: 4,
+                        id: 4,
                         _type: 13,
                         "@key": {
                             dirty: false,
@@ -81,12 +81,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     cause: "Testing purposes",
                     ex: "No exception",
                     instance: {
-                        _id: null,
+                        id: null,
                         _type: 11,
                         key: "QueryRunner",
                         desc: "QueryRunner description",
                         page: {
-                            _id: null,
+                            id: null,
                             _type: 10,
                             key: "Page",
                             desc: "Page description",
@@ -97,7 +97,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                 inst2
                             ],
                             summary: {
-                                _id: null,
+                                id: null,
                                 _type: 12,
                                 total: 2
 
