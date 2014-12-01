@@ -1,0 +1,76 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-icon/core-icon.html">s
+<link rel="import" href="/resources/polymer/core-dropdown/core-dropdown.html">
+<link rel="import" href="/resources/polymer/core-input/core-input.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
+
+<polymer-element name="datetime-picker" attributes="entity propertyName label">
+    <template>
+        <style>
+            #decorator:not([focused]):not(:hover) core-icon[aria-label="today"] {
+                visibility: hidden;
+            }
+            #input-container {
+                display:inline-block;
+                width:100%;
+            }
+            #input-container > input[is="core-input"] {
+                width:100%;
+            }
+            #icon {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                background-color: white;
+            }
+        </style>
+        <paper-input-decorator id="decorator" label="{{label}}" floatingLabel>
+            <div>
+                <div id="input-container">
+                    <input is="core-input" committedValue="{{entity[propertyName]}}">
+                </div>
+                <div id="icon">
+                    <core-icon on-click="{{showCalendar}}" icon="icons:{{calendarVisible ? 'check' : 'today'}}"></core-icon>
+                </div>
+            </div>
+        </paper-input-decorator>
+
+
+        <!--
+        <div id="icon" style="position:absolute; bottom:0; right:0; background-color:white">
+        </div>
+        <shadow></shadow>
+-->
+        <core-dropdown id="picker" opened="{{calendarVisible}}" relatedTarget="{{$.decorator}}" layered>
+            TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>TEST
+            <br>
+        </core-dropdown>
+    </template>
+    <script>
+        Polymer({
+            ready: function () {
+                this.$.decorator.labelVisible = false;
+            },
+            showCalendar: function (e) {
+                this.calendarVisible = !this.calendarVisible;
+            }
+        });
+    </script>
+</polymer-element>

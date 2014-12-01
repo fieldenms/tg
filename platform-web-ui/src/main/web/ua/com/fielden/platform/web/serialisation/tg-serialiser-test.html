@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+    <title>tg-seriliser</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+    <script src="/resources/polymer/polymer-test-tools/htmltest.js"></script>
+
+    <link rel="import" href="/resources/serialisation/tg-serialiser.html">
+</head>
+
+<body unresolved>
+
+    <tg-serialiser id="seriliser"></tg-serialiser>
+
+    <script>
+        document.addEventListener('polymer-ready', function () {
+            var inst1 = {
+                    _id: 1,
+                    _type: 12,
+                    key: "entity key",
+                    "@key": {
+                        dirty: false,
+                        readonly: true
+                    },
+                    desc: "entity description",
+                    "@desc": {
+                        dirty: false,
+                        readonly: false
+                    },
+                    detail: {
+                        _id: 2,
+                        _type: 13,
+                        "@key": {
+                            dirty: false,
+                            readonly: true
+                        }
+                    },
+                    "@detail": {
+                        dirty: false,
+                        readonly: false
+                    }
+                },
+                inst2 = {
+                    _id: 3,
+                    _type: 12,
+                    key: "entity key1",
+                    "@key": {
+                        dirty: false,
+                        readonly: true
+                    },
+                    desc: "entity description1",
+                    "@desc": {
+                        dirty: false,
+                        readonly: false
+                    },
+                    detail: {
+                        _id: 4,
+                        _type: 13,
+                        "@key": {
+                            dirty: false,
+                            readonly: true
+                        }
+                    },
+                    "@detail": {
+                        dirty: false,
+                        readonly: false
+                    }
+                },
+                objToSerialise = {
+                    cause: "Testing purposes",
+                    ex: "No exception",
+                    instance: {
+                        _id: null,
+                        _type: 11,
+                        key: "QueryRunner",
+                        desc: "QueryRunner description",
+                        page: {
+                            _id: null,
+                            _type: 10,
+                            key: "Page",
+                            desc: "Page description",
+                            numberOfPages: 1,
+                            pageNo: 0,
+                            results: [
+                                inst1,
+                                inst2
+                            ],
+                            summary: {
+                                _id: null,
+                                _type: 12,
+                                total: 2
+
+                            }
+                        },
+                        pageCapacity: 25,
+                        query: null
+                    }
+                },
+                serialiser = document.querySelector('#seriliser'),
+                restoredObj = null;
+            inst1.detail.key = inst1;
+            inst2.detail.key = inst2;
+            restoredObj = serialiser.deserialise(serialiser.serialise(objToSerialise));
+            assert.deepEqual(restoredObj, objToSerialise, "object after serialisation-deserialisation process is not equal to ");
+            done();
+        });
+    </script>
+
+</body>
+
+</html>

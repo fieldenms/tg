@@ -65,7 +65,11 @@ public class FileResource extends ServerResource {
      * @param filePath - the relative file path for which full file path must be generated.
      * @return
      */
-    private String generateFileName(final String filePath) {
+    private String generateFileName(final String path) {
+	// this is a preventive stuff: if the server receives additional link parameters -- JUST IGNORE THEM. Was used to run
+	// appropriately Mocha / Chai tests for Polymer web components. See http://localhost:8091/resources/polymer/runner.html for results.
+	final String filePath = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
+
 	for (int pathIndex =0;pathIndex < resourcePaths.size(); pathIndex++) {
 	    if (ResourceLoader.exist(resourcePaths.get(pathIndex) + filePath)) {
 		return resourcePaths.get(pathIndex) + filePath;
