@@ -1,0 +1,19 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-input/core-input.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
+
+<polymer-element name="tg-spinner" attributes="label entity propertyName">
+    <template>
+
+        <paper-input-decorator id="decorator" label="{{label}}" floatingLabel>
+            <input is="core-input" type="number" committedValue="{{entity[propertyName]}}" preventInvalidInput>
+        </paper-input-decorator>
+    </template>
+    <script>
+        Polymer({
+            ready: function() {
+                this.$.decorator.labelVisible = false;
+            }
+        });
+    </script>
+</polymer-element>

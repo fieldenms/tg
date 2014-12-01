@@ -1,0 +1,38 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/editors/tg-textfield.html">
+<link rel="import" href="/resources/editors/datetime-picker.html">
+<link rel="import" href="/resources/editors/tg-spinner.html">
+
+<polymer-element name="property-editor" attributes="config bindTo propertyName grow">
+    <template>
+        <template if="{{ bindTo.propType === 'Entity' }}">
+            <tg-textfield label="{{config.title}}" entity={{bindTo}} propertyName="{{propertyName}}" style="{{styles | styleObject}}"></tg-textfield>
+        </template>
+        <template if="{{ bindTo.propType === 'String' }}">
+            <tg-textfield label="{{config.title}}" entity={{bindTo}} propertyName="{{propertyName}}" style="{{styles | styleObject}}"></tg-textfield>
+        </template>
+        <template if="{{ bindTo.propType === 'Integer' }}">
+            <tg-spinner label="{{config.title}}" entity={{bindTo}} propertyName="{{propertyName}}" style="{{styles | styleObject}}"></tg-spinner>
+        </template>
+        <template if = "{{ bindTo.propType === 'Date' }}">
+            <datetime-picker label="{{config.title}}" entity="{{bindTo}}" propertyName = "{{propertyName}}" style="{{styles | styleObject}}"></datetime-picker>
+        </template>
+        <!--<template if = "{{ bindto.propType === 'Boolean' }}">
+            <paper-input label="{{config.title}}" inputValue = "{{bindto.value1}}"></paper-input>
+        </template>
+        <template if = "{{ bindto.propType === 'BigDecimal' ||  bindto.propType === 'Double' || bindto.propType === 'Money'}}">
+            <paper-input label="{{config.title}}" inputValue = "{{bindto.value1}}"></paper-input>
+        </template>-->
+
+    </template>
+    <script>
+        Polymer({
+            attached: function () {
+                this.styles = {};
+                if (this.grow) {
+                    this.styles.width = '100%';
+                }
+            },
+        });
+    </script>
+</polymer-element>

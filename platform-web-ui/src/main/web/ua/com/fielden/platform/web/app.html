@@ -5,12 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@appName</title>
-    <script src="/resources/polymer/platform/platform.js"></script>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
     <link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
     <link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-from-right.html">
     <link rel="import" href="/resources/polymer/core-toolbar/core-toolbar.html">
     <link rel="import" href="/resources/polymer/core-scaffold/core-scaffold.html">
     <link rel="import" href="/resources/polymer/core-menu/core-menu.html">
+    <link rel="import" href="/resources/polymer/core-icon/core-icon.html">
     <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
     <link rel="import" href="/resources/polymer/flatiron-director/flatiron-director.html">
     <link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
@@ -34,6 +35,10 @@
             font-size: 16px;
             background-color: white;
         }
+         body   core-toolbar {
+            background-color: #03a9f4;
+            color: #fff;
+        }
         body /deep/ core-toolbar {
             background-color: #03a9f4;
             color: #fff;
@@ -45,6 +50,11 @@
         core-menu > paper-item {
             transition: all 300ms ease-in-out;
         }
+        paper-item a {
+            text-decoration: none;
+            color: currentcolor;
+            margin-left: 5px;
+        }
         core-menu > paper-item.core-selected {
             background: #e1f5fe;
         }
@@ -52,6 +62,7 @@
             core-animated-pages {
                 width: 100%;
                 height: 100%;
+                border-radius: 0px;
             }
             .paper-shadow {
                 display: none;
@@ -72,27 +83,26 @@
             <nav>
                 <core-toolbar><span>@appName</span>
                 </core-toolbar>
-                <core-menu selected="{{route}}" valueattr="hash" on-core-select="{{menuItemSelected}}">
+                <core-menu selected="{{route}}" valueattr="hash" selectedmodel="{{selectedPage}}" on-core-select="{{menuItemSelected}}">
                     <template repeat="{{page in pages}}">
-                        <paper-item icon="label{{route != page.hash ? '-outline' : ''}}" label="{{page.name}}" hash="{{page.hash}}">
-                            <a href="#{{page.hash}}"></a>
+                        <paper-item noink hash="{{page.hash}}">
+                            <core-icon icon="label{{route != page.hash ? '-outline' : ''}}"></core-icon>
+                            <a href="#{{page.hash}}">{{page.name}}</a>
                         </paper-item>
                     </template>
                 </core-menu>
             </nav>
 
             <core-toolbar tool flex>
-                <div flex>View description</div>
+                <div flex>{{selectedPage.page.name}}</div>
             </core-toolbar>
 
             <div layout horizontal center-center center-justified fit>
                 <core-animated-pages id="pages" selected="{{route}}" valueattr="hash" on-core-animated-pages-transition-end="{{pageSelected}}" transitions="slide-from-right">
                     <template repeat="{{page in pages}}">
-                        <div hash="{{page.hash}}">
-                            <paper-shadow z="2"></paper-shadow>
-                            <load-element import="{{page.url}}" attrs="{{page.attributes}}" 
-                                          on-after-load="{{afterElementLoad}}" auto?="{{!page.lazyLoad}}">Loading {{page.name}}...</load-element>
-                        </div>
+                        <paper-shadow z="2" hash="{{page.hash}}" fit>
+                                <load-element import="{{page.url}}" attrs="{{page.attributes}}" on-after-load="{{afterElementLoad}}" auto?="{{!page.lazyLoad}}">Loading {{page.name}}...</load-element>
+                        </paper-shadow>
                     </template>
                 </core-animated-pages>
             </div>
@@ -103,17 +113,17 @@
     <script>
         (function () {
 
-    var template = document.querySelector('#app_template'),
-        DEFAULT_ROUTE = @defaultView,
-        scaffold,
-        pages;
+            var template = document.querySelector('#app_template'),
+                DEFAULT_ROUTE = @defaultView,
+                scaffold,
+                pages;
 
-    template.pages = @pages;
+            template.pages = @pages;
 
-    template.addEventListener('template-bound', function (e) {
-        scaffold = document.querySelector('#scaffold');
-        pages = document.querySelector('#pages');
-        /*var keys = document.querySelector('#keys');
+            template.addEventListener('template-bound', function (e) {
+                scaffold = document.querySelector('#scaffold');
+                pages = document.querySelector('#pages');
+                /*var keys = document.querySelector('#keys');
 
             // Allow selecting pages by num keypad. Dynamically add
             // [1, template.pages.length] to key mappings.
@@ -124,23 +134,23 @@
             });
             keys.keys += ' ' + keysToAdd;*/
 
-        this.route = this.route || DEFAULT_ROUTE; // Select initial route.
-    });
+                this.route = this.route || DEFAULT_ROUTE; // Select initial route.
+            });
 
-    template.menuItemSelected = function (e, detail, sender) {
-        if (detail.isSelected) {
-            //scaffold = document.querySelector('#scaffold');
-            scaffold.closeDrawer();
-        }
-    };
+            template.menuItemSelected = function (e, detail, sender) {
+                if (detail.isSelected) {
+                    //scaffold = document.querySelector('#scaffold');
+                    scaffold.closeDrawer();
+                }
+            };
 
-    template.pageSelected = function (e, detail, sender) {
-        var elementToLoad = pages.selectedItem.querySelector('load-element');
-        if (!elementToLoad.wasLoaded) {
-            pages.selectedItem.querySelector('load-element').load();
-        }
-    };
-})();
+            template.pageSelected = function (e, detail, sender) {
+                var elementToLoad = pages.selectedItem.querySelector('load-element');
+                if (!elementToLoad.wasLoaded) {
+                    pages.selectedItem.querySelector('load-element').load();
+                }
+            };
+        })();
     </script>
 </body>
 

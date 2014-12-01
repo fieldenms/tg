@@ -1,19 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/core-media-query/core-media-query.html">
 
-<polymer-element name="tile-layout" attributes="whenDesktop whenTablet whenMobile">
+<polymer-element name="tile-layout" attributes="whenDesktop whenTablet whenMobile minCellHeight minCellWidth">
     <template>
         <style>
-            :host {
-                display: block;
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                right: 0;
-                left: 0;
-            }
-            ::content > .tile {
-                float: left;
+            ::content .tile {
                 position: absolute;
             }
         </style>
@@ -39,11 +30,33 @@
                             componentIndex += 1;
                         });
                     });
-                    this.$.items.getDistributedNodes().array().forEach(function (item, itemIndex) {
+                    this.rows = rows;
+                    this.cols = cols;
+                    Array.prototype.forEach.call(this.$.items.getDistributedNodes(), function (item, itemIndex) {
                         item.style.top = 100 * layout[itemIndex].y / rows + "%";
                         item.style.left = 100 * layout[itemIndex].x / cols + "%";
                         item.style.width = 100 * layout[itemIndex].width / cols + "%";
                         item.style.height = 100 * layout[itemIndex].height / rows + "%";
+                        item.rows = layout[itemIndex].height;
+                        item.cols = layout[itemIndex].width;
+                    });
+                    setMinDimensions.bind(this)();
+                },
+                setMinDimensions = function () {
+                    var self = this;
+                    if (self.minCellHeight) {
+                        self.style.minHeight = "calc(" + self.minCellHeight + " * " + self.rows + ")";
+                    }
+                    if (self.minCellWidth) {
+                        self.style.minWidth = "calc(" + self.minCellWidth + " * " + self.cols + ")";
+                    }
+                    Array.prototype.forEach.call(this.$.items.getDistributedNodes(), function (item, itemIndex) {
+                        if (self.minCellHeight) {
+                            item.style.minHeight = "calc(" + self.minCellHeight + " * " + item.rows + ")";
+                        }
+                        if (self.minCellWidth) {
+                            item.style.minWidth = "calc(" + self.minCellWidth + " * " + item.cols + ")";
+                        }
                     });
                 },
                 // Returns the component's bounding box in index units; Component for which bounding box must be calculated is specified with componentIndex.
@@ -215,14 +228,35 @@
                     }
                 },
                 handleTabletScreen: function (e) {
-                   if (e.detail.matches && this.whenTablet) {
-                       setLayout.bind(this)(this.whenTablet);
-                   }
+                    if (e.detail.matches && this.whenTablet) {
+                        setLayout.bind(this)(this.whenTablet);
+                    }
                 },
                 handleDesktopScreen: function (e) {
                     if (e.detail.matches && this.whenDesktop) {
                         setLayout.bind(this)(this.whenDesktop);
                     }
+                },
+                whenMobileChanged: function (oldValue, newValue) {
+                    if (this.mobileScreen && this.whenMobile) {
+                        setLayout.bind(this)(this.whenMobile);
+                    }
+                },
+                whenTabletChanged: function (oldValue, newValue) {
+                    if (this.tabletScreen && this.whenTablet) {
+                        setLayout.bind(this)(this.whenTablet);
+                    }
+                },
+                whenDesktopChanged: function (oldValue, newValue) {
+                    if (this.desktopScreen && this.whenDesktop) {
+                        setLayout.bind(this)(this.whenDesktop);
+                    }
+                },
+                minCellHeightChanged: function (oldValue, newValue) {
+                    setMinDimensions.bind(this)();
+                },
+                minCellWidthChanged: function (oldValue, newValue) {
+                    setMinDimensions.bind(this)();
                 }
             });
         })()

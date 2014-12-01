@@ -1,0 +1,20 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-input/core-input.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
+
+<polymer-element name="tg-textfield" attributes="label entity propertyName">
+    <template>
+
+        <paper-input-decorator id="decorator" label="{{label}}" floatingLabel>
+            <input is="core-input" committedValue="{{entity[propertyName]}}">
+        </paper-input-decorator>
+
+    </template>
+    <script>
+        Polymer({
+            ready: function() {
+                this.$.decorator.labelVisible = false;
+            }
+        });
+    </script>
+</polymer-element>
