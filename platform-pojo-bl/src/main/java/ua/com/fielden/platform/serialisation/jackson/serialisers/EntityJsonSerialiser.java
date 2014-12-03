@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 
@@ -21,11 +22,13 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
+    private final EntityTypeInfo entityTypeInfo;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfo entityTypeInfo) {
         super(type);
         this.type = type;
         this.properties = properties;
+        this.entityTypeInfo = entityTypeInfo;
     }
 
     @Override
@@ -54,7 +57,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references);
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, typeNumber());
             references.putReference(entity, newReference);
 
             generator.writeStartObject();
@@ -123,4 +126,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
         }
     }
 
+    private Long typeNumber() {
+        return entityTypeInfo.getNumber();
+    }
 }

@@ -12,11 +12,6 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.functional.centre.CritProp;
-import ua.com.fielden.platform.entity.functional.centre.FetchProp;
-import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
-import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
-import ua.com.fielden.platform.entity.functional.paginator.Page;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -26,6 +21,8 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
@@ -59,14 +56,18 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
     private final TgJacksonModule module;
     private final EntityFactory factory;
+    private final EntityTypeInfoGetter entityTypeInfoGetter;
 
     public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
         super();
         this.module = new TgJacksonModule();
         this.factory = entityFactory;
+        entityTypeInfoGetter = new EntityTypeInfoGetter();
 
         // enable(SerializationFeature.INDENT_OUTPUT);
         // enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+
+        registerEntityTypes(provider, this.module);
 
         this.module.addSerializer(Money.class, new MoneyJsonSerialiser());
         this.module.addDeserializer(Money.class, new MoneyJsonDeserialiser());
@@ -76,13 +77,11 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addSerializer(Warning.class, new ResultJsonSerialiser());
         this.module.addDeserializer(Warning.class, new ResultJsonDeserialiser<Warning>(this));
 
-        this.module.addDeserializer(ArrayList.class, new ArrayListJsonDeserialiser(this));
-        this.module.addDeserializer((Class<List>) ClassesRetriever.findClass("java.util.Arrays$ArrayList"), new ArraysArrayListJsonDeserialiser(this));
+        this.module.addDeserializer(ArrayList.class, new ArrayListJsonDeserialiser(this, entityTypeInfoGetter));
+        this.module.addDeserializer((Class<List>) ClassesRetriever.findClass("java.util.Arrays$ArrayList"), new ArraysArrayListJsonDeserialiser(this, entityTypeInfoGetter));
 
         this.module.addSerializer(ICentreDomainTreeManagerAndEnhancer.class, new CentreManagerSerialiser(entityFactory));
         this.module.addSerializer(IPage.class, new PageSerialiser());
-
-        registerEntityTypes(provider, this.module);
 
         registerModule(module);
     }
@@ -91,17 +90,10 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * Register all serialisers / deserialisers for entity types present in TG app.
      */
     protected void registerEntityTypes(final ISerialisationClassProvider provider, final TgJacksonModule module) {
-        // registerAbstractEntitySerialiser();
-
-        new EntitySerialiser<QueryRunner>(QueryRunner.class, this.module, this, this.factory);
-        new EntitySerialiser<Page>(Page.class, this.module, this, this.factory);
-        new EntitySerialiser<CritProp>(CritProp.class, this.module, this, this.factory);
-        new EntitySerialiser<FetchProp>(FetchProp.class, this.module, this, this.factory);
-        new EntitySerialiser<QueryEntity>(QueryEntity.class, this.module, this, this.factory);
-
         for (final Class<?> type : provider.classes()) {
             if (AbstractEntity.class.isAssignableFrom(type)) {
-                new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, this.module, this, this.factory);
+                final EntityTypeInfo entityTypeInfo = new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, this.module, this, this.factory).register();
+                entityTypeInfoGetter.register(entityTypeInfo);
             }
         }
     }
@@ -135,8 +127,8 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     @Override
     public byte[] serialise(final Object obj) {
         try {
-            //            EntitySerialiser.getContext().reset();
-            //            logger.error("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|."); // TODO remove
+            EntitySerialiser.getContext().reset();
+            logger.error("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|."); // TODO remove
 
             EntitySerialiser.getContext().reset();
             final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8

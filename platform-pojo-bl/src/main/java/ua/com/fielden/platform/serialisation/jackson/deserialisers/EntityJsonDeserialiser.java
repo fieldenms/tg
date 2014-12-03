@@ -19,6 +19,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 
@@ -38,12 +39,14 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
+    private final EntityTypeInfo entityTypeInfo;
 
-    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties) {
+    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfo entityTypeInfo) {
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
         this.properties = properties;
+        this.entityTypeInfo = entityTypeInfo;
 
         this.type = type;
         versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
@@ -87,7 +90,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 entity = factory.newEntity(type, id);
             }
 
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references);
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, typeNumber());
             references.putEntity(newReference, entity);
 
             // deserialise version -- should never be null
@@ -192,4 +195,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         }
     }
 
+    private Long typeNumber() {
+        return entityTypeInfo.getNumber();
+    }
 }

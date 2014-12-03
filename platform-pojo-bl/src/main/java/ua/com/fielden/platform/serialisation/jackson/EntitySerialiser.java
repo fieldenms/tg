@@ -26,33 +26,43 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class EntitySerialiser<T extends AbstractEntity<?>> {
     public static final String ENTITY_JACKSON_REFERENCES = "entity-references";
+    private final Class<T> type;
     private final EntityJsonSerialiser<T> serialiser;
     private final EntityJsonDeserialiser<T> deserialiser;
     private final List<CachedProperty> properties;
+    private final TgJacksonModule module;
+    private final EntityFactory factory;
+    private final EntityTypeInfo entityTypeInfo;
 
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory) {
-
+        this.type = type;
+        this.factory = factory;
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
+        entityTypeInfo = factory.newEntity(EntityTypeInfo.class, (Long) null, type.getName());
 
-        serialiser = new EntityJsonSerialiser<T>(type, properties);
-        deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties);
+        serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo);
+        deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo);
+        this.module = module;
+    }
 
+    public EntityTypeInfo register() {
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);
         module.addDeserializer(type, deserialiser);
+
+        return entityTypeInfo;
     }
 
-    public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references) {
-        return typeId(entity) + "#" + newIdWithinTheType(entity, references);
+    public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final Long typeNumber) {
+        return typeId(typeNumber) + "#" + newIdWithinTheType(entity, references);
     }
 
-    public static <M extends AbstractEntity<?>> String typeId(final M entity) {
-        // TODO should use type table
-        return entity.getType().getName();
+    private static <M extends AbstractEntity<?>> String typeId(final Long typeNumber) {
+        return typeNumber.toString();
     }
 
-    public static <M extends AbstractEntity<?>> String newIdWithinTheType(final M entity, final References references) {
+    private static <M extends AbstractEntity<?>> String newIdWithinTheType(final M entity, final References references) {
         final Long newId = references.addNewId(entity.getType());
         return newId.toString();
     }

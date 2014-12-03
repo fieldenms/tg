@@ -19,6 +19,7 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
@@ -54,5 +55,7 @@ public class PlatformDomainTypes {
         types.add(CritProp.class);
         types.add(FetchProp.class);
         types.add(Page.class);
+
+        types.add(EntityTypeInfo.class);
     }
 }
