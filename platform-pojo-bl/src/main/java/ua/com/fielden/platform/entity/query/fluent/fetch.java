@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -7,15 +8,17 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.reflection.Finder;
 
 public class fetch<T extends AbstractEntity<?>> {
     public enum FetchCategory {
-        ALL, MINIMAL, KEY_AND_DESC, NONE
+        ALL, MINIMAL, KEY_AND_DESC, NONE, ALL_INCL_CALC
     }
 
     private final Class<T> entityType;
     private final Map<String, fetch<? extends AbstractEntity<?>>> includedPropsWithModels = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
-    private final Set<String> incudedProps = new HashSet<String>();
+    private final Set<String> includedProps = new HashSet<String>();
     private final Set<String> excludedProps = new HashSet<String>();
     private final FetchCategory fetchCategory;
 
@@ -31,16 +34,30 @@ public class fetch<T extends AbstractEntity<?>> {
         this.fetchCategory = fetchCategory;
     }
 
+    private void validate(final String propName) {
+        checkForExistence(propName);
+        checkForDuplicate(propName);
+    }
+    
     private void checkForDuplicate(final String propName) {
-        if (includedPropsWithModels.containsKey(propName) || incudedProps.contains(propName) || excludedProps.contains(propName)) {
-            throw new IllegalArgumentException("Property [" + propName + "] is already present within fetch model.");
+        if (includedPropsWithModels.containsKey(propName) || includedProps.contains(propName) || excludedProps.contains(propName)) {
+            throw new IllegalArgumentException("Property [" + propName + "] is already present within fetch model!");
+        }
+    }
+    
+    private void checkForExistence(final String propName) {
+        if (entityType != EntityAggregates.class && // 
+                !"id".equals(propName) && //
+                !"version".equals(propName) && //
+                !Finder.isPropertyPresent(entityType, propName)) {
+            throw new IllegalArgumentException("Property [" + propName + "] is not present within [" + entityType.getSimpleName() + "] entity!");
         }
     }
 
     private fetch<T> copy() {
         final fetch<T> result = new fetch<T>(entityType, fetchCategory);
         result.includedPropsWithModels.putAll(includedPropsWithModels);
-        result.incudedProps.addAll(incudedProps);
+        result.includedProps.addAll(includedProps);
         result.excludedProps.addAll(excludedProps);
         return result;
     }
@@ -54,9 +71,9 @@ public class fetch<T extends AbstractEntity<?>> {
      * @return
      */
     public fetch<T> with(final String propName) {
-        checkForDuplicate(propName);
+        validate(propName);
         final fetch<T> result = copy();
-        result.incudedProps.add(propName);
+        result.includedProps.add(propName);
         return result;
     }
 
@@ -69,7 +86,7 @@ public class fetch<T extends AbstractEntity<?>> {
      * @return
      */
     public fetch<T> without(final String propName) {
-        checkForDuplicate(propName);
+        validate(propName);
         final fetch<T> result = copy();
         result.excludedProps.add(propName);
         return result;
@@ -84,7 +101,7 @@ public class fetch<T extends AbstractEntity<?>> {
      * @return
      */
     public fetch<T> with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        checkForDuplicate(propName);
+        validate(propName);
         final fetch<T> result = copy();
         result.includedPropsWithModels.put(propName, fetchModel);
         return result;
@@ -95,15 +112,15 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     public Map<String, fetch<? extends AbstractEntity<?>>> getIncludedPropsWithModels() {
-        return includedPropsWithModels;
+        return Collections.unmodifiableMap(includedPropsWithModels);
     }
 
     public Set<String> getIncudedProps() {
-        return incudedProps;
+        return Collections.unmodifiableSet(includedProps);
     }
 
     public Set<String> getExcludedProps() {
-        return excludedProps;
+        return Collections.unmodifiableSet(excludedProps);
     }
 
     public FetchCategory getFetchCategory() {
@@ -118,7 +135,7 @@ public class fetch<T extends AbstractEntity<?>> {
         result = prime * result + ((excludedProps == null) ? 0 : excludedProps.hashCode());
         result = prime * result + ((fetchCategory == null) ? 0 : fetchCategory.hashCode());
         result = prime * result + ((includedPropsWithModels == null) ? 0 : includedPropsWithModels.hashCode());
-        result = prime * result + ((incudedProps == null) ? 0 : incudedProps.hashCode());
+        result = prime * result + ((includedProps == null) ? 0 : includedProps.hashCode());
         return result;
     }
 
@@ -158,11 +175,11 @@ public class fetch<T extends AbstractEntity<?>> {
         } else if (!includedPropsWithModels.equals(other.includedPropsWithModels)) {
             return false;
         }
-        if (incudedProps == null) {
-            if (other.incudedProps != null) {
+        if (includedProps == null) {
+            if (other.includedProps != null) {
                 return false;
             }
-        } else if (!incudedProps.equals(other.incudedProps)) {
+        } else if (!includedProps.equals(other.includedProps)) {
             return false;
         }
         return true;
@@ -178,8 +195,8 @@ public class fetch<T extends AbstractEntity<?>> {
     private String getString(final String currOffset) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\n" + currOffset + entityType.getSimpleName() + " [" + fetchCategory + "]");
-        if (incudedProps.size() > 0) {
-            sb.append("\n" + currOffset + "+ " + incudedProps);
+        if (includedProps.size() > 0) {
+            sb.append("\n" + currOffset + "+ " + includedProps);
         }
         if (excludedProps.size() > 0) {
             sb.append("\n" + currOffset + "- " + excludedProps);
@@ -215,8 +232,8 @@ public class fetch<T extends AbstractEntity<?>> {
 
         final FetchCategory resultCategory = getMergedFetchCategory(second);
         final fetch<T> result = new fetch<>(getEntityType(), resultCategory);
-        result.incudedProps.addAll(incudedProps);
-        result.incudedProps.addAll(second.incudedProps);
+        result.includedProps.addAll(includedProps);
+        result.includedProps.addAll(second.includedProps);
         result.excludedProps.addAll(excludedProps);
         result.excludedProps.addAll(second.excludedProps);
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> iterable_element : includedPropsWithModels.entrySet()) {

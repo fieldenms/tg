@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
 
 public class FetchTest {
 
@@ -26,4 +27,16 @@ public class FetchTest {
         } catch (final Exception e) {
         }
     }
+
+    @Test
+    public void test_validation_of_non_existing_property() {
+        final fetch<TgVehicleMake> makeFetchModel = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.MINIMAL) {
+        };
+        try {
+            makeFetchModel.with("ket");
+            fail("Should have failed with non-existing property exception");
+        } catch (final Exception e) {
+        }
+    }
+
 }

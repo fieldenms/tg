@@ -46,7 +46,7 @@ public abstract class AbstractDomainDrivenTestCase {
     private final EntityFactory factory = config.getEntityFactory();
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final Collection<PersistedEntityMetadata> entityMetadatas = config.getDomainMetadata().getEntityMetadatas();
+    private final Collection<PersistedEntityMetadata> entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
 
     private static boolean domainPopulated = false;
 

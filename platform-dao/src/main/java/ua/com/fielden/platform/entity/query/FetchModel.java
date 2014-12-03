@@ -1,17 +1,5 @@
 package ua.com.fielden.platform.entity.query;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyMetadata;
-import ua.com.fielden.platform.dao.PropertyCategory;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -22,6 +10,19 @@ import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
+import ua.com.fielden.platform.dao.PropertyCategory;
+import ua.com.fielden.platform.dao.PropertyMetadata;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 
 public class FetchModel<T extends AbstractEntity<?>> {
     private final fetch<T> originalFetch;
@@ -38,6 +39,9 @@ public class FetchModel<T extends AbstractEntity<?>> {
             switch (originalFetch.getFetchCategory()) {
             case ALL:
                 includeAllFirstLevelProps();
+                break;
+            case ALL_INCL_CALC:
+                includeAllFirstLevelPropsInclCalc();
                 break;
             case MINIMAL:
                 includeAllFirstLevelPrimPropsAndKey();
@@ -156,6 +160,16 @@ public class FetchModel<T extends AbstractEntity<?>> {
             if (ppi.isUnionEntity()) {
                 with(ppi.getName(), new fetch(ppi.getJavaType(), FetchCategory.ALL));
             } else if (!ppi.isCalculated() && !ppi.isCollection()) {
+                with(ppi.getName(), false);
+            }
+        }
+    }
+
+    private void includeAllFirstLevelPropsInclCalc() {
+        for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType())) {
+            if (ppi.isUnionEntity()) {
+                with(ppi.getName(), new fetch(ppi.getJavaType(), FetchCategory.ALL));
+            } else if (!ppi.isCollection()) {
                 with(ppi.getName(), false);
             }
         }
