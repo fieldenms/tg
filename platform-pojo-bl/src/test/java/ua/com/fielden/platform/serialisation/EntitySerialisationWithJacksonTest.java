@@ -10,6 +10,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
@@ -202,6 +203,21 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
+    public void arrays_as_list_of_entities_should_be_restored() throws Exception {
+        final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
+        final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
+        final List<EntityWithInteger> entities = Arrays.asList(entity1, entity2);
+        final List<EntityWithInteger> restoredEntities = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entities), ArrayList.class);
+
+        assertNotNull("Entities have not been deserialised successfully.", restoredEntities);
+        assertEquals("Incorrect prop.", 2, restoredEntities.size());
+        assertFalse("Restored entity should not be the same entity.", entity1 == restoredEntities.get(0));
+        assertFalse("Restored entity should not be the same entity.", entity2 == restoredEntities.get(1));
+        assertEquals("Restored entity should be equal.", entity1, restoredEntities.get(0));
+        assertEquals("Restored entity should be equal.", entity2, restoredEntities.get(1));
+    }
+
+    @Test
     public void list_of_entities_should_be_restored() throws Exception {
         final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
         final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
@@ -225,6 +241,32 @@ public class EntitySerialisationWithJacksonTest {
         final List<EntityWithInteger> entities = new ArrayList<>(); // Arrays.asList(entity1, entity2);
         entities.add(entity1);
         entities.add(entity2);
+
+        final Result result = new Result(entities, "All cool.");
+        final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
+
+        final List<EntityWithInteger> restoredEntities = (List<EntityWithInteger>) restoredResult.getInstance();
+
+        assertNotNull("Restored result could not be null.", restoredResult);
+        assertTrue("Restored result should be successful.", restoredResult.isSuccessful());
+        assertTrue("Restored result should be successful without warning.", restoredResult.isSuccessfulWithoutWarning());
+        assertNull("Restored result should not have exception.", restoredResult.getEx());
+        assertNotNull("Restored result should have message.", restoredResult.getMessage());
+        assertNotNull("Restored result should have instance.", restoredResult.getInstance());
+
+        assertNotNull("Entities have not been deserialised successfully.", restoredEntities);
+        assertEquals("Incorrect prop.", 2, restoredEntities.size());
+        assertFalse("Restored entity should not be the same entity.", entity1 == restoredEntities.get(0));
+        assertFalse("Restored entity should not be the same entity.", entity2 == restoredEntities.get(1));
+        assertEquals("Restored entity should be equal.", entity1, restoredEntities.get(0));
+        assertEquals("Restored entity should be equal.", entity2, restoredEntities.get(1));
+    }
+
+    @Test
+    public void successfull_result_with_arrays_as_list_of_entities_should_be_restored() throws Exception {
+        final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
+        final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
+        final List<EntityWithInteger> entities = Arrays.asList(entity1, entity2);
 
         final Result result = new Result(entities, "All cool.");
         final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
@@ -401,6 +443,34 @@ public class EntitySerialisationWithJacksonTest {
     @Test
     public void entity_with_the_list_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
         final EntityWithListOfEntities entity = factory.createEntityWithListOfSameEntities();
+        assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
+
+        final EntityWithListOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithListOfEntities.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+
+        final List<EntityWithListOfEntities> resPropVal = new ArrayList<>();
+        resPropVal.add(factory.getFactory().newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"));
+        resPropVal.add(restoredEntity);
+
+        assertFalse("Restored prop should not be the same reference.", entity.getProp() == restoredEntity.getProp());
+        assertEquals("Restored collection prop should have the same size.", entity.getProp().size(), restoredEntity.getProp().size());
+        final Iterator<EntityWithListOfEntities> propIter = entity.getProp().iterator();
+        final Iterator<EntityWithListOfEntities> restoredPropIter = restoredEntity.getProp().iterator();
+        while (propIter.hasNext()) {
+            final EntityWithListOfEntities propEntity = propIter.next();
+            final EntityWithListOfEntities restoredPropEntity = restoredPropIter.next();
+            assertEquals("Incorrect collection element.", propEntity, restoredPropEntity);
+            assertFalse("Incorrect collection element.", propEntity == restoredPropEntity);
+        }
+
+        assertFalse("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+    }
+
+    @Test
+    public void entity_with_the_ARRAYS_ASLIST_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
+        final EntityWithListOfEntities entity = factory.createEntityWithArraysAsListOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
 
         final EntityWithListOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithListOfEntities.class);

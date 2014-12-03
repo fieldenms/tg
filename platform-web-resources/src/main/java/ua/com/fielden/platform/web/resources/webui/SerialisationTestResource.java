@@ -66,6 +66,7 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithOtherEntityCircularlyReferencingItself(),
                 factory.createEntityWithSetOfSameEntities(),
                 factory.createEntityWithListOfSameEntities(),
+                factory.createEntityWithArraysAsListOfSameEntities(),
                 factory.createEntityWithMapOfSameEntities()
                 );
     }

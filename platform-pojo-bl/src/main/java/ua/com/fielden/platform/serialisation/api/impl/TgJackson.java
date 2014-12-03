@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
@@ -27,7 +29,8 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
-import ua.com.fielden.platform.serialisation.jackson.deserialisers.ListJsonDeserialiser;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArrayListJsonDeserialiser;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArraysArrayListJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.MoneyJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.CentreManagerSerialiser;
@@ -73,7 +76,8 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addSerializer(Warning.class, new ResultJsonSerialiser());
         this.module.addDeserializer(Warning.class, new ResultJsonDeserialiser<Warning>(this));
 
-        this.module.addDeserializer(ArrayList.class, new ListJsonDeserialiser<ArrayList>(this));
+        this.module.addDeserializer(ArrayList.class, new ArrayListJsonDeserialiser(this));
+        this.module.addDeserializer((Class<List>) ClassesRetriever.findClass("java.util.Arrays$ArrayList"), new ArraysArrayListJsonDeserialiser(this));
 
         this.module.addSerializer(ICentreDomainTreeManagerAndEnhancer.class, new CentreManagerSerialiser(entityFactory));
         this.module.addSerializer(IPage.class, new PageSerialiser());

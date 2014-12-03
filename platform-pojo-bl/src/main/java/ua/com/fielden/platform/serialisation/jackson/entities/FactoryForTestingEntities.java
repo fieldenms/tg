@@ -2,6 +2,7 @@ package ua.com.fielden.platform.serialisation.jackson.entities;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
@@ -131,9 +132,15 @@ public class FactoryForTestingEntities {
         return entity;
     }
 
+    public EntityWithListOfEntities createEntityWithArraysAsListOfSameEntities() {
+        final EntityWithListOfEntities entity = factory.newEntity(EntityWithListOfEntities.class, 1L, "key1", "description");
+        final List<EntityWithListOfEntities> propVal = Arrays.asList(factory.newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"), entity);
+        entity.setProp(propVal);
+        return entity;
+    }
+
     public EntityWithListOfEntities createEntityWithListOfSameEntities() {
         final EntityWithListOfEntities entity = factory.newEntity(EntityWithListOfEntities.class, 1L, "key1", "description");
-
         final List<EntityWithListOfEntities> propVal = new ArrayList<>();
         propVal.add(factory.newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"));
         propVal.add(entity);

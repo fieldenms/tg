@@ -3,7 +3,6 @@ package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 
@@ -20,23 +19,23 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
  * @author TG Team
  *
  */
-public class ListJsonDeserialiser<T extends List> extends StdDeserializer<T> {
+public class ArrayListJsonDeserialiser extends StdDeserializer<ArrayList> {
     private final ObjectMapper mapper;
 
-    public ListJsonDeserialiser(final ObjectMapper mapper) {
-        super(List.class);
+    public ArrayListJsonDeserialiser(final ObjectMapper mapper) {
+        super(ArrayList.class);
         this.mapper = mapper;
     }
 
     @Override
-    public T deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public ArrayList deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
         final JsonNode node = jp.readValueAsTree();
         if (!node.isArray()) {
             throw new IllegalStateException("ListJsonDeserialiser has got non-array.");
         }
 
         final Iterator<JsonNode> elements = node.elements();
-        final T list = (T) new ArrayList();
+        final ArrayList list = new ArrayList();
         while (elements.hasNext()) {
             final JsonNode el = elements.next();
             if (el.isNull()) {
