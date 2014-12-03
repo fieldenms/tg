@@ -22,8 +22,8 @@ import ua.com.fielden.platform.security.UserRoleRao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
-import ua.com.fielden.platform.web.SecurityTokenResourceFactory;
-import ua.com.fielden.platform.web.TokenRoleAssociationResourceFactory;
+import ua.com.fielden.platform.web.factories.SecurityTokenResourceFactory;
+import ua.com.fielden.platform.web.factories.TokenRoleAssociationResourceFactory;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 

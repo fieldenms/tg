@@ -49,6 +49,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEnt
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
+import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
@@ -65,9 +66,10 @@ import com.google.inject.Module;
 public class EntitySerialisationWithJacksonTest {
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
-    private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private final ISerialiserEngine jacksonSerialiser = new Serialiser(factory, createClassProvider()).getEngine(SerialiserEngines.JACKSON);
-    private final ISerialiserEngine jacksonDeserialiser = new Serialiser(factory, createClassProvider()).getEngine(SerialiserEngines.JACKSON);
+    private final Date testingDate = new Date();
+    private final FactoryForTestingEntities factory = new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), testingDate);
+    private final ISerialiserEngine jacksonSerialiser = new Serialiser(factory.getFactory(), createClassProvider()).getEngine(SerialiserEngines.JACKSON);
+    private final ISerialiserEngine jacksonDeserialiser = new Serialiser(factory.getFactory(), createClassProvider()).getEngine(SerialiserEngines.JACKSON);
     private boolean observed = false;
 
     private ProvidedSerialisationClassProvider createClassProvider() {
@@ -97,7 +99,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void null_entity_should_be_restored() throws Exception {
-        final EmptyEntity entity = null;
+        final EmptyEntity entity = factory.createNullEmptyEntity();
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
         assertNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -105,7 +107,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void empty_entity_should_be_restored() throws Exception {
-        final EmptyEntity entity = factory.newEntity(EmptyEntity.class, 1L, "key", "description");
+        final EmptyEntity entity = factory.createSimpleEmptyEntity();
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -121,7 +123,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void empty_entity_with_null_id_should_be_restored() throws Exception {
-        final EmptyEntity entity = factory.newEntity(EmptyEntity.class, null, "key", "description");
+        final EmptyEntity entity = factory.createEmptyEntityWithNoId();
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -137,7 +139,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void empty_entity_with_null_key_should_be_restored() throws Exception {
-        final EmptyEntity entity = factory.newEntity(EmptyEntity.class, 1L, null, "description");
+        final EmptyEntity entity = factory.createEmptyEntityWithNoKey();
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -153,7 +155,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void empty_entity_with_null_desc_should_be_restored() throws Exception {
-        final EmptyEntity entity = factory.newEntity(EmptyEntity.class, 1L, "key", null);
+        final EmptyEntity entity = factory.createEmptyEntityWithNoDescription();
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -169,8 +171,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_big_decimal_prop_should_be_restored() throws Exception {
-        final EntityWithBigDecimal entity = factory.newEntity(EntityWithBigDecimal.class, 1L, "key", "description");
-        entity.setProp(BigDecimal.TEN);
+        final EntityWithBigDecimal entity = factory.createEntityWithBigDecimal();
         final EntityWithBigDecimal restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBigDecimal.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -182,8 +183,7 @@ public class EntitySerialisationWithJacksonTest {
     @Test
     public void entity_with_prop_should_be_restored_and_have_observable_property() throws Exception {
         observed = false;
-        final EntityWithBigDecimal entity = factory.newEntity(EntityWithBigDecimal.class, 1L, "key", "description");
-        entity.setProp(BigDecimal.TEN);
+        final EntityWithBigDecimal entity = factory.createEntityWithBigDecimal();
         final EntityWithBigDecimal restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBigDecimal.class);
         restoredEntity.addPropertyChangeListener("prop", new PropertyChangeListener() {
             @Override
@@ -202,9 +202,53 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
+    public void list_of_entities_should_be_restored() throws Exception {
+        final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
+        final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
+        final List<EntityWithInteger> entities = new ArrayList<>(); // Arrays.asList(entity1, entity2);
+        entities.add(entity1);
+        entities.add(entity2);
+        final List<EntityWithInteger> restoredEntities = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entities), ArrayList.class);
+
+        assertNotNull("Entities have not been deserialised successfully.", restoredEntities);
+        assertEquals("Incorrect prop.", 2, restoredEntities.size());
+        assertFalse("Restored entity should not be the same entity.", entity1 == restoredEntities.get(0));
+        assertFalse("Restored entity should not be the same entity.", entity2 == restoredEntities.get(1));
+        assertEquals("Restored entity should be equal.", entity1, restoredEntities.get(0));
+        assertEquals("Restored entity should be equal.", entity2, restoredEntities.get(1));
+    }
+
+    @Test
+    public void successfull_result_with_list_of_entities_should_be_restored() throws Exception {
+        final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
+        final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
+        final List<EntityWithInteger> entities = new ArrayList<>(); // Arrays.asList(entity1, entity2);
+        entities.add(entity1);
+        entities.add(entity2);
+
+        final Result result = new Result(entities, "All cool.");
+        final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
+
+        final List<EntityWithInteger> restoredEntities = (List<EntityWithInteger>) restoredResult.getInstance();
+
+        assertNotNull("Restored result could not be null.", restoredResult);
+        assertTrue("Restored result should be successful.", restoredResult.isSuccessful());
+        assertTrue("Restored result should be successful without warning.", restoredResult.isSuccessfulWithoutWarning());
+        assertNull("Restored result should not have exception.", restoredResult.getEx());
+        assertNotNull("Restored result should have message.", restoredResult.getMessage());
+        assertNotNull("Restored result should have instance.", restoredResult.getInstance());
+
+        assertNotNull("Entities have not been deserialised successfully.", restoredEntities);
+        assertEquals("Incorrect prop.", 2, restoredEntities.size());
+        assertFalse("Restored entity should not be the same entity.", entity1 == restoredEntities.get(0));
+        assertFalse("Restored entity should not be the same entity.", entity2 == restoredEntities.get(1));
+        assertEquals("Restored entity should be equal.", entity1, restoredEntities.get(0));
+        assertEquals("Restored entity should be equal.", entity2, restoredEntities.get(1));
+    }
+
+    @Test
     public void entity_with_integer_prop_should_be_restored() throws Exception {
-        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", "description");
-        entity.setProp(new Integer(23));
+        final EntityWithInteger entity = factory.createEntityWithInteger();
         final EntityWithInteger restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithInteger.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -215,8 +259,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_string_prop_should_be_restored() throws Exception {
-        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
-        entity.setProp("okay");
+        final EntityWithString entity = factory.createEntityWithString();
         final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -227,8 +270,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_non_editable_prop_should_be_restored() throws Exception {
-        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
-        entity.setProp("okay");
+        final EntityWithString entity = factory.createEntityWithString();
         entity.getProperty("prop").setEditable(false);
         final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
 
@@ -240,10 +282,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_definer_should_be_restored_and_invoke_definer_afterwards() throws Exception {
-        final EntityWithDefiner entity = factory.newEntity(EntityWithDefiner.class, 1L, "key", "description");
-        entity.beginInitialising();
-        entity.setProp("okay");
-        entity.endInitialising();
+        final EntityWithDefiner entity = factory.createEntityWithPropertyWithDefiner();
         assertNull("Entity should have uninitialised prop2.", entity.getProp2());
         final EntityWithDefiner restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithDefiner.class);
 
@@ -255,8 +294,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_boolean_prop_should_be_restored() throws Exception {
-        final EntityWithBoolean entity = factory.newEntity(EntityWithBoolean.class, 1L, "key", "description");
-        entity.setProp(true);
+        final EntityWithBoolean entity = factory.createEntityWithBoolean();
         final EntityWithBoolean restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBoolean.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -267,21 +305,19 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_date_prop_should_be_restored() throws Exception {
-        final EntityWithDate entity = factory.newEntity(EntityWithDate.class, 1L, "key", "description");
-        final Date date = new Date();
-        entity.setProp(date);
+        final EntityWithDate entity = factory.createEntityWithDate();
+
         final EntityWithDate restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithDate.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
-        assertEquals("Incorrect prop.", date, restoredEntity.getProp());
+        assertEquals("Incorrect prop.", testingDate, restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
 
     @Test
     public void entity_with_money_prop_should_be_restored() throws Exception {
-        final EntityWithMoney entity = factory.newEntity(EntityWithMoney.class, 1L, "key", "description");
-        entity.setProp(new Money("23.00", 20, Currency.getInstance("AUD")));
+        final EntityWithMoney entity = factory.createEntityWithMoney();
         final EntityWithMoney restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithMoney.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -292,32 +328,29 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_other_entity_prop_should_be_restored() throws Exception {
-        final EntityWithOtherEntity entity = factory.newEntity(EntityWithOtherEntity.class, 1L, "key", "description");
-        entity.setProp(factory.newEntity(OtherEntity.class, 1L, "other_key", "description"));
+        final EntityWithOtherEntity entity = factory.createEntityWithOtherEntity();
         final EntityWithOtherEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithOtherEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
-        assertEquals("Incorrect prop.", factory.newEntity(OtherEntity.class, 1L, "other_key", "description"), restoredEntity.getProp());
+        assertEquals("Incorrect prop.", factory.getFactory().newEntity(OtherEntity.class, 1L, "other_key", "description"), restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
 
     @Test
     public void entity_with_the_same_entity_prop_should_be_restored() throws Exception {
-        final EntityWithSameEntity entity = factory.newEntity(EntityWithSameEntity.class, 1L, "key1", "description");
-        entity.setProp(factory.newEntity(EntityWithSameEntity.class, 2L, "key2", "description"));
+        final EntityWithSameEntity entity = factory.createEntityWithSameEntity();
         final EntityWithSameEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSameEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
-        assertEquals("Incorrect prop.", factory.newEntity(EntityWithSameEntity.class, 2L, "key2", "description"), restoredEntity.getProp());
+        assertEquals("Incorrect prop.", factory.getFactory().newEntity(EntityWithSameEntity.class, 2L, "key2", "description"), restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
 
     @Test
     public void entity_with_the_same_entity_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
-        final EntityWithSameEntity entity = factory.newEntity(EntityWithSameEntity.class, 1L, "key1", "description");
-        entity.setProp(entity);
+        final EntityWithSameEntity entity = factory.createEntityWithSameEntityCircularlyReferencingItself();
         final EntityWithSameEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSameEntity.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -328,10 +361,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_the_other_entity_prop_and_double_circular_reference_should_be_restored() throws Exception {
-        final Entity1WithEntity2 entity1 = factory.newEntity(Entity1WithEntity2.class, 1L, "key1", "description");
-        final Entity2WithEntity1 entity2 = factory.newEntity(Entity2WithEntity1.class, 1L, "key2", "description");
-        entity1.setProp(entity2);
-        entity2.setProp(entity1);
+        final Entity1WithEntity2 entity1 = factory.createEntityWithOtherEntityCircularlyReferencingItself();
         final Entity1WithEntity2 restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity1), Entity1WithEntity2.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
@@ -342,12 +372,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_the_set_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
-        final EntityWithSetOfEntities entity = factory.newEntity(EntityWithSetOfEntities.class, 1L, "key1", "description");
-
-        final Set<EntityWithSetOfEntities> propVal = new HashSet<>();
-        propVal.add(factory.newEntity(EntityWithSetOfEntities.class, 2L, "key2", "description"));
-        propVal.add(entity);
-        entity.setProp(propVal);
+        final EntityWithSetOfEntities entity = factory.createEntityWithSetOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
 
         final EntityWithSetOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSetOfEntities.class);
@@ -356,7 +381,7 @@ public class EntitySerialisationWithJacksonTest {
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
 
         final Set<EntityWithSetOfEntities> resPropVal = new HashSet<>();
-        resPropVal.add(factory.newEntity(EntityWithSetOfEntities.class, 2L, "key2", "description"));
+        resPropVal.add(factory.getFactory().newEntity(EntityWithSetOfEntities.class, 2L, "key2", "description"));
         resPropVal.add(restoredEntity);
 
         assertFalse("Restored prop should not be the same reference.", entity.getProp() == restoredEntity.getProp());
@@ -375,12 +400,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_the_list_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
-        final EntityWithListOfEntities entity = factory.newEntity(EntityWithListOfEntities.class, 1L, "key1", "description");
-
-        final List<EntityWithListOfEntities> propVal = new ArrayList<>();
-        propVal.add(factory.newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"));
-        propVal.add(entity);
-        entity.setProp(propVal);
+        final EntityWithListOfEntities entity = factory.createEntityWithListOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
 
         final EntityWithListOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithListOfEntities.class);
@@ -389,7 +409,7 @@ public class EntitySerialisationWithJacksonTest {
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
 
         final List<EntityWithListOfEntities> resPropVal = new ArrayList<>();
-        resPropVal.add(factory.newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"));
+        resPropVal.add(factory.getFactory().newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"));
         resPropVal.add(restoredEntity);
 
         assertFalse("Restored prop should not be the same reference.", entity.getProp() == restoredEntity.getProp());
@@ -408,12 +428,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_the_map_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
-        final EntityWithMapOfEntities entity = factory.newEntity(EntityWithMapOfEntities.class, 1L, "key1", "description");
-
-        final Map<String, EntityWithMapOfEntities> propVal = new LinkedHashMap<>();
-        propVal.put("19", factory.newEntity(EntityWithMapOfEntities.class, 2L, "key3", "description"));
-        propVal.put("4", entity);
-        entity.setProp(propVal);
+        final EntityWithMapOfEntities entity = factory.createEntityWithMapOfSameEntities();
         assertTrue("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
 
         final EntityWithMapOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithMapOfEntities.class);
@@ -422,7 +437,7 @@ public class EntitySerialisationWithJacksonTest {
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
 
         final Map<EntityWithMapOfEntities, EntityWithMapOfEntities> resPropVal = new LinkedHashMap<>();
-        resPropVal.put(factory.newEntity(EntityWithMapOfEntities.class, 2L, "key2", "description"), factory.newEntity(EntityWithMapOfEntities.class, 2L, "key3", "description"));
+        resPropVal.put(factory.getFactory().newEntity(EntityWithMapOfEntities.class, 2L, "key2", "description"), factory.getFactory().newEntity(EntityWithMapOfEntities.class, 2L, "key3", "description"));
         resPropVal.put(restoredEntity, restoredEntity);
 
         assertFalse("Restored prop should not be the same reference.", entity.getProp() == restoredEntity.getProp());
@@ -443,7 +458,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void successful_result_with_entity_should_be_restored() throws Exception {
-        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", null);
+        final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(new Integer(23));
         final Result result = new Result(entity, "All cool.");
         final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
@@ -461,7 +476,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void unsuccessful_result_with_entity_and_exception_should_be_restored() throws Exception {
-        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", null);
+        final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(new Integer(23));
         final Result result = new Result(entity, new Exception("exception message"));
         final Result restoredResult = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(result), Result.class);
@@ -474,7 +489,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void successful_warning_with_entity_should_be_restored() throws Exception {
-        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", null);
+        final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(new Integer(23));
         final Warning warning = new Warning(entity, "warning message");
         final Warning restoredWarning = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(warning), Warning.class);
@@ -503,8 +518,8 @@ public class EntitySerialisationWithJacksonTest {
     @Test
     @Ignore
     public void test_serialisation_of_entity_with_polymorphyc_property() throws Exception {
-        final EntityWithPolymorphicProperty entity = factory.newEntity(EntityWithPolymorphicProperty.class, 1L, "key", "description");
-        entity.setPolyProperty(factory.newEntity(SubBaseEntity1.class, 1L, "key", "description"));
+        final EntityWithPolymorphicProperty entity = factory.getFactory().newEntity(EntityWithPolymorphicProperty.class, 1L, "key", "description");
+        entity.setPolyProperty(factory.getFactory().newEntity(SubBaseEntity1.class, 1L, "key", "description"));
 
         jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithPolymorphicProperty.class);
     }
@@ -512,7 +527,7 @@ public class EntitySerialisationWithJacksonTest {
     @Test
     @Ignore
     public void test_deserialisation_when_specifying_ancestor_as_the_type() throws Exception {
-        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", "description");
+        final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", "description");
 
         final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
 

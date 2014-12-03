@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
-import static ua.com.fielden.platform.serialisation.kryo.IoHelper.ENTITY_REFERENCES;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -28,6 +27,7 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.ListJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.MoneyJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.CentreManagerSerialiser;
@@ -62,9 +62,6 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module = new TgJacksonModule();
         this.factory = entityFactory;
 
-        // Configuring type specific parameters.
-        // setDateFormat(dateFormat);
-
         // enable(SerializationFeature.INDENT_OUTPUT);
         // enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
 
@@ -75,6 +72,8 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addDeserializer(Result.class, new ResultJsonDeserialiser<Result>(this));
         this.module.addSerializer(Warning.class, new ResultJsonSerialiser());
         this.module.addDeserializer(Warning.class, new ResultJsonDeserialiser<Warning>(this));
+
+        this.module.addDeserializer(ArrayList.class, new ListJsonDeserialiser<ArrayList>(this));
 
         this.module.addSerializer(ICentreDomainTreeManagerAndEnhancer.class, new CentreManagerSerialiser(entityFactory));
         this.module.addSerializer(IPage.class, new PageSerialiser());
@@ -132,12 +131,12 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     @Override
     public byte[] serialise(final Object obj) {
         try {
-            EntitySerialiser.getContext().reset();
-            logger.error("Serialised pretty JSON = [" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "]."); // TODO remove
+            //            EntitySerialiser.getContext().reset();
+            //            logger.error("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|."); // TODO remove
 
             EntitySerialiser.getContext().reset();
             final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
-            // logger.error("Serialised JSON = [" + new String(bytes, Charsets.UTF_8) + "].");
+            logger.debug("Serialised JSON = |" + new String(bytes, Charsets.UTF_8) + "|.");
 
             return bytes;
         } catch (final JsonProcessingException e) {
@@ -162,7 +161,7 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      */
     private void executeDefiners() {
         final JacksonContext context = EntitySerialiser.getContext();
-        final References references = (References) context.get(ENTITY_REFERENCES);
+        final References references = (References) context.get(EntitySerialiser.ENTITY_JACKSON_REFERENCES);
         if (references != null) {
             // references is thread local variable, which gets reset if a nested deserialisation happens
             // therefore need to make a local cache of the present in references entities

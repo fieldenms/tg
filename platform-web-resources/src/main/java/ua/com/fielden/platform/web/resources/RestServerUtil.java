@@ -215,6 +215,26 @@ public class RestServerUtil {
     }
 
     /**
+     * Composes representation of a list of entities.
+     *
+     * @return
+     */
+    public <T extends AbstractEntity> Representation listJSONRepresentation(final List<T> entities) {
+        logger.debug("Start building JSON entities representation.");
+        try {
+            // create a Result enclosing entity list
+            final Result result = new Result(new ArrayList<T>(entities), "All is cool");
+            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+            logger.debug("SIZE: " + bytes.length);
+            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+        } catch (final Exception ex) {
+            ex.printStackTrace();
+            logger.error(ex);
+            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+        }
+    }
+
+    /**
      * Composes representation of a map.
      *
      * @return
@@ -334,6 +354,17 @@ public class RestServerUtil {
      */
     public List<?> restoreList(final Representation representation) throws Exception {
         return serialiser.deserialise(representation.getStream(), List.class);
+    }
+
+    /**
+     * Converts representation of the export request representation in to result.
+     *
+     * @param representation
+     * @return
+     * @throws Exception
+     */
+    public Result restoreJSONResult(final Representation representation) throws Exception {
+        return serialiser.deserialise(representation.getStream(), Result.class, SerialiserEngines.JACKSON);
     }
 
     /**

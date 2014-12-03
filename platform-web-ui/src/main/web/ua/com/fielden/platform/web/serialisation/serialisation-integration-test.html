@@ -1,0 +1,60 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+
+<head>
+    <title>serialisation-integration</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+    <script src="/resources/polymer/polymer-test-tools/htmltest.js"></script>
+
+    <link rel="import" href="/resources/serialisation/tg-serialiser.html">
+    <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+</head>
+
+<body unresolved>
+    <core-ajax id="entities_retriever" url="/test/serialisation" handleas="json" auto></core-ajax>
+    <core-ajax id="entities_sender" url="/test/serialisation" method="POST" handleas="json"></core-ajax>
+
+    <tg-serialiser id="serialiser"></tg-serialiser>
+
+    <script>
+        document.addEventListener('polymer-ready', function() {
+            var entityRetriever = document.querySelector('#entities_retriever'),
+                entitySender = document.querySelector('#entities_sender'),
+                serialiser = document.querySelector('#serialiser'),
+                onError = function(e, detail, sender) {
+                    assert.fail(null, null, "The error has happened.");
+                    done();
+                };
+
+            entityRetriever.addEventListener('core-response', function(e) {
+                // console.log("not deserialised: ", JSON.stringify(e.detail.response));
+                var resultWithEntities = serialiser.deserialise(e.detail.response);
+                // console.log("deserialised with tg-serialiser: ", JSON.stringify(resultWithEntities));
+                entitySender.body = JSON.stringify(serialiser.serialise(resultWithEntities));
+                // console.log("serialised with tg-serialiser: ", entitySender.body);
+                entitySender.go();
+            });
+
+            entitySender.addEventListener('core-response', function(e) {
+                assert.equal(e.detail.response.message, 'okay', "The sended entities are not equal.");
+                done();
+            });
+
+            entityRetriever.addEventListener('core-error', onError);
+            entitySender.addEventListener('core-error', onError);
+        });
+    </script>
+
+</body>
+
+</html>

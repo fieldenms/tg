@@ -18,10 +18,10 @@ import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
 import ua.com.fielden.platform.security.user.IUserDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
-import ua.com.fielden.platform.web.ResourceGuard;
-import ua.com.fielden.platform.web.SecurityTokenResourceFactory;
-import ua.com.fielden.platform.web.TokenRoleAssociationResourceFactory;
-import ua.com.fielden.platform.web.UserRoleAssociationResourceFactory;
+import ua.com.fielden.platform.web.factories.ResourceGuard;
+import ua.com.fielden.platform.web.factories.SecurityTokenResourceFactory;
+import ua.com.fielden.platform.web.factories.TokenRoleAssociationResourceFactory;
+import ua.com.fielden.platform.web.factories.UserRoleAssociationResourceFactory;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 

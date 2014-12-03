@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
-import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ENTITY_JACKSON_REFERENCES;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -55,16 +53,16 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     @Override
     public T deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
         final JacksonContext context = EntitySerialiser.getContext();
-        References references = (References) context.getTemp(ENTITY_JACKSON_REFERENCES);
+        References references = (References) context.getTemp(EntitySerialiser.ENTITY_JACKSON_REFERENCES);
         if (references == null) {
             // Use non-temporary storage to avoid repeated allocation.
-            references = (References) context.get(ENTITY_JACKSON_REFERENCES);
+            references = (References) context.get(EntitySerialiser.ENTITY_JACKSON_REFERENCES);
             if (references == null) {
-                context.put(ENTITY_JACKSON_REFERENCES, references = new References());
+                context.put(EntitySerialiser.ENTITY_JACKSON_REFERENCES, references = new References());
             } else {
                 references.reset();
             }
-            context.putTemp(ENTITY_JACKSON_REFERENCES, references);
+            context.putTemp(EntitySerialiser.ENTITY_JACKSON_REFERENCES, references);
         }
 
         final JsonNode node = jp.readValueAsTree();

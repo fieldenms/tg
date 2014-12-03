@@ -64,7 +64,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         }
     };
 
-    public List<CachedProperty> createCachedProperties(final Class<T> type) {
+    public static <T extends AbstractEntity<?>> List<CachedProperty> createCachedProperties(final Class<T> type) {
         final boolean hasCompositeKey = EntityUtils.isCompositeEntity(type);
         final List<CachedProperty> properties = new ArrayList<CachedProperty>();
         for (final Field propertyField : Finder.findRealProperties(type)) {
