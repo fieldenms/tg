@@ -167,8 +167,25 @@ public class DomainMetadata {
                 throw new IllegalStateException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
             }
         }
-
+        
+        //System.out.println(printEntitiesMetadataSummary("Persistent entities metadata summary:", persistedEntityMetadataMap));
+        //System.out.println(printEntitiesMetadataSummary("Synthetic entities metadata summary:", modelledEntityMetadataMap));
         //enhanceWithCalcProps(entityMetadataMap.values());
+    }
+    
+    private String printEntitiesMetadataSummary(final String header, final Map<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> map) {
+        final StringBuffer sb = new StringBuffer();
+        sb.append(header);
+        sb.append("\n");
+        int pecalcpc = 0;
+        int pecollpc = 0;
+        for (final Entry<Class<? extends AbstractEntity<?>>, ? extends AbstractEntityMetadata> entry : map.entrySet()) {
+            pecalcpc = pecalcpc + entry.getValue().countCalculatedProps();
+            pecollpc = pecollpc + entry.getValue().countCollectionalProps();
+            sb.append("===== type: " + entry.getKey().getSimpleName() + " calculatedPropsCount = " + entry.getValue().countCalculatedProps() + " collectionalPropsCount = " + entry.getValue().countCollectionalProps() + "\n");
+        }
+        sb.append("=====  totals: " + map.size() + " calculatedPropsCount: " + pecalcpc + " collectionalPropsCount: " + pecollpc + "\n");
+        return sb.toString();
     }
 
     public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> generatePersistedEntityMetadata(final Class<ET> entityType, final BaseInfoForDomainMetadata baseInfoForDomainMetadata)
@@ -536,7 +553,7 @@ public class DomainMetadata {
         return hibTypesDefaults;
     }
 
-    public Collection<PersistedEntityMetadata> getEntityMetadatas() {
+    public Collection<PersistedEntityMetadata> getPersistedEntityMetadatas() {
         return Collections.unmodifiableCollection(persistedEntityMetadataMap.values());
     }
 

@@ -26,7 +26,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 public class HibernateMappingsGenerator {
 
     public String generateMappings(final DomainMetadata domainMetadata) {
-        final Collection<PersistedEntityMetadata> entityMetadatas = domainMetadata.getEntityMetadatas();
+        final Collection<PersistedEntityMetadata> entityMetadatas = domainMetadata.getPersistedEntityMetadatas();
         final StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");

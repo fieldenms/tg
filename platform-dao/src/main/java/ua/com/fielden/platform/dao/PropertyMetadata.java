@@ -15,7 +15,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -56,17 +55,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
             //System.out.println(" ----------------" + type + " ------------- " +  name + " == " + javaType + " -------------------------------------------------------");
             //throw new RuntimeException(" ----------------" + type + " ------------- " +  name + " == " + javaType + " -------------------------------------------------------");
         }
-    }
-
-    public String ddl() {
-        final StringBuffer sb = new StringBuffer();
-        for (final Iterator<PropertyColumn> iterator = columns.iterator(); iterator.hasNext();) {
-            final PropertyColumn column = iterator.next();
-            sb.append(column.ddl());
-            sb.append(nullable ? " NULL" : " NOT NULL");
-            sb.append((iterator.hasNext() ? ",\n" : ""));
-        }
-        return sb.toString();
     }
 
     public YieldDetailsType getYieldDetailType() {

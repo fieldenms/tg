@@ -57,6 +57,10 @@ public class EntityQueryUtils {
         return new fetch<T>(entityType, FetchCategory.ALL);
     }
 
+    public static <T extends AbstractEntity<?>> fetch<T> fetchAllInclCalc(final Class<T> entityType) {
+        return new fetch<T>(entityType, FetchCategory.ALL_INCL_CALC);
+    }
+
     public static <T extends AbstractEntity<?>> fetch<T> fetchOnly(final Class<T> entityType) {
         return new fetch<T>(entityType, FetchCategory.NONE);
     }

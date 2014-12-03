@@ -55,24 +55,52 @@ public abstract class AbstractEntityMetadata<ET extends AbstractEntity<?>> {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (!(obj instanceof AbstractEntityMetadata))
+        }
+        if (!(obj instanceof AbstractEntityMetadata)) {
             return false;
-        AbstractEntityMetadata other = (AbstractEntityMetadata) obj;
+        }
+        final AbstractEntityMetadata other = (AbstractEntityMetadata) obj;
         if (props == null) {
-            if (other.props != null)
+            if (other.props != null) {
                 return false;
-        } else if (!props.equals(other.props))
+            }
+        } else if (!props.equals(other.props)) {
             return false;
+        }
         if (type == null) {
-            if (other.type != null)
+            if (other.type != null) {
                 return false;
-        } else if (!type.equals(other.type))
+            }
+        } else if (!type.equals(other.type)) {
             return false;
+        }
         return true;
     }
+
+    public int countCalculatedProps() {
+        int result = 0;
+        for (final PropertyMetadata propMetadata : props.values()) {
+            if (propMetadata.isCalculated()) {
+                result = result + 1;
+            }
+        }
+        return result;
+    }
+
+    public int countCollectionalProps() {
+        int result = 0;
+        for (final PropertyMetadata propMetadata : props.values()) {
+            if (propMetadata.isCollection()) {
+                result = result + 1;
+            }
+        }
+        return result;
+    }
+
 }
