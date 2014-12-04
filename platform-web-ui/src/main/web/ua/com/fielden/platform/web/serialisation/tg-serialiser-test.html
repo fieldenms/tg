@@ -24,10 +24,90 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <tg-serialiser id="seriliser"></tg-serialiser>
 
     <script>
-        document.addEventListener('polymer-ready', function () {
-            var inst1 = {
+        document.addEventListener('polymer-ready', function() {
+            var type10 = {
+                    "@id": "44#10",
+                    "id": null,
+                    "version": 0,
+                    "key": "ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity",
+                    "@key": {
+                        "editable": true,
+                        "dirty": true
+                    },
+                    "number": 10,
+                    "@number": {
+                        "editable": true,
+                        "dirty": true
+                    },
+                    "desc": null,
+                    "@desc": {
+                        "editable": true,
+                        "dirty": true
+                    }
+                },
+                type11 = {
+                    "@id": "44#11",
+                    "id": null,
+                    "version": 0,
+                    "key": "ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2",
+                    "@key": {
+                        "editable": true,
+                        "dirty": true
+                    },
+                    "number": 11,
+                    "@number": {
+                        "editable": true,
+                        "dirty": true
+                    },
+                    "desc": null,
+                    "@desc": {
+                        "editable": true,
+                        "dirty": true
+                    }
+                },
+                type12 = {
+                    "@id": "44#12",
+                    "id": null,
+                    "version": 0,
+                    "key": "ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1",
+                    "@key": {
+                        "editable": true,
+                        "dirty": true
+                    },
+                    "number": 12,
+                    "@number": {
+                        "editable": true,
+                        "dirty": true
+                    },
+                    "desc": null,
+                    "@desc": {
+                        "editable": true,
+                        "dirty": true
+                    }
+                },
+                type13 = {
+                    "@id": "44#13",
+                    "id": null,
+                    "version": 0,
+                    "key": "ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities",
+                    "@key": {
+                        "editable": true,
+                        "dirty": true
+                    },
+                    "number": 13,
+                    "@number": {
+                        "editable": true,
+                        "dirty": true
+                    },
+                    "desc": null,
+                    "@desc": {
+                        "editable": true,
+                        "dirty": true
+                    }
+                },
+                inst1 = {
                     id: 1,
-                    _type: 12,
+                    _type: type12,
                     key: "entity key",
                     "@key": {
                         dirty: false,
@@ -40,7 +120,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     },
                     detail: {
                         id: 2,
-                        _type: 13,
+                        _type: type13,
                         "@key": {
                             dirty: false,
                             readonly: true
@@ -53,7 +133,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 },
                 inst2 = {
                     id: 3,
-                    _type: 12,
+                    _type: type12,
                     key: "entity key1",
                     "@key": {
                         dirty: false,
@@ -66,7 +146,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     },
                     detail: {
                         id: 4,
-                        _type: 13,
+                        _type: type13,
                         "@key": {
                             dirty: false,
                             readonly: true
@@ -82,12 +162,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     ex: "No exception",
                     instance: {
                         id: null,
-                        _type: 11,
+                        _type: type11,
                         key: "QueryRunner",
                         desc: "QueryRunner description",
                         page: {
                             id: null,
-                            _type: 10,
+                            _type: type10,
                             key: "Page",
                             desc: "Page description",
                             numberOfPages: 1,
@@ -98,7 +178,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             ],
                             summary: {
                                 id: null,
-                                _type: 12,
+                                _type: type12,
                                 total: 2
 
                             }

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
@@ -228,9 +229,27 @@ public class RestServerUtil {
             logger.debug("SIZE: " + bytes.length);
             return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
         } catch (final Exception ex) {
-            ex.printStackTrace();
-            logger.error(ex);
+            logger.error(ex.getMessage(), ex);
             return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+        }
+    }
+
+    /**
+     * Composes representation of a map.
+     *
+     * @return
+     */
+    public Representation mapJSONRepresentation(final Map<?, ?> map) {
+        logger.debug("Start building JSON map representation.");
+        try {
+            // create a Result enclosing map
+            final Result result = new Result(new LinkedHashMap<>(map), "All is cool");
+            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+            logger.debug("SIZE: " + bytes.length);
+            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+        } catch (final Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
         }
     }
 

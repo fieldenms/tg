@@ -157,4 +157,12 @@ public class FactoryForTestingEntities {
         entity.setProp(propVal);
         return entity;
     }
+
+    public EntityWithCompositeKey createEntityWithCompositeKey() {
+        final EmptyEntity key1 = factory.newEntity(EmptyEntity.class, 1L, "key", "desc");
+        final BigDecimal key2 = BigDecimal.TEN;
+
+        final EntityWithCompositeKey entity = factory.newByKey(EntityWithCompositeKey.class, key1, key2);
+        return entity;
+    }
 }

@@ -21,6 +21,7 @@ import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebViewResourceFactory;
 
 import com.google.inject.Injector;
@@ -122,6 +123,8 @@ public abstract class AbstractWebApp extends Application {
 
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
+        // type meta info resource
+        router.attach("/tg-reflector", new TgReflectorComponentResourceFactory(injector));
 
         return router;
     }

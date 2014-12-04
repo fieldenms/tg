@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -50,7 +51,7 @@ import com.google.common.base.Charsets;
  * @author TG Team
  *
  */
-final class TgJackson extends ObjectMapper implements ISerialiserEngine {
+public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     private static final long serialVersionUID = 8131371701442950310L;
     private final Logger logger = Logger.getLogger(getClass());
 
@@ -90,6 +91,7 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * Register all serialisers / deserialisers for entity types present in TG app.
      */
     protected void registerEntityTypes(final ISerialisationClassProvider provider, final TgJacksonModule module) {
+        new EntitySerialiser<EntityTypeInfo>(EntityTypeInfo.class, this.module, this, this.factory).register();
         for (final Class<?> type : provider.classes()) {
             if (AbstractEntity.class.isAssignableFrom(type)) {
                 final EntityTypeInfo entityTypeInfo = new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, this.module, this, this.factory).register();
@@ -179,5 +181,9 @@ final class TgJackson extends ObjectMapper implements ISerialiserEngine {
                 entity.endInitialising();
             }
         }
+    }
+
+    public LinkedHashMap<Long, EntityTypeInfo> getTypeTable() {
+        return entityTypeInfoGetter.getTypeTable();
     }
 }

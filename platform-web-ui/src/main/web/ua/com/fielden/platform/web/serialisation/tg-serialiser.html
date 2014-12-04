@@ -1,6 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/tg-reflector">
 
 <polymer-element name="tg-serialiser" hidden>
+    <template>
+        <tg-reflector id="typeInfo"></tg-reflector>
+    </template>
     <script>
         (function () {
             var convertToType = function (value) {
@@ -43,13 +47,13 @@
                                     // Find the index of the obj in 'array of serialised objects'. If the index equals -1 -- the object was not serialised yet
                                     index = getId(obj);
                                     if (index >= 0) {
-                                        serialisedObj["@ref_id"] = obj["_type"] + "#" + index; // use the current number
+                                        serialisedObj["@ref_id"] = obj["_type"].number + "#" + index; // use the current number
                                         return serialisedObj;
                                     } else {                                        
                                         // If obj wasn't found in object map then
                                         // create object and add property "@id" to that object, also add created object to object map with key "@id".
                                         // That object map contains entity references in order to use it later for initialising cross referenced objects. 
-                                        serialisedObj["@id"] = obj["_type"] + "#" + putId(obj); 
+                                        serialisedObj["@id"] = obj["_type"].number + "#" + putId(obj); 
                                     }
                                 }
                                 // All object properties will be copied to new object. Just skip "_type" property.
@@ -68,6 +72,7 @@
                 },
                 deserialise: function (envelope) {
                     var objectMap = {},
+                        self = this,
                         deserialise = function (obj) {
                             var deserialisedObject,
                                 property;
@@ -86,7 +91,7 @@
                                     return objectMap[obj["@ref_id"]];
                                 } else if (obj.hasOwnProperty("@id")) {
                                     // If it is an object with "@id" property then create new object with "_id" and "_type" properties and add to the object map.
-                                    deserialisedObject["_type"] = convertToType(obj["@id"].split("#")[0]);
+                                    deserialisedObject["_type"] = self.$.typeInfo.getType(obj["@id"].split("#")[0]);
                                     objectMap[obj["@id"]] = deserialisedObject;
                                 }
                                 // Copy all properties from obj to new deserialised object. Skip "@id" proeprty.

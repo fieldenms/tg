@@ -1,0 +1,15 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<polymer-element name="tg-reflector" hidden>
+    <script>
+        (function() {
+            var typeInfo = @typeTable;
+
+            Polymer({
+                getType: function(number) {
+                    return typeInfo[number];
+                }
+            });
+        })();
+    </script>
+</polymer-element>

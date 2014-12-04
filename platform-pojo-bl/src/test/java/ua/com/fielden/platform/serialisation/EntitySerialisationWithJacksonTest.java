@@ -40,6 +40,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBigDecimal;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBoolean;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithCompositeKey;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDefiner;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -94,6 +95,7 @@ public class EntitySerialisationWithJacksonTest {
                 // BaseEntity.class,
                 SubBaseEntity1.class,
                 SubBaseEntity2.class,
+                EntityWithCompositeKey.class,
                 EntityWithMoney.class //
         );
     }
@@ -524,6 +526,17 @@ public class EntitySerialisationWithJacksonTest {
         }
 
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+    }
+
+    @Test
+    public void entity_with_composite_key_should_be_restored() throws Exception {
+        final EntityWithCompositeKey entity = factory.createEntityWithCompositeKey();
+        final EntityWithCompositeKey restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithCompositeKey.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", factory.getFactory().newEntity(EmptyEntity.class, 1L, "key", "desc"), restoredEntity.getKey1());
+        assertEquals("Incorrect prop.", BigDecimal.TEN, restoredEntity.getKey2());
     }
 
     @Test

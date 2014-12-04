@@ -14,4 +14,8 @@ public class EntityTypeInfoGetter {
         typeCount = typeCount + 1;
         typeTable.put(typeCount, entityTypeInfo.setNumber(typeCount)); // starting from 1
     }
+
+    public LinkedHashMap<Long, EntityTypeInfo> getTypeTable() {
+        return typeTable;
+    }
 }
