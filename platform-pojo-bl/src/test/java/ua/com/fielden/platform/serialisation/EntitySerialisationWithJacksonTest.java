@@ -314,14 +314,46 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void entity_with_non_editable_prop_should_be_restored() throws Exception {
-        final EntityWithString entity = factory.createEntityWithString();
-        entity.getProperty("prop").setEditable(false);
+        final EntityWithString entity = factory.createEntityWithStringNonEditable();
         final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
         assertFalse("Incorrect prop editability.", restoredEntity.getProperty("prop").isEditable());
+    }
+
+    @Test
+    public void entity_with_non_visible_prop_should_be_restored() throws Exception {
+        final EntityWithString entity = factory.createEntityWithStringNonVisible();
+        final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
+        assertFalse("Incorrect prop visibility.", restoredEntity.getProperty("prop").isVisible());
+    }
+
+    @Test
+    public void entity_with_required_prop_should_be_restored() throws Exception {
+        final EntityWithString entity = factory.createEntityWithStringRequired();
+        final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
+        assertTrue("Incorrect prop requiredness.", restoredEntity.getProperty("prop").isRequired());
+    }
+
+    @Test
+    public void entity_with_prop_with_result_should_be_restored() throws Exception {
+        final EntityWithString entity = factory.createEntityWithStringAndResult();
+        final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
+        assertNotNull("Incorrect prop requiredness.", restoredEntity.getProperty("prop").getFirstFailure());
     }
 
     @Test

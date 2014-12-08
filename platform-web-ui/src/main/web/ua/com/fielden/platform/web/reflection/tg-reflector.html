@@ -3,11 +3,101 @@
 <polymer-element name="tg-reflector" hidden>
     <script>
         (function() {
-            var typeInfo = @typeTable;
+            ////////////////////////////////////////// THE PROTOTYPE FOR EntityType ////////////////////////////////////////// 
+            var EntityType = function(rawObject) { 
+                Object.call(this);
+                // copy all properties from rawObject after deserialisation
+                for (var prop in rawObject) { 
+                    this[prop] = rawObject[prop];
+                }
+            };
+            EntityType.prototype = Object.create(Object.prototype);
+            EntityType.prototype.constructor = EntityType;
+
+            /**
+             * Returns 'true' when the entity type represents composite entity, 'false' otherwise. 
+             * 
+             * Use compositeKeyNames() function to determine property names for the key members.
+            */
+            EntityType.prototype.isCompositeEntity = function() {
+                return typeof this.compositeKeyNames !== 'undefined' && this.compositeKeyNames && this.compositeKeyNames.length > 0;
+            }
+
+            /** 
+             * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
+            */
+            EntityType.prototype.compositeKeyNames = function() {
+                return this.compositeKeyNames;
+            }
+
+            ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
+            var EntityInstanceProp = function() {
+                Object.call(this);
+            };
+            EntityInstanceProp.prototype = Object.create(Object.prototype);
+            EntityInstanceProp.prototype.constructor = EntityInstanceProp;
+
+            /**
+             * Returns 'true' when the instance property is editable, false otherwise.
+             * 
+             * IMPORTANT: do not use '_editable' field directly!
+            */
+            EntityInstanceProp.prototype.isEditable = function() {
+                return typeof this._editable === 'undefined' ? true : this._editable;
+            }
+
+            /**
+             * Returns 'true' when the instance property is dirty, false otherwise.
+             * 
+             * IMPORTANT: do not use '_dirty' field directly!
+            */
+            EntityInstanceProp.prototype.isDirty = function() {
+                return typeof this._dirty === 'undefined' ? false : this._dirty;
+            }
+
+            /**
+             * Returns 'true' when the instance property is required, false otherwise.
+             * 
+             * IMPORTANT: do not use '_required' field directly!
+            */
+            EntityInstanceProp.prototype.isRequired = function() {
+                return typeof this._required === 'undefined' ? false : this._required;
+            }
+
+            /**
+             * Returns 'true' when the instance property is visible, false otherwise.
+             * 
+             * IMPORTANT: do not use '_visible' field directly!
+            */
+            EntityInstanceProp.prototype.isVisible = function() {
+                return typeof this._visible === 'undefined' ? true : this._visible;
+            }
+
+            ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
+            var providePrototypes = function(typeTable) {
+                    for (var key in typeTable) {
+                        if (typeTable.hasOwnProperty(key)) {
+                            var entityType = typeTable[key];
+                            typeTable[key] = new EntityType(entityType);
+                            // entityType.prototype = EntityType.prototype;
+                            // entityType.__proto__ = EntityType.prototype;
+                        }
+                    }
+                    return typeTable;
+                },
+                typeTable = providePrototypes(@typeTable);
+
+
+            // console.log("typeTable = ", typeTable);
+            // console.log("typeTable['34'].isCompositeEntity() = ", typeTable['34'].isCompositeEntity());
 
             Polymer({
                 getType: function(number) {
-                    return typeInfo[number];
+                    return typeTable[number];
+                },
+
+                getEntityInstanceProp: function() {
+                    return EntityInstanceProp;
                 }
             });
         })();

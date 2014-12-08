@@ -25,137 +25,48 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <script>
         document.addEventListener('polymer-ready', function() {
-            var type10 = {
-                    "@id": "44#10",
-                    "id": null,
-                    "version": 0,
-                    "key": "ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity",
-                    "@key": {
-                        "editable": true,
-                        "dirty": true
-                    },
-                    "number": 10,
-                    "@number": {
-                        "editable": true,
-                        "dirty": true
-                    },
-                    "desc": null,
-                    "@desc": {
-                        "editable": true,
-                        "dirty": true
-                    }
-                },
-                type11 = {
-                    "@id": "44#11",
-                    "id": null,
-                    "version": 0,
-                    "key": "ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2",
-                    "@key": {
-                        "editable": true,
-                        "dirty": true
-                    },
-                    "number": 11,
-                    "@number": {
-                        "editable": true,
-                        "dirty": true
-                    },
-                    "desc": null,
-                    "@desc": {
-                        "editable": true,
-                        "dirty": true
-                    }
-                },
-                type12 = {
-                    "@id": "44#12",
-                    "id": null,
-                    "version": 0,
-                    "key": "ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1",
-                    "@key": {
-                        "editable": true,
-                        "dirty": true
-                    },
-                    "number": 12,
-                    "@number": {
-                        "editable": true,
-                        "dirty": true
-                    },
-                    "desc": null,
-                    "@desc": {
-                        "editable": true,
-                        "dirty": true
-                    }
-                },
-                type13 = {
-                    "@id": "44#13",
-                    "id": null,
-                    "version": 0,
-                    "key": "ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities",
-                    "@key": {
-                        "editable": true,
-                        "dirty": true
-                    },
-                    "number": 13,
-                    "@number": {
-                        "editable": true,
-                        "dirty": true
-                    },
-                    "desc": null,
-                    "@desc": {
-                        "editable": true,
-                        "dirty": true
-                    }
-                },
+            var serialiser = document.querySelector('#seriliser'),
+                reflector = serialiser.$.typeInfo,
+                EntityInstancePropType = reflector.getEntityInstanceProp(),
+                keyProp1 = new EntityInstancePropType(),
+                descProp1 = new EntityInstancePropType(),
+                keyProp2 = new EntityInstancePropType(),
+                detailProp1 = new EntityInstancePropType(),
+                keyProp3 = new EntityInstancePropType(),
+                descProp2 = new EntityInstancePropType(),
+                detailProp2 = new EntityInstancePropType(),
+                keyProp4 = new EntityInstancePropType(),
+                type10 = reflector.getType("4"),
+                type11 = reflector.getType("11"),
+                type12 = reflector.getType("12"),
+                type13 = reflector.getType("13"),
                 inst1 = {
                     id: 1,
                     _type: type12,
                     key: "entity key",
-                    "@key": {
-                        dirty: false,
-                        readonly: true
-                    },
+                    "@key": keyProp1,
                     desc: "entity description",
-                    "@desc": {
-                        dirty: false,
-                        readonly: false
-                    },
+                    "@desc": descProp1,
                     detail: {
                         id: 2,
                         _type: type13,
-                        "@key": {
-                            dirty: false,
-                            readonly: true
-                        }
+                        "@key": keyProp2
                     },
-                    "@detail": {
-                        dirty: false,
-                        readonly: false
-                    }
+                    "@detail": detailProp1
                 },
                 inst2 = {
                     id: 3,
                     _type: type12,
                     key: "entity key1",
-                    "@key": {
-                        dirty: false,
-                        readonly: true
-                    },
+                    "@key": keyProp3,
                     desc: "entity description1",
-                    "@desc": {
-                        dirty: false,
-                        readonly: false
-                    },
+                    "@desc": descProp2,
                     detail: {
                         id: 4,
                         _type: type13,
-                        "@key": {
-                            dirty: false,
-                            readonly: true
-                        }
+                        "@key": keyProp4
                     },
-                    "@detail": {
-                        dirty: false,
-                        readonly: false
-                    }
+                    "@detail": detailProp2
                 },
                 objToSerialise = {
                     cause: "Testing purposes",
@@ -186,8 +97,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         pageCapacity: 25,
                         query: null
                     }
-                },
-                serialiser = document.querySelector('#seriliser'),
+                },                
                 restoredObj = null;
             inst1.detail.key = inst1;
             inst2.detail.key = inst2;

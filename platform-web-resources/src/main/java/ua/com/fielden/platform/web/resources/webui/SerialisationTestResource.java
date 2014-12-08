@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
@@ -39,11 +40,13 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class SerialisationTestResource extends ServerResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities;
+    private final DefaultValueContract dvc;
 
     public SerialisationTestResource(final EntityFactory entityFactory, final RestServerUtil restUtil, final Context context, final Request request, final Response response, final Date testingDate) {
         init(context, request, response);
         this.restUtil = restUtil;
         this.entities = createEntities(entityFactory, testingDate);
+        this.dvc = new DefaultValueContract();
     }
 
     private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory, final Date testingDate) {
@@ -56,6 +59,10 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithBigDecimal(),
                 factory.createEntityWithInteger(),
                 factory.createEntityWithString(),
+                factory.createEntityWithStringNonEditable(),
+                factory.createEntityWithStringRequired(),
+                factory.createEntityWithStringNonVisible(),
+                factory.createEntityWithStringAndResult(),
                 factory.createEntityWithPropertyWithDefiner(),
                 factory.createEntityWithBoolean(),
                 factory.createEntityWithDate(),
@@ -81,7 +88,7 @@ public class SerialisationTestResource extends ServerResource {
         try {
             final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) restUtil.restoreJSONResult(envelope).getInstance();
 
-            final Result result = deepEqualsForTesting(this.entities, entities);
+            final Result result = deepEqualsForTesting(this.entities, entities, this.dvc);
             if (!result.isSuccessful()) {
                 throw result;
             }
@@ -103,7 +110,7 @@ public class SerialisationTestResource extends ServerResource {
         return restUtil.listJSONRepresentation(this.entities);
     }
 
-    private static Result deepEqualsForTesting(final List<AbstractEntity<?>> entities1, final List<AbstractEntity<?>> entities2) {
+    private static Result deepEqualsForTesting(final List<AbstractEntity<?>> entities1, final List<AbstractEntity<?>> entities2, final DefaultValueContract dvc) {
         final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities = new IdentityHashMap<>();
         if (entities1 == null) {
             if (entities2 == null) {
@@ -123,7 +130,7 @@ public class SerialisationTestResource extends ServerResource {
                     while (iter1.hasNext()) {
                         final AbstractEntity<?> e1 = iter1.next();
                         final AbstractEntity<?> e2 = iter2.next();
-                        final Result deepEquals = deepEqualsForTesting(e1, e2, setOfCheckedEntities);
+                        final Result deepEquals = deepEqualsForTesting(e1, e2, setOfCheckedEntities, dvc);
                         if (!deepEquals.isSuccessful()) {
                             return deepEquals;
                         }
@@ -134,7 +141,7 @@ public class SerialisationTestResource extends ServerResource {
         }
     }
 
-    private static Result deepEqualsForTesting(final AbstractEntity<?> e1, final AbstractEntity<?> e2, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities) {
+    private static Result deepEqualsForTesting(final AbstractEntity<?> e1, final AbstractEntity<?> e2, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities, final DefaultValueContract dvc) {
         if (e1 == null) {
             if (e2 == null) {
                 return Result.successful(e1);
@@ -171,13 +178,13 @@ public class SerialisationTestResource extends ServerResource {
                     final String propName = prop.field().getName();
                     if (prop.getPropertyType() != null) {
                         // check property meta-info equality
-                        final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName));
+                        final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName), dvc);
                         if (!metaPropEq.isSuccessful()) {
                             return metaPropEq;
                         }
                         // check property value equality
                         if (EntityUtils.isEntityType(prop.getPropertyType())) {
-                            final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities);
+                            final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities, dvc);
                             if (!eq.isSuccessful()) {
                                 return eq;
                             }
@@ -199,16 +206,53 @@ public class SerialisationTestResource extends ServerResource {
         }
     }
 
-    private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2) {
+    private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2, final DefaultValueContract dvc) {
         // dirty equality
         if (!EntityUtils.equalsEx(metaProp1.isDirty(), metaProp2.isDirty())) {
             return Result.failure(format("e1 [%s] dirtiness [%s] does not equal to e2 [%s] dirtiness [%s].", metaProp1.getEntity(), metaProp1.isDirty(), metaProp2.getEntity(), metaProp2.isDirty()));
         }
-        // dirty equality
+        // editable equality
         if (!EntityUtils.equalsEx(metaProp1.isEditable(), metaProp2.isEditable())) {
             return Result.failure(format("e1 [%s] editability [%s] does not equal to e2 [%s] editability [%s].", metaProp1.getEntity(), metaProp1.isEditable(), metaProp2.getEntity(), metaProp2.isEditable()));
         }
+        // required equality
+        if (!EntityUtils.equalsEx(metaProp1.isRequired(), metaProp2.isRequired())) {
+            return Result.failure(format("e1 [%s] requiredness [%s] does not equal to e2 [%s] requiredness [%s].", metaProp1.getEntity(), metaProp1.isRequired(), metaProp2.getEntity(), metaProp2.isRequired()));
+        }
+        // visible equality
+        if (!EntityUtils.equalsEx(metaProp1.isVisible(), metaProp2.isVisible())) {
+            return Result.failure(format("e1 [%s] Visible [%s] does not equal to e2 [%s] Visible [%s].", metaProp1.getEntity(), metaProp1.isVisible(), metaProp2.getEntity(), metaProp2.isVisible()));
+        }
+        // validationResult equality
+        if (!resultsEqualsEx(dvc.getValidationResult((MetaProperty<Object>) metaProp1), dvc.getValidationResult((MetaProperty<Object>) metaProp2))) {
+            return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), dvc.getValidationResult((MetaProperty<Object>) metaProp1), metaProp2.getEntity(), dvc.getValidationResult((MetaProperty<Object>) metaProp2)));
+        }
         return Result.successful(metaProp1.getEntity());
+    }
+
+    private static boolean resultsEqualsEx(final Result validationResult, final Result validationResult2) {
+        if (validationResult == null) {
+            if (validationResult2 == null) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            if (validationResult2 == null) {
+                return false;
+            } else {
+                if (!EntityUtils.equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
+                    return false;
+                }
+                if (!EntityUtils.equalsEx(validationResult.getEx(), validationResult2.getEx())) {
+                    return false;
+                }
+                if (!EntityUtils.equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {
+                    return false;
+                }
+                return true;
+            }
+        }
     }
 
     private static void markAsChecked(final AbstractEntity<?> e1, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities) {

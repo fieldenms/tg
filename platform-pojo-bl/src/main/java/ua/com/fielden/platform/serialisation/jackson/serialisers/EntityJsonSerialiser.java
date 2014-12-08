@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
@@ -23,12 +24,14 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
     private final EntityTypeInfo entityTypeInfo;
+    private final DefaultValueContract defaultValueContract;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfo entityTypeInfo) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfo entityTypeInfo, final DefaultValueContract defaultValueContract) {
         super(type);
         this.type = type;
         this.properties = properties;
         this.entityTypeInfo = entityTypeInfo;
+        this.defaultValueContract = defaultValueContract;
     }
 
     @Override
@@ -92,32 +95,49 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                     throw e;
                 }
 
-                final boolean dirty = entity.getProperty(name) == null ? false : entity.getProperty(name).isDirty();
+                // final boolean dirty = metaProperty == null ? false : metaProperty.isDirty();
 
                 // write actual property
                 generator.writeFieldName(name);
-                if (dirty && value != null) {
-                    generator.writeObject(value);
-                } else if (dirty && value == null) {
-                    generator.writeObject(null);
-                } else {
-                    // TODO Theoretically the following two conditions can be removed when serialising from the client side due to the fact that server can retrieve the data from db if required
-                    if (!dirty && value != null) {
-                        generator.writeObject(value);
-                    } else if (!dirty && value == null) {
-                        generator.writeObject(null);
-                    }
-                }
+                generator.writeObject(value);
+                //                if (dirty && value != null) {
+                //                    generator.writeObject(value);
+                //                } else if (dirty && value == null) {
+                //                    generator.writeObject(null);
+                //                } else {
+                //                    // TODO Theoretically the following two conditions can be removed when serialising from the client side due to the fact that server can retrieve the data from db if required
+                //                    if (!dirty && value != null) {
+                //                        generator.writeObject(value);
+                //                    } else if (!dirty && value == null) {
+                //                        generator.writeObject(null);
+                //                    }
+                //                }
 
                 // write actual property
                 generator.writeFieldName("@" + name);
                 generator.writeStartObject();
 
-                generator.writeFieldName(MetaProperty.EDITABLE_PROPERTY_NAME);
-                generator.writeObject(entity.getProperty(name) == null ? true : entity.getProperty(name).isEditable());
-
-                generator.writeFieldName("dirty");
-                generator.writeObject(dirty);
+                final MetaProperty<Object> metaProperty = entity.getProperty(name);
+                if (!defaultValueContract.isEditableDefault(metaProperty)) {
+                    generator.writeFieldName("_" + MetaProperty.EDITABLE_PROPERTY_NAME);
+                    generator.writeObject(defaultValueContract.getEditable(metaProperty));
+                }
+                if (!defaultValueContract.isDirtyDefault(metaProperty)) {
+                    generator.writeFieldName("_dirty");
+                    generator.writeObject(defaultValueContract.getDirty(metaProperty));
+                }
+                if (!defaultValueContract.isRequiredDefault(metaProperty)) {
+                    generator.writeFieldName("_" + MetaProperty.REQUIRED_PROPERTY_NAME);
+                    generator.writeObject(defaultValueContract.getRequired(metaProperty));
+                }
+                if (!defaultValueContract.isVisibleDefault(metaProperty)) {
+                    generator.writeFieldName("_visible");
+                    generator.writeObject(defaultValueContract.getVisible(metaProperty));
+                }
+                if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
+                    generator.writeFieldName("_validationResult");
+                    generator.writeObject(defaultValueContract.getValidationResult(metaProperty));
+                }
 
                 generator.writeEndObject();
             }
@@ -127,6 +147,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     }
 
     private Long typeNumber() {
-        return entityTypeInfo.getNumber();
+        return entityTypeInfo.getKey().equals(EntityTypeInfo.class.getName()) ? 0L : entityTypeInfo.getNumber();
     }
 }

@@ -73,6 +73,25 @@
                 deserialise: function (envelope) {
                     var objectMap = {},
                         self = this,
+                        deserialiseMetaProperty = function(obj) {
+                            var EntityInstancePropType = self.$.typeInfo.getEntityInstanceProp();
+                            var deserialisedObject = new EntityInstancePropType();
+
+                            // var deserialisedObject = {};
+
+                            // Copy all properties from obj to new deserialised object. Skip "@id" proeprty.
+                            copyProperties(deserialisedObject, obj);
+                            return deserialisedObject;
+                        },
+                        copyProperties = function(deserialisedObject, obj) {
+                            for (property in obj) {
+                                if (property !== "@id" && property[0] === "@" && property !== "@instanceType" && property !== "@resultType" && property !== "@id_ref") {
+                                    deserialisedObject[property] = deserialiseMetaProperty(obj[property]);
+                                } else if (property !== "@id") {
+                                    deserialisedObject[property] = deserialise(obj[property]);
+                                }
+                            }
+                        },
                         deserialise = function (obj) {
                             var deserialisedObject,
                                 property;
@@ -91,21 +110,27 @@
                                     return objectMap[obj["@ref_id"]];
                                 } else if (obj.hasOwnProperty("@id")) {
                                     // If it is an object with "@id" property then create new object with "_id" and "_type" properties and add to the object map.
-                                    deserialisedObject["_type"] = self.$.typeInfo.getType(obj["@id"].split("#")[0]);
+                                    var typeIndex = obj["@id"].split("#")[0];
+                                    deserialisedObject["_type"] = self.$.typeInfo.getType(typeIndex);
                                     objectMap[obj["@id"]] = deserialisedObject;
-                                }
+                                } 
+                                // else { 
+                                //     var EntityInstancePropType = self.$.typeInfo.getEntityInstanceProp;
+                                //     deserialisedObject = new EntityInstancePropType();
+                                // }
                                 // Copy all properties from obj to new deserialised object. Skip "@id" proeprty.
-                                for (property in obj) {
-                                    if (property !== "@id") {
-                                        deserialisedObject[property] = deserialise(obj[property]);
-                                    }
-                                }
+                                copyProperties(deserialisedObject, obj);
                             } else {
                                 deserialisedObject = obj;
                             }
                             return deserialisedObject;
                         };
-                    return deserialise(envelope);
+                    var deserialisedEnvelope = deserialise(envelope);
+                    console.log("deserialisedEnvelope = ", deserialisedEnvelope);
+                    // console.log("deserialisedEnvelope.instance[6]['@prop'].isEditable() = ", deserialisedEnvelope.instance[6]["@prop"].isEditable());
+                    // console.log("deserialisedEnvelope.instance[7]['@prop'].isEditable() = ", deserialisedEnvelope.instance[7]["@prop"].isEditable());
+                    // console.log("deserialisedEnvelope.instance[8]['@prop'].isEditable() = ", deserialisedEnvelope.instance[8]["@prop"].isEditable());
+                    return deserialisedEnvelope;
                 }
 
             });

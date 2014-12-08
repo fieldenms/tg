@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
 
 public class FactoryForTestingEntities {
@@ -67,6 +68,34 @@ public class FactoryForTestingEntities {
     public EntityWithString createEntityWithString() {
         final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
+        return entity;
+    }
+
+    public EntityWithString createEntityWithStringNonEditable() {
+        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setEditable(false);
+        return entity;
+    }
+
+    public EntityWithString createEntityWithStringNonVisible() {
+        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setVisible(false);
+        return entity;
+    }
+
+    public EntityWithString createEntityWithStringRequired() {
+        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setRequired(true);
+        return entity;
+    }
+
+    public EntityWithString createEntityWithStringAndResult() {
+        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
+        entity.setProp("okay");
+        entity.getProperty("prop").setRequiredValidationResult(new Result(entity, "Ex.", new Exception("Exception.")));
         return entity;
     }
 

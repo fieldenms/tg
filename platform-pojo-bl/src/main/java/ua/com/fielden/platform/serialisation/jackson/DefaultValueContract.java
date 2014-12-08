@@ -1,0 +1,169 @@
+package ua.com.fielden.platform.serialisation.jackson;
+
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.utils.EntityUtils;
+
+/**
+ * A set of utilities to determine if the value of some property or meta-info is default. It is used internally for Jackson entity serialiser to significantly reduce the amount of
+ * the information to be serialised.
+ *
+ * @author TG Team
+ *
+ */
+public class DefaultValueContract {
+    ///////////////////////////////////////////////// EDITABLE /////////////////////////////////////////////////
+    /**
+     * Returns the default value of <code>editable</code> property.
+     *
+     * @return
+     */
+    public boolean getEditableDefault() {
+        return true;
+    }
+
+    /**
+     * Returns the value of <code>editable</code> property.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public boolean getEditable(final MetaProperty<Object> metaProperty) {
+        return metaProperty == null ? getEditableDefault() : metaProperty.isEditable();
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>editable</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public boolean isEditableDefault(final MetaProperty<Object> metaProperty) {
+        return EntityUtils.equalsEx(getEditable(metaProperty), getEditableDefault());
+    }
+
+    ///////////////////////////////////////////////// DIRTY /////////////////////////////////////////////////
+    /**
+     * Returns the default value of <code>dirty</code> property.
+     *
+     * @return
+     */
+    public boolean getDirtyDefault() {
+        return false;
+    }
+
+    /**
+     * Returns the value of <code>dirty</code> property.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public boolean getDirty(final MetaProperty<Object> metaProperty) {
+        return metaProperty == null ? getDirtyDefault() : metaProperty.isDirty();
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>dirty</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public boolean isDirtyDefault(final MetaProperty<Object> metaProperty) {
+        return EntityUtils.equalsEx(getDirty(metaProperty), getDirtyDefault());
+    }
+
+    ///////////////////////////////////////////////// REQUIRED /////////////////////////////////////////////////
+    /**
+     * Returns the default value of <code>required</code> property.
+     *
+     * @return
+     */
+    public boolean getRequiredDefault() {
+        return false;
+    }
+
+    /**
+     * Returns the value of <code>required</code> property.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public boolean getRequired(final MetaProperty<Object> metaProperty) {
+        return metaProperty == null ? getRequiredDefault() : metaProperty.isRequired();
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>required</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public boolean isRequiredDefault(final MetaProperty<Object> metaProperty) {
+        return EntityUtils.equalsEx(getRequired(metaProperty), getRequiredDefault());
+    }
+
+    ///////////////////////////////////////////////// VISIBLE /////////////////////////////////////////////////
+    /**
+     * Returns the default value of <code>visible</code> property.
+     *
+     * @return
+     */
+    public boolean getVisibleDefault() {
+        return true;
+    }
+
+    /**
+     * Returns the value of <code>visible</code> property.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public boolean getVisible(final MetaProperty<Object> metaProperty) {
+        return metaProperty == null ? getVisibleDefault() : metaProperty.isVisible();
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>visible</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public boolean isVisibleDefault(final MetaProperty<Object> metaProperty) {
+        return EntityUtils.equalsEx(getVisible(metaProperty), getVisibleDefault());
+    }
+
+    ///////////////////////////////////////////////// VALIDATION RESULT /////////////////////////////////////////////////
+    /**
+     * Returns the default value of <code>ValidationResult</code> property.
+     *
+     * @return
+     */
+    public Result getValidationResultDefault() {
+        return null;
+    }
+
+    /**
+     * Returns the value of <code>ValidationResult</code> property.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public Result getValidationResult(final MetaProperty<Object> metaProperty) {
+        return metaProperty == null ? getValidationResultDefault() : validationResult(metaProperty);
+    }
+
+    private Result validationResult(final MetaProperty<Object> metaProperty) {
+        return !metaProperty.isValid() ? metaProperty.getFirstFailure() : metaProperty.getFirstWarning();
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>ValidationResult</code> property is default, <code>false</code> otherwise.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public boolean isValidationResultDefault(final MetaProperty<Object> metaProperty) {
+        return EntityUtils.equalsEx(getValidationResult(metaProperty), getValidationResultDefault());
+    }
+
+}

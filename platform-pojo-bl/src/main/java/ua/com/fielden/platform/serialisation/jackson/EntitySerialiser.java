@@ -39,10 +39,13 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         this.factory = factory;
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        entityTypeInfo = factory.newEntity(EntityTypeInfo.class, (Long) null, type.getName());
+        entityTypeInfo = factory.newEntity(EntityTypeInfo.class, 1L);
+        entityTypeInfo.beginInitialising();
+        entityTypeInfo.setKey(type.getName());
 
-        serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo);
-        deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo);
+        final DefaultValueContract defaultValueContract = new DefaultValueContract();
+        serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, defaultValueContract);
+        deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, defaultValueContract);
         this.module = module;
     }
 
@@ -51,6 +54,14 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         module.addSerializer(type, serialiser);
         module.addDeserializer(type, deserialiser);
 
+        final List<String> compositeKeyNames = new ArrayList<>();
+        if (EntityUtils.isCompositeEntity(type)) {
+            final List<Field> keyMembers = Finder.getKeyMembers(type);
+            for (final Field keyMember : keyMembers) {
+                compositeKeyNames.add(keyMember.getName());
+            }
+        }
+        entityTypeInfo.setCompositeKeyNames(compositeKeyNames);
         return entityTypeInfo;
     }
 
