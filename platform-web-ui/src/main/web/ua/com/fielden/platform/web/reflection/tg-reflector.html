@@ -7,8 +7,21 @@
             var EntityType = function(rawObject) { 
                 Object.call(this);
                 // copy all properties from rawObject after deserialisation
-                for (var prop in rawObject) { 
-                    this[prop] = rawObject[prop];
+                for (var prop in rawObject) {
+                    if (prop === "_props") {
+                        var _props = rawObject[prop];
+
+                        for (var p in _props) {
+                            if (_props.hasOwnProperty(p)) {
+                                var val = _props[p];
+                                _props[p] = new EntityTypeProp(val);
+                            }
+                        }
+
+                        this[prop] = _props;
+                    } else {
+                        this[prop] = rawObject[prop];
+                    }
                 }
             };
             EntityType.prototype = Object.create(Object.prototype);
@@ -90,6 +103,32 @@
                 // TODO implement when needed (TitlesDescsGetter.breakClassName method)
                 return className;
             }
+
+            ////////////////////////////////////////// THE PROTOTYPE FOR EntityTypeProp ////////////////////////////////////////// 
+            var EntityTypeProp = function() {
+                Object.call(this);
+            };
+            EntityTypeProp.prototype = Object.create(Object.prototype);
+            EntityTypeProp.prototype.constructor = EntityTypeProp;
+
+            /**
+             * Returns 'true' when the type property is secrete, false otherwise.
+             * 
+             * IMPORTANT: do not use '_secrete' field directly!
+            */
+            EntityTypeProp.prototype.isSecrete = function() {
+                return typeof this._secrete === 'undefined' ? false : this._secrete;
+            }
+
+            /**
+             * Returns 'true' when the type property is upperCase, false otherwise.
+             * 
+             * IMPORTANT: do not use '_upperCase' field directly!
+            */
+            EntityTypeProp.prototype.isUpperCase = function() {
+                return typeof this._upperCase === 'undefined' ? false : this._upperCase;
+            }
+
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var EntityInstanceProp = function() {
                 Object.call(this);
