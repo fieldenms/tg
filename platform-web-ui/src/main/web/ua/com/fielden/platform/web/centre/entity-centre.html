@@ -40,6 +40,7 @@
             }
             tile-layout {
                 margin: 5px;
+                font: inherit;
             }
         </style>
         <core-ajax id="config_retriever" url="/users/SU/centre/{{centreName}}" handleas="json" on-core-response="{{onConfigLoadResponse}}" on-core-error="{{onConfigLoadError}}" auto></core-ajax>
@@ -47,7 +48,7 @@
         <div layout vertical center center-justified fit>
             <div class="entity-center">
                 <accordion-element heading="Selection Criteria">
-                    <tile-layout fullbleed block relative whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}" mincellheight="70px">
+                    <tile-layout fullbleed block relative whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}" mincellheight="4.5em">
                         <template repeat="{{criteria in config.centreConfig.criteria.criteriaProperties}}">
                             <criteria-editor class="tile" config="{{criteria}}" bindto="{{config.query.criteriaProperties[criteria.propertyName]}}"></criteria-editor>
                         </template>
