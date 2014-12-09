@@ -4,10 +4,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -36,7 +39,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     private final List<CachedProperty> properties;
     private final TgJacksonModule module;
     private final EntityFactory factory;
-    private final EntityTypeInfo entityTypeInfo;
+    private final EntityType entityType;
     private final DefaultValueContract defaultValueContract;
 
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory) {
@@ -48,17 +51,17 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         this.factory = factory;
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        entityTypeInfo = factory.newEntity(EntityTypeInfo.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
-        entityTypeInfo.beginInitialising();
-        entityTypeInfo.setKey(type.getName());
+        entityType = this.factory.newEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
+        entityType.beginInitialising();
+        entityType.setKey(type.getName());
 
         defaultValueContract = new DefaultValueContract();
-        serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, defaultValueContract, excludeNulls);
-        deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, defaultValueContract);
+        serialiser = new EntityJsonSerialiser<T>(type, properties, entityType, defaultValueContract, excludeNulls);
+        deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityType, defaultValueContract);
         this.module = module;
     }
 
-    public EntityTypeInfo register() {
+    public EntityType register() {
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);
         module.addDeserializer(type, deserialiser);
@@ -69,21 +72,45 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             for (final Field keyMember : keyMembers) {
                 compositeKeyNames.add(keyMember.getName());
             }
-            entityTypeInfo.set_compositeKeyNames(compositeKeyNames);
+            entityType.set_compositeKeyNames(compositeKeyNames);
 
             final String compositeKeySeparator = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) type);
             if (!defaultValueContract.isCompositeKeySeparatorDefault(compositeKeySeparator)) {
-                entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
+                entityType.set_compositeKeySeparator(compositeKeySeparator);
             }
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!defaultValueContract.isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
-            entityTypeInfo.set_entityTitle(entityTitleAndDesc.getKey());
+            entityType.set_entityTitle(entityTitleAndDesc.getKey());
         }
         if (!defaultValueContract.isEntityDescDefault(type, entityTitleAndDesc.getValue())) {
-            entityTypeInfo.set_entityDesc(entityTitleAndDesc.getValue());
+            entityType.set_entityDesc(entityTitleAndDesc.getValue());
         }
-        return entityTypeInfo;
+
+        if (!properties.isEmpty()) {
+            final Map<String, EntityTypeProp> props = new LinkedHashMap<>();
+            for (final CachedProperty prop : properties) {
+                // non-composite keys should be persisted by identifying their actual type
+                final String name = prop.field().getName();
+                final EntityTypeProp entityTypeProp = this.factory.newEntity(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON);
+                entityTypeProp.beginInitialising();
+
+                final Boolean secrete = AnnotationReflector.isSecreteProperty(type, name);
+                if (!defaultValueContract.isSecreteDefault(secrete)) {
+                    entityTypeProp.set_secrete(secrete);
+                }
+                final Boolean upperCase = AnnotationReflector.isAnnotationPresent(prop.field, UpperCase.class);
+                if (!defaultValueContract.isUpperCaseDefault(upperCase)) {
+                    entityTypeProp.set_upperCase(upperCase);
+                }
+                entityTypeProp.endInitialising();
+
+                props.put(name, entityTypeProp);
+            }
+            entityType.set_props(props);
+        }
+
+        return entityType;
     }
 
     public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final Long typeNumber) {

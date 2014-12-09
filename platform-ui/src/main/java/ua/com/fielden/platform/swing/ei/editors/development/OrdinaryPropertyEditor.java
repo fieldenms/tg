@@ -29,7 +29,6 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Mutator;
-import ua.com.fielden.platform.entity.annotation.Secrete;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -46,9 +45,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Editor for an entity property of ordinary types (i.e. not entity and non-collectional).
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class OrdinaryPropertyEditor implements IPropertyEditor {
 
@@ -62,7 +61,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 
     /**
      * Creates {@link OrdinaryPropertyEditor} for the entity centre and binds it to the specified property.
-     * 
+     *
      * @param criteria
      * @param propertyName
      * @return
@@ -76,7 +75,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 
     /**
      * Creates {@link OrdinaryPropertyEditor} and binds it to the specified property.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -90,7 +89,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 
     /**
      * Creates {@link OrdinaryPropertyEditor} and binds it to the specified property in the given entity.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param defaultTimePortionMillis
@@ -171,12 +170,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
                 };
                 editor = scrollPane;
             } else {
-                boolean isSecrete = false;
-                try {
-                    isSecrete = AnnotationReflector.getPropertyAnnotation(Secrete.class, entity.getType(), bindingPropertyName) != null;
-                } catch (final Exception ex) {
-                    // in most cases this exception will be thrown when entity is the DynamicEntityQueryCriteria
-                }
+                final boolean isSecrete = AnnotationReflector.isSecreteProperty(entity.getType(), bindingPropertyName);
                 if (!isSecrete) {
                     final BoundedValidationLayer<JTextField> component = ComponentFactory.createStringTextField(entity, bindingPropertyName, true, desc, upperCase ? UPPER_CASE
                             : MIXED_CASE);
@@ -236,10 +230,12 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
         return propertyName;
     }
 
+    @Override
     public JLabel getLabel() {
         return label;
     }
 
+    @Override
     public JComponent getEditor() {
         return editor;
     }

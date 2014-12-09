@@ -10,7 +10,8 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeProp;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 
@@ -23,15 +24,15 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
-    private final EntityTypeInfo entityTypeInfo;
+    private final EntityType entityType;
     private final DefaultValueContract defaultValueContract;
     private final boolean excludeNulls;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfo entityTypeInfo, final DefaultValueContract defaultValueContract, final boolean excludeNulls) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final DefaultValueContract defaultValueContract, final boolean excludeNulls) {
         super(type);
         this.type = type;
         this.properties = properties;
-        this.entityTypeInfo = entityTypeInfo;
+        this.entityType = entityType;
         this.defaultValueContract = defaultValueContract;
         this.excludeNulls = excludeNulls;
     }
@@ -136,6 +137,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     }
 
     private Long typeNumber() {
-        return entityTypeInfo.getKey().equals(EntityTypeInfo.class.getName()) ? 0L : entityTypeInfo.get_number();
+        return entityType.getKey().equals(EntityType.class.getName()) ? 0L :
+                entityType.getKey().equals(EntityTypeProp.class.getName()) ? 1L : entityType.get_number();
     }
 }

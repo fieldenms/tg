@@ -2,7 +2,9 @@ package ua.com.fielden.platform.serialisation.jackson;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -20,8 +22,8 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity Type Name", desc = "Entity Type Name description")
-@CompanionObject(IEntityTypeInfo.class)
-public class EntityTypeInfo extends AbstractEntity<String> {
+@CompanionObject(IEntityType.class)
+public class EntityType extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -44,8 +46,25 @@ public class EntityTypeInfo extends AbstractEntity<String> {
     @Title(value = "Entity Desc", desc = "Entity description")
     private String _entityDesc;
 
+    @IsProperty(EntityTypeProp.class)
+    @Title(value = "Entity Type Properties", desc = "A map of entity type properties by their names")
+    private Map<String, EntityTypeProp> _props;
+
     @Observable
-    public EntityTypeInfo set_entityDesc(final String entityDesc) {
+    protected EntityType set_props(final Map<String, EntityTypeProp> _props) {
+        this._props = new LinkedHashMap<>();
+
+        this._props.clear();
+        this._props.putAll(_props);
+        return this;
+    }
+
+    public Map<String, EntityTypeProp> get_props() {
+        return Collections.unmodifiableMap(_props);
+    }
+
+    @Observable
+    public EntityType set_entityDesc(final String entityDesc) {
         this._entityDesc = entityDesc;
         return this;
     }
@@ -55,7 +74,7 @@ public class EntityTypeInfo extends AbstractEntity<String> {
     }
 
     @Observable
-    public EntityTypeInfo set_entityTitle(final String entityTitle) {
+    public EntityType set_entityTitle(final String entityTitle) {
         this._entityTitle = entityTitle;
         return this;
     }
@@ -65,7 +84,7 @@ public class EntityTypeInfo extends AbstractEntity<String> {
     }
 
     @Observable
-    public EntityTypeInfo set_compositeKeySeparator(final String _compositeKeySeparator) {
+    public EntityType set_compositeKeySeparator(final String _compositeKeySeparator) {
         this._compositeKeySeparator = _compositeKeySeparator;
         return this;
     }
@@ -75,7 +94,7 @@ public class EntityTypeInfo extends AbstractEntity<String> {
     }
 
     @Observable
-    protected EntityTypeInfo set_compositeKeyNames(final List<String> _compositeKeyNames) {
+    protected EntityType set_compositeKeyNames(final List<String> _compositeKeyNames) {
         this._compositeKeyNames = new ArrayList<>();
 
         this._compositeKeyNames.clear();
@@ -88,7 +107,7 @@ public class EntityTypeInfo extends AbstractEntity<String> {
     }
 
     @Observable
-    public EntityTypeInfo set_number(final Long _number) {
+    public EntityType set_number(final Long _number) {
         this._number = _number;
         return this;
     }

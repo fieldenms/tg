@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.Secrete;
 import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.utils.Pair;
@@ -350,8 +351,8 @@ public final class AnnotationReflector {
         // 0, dotNotationExp.length() - 5);
         // return getAnnotation(annotationType, PropertyTypeDeterminator.determinePropertyType(forType, containingPropertyName));
         if (dotNotationExp.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) || //
-                dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) || //
-                dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
+        dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) || //
+        dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
             final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(forType, dotNotationExp);
             return getAnnotationForClass(annotationType, transformed.getKey());
         } else {
@@ -369,8 +370,8 @@ public final class AnnotationReflector {
      */
     public static boolean isContextual(final Calculated calculatedAnnotation) {
         return !calculatedAnnotation.rootTypeName().equals(Calculated.NOTHING) && //
-                !calculatedAnnotation.contextPath().equals(Calculated.NOTHING) && //
-                !calculatedAnnotation.origination().equals(Calculated.NOTHING);
+        !calculatedAnnotation.contextPath().equals(Calculated.NOTHING) && //
+        !calculatedAnnotation.origination().equals(Calculated.NOTHING);
     }
 
     /**
@@ -414,5 +415,22 @@ public final class AnnotationReflector {
                 return false;
             }
         }
+    }
+
+    /**
+     * Returns <code>true</code> when the properties represents 'secrete' property, <code>false</code> otherwise.
+     *
+     * @param entityType
+     * @param propName
+     * @return
+     */
+    public static boolean isSecreteProperty(final Class<?> entityType, final String propName) {
+        boolean isSecrete = false;
+        try {
+            isSecrete = getPropertyAnnotation(Secrete.class, entityType, propName) != null;
+        } catch (final Exception ex) {
+            // in most cases this exception will be thrown when entity is the DynamicEntityQueryCriteria
+        }
+        return isSecrete;
     }
 }

@@ -196,4 +196,22 @@ public class DefaultValueContract {
         return EntityUtils.equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
     }
 
+    ///////////////////////////////////////////////// ENTITY TYPE PROP props /////////////////////////////////////////////////
+    /**
+     * Returns <code>true</code> if the value of <code>secrete</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isSecreteDefault(final Boolean secrete) {
+        return EntityUtils.equalsEx(secrete, false);
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>upperCase</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isUpperCaseDefault(final Boolean upperCase) {
+        return EntityUtils.equalsEx(upperCase, false);
+    }
 }

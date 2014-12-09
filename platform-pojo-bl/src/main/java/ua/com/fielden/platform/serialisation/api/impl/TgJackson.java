@@ -22,8 +22,9 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeProp;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
@@ -91,10 +92,11 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * Register all serialisers / deserialisers for entity types present in TG app.
      */
     protected void registerEntityTypes(final ISerialisationClassProvider provider, final TgJacksonModule module) {
-        new EntitySerialiser<EntityTypeInfo>(EntityTypeInfo.class, this.module, this, this.factory, true).register();
+        new EntitySerialiser<EntityType>(EntityType.class, this.module, this, this.factory, true).register();
+        new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, true).register();
         for (final Class<?> type : provider.classes()) {
             if (AbstractEntity.class.isAssignableFrom(type)) {
-                final EntityTypeInfo entityTypeInfo = new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, this.module, this, this.factory).register();
+                final EntityType entityTypeInfo = new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, this.module, this, this.factory).register();
                 entityTypeInfoGetter.register(entityTypeInfo);
             }
         }
@@ -183,7 +185,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         }
     }
 
-    public LinkedHashMap<Long, EntityTypeInfo> getTypeTable() {
+    public LinkedHashMap<Long, EntityType> getTypeTable() {
         return entityTypeInfoGetter.getTypeTable();
     }
 }

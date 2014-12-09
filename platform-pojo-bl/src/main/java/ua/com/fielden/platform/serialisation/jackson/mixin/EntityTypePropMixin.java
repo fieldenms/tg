@@ -7,20 +7,20 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
-import ua.com.fielden.platform.serialisation.jackson.IEntityTypeInfo;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeProp;
+import ua.com.fielden.platform.serialisation.jackson.IEntityTypeProp;
 
 /** 
- * Mixin implementation for companion object {@link IEntityTypeInfo}.
+ * Mixin implementation for companion object {@link IEntityTypeProp}.
  * 
  * @author Developers
  *
  */
-public class EntityTypeInfoMixin {
+public class EntityTypePropMixin {
     
-    private final IEntityTypeInfo companion;
+    private final IEntityTypeProp companion;
     
-    public EntityTypeInfoMixin(final IEntityTypeInfo companion) {
+    public EntityTypePropMixin(final IEntityTypeProp companion) {
         this.companion = companion;
     }
     

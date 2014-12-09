@@ -5,31 +5,30 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import java.util.Map;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.rao.CommonEntityRao;
+import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.serialisation.jackson.mixin.EntityTypeInfoMixin;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.serialisation.jackson.mixin.EntityTypePropMixin;
 import com.google.inject.Inject;
 
 /** 
- * DAO implementation for companion object {@link IEntityTypeInfo}.
+ * RAO implementation for master object {@link IEntityTypeProp} based on a common with DAO mixin.
  * 
  * @author Developers
  *
  */
-@EntityType(EntityTypeInfo.class)
-public class EntityTypeInfoDao extends CommonEntityDao<EntityTypeInfo> implements IEntityTypeInfo {
+@EntityType(EntityTypeProp.class)
+public class EntityTypePropRao extends CommonEntityRao<EntityTypeProp> implements IEntityTypeProp {
+
     
-    private final EntityTypeInfoMixin mixin;
+    private final EntityTypePropMixin mixin;
     
     @Inject
-    public EntityTypeInfoDao(final IFilter filter) {
-        super(filter);
+    public EntityTypePropRao(final RestClientUtil restUtil) {
+        super(restUtil);
         
-        mixin = new EntityTypeInfoMixin(this);
+        mixin = new EntityTypePropMixin(this);
     }
     
 }

@@ -20,7 +20,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 
@@ -40,15 +40,15 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
-    private final EntityTypeInfo entityTypeInfo;
+    private final EntityType entityType;
     private final DefaultValueContract defaultValueContract;
 
-    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfo entityTypeInfo, final DefaultValueContract defaultValueContract) {
+    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final DefaultValueContract defaultValueContract) {
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
         this.properties = properties;
-        this.entityTypeInfo = entityTypeInfo;
+        this.entityType = entityType;
         this.defaultValueContract = defaultValueContract;
 
         this.type = type;
@@ -293,6 +293,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     }
 
     private Long typeNumber() {
-        return entityTypeInfo.get_number();
+        return entityType.get_number();
     }
 }

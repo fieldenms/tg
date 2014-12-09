@@ -3,11 +3,11 @@ package ua.com.fielden.platform.serialisation.jackson;
 import ua.com.fielden.platform.dao.IEntityDao;
 
 /** 
- * Companion object for entity {@link EntityTypeInfo}.
+ * Companion object for entity {@link EntityTypeProp}.
  * 
  * @author Developers
  *
  */
-public interface IEntityTypeInfo extends IEntityDao<EntityTypeInfo> {
+public interface IEntityTypeProp extends IEntityDao<EntityTypeProp> {
 
 }

@@ -12,7 +12,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfo;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -28,9 +28,9 @@ import com.google.common.base.Charsets;
  */
 public class TgReflectorComponentResource extends ServerResource {
     private final RestServerUtil restUtil;
-    private final LinkedHashMap<Long, EntityTypeInfo> typeTable;
+    private final LinkedHashMap<Long, EntityType> typeTable;
 
-    public TgReflectorComponentResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final LinkedHashMap<Long, EntityTypeInfo> typeTable) {
+    public TgReflectorComponentResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final LinkedHashMap<Long, EntityType> typeTable) {
         init(context, request, response);
         this.restUtil = restUtil;
         this.typeTable = typeTable;
