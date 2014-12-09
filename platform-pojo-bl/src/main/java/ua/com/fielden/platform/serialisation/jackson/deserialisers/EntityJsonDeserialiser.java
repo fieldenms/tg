@@ -151,14 +151,16 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     }
                 }
                 final JsonNode metaPropNode = node.get("@" + prop.field().getName());
-                if (metaPropNode.isNull()) {
-                    throw new IllegalStateException("EntitySerialiser has got null meta property '@" + prop.field().getName() + "' when reading entity of type [" + type.getName() + "].");
+                if (metaPropNode != null) {
+                    if (metaPropNode.isNull()) {
+                        throw new IllegalStateException("EntitySerialiser has got null meta property '@" + prop.field().getName() + "' when reading entity of type [" + type.getName() + "].");
+                    }
+                    final MetaProperty metaProperty = entity.getProperty(prop.field().getName());
+                    provideDirty(metaProperty, metaPropNode);
+                    provideEditable(metaProperty, metaPropNode);
+                    provideRequired(metaProperty, metaPropNode);
+                    provideVisible(metaProperty, metaPropNode);
                 }
-                final MetaProperty metaProperty = entity.getProperty(prop.field().getName());
-                provideDirty(metaProperty, metaPropNode);
-                provideEditable(metaProperty, metaPropNode);
-                provideRequired(metaProperty, metaPropNode);
-                provideVisible(metaProperty, metaPropNode);
             }
             //      entity.setInitialising(false);
 

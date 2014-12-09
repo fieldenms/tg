@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -102,33 +104,34 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                     // write actual property
                     generator.writeFieldName(name);
                     generator.writeObject(value);
-                    // write actual meta-property
-                    generator.writeFieldName("@" + name);
-                    generator.writeStartObject();
 
                     final MetaProperty<Object> metaProperty = entity.getProperty(name);
+                    final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
                     if (!defaultValueContract.isEditableDefault(metaProperty)) {
-                        generator.writeFieldName("_" + MetaProperty.EDITABLE_PROPERTY_NAME);
-                        generator.writeObject(defaultValueContract.getEditable(metaProperty));
+                        existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, defaultValueContract.getEditable(metaProperty));
                     }
                     if (!defaultValueContract.isDirtyDefault(metaProperty)) {
-                        generator.writeFieldName("_dirty");
-                        generator.writeObject(defaultValueContract.getDirty(metaProperty));
+                        existingMetaProps.put("_dirty", defaultValueContract.getDirty(metaProperty));
                     }
                     if (!defaultValueContract.isRequiredDefault(metaProperty)) {
-                        generator.writeFieldName("_" + MetaProperty.REQUIRED_PROPERTY_NAME);
-                        generator.writeObject(defaultValueContract.getRequired(metaProperty));
+                        existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, defaultValueContract.getRequired(metaProperty));
                     }
                     if (!defaultValueContract.isVisibleDefault(metaProperty)) {
-                        generator.writeFieldName("_visible");
-                        generator.writeObject(defaultValueContract.getVisible(metaProperty));
+                        existingMetaProps.put("_visible", defaultValueContract.getVisible(metaProperty));
                     }
                     if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
-                        generator.writeFieldName("_validationResult");
-                        generator.writeObject(defaultValueContract.getValidationResult(metaProperty));
+                        existingMetaProps.put("_validationResult", defaultValueContract.getValidationResult(metaProperty));
                     }
-
-                    generator.writeEndObject();
+                    // write actual meta-property
+                    if (!existingMetaProps.isEmpty()) {
+                        generator.writeFieldName("@" + name);
+                        generator.writeStartObject();
+                        for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
+                            generator.writeFieldName(nameAndVal.getKey());
+                            generator.writeObject(nameAndVal.getValue());
+                        }
+                        generator.writeEndObject();
+                    }
                 }
             }
 
