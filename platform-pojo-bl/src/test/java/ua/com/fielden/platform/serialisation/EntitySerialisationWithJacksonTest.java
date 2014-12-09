@@ -353,7 +353,7 @@ public class EntitySerialisationWithJacksonTest {
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
         assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
-        assertNotNull("Incorrect prop requiredness.", restoredEntity.getProperty("prop").getFirstFailure());
+        assertNull("The validation result should be null after deserialisation.", restoredEntity.getProperty("prop").getFirstFailure());
     }
 
     @Test

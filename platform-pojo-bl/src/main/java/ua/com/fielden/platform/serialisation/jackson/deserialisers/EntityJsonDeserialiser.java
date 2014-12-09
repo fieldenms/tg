@@ -13,7 +13,6 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -160,7 +159,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 provideEditable(metaProperty, metaPropNode);
                 provideRequired(metaProperty, metaPropNode);
                 provideVisible(metaProperty, metaPropNode);
-                provideValidationResult(metaProperty, metaPropNode);
             }
             //      entity.setInitialising(false);
 
@@ -252,27 +250,27 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         }
     }
 
-    /**
-     * Retrieves 'ValidationResult' value from entity JSON tree.
-     *
-     * @param metaProperty
-     * @param metaPropNode
-     * @return
-     */
-    private void provideValidationResult(final MetaProperty metaProperty, final JsonNode metaPropNode) throws IOException, JsonProcessingException {
-        final JsonNode validationResultPropNode = metaPropNode.get("_validationResult");
-        if (validationResultPropNode == null) {
-            // do nothing -- there is no node and that means that there is default value
-        } else {
-            if (validationResultPropNode.isNull()) {
-                throw new IllegalStateException("EntitySerialiser has got null 'ValidationResult' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
-            }
-            if (metaProperty != null) {
-                final JsonParser jsonParser = validationResultPropNode.traverse(mapper);
-                metaProperty.setRequiredValidationResult(jsonParser.readValueAs(Result.class)); // TODO how can it be done for Warning.class??
-            }
-        }
-    }
+    //    /**
+    //     * Retrieves 'ValidationResult' value from entity JSON tree.
+    //     *
+    //     * @param metaProperty
+    //     * @param metaPropNode
+    //     * @return
+    //     */
+    //    private void provideValidationResult(final MetaProperty metaProperty, final JsonNode metaPropNode) throws IOException, JsonProcessingException {
+    //        final JsonNode validationResultPropNode = metaPropNode.get("_validationResult");
+    //        if (validationResultPropNode == null) {
+    //            // do nothing -- there is no node and that means that there is default value
+    //        } else {
+    //            if (validationResultPropNode.isNull()) {
+    //                throw new IllegalStateException("EntitySerialiser has got null 'ValidationResult' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
+    //            }
+    //            if (metaProperty != null) {
+    //                final JsonParser jsonParser = validationResultPropNode.traverse(mapper);
+    //                metaProperty.setRequiredValidationResult(jsonParser.readValueAs(Result.class)); // TODO how can it be done for Warning.class??
+    //            }
+    //        }
+    //    }
 
     private ResolvedType constructType(final TypeFactory typeFactory, final Field propertyField) {
         final Class<?> fieldType = PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());

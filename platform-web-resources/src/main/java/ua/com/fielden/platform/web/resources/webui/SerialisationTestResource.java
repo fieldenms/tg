@@ -224,35 +224,39 @@ public class SerialisationTestResource extends ServerResource {
             return Result.failure(format("e1 [%s] Visible [%s] does not equal to e2 [%s] Visible [%s].", metaProp1.getEntity(), metaProp1.isVisible(), metaProp2.getEntity(), metaProp2.isVisible()));
         }
         // validationResult equality
-        if (!resultsEqualsEx(dvc.getValidationResult((MetaProperty<Object>) metaProp1), dvc.getValidationResult((MetaProperty<Object>) metaProp2))) {
+        if (!resultsAreExpected(dvc.getValidationResult((MetaProperty<Object>) metaProp1), dvc.getValidationResult((MetaProperty<Object>) metaProp2))) {
             return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), dvc.getValidationResult((MetaProperty<Object>) metaProp1), metaProp2.getEntity(), dvc.getValidationResult((MetaProperty<Object>) metaProp2)));
         }
         return Result.successful(metaProp1.getEntity());
     }
 
-    private static boolean resultsEqualsEx(final Result validationResult, final Result validationResult2) {
-        if (validationResult == null) {
-            if (validationResult2 == null) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            if (validationResult2 == null) {
-                return false;
-            } else {
-                if (!EntityUtils.equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
-                    return false;
-                }
-                if (!EntityUtils.equalsEx(validationResult.getEx().getMessage(), validationResult2.getEx().getMessage())) {
-                    return false;
-                }
-                if (!EntityUtils.equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {
-                    return false;
-                }
-                return true;
-            }
+    private static boolean resultsAreExpected(final Result validationResult, final Result validationResult2) {
+        if (validationResult2 != null) { // validation result should disappear after deserialisation
+            return false;
         }
+        return true;
+        //        if (validationResult == null) {
+        //            if (validationResult2 == null) {
+        //                return true;
+        //            } else {
+        //                return false;
+        //            }
+        //        } else {
+        //            if (validationResult2 == null) {
+        //                return false;
+        //            } else {
+        //                if (!EntityUtils.equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
+        //                    return false;
+        //                }
+        //                if (!EntityUtils.equalsEx(validationResult.getEx().getMessage(), validationResult2.getEx().getMessage())) {
+        //                    return false;
+        //                }
+        //                if (!EntityUtils.equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {
+        //                    return false;
+        //                }
+        //                return true;
+        //            }
+        //        }
     }
 
     private static void markAsChecked(final AbstractEntity<?> e1, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities) {
