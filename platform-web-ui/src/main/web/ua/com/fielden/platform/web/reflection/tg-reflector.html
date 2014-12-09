@@ -80,6 +80,15 @@
                 return typeof this._visible === 'undefined' ? true : this._visible;
             }
 
+            /**
+             * Returns validation result (failure or warning) for the instance property or 'null' if successful without warnings.
+             * 
+             * IMPORTANT: do not use '_validationResult' field directly!
+            */
+            EntityInstanceProp.prototype.getValidationResult = function() {
+                return typeof this._validationResult === 'undefined' ? null : this._validationResult;
+            }
+
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var providePrototypes = function(typeTable) {
                     for (var key in typeTable) {
