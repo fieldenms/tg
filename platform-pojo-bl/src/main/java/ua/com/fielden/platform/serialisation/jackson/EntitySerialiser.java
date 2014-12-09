@@ -13,9 +13,11 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 
 import com.esotericsoftware.kryo.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,6 +75,13 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             if (!defaultValueContract.isCompositeKeySeparatorDefault(compositeKeySeparator)) {
                 entityTypeInfo.setCompositeKeySeparator(compositeKeySeparator);
             }
+        }
+        final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
+        if (!defaultValueContract.isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
+            entityTypeInfo.setEntityTitle(entityTitleAndDesc.getKey());
+        }
+        if (!defaultValueContract.isEntityDescDefault(type, entityTitleAndDesc.getValue())) {
+            entityTypeInfo.setEntityDesc(entityTitleAndDesc.getValue());
         }
         return entityTypeInfo;
     }

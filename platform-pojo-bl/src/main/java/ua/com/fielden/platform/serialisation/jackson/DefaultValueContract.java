@@ -2,6 +2,7 @@ package ua.com.fielden.platform.serialisation.jackson;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -174,6 +175,25 @@ public class DefaultValueContract {
      */
     public boolean isCompositeKeySeparatorDefault(final String compositeKeySeparator) {
         return EntityUtils.equalsEx(compositeKeySeparator, " ");
+    }
+
+    ///////////////////////////////////////////////// ENTITY TITLE AND DESC /////////////////////////////////////////////////
+    /**
+     * Returns <code>true</code> if the value of <code>entity title</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isEntityTitleDefault(final Class<?> entityType, final String entityTitle) {
+        return EntityUtils.equalsEx(entityTitle, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getKey());
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>entity description</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isEntityDescDefault(final Class<?> entityType, final String entityDesc) {
+        return EntityUtils.equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
     }
 
 }
