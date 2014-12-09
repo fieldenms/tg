@@ -293,6 +293,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     }
 
     private Long typeNumber() {
-        return entityTypeInfo.getNumber();
+        return entityTypeInfo.get_number();
     }
 }

@@ -136,6 +136,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     }
 
     private Long typeNumber() {
-        return entityTypeInfo.getKey().equals(EntityTypeInfo.class.getName()) ? 0L : entityTypeInfo.getNumber();
+        return entityTypeInfo.getKey().equals(EntityTypeInfo.class.getName()) ? 0L : entityTypeInfo.get_number();
     }
 }

@@ -48,7 +48,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         this.factory = factory;
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        entityTypeInfo = factory.newEntity(EntityTypeInfo.class, 1L);
+        entityTypeInfo = factory.newEntity(EntityTypeInfo.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
         entityTypeInfo.beginInitialising();
         entityTypeInfo.setKey(type.getName());
 
@@ -69,19 +69,19 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             for (final Field keyMember : keyMembers) {
                 compositeKeyNames.add(keyMember.getName());
             }
-            entityTypeInfo.setCompositeKeyNames(compositeKeyNames);
+            entityTypeInfo.set_compositeKeyNames(compositeKeyNames);
 
             final String compositeKeySeparator = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) type);
             if (!defaultValueContract.isCompositeKeySeparatorDefault(compositeKeySeparator)) {
-                entityTypeInfo.setCompositeKeySeparator(compositeKeySeparator);
+                entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!defaultValueContract.isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
-            entityTypeInfo.setEntityTitle(entityTitleAndDesc.getKey());
+            entityTypeInfo.set_entityTitle(entityTitleAndDesc.getKey());
         }
         if (!defaultValueContract.isEntityDescDefault(type, entityTitleAndDesc.getValue())) {
-            entityTypeInfo.setEntityDesc(entityTitleAndDesc.getValue());
+            entityTypeInfo.set_entityDesc(entityTitleAndDesc.getValue());
         }
         return entityTypeInfo;
     }

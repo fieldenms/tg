@@ -26,75 +26,75 @@ public class EntityTypeInfo extends AbstractEntity<String> {
 
     @IsProperty
     @Title(value = "Number", desc = "Number of the type in context of other types for serialisation")
-    private Long number;
+    private Long _number;
 
     @IsProperty(String.class)
     @Title(value = "Composite Keys", desc = "Composite key property names")
-    private List<String> compositeKeyNames;
+    private List<String> _compositeKeyNames;
 
     @IsProperty
     @Title(value = "Composite Key Separator", desc = "Separator for composite key members (for autocompletion)")
-    private String compositeKeySeparator;
+    private String _compositeKeySeparator;
 
     @IsProperty
     @Title(value = "Entity Title", desc = "Entity title")
-    private String entityTitle;
+    private String _entityTitle;
 
     @IsProperty
     @Title(value = "Entity Desc", desc = "Entity description")
-    private String entityDesc;
+    private String _entityDesc;
 
     @Observable
-    public EntityTypeInfo setEntityDesc(final String entityDesc) {
-        this.entityDesc = entityDesc;
+    public EntityTypeInfo set_entityDesc(final String entityDesc) {
+        this._entityDesc = entityDesc;
         return this;
     }
 
-    public String getEntityDesc() {
-        return entityDesc;
+    public String get_entityDesc() {
+        return _entityDesc;
     }
 
     @Observable
-    public EntityTypeInfo setEntityTitle(final String entityTitle) {
-        this.entityTitle = entityTitle;
+    public EntityTypeInfo set_entityTitle(final String entityTitle) {
+        this._entityTitle = entityTitle;
         return this;
     }
 
-    public String getEntityTitle() {
-        return entityTitle;
+    public String get_entityTitle() {
+        return _entityTitle;
     }
 
     @Observable
-    public EntityTypeInfo setCompositeKeySeparator(final String compositeKeySeparator) {
-        this.compositeKeySeparator = compositeKeySeparator;
+    public EntityTypeInfo set_compositeKeySeparator(final String _compositeKeySeparator) {
+        this._compositeKeySeparator = _compositeKeySeparator;
         return this;
     }
 
-    public String getCompositeKeySeparator() {
-        return compositeKeySeparator;
+    public String get_compositeKeySeparator() {
+        return _compositeKeySeparator;
     }
 
     @Observable
-    protected EntityTypeInfo setCompositeKeyNames(final List<String> compositeKeyNames) {
-        this.compositeKeyNames = new ArrayList<>();
+    protected EntityTypeInfo set_compositeKeyNames(final List<String> _compositeKeyNames) {
+        this._compositeKeyNames = new ArrayList<>();
 
-        this.compositeKeyNames.clear();
-        this.compositeKeyNames.addAll(compositeKeyNames);
+        this._compositeKeyNames.clear();
+        this._compositeKeyNames.addAll(_compositeKeyNames);
         return this;
     }
 
-    public List<String> getCompositeKeyNames() {
-        return Collections.unmodifiableList(compositeKeyNames);
+    public List<String> get_compositeKeyNames() {
+        return Collections.unmodifiableList(_compositeKeyNames);
     }
 
     @Observable
-    public EntityTypeInfo setNumber(final Long number) {
-        this.number = number;
+    public EntityTypeInfo set_number(final Long _number) {
+        this._number = _number;
         return this;
     }
 
-    public Long getNumber() {
-        return number;
+    public Long get_number() {
+        return _number;
     }
 
 }

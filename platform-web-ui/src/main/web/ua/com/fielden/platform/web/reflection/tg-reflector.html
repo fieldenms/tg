@@ -15,28 +15,81 @@
             EntityType.prototype.constructor = EntityType;
 
             /**
+             * Returns the number for the entity type inside the type table.
+             * 
+            */
+            EntityType.prototype.number = function() {
+                return this._number;
+            }
+
+            /**
+             * Returns full Java class name for the entity type.
+             * 
+            */
+            EntityType.prototype.fullClassName = function() {
+                return this.key;
+            }
+
+            /**
              * Returns 'true' when the entity type represents composite entity, 'false' otherwise. 
              * 
              * Use compositeKeyNames() function to determine property names for the key members.
             */
             EntityType.prototype.isCompositeEntity = function() {
-                return typeof this.compositeKeyNames !== 'undefined' && this.compositeKeyNames && this.compositeKeyNames.length > 0;
+                return typeof this._compositeKeyNames !== 'undefined' && this._compositeKeyNames && this._compositeKeyNames.length > 0;
             }
 
             /** 
              * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
             */
             EntityType.prototype.compositeKeyNames = function() {
-                return this.compositeKeyNames;
+                return this._compositeKeyNames;
             }
 
             /** 
              * Returns the key member separator in case of composite entity, 'undefined' otherwise.
             */
             EntityType.prototype.compositeKeySeparator = function() {
-                return typeof this.compositeKeySeparator === 'undefined' ? " " : this.compositeKeySeparator;
+                return typeof this._compositeKeySeparator === 'undefined' ? " " : this._compositeKeySeparator;
             }
 
+            /** 
+             * Returns entity title.
+            */
+            EntityType.prototype.entityTitle = function() {
+                return typeof this._entityTitle === 'undefined' ? this._entityTitleDefault() : this._entityTitle;
+            }
+
+            /** 
+             * Returns entity description.
+            */
+            EntityType.prototype.entityDesc = function() {
+                return typeof this._entityDesc === 'undefined' ? this._entityDescDefault() : this._entityDesc;
+            }
+
+            /** 
+             * Returns entity title.
+            */
+            EntityType.prototype._entityTitleDefault = function() {
+                var title = this._breakClassName(this.fullClassName());
+                return title;
+            }
+
+            /** 
+             * Returns entity title.
+            */
+            EntityType.prototype._entityDescDefault = function() {
+                var title = this._breakClassName(this.fullClassName());
+                return title + " entity";
+            }
+
+            /** 
+             * Returns entity title.
+            */
+            EntityType.prototype._breakClassName = function(className) {
+                // TODO implement when needed (TitlesDescsGetter.breakClassName method)
+                return className;
+            }
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var EntityInstanceProp = function() {
                 Object.call(this);
@@ -85,7 +138,7 @@
              * 
              * IMPORTANT: do not use '_validationResult' field directly!
             */
-            EntityInstanceProp.prototype.getValidationResult = function() {
+            EntityInstanceProp.prototype.validationResult = function() {
                 return typeof this._validationResult === 'undefined' ? null : this._validationResult;
             }
 
@@ -103,9 +156,8 @@
                 },
                 typeTable = providePrototypes(@typeTable);
 
-
             console.log("typeTable = ", typeTable);
-            console.log("typeTable['34'].isCompositeEntity() = ", typeTable['34'].isCompositeEntity());
+            // console.log("typeTable['34'].isCompositeEntity() = ", typeTable['34'].isCompositeEntity());
 
             Polymer({
                 getType: function(number) {
