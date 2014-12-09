@@ -165,6 +165,15 @@
                 return this._desc;
             }
 
+            /**
+             * Returns 'true' when the type property is critOnly, false otherwise.
+             * 
+             * IMPORTANT: do not use '_critOnly' field directly!
+            */
+            EntityTypeProp.prototype.isCritOnly = function() {
+                return typeof this._critOnly === 'undefined' ? false : this._critOnly;
+            }
+
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var EntityInstanceProp = function() {
                 Object.call(this);

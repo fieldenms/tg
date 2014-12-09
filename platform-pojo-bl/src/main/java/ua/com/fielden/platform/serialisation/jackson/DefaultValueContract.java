@@ -214,4 +214,13 @@ public class DefaultValueContract {
     public boolean isUpperCaseDefault(final Boolean upperCase) {
         return EntityUtils.equalsEx(upperCase, false);
     }
+
+    /**
+     * Returns <code>true</code> if the value of <code>critOnly</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isCritOnlyDefault(final Boolean critOnly) {
+        return EntityUtils.equalsEx(critOnly, false);
+    }
 }

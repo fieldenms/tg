@@ -3,6 +3,7 @@ package ua.com.fielden.platform.serialisation.jackson.entities;
 import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -21,6 +22,7 @@ public class EntityWithDate extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Title", desc = "Desc")
+    @CritOnly
     private Date prop;
 
     @Observable
