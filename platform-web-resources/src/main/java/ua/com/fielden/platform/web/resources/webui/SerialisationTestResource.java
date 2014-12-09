@@ -244,7 +244,7 @@ public class SerialisationTestResource extends ServerResource {
                 if (!EntityUtils.equalsEx(validationResult.getMessage(), validationResult2.getMessage())) {
                     return false;
                 }
-                if (!EntityUtils.equalsEx(validationResult.getEx(), validationResult2.getEx())) {
+                if (!EntityUtils.equalsEx(validationResult.getEx().getMessage(), validationResult2.getEx().getMessage())) {
                     return false;
                 }
                 if (!EntityUtils.equalsEx(validationResult.getInstance(), validationResult2.getInstance())) {

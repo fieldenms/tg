@@ -91,7 +91,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * Register all serialisers / deserialisers for entity types present in TG app.
      */
     protected void registerEntityTypes(final ISerialisationClassProvider provider, final TgJacksonModule module) {
-        new EntitySerialiser<EntityTypeInfo>(EntityTypeInfo.class, this.module, this, this.factory).register();
+        new EntitySerialiser<EntityTypeInfo>(EntityTypeInfo.class, this.module, this, this.factory, true).register();
         for (final Class<?> type : provider.classes()) {
             if (AbstractEntity.class.isAssignableFrom(type)) {
                 final EntityTypeInfo entityTypeInfo = new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, this.module, this, this.factory).register();

@@ -30,10 +30,26 @@ public class EntityTypeInfo extends AbstractEntity<String> {
 
     @IsProperty(String.class)
     @Title(value = "Composite Keys", desc = "Composite key property names")
-    private final List<String> compositeKeyNames = new ArrayList<String>();
+    private List<String> compositeKeyNames;
+
+    @IsProperty
+    @Title(value = "Composite Key Member Separator", desc = "Composite Key Member Separator")
+    private String compositeKeySeparator;
+
+    @Observable
+    public EntityTypeInfo setCompositeKeySeparator(final String compositeKeySeparator) {
+        this.compositeKeySeparator = compositeKeySeparator;
+        return this;
+    }
+
+    public String getCompositeKeySeparator() {
+        return compositeKeySeparator;
+    }
 
     @Observable
     protected EntityTypeInfo setCompositeKeyNames(final List<String> compositeKeyNames) {
+        this.compositeKeyNames = new ArrayList<>();
+
         this.compositeKeyNames.clear();
         this.compositeKeyNames.addAll(compositeKeyNames);
         return this;

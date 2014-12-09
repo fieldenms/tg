@@ -166,4 +166,14 @@ public class DefaultValueContract {
         return EntityUtils.equalsEx(getValidationResult(metaProperty), getValidationResultDefault());
     }
 
+    ///////////////////////////////////////////////// COMPOSITE KEY MEMBER SEPARATOR /////////////////////////////////////////////////
+    /**
+     * Returns <code>true</code> if the value of <code>composite key member separator</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isCompositeKeySeparatorDefault(final String compositeKeySeparator) {
+        return EntityUtils.equalsEx(compositeKeySeparator, " ");
+    }
+
 }

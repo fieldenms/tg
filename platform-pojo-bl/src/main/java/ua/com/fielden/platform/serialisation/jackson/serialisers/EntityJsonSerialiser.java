@@ -25,13 +25,15 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private final List<CachedProperty> properties;
     private final EntityTypeInfo entityTypeInfo;
     private final DefaultValueContract defaultValueContract;
+    private final boolean excludeNulls;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfo entityTypeInfo, final DefaultValueContract defaultValueContract) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfo entityTypeInfo, final DefaultValueContract defaultValueContract, final boolean excludeNulls) {
         super(type);
         this.type = type;
         this.properties = properties;
         this.entityTypeInfo = entityTypeInfo;
         this.defaultValueContract = defaultValueContract;
+        this.excludeNulls = excludeNulls;
     }
 
     @Override
@@ -95,51 +97,38 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                     throw e;
                 }
 
-                // final boolean dirty = metaProperty == null ? false : metaProperty.isDirty();
+                if (value != null || !excludeNulls) {
+                    // write actual property
+                    generator.writeFieldName(name);
+                    generator.writeObject(value);
+                    // write actual meta-property
+                    generator.writeFieldName("@" + name);
+                    generator.writeStartObject();
 
-                // write actual property
-                generator.writeFieldName(name);
-                generator.writeObject(value);
-                //                if (dirty && value != null) {
-                //                    generator.writeObject(value);
-                //                } else if (dirty && value == null) {
-                //                    generator.writeObject(null);
-                //                } else {
-                //                    // TODO Theoretically the following two conditions can be removed when serialising from the client side due to the fact that server can retrieve the data from db if required
-                //                    if (!dirty && value != null) {
-                //                        generator.writeObject(value);
-                //                    } else if (!dirty && value == null) {
-                //                        generator.writeObject(null);
-                //                    }
-                //                }
+                    final MetaProperty<Object> metaProperty = entity.getProperty(name);
+                    if (!defaultValueContract.isEditableDefault(metaProperty)) {
+                        generator.writeFieldName("_" + MetaProperty.EDITABLE_PROPERTY_NAME);
+                        generator.writeObject(defaultValueContract.getEditable(metaProperty));
+                    }
+                    if (!defaultValueContract.isDirtyDefault(metaProperty)) {
+                        generator.writeFieldName("_dirty");
+                        generator.writeObject(defaultValueContract.getDirty(metaProperty));
+                    }
+                    if (!defaultValueContract.isRequiredDefault(metaProperty)) {
+                        generator.writeFieldName("_" + MetaProperty.REQUIRED_PROPERTY_NAME);
+                        generator.writeObject(defaultValueContract.getRequired(metaProperty));
+                    }
+                    if (!defaultValueContract.isVisibleDefault(metaProperty)) {
+                        generator.writeFieldName("_visible");
+                        generator.writeObject(defaultValueContract.getVisible(metaProperty));
+                    }
+                    if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
+                        generator.writeFieldName("_validationResult");
+                        generator.writeObject(defaultValueContract.getValidationResult(metaProperty));
+                    }
 
-                // write actual property
-                generator.writeFieldName("@" + name);
-                generator.writeStartObject();
-
-                final MetaProperty<Object> metaProperty = entity.getProperty(name);
-                if (!defaultValueContract.isEditableDefault(metaProperty)) {
-                    generator.writeFieldName("_" + MetaProperty.EDITABLE_PROPERTY_NAME);
-                    generator.writeObject(defaultValueContract.getEditable(metaProperty));
+                    generator.writeEndObject();
                 }
-                if (!defaultValueContract.isDirtyDefault(metaProperty)) {
-                    generator.writeFieldName("_dirty");
-                    generator.writeObject(defaultValueContract.getDirty(metaProperty));
-                }
-                if (!defaultValueContract.isRequiredDefault(metaProperty)) {
-                    generator.writeFieldName("_" + MetaProperty.REQUIRED_PROPERTY_NAME);
-                    generator.writeObject(defaultValueContract.getRequired(metaProperty));
-                }
-                if (!defaultValueContract.isVisibleDefault(metaProperty)) {
-                    generator.writeFieldName("_visible");
-                    generator.writeObject(defaultValueContract.getVisible(metaProperty));
-                }
-                if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
-                    generator.writeFieldName("_validationResult");
-                    generator.writeObject(defaultValueContract.getValidationResult(metaProperty));
-                }
-
-                generator.writeEndObject();
             }
 
             generator.writeEndObject();

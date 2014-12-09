@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * @author TG Team
  *
  */
-@KeyType(DynamicEntityKey.class)
+@KeyType(value = DynamicEntityKey.class, keyMemberSeparator = " :: ")
 public class EntityWithCompositeKey extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty

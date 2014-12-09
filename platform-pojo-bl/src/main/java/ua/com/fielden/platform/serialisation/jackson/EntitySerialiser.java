@@ -7,10 +7,12 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -33,8 +35,13 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     private final TgJacksonModule module;
     private final EntityFactory factory;
     private final EntityTypeInfo entityTypeInfo;
+    private final DefaultValueContract defaultValueContract;
 
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory) {
+        this(type, module, mapper, factory, false);
+    }
+
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final boolean excludeNulls) {
         this.type = type;
         this.factory = factory;
         // cache all properties annotated with @IsProperty
@@ -43,8 +50,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         entityTypeInfo.beginInitialising();
         entityTypeInfo.setKey(type.getName());
 
-        final DefaultValueContract defaultValueContract = new DefaultValueContract();
-        serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, defaultValueContract);
+        defaultValueContract = new DefaultValueContract();
+        serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, defaultValueContract, excludeNulls);
         deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, defaultValueContract);
         this.module = module;
     }
@@ -54,14 +61,19 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         module.addSerializer(type, serialiser);
         module.addDeserializer(type, deserialiser);
 
-        final List<String> compositeKeyNames = new ArrayList<>();
         if (EntityUtils.isCompositeEntity(type)) {
+            final List<String> compositeKeyNames = new ArrayList<>();
             final List<Field> keyMembers = Finder.getKeyMembers(type);
             for (final Field keyMember : keyMembers) {
                 compositeKeyNames.add(keyMember.getName());
             }
+            entityTypeInfo.setCompositeKeyNames(compositeKeyNames);
+
+            final String compositeKeySeparator = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) type);
+            if (!defaultValueContract.isCompositeKeySeparatorDefault(compositeKeySeparator)) {
+                entityTypeInfo.setCompositeKeySeparator(compositeKeySeparator);
+            }
         }
-        entityTypeInfo.setCompositeKeyNames(compositeKeyNames);
         return entityTypeInfo;
     }
 

@@ -30,6 +30,13 @@
                 return this.compositeKeyNames;
             }
 
+            /** 
+             * Returns the key member separator in case of composite entity, 'undefined' otherwise.
+            */
+            EntityType.prototype.compositeKeySeparator = function() {
+                return typeof this.compositeKeySeparator === 'undefined' ? " " : this.compositeKeySeparator;
+            }
+
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var EntityInstanceProp = function() {
                 Object.call(this);
@@ -88,8 +95,8 @@
                 typeTable = providePrototypes(@typeTable);
 
 
-            // console.log("typeTable = ", typeTable);
-            // console.log("typeTable['34'].isCompositeEntity() = ", typeTable['34'].isCompositeEntity());
+            console.log("typeTable = ", typeTable);
+            console.log("typeTable['34'].isCompositeEntity() = ", typeTable['34'].isCompositeEntity());
 
             Polymer({
                 getType: function(number) {
