@@ -103,6 +103,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!defaultValueContract.isUpperCaseDefault(upperCase)) {
                     entityTypeProp.set_upperCase(upperCase);
                 }
+                final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(name, type);
+                entityTypeProp.set_title(titleAndDesc.getKey());
+                entityTypeProp.set_desc(titleAndDesc.getValue());
                 entityTypeProp.endInitialising();
 
                 props.put(name, entityTypeProp);

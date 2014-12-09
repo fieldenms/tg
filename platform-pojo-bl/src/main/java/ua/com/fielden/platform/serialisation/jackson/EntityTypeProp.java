@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -22,14 +21,40 @@ public class EntityTypeProp extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @MapTo
     @Title(value = "Secrete", desc = "Determines whether the property represents 'secrete' property (e.g. passwords etc.)")
     private Boolean _secrete;
 
     @IsProperty
-    @MapTo
     @Title(value = "Upper Case", desc = "Determines whether the property represents 'upper-case' property")
     private Boolean _upperCase;
+
+    @IsProperty
+    @Title(value = "Title", desc = "The title of the property")
+    private String _title;
+
+    @IsProperty
+    @Title(value = "Description", desc = "The description of the property")
+    private String _desc;
+
+    @Observable
+    public EntityTypeProp set_desc(final String _desc) {
+        this._desc = _desc;
+        return this;
+    }
+
+    public String get_desc() {
+        return _desc;
+    }
+
+    @Observable
+    public EntityTypeProp set_title(final String _title) {
+        this._title = _title;
+        return this;
+    }
+
+    public String get_title() {
+        return _title;
+    }
 
     @Observable
     public EntityTypeProp set_upperCase(final Boolean _upperCase) {

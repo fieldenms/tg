@@ -34,11 +34,49 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 onError = function(e, detail, sender) {
                     assert.fail(null, null, "The error has happened.");
                     done();
+                },
+                find = function(entities, simpleTypeName) {
+                    for (var i = 0; i < entities.length; i++) {
+                        var entity = entities[i];
+                        if (entity && entity.type().fullClassName().indexOf(simpleTypeName) > -1) {
+                            return entity;
+                        }
+                    }
+                    return null;
                 };
 
             entityRetriever.addEventListener('core-response', function(e) {
                 // console.log("not deserialised: ", JSON.stringify(e.detail.response));
                 var resultWithEntities = serialiser.deserialise(e.detail.response);
+
+                var entities = resultWithEntities.instance;
+
+                // check EntityType properties
+                assert.deepEqual(find(entities, "EmptyEntity").type().isCompositeEntity(), false, "EmptyEntity should not be composite.");
+                assert.deepEqual(find(entities, "EntityWithCompositeKey").type().isCompositeEntity(), true, "EntityWithCompositeKey should be composite.");
+                assert.deepEqual(find(entities, "EntityWithCompositeKey").type().compositeKeyNames(), ["key1", "key2"], "EntityWithCompositeKey has incorrect composite names.");
+                assert.deepEqual(find(entities, "EntityWithCompositeKey").type().compositeKeySeparator(), " :: ", "EntityWithCompositeKey has incorrect composite key separator.");
+
+                assert.deepEqual(find(entities, "EmptyEntity").type().entityTitle(), "Empty entity", "EmptyEntity has incorrect title.");
+                assert.deepEqual(find(entities, "EmptyEntity").type().entityDesc(), "The entity without any properties for testing", "EmptyEntity has incorrect desc.");
+                assert.deepEqual(find(entities, "EntityWithInteger").type().entityTitle(), "Entity With Integer", "EntityWithInteger has incorrect title.");
+                assert.deepEqual(find(entities, "EntityWithInteger").type().entityDesc(), "Entity With Integer entity", "EntityWithInteger has incorrect desc.");
+
+                assert.deepEqual(find(entities, "EntityWithBigDecimal").type().prop("prop").isSecrete(), true, "EntityWithBigDecimal property should be secrete.");
+                assert.deepEqual(find(entities, "EntityWithInteger").type().prop("prop").isSecrete(), false, "EntityWithInteger property should not be secrete.");
+
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").isUpperCase(), true, "EntityWithString property should be upperCase.");
+                assert.deepEqual(find(entities, "EntityWithInteger").type().prop("prop").isUpperCase(), false, "EntityWithInteger property should not be upperCase.");
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("key").isUpperCase(), true, "EntityWithString property 'key' should be upperCase.");
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("desc").isUpperCase(), false, "EntityWithString property 'desc' should not be upperCase.");
+
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").title(), "Special Prop", "EntityWithString property has incorrect title.");
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").desc(), "Special Prop desc", "EntityWithString property has incorrect desc.");
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("key").title(), "Special Key", "EntityWithString property 'key' has incorrect title.");
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("key").desc(), "Special Key desc", "EntityWithString property 'key' has incorrect desc.");
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("desc").title(), "Special Desc", "EntityWithString property 'desc' has incorrect title.");
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("desc").desc(), "Special Desc desc", "EntityWithString property 'desc' has incorrect desc.");
+
                 // console.log("deserialised with tg-serialiser: ", JSON.stringify(resultWithEntities));
                 entitySender.body = JSON.stringify(serialiser.serialise(resultWithEntities));
                 // console.log("serialised with tg-serialiser: ", entitySender.body);

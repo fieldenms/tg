@@ -44,6 +44,15 @@
             }
 
             /**
+             * Returns full Java class name for the entity type.
+             * 
+            */
+            EntityType.prototype._simpleClassName = function() {
+                var ind = this.fullClassName().lastIndexOf(".") + 1;
+                return this.fullClassName().substring(ind);
+            }
+
+            /**
              * Returns 'true' when the entity type represents composite entity, 'false' otherwise. 
              * 
              * Use compositeKeyNames() function to determine property names for the key members.
@@ -74,6 +83,13 @@
             }
 
             /** 
+             * Returns entity type property with the specified name.
+            */
+            EntityType.prototype.prop = function(name) {
+                return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
+            }
+
+            /** 
              * Returns entity description.
             */
             EntityType.prototype.entityDesc = function() {
@@ -81,32 +97,38 @@
             }
 
             /** 
-             * Returns entity title.
+             * Returns default entity title.
             */
             EntityType.prototype._entityTitleDefault = function() {
-                var title = this._breakClassName(this.fullClassName());
+                var title = this._breakToWords(this._simpleClassName());
                 return title;
             }
 
             /** 
-             * Returns entity title.
+             * Returns default entity desc.
             */
             EntityType.prototype._entityDescDefault = function() {
-                var title = this._breakClassName(this.fullClassName());
+                var title = this._breakToWords(this._simpleClassName());
                 return title + " entity";
             }
 
             /** 
-             * Returns entity title.
+             * Breaks camelCased string onto words and separates it with ' '.
             */
-            EntityType.prototype._breakClassName = function(className) {
-                // TODO implement when needed (TitlesDescsGetter.breakClassName method)
-                return className;
+            EntityType.prototype._breakToWords = function(str) { // see http://stackoverflow.com/questions/10425287/convert-string-to-camelcase-with-regular-expression
+                return str.replace(/([A-Z])/g, function(match, group) {
+                    return " " + group;
+                }).trim();
             }
 
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityTypeProp ////////////////////////////////////////// 
-            var EntityTypeProp = function() {
+            var EntityTypeProp = function(rawObject) {
                 Object.call(this);
+
+                // copy all properties from rawObject after deserialisation
+                for (var prop in rawObject) {
+                    this[prop] = rawObject[prop];
+                }
             };
             EntityTypeProp.prototype = Object.create(Object.prototype);
             EntityTypeProp.prototype.constructor = EntityTypeProp;
@@ -127,6 +149,20 @@
             */
             EntityTypeProp.prototype.isUpperCase = function() {
                 return typeof this._upperCase === 'undefined' ? false : this._upperCase;
+            }
+
+            /** 
+             * Returns entity type prop title.
+            */
+            EntityTypeProp.prototype.title = function() {
+                return this._title;
+            }
+
+            /** 
+             * Returns entity type prop description.
+            */
+            EntityTypeProp.prototype.desc = function() {
+                return this._desc;
             }
 
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
