@@ -21,62 +21,63 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <body unresolved>
 
-    <tg-serialiser id="seriliser"></tg-serialiser>
+    <tg-serialiser id="serialiser"></tg-serialiser>
 
     <script>
         document.addEventListener('polymer-ready', function() {
-            var serialiser = document.querySelector('#seriliser'),
-                reflector = serialiser.$.typeInfo,
-                EntityInstancePropType = reflector.getEntityInstanceProp(),
-                keyProp1 = new EntityInstancePropType(),
-                descProp1 = new EntityInstancePropType(),
-                keyProp2 = new EntityInstancePropType(),
-                detailProp1 = new EntityInstancePropType(),
-                keyProp3 = new EntityInstancePropType(),
-                descProp2 = new EntityInstancePropType(),
-                detailProp2 = new EntityInstancePropType(),
-                keyProp4 = new EntityInstancePropType(),
+            var serialiser = document.querySelector('#serialiser'),
+                reflector = serialiser.$.reflector,
+                EntityInstanceProp = reflector.getEntityInstancePropType(),
+                Entity = reflector.getEntityType(),
+                keyProp1 = new EntityInstanceProp(),
+                descProp1 = new EntityInstanceProp(),
+                keyProp2 = new EntityInstanceProp(),
+                detailProp1 = new EntityInstanceProp(),
+                keyProp3 = new EntityInstanceProp(),
+                descProp2 = new EntityInstanceProp(),
+                detailProp2 = new EntityInstanceProp(),
+                keyProp4 = new EntityInstanceProp(),
                 type10 = reflector.getType("4"),
                 type11 = reflector.getType("11"),
                 type12 = reflector.getType("12"),
                 type13 = reflector.getType("13"),
-                inst1 = {
+                inst1 = new Entity({
                     id: 1,
                     _type: type12,
                     key: "entity key",
                     "@key": keyProp1,
                     desc: "entity description",
                     "@desc": descProp1,
-                    detail: {
+                    detail: new Entity({
                         id: 2,
                         _type: type13,
                         "@key": keyProp2
-                    },
+                    }),
                     "@detail": detailProp1
-                },
-                inst2 = {
+                }),
+                inst2 = new Entity({
                     id: 3,
                     _type: type12,
                     key: "entity key1",
                     "@key": keyProp3,
                     desc: "entity description1",
                     "@desc": descProp2,
-                    detail: {
+                    detail: new Entity({
                         id: 4,
                         _type: type13,
                         "@key": keyProp4
-                    },
+                    }),
                     "@detail": detailProp2
-                },
+                }),
                 objToSerialise = {
                     cause: "Testing purposes",
                     ex: "No exception",
-                    instance: {
+                    instance: new Entity({
                         id: null,
                         _type: type11,
                         key: "QueryRunner",
                         desc: "QueryRunner description",
-                        page: {
+                        page: new Entity({
                             id: null,
                             _type: type10,
                             key: "Page",
@@ -87,16 +88,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                 inst1,
                                 inst2
                             ],
-                            summary: {
+                            summary: new Entity({
                                 id: null,
                                 _type: type12,
                                 total: 2
-
-                            }
-                        },
+                            })
+                        }),
                         pageCapacity: 25,
                         query: null
-                    }
+                    })
                 },                
                 restoredObj = null;
             inst1.detail.key = inst1;

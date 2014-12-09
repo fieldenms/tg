@@ -142,6 +142,29 @@
                 return typeof this._validationResult === 'undefined' ? null : this._validationResult;
             }
 
+            ////////////////////////////////////////// THE PROTOTYPE FOR Entity ////////////////////////////////////////// 
+            var Entity = function(rawObject) { // rawObject
+                Object.call(this);
+
+                if (rawObject) {
+                    // copy all properties from rawObject if it is not empty
+                    for (var prop in rawObject) { 
+                        this[prop] = rawObject[prop];
+                    }
+                }
+            };
+            Entity.prototype = Object.create(Object.prototype);
+            Entity.prototype.constructor = Entity;
+
+            /**
+             * Returns the type for the entity.
+             * 
+             * IMPORTANT: do not use '_type' field directly!
+            */
+            Entity.prototype.type = function() {
+                return this._type;
+            }
+
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var providePrototypes = function(typeTable) {
                     for (var key in typeTable) {
@@ -164,8 +187,12 @@
                     return typeTable[number];
                 },
 
-                getEntityInstanceProp: function() {
+                getEntityInstancePropType: function() {
                     return EntityInstanceProp;
+                },
+
+                getEntityType: function() {
+                    return Entity;
                 }
             });
         })();
