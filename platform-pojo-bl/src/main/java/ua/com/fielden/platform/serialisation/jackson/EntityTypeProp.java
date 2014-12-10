@@ -46,9 +46,52 @@ public class EntityTypeProp extends AbstractEntity<String> {
     private Boolean _resultOnly;
 
     @IsProperty
-    @MapTo
     @Title(value = "Ignore", desc = "Determines whether the property should be ignored for UI elements")
     private Boolean _ignore;
+
+    @IsProperty
+    @Title(value = "Length", desc = "Represents the length of the underlying db column and can be used for UI editors construction")
+    private Long _length;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Precision", desc = "Represents the precision of the underlying db column and can be used for UI editors construction")
+    private Long _precision;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Scale", desc = "Represents the scale of the underlying db column and can be used for UI editors construction")
+    private Long _scale;
+
+    @Observable
+    public EntityTypeProp set_scale(final Long _scale) {
+        this._scale = _scale;
+        return this;
+    }
+
+    public Long get_scale() {
+        return _scale;
+    }
+
+    @Observable
+    public EntityTypeProp set_precision(final Long _precision) {
+        this._precision = _precision;
+        return this;
+    }
+
+    public Long get_precision() {
+        return _precision;
+    }
+
+    @Observable
+    public EntityTypeProp set_length(final Long _length) {
+        this._length = _length;
+        return this;
+    }
+
+    public Long get_length() {
+        return _length;
+    }
 
     @Observable
     public EntityTypeProp set_ignore(final Boolean _ignore) {

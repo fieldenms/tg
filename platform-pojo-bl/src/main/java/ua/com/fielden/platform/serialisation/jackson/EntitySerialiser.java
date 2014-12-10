@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.Ignore;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -102,7 +103,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!defaultValueContract.isSecreteDefault(secrete)) {
                     entityTypeProp.set_secrete(secrete);
                 }
-                final Boolean upperCase = AnnotationReflector.isAnnotationPresent(prop.field, UpperCase.class);
+                final Boolean upperCase = AnnotationReflector.isAnnotationPresentInHierarchy(UpperCase.class, type, name);
                 if (!defaultValueContract.isUpperCaseDefault(upperCase)) {
                     entityTypeProp.set_upperCase(upperCase);
                 }
@@ -121,6 +122,22 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!defaultValueContract.isIgnoreDefault(ignore)) {
                     entityTypeProp.set_ignore(ignore);
                 }
+                final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, name);
+                if (mapTo != null) {
+                    final Long length = mapTo.length();
+                    if (!defaultValueContract.isLengthDefault(length)) {
+                        entityTypeProp.set_length(length);
+                    }
+                    final Long precision = mapTo.precision();
+                    if (!defaultValueContract.isPrecisionDefault(precision)) {
+                        entityTypeProp.set_precision(precision);
+                    }
+                    final Long scale = mapTo.scale();
+                    if (!defaultValueContract.isScaleDefault(scale)) {
+                        entityTypeProp.set_scale(scale);
+                    }
+                }
+
                 entityTypeProp.endInitialising();
 
                 props.put(name, entityTypeProp);

@@ -241,4 +241,31 @@ public class DefaultValueContract {
     public boolean isIgnoreDefault(final Boolean ignore) {
         return EntityUtils.equalsEx(ignore, false);
     }
+
+    /**
+     * Returns <code>true</code> if the value of <code>length</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isLengthDefault(final Long length) {
+        return EntityUtils.equalsEx(length, 0L);
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>precision</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isPrecisionDefault(final Long precision) {
+        return EntityUtils.equalsEx(precision, -1L);
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>scale</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isScaleDefault(final Long scale) {
+        return EntityUtils.equalsEx(scale, -1L);
+    }
 }

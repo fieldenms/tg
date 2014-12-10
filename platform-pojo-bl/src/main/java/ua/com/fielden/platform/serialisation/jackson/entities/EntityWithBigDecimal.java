@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class EntityWithBigDecimal extends AbstractEntity<String> {
 
     @IsProperty
-    @MapTo
+    @MapTo(length = 10, precision = 10, scale = 3)
     @Title(value = "Title", desc = "Desc")
     @Secrete
     private BigDecimal prop;

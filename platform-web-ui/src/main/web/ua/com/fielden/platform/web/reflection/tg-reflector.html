@@ -191,6 +191,27 @@
             EntityTypeProp.prototype.isIgnore = function() {
                 return typeof this._ignore === 'undefined' ? false : this._ignore;
             }
+
+            /** 
+             * Returns entity type prop length.
+            */
+            EntityTypeProp.prototype.length = function() {
+                return typeof this._length === 'undefined' ? 0 : this._length;
+            }
+
+            /** 
+             * Returns entity type prop precision.
+            */
+            EntityTypeProp.prototype.precision = function() {
+                return typeof this._precision === 'undefined' ? -1 : this._precision;
+            }
+
+            /** 
+             * Returns entity type prop scale.
+            */
+            EntityTypeProp.prototype.scale = function() {
+                return typeof this._scale === 'undefined' ? -1 : this._scale;
+            }
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var EntityInstanceProp = function() {
                 Object.call(this);
