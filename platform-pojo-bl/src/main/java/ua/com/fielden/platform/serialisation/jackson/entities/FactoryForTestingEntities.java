@@ -13,8 +13,15 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.serialisation.EntitySerialisationWithJacksonTest;
 import ua.com.fielden.platform.types.Money;
 
+/**
+ * The factory for testing entities for serialisation integration test and {@link EntitySerialisationWithJacksonTest}.
+ *
+ * @author TG Team
+ *
+ */
 public class FactoryForTestingEntities {
     private final EntityFactory factory;
     private final Date testingDate;

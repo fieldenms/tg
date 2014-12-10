@@ -49,36 +49,6 @@ public class SerialisationTestResource extends ServerResource {
         this.dvc = new DefaultValueContract();
     }
 
-    private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory, final Date testingDate) {
-        final FactoryForTestingEntities factory = new FactoryForTestingEntities(entityFactory, testingDate);
-        return Arrays.asList(factory.createNullEmptyEntity(),
-                factory.createSimpleEmptyEntity(),
-                factory.createEmptyEntityWithNoId(),
-                factory.createEmptyEntityWithNoKey(),
-                factory.createEmptyEntityWithNoDescription(),
-                factory.createEntityWithBigDecimal(),
-                factory.createEntityWithInteger(),
-                factory.createEntityWithString(),
-                factory.createEntityWithStringNonEditable(),
-                factory.createEntityWithStringRequired(),
-                factory.createEntityWithStringNonVisible(),
-                factory.createEntityWithStringAndResult(),
-                factory.createEntityWithPropertyWithDefiner(),
-                factory.createEntityWithBoolean(),
-                factory.createEntityWithDate(),
-                factory.createEntityWithMoney(),
-                factory.createEntityWithOtherEntity(),
-                factory.createEntityWithSameEntity(),
-                factory.createEntityWithSameEntityCircularlyReferencingItself(),
-                factory.createEntityWithOtherEntityCircularlyReferencingItself(),
-                factory.createEntityWithSetOfSameEntities(),
-                factory.createEntityWithListOfSameEntities(),
-                factory.createEntityWithArraysAsListOfSameEntities(),
-                factory.createEntityWithMapOfSameEntities(),
-                factory.createEntityWithCompositeKey()
-                );
-    }
-
     /**
      * Handles receiving back serialised testing entities from the Web UI client and checking whether they are 'deep equal' to the send ones.
      */
@@ -265,5 +235,35 @@ public class SerialisationTestResource extends ServerResource {
 
     private static boolean markedAsChecked(final AbstractEntity<?> e1, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities) {
         return setOfCheckedEntities.containsKey(e1);
+    }
+
+    private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory, final Date testingDate) {
+        final FactoryForTestingEntities factory = new FactoryForTestingEntities(entityFactory, testingDate);
+        return Arrays.asList(factory.createNullEmptyEntity(),
+                factory.createSimpleEmptyEntity(),
+                factory.createEmptyEntityWithNoId(),
+                factory.createEmptyEntityWithNoKey(),
+                factory.createEmptyEntityWithNoDescription(),
+                factory.createEntityWithBigDecimal(),
+                factory.createEntityWithInteger(),
+                factory.createEntityWithString(),
+                factory.createEntityWithStringNonEditable(),
+                factory.createEntityWithStringRequired(),
+                factory.createEntityWithStringNonVisible(),
+                factory.createEntityWithStringAndResult(),
+                factory.createEntityWithPropertyWithDefiner(),
+                factory.createEntityWithBoolean(),
+                factory.createEntityWithDate(),
+                factory.createEntityWithMoney(),
+                factory.createEntityWithOtherEntity(),
+                factory.createEntityWithSameEntity(),
+                factory.createEntityWithSameEntityCircularlyReferencingItself(),
+                factory.createEntityWithOtherEntityCircularlyReferencingItself(),
+                factory.createEntityWithSetOfSameEntities(),
+                factory.createEntityWithListOfSameEntities(),
+                factory.createEntityWithArraysAsListOfSameEntities(),
+                factory.createEntityWithMapOfSameEntities(),
+                factory.createEntityWithCompositeKey()
+                );
     }
 }
