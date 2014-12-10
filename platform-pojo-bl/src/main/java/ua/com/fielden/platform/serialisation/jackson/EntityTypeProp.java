@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -43,6 +44,21 @@ public class EntityTypeProp extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Result Only", desc = "Determines whether the property is for result only")
     private Boolean _resultOnly;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Ignore", desc = "Determines whether the property should be ignored for UI elements")
+    private Boolean _ignore;
+
+    @Observable
+    public EntityTypeProp set_ignore(final Boolean _ignore) {
+        this._ignore = _ignore;
+        return this;
+    }
+
+    public Boolean get_ignore() {
+        return _ignore;
+    }
 
     @Observable
     public EntityTypeProp set_resultOnly(final Boolean _resultOnly) {

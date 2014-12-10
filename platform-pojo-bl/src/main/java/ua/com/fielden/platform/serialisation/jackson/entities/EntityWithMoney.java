@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -20,6 +21,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Title", desc = "Desc")
+    @Ignore
     private Money prop;
 
     @Observable

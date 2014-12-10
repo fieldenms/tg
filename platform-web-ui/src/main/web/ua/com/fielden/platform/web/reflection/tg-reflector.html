@@ -182,6 +182,15 @@
             EntityTypeProp.prototype.isResultOnly = function() {
                 return typeof this._resultOnly === 'undefined' ? false : this._resultOnly;
             }
+
+            /**
+             * Returns 'true' when the type property is 'ignore', false otherwise.
+             * 
+             * IMPORTANT: do not use '_ignore' field directly!
+            */
+            EntityTypeProp.prototype.isIgnore = function() {
+                return typeof this._ignore === 'undefined' ? false : this._ignore;
+            }
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var EntityInstanceProp = function() {
                 Object.call(this);

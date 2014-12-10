@@ -81,6 +81,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").isCritOnly(), false, "EntityWithString property has incorrect critOnly.");
                 assert.deepEqual(find(entities, "EntityWithInteger").type().prop("prop").isResultOnly(), true, "EntityWithInteger property has incorrect resultOnly.");
                 assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").isResultOnly(), false, "EntityWithString property has incorrect resultOnly.");
+                assert.deepEqual(find(entities, "EntityWithMoney").type().prop("prop").isIgnore(), true, "EntityWithMoney property has incorrect 'ignore'.");
+                assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").isIgnore(), false, "EntityWithString property has incorrect 'ignore'.");
 
                 // console.log("deserialised with tg-serialiser: ", JSON.stringify(resultWithEntities));
                 entitySender.body = JSON.stringify(serialiser.serialise(resultWithEntities));

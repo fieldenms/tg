@@ -232,4 +232,13 @@ public class DefaultValueContract {
     public boolean isResultOnlyDefault(final Boolean resultOnly) {
         return EntityUtils.equalsEx(resultOnly, false);
     }
+
+    /**
+     * Returns <code>true</code> if the value of <code>ignore</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isIgnoreDefault(final Boolean ignore) {
+        return EntityUtils.equalsEx(ignore, false);
+    }
 }
