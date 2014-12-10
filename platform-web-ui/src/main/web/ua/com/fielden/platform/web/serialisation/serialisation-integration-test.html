@@ -43,6 +43,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         }
                     }
                     return null;
+                },
+                findProp = function(entities, simpleTypeName, propName) {
+                    var entity = find(entities, simpleTypeName);
+                    return entity.constructor.prototype.prop.call(entity, propName);
+                    // return entity.prop(propName); -- this is problem for this test because the field name 'prop' equals to prototype function 'prop'
                 };
 
             entityRetriever.addEventListener('core-response', function(e) {
@@ -50,6 +55,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 var resultWithEntities = serialiser.deserialise(e.detail.response);
 
                 var entities = resultWithEntities.instance;
+
+                // check EntityInstanceProp properties
+                assert.deepEqual(findProp(entities, "EntityWithString", "prop").stringLength(), 255, "EntityWithString property has incorrect stringLength.");
+                // assert.deepEqual(findProp(entities, "EntityWithString", "prop").integerMax(), undefined, "EntityWithString property has incorrect integerMax.");
+                // assert.deepEqual(findProp(entities, "EntityWithString", "prop").integerMin(), undefined, "EntityWithString property has incorrect integerMax.");
+                // assert.deepEqual(findProp(entities, "EntityWithInteger", "prop").stringLength(), undefined, "EntityWithInteger property has incorrect stringLength.");
+                assert.deepEqual(findProp(entities, "EntityWithInteger", "prop").integerMax(), 9999, "EntityWithInteger property has incorrect integerMax.");
+                assert.deepEqual(findProp(entities, "EntityWithInteger", "prop").integerMin(), -600, "EntityWithInteger property has incorrect integerMax.");
+                // assert.deepEqual(findProp(entities, "EntityWithMoney", "prop").stringLength(), undefined, "EntityWithMoney property has incorrect stringLength.");
+                assert.deepEqual(findProp(entities, "EntityWithMoney", "prop").integerMax(), null, "EntityWithMoney property has incorrect integerMax.");
+                assert.deepEqual(findProp(entities, "EntityWithMoney", "prop").integerMin(), 34, "EntityWithMoney property has incorrect integerMax.");
 
                 // check EntityType properties
                 assert.deepEqual(find(entities, "EmptyEntity").type().isCompositeEntity(), false, "EmptyEntity should not be composite.");
@@ -62,6 +78,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 assert.deepEqual(find(entities, "EntityWithInteger").type().entityTitle(), "Entity With Integer", "EntityWithInteger has incorrect title.");
                 assert.deepEqual(find(entities, "EntityWithInteger").type().entityDesc(), "Entity With Integer entity", "EntityWithInteger has incorrect desc.");
 
+                // check EntityTypeProp properties
                 assert.deepEqual(find(entities, "EntityWithBigDecimal").type().prop("prop").isSecrete(), true, "EntityWithBigDecimal property should be secrete.");
                 assert.deepEqual(find(entities, "EntityWithInteger").type().prop("prop").isSecrete(), false, "EntityWithInteger property should not be secrete.");
 

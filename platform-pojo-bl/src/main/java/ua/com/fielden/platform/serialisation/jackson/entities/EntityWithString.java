@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
+import ua.com.fielden.platform.entity.validation.annotation.Max;
 
 /**
  * Entity class used for testing.
@@ -28,6 +29,7 @@ public class EntityWithString extends AbstractEntity<String> {
     private String prop;
 
     @Observable
+    @Max(255)
     public EntityWithString setProp(final String prop) {
         this.prop = prop;
         return this;

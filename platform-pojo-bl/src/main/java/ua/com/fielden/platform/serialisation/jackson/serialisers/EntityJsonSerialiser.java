@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeProp;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
+import ua.com.fielden.platform.utils.Pair;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -122,6 +124,16 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                     if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
                         existingMetaProps.put("_validationResult", defaultValueContract.getValidationResult(metaProperty));
                     }
+                    final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
+                    final Integer min = minMax.getKey();
+                    final Integer max = minMax.getValue();
+                    if (!defaultValueContract.isMinDefault(min)) {
+                        existingMetaProps.put("_min", min);
+                    }
+                    if (!defaultValueContract.isMaxDefault(max)) {
+                        existingMetaProps.put("_max", max);
+                    }
+
                     // write actual meta-property
                     if (!existingMetaProps.isEmpty()) {
                         generator.writeFieldName("@" + name);

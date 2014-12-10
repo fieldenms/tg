@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -54,14 +53,26 @@ public class EntityTypeProp extends AbstractEntity<String> {
     private Long _length;
 
     @IsProperty
-    @MapTo
     @Title(value = "Precision", desc = "Represents the precision of the underlying db column and can be used for UI editors construction")
     private Long _precision;
 
     @IsProperty
-    @MapTo
     @Title(value = "Scale", desc = "Represents the scale of the underlying db column and can be used for UI editors construction")
     private Long _scale;
+
+    //    @IsProperty
+    //    @Title(value = "Type", desc = "The string representation of the property type, which can be pattern-matched to determine for e.g. UI editor type")
+    //    private String _type;
+    //
+    //    @Observable
+    //    public EntityTypeProp set_type(final String _type) {
+    //        this._type = _type;
+    //        return this;
+    //    }
+    //
+    //    public String get_type() {
+    //        return _type;
+    //    }
 
     @Observable
     public EntityTypeProp set_scale(final Long _scale) {

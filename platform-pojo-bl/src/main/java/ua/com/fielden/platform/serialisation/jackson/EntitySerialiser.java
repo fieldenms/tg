@@ -99,6 +99,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 final EntityTypeProp entityTypeProp = this.factory.newEntity(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON);
                 entityTypeProp.beginInitialising();
 
+                //                if (String.class == prop.getPropertyType()) {
+                //                    entityTypeProp.set_type("s");
+                //                }
+
                 final Boolean secrete = AnnotationReflector.isSecreteProperty(type, name);
                 if (!defaultValueContract.isSecreteDefault(secrete)) {
                     entityTypeProp.set_secrete(secrete);

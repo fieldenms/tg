@@ -268,4 +268,22 @@ public class DefaultValueContract {
     public boolean isScaleDefault(final Long scale) {
         return EntityUtils.equalsEx(scale, -1L);
     }
+
+    /**
+     * Returns <code>true</code> if the value of <code>min</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isMinDefault(final Integer min) {
+        return EntityUtils.equalsEx(min, null);
+    }
+
+    /**
+     * Returns <code>true</code> if the value of <code>max</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isMaxDefault(final Integer max) {
+        return EntityUtils.equalsEx(max, null);
+    }
 }

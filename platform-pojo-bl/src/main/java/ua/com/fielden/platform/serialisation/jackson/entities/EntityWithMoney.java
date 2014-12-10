@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -25,6 +26,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
     private Money prop;
 
     @Observable
+    @GreaterOrEqual(34)
     public EntityWithMoney setProp(final Money prop) {
         this.prop = prop;
         return this;

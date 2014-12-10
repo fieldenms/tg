@@ -264,6 +264,42 @@
                 return typeof this._validationResult === 'undefined' ? null : this._validationResult;
             }
 
+            /**
+             * Returns the max possible length in case of string property, 'undefined' otherwise.
+             * 
+             * IMPORTANT: do not use '_max' field directly!
+            */
+            EntityInstanceProp.prototype.stringLength = function() {
+                // if (this._isString()) { 
+                return typeof this._max === 'undefined' ? 0 : this._max;
+                // }
+                // return undefined;
+            }
+
+            /**
+             * Returns the max possible integer value in case of integer property (null means unlimited), 'undefined' otherwise.
+             * 
+             * IMPORTANT: do not use '_max' field directly!
+            */
+            EntityInstanceProp.prototype.integerMax = function() {
+                // if (!this._isString()) {
+                return typeof this._max === 'undefined' ? null : this._max;
+                // }
+                // return undefined;
+            }
+
+            /**
+             * Returns the min possible integer value in case of integer property (null means unlimited), 'undefined' otherwise.
+             * 
+             * IMPORTANT: do not use '_min' field directly!
+            */
+            EntityInstanceProp.prototype.integerMin = function() {
+                // if (!this._isString()) {
+                return typeof this._min === 'undefined' ? null : this._min;
+                // }
+                // return undefined;
+            }
+
             ////////////////////////////////////////// THE PROTOTYPE FOR Entity ////////////////////////////////////////// 
             var Entity = function(rawObject) { // rawObject
                 Object.call(this);
@@ -285,6 +321,15 @@
             */
             Entity.prototype.type = function() {
                 return this._type;
+            }
+
+            /**
+             * Returns the instance prop for the entity.
+             * 
+             * IMPORTANT: do not use '@prop' field directly!
+            */
+            Entity.prototype.prop = function(name) {
+                return this["@" + name];
             }
 
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 

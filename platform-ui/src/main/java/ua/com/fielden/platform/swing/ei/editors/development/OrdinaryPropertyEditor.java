@@ -3,7 +3,6 @@ package ua.com.fielden.platform.swing.ei.editors.development;
 import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.MIXED_CASE;
 import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.UPPER_CASE;
 
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.EnumSet;
@@ -28,9 +27,7 @@ import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -134,15 +131,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
             editor = component;
         } else if (String.class == type) {
             // The appropriate editor for string property is determined based on the Max annotation indicating the maximum value length
-            int length = 0;
-            try {
-                final Method setter = Reflector.getMethod(entity/* .getType() */, Mutator.SETTER.getName(bindingPropertyName), String.class);
-                if (AnnotationReflector.isAnnotationPresent(setter, Max.class)) {
-                    length = AnnotationReflector.getAnnotation(setter, Max.class).value();
-                }
-            } catch (final Throwable ex) {
-                // TODO log exception... usually it should be a harmless situation where a property was not provided with a setter, which is a legitimate case
-            }
+            final Integer length = extractLength(entity, bindingPropertyName);
 
             if (length > 50) {
                 final BoundedValidationLayer<JTextArea> component = ComponentFactory.createStringTextArea(entity, bindingPropertyName, true, true, desc);
@@ -205,6 +194,18 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
         }
 
         return editor;
+    }
+
+    /**
+     * Extracts string property maximum length allowed by the model.
+     *
+     * @param entity
+     * @param propertyName
+     * @return
+     */
+    private Integer extractLength(final AbstractEntity<?> entity, final String propertyName) {
+        final Integer max = Reflector.extractValidationLimits(entity, propertyName).getValue();
+        return max == null ? 0 : max;
     }
 
     @Override
