@@ -11,6 +11,7 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -110,6 +111,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 final Boolean critOnly = AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, type, name);
                 if (!defaultValueContract.isCritOnlyDefault(critOnly)) {
                     entityTypeProp.set_critOnly(critOnly);
+                }
+                final Boolean resultOnly = AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, type, name);
+                if (!defaultValueContract.isResultOnlyDefault(resultOnly)) {
+                    entityTypeProp.set_resultOnly(resultOnly);
                 }
                 entityTypeProp.endInitialising();
 

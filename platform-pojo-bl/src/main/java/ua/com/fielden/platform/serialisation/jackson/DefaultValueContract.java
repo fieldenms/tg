@@ -223,4 +223,13 @@ public class DefaultValueContract {
     public boolean isCritOnlyDefault(final Boolean critOnly) {
         return EntityUtils.equalsEx(critOnly, false);
     }
+
+    /**
+     * Returns <code>true</code> if the value of <code>resultOnly</code> property is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isResultOnlyDefault(final Boolean resultOnly) {
+        return EntityUtils.equalsEx(resultOnly, false);
+    }
 }

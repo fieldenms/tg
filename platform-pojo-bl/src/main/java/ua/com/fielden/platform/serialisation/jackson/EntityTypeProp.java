@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -38,9 +37,22 @@ public class EntityTypeProp extends AbstractEntity<String> {
     private String _desc;
 
     @IsProperty
-    @MapTo
     @Title(value = "Crit Only", desc = "Determines whether the property is for criteria only")
     private Boolean _critOnly;
+
+    @IsProperty
+    @Title(value = "Result Only", desc = "Determines whether the property is for result only")
+    private Boolean _resultOnly;
+
+    @Observable
+    public EntityTypeProp set_resultOnly(final Boolean _resultOnly) {
+        this._resultOnly = _resultOnly;
+        return this;
+    }
+
+    public Boolean get_resultOnly() {
+        return _resultOnly;
+    }
 
     @Observable
     public EntityTypeProp set_critOnly(final Boolean _critOnly) {

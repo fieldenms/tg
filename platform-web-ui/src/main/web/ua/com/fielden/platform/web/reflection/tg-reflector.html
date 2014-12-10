@@ -174,6 +174,14 @@
                 return typeof this._critOnly === 'undefined' ? false : this._critOnly;
             }
 
+            /**
+             * Returns 'true' when the type property is resultOnly, false otherwise.
+             * 
+             * IMPORTANT: do not use '_resultOnly' field directly!
+            */
+            EntityTypeProp.prototype.isResultOnly = function() {
+                return typeof this._resultOnly === 'undefined' ? false : this._resultOnly;
+            }
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var EntityInstanceProp = function() {
                 Object.call(this);
