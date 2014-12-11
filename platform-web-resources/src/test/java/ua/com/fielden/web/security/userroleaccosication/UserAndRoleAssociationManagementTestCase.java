@@ -21,7 +21,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
-import ua.com.fielden.platform.web.UserRoleAssociationResourceFactory;
+import ua.com.fielden.platform.web.factories.UserRoleAssociationResourceFactory;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 

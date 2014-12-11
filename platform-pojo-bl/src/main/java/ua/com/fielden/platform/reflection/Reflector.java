@@ -298,28 +298,18 @@ public final class Reflector {
      * @param propertyName
      * @return
      */
-    public static Pair<Comparable, Comparable> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
-        final List<Field> fields = Finder.findProperties(entity.getType());
-        Comparable<?> min = null, max = null;
-        for (final Field field : fields) { // for each property field
-            if (field.getName().equals(propertyName)) { //
-                final Set<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
-                for (final Annotation annotation : propertyValidationAnotations) {
-                    if (annotation instanceof GreaterOrEqual) {
-                        min = ((GreaterOrEqual) annotation).value();
-                    } else if (annotation instanceof Max) {
-                        max = ((Max) annotation).value();
-                    }
-                }
+    public static Pair<Integer, Integer> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
+        final Field field = Finder.findFieldByName(entity.getType(), propertyName);
+        Integer min = null, max = null;
+        final Set<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
+        for (final Annotation annotation : propertyValidationAnotations) {
+            if (annotation instanceof GreaterOrEqual) {
+                min = ((GreaterOrEqual) annotation).value();
+            } else if (annotation instanceof Max) {
+                max = ((Max) annotation).value();
             }
         }
-        if (min == null) {
-            min = Integer.MIN_VALUE;
-        }
-        if (max == null) {
-            max = Integer.MAX_VALUE;
-        }
-        return new Pair<Comparable, Comparable>(min, max);
+        return new Pair<>(min, max);
     }
 
     /**

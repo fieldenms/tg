@@ -13,11 +13,11 @@ import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
-import ua.com.fielden.platform.web.InfoResourceFactory;
-import ua.com.fielden.platform.web.ReferenceDependencyDownloadResourceFactory;
-import ua.com.fielden.platform.web.ReferenceDependencyListResourceFactory;
-import ua.com.fielden.platform.web.ResourceGuard;
-import ua.com.fielden.platform.web.UserAuthResourceFactory;
+import ua.com.fielden.platform.web.factories.InfoResourceFactory;
+import ua.com.fielden.platform.web.factories.ReferenceDependencyDownloadResourceFactory;
+import ua.com.fielden.platform.web.factories.ReferenceDependencyListResourceFactory;
+import ua.com.fielden.platform.web.factories.ResourceGuard;
+import ua.com.fielden.platform.web.factories.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 

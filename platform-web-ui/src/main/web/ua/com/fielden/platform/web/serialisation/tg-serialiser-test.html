@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 
 <head>
-    <title>tg-seriliser</title>
+    <title>tg-serialiser</title>
 
     <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
     <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
@@ -21,73 +21,65 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <body unresolved>
 
-    <tg-serialiser id="seriliser"></tg-serialiser>
+    <tg-serialiser id="serialiser"></tg-serialiser>
 
     <script>
-        document.addEventListener('polymer-ready', function () {
-            var inst1 = {
-                    _id: 1,
-                    _type: 12,
+        document.addEventListener('polymer-ready', function() {
+            var serialiser = document.querySelector('#serialiser'),
+                reflector = serialiser.$.reflector,
+                EntityInstanceProp = reflector.getEntityInstancePropType(),
+                Entity = reflector.getEntityType(),
+                keyProp1 = new EntityInstanceProp(),
+                descProp1 = new EntityInstanceProp(),
+                keyProp2 = new EntityInstanceProp(),
+                detailProp1 = new EntityInstanceProp(),
+                keyProp3 = new EntityInstanceProp(),
+                descProp2 = new EntityInstanceProp(),
+                detailProp2 = new EntityInstanceProp(),
+                keyProp4 = new EntityInstanceProp(),
+                type10 = reflector.getType("4"),
+                type11 = reflector.getType("11"),
+                type12 = reflector.getType("12"),
+                type13 = reflector.getType("13"),
+                inst1 = new Entity({
+                    id: 1,
+                    _type: type12,
                     key: "entity key",
-                    "@key": {
-                        dirty: false,
-                        readonly: true
-                    },
+                    "@key": keyProp1,
                     desc: "entity description",
-                    "@desc": {
-                        dirty: false,
-                        readonly: false
-                    },
-                    detail: {
-                        _id: 2,
-                        _type: 13,
-                        "@key": {
-                            dirty: false,
-                            readonly: true
-                        }
-                    },
-                    "@detail": {
-                        dirty: false,
-                        readonly: false
-                    }
-                },
-                inst2 = {
-                    _id: 3,
-                    _type: 12,
+                    "@desc": descProp1,
+                    detail: new Entity({
+                        id: 2,
+                        _type: type13,
+                        "@key": keyProp2
+                    }),
+                    "@detail": detailProp1
+                }),
+                inst2 = new Entity({
+                    id: 3,
+                    _type: type12,
                     key: "entity key1",
-                    "@key": {
-                        dirty: false,
-                        readonly: true
-                    },
+                    "@key": keyProp3,
                     desc: "entity description1",
-                    "@desc": {
-                        dirty: false,
-                        readonly: false
-                    },
-                    detail: {
-                        _id: 4,
-                        _type: 13,
-                        "@key": {
-                            dirty: false,
-                            readonly: true
-                        }
-                    },
-                    "@detail": {
-                        dirty: false,
-                        readonly: false
-                    }
-                },
+                    "@desc": descProp2,
+                    detail: new Entity({
+                        id: 4,
+                        _type: type13,
+                        "@key": keyProp4
+                    }),
+                    "@detail": detailProp2
+                }),
                 objToSerialise = {
                     cause: "Testing purposes",
                     ex: "No exception",
-                    instance: {
-                        _id: null,
-                        _type: 11,
+                    instance: new Entity({
+                        id: null,
+                        _type: type11,
                         key: "QueryRunner",
                         desc: "QueryRunner description",
-                        page: {
-                            _id: null,
-                            _type: 10,
+                        page: new Entity({
+                            id: null,
+                            _type: type10,
                             key: "Page",
                             desc: "Page description",
                             numberOfPages: 1,
@@ -96,18 +88,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                 inst1,
                                 inst2
                             ],
-                            summary: {
-                                _id: null,
-                                _type: 12,
+                            summary: new Entity({
+                                id: null,
+                                _type: type12,
                                 total: 2
-
-                            }
-                        },
+                            })
+                        }),
                         pageCapacity: 25,
                         query: null
-                    }
-                },
-                serialiser = document.querySelector('#seriliser'),
+                    })
+                },                
                 restoredObj = null;
             inst1.detail.key = inst1;
             inst2.detail.key = inst2;

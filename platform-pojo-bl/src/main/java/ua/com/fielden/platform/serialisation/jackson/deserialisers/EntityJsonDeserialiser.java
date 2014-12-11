@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
-import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ENTITY_JACKSON_REFERENCES;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -19,8 +17,10 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 
@@ -40,12 +40,16 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
+    private final EntityType entityType;
+    private final DefaultValueContract defaultValueContract;
 
-    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties) {
+    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final DefaultValueContract defaultValueContract) {
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
         this.properties = properties;
+        this.entityType = entityType;
+        this.defaultValueContract = defaultValueContract;
 
         this.type = type;
         versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
@@ -55,16 +59,16 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     @Override
     public T deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
         final JacksonContext context = EntitySerialiser.getContext();
-        References references = (References) context.getTemp(ENTITY_JACKSON_REFERENCES);
+        References references = (References) context.getTemp(EntitySerialiser.ENTITY_JACKSON_REFERENCES);
         if (references == null) {
             // Use non-temporary storage to avoid repeated allocation.
-            references = (References) context.get(ENTITY_JACKSON_REFERENCES);
+            references = (References) context.get(EntitySerialiser.ENTITY_JACKSON_REFERENCES);
             if (references == null) {
-                context.put(ENTITY_JACKSON_REFERENCES, references = new References());
+                context.put(EntitySerialiser.ENTITY_JACKSON_REFERENCES, references = new References());
             } else {
                 references.reset();
             }
-            context.putTemp(ENTITY_JACKSON_REFERENCES, references);
+            context.putTemp(EntitySerialiser.ENTITY_JACKSON_REFERENCES, references);
         }
 
         final JsonNode node = jp.readValueAsTree();
@@ -89,7 +93,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 entity = factory.newEntity(type, id);
             }
 
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references);
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, typeNumber());
             references.putEntity(newReference, entity);
 
             // deserialise version -- should never be null
@@ -115,21 +119,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
 
             //      entity.setInitialising(true);
             for (final CachedProperty prop : properties) {
-                final JsonNode metaPropNode = node.get("@" + prop.field().getName());
-                if (metaPropNode.isNull()) {
-                    throw new IllegalStateException("EntitySerialiser has got null meta property '@" + prop.field().getName() + "' when reading entity of type [" + type.getName() + "].");
-                }
-                final JsonNode dirtyPropNode = metaPropNode.get("dirty");
-                if (dirtyPropNode.isNull()) {
-                    throw new IllegalStateException("EntitySerialiser has got null 'dirty' inside meta property '@" + prop.field().getName() + "' when reading entity of type [" + type.getName() + "].");
-                }
-                final boolean dirty = dirtyPropNode.asBoolean();
-                final JsonNode editablePropNode = metaPropNode.get(MetaProperty.EDITABLE_PROPERTY_NAME);
-                if (editablePropNode.isNull()) {
-                    throw new IllegalStateException("EntitySerialiser has got null 'editable' inside meta property '@" + prop.field().getName() + "' when reading entity of type [" + type.getName() + "].");
-                }
-                final boolean editable = editablePropNode.asBoolean();
-
                 final JsonNode propNode = node.get(prop.field().getName());
                 if (propNode.isNull()) {
                     if (!DynamicEntityClassLoader.isEnhanced(type)) {
@@ -161,11 +150,16 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                         entity.getProperty(prop.field().getName()).setOriginalValue(value);
                     }
                 }
-                if (dirty) {
-                    entity.getProperty(prop.field().getName()).setDirty(true);
-                }
-                if (!editable) {
-                    entity.getProperty(prop.field().getName()).setEditable(false);
+                final JsonNode metaPropNode = node.get("@" + prop.field().getName());
+                if (metaPropNode != null) {
+                    if (metaPropNode.isNull()) {
+                        throw new IllegalStateException("EntitySerialiser has got null meta property '@" + prop.field().getName() + "' when reading entity of type [" + type.getName() + "].");
+                    }
+                    final MetaProperty metaProperty = entity.getProperty(prop.field().getName());
+                    provideDirty(metaProperty, metaPropNode);
+                    provideEditable(metaProperty, metaPropNode);
+                    provideRequired(metaProperty, metaPropNode);
+                    provideVisible(metaProperty, metaPropNode);
                 }
             }
             //      entity.setInitialising(false);
@@ -173,6 +167,112 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             return entity;
         }
     }
+
+    /**
+     * Retrieves 'dirty' value from entity JSON tree.
+     *
+     * @param metaProperty
+     * @param metaPropNode
+     * @return
+     */
+    private void provideDirty(final MetaProperty metaProperty, final JsonNode metaPropNode) {
+        final JsonNode dirtyPropNode = metaPropNode.get("_dirty");
+        if (dirtyPropNode == null) {
+            // do nothing -- there is no node and that means that there is default value
+        } else {
+            if (dirtyPropNode.isNull()) {
+                throw new IllegalStateException("EntitySerialiser has got null 'dirty' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
+            }
+            if (metaProperty != null) {
+                metaProperty.setDirty(dirtyPropNode.asBoolean());
+            }
+        }
+    }
+
+    /**
+     * Retrieves 'editable' value from entity JSON tree.
+     *
+     * @param metaProperty
+     * @param metaPropNode
+     * @return
+     */
+    private void provideEditable(final MetaProperty metaProperty, final JsonNode metaPropNode) {
+        final JsonNode editablePropNode = metaPropNode.get("_" + MetaProperty.EDITABLE_PROPERTY_NAME);
+        if (editablePropNode == null) {
+            // do nothing -- there is no node and that means that there is default value
+        } else {
+            if (editablePropNode.isNull()) {
+                throw new IllegalStateException("EntitySerialiser has got null 'editable' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
+            }
+            if (metaProperty != null) {
+                metaProperty.setEditable(editablePropNode.asBoolean());
+            }
+        }
+    }
+
+    /**
+     * Retrieves 'required' value from entity JSON tree.
+     *
+     * @param metaProperty
+     * @param metaPropNode
+     * @return
+     */
+    private void provideRequired(final MetaProperty metaProperty, final JsonNode metaPropNode) {
+        final JsonNode requiredPropNode = metaPropNode.get("_" + MetaProperty.REQUIRED_PROPERTY_NAME);
+        if (requiredPropNode == null) {
+            // do nothing -- there is no node and that means that there is default value
+        } else {
+            if (requiredPropNode.isNull()) {
+                throw new IllegalStateException("EntitySerialiser has got null 'required' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
+            }
+            if (metaProperty != null) {
+                metaProperty.setRequired(requiredPropNode.asBoolean());
+            }
+        }
+    }
+
+    /**
+     * Retrieves 'visible' value from entity JSON tree.
+     *
+     * @param metaProperty
+     * @param metaPropNode
+     * @return
+     */
+    private void provideVisible(final MetaProperty metaProperty, final JsonNode metaPropNode) {
+        final JsonNode visiblePropNode = metaPropNode.get("_visible");
+        if (visiblePropNode == null) {
+            // do nothing -- there is no node and that means that there is default value
+        } else {
+            if (visiblePropNode.isNull()) {
+                throw new IllegalStateException("EntitySerialiser has got null 'visible' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
+            }
+            if (metaProperty != null) {
+                metaProperty.setVisible(visiblePropNode.asBoolean());
+            }
+        }
+    }
+
+    //    /**
+    //     * Retrieves 'ValidationResult' value from entity JSON tree.
+    //     *
+    //     * @param metaProperty
+    //     * @param metaPropNode
+    //     * @return
+    //     */
+    //    private void provideValidationResult(final MetaProperty metaProperty, final JsonNode metaPropNode) throws IOException, JsonProcessingException {
+    //        final JsonNode validationResultPropNode = metaPropNode.get("_validationResult");
+    //        if (validationResultPropNode == null) {
+    //            // do nothing -- there is no node and that means that there is default value
+    //        } else {
+    //            if (validationResultPropNode.isNull()) {
+    //                throw new IllegalStateException("EntitySerialiser has got null 'ValidationResult' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
+    //            }
+    //            if (metaProperty != null) {
+    //                final JsonParser jsonParser = validationResultPropNode.traverse(mapper);
+    //                metaProperty.setRequiredValidationResult(jsonParser.readValueAs(Result.class)); // TODO how can it be done for Warning.class??
+    //            }
+    //        }
+    //    }
 
     private ResolvedType constructType(final TypeFactory typeFactory, final Field propertyField) {
         final Class<?> fieldType = PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
@@ -194,4 +294,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         }
     }
 
+    private Long typeNumber() {
+        return entityType.get_number();
+    }
 }

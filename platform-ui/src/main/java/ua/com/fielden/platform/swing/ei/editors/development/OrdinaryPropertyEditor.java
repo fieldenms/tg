@@ -3,7 +3,6 @@ package ua.com.fielden.platform.swing.ei.editors.development;
 import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.MIXED_CASE;
 import static ua.com.fielden.platform.swing.components.bind.development.ComponentFactory.EditorCase.UPPER_CASE;
 
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.EnumSet;
@@ -28,10 +27,7 @@ import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.Mutator;
-import ua.com.fielden.platform.entity.annotation.Secrete;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -46,9 +42,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Editor for an entity property of ordinary types (i.e. not entity and non-collectional).
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class OrdinaryPropertyEditor implements IPropertyEditor {
 
@@ -62,7 +58,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 
     /**
      * Creates {@link OrdinaryPropertyEditor} for the entity centre and binds it to the specified property.
-     * 
+     *
      * @param criteria
      * @param propertyName
      * @return
@@ -76,7 +72,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 
     /**
      * Creates {@link OrdinaryPropertyEditor} and binds it to the specified property.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -90,7 +86,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
 
     /**
      * Creates {@link OrdinaryPropertyEditor} and binds it to the specified property in the given entity.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param defaultTimePortionMillis
@@ -135,15 +131,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
             editor = component;
         } else if (String.class == type) {
             // The appropriate editor for string property is determined based on the Max annotation indicating the maximum value length
-            int length = 0;
-            try {
-                final Method setter = Reflector.getMethod(entity/* .getType() */, Mutator.SETTER.getName(bindingPropertyName), String.class);
-                if (AnnotationReflector.isAnnotationPresent(setter, Max.class)) {
-                    length = AnnotationReflector.getAnnotation(setter, Max.class).value();
-                }
-            } catch (final Throwable ex) {
-                // TODO log exception... usually it should be a harmless situation where a property was not provided with a setter, which is a legitimate case
-            }
+            final Integer length = extractLength(entity, bindingPropertyName);
 
             if (length > 50) {
                 final BoundedValidationLayer<JTextArea> component = ComponentFactory.createStringTextArea(entity, bindingPropertyName, true, true, desc);
@@ -171,12 +159,7 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
                 };
                 editor = scrollPane;
             } else {
-                boolean isSecrete = false;
-                try {
-                    isSecrete = AnnotationReflector.getPropertyAnnotation(Secrete.class, entity.getType(), bindingPropertyName) != null;
-                } catch (final Exception ex) {
-                    // in most cases this exception will be thrown when entity is the DynamicEntityQueryCriteria
-                }
+                final boolean isSecrete = AnnotationReflector.isSecreteProperty(entity.getType(), bindingPropertyName);
                 if (!isSecrete) {
                     final BoundedValidationLayer<JTextField> component = ComponentFactory.createStringTextField(entity, bindingPropertyName, true, desc, upperCase ? UPPER_CASE
                             : MIXED_CASE);
@@ -213,6 +196,18 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
         return editor;
     }
 
+    /**
+     * Extracts string property maximum length allowed by the model.
+     *
+     * @param entity
+     * @param propertyName
+     * @return
+     */
+    private Integer extractLength(final AbstractEntity<?> entity, final String propertyName) {
+        final Integer max = Reflector.extractValidationLimits(entity, propertyName).getValue();
+        return max == null ? 0 : max;
+    }
+
     @Override
     public void bind(final AbstractEntity<?> entity) {
         this.entity = entity;
@@ -236,10 +231,12 @@ public class OrdinaryPropertyEditor implements IPropertyEditor {
         return propertyName;
     }
 
+    @Override
     public JLabel getLabel() {
         return label;
     }
 
+    @Override
     public JComponent getEditor() {
         return editor;
     }

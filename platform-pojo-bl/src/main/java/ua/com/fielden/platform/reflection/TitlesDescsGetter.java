@@ -127,12 +127,12 @@ public class TitlesDescsGetter {
         final boolean containsKey = AbstractEntity.KEY.equals(propertyName) || propertyName.endsWith("." + AbstractEntity.KEY);
         final boolean containsDesc = AbstractEntity.DESC.equals(propertyName) || propertyName.endsWith("." + AbstractEntity.DESC);
         final String title = containsKey ? (keyTitleAnnotation != null ? keyTitleAnnotation.value() : "") //
-                : containsDesc ? (descTitleAnnotation != null ? descTitleAnnotation.value() : "") //
-                        : titleAnnotation != null ? titleAnnotation.value() : "";
+        : containsDesc ? (descTitleAnnotation != null ? descTitleAnnotation.value() : "") //
+        : titleAnnotation != null ? titleAnnotation.value() : "";
         // If desc() is not specified in corresponding annotation then use value() instead:
         final String desc = containsKey ? (keyTitleAnnotation != null ? (keyTitleAnnotation.desc().isEmpty() ? keyTitleAnnotation.value() : keyTitleAnnotation.desc()) : "") //
-                : containsDesc ? (descTitleAnnotation != null ? (descTitleAnnotation.desc().isEmpty() ? descTitleAnnotation.value() : descTitleAnnotation.desc()) : "") //
-                        : titleAnnotation != null ? (titleAnnotation.desc().isEmpty() ? titleAnnotation.value() : titleAnnotation.desc()) : "";
+        : containsDesc ? (descTitleAnnotation != null ? (descTitleAnnotation.desc().isEmpty() ? descTitleAnnotation.value() : descTitleAnnotation.desc()) : "") //
+        : titleAnnotation != null ? (titleAnnotation.desc().isEmpty() ? titleAnnotation.value() : titleAnnotation.desc()) : "";
 
         return new Pair<String, String>(title, desc);
     }
@@ -168,7 +168,7 @@ public class TitlesDescsGetter {
     /**
      * Provides default values of title and description for entity. (e.g. "VehicleFinDetails.class" => "Vehicle Fin Details" and "Vehicle Fin Details entity")
      */
-    private static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<?> klass) {
+    public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<?> klass) {
         final String s = breakClassName(klass.getSimpleName());
         return new Pair<String, String>(s, s + " entity");
     }

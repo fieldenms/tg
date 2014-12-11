@@ -3,6 +3,7 @@ package ua.com.fielden.platform.serialisation.api.impl;
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -10,6 +11,26 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.entity.EntityWithPolymorphicProperty;
+import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
+import ua.com.fielden.platform.serialisation.entity.SubBaseEntity2;
+import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
+import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBigDecimal;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBoolean;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithCompositeKey;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDefiner;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEntities;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMoney;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
+import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 
 import com.google.inject.Inject;
 
@@ -159,8 +180,35 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.addAll(utilityGeneratedClasses());
         types.add(Exception.class);
         types.add(StackTraceElement[].class);
+        types.addAll(typesForSerialisationTesting());
         types.addAll(applicationDomain.entityTypes());
         types.add(UserAndRoleAssociationBatchAction.class);
+    }
+
+    private List<Class<?>> typesForSerialisationTesting() {
+        return Arrays.asList(
+                EmptyEntity.class,
+                EntityWithBigDecimal.class,
+                EntityWithInteger.class,
+                EntityWithString.class,
+                EntityWithBoolean.class,
+                EntityWithDate.class,
+                EntityWithOtherEntity.class,
+                EntityWithSameEntity.class,
+                OtherEntity.class,
+                Entity1WithEntity2.class,
+                Entity2WithEntity1.class,
+                EntityWithSetOfEntities.class,
+                EntityWithListOfEntities.class,
+                EntityWithMapOfEntities.class,
+                EntityWithPolymorphicProperty.class,
+                EntityWithDefiner.class,
+                // BaseEntity.class,
+                SubBaseEntity1.class,
+                SubBaseEntity2.class,
+                EntityWithCompositeKey.class,
+                EntityWithMoney.class //
+        );
     }
 
     @Override

@@ -1,18 +1,23 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
-import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ENTITY_JACKSON_REFERENCES;
-
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeProp;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
+import ua.com.fielden.platform.utils.Pair;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,11 +28,17 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
+    private final EntityType entityType;
+    private final DefaultValueContract defaultValueContract;
+    private final boolean excludeNulls;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final DefaultValueContract defaultValueContract, final boolean excludeNulls) {
         super(type);
         this.type = type;
         this.properties = properties;
+        this.entityType = entityType;
+        this.defaultValueContract = defaultValueContract;
+        this.excludeNulls = excludeNulls;
     }
 
     @Override
@@ -36,16 +47,16 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
         ///////////////// handle references ////////////////
         ////////////////////////////////////////////////////
         final JacksonContext context = EntitySerialiser.getContext();
-        References references = (References) context.getTemp(ENTITY_JACKSON_REFERENCES);
+        References references = (References) context.getTemp(EntitySerialiser.ENTITY_JACKSON_REFERENCES);
         if (references == null) {
             // Use non-temporary storage to avoid repeated allocation.
-            references = (References) context.get(ENTITY_JACKSON_REFERENCES);
+            references = (References) context.get(EntitySerialiser.ENTITY_JACKSON_REFERENCES);
             if (references == null) {
-                context.put(ENTITY_JACKSON_REFERENCES, references = new References());
+                context.put(EntitySerialiser.ENTITY_JACKSON_REFERENCES, references = new References());
             } else {
                 references.reset();
             }
-            context.putTemp(ENTITY_JACKSON_REFERENCES, references);
+            context.putTemp(EntitySerialiser.ENTITY_JACKSON_REFERENCES, references);
         }
         final String reference = references.getReference(entity);
         if (reference != null) {
@@ -56,7 +67,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references);
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, typeNumber());
             references.putReference(entity, newReference);
 
             generator.writeStartObject();
@@ -91,38 +102,57 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                     throw e;
                 }
 
-                final boolean dirty = entity.getProperty(name) == null ? false : entity.getProperty(name).isDirty();
-
-                // write actual property
-                generator.writeFieldName(name);
-                if (dirty && value != null) {
+                if (value != null || !excludeNulls) {
+                    // write actual property
+                    generator.writeFieldName(name);
                     generator.writeObject(value);
-                } else if (dirty && value == null) {
-                    generator.writeObject(null);
-                } else {
-                    // TODO Theoretically the following two conditions can be removed when serialising from the client side due to the fact that server can retrieve the data from db if required
-                    if (!dirty && value != null) {
-                        generator.writeObject(value);
-                    } else if (!dirty && value == null) {
-                        generator.writeObject(null);
+
+                    final MetaProperty<Object> metaProperty = entity.getProperty(name);
+                    final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
+                    if (!defaultValueContract.isEditableDefault(metaProperty)) {
+                        existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, defaultValueContract.getEditable(metaProperty));
+                    }
+                    if (!defaultValueContract.isDirtyDefault(metaProperty)) {
+                        existingMetaProps.put("_dirty", defaultValueContract.getDirty(metaProperty));
+                    }
+                    if (!defaultValueContract.isRequiredDefault(metaProperty)) {
+                        existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, defaultValueContract.getRequired(metaProperty));
+                    }
+                    if (!defaultValueContract.isVisibleDefault(metaProperty)) {
+                        existingMetaProps.put("_visible", defaultValueContract.getVisible(metaProperty));
+                    }
+                    if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
+                        existingMetaProps.put("_validationResult", defaultValueContract.getValidationResult(metaProperty));
+                    }
+                    final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
+                    final Integer min = minMax.getKey();
+                    final Integer max = minMax.getValue();
+                    if (!defaultValueContract.isMinDefault(min)) {
+                        existingMetaProps.put("_min", min);
+                    }
+                    if (!defaultValueContract.isMaxDefault(max)) {
+                        existingMetaProps.put("_max", max);
+                    }
+
+                    // write actual meta-property
+                    if (!existingMetaProps.isEmpty()) {
+                        generator.writeFieldName("@" + name);
+                        generator.writeStartObject();
+                        for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
+                            generator.writeFieldName(nameAndVal.getKey());
+                            generator.writeObject(nameAndVal.getValue());
+                        }
+                        generator.writeEndObject();
                     }
                 }
-
-                // write actual property
-                generator.writeFieldName("@" + name);
-                generator.writeStartObject();
-
-                generator.writeFieldName(MetaProperty.EDITABLE_PROPERTY_NAME);
-                generator.writeObject(entity.getProperty(name) == null ? true : entity.getProperty(name).isEditable());
-
-                generator.writeFieldName("dirty");
-                generator.writeObject(dirty);
-
-                generator.writeEndObject();
             }
 
             generator.writeEndObject();
         }
     }
 
+    private Long typeNumber() {
+        return entityType.getKey().equals(EntityType.class.getName()) ? 0L :
+                entityType.getKey().equals(EntityTypeProp.class.getName()) ? 1L : entityType.get_number();
+    }
 }

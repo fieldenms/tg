@@ -194,9 +194,10 @@ public class ReflectorTest {
 
     @Test
     public void test_validation_limits_extraction() {
-        final C c = factory.newEntity(C.class, 1L, "KEY");
-        assertEquals("Should be equal.", new Pair<Comparable, Comparable>(1, 12), Reflector.extractValidationLimits(c, "month"));
-        assertEquals("Should be equal.", new Pair<Comparable, Comparable>(1950, Integer.MAX_VALUE), Reflector.extractValidationLimits(c, "year"));
+        final EntityWithValidationLimits entity = factory.newEntity(EntityWithValidationLimits.class, 1L, "KEY");
+        assertEquals("Should be equal.", new Pair<Integer, Integer>(1, 12), Reflector.extractValidationLimits(entity, "month"));
+        assertEquals("Should be equal.", new Pair<Integer, Integer>(1950, null), Reflector.extractValidationLimits(entity, "year"));
+        assertEquals("Should be equal.", new Pair<Integer, Integer>(null, 255), Reflector.extractValidationLimits(entity, "prop"));
     }
 
     @Test
@@ -293,14 +294,28 @@ public class ReflectorTest {
     }
 
     @KeyType(String.class)
-    private static class C extends AbstractEntity<String> {
-        public C() {
+    private static class EntityWithValidationLimits extends AbstractEntity<String> {
+        public EntityWithValidationLimits() {
         }
 
         @IsProperty
         private Integer month;
         @IsProperty
         private Integer year;
+
+        @IsProperty
+        private String prop;
+
+        @Observable
+        @Max(255)
+        public ReflectorTest.EntityWithValidationLimits setProp(final String prop) {
+            this.prop = prop;
+            return this;
+        }
+
+        public String getProp() {
+            return prop;
+        }
 
         public Integer getMonth() {
             return month;

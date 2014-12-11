@@ -15,12 +15,14 @@ import org.restlet.routing.Template;
 
 import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
-import ua.com.fielden.platform.web.CentreResourceFactory;
-import ua.com.fielden.platform.web.FileResourceFactory;
-import ua.com.fielden.platform.web.FunctionalEntityResourceFactory;
-import ua.com.fielden.platform.web.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.WebAppConfig;
-import ua.com.fielden.platform.web.WebViewResourceFactory;
+import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.WebViewResourceFactory;
 
 import com.google.inject.Injector;
 
@@ -118,6 +120,11 @@ public abstract class AbstractWebApp extends Application {
 
         // Register resources those are in resource paths.
         attacheResources(router);
+
+        // serialisation testing resource
+        router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
+        // type meta info resource
+        router.attach("/tg-reflector", new TgReflectorComponentResourceFactory(injector));
 
         return router;
     }

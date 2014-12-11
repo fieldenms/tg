@@ -16,7 +16,7 @@ import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
-import ua.com.fielden.platform.web.UserAuthResourceFactory;
+import ua.com.fielden.platform.web.factories.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 
 /**

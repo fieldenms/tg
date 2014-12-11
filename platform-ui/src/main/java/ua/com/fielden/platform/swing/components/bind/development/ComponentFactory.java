@@ -65,9 +65,9 @@ import com.jgoodies.binding.value.ValueModel;
 
 /**
  * The factory to create components from entity's properties or from propertyWrappers
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ComponentFactory {
 
@@ -82,7 +82,7 @@ public class ComponentFactory {
 
     /**
      * creates simple {@link JTextField} with the specified DocumentFilter. Use FilterFactory
-     * 
+     *
      * @param abstractDocumentFilter
      * @param upperCase
      *            - determines whether {@link UpperCaseTextField} or simple {@link JTextField} should be created
@@ -94,7 +94,7 @@ public class ComponentFactory {
 
     /**
      * creates simple {@link JTextField} with the specified DocumentFilter. Use FilterFactory
-     * 
+     *
      * @param abstractDocumentFilter
      * @param upperCase
      *            - determines whether {@link UpperCaseTextField} or simple {@link JTextField} should be created
@@ -138,7 +138,7 @@ public class ComponentFactory {
      * Note: We encourage you to specify the number of columns for each text field. If you do not specify the number of columns or a preferred size, then the field's preferred size
      * changes whenever the text changes, which can result in unwanted layout updates.
      * <p>
-     * 
+     *
      * @param textField
      */
     private static void enhanceTextFieldByDeprecatingPreferredSize(final JTextField textField) {
@@ -153,9 +153,9 @@ public class ComponentFactory {
      * 2. it prevents buffering when focus gains (by temporary removing textChangeHandler).
      * <p>
      * 3. Added external implementation of method <code>composedTextExists</code> from JTextComponent class.
-     * 
+     *
      * @author Jhou
-     * 
+     *
      */
     public static class SpecialFormattedField extends JFormattedTextField implements UIResource {
         private static final long serialVersionUID = 1L;
@@ -207,7 +207,7 @@ public class ComponentFactory {
 
     /**
      * Creates formatter factory for number formatted text field based on provided display/edit number formats.
-     * 
+     *
      * @param displayNumberFormat
      * @param editNumberFormat
      * @return
@@ -222,7 +222,7 @@ public class ComponentFactory {
 
     /**
      * Creates formatter factory for date formatted text field based on provided display/edit date formats.
-     * 
+     *
      * @param displayDateFormat
      * @param editDateFormat
      * @return
@@ -237,7 +237,7 @@ public class ComponentFactory {
 
     /**
      * Creates numberFormattedField using specified formatters(edit/display).
-     * 
+     *
      * @param displayNumberFormat
      * @param editNumberFormat
      * @return
@@ -249,7 +249,7 @@ public class ComponentFactory {
 
     /**
      * Creates formatted field with Integer edit/display formatters.
-     * 
+     *
      * @return
      */
     private static JFormattedTextField createFormattedFieldIntegerType() {
@@ -259,7 +259,7 @@ public class ComponentFactory {
 
     /**
      * Creates a pair of display/edit formats for number types.
-     * 
+     *
      * @param decimal
      *            - true for decimal types, false for integer types.
      * @return
@@ -276,7 +276,7 @@ public class ComponentFactory {
 
     /**
      * Creates formatted field with BigDecimal/Money edit/display formatters.
-     * 
+     *
      * @return
      */
     private static JFormattedTextField createFormattedFieldForDecimalTypes() {
@@ -286,9 +286,9 @@ public class ComponentFactory {
 
     /**
      * The Label which text cannot be changed directly (only from binding)
-     * 
+     *
      * @author Jhou
-     * 
+     *
      */
     public static class ReadOnlyLabel extends JLabel {
         private static final long serialVersionUID = 1L;
@@ -309,7 +309,7 @@ public class ComponentFactory {
 
         /**
          * this text setter is for internal purposes only
-         * 
+         *
          * @param text
          */
         final void setTextFromBinding(final String text) {
@@ -319,7 +319,7 @@ public class ComponentFactory {
 
     /**
      * Creates not assigned to any property Autocompleter.
-     * 
+     *
      * @param <T>
      * @param acceptableValues
      *            -
@@ -347,7 +347,7 @@ public class ComponentFactory {
 
     /**
      * Creates not assigned to any property Autocompleter with entity locator.
-     * 
+     *
      * @param locatorManager
      * @param entityFactory
      * @param criteriaGenerator
@@ -392,7 +392,7 @@ public class ComponentFactory {
 
     /**
      * Creates unBounded ValidationLayer wrapped around component. "onCommitActionable" and "trigger" property are not initialized!
-     * 
+     *
      * @param <T>
      * @param component
      * @param originalToolTipText
@@ -429,7 +429,7 @@ public class ComponentFactory {
     /**
      * creates textField and binds it with Integer property. if you create onFocusLost model binding, you can manually commit()/flush() it from BoundedValidationLayer methods
      * commit()/flush().
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param commitOnFocusLost
@@ -446,7 +446,7 @@ public class ComponentFactory {
     /**
      * Creates JSpinner and binds it with Integer property. if you create onFocusLost model binding, you can manually commit()/flush() it from BoundedValidationLayer methods
      * commit()/flush().
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param decimal
@@ -460,12 +460,12 @@ public class ComponentFactory {
             throw new RuntimeException("Please specify the step to increase/decrease values in bounded spinner.");
         }
         final boolean decimal = !(step instanceof Integer) && !(step instanceof Long);
-        final Pair<Comparable, Comparable> minMax = Reflector.extractValidationLimits((AbstractEntity) entity, propertyName);
+        final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits((AbstractEntity) entity, propertyName);
         if (minMax == null) {
             logger.error("Min max values could not be extracted from entity [" + entity + "] of type [" + ((AbstractEntity) entity).getType() + "]");
             throw new RuntimeException("Min max values could not be extracted from entity [" + entity + "] of type [" + ((AbstractEntity) entity).getType() + "]");
         }
-        final Integer min = (Integer) minMax.getKey(), max = (Integer) minMax.getValue();
+        final Integer min = minMax.getKey() == null ? Integer.MIN_VALUE : minMax.getKey(), max = minMax.getValue() == null ? Integer.MAX_VALUE : minMax.getValue();
         final Comparable<?> actualMin, actualMax;
         final Number actualValue;
         if (decimal) {
@@ -496,7 +496,7 @@ public class ComponentFactory {
 
     /**
      * creates textField and binds it with Integer propertyWrapper. Use for delaying commits.
-     * 
+     *
      * @param bufferedPropertyWrapper
      * @return
      */
@@ -510,7 +510,7 @@ public class ComponentFactory {
     /**
      * Creates and binds FormattedField with BigDecimal/Money property. If you create onFocusLost model binding, you can manually commit()/flush() it from BoundedValidationLayer
      * methods commit()/flush().
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param commitOnFocusLost
@@ -528,7 +528,7 @@ public class ComponentFactory {
 
     /**
      * Creates the formatted field for BigDecimal/Money type with the commit/flush actions controlled by the specified Trigger.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param triggerChannel
@@ -547,7 +547,7 @@ public class ComponentFactory {
     /**
      * creates textField and binds it with String property. If you create onFocusLost model binding, you can manually commit()/flush() it from BoundedValidationLayer methods
      * commit()/flush().
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param commitOnFocusLost
@@ -568,7 +568,7 @@ public class ComponentFactory {
     /**
      * creates textField and binds it with String property. If you create onFocusLost model binding, you can manually commit()/flush() it from BoundedValidationLayer methods
      * commit()/flush().
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param commitOnFocusLost
@@ -588,7 +588,7 @@ public class ComponentFactory {
 
     /**
      * Creates password field and binds it to string property.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param commitOnFocusLost
@@ -607,7 +607,7 @@ public class ComponentFactory {
 
     /**
      * creates READ-ONLY JLabel and binds it with any supported property, e.g. autocompleter entities, strings, etc. You cannot use setText() method of the inner JLabel
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -621,7 +621,7 @@ public class ComponentFactory {
 
     /**
      * creates READ-ONLY JLabel and binds it with any supported property, e.g. autocompleter entities, strings, etc. You cannot use setText() method of the inner JLabel
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -632,7 +632,7 @@ public class ComponentFactory {
 
     /**
      * creates textField and binds it with String propertyWrapper. Use for delaying commits.
-     * 
+     *
      * @param bufferedPropertyWrapper
      * @return
      */
@@ -645,7 +645,7 @@ public class ComponentFactory {
 
     /**
      * creates textArea and binds it with String property
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param commitOnFocusLost
@@ -661,7 +661,7 @@ public class ComponentFactory {
 
     /**
      * creates textArea and binds it with String propertyWrapper. Use for delaying commits.
-     * 
+     *
      * @return
      */
     public static BoundedValidationLayer<JTextArea> createTriggeredStringTextArea(final IBindingEntity entity, final String propertyName, final ValueModel triggerChannel, final String originalToolTipText, final IOnCommitAction... actions) {
@@ -673,7 +673,7 @@ public class ComponentFactory {
 
     /**
      * creates checkBox and binds it with Boolean property
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -687,7 +687,7 @@ public class ComponentFactory {
 
     /**
      * creates checkBox and binds it with Boolean property
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
@@ -701,7 +701,7 @@ public class ComponentFactory {
 
     /**
      * creates checkBox and binds it with Boolean propertyWrapper. Use for delaying commits.
-     * 
+     *
      * @param bufferedPropertyWrapper
      * @return
      */
@@ -714,7 +714,7 @@ public class ComponentFactory {
 
     /**
      * creates radioButton and binds it with enum'like property
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param choice
@@ -729,7 +729,7 @@ public class ComponentFactory {
 
     /**
      * This method should be used to create propertyWrapper for Enum property. see createTriggeredRadioButton() method!
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param triggerChannel
@@ -742,7 +742,7 @@ public class ComponentFactory {
 
     /**
      * creates radioButton and binds it with enum'like propertyWrapper. Use for delaying commits.
-     * 
+     *
      * @param bufferedPropertyWrapper
      * @param choice
      *            - choice
@@ -761,7 +761,7 @@ public class ComponentFactory {
      * You can manually commit()/flush() returned BoundedValidationLayer. This is useful behaviour when need to commit autocompleter contents not on focusLost,
      * <p>
      * Note : internally used OnFocusLostPropertyWrapper to get committing on focus lost event
-     * 
+     *
      * @param <T>
      * @param entity
      * @param propertyName
@@ -834,7 +834,7 @@ public class ComponentFactory {
      * You can manually commit()/flush() returned BoundedValidationLayer. This is useful behaviour when need to commit autocompleter contents not on focusLost,
      * <p>
      * Note : internally used OnFocusLostPropertyWrapper to get committing on focus lost event
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param entityType
@@ -889,7 +889,7 @@ public class ComponentFactory {
 
     /**
      * Creates not assigned to any property Autocompleter and binds it with property. Note : used AutocompleterBufferedPropertyWrapper to get commiting on triggerChanel commit.
-     * 
+     *
      * @param <T>
      * @param entity
      * @param propertyName
@@ -926,7 +926,7 @@ public class ComponentFactory {
     /**
      * Creates BoundedJXDatePicker. This is On Key Typed Commit component (in sense of binding - coz no BuffPropertyWrappers used). It means that component commits when when
      * commits its JFormattedTextField (e.g. on Enter press), or when date was selected from JXMothView, or when JFormattedTextField looses its focus
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param originalToolTipText
@@ -947,7 +947,7 @@ public class ComponentFactory {
     /**
      * Creates DatePickerLayer and and bounds to date property. This component commits when when commits its JFormattedTextField (e.g. on Enter press), or when date was selected
      * from JXMothView, or when JFormattedTextField looses its focus.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @param originalToolTipText
@@ -956,7 +956,7 @@ public class ComponentFactory {
      * @param defaultTimePortionMillis
      *            - defines a default value of time-portion millis to be used when picking-up/typing a brand new date; if previous date has non-empty time-portion millis - newDate
      *            will be altered by them (default value will be ignored).
-     * 
+     *
      * @param actions
      * @return
      */
@@ -970,9 +970,9 @@ public class ComponentFactory {
 
     /**
      * This interface can be added at trigger binded components (on Focus lost too). The action postCommitAction invokes after commit action(even it is invalid)
-     * 
+     *
      * @author jhou
-     * 
+     *
      */
     public interface IOnCommitAction {
         /**
@@ -997,7 +997,7 @@ public class ComponentFactory {
 
     /**
      * Enumeration indicating a register setting to be used in an editor.
-     * 
+     *
      * @author TG Team
      */
     public static enum EditorCase {
