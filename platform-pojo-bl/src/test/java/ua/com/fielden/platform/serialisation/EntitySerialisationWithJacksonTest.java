@@ -32,9 +32,6 @@ import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.serialisation.entity.EntityWithPolymorphicProperty;
-import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
-import ua.com.fielden.platform.serialisation.entity.SubBaseEntity2;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
@@ -48,11 +45,14 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEn
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMoney;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicProp;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
+import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
@@ -90,7 +90,7 @@ public class EntitySerialisationWithJacksonTest {
                 EntityWithSetOfEntities.class,
                 EntityWithListOfEntities.class,
                 EntityWithMapOfEntities.class,
-                EntityWithPolymorphicProperty.class,
+                EntityWithPolymorphicProp.class,
                 EntityWithDefiner.class,
                 // BaseEntity.class,
                 SubBaseEntity1.class,
@@ -398,7 +398,7 @@ public class EntitySerialisationWithJacksonTest {
 
         assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
         assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
-        assertEquals("Incorrect prop.", new Money("23.00", 20, Currency.getInstance("AUD")), restoredEntity.getProp());
+        assertEquals("Incorrect prop.", new Money("54.00", 20, Currency.getInstance("AUD")), restoredEntity.getProp());
         assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
     }
 
@@ -633,10 +633,10 @@ public class EntitySerialisationWithJacksonTest {
     @Test
     @Ignore
     public void test_serialisation_of_entity_with_polymorphyc_property() throws Exception {
-        final EntityWithPolymorphicProperty entity = factory.getFactory().newEntity(EntityWithPolymorphicProperty.class, 1L, "key", "description");
+        final EntityWithPolymorphicProp entity = factory.getFactory().newEntity(EntityWithPolymorphicProp.class, 1L, "key", "description");
         entity.setPolyProperty(factory.getFactory().newEntity(SubBaseEntity1.class, 1L, "key", "description"));
 
-        jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithPolymorphicProperty.class);
+        jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithPolymorphicProp.class);
     }
 
     @Test
