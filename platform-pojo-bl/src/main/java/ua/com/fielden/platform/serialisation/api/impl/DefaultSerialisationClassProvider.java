@@ -11,9 +11,6 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.entity.EntityWithPolymorphicProperty;
-import ua.com.fielden.platform.serialisation.entity.SubBaseEntity1;
-import ua.com.fielden.platform.serialisation.entity.SubBaseEntity2;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
@@ -27,10 +24,13 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEn
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMoney;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicProp;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
+import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
 
 import com.google.inject.Inject;
 
@@ -201,7 +201,7 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
                 EntityWithSetOfEntities.class,
                 EntityWithListOfEntities.class,
                 EntityWithMapOfEntities.class,
-                EntityWithPolymorphicProperty.class,
+                EntityWithPolymorphicProp.class,
                 EntityWithDefiner.class,
                 // BaseEntity.class,
                 SubBaseEntity1.class,

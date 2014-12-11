@@ -13,11 +13,10 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.serialisation.EntitySerialisationWithJacksonTest;
 import ua.com.fielden.platform.types.Money;
 
 /**
- * The factory for testing entities for serialisation integration test and {@link EntitySerialisationWithJacksonTest}.
+ * The factory for testing entities for serialisation integration test and EntitySerialisationWithJacksonTest.
  *
  * @author TG Team
  *
@@ -128,7 +127,7 @@ public class FactoryForTestingEntities {
 
     public EntityWithMoney createEntityWithMoney() {
         final EntityWithMoney entity = factory.newEntity(EntityWithMoney.class, 1L, "key", "description");
-        entity.setProp(new Money("23.00", 20, Currency.getInstance("AUD")));
+        entity.setProp(new Money("54.00", 20, Currency.getInstance("AUD")));
         return entity;
     }
 
