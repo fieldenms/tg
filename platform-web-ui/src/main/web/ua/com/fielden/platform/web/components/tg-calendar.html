@@ -1,10 +1,14 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/resources/polymer/core-media-query/core-media-query.html">
+<link rel="import" href="/resources/components/tg-time.html">
 
-<polymer-element name="tg-calendar" attributes="selectedDateStr">
+<polymer-element name="tg-calendar" attributes="selectedDate pickTime">
     <template>
         <style>
+            .col {
+                width: 14em;
+            }
             .day {
                 height: 2.2em;
                 width: 2.2em;
@@ -21,20 +25,17 @@
                 pointer-events: none;
                 cursor: auto;
             }
+            .day-name {
+                background-color: #0288D1;
+                color: white;
+            }
             .header {
                 height: 2.2em;
                 font-size: 14px;
             }
-            .col {
-                width: 14em;
-            }
             .month-shown {
                 font-weight: 600;
                 margin: 0px 1.1em;
-            }
-            .day-name {
-                background-color: #0288D1;
-                color: white;
             }
             .selected-date {
                 background-color: #03A9F4;
@@ -44,7 +45,7 @@
                 font-size: 24px;
             }
             .selected-day {
-                font-size: 72px;
+                font-size: 56px;
             }
             .selected-year {
                 font-size: 24px;
@@ -54,27 +55,42 @@
                 color: #03A9F4;
             }
             .calendar {
-                height: 11.5em;
+                min-height: 11.5em;
             }
             core-icon-button {
                 padding: 0px;
                 margin: 0px;
             }
-            paper-ripple {
-                color: #03A9F4;
+            tg-time {
+                background-color: #03A9F4;
+                color: white;
+            }
+            tg-time::shadow .time {
+                font-size: 14px;
+                height: 14px;
+            }
+            tg-time::shadow .time-portion {
+                margin: 8px 0px;
+            }
+            tg-time::shadow .meridian {
+                font-size: 14px;
+                height: 14px;
             }
         </style>
         <core-media-query query="max-width: 767px" queryMatches="{{phoneScreen}}"></core-media-query>
         <div layout vertical?="{{phoneScreen}}" horizontal?="{{!phoneScreen}}">
             <div class="col" auto-vertical layout vertical>
                 <div class="header day-name" layout vertical center center-justified>{{dayName}}</div>
-                <div class="selected-date" flex layout vertical center center-justified>
-                    <div class="selected-month" flex layout vertical center center-justified>{{monthName}}</div>
+                <div class="selected-date" style="padding: 10px;" layout vertical center justified>
+                    <div class="selected-month">{{monthName}}</div>
                     <div class="selected-day">{{day}}</div>
-                    <div class="selected-year" flex layout vertical center center-justified>{{year}}</div>
+                    <div class="selected-year">{{year}}</div>
                 </div>
+                <template if="{{pickTime}}">
+                    <tg-time date="{{selectedDate}}" showmeridian></tg-time>
+                </template>
             </div>
-            <div class="col col-margin" auto-vertical layout vertical>
+            <div class="col" auto-vertical layout vertical>
                 <div class="header month-shown" layout horizontal justified center>
                     <div>
                         <core-icon-button icon="chevron-left" on-tap="{{prevMonth}}"></core-icon-button>
@@ -153,19 +169,24 @@
                 };
 
             Polymer({
+                publish: {
+                    pickTime: {
+                        value: false,
+                        reflect: true
+                    }
+                },
                 ready: function () {
                     this.today = new Date();
                     this.todayYear = this.today.getFullYear();
                     this.todayMonth = this.today.getMonth();
                     this.todayDay = this.today.getDate();
-                    this.selectedDateStr = null;
                     this.selectedDate = null;
                     this.selectedYear = null;
                     this.selectedMonth = null;
                     this.selectedDay = null;
                 },
                 attached: function () {
-                    var shownDate = this.selectedDate || new Date();
+                    var shownDate = (this.selectedDate && new Date(this.selectedDate)) || new Date();
                     this.adjustDate(shownDate);
                     this.adjustShownMonth(shownDate);
                 },
@@ -179,19 +200,21 @@
                     var shownDate = new Date(this.shownYear, this.shownMonth + increment, 1);
                     this.adjustShownMonth(shownDate);
                 },
-                selectDay: function(event, detail, el) {
-                    this.selectedDateStr = new Date(this.shownYear, this.shownMonth, el.getAttribute('day'));
+                selectDay: function (event, detail, el) {
+                    this.selectedDate = new Date(this.shownYear, this.shownMonth, el.getAttribute('day')).getTime();
                 },
                 adjustShownMonth: function (shownDate) {
-                    this.shownMonthName = shownDate.toLocaleString(locale, {
-                        month: "long"
-                    });
-                    this.shownMonth = shownDate.getMonth();
-                    this.shownYear = shownDate.getFullYear();
-                    this.weeks = createMonth(this.shownYear, this.shownMonth);
+                    if (this.shownMonth !== shownDate.getMonth() || this.shownYear !== shownDate.getFullYear()) {
+                        this.shownMonthName = shownDate.toLocaleString(locale, {
+                            month: "long"
+                        });
+                        this.shownMonth = shownDate.getMonth();
+                        this.shownYear = shownDate.getFullYear();
+                        this.weeks = createMonth(this.shownYear, this.shownMonth);
+                    }
                 },
-                adjustDate: function(date) {
-                     this.dayName = date.toLocaleString(locale, {
+                adjustDate: function (date) {
+                    this.dayName = date.toLocaleString(locale, {
                         weekday: "long"
                     });
                     this.monthName = date.toLocaleString(locale, {
@@ -200,12 +223,13 @@
                     this.day = date.getDate();
                     this.year = date.getFullYear();
                 },
-                selectedDateStrChanged: function (oldValue, newValue) {
-                    this.selectedDate = new Date(newValue);
-                    this.selectedYear = this.selectedDate.getFullYear();
-                    this.selectedMonth = this.selectedDate.getMonth();
-                    this.selectedDay = this.selectedDate.getDate();
-                    this.adjustDate(this.selectedDate);
+                selectedDateChanged: function (oldValue, newValue) {
+                    var newDate = new Date(newValue);
+                    this.selectedYear = newDate.getFullYear();
+                    this.selectedMonth = newDate.getMonth();
+                    this.selectedDay = newDate.getDate();
+                    this.adjustDate(newDate);
+                    this.adjustShownMonth(newDate);
                 },
             });
         })();

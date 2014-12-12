@@ -1,0 +1,138 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
+
+<polymer-element name="tg-time" attributes="date hour minute showMeridian">
+    <template>
+        <style>
+            .time {
+                font-size: 64px;
+                height: 64px;
+            }
+            .time-portion {
+                margin: 10px;
+            }
+            .meridian {
+                font-size: 24px;
+                height: 64px;
+            }
+            core-icon-button {
+                padding: 0px;
+                margin: 0px;
+            }
+        </style>
+        <div layout horizontal center center-justified>
+            <div class="time-portion" layout vertical center>
+                <core-icon-button icon="expand-less" on-down="{{incrementHour}}" on-holdpulse="{{incrementHour}}"></core-icon-button>
+                <div class="time">{{hour | formatHours}}</div>
+                <core-icon-button icon="expand-more" on-down="{{decrementHour}}" on-holdpulse="{{decrementHour}}"></core-icon-button>
+            </div>
+            <div class="time time-portion">:</div>
+            <div class="time-portion" layout vertical center>
+                <core-icon-button icon="expand-less" on-down="{{incrementMinute}}" on-holdpulse="{{incrementMinute}}"></core-icon-button>
+                <div class="time">{{minute}}</div>
+                <core-icon-button icon="expand-more" on-down="{{decrementMinute}}" on-holdpulse="{{decrementMinute}}"></core-icon-button>
+            </div>
+            <template if="{{showMeridian}}">
+                <div class="time-portion" layout vertical center>
+                    <core-icon-button icon="expand-less" on-down="{{incrementMeridian}}" on-holdpulse="{{incrementMeridian}}"></core-icon-button>
+                    <div class="meridian" layout vertical center center-justified>{{meridian}}</div>
+                    <core-icon-button icon="expand-more" on-down="{{decrementMeridian}}" on-holdpulse="{{decrementMeridian}}"></core-icon-button>
+                </div>
+            </template>
+        </div>
+    </template>
+    <script>
+        (function () {
+            var meridians = ["AM", "PM"],
+                zeroPad = function (str, num) {
+                    str = str.toString();
+                    return str.length < num ? zeroPad("0" + str, num) : str;
+                };
+
+            Polymer({
+                publish: {
+                    hour: "00",
+                    minute: "00",
+                    showMeridian: {
+                        value: false,
+                        reflect: true
+                    },
+                    meridian: "AM"
+                },
+                incrementHour: function () {
+                    this.goHour(1);
+                },
+                decrementHour: function () {
+                    this.goHour(-1);
+                },
+                incrementMinute: function () {
+                    this.goMinute(1);
+                },
+                decrementMinute: function () {
+                    this.goMinute(-1);
+                },
+                incrementMeridian: function () {
+                    this.goMeridian(1);
+                },
+                decrementMeridian: function () {
+                    this.goMeridian(-1);
+                },
+                hourChanged: function () {
+                    this.dateChanged();
+                },
+                minuteChanged: function () {
+                   this.dateChanged();
+                },
+                dateChanged: function () {
+                    var dateToManipulate = this.date && new Date(this.date),
+                        oldDate = this.date && new Date(this.date);
+                    if (dateToManipulate && dateToManipulate.getHours() !== Number(this.hour)) {
+                        dateToManipulate.setHours(Number(this.hour));
+                    }
+                    if (dateToManipulate && dateToManipulate.getMinutes() !== Number(this.minute)) {
+                        dateToManipulate.setMinutes(Number(this.minute));
+                    }
+                    if (dateToManipulate && oldDate && dateToManipulate.getTime() !== oldDate.getTime()) {
+                        this.date = dateToManipulate.getTime();
+                    }
+                },
+                formatHours: function (value) {
+                    if (this.showMeridian) {
+                        return zeroPad(Number(value) % 12, 2);
+                    }
+                },
+                goMinute: function (step) {
+                    var minuteNumber = Number(this.minute),
+                        remainMinutes = (minuteNumber + step) % 60;
+                    if (remainMinutes >= 0) {
+                        this.minute = zeroPad(remainMinutes, 2);
+                    } else {
+                        this.minute = zeroPad(60 + remainMinutes, 2);
+                    }
+                    this.goHour(Math.floor((minuteNumber + step) / 60));
+                },
+                goMeridian: function (step) {
+                    this.goHour(12 * step);
+                },
+                goHour: function (step) {
+                    var hourNumber = Number(this.hour),
+                        remainHours = (hourNumber + step) % 24;
+                    if (remainHours >= 0) {
+                        this.hour = zeroPad(remainHours, 2);
+                    } else {
+                        this.hour = zeroPad(24 + remainHours, 2);
+                    }
+                    this.meridian = meridians[Math.floor(Number(this.hour) / 12)];
+                    this.goDate(Math.floor((hourNumber + step) / 24));
+                },
+                goDate: function (step) {
+                    var dateToManipulate = this.date && new Date(this.date);
+                    if (dateToManipulate) {
+                        dateToManipulate.setDate(dateToManipulate.getDate() + step);
+                        this.date = dateToManipulate.getTime();
+                    }
+                }
+            });
+        })();
+    </script>
+</polymer-element>
