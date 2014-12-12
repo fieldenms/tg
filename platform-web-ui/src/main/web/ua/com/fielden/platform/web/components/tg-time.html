@@ -19,21 +19,24 @@
                 padding: 0px;
                 margin: 0px;
             }
+            core-icon-button[icon="expand-more"] {
+                margin-top: 2px;
+            }
         </style>
         <div layout horizontal center center-justified>
-            <div class="time-portion" layout vertical center>
+            <div class="time-portion" layout vertical center justified>
                 <core-icon-button icon="expand-less" on-down="{{incrementHour}}" on-holdpulse="{{incrementHour}}"></core-icon-button>
                 <div class="time">{{hour | formatHours}}</div>
                 <core-icon-button icon="expand-more" on-down="{{decrementHour}}" on-holdpulse="{{decrementHour}}"></core-icon-button>
             </div>
             <div class="time time-portion">:</div>
-            <div class="time-portion" layout vertical center>
+            <div class="time-portion" layout vertical center justified>
                 <core-icon-button icon="expand-less" on-down="{{incrementMinute}}" on-holdpulse="{{incrementMinute}}"></core-icon-button>
                 <div class="time">{{minute}}</div>
                 <core-icon-button icon="expand-more" on-down="{{decrementMinute}}" on-holdpulse="{{decrementMinute}}"></core-icon-button>
             </div>
             <template if="{{showMeridian}}">
-                <div class="time-portion" layout vertical center>
+                <div class="time-portion" layout vertical center justified>
                     <core-icon-button icon="expand-less" on-down="{{incrementMeridian}}" on-holdpulse="{{incrementMeridian}}"></core-icon-button>
                     <div class="meridian" layout vertical center center-justified>{{meridian}}</div>
                     <core-icon-button icon="expand-more" on-down="{{decrementMeridian}}" on-holdpulse="{{decrementMeridian}}"></core-icon-button>
@@ -81,7 +84,7 @@
                     this.dateChanged();
                 },
                 minuteChanged: function () {
-                   this.dateChanged();
+                    this.dateChanged();
                 },
                 dateChanged: function () {
                     var dateToManipulate = this.date && new Date(this.date),
