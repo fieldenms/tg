@@ -40,6 +40,7 @@
             }
             tile-layout {
                 margin: 5px;
+                font: inherit;
             }
         </style>
         <core-ajax id="config_retriever" url="/users/SU/centre/{{centreName}}" handleas="json" on-core-response="{{onConfigLoadResponse}}" on-core-error="{{onConfigLoadError}}" auto></core-ajax>
@@ -47,7 +48,7 @@
         <div layout vertical center center-justified fit>
             <div class="entity-center">
                 <accordion-element heading="Selection Criteria">
-                    <tile-layout fullbleed block relative whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}" mincellheight="70px">
+                    <tile-layout fullbleed block relative whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}" mincellheight="4.5em">
                         <template repeat="{{criteria in config.centreConfig.criteria.criteriaProperties}}">
                             <criteria-editor class="tile" config="{{criteria}}" bindto="{{config.query.criteriaProperties[criteria.propertyName]}}"></criteria-editor>
                         </template>
@@ -55,22 +56,22 @@
                 </accordion-element>
                 <div layout horizontal justified center>
                     <div layout horizontal center>
-                        <div class="btn-group" layout horizontal>
+                        <!--div class="btn-group" layout horizontal>
                             <paper-button class="btn" on-click="{{firstPage}}">Run</paper-button>
                             <paper-button class="btn" on-click="{{prevPage}}">Run</paper-button>
                             <paper-button class="btn" on-click="{{nextPage}}">Run</paper-button>
                             <paper-button class="btn" on-click="{{lastPage}}">Run</paper-button>
-                        </div>
+                        </div-->
                         <span>{{"page: " + (paginator.page.numberOfPages == 0 ? 0 : paginator.page.pageNo + 1) + " of " + paginator.page.numberOfPages}}</span>
                     </div>
                     <div layout horizontal center>
-                        <paper-dropdown-menu selected="{{pageCapacity}}" valueattr="label">
+                        <!--paper-dropdown-menu selected="{{pageCapacity}}" valueattr="label">
                             <paper-item label="5"></paper-item>
                             <paper-item label="10"></paper-item>
                             <paper-item label="20"></paper-item>
                             <paper-item label="25"></paper-item>
                             <paper-item label="50"></paper-item>
-                        </paper-dropdown-menu>
+                        </paper-dropdown-menu-->
                         <paper-button style="margin-right: 0px" on-click="{{runAction}}">Run</paper-button>
                     </div>
                 </div>
