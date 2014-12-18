@@ -76,6 +76,8 @@
                             this.isInvalid = true;
                             this.error = "The entered date is incorrect."
                         }
+                    } else {
+                        this.isInvalid = false;
                     }
                 },
                 bindToChanged: function (oldValue, newValue) {
