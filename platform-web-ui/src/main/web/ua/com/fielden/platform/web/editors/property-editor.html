@@ -15,7 +15,7 @@
             <tg-spinner label="{{config.title}}" entity={{bindTo}} propertyName="{{propertyName}}" style="{{styles | styleObject}}"></tg-spinner>
         </template>
         <template if = "{{ bindTo.propType === 'Date' }}">
-            <datetime-picker label="{{config.title}}" entity="{{bindTo}}" propertyName = "{{propertyName}}" style="{{styles | styleObject}}"></datetime-picker>
+            <datetime-picker label="{{config.title}}" bindTo="{{bindTo[propertyName]}}" style="{{styles | styleObject}}"></datetime-picker>
         </template>
         <!--<template if = "{{ bindto.propType === 'Boolean' }}">
             <paper-input label="{{config.title}}" inputValue = "{{bindto.value1}}"></paper-input>

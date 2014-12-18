@@ -3,7 +3,7 @@
 <link rel="import" href="/resources/polymer/core-media-query/core-media-query.html">
 <link rel="import" href="/resources/components/tg-time.html">
 
-<polymer-element name="tg-calendar" attributes="selectedDate pickTime">
+<polymer-element name="tg-calendar" attributes="selectedDate selectedHour selectedMinute pickTime">
     <template>
         <style>
             .col {
@@ -87,7 +87,7 @@
                     <div class="selected-year">{{year}}</div>
                 </div>
                 <template if="{{pickTime}}">
-                    <tg-time date="{{selectedDate}}" showmeridian></tg-time>
+                    <tg-time hour="{{selectedHour}}" minute="{{selectedMinute}}"></tg-time>
                 </template>
             </div>
             <div class="col" auto-vertical layout vertical>
@@ -184,6 +184,8 @@
                     this.selectedYear = null;
                     this.selectedMonth = null;
                     this.selectedDay = null;
+                    this.selectedHour = 0;
+                    this.selectedMinute = 0;
                 },
                 attached: function () {
                     var shownDate = (this.selectedDate && new Date(this.selectedDate)) || new Date();

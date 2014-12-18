@@ -17,6 +17,7 @@
     <link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
     <link rel="import" href="/resources/element_loader/load-element.html">
     <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+    <link rel="import" href="/resources/components/moment-component.html">
 
     <style>
         body {
@@ -124,9 +125,9 @@
                 DEFAULT_ROUTE = @defaultView,
                 scaffold,
                 pages;
-
+            
+            moment.locale("en-AU");
             template.pages = @pages;
-
             template.addEventListener('template-bound', function (e) {
                 scaffold = document.querySelector('#scaffold');
                 pages = document.querySelector('#pages');
