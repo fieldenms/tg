@@ -107,7 +107,9 @@
             separator: ",",
             isSearching: false,
             onOkClick: function () {
-                this.$.trigger.value = this.$.suggestions.selected;
+                this.$.trigger.value = _.map(this.selectedItems, function (obj) {
+                    return obj.key
+                }).toString();
                 this.$.overlay.close();
                 this.$.trigger.focus();
 
