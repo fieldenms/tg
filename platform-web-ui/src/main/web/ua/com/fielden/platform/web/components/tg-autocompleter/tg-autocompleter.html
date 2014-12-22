@@ -107,12 +107,21 @@
             separator: ",",
             isSearching: false,
             onOkClick: function () {
-                this.$.trigger.value = _.map(this.selectedItems, function (obj) {
+                var selectedItemsToStr = _.map(this.selectedItems, function (obj) {
                     return obj.key
                 }).toString();
+
+                if (selectedItemsToStr) {
+                    var before = this.$.trigger.value.substring(0, this.replaceFromIndex + 1);
+                    var after = this.$.trigger.value.substr(this.replaceToIndex);
+                    this.$.trigger.value = before + selectedItemsToStr + after;
+                }
+
                 this.$.overlay.close();
                 this.$.trigger.focus();
-
+                // let's highlight the inseted values
+                this.$.trigger.selectionStart = this.replaceFromIndex + 1;
+                this.$.trigger.selectionEnd = this.$.trigger.selectionStart + selectedItemsToStr.length;
             },
             selectedItems: {},
             onSelectItem: function (event) {
@@ -183,7 +192,8 @@
                 // return the result
                 return parts;
             },
-
+            replaceFromIndex: 0,
+            replaceToIndex: 0,
             search: function () {
                 this.isSearching = true;
                 // need to implement the actuall search 
@@ -191,10 +201,29 @@
                 // TODO for new just grab the whole value, but later would need to split the input value by separator
                 // and identify the search query based on the current cursor position
                 // might need to prepend ^ and append $ to avoid match anywhere behaviour
-                if (!this.$.trigger.value) {
+                var text = this.$.trigger.value;
+                var caretPos = this.$.trigger.selectionStart;
+                var toIndex = text.indexOf(this.separator, caretPos);
+                if (toIndex < 0) {
+                    toIndex = text.length;
+                }
+                var startOfText = text.substring(0, caretPos);
+                var fromIndex = startOfText.lastIndexOf(this.separator);
+                if (fromIndex < 0) {
+                    fromIndex = -1; // just to make sure that it is -1
+                }
+
+                this.replaceFromIndex = fromIndex;
+                this.replaceToIndex = toIndex;
+
+                var inputText = text.substring(fromIndex + 1, toIndex).trim();
+
+                console.log('search text portion: ', inputText);
+
+                if (!inputText) {
                     this.searchQuery = ""
                 } else {
-                    this.searchQuery = replaceAll('*', '\\w*', this.$.trigger.value);
+                    this.searchQuery = replaceAll('*', '\\w*', inputText);
                 }
                 console.log('searchQuery: ', this.searchQuery);
                 var searchExp = new RegExp(this.searchQuery, 'g', 'i');
@@ -208,7 +237,7 @@
                     this.matchedValues.pop();
                 }
                 // collect new matching values
-                if (this.$.trigger.value) {
+                if (this.searchQuery) {
                     var allValues = this.allValues();
                     for (var index = 0; index < allValues.length; index++) {
                         /*if (allValues[index].key == '100100') {
