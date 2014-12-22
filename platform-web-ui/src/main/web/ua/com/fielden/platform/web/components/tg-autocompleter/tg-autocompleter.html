@@ -27,7 +27,7 @@
     .invalid paper-spinner { width: 1.0em; height:1.0em; border-color : {{g.paperInput.invalidColor}}; }
 </core-style>
 
-<polymer-element name="tg-autocompleter" attributes="label page-size separator">
+<polymer-element name="tg-autocompleter" attributes="label page-size separator multi">
     <template>
         <core-style ref="search-icon-decorator"></core-style>
         <link rel="stylesheet" href="tg-autocompleter.css">
@@ -53,7 +53,7 @@
                 <paper-shadow z="1">
                     <!-- list of suggestions, each item can be selected with space (TODO) -->
                     <div class="tg-snatchback-suggestions">
-                        <core-selector id="suggestions" valueattr="value" class="tg-snatchback-suggestions" on-core-select="{{onSelectItem}}" multi>
+                        <core-selector id="suggestions" valueattr="value" selectedModel="{{selectedItems}}" class="tg-snatchback-suggestions" on-core-select="{{onSelectItem}}" multi="{{multi}}">
                             <template repeat="{{v in matchedValues}}">
                                 <paper-item class="tg-item" value="{{v.key}}" noink layout vertical>
                                     <!-- font-size:0 is a hack to enforce no space between the highlighted and not highlighted part of the key value -->
@@ -101,6 +101,7 @@
 
         Polymer({
             "page-size": 10,
+            multi: true,
             label: "Autocompleter",
             separator: ",",
             isSearching: false,
@@ -110,8 +111,18 @@
                 this.$.trigger.focus();
 
             },
+            selectedItems: {},
             onSelectItem: function (event) {
-                console.log('selected item: ', event.detail.isSelected, ' ', event.detail.item.getAttribute("value"));
+                var key = event.detail.item.getAttribute("value");
+                console.log('selected item: ', event.detail.isSelected, ' ', key);
+                if (event.detail.isSelected) {
+                    // TODO add object to selectedItems
+                    //this.selectedItems[key] = this.matchedValues...;
+                } else {
+                    // TODO remove object from selectedItems
+                    delete this.selectedItems[key];
+                }
+                console.log('selected item model: ', this.selectedItems);
             },
             showSnatchback: function () {},
 
