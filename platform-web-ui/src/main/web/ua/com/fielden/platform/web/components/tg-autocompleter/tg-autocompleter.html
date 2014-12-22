@@ -54,7 +54,7 @@
                 <paper-shadow z="1">
                     <!-- list of suggestions, each item can be selected with space (TODO) -->
                     <div class="tg-snatchback-suggestions">
-                        <core-selector id="suggestions" valueattr="value" selectedModel="{{selectedItems}}" class="tg-snatchback-suggestions" on-core-select="{{onSelectItem}}" multi="{{multi}}">
+                        <core-selector id="suggestions" valueattr="value" class="tg-snatchback-suggestions" on-core-select="{{onSelectItem}}" multi="{{multi}}">
                             <template repeat="{{v in matchedValues}}">
                                 <paper-item class="tg-item" value="{{v.key}}" noink layout vertical>
                                     <!-- font-size:0 is a hack to enforce no space between the highlighted and not highlighted part of the key value -->
@@ -117,13 +117,13 @@
                 var key = event.detail.item.getAttribute("value");
                 console.log('selected item: ', event.detail.isSelected, ' ', key);
                 if (event.detail.isSelected) {
-                    // TODO add object to selectedItems
-                    //this.selectedItems[key] = this.matchedValues...;
+                    this.selectedItems[key] = _.find(this.matchedValues, function (obj) {
+                        return obj.key === key;
+                    });
                 } else {
-                    // TODO remove object from selectedItems
                     delete this.selectedItems[key];
                 }
-                console.log('selected item model: ', this.selectedItems);
+                console.log('selected items: ', this.selectedItems);
             },
             showSnatchback: function () {},
 
