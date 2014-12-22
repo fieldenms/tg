@@ -2,17 +2,20 @@ package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 
 /**
@@ -60,8 +63,11 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 exists = co.entityExists(newValue);
             } else { // otherwise, property value is activatable
                 final Class<T> entityType = co.getEntityType();
+                final EntityResultQueryModel<T> query = select(entityType).where().prop("id").eq().val(newValue.getId()).model();
                 final fetch<T> fm = fetchOnly(entityType).with(ACTIVE);
-                final T ent = co.findByEntityAndFetch(fm, newValue);
+                final QueryExecutionModel<T, EntityResultQueryModel<T>> qem = from(query).with(fm).model();
+                qem.setLightweight(true);
+                final T ent = co.getEntity(qem);
                 // two possible cases:
                 // 1. if the property owning entity is itself an inactive activatable then the inactive property value is appropriate
                 // 2. otherwise, the activatable value should also be active

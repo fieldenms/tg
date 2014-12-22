@@ -196,6 +196,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public T save(final T entity) {
         if (entity == null) {
             throw new IllegalArgumentException(format("Null reference to entity of type %s cannot be saved.", getEntityType()));
+        } else if (!entity.isPersistent()) {
+            return entity;
         } else if (!entity.isDirty() && entity.isValid().isSuccessful()) {
             logger.debug(format("Entity %s is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
             return findById(entity.getId(), FetchModelReconstructor.reconstruct(entity));
