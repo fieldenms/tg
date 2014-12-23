@@ -10,6 +10,7 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
@@ -813,7 +814,8 @@ public class EntityUtils {
      * @param instance
      * @return
      */
-    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance) {
+    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final String ... proxiesProps) {
+        final List<String> proxied = Arrays.asList(proxiesProps);
         if (!(instance instanceof AbstractUnionEntity) && instance.getProperties().containsKey("key")) {
             final Object keyValue = instance.get("key");
             if (keyValue != null) {
@@ -823,7 +825,7 @@ public class EntityUtils {
         }
 
         for (final MetaProperty meta : instance.getProperties().values()) {
-            if (meta != null && !(COMMON_PROPS.contains(meta.getName()) && instance instanceof AbstractUnionEntity)) {
+            if (meta != null && !(COMMON_PROPS.contains(meta.getName()) && instance instanceof AbstractUnionEntity) && !(proxied.contains(meta.getName()))) {
                 final Object newOriginalValue = instance.get(meta.getName());
                 meta.setOriginalValue(newOriginalValue);
                 if (!meta.isCollectional()) {
