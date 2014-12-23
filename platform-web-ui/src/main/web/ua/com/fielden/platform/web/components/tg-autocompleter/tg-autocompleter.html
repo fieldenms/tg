@@ -44,7 +44,7 @@
                             <paper-spinner id="spinner" active="{{isSearching}}" class="blue" alt="searching"></paper-spinner>
                         </template>
                         <template if="{{!isSearching}}">
-                            <core-icon-button class="search-button" on-click="{{showSnatchback}}" icon="search"></core-icon-buton>
+                            <core-icon-button class="search-button" on-click="{{onInput}}" icon="search"></core-icon-buton>
                         </template>
                     </div>
                 </div>
@@ -80,7 +80,7 @@
                             <core-icon-button class="tg-snatchback-button" icon="chevron-right"></core-icon-button>
                         </div>
                         <div id="okCancel" layout horizontal center>
-                            <paper-button class="tg-snatchback-button" dismissive>Cancel</paper-button>
+                            <paper-button class="tg-snatchback-button" on-click="{{onCancelClick}}" dismissive>Cancel</paper-button>
                             <paper-button class="tg-snatchback-button" on-click="{{onOkClick}}" affirmative default>Ok</paper-button>
                         </div>
                     </div>
@@ -130,6 +130,11 @@
                 this.$.trigger.selectionStart = this.multi ? this.replaceFromIndex + 1 : this.replaceFromIndex;
                 this.$.trigger.selectionEnd = this.$.trigger.selectionStart + selectedItemsToStr.length;
             },
+            /* Handles click on button Cancel. */
+            onCancelClick: function () {
+                this.$.overlay.close();
+                this.$.trigger.focus();
+            },
             /* A structure to maintain a list of selected items. */
             selectedItems: {},
             onSelectItem: function (event) {
@@ -145,9 +150,6 @@
                 console.log('selected items: ', this.selectedItems);
             },
             
-            /* This is a STUB for future snatchback support. */
-            showSnatchback: function () {},
-
             /* regular expression to highlight found matches */
             searchQuery: "",
 
