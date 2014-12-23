@@ -102,27 +102,35 @@
 
         Polymer({
             "page-size": 10,
-            multi: true,
+            multi: false,
             label: "Autocompleter",
             separator: ",",
             isSearching: false,
+            /* Handles click on button OK, which confirms selection and assignes it to the input field. */
             onOkClick: function () {
                 var selectedItemsToStr = _.map(this.selectedItems, function (obj) {
                     return obj.key
                 }).toString();
 
+                this.selectedItems = {};
+                
                 if (selectedItemsToStr) {
-                    var before = this.$.trigger.value.substring(0, this.replaceFromIndex + 1);
-                    var after = this.$.trigger.value.substr(this.replaceToIndex);
-                    this.$.trigger.value = before + selectedItemsToStr + after;
+                    if (this.multi) {
+                        var before = this.$.trigger.value.substring(0, this.replaceFromIndex + 1);
+                        var after = this.$.trigger.value.substr(this.replaceToIndex);
+                        this.$.trigger.value = before + selectedItemsToStr + after;
+                    } else {
+                        this.$.trigger.value = selectedItemsToStr;
+                    }
                 }
 
                 this.$.overlay.close();
                 this.$.trigger.focus();
                 // let's highlight the inseted values
-                this.$.trigger.selectionStart = this.replaceFromIndex + 1;
+                this.$.trigger.selectionStart = this.multi ? this.replaceFromIndex + 1 : this.replaceFromIndex;
                 this.$.trigger.selectionEnd = this.$.trigger.selectionStart + selectedItemsToStr.length;
             },
+            /* A structure to maintain a list of selected items. */
             selectedItems: {},
             onSelectItem: function (event) {
                 var key = event.detail.item.getAttribute("value");
@@ -136,6 +144,8 @@
                 }
                 console.log('selected items: ', this.selectedItems);
             },
+            
+            /* This is a STUB for future snatchback support. */
             showSnatchback: function () {},
 
             /* regular expression to highlight found matches */
@@ -192,8 +202,11 @@
                 // return the result
                 return parts;
             },
+            /* A position of the start of the search string the input value. */
             replaceFromIndex: 0,
+            /* A position of the end of the search string the input value. */
             replaceToIndex: 0,
+            /* The function that actually perform the search and opensup the overlay with matched values. */
             search: function () {
                 this.isSearching = true;
                 // need to implement the actuall search 
@@ -201,23 +214,25 @@
                 // TODO for new just grab the whole value, but later would need to split the input value by separator
                 // and identify the search query based on the current cursor position
                 // might need to prepend ^ and append $ to avoid match anywhere behaviour
-                var text = this.$.trigger.value;
-                var caretPos = this.$.trigger.selectionStart;
-                var toIndex = text.indexOf(this.separator, caretPos);
-                if (toIndex < 0) {
-                    toIndex = text.length;
+                var inputText = this.$.trigger.value;
+                if (this.multi) {
+                    var text = this.$.trigger.value;
+                    var caretPos = this.$.trigger.selectionStart;
+                    var toIndex = text.indexOf(this.separator, caretPos);
+                    if (toIndex < 0) {
+                        toIndex = text.length;
+                    }
+                    var startOfText = text.substring(0, caretPos);
+                    var fromIndex = startOfText.lastIndexOf(this.separator);
+                    if (fromIndex < 0) {
+                        fromIndex = -1; // just to make sure that it is -1
+                    }
+
+                    this.replaceFromIndex = fromIndex;
+                    this.replaceToIndex = toIndex;
+
+                    inputText = text.substring(fromIndex + 1, toIndex).trim();
                 }
-                var startOfText = text.substring(0, caretPos);
-                var fromIndex = startOfText.lastIndexOf(this.separator);
-                if (fromIndex < 0) {
-                    fromIndex = -1; // just to make sure that it is -1
-                }
-
-                this.replaceFromIndex = fromIndex;
-                this.replaceToIndex = toIndex;
-
-                var inputText = text.substring(fromIndex + 1, toIndex).trim();
-
                 console.log('search text portion: ', inputText);
 
                 if (!inputText) {
@@ -262,7 +277,7 @@
                 }
                 this.isSearching = false;
             },
-
+            /* A timer callback object, which is used to implement typing delay before initiating the search. */
             startSearchTimerCallback: null,
             /* a callback to reack to an input event to trigger search */
             onInput: function () {
@@ -276,6 +291,7 @@
                 console.log('There is nothing to cancel by default.');
             },
 
+            /* A handler of the overlay open event. */
             suggestionsOpened: function () {
                 //this.isSearching = false;
             },
