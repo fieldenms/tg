@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Tg view example</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/flatiron-director/flatiron-director.html">
+    <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+    <link rel="import" href="tg-view-with-menu.html">
+
+    <style>
+        body {
+            font-family: "RobotoDraft";
+        }
+    </style>
+
+</head>
+
+<body unresolved fullbleed>
+
+    <template is="auto-binding" id="app_template">
+
+        <!--<flatiron-director route="{{route}}" autoHash></flatiron-director>-->
+
+        <tg-view-with-menu label="Workorders" pages="{{pages}}" select="{{remainingRoute}}"></tg-view-with-menu>
+    </template>
+    <script>
+        (function () {
+
+            var template = document.querySelector('#app_template'),
+                DEFAULT_ROUTE = "workorders/firstPage",
+                pages;
+
+            template.pages = [
+                {
+                    name: "First Page",
+                    hash: "firstPage",
+                    url: "first-page.html"
+                },
+                {
+                    name: "Second Page",
+                    hash: "secondPage",
+                    url: "second-page.html"
+                }
+            ];
+            template.addEventListener('template-bound', function (e) {
+                //this.route = this.route || DEFAULT_ROUTE; // Select initial route.
+            });
+        })();
+    </script>
+</body>
+
+</html>
