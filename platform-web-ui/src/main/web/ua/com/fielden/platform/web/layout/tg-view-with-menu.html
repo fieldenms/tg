@@ -10,7 +10,7 @@
 <link rel="import" href="/resources/polymer/core-scaffold/core-scaffold.html">
 <link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
 
-<polymer-element name="tg-view-with-menu" attributes="label pages childRoute">
+<polymer-element name="tg-view-with-menu" attributes="label pages activePage">
     <template>
         <style>
             core-animated-pages {
@@ -54,10 +54,10 @@
 
             <nav>
                 <core-toolbar>{{label}}</core-toolbar>
-                <core-menu selected="{{route}}" valueattr="hash" selectedmodel="{{selectedPage}}" on-core-select="{{menuItemSelected}}">
+                <core-menu selected="{{activePage}}" valueattr="hash" selectedmodel="{{selectedPage}}" on-core-select="{{menuItemSelected}}">
                     <template repeat="{{page in pages}}">
                         <paper-item noink hash="{{page.hash}}">
-                            <core-icon icon="label{{route != page.hash ? '-outline' : ''}}"></core-icon>
+                            <core-icon icon="label{{activePage != page.hash ? '-outline' : ''}}"></core-icon>
                             <a href="#{{page.hash}}">{{page.name}}</a>
                         </paper-item>
                     </template>
@@ -69,7 +69,7 @@
             </core-toolbar>
 
             <div layout horizontal center-center center-justified fit>
-                <core-animated-pages selected="{{route}}" valueattr="hash" transitions="slide-from-right">
+                <core-animated-pages selected="{{activePage}}" valueattr="hash" transitions="slide-from-right">
                     <template repeat="{{page in pages}}">
                         <paper-shadow z="1" hash="{{page.hash}}" fit>
                             <load-element import="{{page.url}}" attrs="{{page.attributes}}" auto>Loading {{page.name}}...</load-element>
@@ -79,16 +79,32 @@
             </div>
 
         </core-scaffold>
-        5
     </template>
     <script>
-        Polymer({
-            attached: function () {
-                if (this.pages && this.pages.length) {
-                    this.route = this.route || this.pages[0].hash;
-                }
-            },
-            childRouteChanged: function (oldValue, newValue) {
+        (function () {
+            Polymer({
+                attached: function() {
+                    if (this.pages && this.pages.length) {
+                        this.activePage = this.pages[0].hash;
+                    }
+                },
+//                routeChanged: function (event, detail, source) {
+//                    //console.log("id ", this.id, "\tdetail: ", detail, "\tactivePage: ", this.activePage, "no condition ", event);
+//                    var splittedPaths = detail.split("/");
+//                    if (splittedPaths.length === 1 && splittedPaths[0] === this.id && !this.activePage) {
+//                        console.log("id ", this.id, "\tdetail: ", detail, "\thash: ", this.pages[0].hash);
+//                        this.route = this.pages[0].hash;
+//                    } else if (splittedPaths.length === 2 && splittedPaths[0] === this.id) {
+//                        this.activePage = detail;
+//                        console.log("id ", this.id, "\tdetail: ", detail, "\tactivePage: ", this.activePage);
+//                    } else if (splittedPaths.length && splittedPaths[0] === this.id) {
+//                        console.log("id ", this.id, "\tdetail: ", detail, "\tactivePage: ", this.activePage, " going back");
+//                        history.back();
+//                    } else {
+//                        console.log("id ", this.id, "\tdetail: ", detail, "\tactivePage: ", this.activePage, "no condition ", event);
+//                    }
+//                },
+                /*childRouteChanged: function (oldValue, newValue) {
                 var splittedRoute;
                 if (newValue && newValue.length) {
                     splittedRoute = newValue.split("/");
@@ -103,12 +119,13 @@
                         this.remainingRoute = null;
                     }
                 }
-            },
-            menuItemSelected: function (e, detail, sender) {
-                if (detail.isSelected) {
-                    this.$.scaffold.closeDrawer();
+            },*/
+                menuItemSelected: function (e, detail, sender) {
+                    if (detail.isSelected) {
+                        this.$.scaffold.closeDrawer();
+                    }
                 }
-            }
-        });
+            });
+        })();
     </script>
 </polymer-element>

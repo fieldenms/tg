@@ -1,0 +1,66 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
+<link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-from-bottom.html">
+<link rel="import" href="/resources/polymer/flatiron-director/flatiron-director.html">
+<link rel="import" href="/resources/layout/tg-view-with-menu.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+
+
+<polymer-element name="tg-main-view">
+    <template>
+        <flatiron-director route="{{route}}" on-director-route="{{onRouteChanged}}" autohash></flatiron-director>
+        <div fit layout vertical>
+            <div>
+                <paper-button on-tap="{{onSelectWorkorders}}" raised>Workorders</paper-button>
+                <paper-button on-tap="{{onSelectReports}}" raised>Reports</paper-button>
+            </div>
+            <core-animated-pages selected="{{activePage}}" valueattr="id" transitions="slide-from-bottom" flex>
+                <tg-view-with-menu id="workorders" label="Workorders" pages="{{workOrderPages}}"></tg-view-with-menu>
+                <tg-view-with-menu id="reports" label="Reports" pages="{{reportPages}}"></tg-view-with-menu>
+            </core-animated-pages>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            created: function () {
+                this.workOrderPages = [
+                    {
+                        name: "First Page",
+                        hash: "workorders/firstPage",
+                        url: "first-page.html"
+                    },
+                    {
+                        name: "Second Page",
+                        hash: "workorders/secondPage",
+                        url: "second-page.html"
+                    }
+                ];
+                this.reportPages = [
+                    {
+                        name: "First Page",
+                        hash: "reports/firstPage",
+                        url: "first-page.html"
+                    },
+                    {
+                        name: "Second Page",
+                        hash: "reports/secondPage",
+                        url: "second-page.html"
+                    }
+                ];
+            },
+            onRouteChanged: function (event, detail) {
+                var splitDetail = detail.split("/");
+                if (splitDetail.length === 2) {
+                    this.activePage = splitDetail[0];
+                    this.$[this.activePage].activePage = detail;
+                }
+            },
+            onSelectWorkorders: function () {
+                this.route = this.$.workorders.activePage;
+            },
+            onSelectReports: function () {
+                this.route = this.$.reports.activePage;
+            }
+        });
+    </script>
+</polymer-element>
