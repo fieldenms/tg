@@ -13,6 +13,22 @@
         body {
             font-family: "RobotoDraft";
         }
+        html /deep/ .main-menu::shadow #actions {
+            color: #03A9F4;
+        }
+        html /deep/ .main-menu::shadow #scroller {
+            margin: 4px;
+            height: 600px;
+            width: 720px;
+            overflow: hidden;
+        }
+        @media all and (max-width: 767px) {
+            html /deep/ .main-menu::shadow #scroller {
+                height: 1500px;
+                width: 360px;
+                overflow: hidden;
+            }
+        }
     </style>
 
 </head>

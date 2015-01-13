@@ -1,0 +1,26 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
+<link rel="import" href="/resources/polymer/core-input/core-input.html">
+
+<polymer-element name="tg-editor" attributes="entity propertyName">
+    <template>
+        <paper-input-decorator>
+            <input is="core-input" value="{{inputValue}}" committedValue="{{acceptedValue}}"></input>
+        </paper-input-decorator>
+    </template>
+    <script>
+        Polymer({
+            entityChanged: function(oldEntity, newEntity) {
+                console.log("entities: ", oldEntity, ", ", newEntity);
+                this.inputValue = newEntity[this.propertyName];
+            },
+            acceptedValueChanged: function(oldValue, newValue) {
+                console.log("accepted values: ", oldValue, ", ", newValue);
+                if (!newValue) {
+                    console.log("hi there: ", newValue);
+                }
+                this.entity[this.propertyName] = newValue;
+            }
+        });
+    </script>
+</polymer-element>

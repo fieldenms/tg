@@ -4,62 +4,197 @@
 <link rel="import" href="/resources/polymer/flatiron-director/flatiron-director.html">
 <link rel="import" href="/resources/layout/tg-view-with-menu.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+<link rel="import" href="tg-main-menu.html">
 
 <polymer-element name="tg-main-view">
     <template>
         <flatiron-director route="{{route}}" on-director-route="{{onRouteChanged}}" autohash></flatiron-director>
-        <div fit layout vertical>
-            <div>
-                <paper-button on-tap="{{onSelectWorkorders}}" raised>Workorders</paper-button>
-                <paper-button on-tap="{{onSelectReports}}" raised>Reports</paper-button>
-            </div>
-            <core-animated-pages selected="{{activePage}}" valueattr="id" transitions="slide-from-bottom" flex>
-                <tg-view-with-menu id="workorders" label="Workorders" pages="{{workOrderPages}}"></tg-view-with-menu>
-                <tg-view-with-menu id="reports" label="Reports" pages="{{reportPages}}"></tg-view-with-menu>
-            </core-animated-pages>
-        </div>
+        <core-animated-pages selected="{{activePage}}" valueattr="id" transitions="slide-from-bottom" fit>
+            <tg-view-with-menu id="sysservice" label="System/Service" pages="{{sysServicePages}}" route="{{route}}"on-show-menu="{{onShowMenu}}"></tg-view-with-menu>
+            <tg-view-with-menu id="equipment" label="Equipment" pages="{{equipmentPages}}" route="{{route}}"on-show-menu="{{onShowMenu}}"></tg-view-with-menu>
+        </core-animated-pages>
+        <paper-dialog class="main-menu" id="mainMenu" backdrop autoCloseDisabled>
+            <tg-main-menu on-menu-selected="{{onMainMenuSelected}}"></tg-main-menu>
+        </paper-dialog>
     </template>
     <script>
         Polymer({
             created: function () {
-                this.workOrderPages = [
+                this.sysServicePages = [
                     {
-                        name: "First Page",
-                        hash: "workorders/firstPage",
-                        url: "first-page.html"
-                    },
-                    {
-                        name: "Second Page",
-                        hash: "workorders/secondPage",
-                        url: "second-page.html"
+                        name: "System Configuration",
+                        hash: "sysservice/sysconfiguration",
+                        url: "sys-config-home.html",
+                        submenu: [
+                            {
+                                name: "Categories",
+                                hash: "sysservice/sysconfiguration/categories",
+                                url: "sys-config-categories.html"
+                            }, {
+                                name: "Systems",
+                                hash: "sysservice/sysconfiguration/systems",
+                                url: "sys-config-systems.html"
+                            }, {
+                                name: "Subsystems",
+                                hash: "sysservice/sysconfiguration/subsystems",
+                                url: "sys-config-subsystems.html"
+                            }, {
+                                name: "Subsystem/Location",
+                                hash: "sysservice/sysconfiguration/subsysloc",
+                                url: "sys-config-subsysloc.html"
+                            }, {
+                                name: "Services",
+                                hash: "sysservice/sysconfiguration/services",
+                                url: "sys-config-services.html"
+                            }, {
+                                name: "Matrix",
+                                hash: "sysservice/sysconfiguration/matrix",
+                                url: "sys-config-matrix.html"
+                            }
+
+                        ]
+                    }, {
+                        name: "Hierarchy",
+                        hash: "sysservice/hierarchy",
+                        url: "sys-hierarchy.html"
+                    }, {
+                        name: "Availability Profile",
+                        hash: "sysservice/availprofile",
+                        url: "sys-avail-profile.html"
+                    }, {
+                        name: "Service Availability",
+                        hash: "sysservice/serviceavail",
+                        url: "ser-avail.html",
+                        submenu: [
+                            {
+                                name: "Entry/Review",
+                                hash: "sysservice/serviceavail/entreview",
+                                url: "ser-avail-entreview.html"
+                            }, {
+                                name: "History",
+                                hash: "sysservice/serviceavail/history",
+                                url: "ser-avail-history.html"
+                            },
+                        ]
+                    }, {
+                        name: "Service Sentinel Settings",
+                        hash: "sysservice/sentsettings",
+                        url: "ser-sent-settings.html"
+                    }, {
+                        name: "SLA Batch Replacement",
+                        hash: "sysservice/slabatchreplacement",
+                        url: "sys-sla-batch-replacement.html"
+                    }, {
+                        name: "SLA Extended Description",
+                        hash: "sysservice/slaextdesc",
+                        url: "sla-extdesc.html",
+                        submenu: [
+                            {
+                                name: "Imported Data",
+                                hash: "sysservice/slaextdesc/importdata",
+                                url: "sla-extdesc-importdata.html"
+                            }, {
+                                name: "Stored Data",
+                                hash: "sysservice/slaextdesc/storeddata",
+                                url: "sla-extdesc-storeddata.html"
+                            },
+                        ]
+                    }, {
+                        name: "BU Services Relationship",
+                        hash: "sysservice/bu",
+                        url: "bu-service.html",
+                        submenu: [
+                            {
+                                name: "Link/Review",
+                                hash: "sysservice/bu/linkreview",
+                                url: "bu-service-linkreview.html"
+                            }, {
+                                name: "History",
+                                hash: "sysservice/bu/history",
+                                url: "bu-service-history.html"
+                            },
+                        ]
                     }
                 ];
-                this.reportPages = [
+                this.equipmentPages = [
                     {
-                        name: "First Page",
-                        hash: "reports/firstPage",
-                        url: "first-page.html"
-                    },
-                    {
-                        name: "Second Page",
-                        hash: "reports/secondPage",
-                        url: "second-page.html"
+                        name: "Hierarchy",
+                        hash: "equipment/hierarchy",
+                        url: "eq-hierarchy.html"
+                    }, {
+                        name: "Rotables",
+                        hash: "equipment/rotables",
+                        url: "eq-rotables.html",
+                        submenu: [
+                            {
+                                name: "Rotable Notes",
+                                hash: "equipment/rotables/notes",
+                                url: "eq-rotables-notes.html"
+                            }, {
+                                name: "Rotable Special Details",
+                                hash: "equipment/rotables/specdetails",
+                                url: "eq-rotables-specdetails.html"
+                            }, {
+                                name: "Rotables History",
+                                hash: "equipment/rotables/history",
+                                url: "eq-rotables-history.html"
+                            }, {
+                                name: "Rotable Movement",
+                                hash: "equipment/rotables/movement",
+                                url: "eq-rotables-movement.html"
+                            }, {
+                                name: "Reservations",
+                                hash: "equipment/rotables/reservations",
+                                url: "eq-rotables-reservations.html"
+                            }, {
+                                name: "Issues History",
+                                hash: "equipment/rotables/issues",
+                                url: "eq-rotables-issues.html"
+                            }, {
+                                name: "Rotable SEO List",
+                                hash: "equipment/rotables/seolist",
+                                url: "eq-rotables-seolist.html"
+                            }, {
+                                name: "Rotable Parts",
+                                hash: "equipment/rotables/parts",
+                                url: "eq-rotables-parts.html"
+                            }, {
+                                name: "Drawings",
+                                hash: "equipment/rotables/drawings",
+                                url: "eq-rotables-drawings.html"
+                            }
+                        ]
+                    }, {
+                        name: "Meter Readings",
+                        hash: "equipment/readings",
+                        url: "eq-readings.html"
+                    }, {
+                        name: "Messages",
+                        hash: "equipment/messages",
+                        url: "eq-messages.html"
+                    }, {
+                        name: "Specifications",
+                        hash: "equipment/specifications",
+                        url: "eq-specifications.html"
                     }
                 ];
             },
             onRouteChanged: function (event, detail) {
                 var splitDetail = detail.split("/");
-                if (splitDetail.length === 2) {
+                if (splitDetail.length >= 2) {
                     this.activePage = splitDetail[0];
-                    this.$[this.activePage].activePage = detail;
+                    this.$[this.activePage].activatePage(detail);
                 }
             },
-            onSelectWorkorders: function () {
-                this.route = this.$.workorders.activePage;
+            onMainMenuSelected: function (event, detail, source) {
+                if (detail !== "return") {
+                    this.route = this.$[detail].activeSubPage || this.$[detail].activePage;
+                }
+                this.$.mainMenu.close();
             },
-            onSelectReports: function () {
-                this.route = this.$.reports.activePage;
+            onShowMenu: function (event, detail, source) {
+                this.$.mainMenu.open();
             }
         });
     </script>
