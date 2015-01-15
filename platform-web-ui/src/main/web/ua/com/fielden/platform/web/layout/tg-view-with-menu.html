@@ -23,6 +23,13 @@
                 border-radius: 5px;
                 transform: translateZ(0);
             }
+            paper-shadow {
+                padding-left: 22px;
+            }
+            core-menu > * {
+                padding-left: 22px;
+                font-size: 13px;
+            }
             core-animated-pages > * {
                 border-radius: inherit;
                 background-color: white;
@@ -39,16 +46,16 @@
                 color: #01579b;
                 margin: 10px 0 0 0;
             }
-            core-menu > core-item {
+            core-menu core-submenu::shadow core-item::shadow core-icon {
+                order: 2;
+            }
+            core-menu core-submenu::shadow core-item::shadow #label {
+                flex: 1;
+            }
+            core-menu > core-item,
+            core-menu > core-submenu::shadow > core-item,
+            core-menu > core-submenu > core-item{
                 transition: all 300ms ease-in-out;
-            }
-            core-item a {
-                text-decoration: none;
-                color: currentcolor;
-                margin-left: 5px;
-            }
-            core-menu > core-item.core-selected {
-                background: #e1f5fe;
             }
             paper-fab {
                 position: absolute;
@@ -77,7 +84,7 @@
                 <core-menu selected="{{activePage}}" valueattr="hash" on-core-select="{{onMenuItemSelected}}">
                     <template repeat="{{page in pages}}">
                         <template if="{{page.submenu}}">
-                            <core-submenu selected="{{activeSubPage}}" valueattr="hash" hash="{{page.hash}}" label="{{page.name}}">
+                            <core-submenu selected="{{activeSubPage}}" valueattr="hash" hash="{{page.hash}}" label="{{page.name}}" icon="icons:expand-more">
                                 <template repeat="{{sub in page.submenu}}">
                                     <core-item hash="{{sub.hash}}" label="{{sub.name}}"></core-item>
                                 </template>
@@ -90,7 +97,7 @@
                 </core-menu>
             </nav>
 
-            <core-toolbar tool flex>
+            <core-toolbar style="font-size: 20px;" tool flex>
                 <div>{{selectedPageName}}</div>
                 <paper-fab icon="apps" on-tap="{{onShowMenuTap}}"></paper-fab>
             </core-toolbar>

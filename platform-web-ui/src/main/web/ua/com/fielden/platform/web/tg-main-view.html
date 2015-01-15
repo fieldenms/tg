@@ -11,10 +11,11 @@
     <template>
         <flatiron-director route="{{route}}" on-director-route="{{onRouteChanged}}" autohash></flatiron-director>
         <core-animated-pages selected="{{activePage}}" valueattr="id" transitions="slide-from-bottom" fit>
-            <tg-view-with-menu id="sysservice" label="System/Service" pages="{{sysServicePages}}" route="{{route}}"on-show-menu="{{onShowMenu}}"></tg-view-with-menu>
-            <tg-view-with-menu id="equipment" label="Equipment" pages="{{equipmentPages}}" route="{{route}}"on-show-menu="{{onShowMenu}}"></tg-view-with-menu>
+            <tg-view-with-menu id="sysservice" label="System/Service" pages="{{sysServicePages}}" route="{{route}}" on-show-menu="{{onShowMenu}}"></tg-view-with-menu>
+            <tg-view-with-menu id="equipment" label="Equipment" pages="{{equipmentPages}}" route="{{route}}" on-show-menu="{{onShowMenu}}"></tg-view-with-menu>
+            <tg-view-with-menu id="workactivities" label="Work Activity" pages="{{workActivityPages}}" route="{{route}}" on-show-menu="{{onShowMenu}}"></tg-view-with-menu>
         </core-animated-pages>
-        <paper-dialog class="main-menu" id="mainMenu" backdrop autoCloseDisabled>
+        <paper-dialog style="background-color: #EEEEEE;" class="main-menu" id="mainMenu" backdrop autoCloseDisabled>
             <tg-main-menu on-menu-selected="{{onMainMenuSelected}}"></tg-main-menu>
         </paper-dialog>
     </template>
@@ -177,6 +178,70 @@
                         name: "Specifications",
                         hash: "equipment/specifications",
                         url: "eq-specifications.html"
+                    }
+                ];
+                this.workActivityPages = [
+                    {
+                        name: "Work Activity Centre",
+                        hash: "workactivities/centre",
+                        url: "wa-centre.html"
+                    }, {
+                        name: "Projects",
+                        hash: "workactivities/projects",
+                        url: "wa-projects.html",
+                        submenu: [
+                            {
+                                name: "Major Project",
+                                hash: "workactivities/projects/major",
+                                url: "wa-projects-major.html"
+                            }, {
+                                name: "Major Project Cost",
+                                hash: "workactivities/projects/cost",
+                                url: "wa-projects-cost.html"
+                            }, {
+                                name: "MS Project Export/Import",
+                                hash: "workactivities/projects/ms",
+                                url: "wa-projects-ms.html"
+                            }
+                        ]
+                    }, {
+                        name: "Timesheets",
+                        hash: "workactivities/timesheets",
+                        url: "wa-timesheets.html",
+                        submenu: [
+                            {
+                                name: "Daily Timesheets",
+                                hash: "workactivities/timesheets/daily",
+                                url: "wa-timesheets-daily.html"
+                            }, {
+                                name: "Review/Approve/Export",
+                                hash: "workactivities/timesheets/rae",
+                                url: "wa-timesheets-rae.html"
+                            }
+                        ]
+                    }, {
+                        name: "Timesheet Delegation",
+                        hash: "workactivities/delegation",
+                        url: "wa-delegation.html"
+                    }, {
+                        name: "Personnel Unavailability",
+                        hash: "workactivities/personunavail",
+                        url: "wa-personunavail.html"
+                    }, {
+                        name: "Legacy Timesheets",
+                        hash: "workactivities/legacy",
+                        url: "wa-legacy.html",
+                        submenu: [
+                            {
+                                name: "Timesheet Review",
+                                hash: "workactivities/legacy/review",
+                                url: "wa-legacy-review.html"
+                            }, {
+                                name: "Timesheet Entry",
+                                hash: "workactivities/legacy/entry",
+                                url: "wa-legacy-entry.html"
+                            }
+                        ]
                     }
                 ];
             },

@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/core-iconset/core-iconset.html">
 <link rel="import" href="/resources/polymer/core-icon/core-icon.html">
 <link rel="import" href="/resources/layout/tile-layout.html">
+<link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
 
 <polymer-element name="tg-main-menu">
     <template>
@@ -12,30 +13,12 @@
             .category {
                 margin: 4px;
                 cursor: pointer;
-            }
-            .light-gray {
-                background-color: #f5f5f5
-            }
-            .light-green {
-                background-color: #b9f6ca;
-            }
-            .light-brown {
-                background-color: #F4E3C9
-            }
-            .yellow {
-                background-color: #ffff8d;
-            }
-            .blue {
-                background-color: #84ffff;
-            }
-            .tomato {
-                background-color: #ff8a80;
-            }
-            .violet {
-                background-color: #b388ff;
+                color: #757575;
+                font-size: 14px;
+                background-color: white;
             }
             core-icon {
-                margin-top: 10px;
+                margin-bottom: 10px;
             }
             .small {
                 width: 48px;
@@ -61,88 +44,88 @@
         <core-iconset id="workactivity" src="/resources/images/WorkActivity.png" iconSize="96" icons="coloured black&white"></core-iconset>
         <tile-layout whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}" mincellheight="100px" mincellwidth="90px">
             <div class="tile">
-                <div class="category light-gray" id="sysservice" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    System/Service
+                <paper-shadow z="1" class="category" id="sysservice" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="wide" icon="systemservice:coloured"></core-icon>
-                </div>
+                    System/Service
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category light-green" id="equipment" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Equipment
+                <paper-shadow z="1" class="category" id="equipment" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="normal" icon="equipment:coloured"></core-icon>
-                </div>
+                    Equipment
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category yellow" id="workactivities" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Work Activities
+                <paper-shadow z="1" class="category" id="workactivities" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="normal" icon="workactivity:coloured"></core-icon>
+                    Work Activities
                 </div>
             </div>
             <div class="tile">
-                <div class="category blue" id="help" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Help
+                <paper-shadow z="1" class="category" id="help" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="small" src="/resources/images/Help.png"></core-icon>
-                </div>
+                    Help
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category tomato" id="about" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    About
+                <paper-shadow z="1" class="category" id="about" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="small" src="/resources/images/About.png"></core-icon>
-                </div>
+                    About
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category violet" id="pm" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Preventive Maintenance
+                <paper-shadow z="1" class="category" id="pm" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="normal" icon="pm:coloured"></core-icon>
-                </div>
+                    Preventive Maintenance
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category light-brown" id="storepurch" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Store/Purchasing
+                <paper-shadow z="1" class="category" id="storepurch" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="normal" icon="stores:coloured"></core-icon>
-                </div>
+                    Store/Purchasing
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category blue" id="tablecodes" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Table Codes
+                <paper-shadow z="1" class="category" id="tablecodes" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="normal" icon="tablecode:coloured"></core-icon>
-                </div>
+                    Table Codes
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category light-gray" id="logout" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Logout
+                <paper-shadow z="1" class="category" id="logout" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="small" src="/resources/images/Logout.png"></core-icon>
-                </div>
+                    Logout
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category light-green" id="logagain" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Login Again
+                <paper-shadow z="1" class="category" id="logagain" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="small" src="/resources/images/LoginAgain.png"></core-icon>
-                </div>
+                    Login Again
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category yellow" id="docdrawings" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Documents/Drawings
+                <paper-shadow z="1" class="category" id="docdrawings" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="normal" icon="docdraw:coloured"></core-icon>
-                </div>
+                    Documents/Drawings
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category tomato" id="reports" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Reports
+                <paper-shadow z="1" class="category" id="reports" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="normal" icon="report:coloured"></core-icon>
-                </div>
+                    Reports
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category violet" id="analysis" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Analysis
+                <paper-shadow z="1" class="category" id="analysis" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="normal" icon="analys:coloured"></core-icon>
-                </div>
+                    Analysis
+                </paper-shadow>
             </div>
             <div class="tile">
-                <div class="category light-green" id="return" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
-                    Return
+                <paper-shadow z="1" class="category" id="return" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
                     <core-icon class="normal" src="/resources/images/Return.png"></core-icon>
-                </div>
+                    Return
+                </paper-shadow>
             </div>
         </tile-layout>
     </template>
