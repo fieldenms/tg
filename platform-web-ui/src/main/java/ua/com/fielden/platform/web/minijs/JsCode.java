@@ -16,11 +16,11 @@ public class JsCode {
      * @param jsCode
      */
     public JsCode(final String jsCode) {
-	this.jsCode = jsCode;
+        this.jsCode = jsCode;
     }
 
     @Override
     public String toString() {
-	return jsCode;
+        return jsCode;
     };
 }
