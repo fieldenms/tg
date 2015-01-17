@@ -13,7 +13,7 @@ public class MainWebApplicationResourceFactory extends Restlet {
     private final WebAppConfig app;
 
     public MainWebApplicationResourceFactory(final WebAppConfig app) {
-	this.app = app;
+        this.app = app;
     }
 
     @Override
