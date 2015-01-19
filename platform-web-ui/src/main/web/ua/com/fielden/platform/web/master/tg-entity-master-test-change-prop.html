@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>entity-master</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+    <script src="/resources/polymer/polymer-test-tools/htmltest.js"></script>
+
+    <link rel="import" href="/resources/master/tg-entity-master.html">
+</head>
+
+<body unresolved>
+    <tg-entity-master id="master" user="SU" entitytype="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithInteger" entityid="4"></tg-entity-master>
+
+    <script>
+        document.addEventListener('polymer-ready', function() {
+            var master = document.querySelector('#master');
+            var findProp = function(entity, propName) {
+                return entity.constructor.prototype.prop.call(entity, propName);
+                // return entity.prop(propName); -- this is problem for this test because the field name 'prop' equals to prototype function 'prop'
+            };
+            var self = this;
+
+            master.onValidated = function(validatedEntity, bindingEntity) {                
+                console.log("validatedEntity", validatedEntity);
+                // properties:
+                assert.strictEqual(validatedEntity.get("prop"), 98, "The entity response property is not correct.");                
+                // instance meta-properties
+                assert.ok(findProp(validatedEntity, "prop"), "The entity response instance prop should be initialised.");
+                assert.strictEqual(findProp(validatedEntity, "prop").isChangedFromOriginal(), true, "The entity response instance prop should be changedFromOriginal.");
+                assert.strictEqual(findProp(validatedEntity, "prop").validationResult(), null, "The entity response instance prop should have empty (successful) validation result.");
+                assert.strictEqual(findProp(validatedEntity, "prop").isRequired(), false, "The entity response instance prop should be not required.");
+                assert.strictEqual(findProp(validatedEntity, "prop").isEditable(), true, "The entity response instance prop should be editable.");
+                assert.strictEqual(findProp(validatedEntity, "prop").isVisible(), true, "The entity response instance prop should be visible.");
+
+                done();
+            };
+
+            master.onRetrieved = function(entity, bindingEntity) {
+                assert.strictEqual(findProp(entity, "prop").isChangedFromOriginal(), false, "The entity instance prop should be not changedFromOriginal.");
+
+                bindingEntity.set("prop", 98);
+
+                master.validate(); 
+            };
+
+            master.retrieve();
+        });
+    </script>
+
+</body>
+
+</html>

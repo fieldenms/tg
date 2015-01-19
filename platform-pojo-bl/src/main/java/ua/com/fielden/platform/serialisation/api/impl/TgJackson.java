@@ -3,11 +3,13 @@ package ua.com.fielden.platform.serialisation.api.impl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -37,8 +39,10 @@ import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerial
 import ua.com.fielden.platform.serialisation.jackson.serialisers.PageSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSerialiser;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 
@@ -116,9 +120,27 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     @Override
     public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
         try {
+            final String contentString = IOUtils.toString(content, "UTF-8");
+            final Class<? extends T> concreteType;
+            if (EntityUtils.isEntityType(type) && Modifier.isAbstract(type.getModifiers())) {
+                // when we are trying to deserialise an entity of unknown concrete type (e.g. passing AbstractEntity.class) -- there is a need to determine concrete type from @id property
+                EntitySerialiser.getContext().reset();
+                final JsonNode idNode = readTree(contentString).get("@id");
+                if (idNode != null && !idNode.isNull()) {
+                    final String typeNumberStr = idNode.asText().split("#")[0];
+                    final Long typeNumber = Long.valueOf(typeNumberStr);
+                    final String concreteTypeName = entityTypeInfoGetter.get(typeNumber).getKey();
+                    concreteType = (Class<? extends T>) ClassesRetriever.findClass(concreteTypeName);
+                } else {
+                    concreteType = type;
+                }
+            } else {
+                concreteType = type;
+            }
+
             EntitySerialiser.getContext().reset();
-            final T val = readValue(content, type);
-            if (!DynamicEntityClassLoader.isEnhanced(type)) {
+            final T val = readValue(contentString, concreteType);
+            if (!DynamicEntityClassLoader.isEnhanced(concreteType)) {
                 executeDefiners();
             }
             return val;

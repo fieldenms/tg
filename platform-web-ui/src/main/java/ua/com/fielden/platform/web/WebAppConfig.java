@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.master.EntityMaster;
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.web.view.AbstractWebView;
  * @author TG Team
  *
  */
-public class WebAppConfig{
+public class WebAppConfig {
 
     private final String appName;
 
@@ -38,7 +39,7 @@ public class WebAppConfig{
     /*
      * The properties below represent essential tg views: entity centres, entity masters. Also it is possible to specify custom view.
      */
-    private final List<EntityMaster> masters = new ArrayList<>();
+    private final List<EntityMaster<? extends AbstractEntity<?>>> masters = new ArrayList<>();
     private final Map<String, AbstractWebView<?>> customViews = new LinkedHashMap<>();
     private String defaultRoute = null;
 
@@ -48,7 +49,7 @@ public class WebAppConfig{
      * @param appName
      */
     public WebAppConfig(final String appName) {
-	this.appName = appName;
+        this.appName = appName;
     }
 
     /**
@@ -58,8 +59,8 @@ public class WebAppConfig{
      * @return
      */
     public WebAppConfig desktop(final float minWidth) {
-	this.desktopMinWidth = minWidth;
-	return this;
+        this.desktopMinWidth = minWidth;
+        return this;
     }
 
     /**
@@ -70,12 +71,12 @@ public class WebAppConfig{
      * @return
      */
     public WebAppConfig tablet(final float minWidth, final float maxWidth) {
-	if (maxWidth < minWidth) {
-	    throw new IllegalArgumentException("The min tablet width can not be greater then the max tablet width: " + minWidth + " > " + maxWidth);
-	}
-	this.tabletMaxWidth = maxWidth;
-	this.tabletMinWidth = minWidth;
-	return this;
+        if (maxWidth < minWidth) {
+            throw new IllegalArgumentException("The min tablet width can not be greater then the max tablet width: " + minWidth + " > " + maxWidth);
+        }
+        this.tabletMaxWidth = maxWidth;
+        this.tabletMinWidth = minWidth;
+        return this;
     }
 
     /**
@@ -85,8 +86,8 @@ public class WebAppConfig{
      * @return
      */
     public WebAppConfig phone(final float maxWidth) {
-	this.phoneMaxWidth = maxWidth;
-	return this;
+        this.phoneMaxWidth = maxWidth;
+        return this;
     }
 
     /**
@@ -95,7 +96,7 @@ public class WebAppConfig{
      * @return
      */
     public float desktopMinWidth() {
-	return desktopMinWidth;
+        return desktopMinWidth;
     }
 
     /**
@@ -104,7 +105,7 @@ public class WebAppConfig{
      * @return
      */
     public float tabletMaxWidth() {
-	return tabletMaxWidth;
+        return tabletMaxWidth;
     }
 
     /**
@@ -113,7 +114,7 @@ public class WebAppConfig{
      * @return
      */
     public float tabletMinWidth() {
-	return tabletMinWidth;
+        return tabletMinWidth;
     }
 
     /**
@@ -122,7 +123,7 @@ public class WebAppConfig{
      * @return
      */
     public float phoneMaxWidth() {
-	return phoneMaxWidth;
+        return phoneMaxWidth;
     }
 
     /**
@@ -131,7 +132,16 @@ public class WebAppConfig{
      * @param centre
      */
     public void addCentre(final EntityCentre centre) {
-	addCentre(centre, false);
+        addCentre(centre, false);
+    }
+
+    /**
+     * Adds new {@link EntityMaster} instance to this web application configuration.
+     *
+     * @param master
+     */
+    public <T extends AbstractEntity<?>> void addMaster(final EntityMaster<T> master) {
+        masters.add(master);
     }
 
     /**
@@ -140,18 +150,18 @@ public class WebAppConfig{
      * @param centre
      */
     public void addCentre(final EntityCentre centre, final boolean isDefault) {
-	centres.put(centre.getMenuItemType().getName(), centre);
-	if (isDefault) {
-	    defaultRoute = generateCentreHash(centre);
-	}
+        centres.put(centre.getMenuItemType().getName(), centre);
+        if (isDefault) {
+            defaultRoute = generateCentreHash(centre);
+        }
     }
 
     private String generateCentreHash(final EntityCentre centre) {
-	return "centre/" + centre.getMenuItemType().getName();
+        return "centre/" + centre.getMenuItemType().getName();
     }
 
     public void addCustomView(final AbstractWebView<?> webView) {
-	addCustomView(webView, false);
+        addCustomView(webView, false);
     }
 
     /**
@@ -160,14 +170,23 @@ public class WebAppConfig{
      * @param webView
      */
     public void addCustomView(final AbstractWebView<?> webView, final boolean isDefault) {
-	customViews.put(WebUtils.polymerTagName(webView), webView);
-	if (isDefault) {
-	    defaultRoute = generateCustomViewHash(webView);
-	}
+        customViews.put(WebUtils.polymerTagName(webView), webView);
+        if (isDefault) {
+            defaultRoute = generateCustomViewHash(webView);
+        }
     }
 
     private String generateCustomViewHash(final AbstractWebView<?> webView) {
-	return "webview/" + WebUtils.polymerTagName(webView);
+        return "webview/" + WebUtils.polymerTagName(webView);
+    }
+
+    /**
+     * Returns registered entity masters.
+     *
+     * @return
+     */
+    public List<EntityMaster<? extends AbstractEntity<?>>> getMasters() {
+        return Collections.unmodifiableList(masters);
     }
 
     /**
@@ -176,7 +195,7 @@ public class WebAppConfig{
      * @return
      */
     public Map<String, EntityCentre> getCentres() {
-	return Collections.unmodifiableMap(centres);
+        return Collections.unmodifiableMap(centres);
     }
 
     /**
@@ -185,7 +204,7 @@ public class WebAppConfig{
      * @return
      */
     public Map<String, AbstractWebView<?>> getCustomViews() {
-	return Collections.unmodifiableMap(customViews);
+        return Collections.unmodifiableMap(customViews);
     }
 
     /**
@@ -194,30 +213,30 @@ public class WebAppConfig{
      * @return
      */
     public String run() {
-	// TODO should check whether user is authentic first.
-	return ResourceLoader.getText("ua/com/fielden/platform/web/app.html").
-		replaceAll("@defaultView", defaultRoute == null ? "0" : "'" + defaultRoute + "'").
-		replaceAll("@appName", appName).
-		replaceAll("@pages", generatePages());
+        // TODO should check whether user is authentic first.
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app.html").
+                replaceAll("@defaultView", defaultRoute == null ? "0" : "'" + defaultRoute + "'").
+                replaceAll("@appName", appName).
+                replaceAll("@pages", generatePages());
     }
 
     private String generatePages() {
-	final List<String> pagesBuilder = new ArrayList<>();
+        final List<String> pagesBuilder = new ArrayList<>();
 
-	customViews.forEach((key, value) -> {
-	    pagesBuilder.add("{ name: '" + value.getName() + "'," +
-		    	       "hash: '" + generateCustomViewHash(value) + "',"+
-		    	       "url: '/webview/" + key + "',"+
-		    	       "lazyLoad: false}");
-	});
-	centres.forEach((key, value) -> {
-	    pagesBuilder.add("{ name: '" + value.getName() + "',"+
-		    	       "hash: '" + generateCentreHash(value) + "',"+
-		    	       "url: '/resources/centre/entity-centre.html'," +
-		    	       "attributes: {centreName: '" + key + "'}," +
-		    	       "lazyLoad: false}");
-	});
+        customViews.forEach((key, value) -> {
+            pagesBuilder.add("{ name: '" + value.getName() + "'," +
+                    "hash: '" + generateCustomViewHash(value) + "'," +
+                    "url: '/webview/" + key + "'," +
+                    "lazyLoad: false}");
+        });
+        centres.forEach((key, value) -> {
+            pagesBuilder.add("{ name: '" + value.getName() + "'," +
+                    "hash: '" + generateCentreHash(value) + "'," +
+                    "url: '/resources/centre/entity-centre.html'," +
+                    "attributes: {centreName: '" + key + "'}," +
+                    "lazyLoad: false}");
+        });
 
-	return "[\n" + StringUtils.join(pagesBuilder, ",\n") + "\n]";
+        return "[\n" + StringUtils.join(pagesBuilder, ",\n") + "\n]";
     }
 }

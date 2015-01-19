@@ -18,6 +18,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     htmlTest('/resources/serialisation/tg-serialiser-test.html');
     htmlTest('/resources/serialisation/serialisation-integration-test.html');
   });
+
+  htmlSuite('entity-master-tests', function() {
+    htmlTest('/resources/master/tg-entity-master-test-retrieve-new-entity.html');
+    htmlTest('/resources/master/tg-entity-master-test-retrieve-new-persisted-entity.html');
+    htmlTest('/resources/master/tg-entity-master-test-change-prop.html');
+    htmlTest('/resources/master/tg-entity-master-test-change-money-prop.html');
+    htmlTest('/resources/master/tg-entity-master-test-validate-prop.html');
+    htmlTest('/resources/master/tg-entity-master-test-change-prop-with-entity-type.html');
+  });
  
   mocha.run();
 

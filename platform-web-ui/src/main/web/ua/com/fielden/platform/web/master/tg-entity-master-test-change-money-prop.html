@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>entity-master</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+    <script src="/resources/polymer/polymer-test-tools/htmltest.js"></script>
+
+    <link rel="import" href="/resources/master/tg-entity-master.html">
+</head>
+
+<body unresolved>
+    <tg-entity-master id="master" user="SU" entitytype="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithMoney" entityid="7"></tg-entity-master>
+
+    <script>
+        document.addEventListener('polymer-ready', function() {
+            var master = document.querySelector('#master');
+            var self = this;
+
+            master.onValidated = function(validatedEntity, bindingEntity) {                
+                console.log("validatedEntity", validatedEntity);
+                // properties:
+                assert.strictEqual(validatedEntity.get("property").amount, 46.0, "The entity instance prop should be correct.");
+                assert.strictEqual(validatedEntity.get("property").currency, "USD", "The entity instance prop should be correct.");
+                assert.strictEqual(validatedEntity.get("property").taxPercent, 20, "The entity instance prop should be correct.");
+
+                // instance meta-properties
+                assert.ok(validatedEntity.prop("property"), "The entity response instance prop should be initialised.");
+                assert.strictEqual(validatedEntity.prop("property").isChangedFromOriginal(), true, "The entity response instance prop should be changedFromOriginal.");
+                assert.strictEqual(validatedEntity.prop("property").validationResult(), null, "The entity response instance prop should have empty (successful) validation result.");
+                assert.strictEqual(validatedEntity.prop("property").isRequired(), false, "The entity response instance prop should be not required.");
+                assert.strictEqual(validatedEntity.prop("property").isEditable(), true, "The entity response instance prop should be editable.");
+                assert.strictEqual(validatedEntity.prop("property").isVisible(), true, "The entity response instance prop should be visible.");
+
+                done();
+            };
+
+            master.onRetrieved = function(entity, bindingEntity) {
+                assert.strictEqual(entity.get("property").amount, 23.0, "The entity instance prop should be correct.");
+                assert.strictEqual(entity.get("property").currency, "USD", "The entity instance prop should be correct.");
+                assert.strictEqual(entity.get("property").taxPercent, null, "The entity instance prop should be correct.");
+
+                assert.strictEqual(entity.prop("property").isChangedFromOriginal(), false, "The entity instance prop should be not changedFromOriginal.");
+
+                bindingEntity.set("property", { "amount" : 46.0, "currency" : "USD", "taxPercent" : 20 });
+
+                master.validate(); 
+            };
+
+            master.retrieve();
+        });
+    </script>
+
+</body>
+
+</html>

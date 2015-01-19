@@ -1,0 +1,37 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+
+<polymer-element name="tg-entity-validator" attributes="user entitytype onValidated" hidden>
+    <template>
+        <tg-serialiser id="serialiser"></tg-serialiser>
+        <core-ajax id="ajaxSender" url="/users/{{user}}/validation/{{entitytype}}" method="POST" handleas="json"></core-ajax> 
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                ready: function() { 
+                    var self = this;
+
+                    self.$.ajaxSender.addEventListener('core-response', function(e) {
+                        var validatedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
+                        self.onValidated(validatedEntity);
+                    });
+                },
+
+                /**
+                 * Starts the process of entity validation.
+                 *
+                 * @param modifiedPropertiesHolder -- the entity with modified properties
+                 */
+                validate: function (modifiedPropertiesHolder) {
+                    console.log("validate: modifiedPropertiesHolder", modifiedPropertiesHolder);
+                    var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
+                    console.log("validate: serialised modifiedPropertiesHolder", ser);
+                    this.$.ajaxSender.body = JSON.stringify(ser);
+                    this.$.ajaxSender.go();
+                }
+            });
+        })();
+    </script>
+</polymer-element>

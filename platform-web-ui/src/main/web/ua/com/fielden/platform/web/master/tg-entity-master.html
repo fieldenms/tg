@@ -1,0 +1,174 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+<link rel="import" href="/resources/validation/tg-entity-validator.html">
+<link rel="import" href="/tg-reflector">
+
+<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated" hidden>
+    <template>
+        <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax> 
+        <tg-reflector id="reflector"></tg-reflector>
+        <tg-serialiser id="serialiser"></tg-serialiser>
+        <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
+    </template>
+    <script>
+        (function () {
+            Polymer({        
+                // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
+                currEntity: null, // represents the current entity
+                currBindingEntity: null, // represents the view of current entity for binding
+                originalBindingEntity: null, // represents the view of original entity for binding.
+
+                /**
+                 * Initialisation block. It has all children web components already initialised.
+                 */
+                ready: function() { 
+                    var self = this;
+
+                    // IMPORTANT: it is crucial to bind the functions, which will potentially be passed
+                    //            into other contexts (for e.g. onValidatedDefault will be used in tg-entity-validator),
+                    //            with its original context!
+                    self.onValidatedDefault = self.onValidatedDefault.bind(self);
+                    // self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
+
+                    self.$.ajaxRetriever.addEventListener('core-response', function(e) {
+                        self.onRetrievedDefault(e);
+                    });
+                },
+
+                //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
+                /**
+                 * Starts the process of entity retrieval (based on current entityid).
+                 */
+                retrieve: function () {
+                    this.$.ajaxRetriever.go();
+                },
+
+                /**
+                 * Default implementation for onRetrieved callback.
+                 */
+                onRetrievedDefault: function(e) {
+                    var entity = this.$.serialiser.deserialise(e.detail.response).instance;
+                    var newBindingEntity = this.onEntityReceived(entity, true);
+                    // custom external action
+                    this.onRetrieved(entity, newBindingEntity);
+                },
+
+                //////////////////////////////////////// VALIDATION ////////////////////////////////////////
+                /**
+                 * Starts the process of entity validation (based on currBindingEntity).
+                 */
+                validate: function() {
+                    var self = this;
+                    self.$.validator.validate(
+                        self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity)
+                    );
+                },
+
+                /**
+                 * Default implementation for onValidated callback.
+                 */
+                onValidatedDefault: function(validatedEntity) {
+                    var newBindingEntity = this.onEntityReceived(validatedEntity, false);
+                    // custom external action
+                    this.onValidated(validatedEntity, newBindingEntity);
+                },
+
+                extractModifiedPropertiesHolder: function(bindingEntity, originalBindingEntity) {
+                    // var Entity = this.$.reflector.getEntityType();
+                    var modPropHolder = {}; // new Entity();
+
+                    // modPropHolder["_type"] = bindingEntity["_type"];
+                    modPropHolder["id"] = bindingEntity["id"];
+                    // modPropHolder["version"] = bindingEntity["version"];
+
+                    var self = this;
+                    bindingEntity.traverseProperties(function(propertyName) {
+                        var value = bindingEntity.get(propertyName);
+                        var originalValue = originalBindingEntity.get(propertyName);
+                        if (!self.$.reflector.equalsEx(value, originalValue)) {
+                            // modPropHolder[propertyName] = null;
+                            // modPropHolder.set(propertyName, value);
+
+                            modPropHolder[propertyName] = value;
+
+                            // var instanceMetaProperty = modPropHolder.constructor.prototype.prop.call(modPropHolder, propertyName);
+                            /*entity.prop(propName)*/
+                            // instanceMetaProperty._cfo = true;
+                        }
+                    });
+
+                    console.log("       bindingEntity + originalBindingEntity + modPropHolder", bindingEntity, originalBindingEntity, modPropHolder);
+                    return modPropHolder;
+                },
+
+                //////////////////////////////////////// SAVING ////////////////////////////////////////
+                // save: function() {
+                //     save the current entity; get saved one => promote it as currEntity and update entityid with new one              
+                // }
+
+                //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
+                /**
+                 * Provides default action after fresh entity has been received. Rebinds the entity.
+                 */
+                onEntityReceived: function(entity, updateOriginalBindingEntity) {
+                    var self = this;
+                    // After the entity has received, potentially its id has been updated:
+                    if (entity.id !== self.entityid) {
+                        self.entityid = entity.id;
+                    }
+                    // New entity should be promoted to the local cache:
+                    self.currEntity = entity;
+                    self.currBindingEntity = self._extractBindingView(self.currEntity, false);
+
+                    if (updateOriginalBindingEntity) {
+                        // if (this.originalBindingEntity === null) {
+                        self.originalBindingEntity = self._extractBindingView(self.currEntity, true);
+                        // }
+                    }
+
+                    // After the new entity has appeared it should be rebinded:
+                    self.rebind(self.currBindingEntity);
+                    return self.currBindingEntity;                    
+                },
+
+                _extractBindingView: function(entity, withOriginalValues) {
+                    var self = this;
+                    var Entity = self.$.reflector.getEntityType();
+                    var bindingView = new Entity();
+
+                    bindingView["_type"] = entity["_type"];
+                    bindingView["id"] = entity["id"];
+                    bindingView["version"] = entity["version"];
+
+                    entity.traverseProperties(function(propertyName) {
+                        bindingView[propertyName] = withOriginalValues ? self._getOriginalValue(entity, propertyName) : self._convert(entity.get(propertyName));
+                    });
+
+                    console.log("       entity + " + (withOriginalValues ? "original" : "") + "bindingView", entity, bindingView);
+                    return bindingView;
+                },
+
+                _convert: function(value) {
+                    if (value === null) {
+                        return null;
+                    } else if (value instanceof this.$.reflector.getEntityType()) {
+                        return value.get("key"); // TODO complete implementation for composite keys and other aspects!!
+                    } else { // TODO these shoukd be the regular values!
+                        return value;
+                    }
+                },
+
+                _getOriginalValue: function(entity, propName) {
+                    var value = entity.get(propName); // automatic check whether the property is fetched
+                    var instanceMetaProperty = entity.constructor.prototype.prop.call(entity, propName);
+                    return /*entity.prop(propName)*/instanceMetaProperty.isChangedFromOriginal() ? null : this._convert(value);
+                },
+
+                rebind: function(bindingEntity) {
+                    // TODO implement
+                }
+            });
+        })();
+    </script>
+</polymer-element>

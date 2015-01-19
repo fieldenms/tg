@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>entity-master</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+    <script src="/resources/polymer/polymer-test-tools/htmltest.js"></script>
+
+    <link rel="import" href="/resources/master/tg-entity-master.html">
+</head>
+
+<body unresolved>
+    <tg-entity-master id="master" user="SU" entitytype="ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger" entityid="null"></tg-entity-master>
+
+    <script>
+        document.addEventListener('polymer-ready', function() {
+            var master = document.querySelector('#master');
+            var findProp = function(entity, propName) {
+                return entity.constructor.prototype.prop.call(entity, propName);
+                // return entity.prop(propName); -- this is problem for this test because the field name 'prop' equals to prototype function 'prop'
+            };
+
+            master.onRetrieved = function(entityResponse) {
+                console.log("entityResponse = ", entityResponse);
+
+                // assert.strictEqual(entityResponse.type(), entityRequest.type(), "The type of entity response is not correct.");                                
+                assert.strictEqual(entityResponse.type().fullClassName(), "ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger", "The type of entity response is not correct.");
+                assert.strictEqual(entityResponse.id, null, "The id of entity response is not correct.");
+                assert.strictEqual(entityResponse.version, 0, "The version of entity response is not correct.");
+
+                // properties:
+                assert.strictEqual(typeof entityResponse.get("prop"), "object", "The entity response property is not correct.");                
+                assert.strictEqual(entityResponse.get("prop"), null, "The entity response property is not correct.");                
+
+                // try {
+                //     entityResponse.get("desc");
+                //     assert.fail("", "", "The unfetched property for entity should throw an exception.");                    
+                // }
+                // catch (ex) {                   
+                //     if (ex instanceof chai.AssertionError) {
+                //         throw ex;
+                //     }
+                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionType(), true, "The exception thrown should be of type StrictProxyException.");                       
+                // }
+
+                // try {
+                //     entityResponse.get("key");
+                //     assert.fail("", "", "The unfetched property for entity should throw an exception.");                    
+                // }
+                // catch (ex) {                   
+                //     if (ex instanceof chai.AssertionError) {
+                //         throw ex;
+                //     }
+                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionType(), true, "The exception thrown should be of type StrictProxyException.");                       
+                // }
+
+                // instance meta-properties
+                assert.ok(findProp(entityResponse, "prop"), "The entity response instance prop should be initialised.");
+                assert.strictEqual(findProp(entityResponse, "prop").isChangedFromOriginal(), false, "The entity response instance prop should be not changedFromOriginal.");
+                assert.strictEqual(findProp(entityResponse, "prop").validationResult(), null, "The entity response instance prop should have empty validation result.");
+                assert.strictEqual(findProp(entityResponse, "prop").isRequired(), false, "The entity response instance prop should be not required.");
+                assert.strictEqual(findProp(entityResponse, "prop").isEditable(), true, "The entity response instance prop should be editable.");
+                assert.strictEqual(findProp(entityResponse, "prop").isVisible(), true, "The entity response instance prop should be visible.");
+
+                done();
+            };
+
+            master.retrieve();
+        });
+    </script>
+
+</body>
+
+</html>

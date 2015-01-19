@@ -178,9 +178,15 @@ public class SerialisationTestResource extends ServerResource {
 
     private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2, final DefaultValueContract dvc) {
         // dirty equality
-        if (!EntityUtils.equalsEx(metaProp1.isDirty(), metaProp2.isDirty())) {
-            return Result.failure(format("e1 [%s] dirtiness [%s] does not equal to e2 [%s] dirtiness [%s].", metaProp1.getEntity(), metaProp1.isDirty(), metaProp2.getEntity(), metaProp2.isDirty()));
+        //        if (!metaProp1.isCollectional()) {
+        if (metaProp1.isChangedFromOriginal()) {
+            if (!EntityUtils.equalsEx(metaProp1.isChangedFromOriginal(), metaProp2.isDirty())) {
+                return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
+            }
         }
+        //        } else {
+        //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
+        //        }
         // editable equality
         if (!EntityUtils.equalsEx(metaProp1.isEditable(), metaProp2.isEditable())) {
             return Result.failure(format("e1 [%s] editability [%s] does not equal to e2 [%s] editability [%s].", metaProp1.getEntity(), metaProp1.isEditable(), metaProp2.getEntity(), metaProp2.isEditable()));

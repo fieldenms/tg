@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.serialisation.jackson.entities;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
@@ -39,165 +43,231 @@ public class FactoryForTestingEntities {
         return entity;
     }
 
-    public EmptyEntity createSimpleEmptyEntity() {
-        final EmptyEntity entity = factory.newEntity(EmptyEntity.class, 1L, "key", "description");
+    /**
+     * Creates an entity that mimics the one that was retrieved from the database.
+     *
+     * @param type
+     * @param id
+     * @return
+     */
+    private <T extends AbstractEntity<?>> T createPersistedEntity(final Class<T> type, final Long id) {
+        final T entity = factory.newEntity(type, id);
+
+        entity.beginInitialising();
+
         return entity;
+    }
+
+    /**
+     * Creates an entity that mimics the one that was retrieved from the database.
+     *
+     * @param type
+     * @param id
+     * @param key
+     * @param desc
+     * @return
+     */
+    private <T extends AbstractEntity<?>> T createPersistedEntity(final Class<T> type, final Long id, final String key, final String desc) {
+        final T entity = factory.newEntity(type, id);
+
+        entity.beginInitialising();
+        entity.set(AbstractEntity.KEY, key);
+        entity.setDesc(desc);
+
+        return entity;
+    }
+
+    private <T extends AbstractEntity<?>> T finalise(final T entity) {
+        entity.endInitialising();
+
+        entity.resetMetaValue();
+
+        assertFalse("Incorrect key dirtiness.", entity.getProperty(AbstractEntity.KEY).isDirty());
+        assertFalse("Incorrect desc dirtiness.", entity.getProperty(AbstractEntity.DESC).isDirty());
+        assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty(AbstractEntity.KEY).isChangedFromOriginal());
+        assertFalse("Incorrect desc ChangedFromOriginal.", entity.getProperty(AbstractEntity.DESC).isChangedFromOriginal());
+
+        if (entity.getProperty("prop") != null && !entity.getProperty("prop").isCollectional()) {
+            assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
+            assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
+        }
+
+        return entity;
+    }
+
+    /**
+     * Creates an entity that mimics the one that was retrieved from the database.
+     *
+     * @param type
+     * @param id
+     * @param key
+     * @param desc
+     * @return
+     */
+    private <T extends AbstractEntity<?>> T createNewEntity(final Class<T> type, final String key, final String desc) {
+        final T entity = factory.newEntity(type, null);
+
+        entity.beginInitialising();
+        entity.set(AbstractEntity.KEY, key);
+        entity.setDesc(desc);
+        entity.endInitialising();
+
+        assertTrue("Incorrect key dirtiness.", entity.getProperty(AbstractEntity.KEY).isDirty());
+        assertTrue("Incorrect desc dirtiness.", entity.getProperty(AbstractEntity.DESC).isDirty());
+        assertTrue("Incorrect key ChangedFromOriginal.", entity.getProperty(AbstractEntity.KEY).isChangedFromOriginal());
+        assertTrue("Incorrect desc ChangedFromOriginal.", entity.getProperty(AbstractEntity.DESC).isChangedFromOriginal());
+
+        return entity;
+    }
+
+    public EmptyEntity createSimpleEmptyEntity() {
+        return finalise(createPersistedEntity(EmptyEntity.class, 1L, "key", "description"));
     }
 
     public EmptyEntity createEmptyEntityWithNoId() {
-        final EmptyEntity entity = factory.newEntity(EmptyEntity.class, null, "key", "description");
-        return entity;
+        return createNewEntity(EmptyEntity.class, "key", "description");
     }
 
     public EmptyEntity createEmptyEntityWithNoKey() {
-        final EmptyEntity entity = factory.newEntity(EmptyEntity.class, 1L, null, "description");
-        return entity;
+        return finalise(createPersistedEntity(EmptyEntity.class, 1L, null, "description"));
     }
 
     public EmptyEntity createEmptyEntityWithNoDescription() {
-        final EmptyEntity entity = factory.newEntity(EmptyEntity.class, 1L, "key", null);
-        return entity;
+        return finalise(createPersistedEntity(EmptyEntity.class, 1L, "key", null));
     }
 
     public EntityWithBigDecimal createEntityWithBigDecimal() {
-        final EntityWithBigDecimal entity = factory.newEntity(EntityWithBigDecimal.class, 1L, "key", "description");
-        entity.setProp(BigDecimal.TEN);
-        return entity;
+        return finalise(createPersistedEntity(EntityWithBigDecimal.class, 1L, "key", "description").setProp(BigDecimal.TEN));
     }
 
     public EntityWithInteger createEntityWithInteger() {
-        final EntityWithInteger entity = factory.newEntity(EntityWithInteger.class, 1L, "key", "description");
-        entity.setProp(new Integer(23));
-        return entity;
+        return finalise(createPersistedEntity(EntityWithInteger.class, 1L, "key", "description").setProp(new Integer(23)));
     }
 
     public EntityWithString createEntityWithString() {
-        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
-        entity.setProp("okay");
-        return entity;
+        return finalise(createPersistedEntity(EntityWithString.class, 1L, "key", "description").setProp("okay"));
     }
 
     public EntityWithString createEntityWithStringNonEditable() {
-        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
-        entity.setProp("okay");
-        entity.getProperty("prop").setEditable(false);
-        return entity;
+        final EntityWithString ent = createPersistedEntity(EntityWithString.class, 1L, "key", "description").setProp("okay");
+        ent.getProperty("prop").setEditable(false);
+        return finalise(ent);
     }
 
     public EntityWithString createEntityWithStringNonVisible() {
-        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
+        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
         entity.getProperty("prop").setVisible(false);
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithString createEntityWithStringRequired() {
-        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
+        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
         entity.getProperty("prop").setRequired(true);
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithString createEntityWithStringAndResult() {
-        final EntityWithString entity = factory.newEntity(EntityWithString.class, 1L, "key", "description");
+        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
         entity.getProperty("prop").setRequiredValidationResult(new Result(entity, "Ex.", new Exception("Exception.")));
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithDefiner createEntityWithPropertyWithDefiner() {
-        final EntityWithDefiner entity = factory.newEntity(EntityWithDefiner.class, 1L, "key", "description");
-        entity.beginInitialising();
+        final EntityWithDefiner entity = createPersistedEntity(EntityWithDefiner.class, 1L, "key", "description");
         entity.setProp("okay");
-        entity.endInitialising();
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithBoolean createEntityWithBoolean() {
-        final EntityWithBoolean entity = factory.newEntity(EntityWithBoolean.class, 1L, "key", "description");
+        final EntityWithBoolean entity = createPersistedEntity(EntityWithBoolean.class, 1L, "key", "description");
         entity.setProp(true);
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithDate createEntityWithDate() {
-        final EntityWithDate entity = factory.newEntity(EntityWithDate.class, 1L, "key", "description");
+        final EntityWithDate entity = createPersistedEntity(EntityWithDate.class, 1L, "key", "description");
         entity.setProp(testingDate);
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithMoney createEntityWithMoney() {
-        final EntityWithMoney entity = factory.newEntity(EntityWithMoney.class, 1L, "key", "description");
+        final EntityWithMoney entity = createPersistedEntity(EntityWithMoney.class, 1L, "key", "description");
         entity.setProp(new Money("54.00", 20, Currency.getInstance("AUD")));
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithOtherEntity createEntityWithOtherEntity() {
-        final EntityWithOtherEntity entity = factory.newEntity(EntityWithOtherEntity.class, 1L, "key", "description");
-        entity.setProp(factory.newEntity(OtherEntity.class, 1L, "other_key", "description"));
-        return entity;
+        final EntityWithOtherEntity entity = createPersistedEntity(EntityWithOtherEntity.class, 1L, "key", "description");
+        entity.setProp(finalise(createPersistedEntity(OtherEntity.class, 1L, "other_key", "description")));
+        return finalise(entity);
     }
 
     public EntityWithSameEntity createEntityWithSameEntity() {
-        final EntityWithSameEntity entity = factory.newEntity(EntityWithSameEntity.class, 1L, "key1", "description");
-        entity.setProp(factory.newEntity(EntityWithSameEntity.class, 2L, "key2", "description"));
-        return entity;
+        final EntityWithSameEntity entity = createPersistedEntity(EntityWithSameEntity.class, 1L, "key1", "description");
+        entity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 2L, "key2", "description")));
+        return finalise(entity);
     }
 
     public EntityWithSameEntity createEntityWithSameEntityCircularlyReferencingItself() {
-        final EntityWithSameEntity entity = factory.newEntity(EntityWithSameEntity.class, 1L, "key1", "description");
+        final EntityWithSameEntity entity = createPersistedEntity(EntityWithSameEntity.class, 1L, "key1", "description");
         entity.setProp(entity);
-        return entity;
+        return finalise(entity);
     }
 
     public Entity1WithEntity2 createEntityWithOtherEntityCircularlyReferencingItself() {
-        final Entity1WithEntity2 entity1 = factory.newEntity(Entity1WithEntity2.class, 1L, "key1", "description");
-        final Entity2WithEntity1 entity2 = factory.newEntity(Entity2WithEntity1.class, 1L, "key2", "description");
-        entity1.setProp(entity2);
-        entity2.setProp(entity1);
+        final Entity1WithEntity2 entity1 = createPersistedEntity(Entity1WithEntity2.class, 1L, "key1", "description");
+        final Entity2WithEntity1 entity2 = createPersistedEntity(Entity2WithEntity1.class, 1L, "key2", "description");
+        finalise(entity1.setProp(entity2));
+        finalise(entity2.setProp(entity1));
         return entity1;
     }
 
     public EntityWithSetOfEntities createEntityWithSetOfSameEntities() {
-        final EntityWithSetOfEntities entity = factory.newEntity(EntityWithSetOfEntities.class, 1L, "key1", "description");
+        final EntityWithSetOfEntities entity = createPersistedEntity(EntityWithSetOfEntities.class, 1L, "key1", "description");
 
         final Set<EntityWithSetOfEntities> propVal = new HashSet<>();
-        propVal.add(factory.newEntity(EntityWithSetOfEntities.class, 2L, "key2", "description"));
+        propVal.add(finalise(createPersistedEntity(EntityWithSetOfEntities.class, 2L, "key2", "description")));
         propVal.add(entity);
         entity.setProp(propVal);
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithListOfEntities createEntityWithArraysAsListOfSameEntities() {
-        final EntityWithListOfEntities entity = factory.newEntity(EntityWithListOfEntities.class, 1L, "key1", "description");
-        final List<EntityWithListOfEntities> propVal = Arrays.asList(factory.newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"), entity);
+        final EntityWithListOfEntities entity = createPersistedEntity(EntityWithListOfEntities.class, 1L, "key1", "description");
+        final List<EntityWithListOfEntities> propVal = Arrays.asList(finalise(createPersistedEntity(EntityWithListOfEntities.class, 2L, "key2", "description")), entity);
         entity.setProp(propVal);
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithListOfEntities createEntityWithListOfSameEntities() {
-        final EntityWithListOfEntities entity = factory.newEntity(EntityWithListOfEntities.class, 1L, "key1", "description");
+        final EntityWithListOfEntities entity = createPersistedEntity(EntityWithListOfEntities.class, 1L, "key1", "description");
         final List<EntityWithListOfEntities> propVal = new ArrayList<>();
-        propVal.add(factory.newEntity(EntityWithListOfEntities.class, 2L, "key2", "description"));
+        propVal.add(finalise(createPersistedEntity(EntityWithListOfEntities.class, 2L, "key2", "description")));
         propVal.add(entity);
         entity.setProp(propVal);
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithMapOfEntities createEntityWithMapOfSameEntities() {
-        final EntityWithMapOfEntities entity = factory.newEntity(EntityWithMapOfEntities.class, 1L, "key1", "description");
+        final EntityWithMapOfEntities entity = createPersistedEntity(EntityWithMapOfEntities.class, 1L, "key1", "description");
 
         final Map<String, EntityWithMapOfEntities> propVal = new LinkedHashMap<>();
-        propVal.put("19", factory.newEntity(EntityWithMapOfEntities.class, 2L, "key3", "description"));
+        propVal.put("19", finalise(createPersistedEntity(EntityWithMapOfEntities.class, 2L, "key3", "description")));
         propVal.put("4", entity);
         entity.setProp(propVal);
-        return entity;
+        return finalise(entity);
     }
 
     public EntityWithCompositeKey createEntityWithCompositeKey() {
-        final EmptyEntity key1 = factory.newEntity(EmptyEntity.class, 1L, "key", "desc");
+        final EmptyEntity key1 = finalise(createPersistedEntity(EmptyEntity.class, 1L, "key", "desc"));
         final BigDecimal key2 = BigDecimal.TEN;
 
-        final EntityWithCompositeKey entity = factory.newByKey(EntityWithCompositeKey.class, key1, key2);
-        return entity;
+        final EntityWithCompositeKey entity = createPersistedEntity(EntityWithCompositeKey.class, 1L);
+        entity.setKey1(key1);
+        entity.setKey2(key2);
+        return finalise(entity);
     }
 }
