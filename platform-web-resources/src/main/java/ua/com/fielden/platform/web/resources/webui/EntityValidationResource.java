@@ -96,6 +96,8 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
             return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
             return reflectedValue;
+        } else if (Boolean.class.isAssignableFrom(propertyType)) {
+            return reflectedValue;
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
             return reflectedValue instanceof Integer ? new BigDecimal((Integer) reflectedValue) : new BigDecimal((Double) reflectedValue);
         } else if (Money.class.isAssignableFrom(propertyType)) {

@@ -96,6 +96,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties stringEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY6").setStringProp("ok"));
         System.out.println("stringEnt1.getId() == " + stringEnt1.getId());
 
+        final TgPersistentEntityWithProperties booleanEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true));
+        System.out.println("booleanEnt1.getId() == " + booleanEnt1.getId());
+
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
             final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
