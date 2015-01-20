@@ -20,247 +20,255 @@
         </paper-dialog>
     </template>
     <script>
-        Polymer({
-            created: function () {
-                this.sysServicePages = [
-                    {
-                        name: "System Configuration",
-                        hash: "sysservice/sysconfiguration",
-                        url: "sys-config-home.html",
-                        submenu: [
-                            {
-                                name: "Categories",
-                                hash: "sysservice/sysconfiguration/categories",
-                                url: "sys-config-categories.html"
+        (function () {
+            window.onpopstate = function(event) {
+                console.log("history changed: ", window.location.hash ,event);
+            }
+            window.onhashchange = function() {
+                console.log("hash changed: ", window.location.hash, event.oldURL, event.newURL);
+            }
+            Polymer({
+                created: function () {
+                    this.sysServicePages = [
+                        {
+                            name: "System Configuration",
+                            hash: "sysservice/sysconfiguration",
+                            url: "sys-config-home.html",
+                            submenu: [
+                                {
+                                    name: "Categories",
+                                    hash: "sysservice/sysconfiguration/categories",
+                                    url: "sys-config-categories.html"
                             }, {
-                                name: "Systems",
-                                hash: "sysservice/sysconfiguration/systems",
-                                url: "sys-config-systems.html"
+                                    name: "Systems",
+                                    hash: "sysservice/sysconfiguration/systems",
+                                    url: "sys-config-systems.html"
                             }, {
-                                name: "Subsystems",
-                                hash: "sysservice/sysconfiguration/subsystems",
-                                url: "sys-config-subsystems.html"
+                                    name: "Subsystems",
+                                    hash: "sysservice/sysconfiguration/subsystems",
+                                    url: "sys-config-subsystems.html"
                             }, {
-                                name: "Subsystem/Location",
-                                hash: "sysservice/sysconfiguration/subsysloc",
-                                url: "sys-config-subsysloc.html"
+                                    name: "Subsystem/Location",
+                                    hash: "sysservice/sysconfiguration/subsysloc",
+                                    url: "sys-config-subsysloc.html"
                             }, {
-                                name: "Services",
-                                hash: "sysservice/sysconfiguration/services",
-                                url: "sys-config-services.html"
+                                    name: "Services",
+                                    hash: "sysservice/sysconfiguration/services",
+                                    url: "sys-config-services.html"
                             }, {
-                                name: "Matrix",
-                                hash: "sysservice/sysconfiguration/matrix",
-                                url: "sys-config-matrix.html"
+                                    name: "Matrix",
+                                    hash: "sysservice/sysconfiguration/matrix",
+                                    url: "sys-config-matrix.html"
                             }
 
                         ]
                     }, {
-                        name: "Hierarchy",
-                        hash: "sysservice/hierarchy",
-                        url: "sys-hierarchy.html"
+                            name: "Hierarchy",
+                            hash: "sysservice/hierarchy",
+                            url: "sys-hierarchy.html"
                     }, {
-                        name: "Availability Profile",
-                        hash: "sysservice/availprofile",
-                        url: "sys-avail-profile.html"
+                            name: "Availability Profile",
+                            hash: "sysservice/availprofile",
+                            url: "sys-avail-profile.html"
                     }, {
-                        name: "Service Availability",
-                        hash: "sysservice/serviceavail",
-                        url: "ser-avail.html",
-                        submenu: [
-                            {
-                                name: "Entry/Review",
-                                hash: "sysservice/serviceavail/entreview",
-                                url: "ser-avail-entreview.html"
+                            name: "Service Availability",
+                            hash: "sysservice/serviceavail",
+                            url: "ser-avail.html",
+                            submenu: [
+                                {
+                                    name: "Entry/Review",
+                                    hash: "sysservice/serviceavail/entreview",
+                                    url: "ser-avail-entreview.html"
                             }, {
-                                name: "History",
-                                hash: "sysservice/serviceavail/history",
-                                url: "ser-avail-history.html"
+                                    name: "History",
+                                    hash: "sysservice/serviceavail/history",
+                                    url: "ser-avail-history.html"
                             },
                         ]
                     }, {
-                        name: "Service Sentinel Settings",
-                        hash: "sysservice/sentsettings",
-                        url: "ser-sent-settings.html"
+                            name: "Service Sentinel Settings",
+                            hash: "sysservice/sentsettings",
+                            url: "ser-sent-settings.html"
                     }, {
-                        name: "SLA Batch Replacement",
-                        hash: "sysservice/slabatchreplacement",
-                        url: "sys-sla-batch-replacement.html"
+                            name: "SLA Batch Replacement",
+                            hash: "sysservice/slabatchreplacement",
+                            url: "sys-sla-batch-replacement.html"
                     }, {
-                        name: "SLA Extended Description",
-                        hash: "sysservice/slaextdesc",
-                        url: "sla-extdesc.html",
-                        submenu: [
-                            {
-                                name: "Imported Data",
-                                hash: "sysservice/slaextdesc/importdata",
-                                url: "sla-extdesc-importdata.html"
+                            name: "SLA Extended Description",
+                            hash: "sysservice/slaextdesc",
+                            url: "sla-extdesc.html",
+                            submenu: [
+                                {
+                                    name: "Imported Data",
+                                    hash: "sysservice/slaextdesc/importdata",
+                                    url: "sla-extdesc-importdata.html"
                             }, {
-                                name: "Stored Data",
-                                hash: "sysservice/slaextdesc/storeddata",
-                                url: "sla-extdesc-storeddata.html"
+                                    name: "Stored Data",
+                                    hash: "sysservice/slaextdesc/storeddata",
+                                    url: "sla-extdesc-storeddata.html"
                             },
                         ]
                     }, {
-                        name: "BU Services Relationship",
-                        hash: "sysservice/bu",
-                        url: "bu-service.html",
-                        submenu: [
-                            {
-                                name: "Link/Review",
-                                hash: "sysservice/bu/linkreview",
-                                url: "bu-service-linkreview.html"
+                            name: "BU Services Relationship",
+                            hash: "sysservice/bu",
+                            url: "bu-service.html",
+                            submenu: [
+                                {
+                                    name: "Link/Review",
+                                    hash: "sysservice/bu/linkreview",
+                                    url: "bu-service-linkreview.html"
                             }, {
-                                name: "History",
-                                hash: "sysservice/bu/history",
-                                url: "bu-service-history.html"
+                                    name: "History",
+                                    hash: "sysservice/bu/history",
+                                    url: "bu-service-history.html"
                             },
                         ]
                     }
                 ];
-                this.equipmentPages = [
-                    {
-                        name: "Hierarchy",
-                        hash: "equipment/hierarchy",
-                        url: "eq-hierarchy.html"
+                    this.equipmentPages = [
+                        {
+                            name: "Hierarchy",
+                            hash: "equipment/hierarchy",
+                            url: "eq-hierarchy.html"
                     }, {
-                        name: "Rotables",
-                        hash: "equipment/rotables",
-                        url: "eq-rotables.html",
-                        submenu: [
-                            {
-                                name: "Rotable Notes",
-                                hash: "equipment/rotables/notes",
-                                url: "eq-rotables-notes.html"
+                            name: "Rotables",
+                            hash: "equipment/rotables",
+                            url: "eq-rotables.html",
+                            submenu: [
+                                {
+                                    name: "Rotable Notes",
+                                    hash: "equipment/rotables/notes",
+                                    url: "eq-rotables-notes.html"
                             }, {
-                                name: "Rotable Special Details",
-                                hash: "equipment/rotables/specdetails",
-                                url: "eq-rotables-specdetails.html"
+                                    name: "Rotable Special Details",
+                                    hash: "equipment/rotables/specdetails",
+                                    url: "eq-rotables-specdetails.html"
                             }, {
-                                name: "Rotables History",
-                                hash: "equipment/rotables/history",
-                                url: "eq-rotables-history.html"
+                                    name: "Rotables History",
+                                    hash: "equipment/rotables/history",
+                                    url: "eq-rotables-history.html"
                             }, {
-                                name: "Rotable Movement",
-                                hash: "equipment/rotables/movement",
-                                url: "eq-rotables-movement.html"
+                                    name: "Rotable Movement",
+                                    hash: "equipment/rotables/movement",
+                                    url: "eq-rotables-movement.html"
                             }, {
-                                name: "Reservations",
-                                hash: "equipment/rotables/reservations",
-                                url: "eq-rotables-reservations.html"
+                                    name: "Reservations",
+                                    hash: "equipment/rotables/reservations",
+                                    url: "eq-rotables-reservations.html"
                             }, {
-                                name: "Issues History",
-                                hash: "equipment/rotables/issues",
-                                url: "eq-rotables-issues.html"
+                                    name: "Issues History",
+                                    hash: "equipment/rotables/issues",
+                                    url: "eq-rotables-issues.html"
                             }, {
-                                name: "Rotable SEO List",
-                                hash: "equipment/rotables/seolist",
-                                url: "eq-rotables-seolist.html"
+                                    name: "Rotable SEO List",
+                                    hash: "equipment/rotables/seolist",
+                                    url: "eq-rotables-seolist.html"
                             }, {
-                                name: "Rotable Parts",
-                                hash: "equipment/rotables/parts",
-                                url: "eq-rotables-parts.html"
+                                    name: "Rotable Parts",
+                                    hash: "equipment/rotables/parts",
+                                    url: "eq-rotables-parts.html"
                             }, {
-                                name: "Drawings",
-                                hash: "equipment/rotables/drawings",
-                                url: "eq-rotables-drawings.html"
+                                    name: "Drawings",
+                                    hash: "equipment/rotables/drawings",
+                                    url: "eq-rotables-drawings.html"
                             }
                         ]
                     }, {
-                        name: "Meter Readings",
-                        hash: "equipment/readings",
-                        url: "eq-readings.html"
+                            name: "Meter Readings",
+                            hash: "equipment/readings",
+                            url: "eq-readings.html"
                     }, {
-                        name: "Messages",
-                        hash: "equipment/messages",
-                        url: "eq-messages.html"
+                            name: "Messages",
+                            hash: "equipment/messages",
+                            url: "eq-messages.html"
                     }, {
-                        name: "Specifications",
-                        hash: "equipment/specifications",
-                        url: "eq-specifications.html"
+                            name: "Specifications",
+                            hash: "equipment/specifications",
+                            url: "eq-specifications.html"
                     }
                 ];
-                this.workActivityPages = [
-                    {
-                        name: "Work Activity Centre",
-                        hash: "workactivities/centre",
-                        url: "wa-centre.html"
+                    this.workActivityPages = [
+                        {
+                            name: "Work Activity Centre",
+                            hash: "workactivities/centre",
+                            url: "wa-centre.html"
                     }, {
-                        name: "Projects",
-                        hash: "workactivities/projects",
-                        url: "wa-projects.html",
-                        submenu: [
-                            {
-                                name: "Major Project",
-                                hash: "workactivities/projects/major",
-                                url: "wa-projects-major.html"
+                            name: "Projects",
+                            hash: "workactivities/projects",
+                            url: "wa-projects.html",
+                            submenu: [
+                                {
+                                    name: "Major Project",
+                                    hash: "workactivities/projects/major",
+                                    url: "wa-projects-major.html"
                             }, {
-                                name: "Major Project Cost",
-                                hash: "workactivities/projects/cost",
-                                url: "wa-projects-cost.html"
+                                    name: "Major Project Cost",
+                                    hash: "workactivities/projects/cost",
+                                    url: "wa-projects-cost.html"
                             }, {
-                                name: "MS Project Export/Import",
-                                hash: "workactivities/projects/ms",
-                                url: "wa-projects-ms.html"
+                                    name: "MS Project Export/Import",
+                                    hash: "workactivities/projects/ms",
+                                    url: "wa-projects-ms.html"
                             }
                         ]
                     }, {
-                        name: "Timesheets",
-                        hash: "workactivities/timesheets",
-                        url: "wa-timesheets.html",
-                        submenu: [
-                            {
-                                name: "Daily Timesheets",
-                                hash: "workactivities/timesheets/daily",
-                                url: "wa-timesheets-daily.html"
+                            name: "Timesheets",
+                            hash: "workactivities/timesheets",
+                            url: "wa-timesheets.html",
+                            submenu: [
+                                {
+                                    name: "Daily Timesheets",
+                                    hash: "workactivities/timesheets/daily",
+                                    url: "wa-timesheets-daily.html"
                             }, {
-                                name: "Review/Approve/Export",
-                                hash: "workactivities/timesheets/rae",
-                                url: "wa-timesheets-rae.html"
+                                    name: "Review/Approve/Export",
+                                    hash: "workactivities/timesheets/rae",
+                                    url: "wa-timesheets-rae.html"
                             }
                         ]
                     }, {
-                        name: "Timesheet Delegation",
-                        hash: "workactivities/delegation",
-                        url: "wa-delegation.html"
+                            name: "Timesheet Delegation",
+                            hash: "workactivities/delegation",
+                            url: "wa-delegation.html"
                     }, {
-                        name: "Personnel Unavailability",
-                        hash: "workactivities/personunavail",
-                        url: "wa-personunavail.html"
+                            name: "Personnel Unavailability",
+                            hash: "workactivities/personunavail",
+                            url: "wa-personunavail.html"
                     }, {
-                        name: "Legacy Timesheets",
-                        hash: "workactivities/legacy",
-                        url: "wa-legacy.html",
-                        submenu: [
-                            {
-                                name: "Timesheet Review",
-                                hash: "workactivities/legacy/review",
-                                url: "wa-legacy-review.html"
+                            name: "Legacy Timesheets",
+                            hash: "workactivities/legacy",
+                            url: "wa-legacy.html",
+                            submenu: [
+                                {
+                                    name: "Timesheet Review",
+                                    hash: "workactivities/legacy/review",
+                                    url: "wa-legacy-review.html"
                             }, {
-                                name: "Timesheet Entry",
-                                hash: "workactivities/legacy/entry",
-                                url: "wa-legacy-entry.html"
+                                    name: "Timesheet Entry",
+                                    hash: "workactivities/legacy/entry",
+                                    url: "wa-legacy-entry.html"
                             }
                         ]
                     }
                 ];
-            },
-            onRouteChanged: function (event, detail) {
-                var splitDetail = detail.split("/");
-                if (splitDetail.length >= 2) {
-                    this.activePage = splitDetail[0];
-                    this.$[this.activePage].activatePage(detail);
+                },
+                onRouteChanged: function (event, detail) {
+                    var splitDetail = detail.split("/");
+                    if (splitDetail.length >= 2) {
+                        this.activePage = splitDetail[0];
+                        this.$[this.activePage].activatePage(detail);
+                    }
+                },
+                onMainMenuSelected: function (event, detail, source) {
+                    if (detail !== "return") {
+                        this.route = this.$[detail].activeSubPage || this.$[detail].activePage;
+                    }
+                    this.$.mainMenu.close();
+                },
+                onShowMenu: function (event, detail, source) {
+                    this.$.mainMenu.open();
                 }
-            },
-            onMainMenuSelected: function (event, detail, source) {
-                if (detail !== "return") {
-                    this.route = this.$[detail].activeSubPage || this.$[detail].activePage;
-                }
-                this.$.mainMenu.close();
-            },
-            onShowMenu: function (event, detail, source) {
-                this.$.mainMenu.open();
-            }
-        });
+            });
+        })()
     </script>
 </polymer-element>
