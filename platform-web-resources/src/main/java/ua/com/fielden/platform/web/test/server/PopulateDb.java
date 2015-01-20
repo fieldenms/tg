@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
 
+import org.joda.time.DateTime;
+
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -98,6 +100,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final TgPersistentEntityWithProperties booleanEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true));
         System.out.println("booleanEnt1.getId() == " + booleanEnt1.getId());
+
+        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(9999L).toDate()));
+        System.out.println("dateEnt1.getId() == " + dateEnt1.getId());
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

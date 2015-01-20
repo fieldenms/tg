@@ -66,6 +66,7 @@ public class WebApp extends AbstractWebApp {
                         .with("bigDecimalProp")
                         .with("stringProp")
                         .with("booleanProp")
+                        .with("dateProp")
                         .with("entityProp", fetchOnly(TgPersistentEntityWithProperties.class).with("key")), TgPersistentEntityWithPropertiesProducer.class)
                 );
     }

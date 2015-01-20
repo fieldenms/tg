@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.Date;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -98,6 +99,8 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
             return reflectedValue;
         } else if (Boolean.class.isAssignableFrom(propertyType)) {
             return reflectedValue;
+        } else if (Date.class.isAssignableFrom(propertyType)) {
+            return new Date(((Integer) reflectedValue).longValue());
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
             return reflectedValue instanceof Integer ? new BigDecimal((Integer) reflectedValue) : new BigDecimal((Double) reflectedValue);
         } else if (Money.class.isAssignableFrom(propertyType)) {

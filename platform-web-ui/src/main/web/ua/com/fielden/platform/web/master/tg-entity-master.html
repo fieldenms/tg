@@ -183,7 +183,7 @@
                     } else if (value instanceof this.$.reflector.getEntityType()) {
                         // TODO complete implementation for composite keys and other aspects!!
                         return value.get("key"); 
-                    } else if (typeof value === "number") { // for number value -- return the same value for editors
+                    } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
                         return value;
                     } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
                         return value;

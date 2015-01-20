@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -54,6 +55,21 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Boolean prop", desc = "Boolean prop")
     private Boolean booleanProp;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Date prop", desc = "Date prop")
+    private Date dateProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setDateProp(final Date dateProp) {
+        this.dateProp = dateProp;
+        return this;
+    }
+
+    public Date getDateProp() {
+        return dateProp;
+    }
 
     @Observable
     public TgPersistentEntityWithProperties setBooleanProp(final Boolean booleanProp) {
