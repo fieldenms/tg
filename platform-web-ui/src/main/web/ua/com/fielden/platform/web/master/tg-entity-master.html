@@ -13,6 +13,22 @@
     </template>
     <script>
         (function () {
+            var UnsupportedConversionException = function(value) {
+                Object.call(this);
+
+                this.message = "Unsupported conversion exception: the conversion for value [" + value + "] is unsupported at this stage. Value typeof === " + (typeof value) + ".";
+            };
+            UnsupportedConversionException.prototype = Object.create(Object.prototype);
+            UnsupportedConversionException.prototype.constructor = UnsupportedConversionException;     
+
+            /**
+             * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+             * 
+            */
+            UnsupportedConversionException.prototype.toString = function() {
+                return this.message;
+            }
+
             Polymer({        
                 // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
                 currEntity: null, // represents the current entity
@@ -75,28 +91,19 @@
                 },
 
                 extractModifiedPropertiesHolder: function(bindingEntity, originalBindingEntity) {
-                    // var Entity = this.$.reflector.getEntityType();
-                    var modPropHolder = {}; // new Entity();
+                    var modPropHolder = {};
+                    if (bindingEntity !== null) {
+                        modPropHolder["id"] = bindingEntity["id"];
 
-                    // modPropHolder["_type"] = bindingEntity["_type"];
-                    modPropHolder["id"] = bindingEntity["id"];
-                    // modPropHolder["version"] = bindingEntity["version"];
-
-                    var self = this;
-                    bindingEntity.traverseProperties(function(propertyName) {
-                        var value = bindingEntity.get(propertyName);
-                        var originalValue = originalBindingEntity.get(propertyName);
-                        if (!self.$.reflector.equalsEx(value, originalValue)) {
-                            // modPropHolder[propertyName] = null;
-                            // modPropHolder.set(propertyName, value);
-
-                            modPropHolder[propertyName] = value;
-
-                            // var instanceMetaProperty = modPropHolder.constructor.prototype.prop.call(modPropHolder, propertyName);
-                            /*entity.prop(propName)*/
-                            // instanceMetaProperty._cfo = true;
-                        }
-                    });
+                        var self = this;
+                        bindingEntity.traverseProperties(function(propertyName) {
+                            var value = bindingEntity.get(propertyName);
+                            var originalValue = originalBindingEntity.get(propertyName);
+                            if (!self.$.reflector.equalsEx(value, originalValue)) {
+                                modPropHolder[propertyName] = value;
+                            }
+                        });
+                    }
 
                     console.log("       bindingEntity + originalBindingEntity + modPropHolder", bindingEntity, originalBindingEntity, modPropHolder);
                     return modPropHolder;
@@ -117,14 +124,14 @@
                     if (entity.id !== self.entityid) {
                         self.entityid = entity.id;
                     }
+                    // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
+                    var previousModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
                     // New entity should be promoted to the local cache:
                     self.currEntity = entity;
-                    self.currBindingEntity = self._extractBindingView(self.currEntity, false);
+                    self.currBindingEntity = self._extractBindingView(self.currEntity, previousModifiedPropertiesHolder);
 
                     if (updateOriginalBindingEntity) {
-                        // if (this.originalBindingEntity === null) {
-                        self.originalBindingEntity = self._extractBindingView(self.currEntity, true);
-                        // }
+                        self.originalBindingEntity = self._extractOriginalBindingView(self.currEntity);
                     }
 
                     // After the new entity has appeared it should be rebinded:
@@ -132,7 +139,7 @@
                     return self.currBindingEntity;                    
                 },
 
-                _extractBindingView: function(entity, withOriginalValues) {
+                _extractBindingView: function(entity, previousModifiedPropertiesHolder) {
                     var self = this;
                     var Entity = self.$.reflector.getEntityType();
                     var bindingView = new Entity();
@@ -142,21 +149,51 @@
                     bindingView["version"] = entity["version"];
 
                     entity.traverseProperties(function(propertyName) {
-                        bindingView[propertyName] = withOriginalValues ? self._getOriginalValue(entity, propertyName) : self._convert(entity.get(propertyName));
+                        if (entity.prop(propertyName).validationResult() !== null) {
+                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName];
+                        } else {
+                            bindingView[propertyName] = self._convert(entity.get(propertyName));
+                        }
                     });
 
-                    console.log("       entity + " + (withOriginalValues ? "original" : "") + "bindingView", entity, bindingView);
+                    console.log("       entity + bindingView", entity, bindingView);
+                    return bindingView;
+                },
+
+                _extractOriginalBindingView: function(entity) {
+                    var self = this;
+                    var Entity = self.$.reflector.getEntityType();
+                    var bindingView = new Entity();
+
+                    bindingView["_type"] = entity["_type"];
+                    bindingView["id"] = entity["id"];
+                    bindingView["version"] = entity["version"];
+
+                    entity.traverseProperties(function(propertyName) {
+                        bindingView[propertyName] = self._getOriginalValue(entity, propertyName);
+                    });
+
+                    console.log("       entity + originalBindingView", entity, bindingView);
                     return bindingView;
                 },
 
                 _convert: function(value) {
-                    if (value === null) {
+                    if (value === null) { // 'null' is the missing value representation for TG web editors
                         return null;
                     } else if (value instanceof this.$.reflector.getEntityType()) {
-                        return value.get("key"); // TODO complete implementation for composite keys and other aspects!!
-                    } else { // TODO these shoukd be the regular values!
+                        // TODO complete implementation for composite keys and other aspects!!
+                        return value.get("key"); 
+                    } else if (typeof value === "number") { // for number related value -- return the same value for editors
                         return value;
+                    } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
+                        return value;
+                    } else { 
+                        throw new this._getUnsupportedConversionExceptionType(value);
                     }
+                },
+
+                _getUnsupportedConversionExceptionType: function() {
+                    return UnsupportedConversionException;
                 },
 
                 _getOriginalValue: function(entity, propName) {

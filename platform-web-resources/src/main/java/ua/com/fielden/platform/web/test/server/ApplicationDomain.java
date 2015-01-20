@@ -6,8 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithInteger;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithMoney;
+import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 
 /**
@@ -28,8 +27,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
     static {
         entityTypes.addAll(PlatformDomainTypes.types);
         add(TgPerson.class);
-        add(TgPersistentEntityWithInteger.class);
-        add(TgPersistentEntityWithMoney.class);
+        add(TgPersistentEntityWithProperties.class);
     }
 
     @Override

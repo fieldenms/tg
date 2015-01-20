@@ -94,6 +94,8 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
             return mixin.getCompanionFinder().find(propertyType).findByKeyAndFetch(/*mixin.getFetchStrategy for [type; propertyName] (), */fetchAll(propertyType), reflectedValue);
         } else if (Integer.class.isAssignableFrom(propertyType)) {
             return reflectedValue;
+        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
+            return reflectedValue instanceof Integer ? new BigDecimal((Integer) reflectedValue) : new BigDecimal((Double) reflectedValue);
         } else if (Money.class.isAssignableFrom(propertyType)) {
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
 

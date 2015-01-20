@@ -5,9 +5,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import org.restlet.Context;
 import org.restlet.routing.Router;
 
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithInteger;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithIntegerProducer;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithMoney;
+import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.web.WebAppConfig;
 import ua.com.fielden.platform.web.application.AbstractWebApp;
@@ -60,12 +59,13 @@ public class WebApp extends AbstractWebApp {
 
         // Add entity masters.
         app.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, fetchOnly(EntityWithInteger.class).with("prop")));
-        app.addMaster(new EntityMaster<TgPersistentEntityWithInteger>(TgPersistentEntityWithInteger.class,
-                fetchOnly(TgPersistentEntityWithInteger.class)
-                        .with("prop")
-                        .with("entityProp", fetchOnly(TgPersistentEntityWithInteger.class).with("key")), TgPersistentEntityWithIntegerProducer.class)
+        app.addMaster(new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class,
+                fetchOnly(TgPersistentEntityWithProperties.class)
+                        .with("integerProp")
+                        .with("moneyProp")
+                        .with("bigDecimalProp")
+                        .with("entityProp", fetchOnly(TgPersistentEntityWithProperties.class).with("key")), TgPersistentEntityWithPropertiesProducer.class)
                 );
-        app.addMaster(new EntityMaster<TgPersistentEntityWithMoney>(TgPersistentEntityWithMoney.class, fetchOnly(TgPersistentEntityWithMoney.class).with("property")));
     }
 
     @Override

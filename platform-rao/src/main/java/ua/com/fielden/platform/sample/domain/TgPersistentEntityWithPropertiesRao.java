@@ -9,26 +9,26 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import ua.com.fielden.platform.sample.domain.mixin.TgPersistentEntityWithMoneyMixin;
+import ua.com.fielden.platform.sample.domain.mixin.TgPersistentEntityWithPropertiesMixin;
 import com.google.inject.Inject;
 
 /** 
- * RAO implementation for master object {@link ITgPersistentEntityWithMoney} based on a common with DAO mixin.
+ * RAO implementation for master object {@link ITgPersistentEntityWithProperties} based on a common with DAO mixin.
  * 
  * @author Developers
  *
  */
-@EntityType(TgPersistentEntityWithMoney.class)
-public class TgPersistentEntityWithMoneyRao extends CommonEntityRao<TgPersistentEntityWithMoney> implements ITgPersistentEntityWithMoney {
+@EntityType(TgPersistentEntityWithProperties.class)
+public class TgPersistentEntityWithPropertiesRao extends CommonEntityRao<TgPersistentEntityWithProperties> implements ITgPersistentEntityWithProperties {
 
     
-    private final TgPersistentEntityWithMoneyMixin mixin;
+    private final TgPersistentEntityWithPropertiesMixin mixin;
     
     @Inject
-    public TgPersistentEntityWithMoneyRao(final RestClientUtil restUtil) {
+    public TgPersistentEntityWithPropertiesRao(final RestClientUtil restUtil) {
         super(restUtil);
         
-        mixin = new TgPersistentEntityWithMoneyMixin(this);
+        mixin = new TgPersistentEntityWithPropertiesMixin(this);
     }
     
 }

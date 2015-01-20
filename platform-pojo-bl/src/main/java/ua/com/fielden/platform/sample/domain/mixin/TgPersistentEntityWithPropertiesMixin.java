@@ -7,20 +7,20 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithInteger;
-import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithInteger;
+import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 
 /** 
- * Mixin implementation for companion object {@link ITgPersistentEntityWithInteger}.
+ * Mixin implementation for companion object {@link ITgPersistentEntityWithProperties}.
  * 
  * @author Developers
  *
  */
-public class TgPersistentEntityWithIntegerMixin {
+public class TgPersistentEntityWithPropertiesMixin {
     
-    private final ITgPersistentEntityWithInteger companion;
+    private final ITgPersistentEntityWithProperties companion;
     
-    public TgPersistentEntityWithIntegerMixin(final ITgPersistentEntityWithInteger companion) {
+    public TgPersistentEntityWithPropertiesMixin(final ITgPersistentEntityWithProperties companion) {
         this.companion = companion;
     }
     

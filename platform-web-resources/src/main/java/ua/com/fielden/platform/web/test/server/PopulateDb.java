@@ -13,8 +13,7 @@ import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithInteger;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithMoney;
+import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
@@ -80,16 +79,19 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         // populate testing entities
-        final TgPersistentEntityWithInteger ent1 = save(new_(TgPersistentEntityWithInteger.class, "KEY1").setProp(43));
+        final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43));
         System.out.println("ent1.getId() == " + ent1.getId());
-        final TgPersistentEntityWithInteger ent2 = save(new_(TgPersistentEntityWithInteger.class, "KEY2").setProp(14));
+        final TgPersistentEntityWithProperties ent2 = save(new_(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14));
         System.out.println("ent2.getId() == " + ent2.getId());
-        final TgPersistentEntityWithInteger ent3 = save(new_(TgPersistentEntityWithInteger.class, "KEY3").setProp(15));
+        final TgPersistentEntityWithProperties ent3 = save(new_(TgPersistentEntityWithProperties.class, "KEY3").setIntegerProp(15));
         System.out.println("ent3.getId() == " + ent3.getId());
         save(ent2.setEntityProp(ent3));
 
-        final TgPersistentEntityWithMoney moneyEnt1 = save(new_(TgPersistentEntityWithMoney.class, "KEY1").setProperty(new Money(new BigDecimal(23.0))));
+        final TgPersistentEntityWithProperties moneyEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY4").setMoneyProp(new Money(new BigDecimal(23.0))));
         System.out.println("moneyEnt1.getId() == " + moneyEnt1.getId());
+
+        final TgPersistentEntityWithProperties bigDecimalEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)));
+        System.out.println("bigDecimalEnt1.getId() == " + bigDecimalEnt1.getId());
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

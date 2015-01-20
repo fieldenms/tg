@@ -12,30 +12,31 @@
 </head>
 
 <body unresolved>
-    <tg-entity-master id="master" user="SU" entitytype="ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger" entityid="null"></tg-entity-master>
+    <tg-entity-master id="master" user="SU" entitytype="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" entityid="null"></tg-entity-master>
 
     <script>
         document.addEventListener('polymer-ready', function() {
             var master = document.querySelector('#master');
-            var findProp = function(entity, propName) {
-                return entity.constructor.prototype.prop.call(entity, propName);
-                // return entity.prop(propName); -- this is problem for this test because the field name 'prop' equals to prototype function 'prop'
-            };
 
-            master.onRetrieved = function(entityResponse) {
-                console.log("entityResponse = ", entityResponse);
-
-                // assert.strictEqual(entityResponse.type(), entityRequest.type(), "The type of entity response is not correct.");                                
-                assert.strictEqual(entityResponse.type().fullClassName(), "ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger", "The type of entity response is not correct.");
-                assert.strictEqual(entityResponse.id, null, "The id of entity response is not correct.");
-                assert.strictEqual(entityResponse.version, 0, "The version of entity response is not correct.");
+            master.onRetrieved = function(entity, bindingEntity) {
+                assert.strictEqual(entity.type().fullClassName(), "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "The type of entity response is not correct.");
+                assert.strictEqual(entity.id, null, "The id of entity is not correct.");
+                assert.strictEqual(entity.version, 0, "The version of entity is not correct.");
 
                 // properties:
-                assert.strictEqual(typeof entityResponse.get("prop"), "object", "The entity response property is not correct.");                
-                assert.strictEqual(entityResponse.get("prop"), null, "The entity response property is not correct.");                
+                assert.strictEqual(typeof entity.get("integerProp"), "object", "The entity response property is not correct.");                
+                assert.strictEqual(entity.get("integerProp"), null, "The entity response property is not correct.");                
 
+
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
                 // try {
-                //     entityResponse.get("desc");
+                //     entity.get("desc");
                 //     assert.fail("", "", "The unfetched property for entity should throw an exception.");                    
                 // }
                 // catch (ex) {                   
@@ -46,7 +47,7 @@
                 // }
 
                 // try {
-                //     entityResponse.get("key");
+                //     entity.get("key");
                 //     assert.fail("", "", "The unfetched property for entity should throw an exception.");                    
                 // }
                 // catch (ex) {                   
@@ -57,12 +58,15 @@
                 // }
 
                 // instance meta-properties
-                assert.ok(findProp(entityResponse, "prop"), "The entity response instance prop should be initialised.");
-                assert.strictEqual(findProp(entityResponse, "prop").isChangedFromOriginal(), false, "The entity response instance prop should be not changedFromOriginal.");
-                assert.strictEqual(findProp(entityResponse, "prop").validationResult(), null, "The entity response instance prop should have empty validation result.");
-                assert.strictEqual(findProp(entityResponse, "prop").isRequired(), false, "The entity response instance prop should be not required.");
-                assert.strictEqual(findProp(entityResponse, "prop").isEditable(), true, "The entity response instance prop should be editable.");
-                assert.strictEqual(findProp(entityResponse, "prop").isVisible(), true, "The entity response instance prop should be visible.");
+                assert.strictEqual(entity.prop("integerProp").isChangedFromOriginal(), false, "The entity response instance prop should be not changedFromOriginal.");
+                assert.strictEqual(entity.prop("integerProp").validationResult(), null, "The entity response instance prop should have empty validation result.");
+                assert.strictEqual(entity.prop("integerProp").isRequired(), false, "The entity response instance prop should be not required.");
+                assert.strictEqual(entity.prop("integerProp").isEditable(), true, "The entity response instance prop should be editable.");
+                assert.strictEqual(entity.prop("integerProp").isVisible(), true, "The entity response instance prop should be visible.");
+
+                // binding value ok?
+                assert.strictEqual(typeof bindingEntity.get("integerProp"), "object", "Binding property should be initialised.");                
+                assert.strictEqual(bindingEntity.get("integerProp"), null, "Binding property should be string entity representation.");
 
                 done();
             };
