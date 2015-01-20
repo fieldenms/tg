@@ -181,7 +181,7 @@
                     if (value === null) { // 'null' is the missing value representation for TG web editors
                         return null;
                     } else if (value instanceof this.$.reflector.getEntityType()) {
-                        // TODO complete implementation for composite keys and other aspects!!
+                        // TODO complete implementation with appropriate composite entity cases etc.
                         return value.get("key"); 
                     } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
                         return value;

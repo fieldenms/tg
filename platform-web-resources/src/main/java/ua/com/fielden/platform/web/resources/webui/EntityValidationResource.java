@@ -85,15 +85,10 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
      */
     private Object convert(final Class<T> type, final String propertyName, final Object reflectedValue) {
         final Class propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
-        // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
-        // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
-        // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
-        // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
-        // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
-        // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
 
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
+            // TODO complete implementation with appropriate fetchStrategies and composite entity cases etc.
             return reflectedValue == null ? null : mixin.getCompanionFinder().find(propertyType).findByKeyAndFetch(/*mixin.getFetchStrategy for [type; propertyName] (), */fetchAll(propertyType), reflectedValue);
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue == null ? null : reflectedValue;
