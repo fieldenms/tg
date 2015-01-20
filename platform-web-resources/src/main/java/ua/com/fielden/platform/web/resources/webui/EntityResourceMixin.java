@@ -74,4 +74,8 @@ public class EntityResourceMixin<T extends AbstractEntity<?>> {
     public ICompanionObjectFinder getCompanionFinder() {
         return companionFinder;
     }
+
+    public fetch<T> getFetchStrategy() {
+        return fetchStrategy;
+    }
 }

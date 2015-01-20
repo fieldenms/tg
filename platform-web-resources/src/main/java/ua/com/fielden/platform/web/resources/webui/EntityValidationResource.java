@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Map;
@@ -89,12 +91,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
         // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
         // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
         if (EntityUtils.isEntityType(propertyType)) {
-            // TODO fetchModel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO fetchModel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO fetchModel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO fetchModel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO fetchModel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            return mixin.getCompanionFinder().find(propertyType).findByKey/*AndFetch*/(/*fetchModel, */reflectedValue);
+            return mixin.getCompanionFinder().find(propertyType).findByKeyAndFetch(/*mixin.getFetchStrategy for [type; propertyName] (), */fetchAll(propertyType), reflectedValue);
         } else if (Integer.class.isAssignableFrom(propertyType)) {
             return reflectedValue;
         } else if (Money.class.isAssignableFrom(propertyType)) {

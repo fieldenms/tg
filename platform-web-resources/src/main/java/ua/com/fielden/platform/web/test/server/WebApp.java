@@ -60,7 +60,11 @@ public class WebApp extends AbstractWebApp {
 
         // Add entity masters.
         app.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, fetchOnly(EntityWithInteger.class).with("prop")));
-        app.addMaster(new EntityMaster<TgPersistentEntityWithInteger>(TgPersistentEntityWithInteger.class, fetchOnly(TgPersistentEntityWithInteger.class).with("prop").with("entityProp"), TgPersistentEntityWithIntegerProducer.class));
+        app.addMaster(new EntityMaster<TgPersistentEntityWithInteger>(TgPersistentEntityWithInteger.class,
+                fetchOnly(TgPersistentEntityWithInteger.class)
+                        .with("prop")
+                        .with("entityProp", fetchOnly(TgPersistentEntityWithInteger.class).with("key")), TgPersistentEntityWithIntegerProducer.class)
+                );
         app.addMaster(new EntityMaster<TgPersistentEntityWithMoney>(TgPersistentEntityWithMoney.class, fetchOnly(TgPersistentEntityWithMoney.class).with("property")));
     }
 
