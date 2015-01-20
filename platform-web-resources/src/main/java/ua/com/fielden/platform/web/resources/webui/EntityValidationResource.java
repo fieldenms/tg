@@ -92,6 +92,8 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
         // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
         if (EntityUtils.isEntityType(propertyType)) {
             return mixin.getCompanionFinder().find(propertyType).findByKeyAndFetch(/*mixin.getFetchStrategy for [type; propertyName] (), */fetchAll(propertyType), reflectedValue);
+        } else if (EntityUtils.isString(propertyType)) {
+            return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
             return reflectedValue;
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {

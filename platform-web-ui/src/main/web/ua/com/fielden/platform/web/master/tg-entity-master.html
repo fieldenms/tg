@@ -187,8 +187,11 @@
                         return value;
                     } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
                         return value;
+                    } else if (typeof value === "string") { // for string value -- return the same value for editors
+                        return value;
                     } else { 
-                        throw new this._getUnsupportedConversionExceptionType(value);
+                        var UnsupportedConversionException = this._getUnsupportedConversionExceptionType();
+                        throw new UnsupportedConversionException(value);
                     }
                 },
 

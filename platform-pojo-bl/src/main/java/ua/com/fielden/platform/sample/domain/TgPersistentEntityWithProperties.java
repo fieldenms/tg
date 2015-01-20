@@ -45,6 +45,21 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "BigDecimal prop", desc = "BigDecimal prop")
     private BigDecimal bigDecimalProp;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "String prop", desc = "String prop")
+    private String stringProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setStringProp(final String stringProp) {
+        this.stringProp = stringProp;
+        return this;
+    }
+
+    public String getStringProp() {
+        return stringProp;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setBigDecimalProp(final BigDecimal bigDecimalProp) {
         this.bigDecimalProp = bigDecimalProp;
