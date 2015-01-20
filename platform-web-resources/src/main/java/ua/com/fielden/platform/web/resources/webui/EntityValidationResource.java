@@ -91,19 +91,24 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
         // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
         // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
         // TODO at this stage only Integer, Money and Entity properties are supported -- implement full support!
+
+        // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
-            return mixin.getCompanionFinder().find(propertyType).findByKeyAndFetch(/*mixin.getFetchStrategy for [type; propertyName] (), */fetchAll(propertyType), reflectedValue);
+            return reflectedValue == null ? null : mixin.getCompanionFinder().find(propertyType).findByKeyAndFetch(/*mixin.getFetchStrategy for [type; propertyName] (), */fetchAll(propertyType), reflectedValue);
         } else if (EntityUtils.isString(propertyType)) {
-            return reflectedValue;
+            return reflectedValue == null ? null : reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
-            return reflectedValue;
+            return reflectedValue == null ? null : reflectedValue;
         } else if (Boolean.class.isAssignableFrom(propertyType)) {
-            return reflectedValue;
+            return reflectedValue == null ? null : reflectedValue;
         } else if (Date.class.isAssignableFrom(propertyType)) {
-            return new Date(((Integer) reflectedValue).longValue());
+            return reflectedValue == null ? null : new Date(((Integer) reflectedValue).longValue());
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            return reflectedValue instanceof Integer ? new BigDecimal((Integer) reflectedValue) : new BigDecimal((Double) reflectedValue);
+            return reflectedValue == null ? null : (reflectedValue instanceof Integer ? new BigDecimal((Integer) reflectedValue) : new BigDecimal((Double) reflectedValue));
         } else if (Money.class.isAssignableFrom(propertyType)) {
+            if (reflectedValue == null) {
+                return null;
+            }
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
 
             final BigDecimal amount = map.get("amount") instanceof Integer ? new BigDecimal((Integer) map.get("amount")) : new BigDecimal((Double) map.get("amount"));
