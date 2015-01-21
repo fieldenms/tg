@@ -89,6 +89,23 @@
                 assert.ok(bindingEntity.get("producerInitProp"), "Binding property should be initialised.");                
                 assert.strictEqual(bindingEntity.get("producerInitProp"), "DEFAULT_KEY", "Binding property should be string entity representation.");
 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ///////////////////////////////// CHECK THE VALUES INITIALISED BY ENTITY CLASS DEFINITION: /////////////////////////
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // value ok?
+                assert.ok(entity.get("domainInitProp"), "The property should be initialised.");                
+                assert.strictEqual(entity.get("domainInitProp"), "ok", "The entity response property should be correct.");
+
+                // value is changed?
+                assert.strictEqual(entity.prop("domainInitProp").isChangedFromOriginal(), true, "Instance meta-prop should be not changedFromOriginal.");
+
+                // value validationresult?
+                assert.strictEqual(entity.prop("domainInitProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+                // binding value ok?
+                assert.ok(bindingEntity.get("domainInitProp"), "Binding property should be initialised.");                
+                assert.strictEqual(bindingEntity.get("domainInitProp"), "ok", "Binding property should be string entity representation.");
+
                 done();
             };
 

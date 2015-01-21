@@ -66,6 +66,21 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Producer initialised prop", desc = "Producer initialised prop")
     private TgPersistentEntityWithProperties producerInitProp;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Domain initialised prop", desc = "The property that was initialised directly inside Entity type definition Java class")
+    private String domainInitProp = "ok";
+
+    @Observable
+    public TgPersistentEntityWithProperties setDomainInitProp(final String domainInitProp) {
+        this.domainInitProp = domainInitProp;
+        return this;
+    }
+
+    public String getDomainInitProp() {
+        return domainInitProp;
+    }
+
     @Observable
     @EntityExists(TgPersistentEntityWithProperties.class)
     public TgPersistentEntityWithProperties setProducerInitProp(final TgPersistentEntityWithProperties producerInitProp) {
