@@ -53,7 +53,11 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
         final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope);
-        final T validationPrototype = initValidationPrototype(((Integer) modifiedPropertiesHolder.get(AbstractEntity.ID)).longValue());
+
+        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
+        final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
+
+        final T validationPrototype = initValidationPrototype(id);
         return restUtil.singleJSONRepresentation(apply(modifiedPropertiesHolder, validationPrototype));
     }
 
