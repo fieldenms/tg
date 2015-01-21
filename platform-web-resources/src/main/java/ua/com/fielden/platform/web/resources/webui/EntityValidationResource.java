@@ -65,17 +65,38 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
      * Applies the values from <code>dirtyPropertiesHolder</code> into the <code>entity</code>. The values needs to be converted from the client-side component-specific form into
      * the values, which can be set into Java entity's property.
      *
-     * @param dirtyPropertiesHolder
+     * @param modifiedPropertiesHolder
      * @param entity
      * @return
      */
-    private T apply(final Map<String, Object> dirtyPropertiesHolder, final T entity) {
-        for (final Map.Entry<String, Object> nameAndVal : dirtyPropertiesHolder.entrySet()) {
+    private T apply(final Map<String, Object> modifiedPropertiesHolder, final T entity) {
+        final Object arrivedVersionVal = modifiedPropertiesHolder.get(AbstractEntity.VERSION);
+        final Long version = ((Integer) arrivedVersionVal).longValue();
+        final boolean isStale = entity.getVersion() > version;
+
+        // iterate through modified properties:
+        for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
             final String name = nameAndVal.getKey();
-            if (!name.equals(AbstractEntity.ID)) {
-                entity.set(name, convert(mixin.getEntityType(), name, nameAndVal.getValue()));
+            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION)) {
+                final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
+                final Object val = valAndOrigVal.get("val");
+                final Object origVal = valAndOrigVal.get("origVal");
+                final Object newValue = convert(mixin.getEntityType(), name, val);
+                if (!isStale) {
+                    entity.set(name, newValue);
+                } else {
+                    final Object staleOriginalValue = convert(mixin.getEntityType(), name, origVal);
+                    final Object freshValue = entity.get(name);
+                    final boolean isConflicting = EntityUtils.isConflicting(newValue, staleOriginalValue, freshValue);
+                    if (!isConflicting) {
+                        entity.set(name, newValue);
+                    } else {
+                        // TODO mark the property with StalePropertyConflict validation result
+                    }
+                }
             }
         }
+        // TODO if you would like to mark other (not modified) 'stale' properties with some sort of Warning -- you need to get somewhere originalValues... Please, continue..
         return entity;
     }
 

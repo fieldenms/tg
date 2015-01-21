@@ -978,4 +978,21 @@ public class EntityUtils {
         return new Pair<>(TitlesDescsGetter.getTitleAndDesc(propName, entityType).getKey(), propName);
     }
 
+    /**
+     * Returns <code>true</code> if the new value for stale entity conflicts with fresh value for current version of entity, <code>false</code> otherwise.
+     *
+     * @param staleNewValue
+     *            -- new value for the property of stale entity
+     * @param staleOriginalValue
+     *            -- original value for the property of stale entity
+     * @param freshValue
+     *            -- fresh value for the property of current (fresh) version of entity
+     * @return
+     */
+    public static boolean isConflicting(final Object staleNewValue, final Object staleOriginalValue, final Object freshValue) {
+        return (freshValue == null && staleOriginalValue != null && staleNewValue != null) ||
+                (freshValue != null && staleOriginalValue == null && staleNewValue == null) ||
+                (freshValue != null && !freshValue.equals(staleOriginalValue) && !freshValue.equals(staleNewValue));
+    }
+
 }

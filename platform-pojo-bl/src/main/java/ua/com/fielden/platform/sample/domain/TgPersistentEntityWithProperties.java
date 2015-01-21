@@ -71,6 +71,21 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Domain initialised prop", desc = "The property that was initialised directly inside Entity type definition Java class")
     private String domainInitProp = "ok";
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Non-conflicting prop", desc = "Non-conflicting prop")
+    private String nonConflictingProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setNonConflictingProp(final String nonConflictingProp) {
+        this.nonConflictingProp = nonConflictingProp;
+        return this;
+    }
+
+    public String getNonConflictingProp() {
+        return nonConflictingProp;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setDomainInitProp(final String domainInitProp) {
         this.domainInitProp = domainInitProp;

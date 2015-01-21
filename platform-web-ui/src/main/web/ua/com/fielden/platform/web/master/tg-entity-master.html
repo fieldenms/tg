@@ -94,13 +94,14 @@
                     var modPropHolder = {};
                     if (bindingEntity !== null) {
                         modPropHolder["id"] = bindingEntity["id"];
+                        modPropHolder["version"] = bindingEntity["version"];
 
                         var self = this;
                         bindingEntity.traverseProperties(function(propertyName) {
                             var value = bindingEntity.get(propertyName);
                             var originalValue = originalBindingEntity.get(propertyName);
                             if (!self.$.reflector.equalsEx(value, originalValue)) {
-                                modPropHolder[propertyName] = value;
+                                modPropHolder[propertyName] = { "val" : value, "origVal" : originalValue };
                             }
                         });
                     }
@@ -150,7 +151,7 @@
 
                     entity.traverseProperties(function(propertyName) {
                         if (entity.prop(propertyName).validationResult() !== null) {
-                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName];
+                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
                         } else {
                             bindingView[propertyName] = self._convert(entity.get(propertyName));
                         }
