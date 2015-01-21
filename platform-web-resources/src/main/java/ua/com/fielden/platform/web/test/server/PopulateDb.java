@@ -104,6 +104,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(9999L).toDate()));
         System.out.println("dateEnt1.getId() == " + dateEnt1.getId());
 
+        final TgPersistentEntityWithProperties defaultEnt = save(new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
+                // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
+                // .setProducerInitProp(ent1)
+                .setIntegerProp(7).setMoneyProp(new Money(new BigDecimal(7))).setBigDecimalProp(new BigDecimal(7.7))
+                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()));
+        System.out.println("defaultEnt.getId() == " + defaultEnt.getId());
+
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
             final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")

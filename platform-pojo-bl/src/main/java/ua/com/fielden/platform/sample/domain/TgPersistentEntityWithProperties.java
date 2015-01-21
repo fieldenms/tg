@@ -61,6 +61,22 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Date prop", desc = "Date prop")
     private Date dateProp;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Producer initialised prop", desc = "Producer initialised prop")
+    private TgPersistentEntityWithProperties producerInitProp;
+
+    @Observable
+    @EntityExists(TgPersistentEntityWithProperties.class)
+    public TgPersistentEntityWithProperties setProducerInitProp(final TgPersistentEntityWithProperties producerInitProp) {
+        this.producerInitProp = producerInitProp;
+        return this;
+    }
+
+    public TgPersistentEntityWithProperties getProducerInitProp() {
+        return producerInitProp;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setDateProp(final Date dateProp) {
         this.dateProp = dateProp;

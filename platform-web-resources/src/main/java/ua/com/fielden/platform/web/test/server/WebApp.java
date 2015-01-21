@@ -67,7 +67,9 @@ public class WebApp extends AbstractWebApp {
                         .with("stringProp")
                         .with("booleanProp")
                         .with("dateProp")
-                        .with("entityProp", fetchOnly(TgPersistentEntityWithProperties.class).with("key")), TgPersistentEntityWithPropertiesProducer.class)
+                        .with("entityProp", fetchOnly(TgPersistentEntityWithProperties.class).with("key"))
+                        .with("producerInitProp", fetchOnly(TgPersistentEntityWithProperties.class).with("key")), //
+                TgPersistentEntityWithPropertiesProducer.class)
                 );
     }
 
