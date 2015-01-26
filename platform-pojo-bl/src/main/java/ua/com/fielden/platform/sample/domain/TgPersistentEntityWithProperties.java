@@ -76,6 +76,21 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Non-conflicting prop", desc = "Non-conflicting prop")
     private String nonConflictingProp;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Conflicting prop", desc = "Conflicting prop")
+    private String conflictingProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setConflictingProp(final String conflictingProp) {
+        this.conflictingProp = conflictingProp;
+        return this;
+    }
+
+    public String getConflictingProp() {
+        return conflictingProp;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setNonConflictingProp(final String nonConflictingProp) {
         this.nonConflictingProp = nonConflictingProp;

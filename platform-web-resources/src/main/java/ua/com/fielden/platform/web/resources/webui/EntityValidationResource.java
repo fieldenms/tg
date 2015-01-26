@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -72,31 +73,37 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     private T apply(final Map<String, Object> modifiedPropertiesHolder, final T entity) {
         final Object arrivedVersionVal = modifiedPropertiesHolder.get(AbstractEntity.VERSION);
         final Long version = ((Integer) arrivedVersionVal).longValue();
-        final boolean isStale = entity.getVersion() > version;
+        final boolean isEntityStale = entity.getVersion() > version;
 
         // iterate through modified properties:
         for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
             final String name = nameAndVal.getKey();
             if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION)) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
-                final Object val = valAndOrigVal.get("val");
-                final Object origVal = valAndOrigVal.get("origVal");
-                final Object newValue = convert(mixin.getEntityType(), name, val);
-                if (!isStale) {
-                    entity.set(name, newValue);
-                } else {
-                    final Object staleOriginalValue = convert(mixin.getEntityType(), name, origVal);
-                    final Object freshValue = entity.get(name);
-                    final boolean isConflicting = EntityUtils.isConflicting(newValue, staleOriginalValue, freshValue);
-                    if (!isConflicting) {
+                if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                    final Object newValue = convert(mixin.getEntityType(), name, valAndOrigVal.get("val"));
+                    if (!isEntityStale) {
                         entity.set(name, newValue);
                     } else {
-                        // TODO mark the property with StalePropertyConflict validation result
+                        final Object staleOriginalValue = convert(mixin.getEntityType(), name, valAndOrigVal.get("origVal"));
+                        if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
+                            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, "The property has been recently changed by other user. Please revert property value to resolve conflict."));
+                        } else {
+                            entity.set(name, newValue);
+                        }
+                    }
+                } else { // this is unmodified property
+                    if (!isEntityStale) {
+                        // do nothing
+                    } else {
+                        final Object originalValue = convert(mixin.getEntityType(), name, valAndOrigVal.get("origVal"));
+                        if (EntityUtils.isStale(originalValue, entity.get(name))) {
+                            entity.getProperty(name).setDomainValidationResult(Result.warning(entity, "The property has been recently changed by other user."));
+                        }
                     }
                 }
             }
         }
-        // TODO if you would like to mark other (not modified) 'stale' properties with some sort of Warning -- you need to get somewhere originalValues... Please, continue..
         return entity;
     }
 

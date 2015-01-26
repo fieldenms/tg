@@ -69,6 +69,7 @@ public class WebApp extends AbstractWebApp {
                         .with("dateProp")
                         .with("domainInitProp")
                         .with("nonConflictingProp")
+                        .with("conflictingProp")
                         .with("entityProp", fetchOnly(TgPersistentEntityWithProperties.class).with("key"))
                         .with("producerInitProp", fetchOnly(TgPersistentEntityWithProperties.class).with("key")), //
                 TgPersistentEntityWithPropertiesProducer.class)

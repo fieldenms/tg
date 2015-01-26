@@ -4,7 +4,7 @@
 <link rel="import" href="/resources/validation/tg-entity-validator.html">
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated" hidden>
+<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onPreRetrieved" hidden>
     <template>
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax> 
         <tg-reflector id="reflector"></tg-reflector>
@@ -61,10 +61,17 @@
                 },
 
                 /**
+                 * Default implementation for onPreRetrieved callback.
+                 */
+                onPreRetrieved: function(entity) {
+                    return entity;
+                },
+
+                /**
                  * Default implementation for onRetrieved callback.
                  */
                 onRetrievedDefault: function(e) {
-                    var entity = this.$.serialiser.deserialise(e.detail.response).instance;
+                    var entity = this.onPreRetrieved(this.$.serialiser.deserialise(e.detail.response).instance);
                     var newBindingEntity = this.onEntityReceived(entity, true);
                     // custom external action
                     this.onRetrieved(entity, newBindingEntity);
@@ -85,7 +92,8 @@
                  * Default implementation for onValidated callback.
                  */
                 onValidatedDefault: function(validatedEntity) {
-                    var newBindingEntity = this.onEntityReceived(validatedEntity, false);
+                    var wasStale = validatedEntity.version > this.currEntity.version;
+                    var newBindingEntity = this.onEntityReceived(validatedEntity, wasStale);
                     // custom external action
                     this.onValidated(validatedEntity, newBindingEntity);
                 },
@@ -102,6 +110,8 @@
                             var originalValue = originalBindingEntity.get(propertyName);
                             if (!self.$.reflector.equalsEx(value, originalValue)) {
                                 modPropHolder[propertyName] = { "val" : value, "origVal" : originalValue };
+                            } else {
+                                modPropHolder[propertyName] = { "origVal" : originalValue };
                             }
                         });
                     }
@@ -140,6 +150,10 @@
                     return self.currBindingEntity;                    
                 },
 
+                _isError: function(result) {
+                    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result";
+                },
+
                 _extractBindingView: function(entity, previousModifiedPropertiesHolder) {
                     var self = this;
                     var Entity = self.$.reflector.getEntityType();
@@ -150,7 +164,7 @@
                     bindingView["version"] = entity["version"];
 
                     entity.traverseProperties(function(propertyName) {
-                        if (entity.prop(propertyName).validationResult() !== null) {
+                        if (self._isError(entity.prop(propertyName).validationResult())) {
                             bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
                         } else {
                             bindingView[propertyName] = self._convert(entity.get(propertyName));

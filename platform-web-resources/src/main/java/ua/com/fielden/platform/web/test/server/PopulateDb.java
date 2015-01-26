@@ -111,8 +111,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()));
         System.out.println("defaultEnt.getId() == " + defaultEnt.getId());
 
-        final TgPersistentEntityWithProperties staleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY10").setNonConflictingProp("initial"));
+        final TgPersistentEntityWithProperties staleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY10").setConflictingProp("initial").setNonConflictingProp("initial"));
         System.out.println("staleEnt1.getId() == " + staleEnt1.getId());
+        System.out.println("staleEnt1.getVersion() == " + staleEnt1.getVersion());
+
+        final TgPersistentEntityWithProperties staleEnt1New = save(staleEnt1.setConflictingProp("persistently modified"));
+        System.out.println("staleEnt1New.getVersion() == " + staleEnt1New.getVersion());
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

@@ -423,12 +423,12 @@ public class EntityUtils {
                 if (start.after(finish)) {
                     throw new Result("", new Exception(finishSetter ? //
                     /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
-                            : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
+                    : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
                 }
             } else {
                 throw new Result("", new Exception(finishSetter ? //
                 /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                        : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
             }
         }
     }
@@ -451,12 +451,12 @@ public class EntityUtils {
                 if (start.isAfter(finish)) {
                     throw new Result("", new Exception(finishSetter ? //
                     /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
-                            : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
+                    : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
                 }
             } else {
                 throw new Result("", new Exception(finishSetter ? //
                 /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                        : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
             }
         }
     }
@@ -481,12 +481,12 @@ public class EntityUtils {
                 if (start.compareTo(finish) > 0) { //  after(finish)
                     throw new Result("", new Exception(finishSetter ? //
                     /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
-                            : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
                 }
             } else {
                 throw new Result("", new Exception(finishSetter ? //
                 /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                        : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
             }
         }
     }
@@ -508,12 +508,12 @@ public class EntityUtils {
                 if (start.compareTo(finish) > 0) { //  after(finish)
                     throw new Result("", new Exception(finishSetter ? //
                     /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
-                            : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
                 }
             } else {
                 throw new Result("", new Exception(finishSetter ? //
                 /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                        : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
             }
         }
     }
@@ -535,12 +535,12 @@ public class EntityUtils {
                 if (start.compareTo(finish) > 0) { //  after(finish)
                     throw new Result("", new Exception(finishSetter ? //
                     /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
-                            : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
                 }
             } else {
                 throw new Result("", new Exception(finishSetter ? //
                 /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                        : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
             }
         }
     }
@@ -644,6 +644,7 @@ public class EntityUtils {
             return false;
         }
     }
+
     /**
      * Indicates that given entity type is based on query model.
      *
@@ -979,6 +980,19 @@ public class EntityUtils {
     }
 
     /**
+     * Returns <code>true</code> if the original value is stale according to fresh value for current version of entity, <code>false</code> otherwise.
+     *
+     * @param originalValue
+     *            -- original value for the property of stale entity
+     * @param freshValue
+     *            -- fresh value for the property of current (fresh) version of entity
+     * @return
+     */
+    public static boolean isStale(final Object originalValue, final Object freshValue) {
+        return !EntityUtils.equalsEx(freshValue, originalValue);
+    }
+
+    /**
      * Returns <code>true</code> if the new value for stale entity conflicts with fresh value for current version of entity, <code>false</code> otherwise.
      *
      * @param staleNewValue
@@ -990,9 +1004,11 @@ public class EntityUtils {
      * @return
      */
     public static boolean isConflicting(final Object staleNewValue, final Object staleOriginalValue, final Object freshValue) {
-        return (freshValue == null && staleOriginalValue != null && staleNewValue != null) ||
-                (freshValue != null && staleOriginalValue == null && staleNewValue == null) ||
-                (freshValue != null && !freshValue.equals(staleOriginalValue) && !freshValue.equals(staleNewValue));
+        // old implementation:
+        //        return (freshValue == null && staleOriginalValue != null && staleNewValue != null) ||
+        //                (freshValue != null && staleOriginalValue == null && staleNewValue == null) ||
+        //                (freshValue != null && !freshValue.equals(staleOriginalValue) && !freshValue.equals(staleNewValue));
+        return isStale(staleOriginalValue, freshValue) && !EntityUtils.equalsEx(staleNewValue, freshValue);
     }
 
 }
