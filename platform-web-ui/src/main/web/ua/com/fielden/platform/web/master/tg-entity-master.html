@@ -83,6 +83,8 @@
                  */
                 validate: function() {
                     var self = this;
+                    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
+                    self.$.validator.abortValidationIfAny();
                     self.$.validator.validate(
                         self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity)
                     );

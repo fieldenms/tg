@@ -25,11 +25,18 @@
                  * @param modifiedPropertiesHolder -- the entity with modified properties
                  */
                 validate: function (modifiedPropertiesHolder) {
-                    console.log("validate: modifiedPropertiesHolder", modifiedPropertiesHolder);
+                    // console.log("validate: modifiedPropertiesHolder", modifiedPropertiesHolder);
                     var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
-                    console.log("validate: serialised modifiedPropertiesHolder", ser);
+                    // console.log("validate: serialised modifiedPropertiesHolder", ser);
                     this.$.ajaxSender.body = JSON.stringify(ser);
                     this.$.ajaxSender.go();
+                },
+
+                /**
+                 * Cancels any unfinished validation that was requested earlier (if any).
+                 */
+                abortValidationIfAny: function() {
+                    this.$.ajaxSender.abort();
                 }
             });
         })();
