@@ -65,7 +65,7 @@ public class DomContainer extends DomElement {
 
 
     @Override
-    public Object getAttr(final String name) {
+    public Attribute<?> getAttr(final String name) {
 	throw new UnsupportedOperationException("The Dom container can't have style attribute specified");
     }
 

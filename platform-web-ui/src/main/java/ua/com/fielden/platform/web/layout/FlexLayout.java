@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.web.layout;
 
-import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.component.AbstractWebComponent;
 import ua.com.fielden.platform.web.interfaces.ILayout;
-import ua.com.fielden.platform.web.interfaces.IRenderable;
 
 /**
  * The layout that is sensitive to device size. And provides ability to specify layout for each device and device orientation.
@@ -14,39 +16,7 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
  * @author TG Team
  *
  */
-public class DeviceSensitiveLayout implements IRenderable{
-
-    /**
-     * Represents the list of supported devices.
-     *
-     * @author TG Team
-     *
-     */
-    public enum Device {
-	DESKTOP,
-	TABLET,
-	PHONE,
-	PRINT;
-	@Override
-	public String toString() {
-	    return name().toLowerCase();
-	};
-    }
-
-    /**
-     * Represents the device orientation.
-     *
-     * @author TG Team
-     *
-     */
-    public enum Orientation {
-	LANDSCAPE,
-	PORTRAIT;
-	@Override
-	public String toString() {
-	    return name().toLowerCase();
-	};
-    }
+public class FlexLayout implements ILayout {
 
     /**
      * Helper interface, it just hides the device sensitive layout API. Introduced in order to provide chaining API.
@@ -55,13 +25,18 @@ public class DeviceSensitiveLayout implements IRenderable{
      *
      */
     public static interface ILayoutSetter {
-	DeviceSensitiveLayout set(ILayout layout);
+	FlexLayout set(final String layout);
     }
+
+    /**
+     * Components to layout.
+     */
+    private final List<AbstractWebComponent> components = new ArrayList<>();
 
     /**
      * Map of available layouts.
      */
-    private final Map<Map.Entry<Device, Orientation>, LayoutWrapper> layouts = new HashMap<>();
+    private final Map<Pair<Device, Orientation>, LayoutWrapper> layouts = new HashMap<>();
 
     /**
      * Specifies the device and orientation for which the specific layout must be set.
@@ -93,12 +68,12 @@ public class DeviceSensitiveLayout implements IRenderable{
      */
     private LayoutWrapper getLayout(final Device device, final Orientation orientation) {
 	if (device == null) {
-	    throw new NullPointerException("The device of devecie sensitive layout can not be null");
+	    throw new NullPointerException("The layout device can not be null");
 	}
-	LayoutWrapper layoutDefiner = layouts.get(new AbstractMap.SimpleEntry<>(device, orientation));
+	LayoutWrapper layoutDefiner = layouts.get(new Pair<>(device, orientation));
 	if (layoutDefiner == null) {
 	    layoutDefiner = new LayoutWrapper();
-	    layouts.put(new AbstractMap.SimpleEntry<>(device, orientation), layoutDefiner);
+	    layouts.put(new Pair<>(device, orientation), layoutDefiner);
 	}
 	return layoutDefiner;
     }
@@ -109,19 +84,33 @@ public class DeviceSensitiveLayout implements IRenderable{
      * @author TG Team
      *
      */
-    private class LayoutWrapper implements ILayoutSetter{
-	public ILayout layout;
+    private class LayoutWrapper implements ILayoutSetter {
+	public String layout;
 
 	@Override
-	public DeviceSensitiveLayout set(final ILayout layout) {
+	public FlexLayout set(final String layout) {
 	    this.layout = layout;
-	    return DeviceSensitiveLayout.this;
+	    return FlexLayout.this;
 	}
     }
 
     @Override
     public DomElement render() {
-	//TODO implement this.
-	return null;
+	final DomElement flexElement = new DomElement("tg-flex-layout");
+	for (final Pair<Device, Orientation> layout : layouts.keySet()) {
+	    if (layout.getValue() == null) {
+		flexElement.attr("when" + layout.getKey().toString(), layouts.get(layout).layout);
+	    }
+	}
+	for (final AbstractWebComponent component : components) {
+	    flexElement.add(component.render());
+	}
+	return flexElement;
+    }
+
+    @Override
+    public ILayout add(final AbstractWebComponent component) {
+	this.components.add(component);
+	return this;
     }
 }

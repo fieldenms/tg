@@ -99,6 +99,8 @@ public class FileResource extends ServerResource {
             return MediaType.TEXT_HTML;
         case "css":
             return MediaType.TEXT_CSS;
+        case "svg":
+            return MediaType.IMAGE_SVG;
         default:
             return MediaType.ALL;
         }

@@ -92,6 +92,15 @@ public class DomElement {
     }
 
     /**
+     * Returns the number of children in this dom element.
+     *
+     * @return
+     */
+    public int childCount() {
+	return children.size();
+    }
+
+    /**
      * Returns the parent {@link DomElement} element.
      *
      * @return
@@ -241,8 +250,8 @@ public class DomElement {
      * @param name - the attribute name for which the appropriate attribute value must be returned.
      * @return
      */
-    public Object getAttr(final String name) {
-	return attrs.containsKey(name) ? attrs.get(name) : "";
+    public Attribute<?> getAttr(final String name) {
+	return attrs.containsKey(name) ? attrs.get(name) : null;
     }
 
     /**
