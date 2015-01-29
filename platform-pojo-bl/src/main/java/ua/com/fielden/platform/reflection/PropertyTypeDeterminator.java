@@ -261,6 +261,16 @@ public class PropertyTypeDeterminator {
         return new Pair<String, String>(penultPart, lastPart);
     }
 
+    public static Pair<String, String> firstAndRest(final String dotNotationExp) {
+        if (!isDotNotation(dotNotationExp)) {
+            throw new IllegalArgumentException("Should be dot-notation.");
+        }
+        final int indexOfFirstDot = dotNotationExp.indexOf(PROPERTY_SPLITTER);
+        final String firstPart = dotNotationExp.substring(0, indexOfFirstDot);
+        final String restPart = dotNotationExp.substring(indexOfFirstDot + 1);
+        return new Pair<String, String>(firstPart, restPart);
+    }
+
     /**
      * Transforms "type/dotNotationExp" pair into form of "penultPropertyType/lastPropertyName".
      *

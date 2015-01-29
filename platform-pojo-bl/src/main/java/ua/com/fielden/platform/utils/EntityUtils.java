@@ -28,6 +28,8 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.fetch.EntityFetchStrategy;
+import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -1011,4 +1013,13 @@ public class EntityUtils {
         return isStale(staleOriginalValue, freshValue) && !EntityUtils.equalsEx(staleNewValue, freshValue);
     }
 
+    /**
+     * Creates empty {@link IEntityFetchStrategy} for concrete <code>entityType</code>.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IEntityFetchStrategy<T> efs(final Class<T> entityType) {
+        return new EntityFetchStrategy<T>(entityType);
+    }
 }
