@@ -1020,6 +1020,6 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> IEntityFetchStrategy<T> efs(final Class<T> entityType) {
-        return new EntityFetchStrategy<T>(entityType);
+        return EntityFetchStrategy.createDefaultStrategy(entityType);
     }
 }
