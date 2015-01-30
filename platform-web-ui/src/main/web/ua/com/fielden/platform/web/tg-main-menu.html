@@ -15,152 +15,178 @@
                 color: white;
                 font-size: 18px;
                 font-weight: bold;
-                background-color: white;
+                background-color: black;
                 box-sizing: border-box;
+                background-repeat: no-repeat;
+                background-position: top left;
             }
             .return {
-                background-color: #12bdd3;
+                background-image: url("/resources/images/Return-background.svg");
+                /*background-color: #12bdd3;*/
                 /*color: #f3f3f3;*/
             }
-            .login-logout{
-                background-color: #4dd0e1;
-                /*color: #f0f0f0;*/
+            .login {
+                background-image: url("/resources/images/Login-background.svg");
             }
-            .help-about {
+            .logout {
+                background-image: url("/resources/images/Logout-background.svg");
+            }
+            /*.login-logout{
+                background-color: #4dd0e1;
+                color: #f0f0f0;
+            }*/
+            /*.help-about {
                 background-color: #6edfec;
-                /*color: #777777;*/
+                color: #777777;
+            }*/
+            .help {
+                background-image: url("/resources/images/Help-background.svg");
+            }
+            .about {
+                background-image: url("/resources/images/About-background.svg");
             }
             .analysis {
-                background-color: #00a7bb;
+                background-image: url("/resources/images/Analysis-background.svg");
+                /*background-color: #00a7bb;*/
                 /*color: #f9f9f9;*/
             }
             .reports {
-                background-color: #008a9e;
+                background-image: url("/resources/images/Reports-background.svg");
+                /*background-color: #008a9e;*/
                 /*color: #fafafa;*/
             }
             .documents-drawings {
-                background-color: #047b94;
-               /* color: #ffffff;*/
+                background-image: url("/resources/images/DocDraw-background.svg");
+                /*background-color: #047b94;*/
+                /*color: #ffffff;*/
             }
             .table-codes {
-                background-color: #12bdd3;
+                background-image: url("/resources/images/TableCodes-background.svg");
+                /*background-color: #12bdd3;*/
                 /*color: #f0f0f0;*/
             }
             .stores-purchasing {
-                background-color: #00a7bb;
+                background-image: url("/resources/images/Store-background.svg");
+                /*background-color: #00a7bb;*/
                 /*color: #f3f3f3;*/
             }
             .pm {
-                background-color: #008a9e;
-               /* color: #f9f9f9;*/
+                background-image: url("/resources/images/PM-background.svg");
+                /*background-color: #008a9e;*/
+                /*color: #f9f9f9;*/
             }
             .work-activities {
-                background-color: #4dd0e1;
+                background-image: url("/resources/images/WorkActivities-background.svg");
+                /*background-color: #4dd0e1;*/
                 /*color: #f0f0f0;*/
             }
             .equipment {
-                background-color: #12bdd3;
+                background-image: url("/resources/images/Equipment-background.svg");
+                /*background-color: #12bdd3;*/
                 /*color: #f3f3f3;*/
             }
             .system-service {
-                background-color: #00a7bb;
+                background-image: url("/resources/images/SystemService-background.svg");
+                /*background-color: #00a7bb;*/
                 /*color: #f6f6f6;*/
             }
             .svg-normal {
-                margin-bottom: 8px;
-                width: 172px;
-                height: 152px;
+                width: 232px;
+                height: 232px;
             }
             .svg-small {
-                margin-bottom: 8px;
-                width: 140px;
-                height: 50px;
+                width: 232px;
+                height: 82px;
+            }
+            pre {
+                margin: 8px 0px;
+                font-family: inherit;
             }
         </style>
         <tile-layout whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}" mincellheight="130px" mincellwidth="120px">
             <div class="tile">
-                <paper-shadow z="1" class="category system-service" id="sysservice" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category system-service" id="sysservice" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/SystemService.svg"></core-icon>
-                    System/Service
+                    <pre>System/Service</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category equipment" id="equipment" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category equipment" id="equipment" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/Equipment.svg"></core-icon>
-                    Equipment
+                    <pre>Equipment</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category work-activities" id="workactivities" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category work-activities" id="workactivities" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/WorkActivities.svg"></core-icon>
-                    Work Activities
+                    <pre>Work Activities</pre>
                 </paper-shadow>
             </div>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category help-about" id="help" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category help" id="help" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-small" src="/resources/images/Help.svg"></core-icon>
-                    Help
+                    <pre>Help</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category help-about" id="about" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category about" id="about" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-small" src="/resources/images/About.svg"></core-icon>
-                    About
+                    <pre>About</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category pm" id="pm" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category pm" id="pm" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/PM.svg"></core-icon>
-                    Preventive Maintenance
+                    <pre>Preventive Maintenance</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category stores-purchasing" id="storepurch" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category stores-purchasing" id="storepurch" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/Store.svg"></core-icon>
-                    Stores/Purchasing
+                    <pre>Stores/Purchasing</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category table-codes" id="tablecodes" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category table-codes" id="tablecodes" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/TableCodes.svg"></core-icon>
-                    Table Codes
+                    <pre>Table Codes</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category login-logout" id="logout" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category logout" id="logout" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-small" src="/resources/images/Logout.svg"></core-icon>
-                    Logout
+                    <pre>Logout</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category login-logout" id="logagain" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category login" id="logagain" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-small" src="/resources/images/Login.svg"></core-icon>
-                    Login
+                    <pre>Login</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category documents-drawings" id="docdrawings" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category documents-drawings" id="docdrawings" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/DocDraw.svg"></core-icon>
-                    Documents/Drawings
+                    <pre>Documents/Drawings</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category reports" id="reports" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category reports" id="reports" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/Reports.svg"></core-icon>
-                    Reports
+                    <pre>Reports</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category analysis" id="analysis" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category analysis" id="analysis" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/Analysis.svg"></core-icon>
-                    Analysis
+                    <pre>Analysis</pre>
                 </paper-shadow>
             </div>
             <div class="tile">
-                <paper-shadow z="1" class="category return" id="return" on-tap="{{onMenuTap}}" layout vertical center-justified center fit>
+                <paper-shadow z="1" class="category return" id="return" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
                     <core-icon class="svg-normal" src="/resources/images/Return.svg"></core-icon>
-                    Return
+                    <pre>Return</pre>
                 </paper-shadow>
             </div>
         </tile-layout>
