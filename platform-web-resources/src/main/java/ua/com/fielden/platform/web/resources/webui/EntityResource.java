@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -14,6 +17,7 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -54,19 +58,37 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         return restUtil.singleJSONRepresentation(mixin.createEntityForRetrieval(entityId));
     }
 
-    //    /**
-    //     * Handles POST request resulting from RAO call to method save.
-    //     */
-    //    @Post
-    //    @Override
-    //    public Representation post(final Representation envelope) throws ResourceException {
-    //        final T restoredEntity = restoreEntityFrom(envelope); // final Class<?> entityType = restoredEntity.getType();
-    //        final T validationPrototype = initValidationPrototype(restoredEntity.getId());
-    //        if (isRequestEntity(restoredEntity)) {
-    //            return restUtil.singleJSONRepresentation(validationPrototype);
-    //        } else {
-    //            return restUtil.singleJSONRepresentation(apply(restoredEntity, validationPrototype));
-    //        }
-    //    }
+    /**
+     * Handles POST request resulting from RAO call to method save.
+     */
+    @Post
+    @Override
+    public Representation post(final Representation envelope) throws ResourceException {
+        final Map<String, Object> modifiedPropertiesHolder = mixin.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+
+        final T validationPrototype = mixin.createEntityForRetrieval(this.entityId);
+        final T potentiallySaved = save(mixin.apply(modifiedPropertiesHolder, validationPrototype));
+        return restUtil.singleJSONRepresentation(potentiallySaved);
+    }
+
+    /**
+     * Checks the entity on validation errors and saves it if validation was successful, returns it "as is" if validation was not successful.
+     *
+     * @param validatedEntity
+     * @return
+     */
+    private T save(final T validatedEntity) {
+        try {
+            final Result validationResult = validatedEntity.isValid();
+            if (validationResult.isSuccessful()) {
+                return mixin.save(validatedEntity);
+            } else {
+                return validatedEntity;
+            }
+        } catch (final Exception ex) {
+            logger.error("An undesirable error has occured during saving of already successfully validated entity.", ex);
+            throw new IllegalStateException(ex);
+        }
+    }
 
 }

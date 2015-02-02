@@ -4,9 +4,11 @@
 <link rel="import" href="/resources/validation/tg-entity-validator.html">
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onPreRetrieved" hidden>
+<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved" hidden>
     <template>
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax> 
+        <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax> 
+
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
@@ -49,6 +51,11 @@
 
                     self.$.ajaxRetriever.addEventListener('core-response', function(e) {
                         self.onRetrievedDefault(e);
+                    });
+
+                    self.$.ajaxSaver.addEventListener('core-response', function(e) {
+                        var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
+                        self._onSavedDefault(potentiallySavedEntity);
                     });
                 },
 
@@ -123,9 +130,48 @@
                 },
 
                 //////////////////////////////////////// SAVING ////////////////////////////////////////
-                // save: function() {
-                //     save the current entity; get saved one => promote it as currEntity and update entityid with new one              
-                // }
+                /**
+                 * Starts the process of entity saving (based on currBindingEntity).
+                 */
+                save: function() {
+                    var self = this;
+                    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
+                    self.$.validator.abortValidationIfAny();
+                    // TODO what if there is already a request for saving started? self.abortSavingIfAny();
+                    self._abortSavingIfAny();
+                    self._saveModifiedProperties(
+                        self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity)
+                    );
+                },
+                /**
+                 * Starts the process of entity saving.
+                 *
+                 * @param modifiedPropertiesHolder -- the entity with modified properties
+                 */
+                _saveModifiedProperties: function (modifiedPropertiesHolder) {
+                    // console.log("save: modifiedPropertiesHolder", modifiedPropertiesHolder);
+                    var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
+                    // console.log("save: serialised modifiedPropertiesHolder", ser);
+                    this.$.ajaxSaver.body = JSON.stringify(ser);
+                    this.$.ajaxSaver.go();
+                },
+
+                /**
+                 * Cancels any unfinished saving that was requested earlier (if any).
+                 */
+                _abortSavingIfAny: function() {
+                    this.$.ajaxSaver.abort();
+                },
+
+                /**
+                 * Default implementation for onSaved callback.
+                 */
+                _onSavedDefault: function(potentiallySavedEntity) {
+                    var wasStale = potentiallySavedEntity.version > this.currEntity.version;
+                    var newBindingEntity = this.onEntityReceived(potentiallySavedEntity, wasStale);
+                    // custom external action
+                    this.onSaved(potentiallySavedEntity, newBindingEntity);
+                },
 
                 //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
                 /**

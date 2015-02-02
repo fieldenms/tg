@@ -45,6 +45,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     @Override
     public IEntityFetchStrategy<TgPersistentEntityWithProperties> createFetchStrategy() {
         return super.createFetchStrategy()
+                .with("key") // this property is "required" (necessary during saving) -- should be declared as fetching property
                 .with("integerProp", "moneyProp", "bigDecimalProp", "stringProp", "booleanProp", "dateProp")
                 .with("domainInitProp", "nonConflictingProp", "conflictingProp")
                 // .with("entityProp", efs(TgPersistentEntityWithProperties.class).with("key"))
