@@ -14,7 +14,6 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -35,10 +34,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     private final Long entityId;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public EntityResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final fetch<T> fetchStrategy, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
+    public EntityResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
-        mixin = new EntityResourceMixin<T>(entityType, entityProducer, fetchStrategy, entityFactory, restUtil, companionFinder);
+        mixin = new EntityResourceMixin<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
         this.restUtil = restUtil;
 
         final String entityIdString = request.getAttributes().get("entity-id").toString();

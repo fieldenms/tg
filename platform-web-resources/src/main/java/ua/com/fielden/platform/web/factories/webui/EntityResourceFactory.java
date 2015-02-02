@@ -13,7 +13,6 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -67,7 +66,7 @@ public class EntityResourceFactory extends Restlet {
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
             final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
 
-            final EntityResource<AbstractEntity<?>> resource = new EntityResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(injector), (fetch<AbstractEntity<?>>) master.getFetchStrategy(), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
+            final EntityResource<AbstractEntity<?>> resource = new EntityResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(injector), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
             resource.handle();
         }
 

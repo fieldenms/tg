@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.web.master;
 
+import ua.com.fielden.platform.dao.DefaultEntityProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
 
 import com.google.inject.Injector;
 
@@ -16,40 +15,34 @@ import com.google.inject.Injector;
  */
 public class EntityMaster<T extends AbstractEntity<?>> {
     private final Class<T> entityType;
-    private final fetch<T> fetchStrategy;
     private final Class<? extends IEntityProducer<T>> entityProducerType;
 
     /**
-     * Creates master for the specified <code>entityType</code>, <code>fetchStrategy</code> and <code>entityProducerType</code>.
+     * Creates master for the specified <code>entityType</code> and <code>entityProducerType</code>.
      *
      * @param entityType
      * @param fetchStrategy
      * @param entityProducerType
      *
      */
-    public EntityMaster(final Class<T> entityType, final fetch<T> fetchStrategy, final Class<? extends IEntityProducer<T>> entityProducerType) {
+    public EntityMaster(final Class<T> entityType, final Class<? extends IEntityProducer<T>> entityProducerType) {
         this.entityType = entityType;
-        this.fetchStrategy = fetchStrategy;
         this.entityProducerType = entityProducerType;
     }
 
     /**
-     * Creates master for the specified <code>entityType</code>, <code>fetchStrategy</code> and default entity producer.
+     * Creates master for the specified <code>entityType</code> and default entity producer.
      *
      * @param entityType
      * @param fetchStrategy
      *
      */
-    public EntityMaster(final Class<T> entityType, final fetch<T> fetchStrategy) {
-        this(entityType, fetchStrategy, null);
+    public EntityMaster(final Class<T> entityType) {
+        this(entityType, null);
     }
 
     public Class<T> getEntityType() {
         return entityType;
-    }
-
-    public fetch<T> getFetchStrategy() {
-        return fetchStrategy;
     }
 
     /**

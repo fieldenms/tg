@@ -6,6 +6,8 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.fetch.EntityFetchStrategy;
+import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -114,20 +116,19 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      */
     T findByEntityAndFetch(final fetch<T> fetchModel, final T entity);
 
-
     /**
      * Load entity by id in lazy mode -- all its entity properties will be proxied in LAZY mode.
      * <p>
-     * PLEASE REFRAIN YOURSELF AND OTHERS FROM USING THIS METHOD!!! 
+     * PLEASE REFRAIN YOURSELF AND OTHERS FROM USING THIS METHOD!!!
      * </p>
-     * 
+     *
      * @param id
      * @return
      */
     default T lazyLoad(final Long id) {
         throw new org.apache.commons.lang.NotImplementedException("Should be overridden by subclasses");
     }
-    
+
     /**
      * Should return a reference to the first page of the specified size containing entity instances.
      *
@@ -165,7 +166,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     default IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
-	throw new UnsupportedOperationException("Not supported.");
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     /**
@@ -292,4 +293,16 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      */
     byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
 
+    /**
+     * Returns default {@link EntityFetchStrategy} for the entity.
+     * <p>
+     * This entity fetch strategy represents the 'aggregated' variant of all fetch strategies needed mainly for entity master actions (and potentially others): <br>
+     * <br>
+     * 1. visual representation of entity properties in entity master UI <br>
+     * 2. validation / modification processes with BCE / ACE / conversions handling <br>
+     * 3. autocompletion of entity-typed properties
+     *
+     * @return
+     */
+    IEntityFetchStrategy<T> getFetchStrategy();
 }

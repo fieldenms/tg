@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-
 import org.restlet.Context;
 import org.restlet.routing.Router;
 
@@ -58,21 +56,8 @@ public class WebApp extends AbstractWebApp {
         //        app.addCustomView(new CustomWebView(new CustomWebModel()));
 
         // Add entity masters.
-        app.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, fetchOnly(EntityWithInteger.class).with("prop")));
-        app.addMaster(new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class,
-                fetchOnly(TgPersistentEntityWithProperties.class)
-                        .with("integerProp")
-                        .with("moneyProp")
-                        .with("bigDecimalProp")
-                        .with("stringProp")
-                        .with("booleanProp")
-                        .with("dateProp")
-                        .with("domainInitProp")
-                        .with("nonConflictingProp")
-                        .with("conflictingProp")
-                        .with("entityProp", fetchOnly(TgPersistentEntityWithProperties.class).with("key"))
-                        .with("producerInitProp", fetchOnly(TgPersistentEntityWithProperties.class).with("key")), //
-                TgPersistentEntityWithPropertiesProducer.class)
+        app.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class)); // efs(EntityWithInteger.class).with("prop")
+        app.addMaster(new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class)
                 );
     }
 

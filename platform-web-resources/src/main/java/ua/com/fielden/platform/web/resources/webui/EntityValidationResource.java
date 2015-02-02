@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
@@ -16,6 +14,7 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -40,10 +39,10 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     private final RestServerUtil restUtil;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public EntityValidationResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final fetch<T> fetchStrategy, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
+    public EntityValidationResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
-        mixin = new EntityResourceMixin<T>(entityType, entityProducer, fetchStrategy, entityFactory, restUtil, companionFinder);
+        mixin = new EntityResourceMixin<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
         this.restUtil = restUtil;
     }
 
@@ -120,8 +119,13 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
 
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
-            // TODO complete implementation with appropriate fetchStrategies and composite entity cases etc.
-            return reflectedValue == null ? null : mixin.getCompanionFinder().find(propertyType).findByKeyAndFetch(/*mixin.getFetchStrategy for [type; propertyName] (), */fetchAll(propertyType), reflectedValue);
+            if (reflectedValue == null) {
+                return null;
+            }
+            final IEntityDao propertyCompanion = mixin.getCompanionFinder().find(propertyType);
+            final fetch<AbstractEntity<?>> fetchModel = mixin.getFetchStrategy().strategyFor(propertyName).fetchModel();
+            // TODO complete implementation with appropriate composite entity cases etc.
+            return propertyCompanion.findByKeyAndFetch(fetchModel, reflectedValue);
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue == null ? null : reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
