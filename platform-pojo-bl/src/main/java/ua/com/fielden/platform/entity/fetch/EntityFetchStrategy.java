@@ -25,6 +25,19 @@ public class EntityFetchStrategy<T extends AbstractEntity<?>> implements IEntity
     private fetch<T> fetchModel;
 
     /**
+     * A factory method to create a default entity fetch strategy for entity-typed property.
+     *
+     * @param entityType
+     *            -- the type of the property
+     *
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> EntityFetchStrategy<T> createDefaultStrategy(final Class<T> entityType) {
+        // TODO continue implementation -- version and id? fetchOnly analog
+        return new EntityFetchStrategy<T>(entityType);
+    }
+
+    /**
      * Constructs empty {@link EntityFetchStrategy}.
      *
      * @param entityType
@@ -235,19 +248,6 @@ public class EntityFetchStrategy<T extends AbstractEntity<?>> implements IEntity
             }
         }
         return this;
-    }
-
-    /**
-     * Creates default entity fetch strategy for entity-typed property.
-     *
-     * @param entityType
-     *            -- the type of the property
-     *
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> EntityFetchStrategy<T> createDefaultStrategy(final Class<T> entityType) {
-        // TODO continue implementation -- version and id? fetchOnly analog
-        return new EntityFetchStrategy<T>(entityType);
     }
 
     private LinkedHashMap<String, EntityFetchStrategy<AbstractEntity<?>>> propertyStrategies() {
