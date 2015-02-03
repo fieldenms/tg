@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.component;
 import java.util.List;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.dom.TextElement;
+import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.web.action.AbstractWebAction;
 
 /**
@@ -19,12 +19,12 @@ public class WebButton extends AbstractWebComponent {
     private boolean raised = false;
 
     public WebButton(final AbstractWebAction<?> action) {
-	this.action = action;
+        this.action = action;
     }
 
     public WebButton setRaised(final boolean raised) {
-	this.raised = raised;
-	return this;
+        this.raised = raised;
+        return this;
     }
 
     @Override
@@ -36,11 +36,11 @@ public class WebButton extends AbstractWebComponent {
 
     @Override
     public DomElement render() {
-	final DomElement button = new DomElement("paper-button");
-	if (raised) {
-	    button.attr("raised", null);
-	}
-	return button.attr("on-click", "{{onAction_" + action.hashCode() + "}}").add(new TextElement(action.getCaption()));
+        final DomElement button = new DomElement("paper-button");
+        if (raised) {
+            button.attr("raised", null);
+        }
+        return button.attr("on-click", "{{onAction_" + action.hashCode() + "}}").add(new InnerTextElement(action.getCaption()));
     }
 
 }

@@ -19,20 +19,20 @@ public class WebPanel extends AbstractWebComponent {
 
     @Override
     public DomElement render() {
-	return new DomContainer().add(renderChildren());
+        return new DomContainer().add(renderChildren());
     }
 
     public WebPanel add(final AbstractWebComponent... components) {
-	this.components.addAll(Arrays.asList(components));
-	return this;
+        this.components.addAll(Arrays.asList(components));
+        return this;
     }
 
     private DomElement[] renderChildren() {
-	final List<DomElement> children = new ArrayList<>();
-	for(final AbstractWebComponent component : components) {
-	    children.add(component.render());
-	}
-	return children.toArray(new DomElement[0]);
+        final List<DomElement> children = new ArrayList<>();
+        for (final AbstractWebComponent component : components) {
+            children.add(component.render());
+        }
+        return children.toArray(new DomElement[0]);
     }
 
 }

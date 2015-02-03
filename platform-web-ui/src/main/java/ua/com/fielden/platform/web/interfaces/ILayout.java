@@ -17,6 +17,7 @@ public interface ILayout extends IRenderable {
      *
      * @author TG Team
      *
+     *            - a component to be added to layout manager.
      */
     public enum Device {
         DESKTOP,
@@ -49,6 +50,8 @@ public interface ILayout extends IRenderable {
      *
      * @param component
      *            - a component to be added to layout manager.
+     * @param constraints
+     *            - additional layout configuration parameters for the component.
      * @return
      */
     ILayout add(AbstractWebComponent component);

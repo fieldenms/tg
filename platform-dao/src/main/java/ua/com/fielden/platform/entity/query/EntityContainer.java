@@ -3,10 +3,13 @@ package ua.com.fielden.platform.entity.query;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -61,6 +64,9 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     public R instantiate(final EntityFactory entFactory, final boolean userViewOnly, final ProxyMode proxyMode) {
         entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
         entity.beginInitialising();
+        
+        final List<String> proxiedProps = new ArrayList<>(); 
+        
         final boolean unionEntity = isUnionEntityType(resultType);
 
         for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {
@@ -73,6 +79,9 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
         for (final Map.Entry<String, EntityContainer<? extends AbstractEntity<?>>> entityEntry : entities.entrySet()) {
             final Object propValue = determinePropValue(entity, entityEntry.getKey(), entityEntry.getValue(), entFactory, userViewOnly, proxyMode);
+            if (propValue != null && ProxyFactory.isProxyClass(propValue.getClass())) {
+                proxiedProps.add(entityEntry.getKey());
+            }
             setPropertyValue(entity, entityEntry.getKey(), propValue);
             if (unionEntity && propValue != null /*&& userViewOnly*/) {
                 ((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
@@ -84,7 +93,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         }
 
         if (!userViewOnly) {
-            EntityUtils.handleMetaProperties(entity);
+            EntityUtils.handleMetaProperties(entity, proxiedProps.toArray(new String[]{}));
         }
 
         entity.endInitialising();

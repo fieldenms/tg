@@ -14,7 +14,7 @@ public class ClassAttribute extends CollectionalAttribute<String> {
      * Creates new instance of class attribute.
      */
     public ClassAttribute() {
-	super("class", new ArrayList<String>(), true, "=", " ");
+        super("class", new ArrayList<String>(), true, "=", " ");
     }
 
     /**
@@ -22,7 +22,7 @@ public class ClassAttribute extends CollectionalAttribute<String> {
      */
     @Override
     public ClassAttribute addValue(final String attrValue) {
-        return (ClassAttribute)super.addValue(attrValue);
+        return (ClassAttribute) super.addValue(attrValue);
     }
 
     /**
@@ -30,7 +30,7 @@ public class ClassAttribute extends CollectionalAttribute<String> {
      */
     @Override
     public ClassAttribute removeValue(final String name) {
-        return (ClassAttribute)super.removeValue(name);
+        return (ClassAttribute) super.removeValue(name);
     }
 
     /**
@@ -38,6 +38,6 @@ public class ClassAttribute extends CollectionalAttribute<String> {
      */
     @Override
     public ClassAttribute values(final String... values) {
-        return (ClassAttribute)super.values(values);
+        return (ClassAttribute) super.values(values);
     }
 }

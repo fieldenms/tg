@@ -17,7 +17,7 @@ public class WebUtils {
      * @return
      */
     public static <WV extends AbstractWebView<?>> String polymerTagName(final WV webView) {
-	return "tg-" + webView.getClass().getSimpleName().toLowerCase();
+        return "tg-" + webView.getClass().getSimpleName().toLowerCase();
     }
 
 }
