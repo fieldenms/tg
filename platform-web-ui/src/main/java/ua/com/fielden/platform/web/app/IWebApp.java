@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.app;
 
 import ua.com.fielden.platform.web.app.config.IWebAppConfig;
+import ua.com.fielden.platform.web.menu.IMainMenuConfig;
 
 /**
  * API for web application configuring.
@@ -17,5 +18,10 @@ public interface IWebApp {
      */
     IWebAppConfig configApp();
 
-
+    /**
+     * Provides access to the application's main menu configuration object.
+     *
+     * @return
+     */
+    IMainMenuConfig configMainMenu();
 }

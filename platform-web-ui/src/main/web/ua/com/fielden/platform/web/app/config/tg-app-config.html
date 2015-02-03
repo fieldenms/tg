@@ -1,0 +1,21 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-style/core-style.html">
+
+<polymer-element name="tg-app-config">
+    <script>
+        (function(){
+            var minDesktopWidth = @minDesktopWidth,
+                minTabletWidth = @minTabletWidth,
+                locale = @locale;
+            CoreStyle.g.minDesktopWidth = minDesktopWidth;
+            CoreStyle.g.minTabletWidth = minTabletWidth;
+            Polymer({
+                ready: function() {
+                    this.minDesktopWidth = minDesktopWidth;
+                    this.minTabletWidth = minTabletWidth;
+                    this.locale = locale;
+                }
+            });
+        })();
+    </script>
+</polymer-element>
