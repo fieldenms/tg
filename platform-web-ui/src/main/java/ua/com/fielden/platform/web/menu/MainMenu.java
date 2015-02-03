@@ -8,13 +8,12 @@ import ua.com.fielden.platform.web.interfaces.ILayout;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
 /**
- * Represents the main application menu that is accessable via the FAB button of the each custom web view,
- * except those which are displayed as modal dialogs.
+ * Represents the main application menu that is accessable via the FAB button of the each custom web view, except those which are displayed as modal dialogs.
  *
  * @author TG Team
  *
  */
-public class MainMenu implements IRenderable{
+public class MainMenu implements IRenderable {
 
     private ILayout layout;
 
@@ -27,17 +26,17 @@ public class MainMenu implements IRenderable{
      * @return
      */
     public MainMenu setLayout(final ILayout layout) {
-	this.layout = layout;
-	return this;
+        this.layout = layout;
+        return this;
     }
 
     public MainMenu addMenuItem(final MainMenuItem menuItem) {
-	this.items.add(menuItem);
-	return this;
+        this.items.add(menuItem);
+        return this;
     }
 
     @Override
     public DomElement render() {
-	return null;
+        return null;
     }
 }

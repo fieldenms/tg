@@ -37,8 +37,8 @@ public class MainMenuItem implements IRenderable {
      * @param icon
      */
     public MainMenuItem(final String title, final String icon) {
-	this.title = title;
-	this.icon = icon;
+        this.title = title;
+        this.icon = icon;
     }
 
     /**
@@ -48,8 +48,8 @@ public class MainMenuItem implements IRenderable {
      * @return
      */
     public MainMenuItem setDescription(final String description) {
-	this.description = description;
-	return this;
+        this.description = description;
+        return this;
     }
 
     /**
@@ -59,8 +59,8 @@ public class MainMenuItem implements IRenderable {
      * @return
      */
     public MainMenuItem setBackgroundImage(final String backgroundImage) {
-	this.backgroundImage = backgroundImage;
-	return this;
+        this.backgroundImage = backgroundImage;
+        return this;
     }
 
     /**
@@ -70,14 +70,14 @@ public class MainMenuItem implements IRenderable {
      * @return
      */
     public MainMenuItem setBackgroundColor(final Color backgroundColor) {
-	this.backgroundColor = backgroundColor;
-	return this;
+        this.backgroundColor = backgroundColor;
+        return this;
     }
 
     @Override
     public DomElement render() {
-	final FlexLayout layout = new FlexLayout();
-	return null;
+        final FlexLayout layout = new FlexLayout();
+        return null;
     }
 
 }
