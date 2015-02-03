@@ -10,7 +10,7 @@ import ua.com.fielden.platform.web.component.AbstractWebComponent;
  * @author TG Team
  *
  */
-public interface ILayout extends IRenderable{
+public interface ILayout extends IRenderable {
 
     /**
      * Represents the list of supported devices.
@@ -19,14 +19,14 @@ public interface ILayout extends IRenderable{
      *
      */
     public enum Device {
-	DESKTOP,
-	TABLET,
-	PHONE,
-	PRINT;
-	@Override
-	public String toString() {
-	    return StringUtils.capitalize(name().toLowerCase());
-	};
+        DESKTOP,
+        TABLET,
+        PHONE,
+        PRINT;
+        @Override
+        public String toString() {
+            return StringUtils.capitalize(name().toLowerCase());
+        };
     }
 
     /**
@@ -36,20 +36,21 @@ public interface ILayout extends IRenderable{
      *
      */
     public enum Orientation {
-	LANDSCAPE,
-	PORTRAIT;
-	@Override
-	public String toString() {
-	    return name().toLowerCase();
-	};
+        LANDSCAPE,
+        PORTRAIT;
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        };
     }
 
     /**
      * Adds the {@link AbstractWebComponent} to the layout manager.
      *
-     * @param component - a component to be added to layout manager.
+     * @param component
+     *            - a component to be added to layout manager.
      * @return
      */
     ILayout add(AbstractWebComponent component);
 
- }
+}
