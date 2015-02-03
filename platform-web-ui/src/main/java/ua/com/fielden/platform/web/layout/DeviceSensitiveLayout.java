@@ -14,7 +14,7 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
  * @author TG Team
  *
  */
-public class DeviceSensitiveLayout implements IRenderable{
+public class DeviceSensitiveLayout implements IRenderable {
 
     /**
      * Represents the list of supported devices.
@@ -23,14 +23,14 @@ public class DeviceSensitiveLayout implements IRenderable{
      *
      */
     public enum Device {
-	DESKTOP,
-	TABLET,
-	PHONE,
-	PRINT;
-	@Override
-	public String toString() {
-	    return name().toLowerCase();
-	};
+        DESKTOP,
+        TABLET,
+        PHONE,
+        PRINT;
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        };
     }
 
     /**
@@ -40,12 +40,12 @@ public class DeviceSensitiveLayout implements IRenderable{
      *
      */
     public enum Orientation {
-	LANDSCAPE,
-	PORTRAIT;
-	@Override
-	public String toString() {
-	    return name().toLowerCase();
-	};
+        LANDSCAPE,
+        PORTRAIT;
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        };
     }
 
     /**
@@ -55,7 +55,7 @@ public class DeviceSensitiveLayout implements IRenderable{
      *
      */
     public static interface ILayoutSetter {
-	DeviceSensitiveLayout set(ILayout layout);
+        DeviceSensitiveLayout set(ILayout layout);
     }
 
     /**
@@ -71,7 +71,7 @@ public class DeviceSensitiveLayout implements IRenderable{
      * @return
      */
     public ILayoutSetter whenMedia(final Device device, final Orientation orientation) {
-	return getLayout(device, orientation);
+        return getLayout(device, orientation);
     }
 
     /**
@@ -81,7 +81,7 @@ public class DeviceSensitiveLayout implements IRenderable{
      * @return
      */
     public ILayoutSetter whenMedia(final Device device) {
-	return getLayout(device, null);
+        return getLayout(device, null);
     }
 
     /**
@@ -92,15 +92,15 @@ public class DeviceSensitiveLayout implements IRenderable{
      * @return
      */
     private LayoutWrapper getLayout(final Device device, final Orientation orientation) {
-	if (device == null) {
-	    throw new NullPointerException("The device of devecie sensitive layout can not be null");
-	}
-	LayoutWrapper layoutDefiner = layouts.get(new AbstractMap.SimpleEntry<>(device, orientation));
-	if (layoutDefiner == null) {
-	    layoutDefiner = new LayoutWrapper();
-	    layouts.put(new AbstractMap.SimpleEntry<>(device, orientation), layoutDefiner);
-	}
-	return layoutDefiner;
+        if (device == null) {
+            throw new NullPointerException("The device of devecie sensitive layout can not be null");
+        }
+        LayoutWrapper layoutDefiner = layouts.get(new AbstractMap.SimpleEntry<>(device, orientation));
+        if (layoutDefiner == null) {
+            layoutDefiner = new LayoutWrapper();
+            layouts.put(new AbstractMap.SimpleEntry<>(device, orientation), layoutDefiner);
+        }
+        return layoutDefiner;
     }
 
     /**
@@ -109,19 +109,19 @@ public class DeviceSensitiveLayout implements IRenderable{
      * @author TG Team
      *
      */
-    private class LayoutWrapper implements ILayoutSetter{
-	public ILayout layout;
+    private class LayoutWrapper implements ILayoutSetter {
+        public ILayout layout;
 
-	@Override
-	public DeviceSensitiveLayout set(final ILayout layout) {
-	    this.layout = layout;
-	    return DeviceSensitiveLayout.this;
-	}
+        @Override
+        public DeviceSensitiveLayout set(final ILayout layout) {
+            this.layout = layout;
+            return DeviceSensitiveLayout.this;
+        }
     }
 
     @Override
     public DomElement render() {
-	//TODO implement this.
-	return null;
+        //TODO implement this.
+        return null;
     }
 }

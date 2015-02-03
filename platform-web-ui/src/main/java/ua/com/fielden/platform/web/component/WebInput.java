@@ -16,8 +16,8 @@ public class WebInput extends AbstractWebComponent {
     private final String caption;
 
     public WebInput(final String caption, final String property) {
-	this.caption = caption;
-	this.property = property;
+        this.caption = caption;
+        this.property = property;
     }
 
     @Override
@@ -29,7 +29,7 @@ public class WebInput extends AbstractWebComponent {
 
     @Override
     public DomElement render() {
-	return new DomElement("paper-input").attr("label", caption).attr("inputValue", "{{" + property + "}}");
+        return new DomElement("paper-input").attr("label", caption).attr("inputValue", "{{" + property + "}}");
     }
 
 }

@@ -16,44 +16,44 @@ public class SingleDomElement extends DomElement {
      * @param tagName
      */
     public SingleDomElement(final String tagName) {
-	super(tagName);
+        super(tagName);
     }
 
     /**
-     * Throws the {@link UnsupportedOperationException} as far as {@link SingleDomElement} can not have children.
+     * Restricts adding child elements to {@link SingleDomElement}.
      */
     @Override
     public DomElement add(final DomElement... element) {
-	throw new UnsupportedOperationException("It is impossible to add an element to single dom element");
+        throw new UnsupportedOperationException("A single DOM element should not have children.");
     }
 
     /**
-     * Throws the {@link UnsupportedOperationException} as far as {@link SingleDomElement} can not have children.
+     * Restricts adding child elements to {@link SingleDomElement}.
      */
     @Override
     public DomElement add(final DomElement element, final int index) {
-	throw new UnsupportedOperationException("It is impossible to add an element to single dom element");
+        throw new UnsupportedOperationException("A single DOM element should not have children.");
     }
 
     /**
-     * Throws the {@link UnsupportedOperationException} as far as {@link SingleDomElement} can not have children.
+     * Restricts removal of child elements from {@link SingleDomElement} as such calls should be recognized as invalid.
      */
     @Override
     public DomElement remove(final DomElement element) {
-	throw new UnsupportedOperationException("It is impossible to remove element from single dom element");
+        throw new UnsupportedOperationException("A single DOM element does not have children.");
     }
 
     /**
-     * Throws the {@link UnsupportedOperationException} as far as {@link SingleDomElement} can not have children.
+     * Restricts removal of child elements from {@link SingleDomElement} as such calls should be recognized as invalid.
      */
     @Override
     public DomElement remove(final int index) {
-	throw new UnsupportedOperationException("It is impossible to remove element from single dom element");
+        throw new UnsupportedOperationException("A single DOM element does not have children.");
     }
 
     @Override
     public String toString() {
-	final String attributes = StringUtils.join(attrs.values(), " ");
-	return "<" + tagName + (StringUtils.isEmpty(attributes) ? "" : (" " + attributes)) + ">";
+        final String attributes = StringUtils.join(attrs.values(), " ");
+        return "<" + tagName + (StringUtils.isEmpty(attributes) ? "" : (" " + attributes)) + ">";
     }
 }
