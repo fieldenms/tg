@@ -25,7 +25,7 @@ public class FlexLayout implements ILayout {
      *
      */
     public static interface ILayoutSetter {
-	FlexLayout set(final String layout);
+        FlexLayout set(final String layout);
     }
 
     /**
@@ -46,7 +46,7 @@ public class FlexLayout implements ILayout {
      * @return
      */
     public ILayoutSetter whenMedia(final Device device, final Orientation orientation) {
-	return getLayout(device, orientation);
+        return getLayout(device, orientation);
     }
 
     /**
@@ -56,7 +56,7 @@ public class FlexLayout implements ILayout {
      * @return
      */
     public ILayoutSetter whenMedia(final Device device) {
-	return getLayout(device, null);
+        return getLayout(device, null);
     }
 
     /**
@@ -67,15 +67,15 @@ public class FlexLayout implements ILayout {
      * @return
      */
     private LayoutWrapper getLayout(final Device device, final Orientation orientation) {
-	if (device == null) {
-	    throw new NullPointerException("The layout device can not be null");
-	}
-	LayoutWrapper layoutDefiner = layouts.get(new Pair<>(device, orientation));
-	if (layoutDefiner == null) {
-	    layoutDefiner = new LayoutWrapper();
-	    layouts.put(new Pair<>(device, orientation), layoutDefiner);
-	}
-	return layoutDefiner;
+        if (device == null) {
+            throw new NullPointerException("The layout device can not be null");
+        }
+        LayoutWrapper layoutDefiner = layouts.get(new Pair<>(device, orientation));
+        if (layoutDefiner == null) {
+            layoutDefiner = new LayoutWrapper();
+            layouts.put(new Pair<>(device, orientation), layoutDefiner);
+        }
+        return layoutDefiner;
     }
 
     /**
@@ -85,32 +85,32 @@ public class FlexLayout implements ILayout {
      *
      */
     private class LayoutWrapper implements ILayoutSetter {
-	public String layout;
+        public String layout;
 
-	@Override
-	public FlexLayout set(final String layout) {
-	    this.layout = layout;
-	    return FlexLayout.this;
-	}
+        @Override
+        public FlexLayout set(final String layout) {
+            this.layout = layout;
+            return FlexLayout.this;
+        }
     }
 
     @Override
     public DomElement render() {
-	final DomElement flexElement = new DomElement("tg-flex-layout");
-	for (final Pair<Device, Orientation> layout : layouts.keySet()) {
-	    if (layout.getValue() == null) {
-		flexElement.attr("when" + layout.getKey().toString(), layouts.get(layout).layout);
-	    }
-	}
-	for (final AbstractWebComponent component : components) {
-	    flexElement.add(component.render());
-	}
-	return flexElement;
+        final DomElement flexElement = new DomElement("tg-flex-layout");
+        for (final Pair<Device, Orientation> layout : layouts.keySet()) {
+            if (layout.getValue() == null) {
+                flexElement.attr("when" + layout.getKey().toString(), layouts.get(layout).layout);
+            }
+        }
+        for (final AbstractWebComponent component : components) {
+            flexElement.add(component.render());
+        }
+        return flexElement;
     }
 
     @Override
     public ILayout add(final AbstractWebComponent component) {
-	this.components.add(component);
-	return this;
+        this.components.add(component);
+        return this;
     }
 }
