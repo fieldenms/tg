@@ -6,7 +6,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * The {@link Attribute} which value is a collection.
+ * An {@link Attribute} whose value is a collection.
  *
  * @author TG Team
  *
@@ -15,7 +15,7 @@ import org.apache.commons.lang.StringUtils;
 public class CollectionalAttribute<T> extends Attribute<List<T>> {
 
     /**
-     * Separator between values of collection.
+     * Separator between collection values.
      */
     protected final String separator;
 
@@ -24,10 +24,15 @@ public class CollectionalAttribute<T> extends Attribute<List<T>> {
      */
     private final boolean quotes;
 
-    public CollectionalAttribute(final String name, final List<T> value, final boolean quotes, final String nameValueSeparator, final String separator) {
-	super(name, value, nameValueSeparator);
-	this.separator = separator;
-	this.quotes = quotes;
+    public CollectionalAttribute(
+            final String name,
+            final List<T> value,
+            final boolean quotes,
+            final String nameValueSeparator,
+            final String separator) {
+        super(name, value, nameValueSeparator);
+        this.separator = separator;
+        this.quotes = quotes;
     }
 
     /**
@@ -37,8 +42,8 @@ public class CollectionalAttribute<T> extends Attribute<List<T>> {
      * @return
      */
     public CollectionalAttribute<T> addValue(final T attrValue) {
-	value.add(attrValue);
-	return this;
+        value.add(attrValue);
+        return this;
     }
 
     /**
@@ -48,8 +53,8 @@ public class CollectionalAttribute<T> extends Attribute<List<T>> {
      * @return
      */
     public CollectionalAttribute<T> removeValue(final T attrValue) {
-	value.remove(attrValue);
-	return this;
+        value.remove(attrValue);
+        return this;
     }
 
     /**
@@ -60,15 +65,15 @@ public class CollectionalAttribute<T> extends Attribute<List<T>> {
      */
     @SuppressWarnings("unchecked")
     public CollectionalAttribute<T> values(final T... values) {
-	value.clear();
-	value.addAll(Arrays.asList(values));
-	return this;
+        value.clear();
+        value.addAll(Arrays.asList(values));
+        return this;
     }
 
     @Override
     public String toString() {
-	final String strValue = StringUtils.join(value, separator);
-	final String quoteString = quotes ? "\"" : "";
+        final String strValue = StringUtils.join(value, separator);
+        final String quoteString = quotes ? "\"" : "";
         return StringUtils.isEmpty(strValue) ? "" : (name + nameValueSeparator + quoteString + strValue + quoteString);
     }
 }

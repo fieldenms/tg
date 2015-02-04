@@ -3,21 +3,21 @@ package ua.com.fielden.platform.dom;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Represents the inner html text.
+ * A DOM element that represent innerHTML text of any other DOM elements.
  *
  * @author TG Team
  *
  */
-public class TextElement extends SingleDomElement {
+public class InnerTextElement extends SingleDomElement {
 
     /**
-     * Represent the inner html text.
+     * Represent the inner HTML text.
      */
     private final String text;
 
-    public TextElement(final String text) {
-	super(null);
-	this.text = text;
+    public InnerTextElement(final String text) {
+        super(null);
+        this.text = text;
     }
 
     @Override
