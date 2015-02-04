@@ -3,9 +3,8 @@
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
 
-<polymer-element name="tg-main-menu-item" attributes="whenDesktop whenTablet whenMobile">
-    <template>
-        <style>
+<polymer-element name="tg-main-menu-item" attributes="whenDesktop whenTablet whenMobile menuIcon menuItemTitle" noscript>
+     <style>
             .category {
                 margin: 4px;
                 cursor: pointer;
@@ -17,20 +16,13 @@
                 background-repeat: no-repeat;
                 background-position: top left;
             }
-           
         </style>
-        @menu
+    <template>
+        <paper-shadow z="1" class="category">
+            <tg-flex-layout whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}">
+                <core-icon src="{{menuIcon}}"></core-icon>
+                <pre>{{menuItemTitle}}</pre>
+            </tg-flex-layout>
+        </paper-shadow>
     </template>
-    <script>
-        Polymer({
-            created: function () {
-                this.returnId = @returnId;
-                this.loginId = @loginId;
-                this.logoutId = @logoutId;
-            },
-            onMenuTap: function (event, detail, el) {
-                this.fire("menu-selected", el.getAttribute('id'));
-            }
-        });
-    </script>
 </polymer-element>

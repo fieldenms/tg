@@ -16,7 +16,11 @@ import org.restlet.routing.Template;
 import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.web.WebAppConfig;
+import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.WebApp;
+import ua.com.fielden.platform.web.factories.MainMenuResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
+import ua.com.fielden.platform.web.factories.WebAppConfigResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFactory;
@@ -97,19 +101,21 @@ public abstract class AbstractWebApp extends Application {
     public final Restlet createInboundRoot() {
         // Create router and web application for registering resources.
         final Router router = new Router(getContext());
-        final WebAppConfig webAppConfig = new WebAppConfig(getName());
+        final WebApp webApp = new WebApp(getName());
 
         // Initialise web application with entity centres, entity masters and other custom views.
-        initWebApplication(webAppConfig);
+        initWebApplication(webApp);
 
         // Attach main application resource.
-        router.attach("/", new MainWebApplicationResourceFactory(webAppConfig));
+        router.attach("/", new MainWebApplicationResourceFactory(webApp));
+        router.attach("/tg-web-app/tg-app-config.html", new WebAppConfigResourceFactory(webApp));
+        router.attach("/tg-web-app/tg-main-menu.html", new MainMenuResourceFactory(webApp));
 
         // Registering entity centres.
-        attachCentreResources(router, webAppConfig);
+        //attachCentreResources(router, webApp);
 
         // Registering web models.
-        attachCustomWebViewResources(router, webAppConfig);
+        //attachCustomWebViewResources(router, webApp);
 
         // TODO Register entity masters and other custom views.
 
@@ -174,7 +180,7 @@ public abstract class AbstractWebApp extends Application {
     /**
      * Implement this in order to provide custom configurations for entity centre, master and other views.
      *
-     * @param app
+     * @param webApp
      */
-    protected abstract void initWebApplication(WebAppConfig app);
+    protected abstract void initWebApplication(IWebApp webApp);
 }

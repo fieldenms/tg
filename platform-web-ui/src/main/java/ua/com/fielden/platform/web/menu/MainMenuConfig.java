@@ -1,8 +1,13 @@
 package ua.com.fielden.platform.web.menu;
 
+import static org.apache.commons.lang.StringUtils.deleteWhitespace;
+import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static org.apache.commons.lang.WordUtils.capitalize;
+
 import java.util.LinkedHashMap;
 
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -16,7 +21,7 @@ public class MainMenuConfig implements IMainMenuConfig {
     private final LinkedHashMap<String, MainMenuItem> menuItems = new LinkedHashMap<>();
     private final FlexLayout flexLayout = new FlexLayout();
 
-    private String returnMenuItem, loginMenuItem, logoutMenuItem;
+    private String returnMenuItem = "", loginMenuItem = "", logoutMenuItem = "";
 
     public MainMenuConfig(final IWebApp webApplication) {
         this.webApplication = webApplication;
@@ -66,18 +71,23 @@ public class MainMenuConfig implements IMainMenuConfig {
 
     public String generateMainMenu() {
         final DomElement flexElement = flexLayout.render();
-        for(final MainMenuItem menuItem: menuItems.values()) {
-            flexElement.add(createMenuItemElement(menuItem));
+        for (final MainMenuItem menuItem : menuItems.values()) {
+            flexElement.add(menuItem.render().attr("id", generateMenuItemId(menuItem.title)).attr("on-tap", "{{onMenuTap}}"));
         }
-        return "<div class="tile">
-                <paper-shadow z="1" class="category return" id="return" on-tap="{{onMenuTap}}" layout vertical end-justified center fit>
-                    <core-icon class="svg-normal" src="/resources/images/Return.svg"></core-icon>
-                    <pre>Return</pre>
-                </paper-shadow>
-            </div>"
+        return ResourceLoader.getText("ua/com/fielden/platform/web/menu/tg-main-menu.html").
+                replaceAll("@returnId", "\"" + generateMenuItemId(returnMenuItem) + "\"").
+                replaceAll("@loginId", "\"" + generateMenuItemId(loginMenuItem) + "\"").
+                replaceAll("@logoutId", "\"" + generateMenuItemId(logoutMenuItem) + "\"").
+                replaceAll("@menu", flexElement.toString());
     }
 
-    private DomElement createMenuItemElement(final MainMenuItem menuItem) {
-        return null;
+    /**
+     * Generates the id for menu item elements.
+     *
+     * @param title
+     * @return
+     */
+    private String generateMenuItemId(final String title) {
+        return uncapitalize(deleteWhitespace(capitalize(title)));
     }
 }

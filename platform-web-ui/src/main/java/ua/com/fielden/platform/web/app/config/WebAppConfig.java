@@ -60,7 +60,7 @@ public class WebAppConfig implements IWebAppConfig {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/t.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/tg-app-config.html").
                 replaceAll("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
                 replaceAll("@minTabletWidth", Integer.toString(this.minTabletWidth)).
                 replaceAll("@locale", "\"" + locale + "\"");

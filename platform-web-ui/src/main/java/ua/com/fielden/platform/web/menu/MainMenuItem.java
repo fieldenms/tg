@@ -2,22 +2,21 @@ package ua.com.fielden.platform.web.menu;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
-import ua.com.fielden.platform.web.layout.FlexLayout;
 
 public class MainMenuItem implements IRenderable {
 
     /**
      * Menu item title.
      */
-    private final String title;
+    public final String title;
     /**
      * Path to the main menu item icon.
      */
-    private final String icon;
+    public final String icon;
     /**
      * Path to the background image of the main menu item.
      */
-    private final String backgroundImage;
+    public final String backgroundImage;
 
     /**
      * Creates new main menu item with a title and an icon.
@@ -33,8 +32,11 @@ public class MainMenuItem implements IRenderable {
 
     @Override
     public DomElement render() {
-        final FlexLayout layout = new FlexLayout();
-        return null;
+        return new DomElement("tg-main-menu-item").
+                attr("whenDesktop", "[background-image: url(" + backgroundImage + "), center, end-justified [], []]").
+                attr("whenTablet", "[background-image: url(" + backgroundImage + "), [], []]").
+                attr("whenMobile", "[background-image: url(" + backgroundImage + "), [], []]").
+                attr("menuIcon", icon).
+                attr("menuItemTitle", title);
     }
-
 }

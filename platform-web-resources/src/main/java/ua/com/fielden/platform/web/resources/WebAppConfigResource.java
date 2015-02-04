@@ -15,11 +15,11 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.web.app.WebApp;
 
-public class MainWebApplicationResource extends ServerResource {
+public class WebAppConfigResource extends ServerResource {
 
     private final WebApp app;
 
-    public MainWebApplicationResource(final WebApp app, final Context context, final Request request, final Response response) {
+    public WebAppConfigResource(final WebApp app, final Context context, final Request request, final Response response) {
         init(context, request, response);
         this.app = app;
     }

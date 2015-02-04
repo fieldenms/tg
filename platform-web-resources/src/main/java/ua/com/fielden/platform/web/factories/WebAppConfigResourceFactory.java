@@ -6,13 +6,13 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.web.app.WebApp;
-import ua.com.fielden.platform.web.resources.MainWebApplicationResource;
+import ua.com.fielden.platform.web.resources.WebAppConfigResource;
 
-public class MainWebApplicationResourceFactory extends Restlet {
+public class WebAppConfigResourceFactory extends Restlet {
 
     private final WebApp app;
 
-    public MainWebApplicationResourceFactory(final WebApp webApp) {
+    public WebAppConfigResourceFactory(final WebApp webApp) {
         this.app = webApp;
     }
 
@@ -21,7 +21,7 @@ public class MainWebApplicationResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new MainWebApplicationResource(app, getContext(), request, response).handle();
+            new WebAppConfigResource(app, getContext(), request, response).handle();
         }
     }
 }
