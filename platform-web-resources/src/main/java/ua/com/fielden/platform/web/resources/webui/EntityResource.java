@@ -9,6 +9,7 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
+import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -57,11 +58,30 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     }
 
     /**
-     * Handles POST requests resulting from tg-entity-master <code>save()</code> method (new or persisted entity).
+     * Handles POST requests resulting from tg-entity-master <code>save()</code> method (persisted entity).
      */
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
+        return tryToSave(envelope);
+    }
+
+    /**
+     * Handles PUT requests resulting from tg-entity-master <code>save()</code> method (new entity).
+     */
+    @Put
+    @Override
+    public Representation put(final Representation envelope) throws ResourceException {
+        return tryToSave(envelope);
+    }
+
+    /**
+     * Tries to save the changes for the entity and returns it in JSON format.
+     *
+     * @param envelope
+     * @return
+     */
+    private Representation tryToSave(final Representation envelope) {
         final Map<String, Object> modifiedPropertiesHolder = mixin.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
         final T validationPrototype = mixin.createEntityForRetrieval(this.entityId);

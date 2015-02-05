@@ -58,7 +58,7 @@ public class EntityResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
-        if (Method.GET == request.getMethod() || Method.POST == request.getMethod()) {
+        if (Method.GET == request.getMethod() || Method.POST == request.getMethod() || Method.PUT == request.getMethod()) {
             final String username = (String) request.getAttributes().get("username");
             injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
@@ -69,17 +69,5 @@ public class EntityResourceFactory extends Restlet {
             final EntityResource<AbstractEntity<?>> resource = new EntityResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(injector), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
             resource.handle();
         }
-
-        //        if (Method.POST == request.getMethod()) {
-        //            final String username = (String) request.getAttributes().get("username");
-        //            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
-        //
-        //            final String entityTypeString = (String) request.getAttributes().get("entityType");
-        //            final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
-        //            final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
-        //
-        //            final EntityValidationResource<AbstractEntity<?>> resource = new EntityValidationResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, (fetch<AbstractEntity<?>>) master.getFetchStrategy(), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
-        //            resource.handle();
-        //        }
     }
 }
