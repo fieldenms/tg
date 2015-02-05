@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.master.api.helpers;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.master.api.editors.IAutocompleterConfig;
 import ua.com.fielden.platform.web.master.api.editors.ITextInputConfig;
+import ua.com.fielden.platform.web.master.api.editors.autocompleter.IAutocompleterConfig;
 
 /**
  *

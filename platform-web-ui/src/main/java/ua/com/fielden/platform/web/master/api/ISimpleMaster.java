@@ -21,8 +21,8 @@ public interface ISimpleMaster {
     // TODO Needs to be removed in a fullness of time. This method exists here purely to demonstrate API fluency as part of the development.
     public static void apiExample(final ISimpleMaster sm) {
         sm.forEntity(TgWorkOrder.class)
-                .addProp("vehicle").asAutocompleter().also()
-                .addProp("status").asAutocompleter().withMatcher(IValueMatcher.class)
+                .addProp("vehicle").asAutocompleter().byDesc().also()
+                .addProp("status").asAutocompleter().withMatcher(IValueMatcher.class).byDescOnly()
                 .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "[][flex]")
                 .setLayoutFor(Device.TABLET, Orientation.LANDSCAPE, "[][flex]")
                 .setLayoutFor(Device.TABLET, Orientation.PORTRAIT, "[][flex]")
