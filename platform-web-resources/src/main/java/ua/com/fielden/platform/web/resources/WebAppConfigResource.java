@@ -27,7 +27,7 @@ public class WebAppConfigResource extends ServerResource {
     @Override
     protected Representation get() throws ResourceException {
         try {
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(app.generateWebApp().getBytes("UTF-8"))));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(app.generateGlobalConfig().getBytes("UTF-8"))));
         } catch (final UnsupportedEncodingException e) {
             e.printStackTrace();
             throw new ResourceException(e);

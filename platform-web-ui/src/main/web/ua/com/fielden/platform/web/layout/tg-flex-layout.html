@@ -9,9 +9,8 @@
                 border: 1px dashed red;
             }
         </style>
-        <div id="container" class="{{ {debug: debug} | tokenList}}" layout vertical>
-        </div>
-        <content id="elements"></content>
+        <div id="container" class="{{ {debug: debug} | tokenList }}" layout vertical></div>
+        <content select=":not(text)" id="elements"></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <core-media-query query="max-width: {{$.appConfig.minTabletWidth - 1}}px" querymatches="{{mobileScreen}}" on-core-media-change="{{handleMobileScreen}}"></core-media-query>
         <core-media-query query="(min-width: {{$.appConfig.minTabletWidth}}px) and (max-width: {{$.appConfig.minDesktopWidth - 1}}px)" querymatches="{{tabletScreen}}" on-core-media-change="{{handleTabletScreen}}"></core-media-query>
@@ -48,17 +47,21 @@
                     }
                 },
                 createFlexCell = function (container, layoutElem, contentIndex, horizontal, debug) {
-                    var rowElement, styleValues;
+                    var rowElement, styleValues, trimmedLayoutElement;
                     if (typeof layoutElem === "string") {
+                        trimmedLayoutElement = layoutElem.trim();
                         if (layoutElem.indexOf(':') >= 0) {
                             styleValues = layoutElem.split(":");
-                            container.style[styleValues[0]] = styleValues[1];
+                            container.style[styleValues[0].trim()] = styleValues[1].trim();
                             container.stylesToRemove = container.stylesToRemove || [];
-                            container.stylesToRemove.push(styleValues[0]);
+                            container.stylesToRemove.push(styleValues[0].trim());
                         } else {
                             container.attributesToRemove = container.attributesToRemove || [];
-                            container.attributesToRemove.push(layoutElem);
-                            container.setAttribute(layoutElem, "");
+                            container.attributesToRemove.push(trimmedLayoutElement);
+                            if (trimmedLayoutElement === "horizontal" || trimmedLayoutElement === "vertical") {
+                                container.removeAttribute(horizontal ? "vertical" : "horizontal");
+                            }
+                            container.setAttribute(trimmedLayoutElement, "");
                         }
                     } else if (Array.isArray(layoutElem)) {
                         if (!hasArray(layoutElem)) {

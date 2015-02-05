@@ -99,7 +99,7 @@ public class FlexLayout implements ILayout {
         final DomElement flexElement = new DomElement("tg-flex-layout");
         for (final Pair<Device, Orientation> layout : layouts.keySet()) {
             if (layout.getValue() == null) {
-                flexElement.attr("when" + layout.getKey().toString(), layouts.get(layout).layout);
+                flexElement.attr("when" + layout.getKey().toString(), "{{" + layouts.get(layout).layout + "}}");
             }
         }
         for (final AbstractWebComponent component : components) {

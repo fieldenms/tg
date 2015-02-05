@@ -17,12 +17,12 @@ public interface ILayout extends IRenderable {
      *
      * @author TG Team
      *
-     *            - a component to be added to layout manager.
+     *         - a component to be added to layout manager.
      */
     public enum Device {
         DESKTOP,
         TABLET,
-        PHONE,
+        MOBILE,
         PRINT;
         @Override
         public String toString() {

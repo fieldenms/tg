@@ -247,17 +247,17 @@
                 var splitDetail = detail.split("/");
                 if (splitDetail.length >= 2) {
                     template.activePage = splitDetail[0];
-                    document.querySelector(template.activePage).activatePage(detail);
+                    document.querySelector("#" + template.activePage).activatePage(detail);
                 }
             },
             template.onMainMenuSelected = function (event, detail, source) {
                 if (detail !== document.querySelector("#mainMenu").returnId) {
                     //this.route = document.querySelector(detail).activeSubPage || document.querySelector("#mainMenu").activePage;
                 }
-                document.querySelector("#mainMenu").close();
+                document.querySelector("#menuDialog").close();
             },
             template.onShowMenu = function (event, detail, source) {
-                document.querySelector("#mainMenu").open();
+                document.querySelector("#menuDialog").open();
             }
         })();
     </script>
