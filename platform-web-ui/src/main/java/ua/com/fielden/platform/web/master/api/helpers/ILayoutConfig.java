@@ -9,5 +9,5 @@ import ua.com.fielden.platform.web.interfaces.ILayout;
  *
  */
 public interface ILayoutConfig extends IComplete {
-    ILayoutConfig layout(final ILayout.Device device, final ILayout.Orientation orientation, final String flexString);
+    ILayoutConfig setLayoutFor(final ILayout.Device device, final ILayout.Orientation orientation, final String flexString);
 }

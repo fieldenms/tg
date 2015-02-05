@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.menu;
 
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
 /**
  * An API for configuring application's main menu
@@ -19,7 +20,7 @@ public interface IMainMenuConfig {
      * @param background
      * @return
      */
-    IMainMenuConfig addMenuItem(String title, String icon, String background);
+    IMainMenuConfig addMenuItem(final String title, final String icon, final String background);
 
     /**
      * Adds "Return" menu item. "Return" action closes main menu.
@@ -29,7 +30,7 @@ public interface IMainMenuConfig {
      * @param background
      * @return
      */
-    IMainMenuConfig addReturn(String title, String icon, String background);
+    IMainMenuConfig addReturn(final String title, final String icon, final String background);
 
     /**
      * Adds "Logout" menu item.
@@ -39,7 +40,7 @@ public interface IMainMenuConfig {
      * @param background
      * @return
      */
-    IMainMenuConfig addLogout(String title, String icon, String background);
+    IMainMenuConfig addLogout(final String title, final String icon, final String background);
 
     /**
      * Adds "Login" menu item.
@@ -49,7 +50,7 @@ public interface IMainMenuConfig {
      * @param background
      * @return
      */
-    IMainMenuConfig addLogin(String title, String icon, String background);
+    IMainMenuConfig addLogin(final String title, final String icon, final String background);
 
     /**
      * Set the main menu layout for specified device.
@@ -58,7 +59,7 @@ public interface IMainMenuConfig {
      * @param layout
      * @return
      */
-    IMainMenuConfig setLayoutWhen(Device device, String layout);
+    IMainMenuConfig setLayoutFor(final Device device, final Orientation orientation, final String layout);
 
     /**
      * Finish to configure the application's main menu.

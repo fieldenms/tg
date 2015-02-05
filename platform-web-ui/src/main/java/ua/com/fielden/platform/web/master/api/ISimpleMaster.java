@@ -18,14 +18,14 @@ import ua.com.fielden.platform.web.master.api.helpers.IPropertySelector;
 public interface ISimpleMaster {
     <T extends AbstractEntity<?>> IPropertySelector<T> forEntity(Class<T> type);
 
-    // TODO Needs to be removed in a fulness of thime. This method exists here purely to demonstrate API fluency as part of the development.
+    // TODO Needs to be removed in a fullness of time. This method exists here purely to demonstrate API fluency as part of the development.
     public static void apiExample(final ISimpleMaster sm) {
         sm.forEntity(TgWorkOrder.class)
                 .addProp("vehicle").asAutocompleter().also()
                 .addProp("status").asAutocompleter().withMatcher(IValueMatcher.class)
-                .layout(Device.DESKTOP, Orientation.LANDSCAPE, "[][flex]")
-                .layout(Device.TABLET, Orientation.LANDSCAPE, "[][flex]")
-                .layout(Device.TABLET, Orientation.PORTRAIT, "[][flex]")
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "[][flex]")
+                .setLayoutFor(Device.TABLET, Orientation.LANDSCAPE, "[][flex]")
+                .setLayoutFor(Device.TABLET, Orientation.PORTRAIT, "[][flex]")
                 .done();
     }
 }

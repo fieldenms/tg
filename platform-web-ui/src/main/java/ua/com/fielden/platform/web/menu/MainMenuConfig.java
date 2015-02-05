@@ -10,6 +10,7 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
 public class MainMenuConfig implements IMainMenuConfig {
@@ -59,7 +60,7 @@ public class MainMenuConfig implements IMainMenuConfig {
     }
 
     @Override
-    public IMainMenuConfig setLayoutWhen(final Device device, final String layout) {
+    public IMainMenuConfig setLayoutFor(final Device device, final Orientation orientation, final String layout) {
         flexLayout.whenMedia(device).set(layout);
         return this;
     }
