@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
  *
  * @param <T>
  */
-public class DefaultEntityProducer<T extends AbstractEntity> implements IEntityProducer<T> {
+public class DefaultEntityProducer<T extends AbstractEntity<?>> implements IEntityProducer<T> {
 
     private final EntityFactory factory;
     private final Class<T> entityType;
