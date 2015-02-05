@@ -44,7 +44,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         this.restUtil = restUtil;
 
         final String entityIdString = request.getAttributes().get("entity-id").toString();
-        this.entityId = entityIdString.equalsIgnoreCase("null") ? null : Long.parseLong(entityIdString);
+        this.entityId = entityIdString.equalsIgnoreCase("new") ? null : Long.parseLong(entityIdString);
     }
 
     /**

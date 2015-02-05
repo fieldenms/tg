@@ -173,6 +173,10 @@
                     this.onSaved(potentiallySavedEntity, newBindingEntity);
                 },
 
+                _idConvert: function(id) {
+                    return id === null ? "new" : ("" + id);
+                },
+
                 //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
                 /**
                  * Provides default action after fresh entity has been received. Rebinds the entity.
@@ -180,8 +184,8 @@
                 onEntityReceived: function(entity, updateOriginalBindingEntity) {
                     var self = this;
                     // After the entity has received, potentially its id has been updated:
-                    if (entity.id !== self.entityid) {
-                        self.entityid = entity.id;
+                    if (self._idConvert(entity.id) !== self.entityid) {
+                        self.entityid = self._idConvert(entity.id);
                     }
                     // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
                     var previousModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
