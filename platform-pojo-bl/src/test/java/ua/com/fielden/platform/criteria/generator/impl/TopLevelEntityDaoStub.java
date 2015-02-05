@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -164,7 +164,7 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public IEntityFetchStrategy<TopLevelEntity> getFetchStrategy() {
+    public IFetchProvider<TopLevelEntity> getFetchProvider() {
         // TODO Auto-generated method stub
         return null;
     }

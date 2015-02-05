@@ -13,8 +13,7 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
@@ -31,7 +30,7 @@ public class EntityResourceMixin<T extends AbstractEntity<?>> {
     private final EntityFactory entityFactory;
     private final Logger logger = Logger.getLogger(getClass());
     private final Class<T> entityType;
-    private final IEntityFetchStrategy<T> fetchStrategy;
+    private final IFetchProvider<T> fetchProvider;
     private final IEntityDao<T> dao;
     private final IEntityProducer<T> entityProducer;
     private final ICompanionObjectFinder companionFinder;
@@ -41,7 +40,7 @@ public class EntityResourceMixin<T extends AbstractEntity<?>> {
         this.companionFinder = companionFinder;
         this.dao = companionFinder.<IEntityDao<T>, T> find(this.entityType);
 
-        this.fetchStrategy = this.dao.getFetchStrategy();
+        this.fetchProvider = this.dao.getFetchProvider();
         this.entityFactory = entityFactory;
         this.entityProducer = entityProducer;
     }
@@ -56,7 +55,7 @@ public class EntityResourceMixin<T extends AbstractEntity<?>> {
     public T createEntityForRetrieval(final Long id) {
         final T entity;
         if (id != null) {
-            entity = dao.findById(id, fetchStrategy.fetchModel());
+            entity = dao.findById(id, fetchProvider.fetchModel());
         } else {
             entity = entityProducer.newEntity();
         }
@@ -71,8 +70,8 @@ public class EntityResourceMixin<T extends AbstractEntity<?>> {
         return companionFinder;
     }
 
-    public IEntityFetchStrategy<T> getFetchStrategy() {
-        return fetchStrategy;
+    public IFetchProvider<T> getFetchProvider() {
+        return fetchProvider;
     }
 
     /**
@@ -137,9 +136,8 @@ public class EntityResourceMixin<T extends AbstractEntity<?>> {
                 return null;
             }
             final IEntityDao propertyCompanion = getCompanionFinder().find(propertyType);
-            final fetch<AbstractEntity<?>> fetchModel = getFetchStrategy().strategyFor(propertyName).fetchModel();
             // TODO complete implementation with appropriate composite entity cases etc.
-            return propertyCompanion.findByKeyAndFetch(fetchModel, reflectedValue);
+            return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue == null ? null : reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {

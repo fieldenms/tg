@@ -3,7 +3,7 @@ package ua.com.fielden.platform.dao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 
 /**
  * Provides default {@link EntityFactory} based implementation for creation of new entity instances.
@@ -32,7 +32,7 @@ public class DefaultEntityProducer<T extends AbstractEntity> implements IEntityP
     public final T newEntity() {
         final T entity = factory.newEntity(entityType, null);
         if (companion != null) {
-            provideProxies(entity, companion.getFetchStrategy());
+            provideProxies(entity, companion.getFetchProvider());
         }
         return provideDefaultValues(entity);
     }
@@ -43,7 +43,7 @@ public class DefaultEntityProducer<T extends AbstractEntity> implements IEntityP
      * @param entity
      * @param fetchStrategy
      */
-    private T provideProxies(final T entity, final IEntityFetchStrategy<T> fetchStrategy) {
+    private T provideProxies(final T entity, final IFetchProvider<T> fetchStrategy) {
         // TODO implement automatic "proxying" for the properties, which do not take part in fetchStrategy --
         // -- it provides consistency between newly created entities and fetched entities and also reduces the
         // size of the JSON data transmitting from server to the client

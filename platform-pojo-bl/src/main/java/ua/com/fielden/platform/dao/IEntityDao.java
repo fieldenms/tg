@@ -6,8 +6,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.fetch.EntityFetchStrategy;
-import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -294,9 +293,9 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
 
     /**
-     * Returns default {@link EntityFetchStrategy} for the entity.
+     * Returns default {@link FetchProvider} for the entity.
      * <p>
-     * This entity fetch strategy represents the 'aggregated' variant of all fetch strategies needed mainly for entity master actions (and potentially others): <br>
+     * This fetch provider represents the 'aggregated' variant of all fetch providers needed mainly for entity master actions (and potentially others): <br>
      * <br>
      * 1. visual representation of entity properties in entity master UI <br>
      * 2. validation / modification processes with BCE / ACE / conversions handling <br>
@@ -304,5 +303,5 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      *
      * @return
      */
-    IEntityFetchStrategy<T> getFetchStrategy();
+    IFetchProvider<T> getFetchProvider();
 }

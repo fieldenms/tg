@@ -28,8 +28,8 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.fetch.EntityFetchStrategy;
-import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
+import ua.com.fielden.platform.entity.fetch.FetchProviderFactory;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -1014,12 +1014,12 @@ public class EntityUtils {
     }
 
     /**
-     * Creates empty {@link IEntityFetchStrategy} for concrete <code>entityType</code>.
+     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code>.
      *
      * @param entityType
      * @return
      */
-    public static <T extends AbstractEntity<?>> IEntityFetchStrategy<T> efs(final Class<T> entityType) {
-        return EntityFetchStrategy.createDefaultStrategy(entityType);
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
+        return FetchProviderFactory.createDefaultFetchProvider(entityType);
     }
 }

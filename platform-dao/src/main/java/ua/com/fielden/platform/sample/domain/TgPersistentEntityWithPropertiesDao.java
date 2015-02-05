@@ -4,7 +4,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.mixin.TgPersistentEntityWithPropertiesMixin;
@@ -21,7 +21,6 @@ import com.google.inject.Inject;
 @EntityType(TgPersistentEntityWithProperties.class)
 public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersistentEntityWithProperties> implements ITgPersistentEntityWithProperties {
     private final TgPersistentEntityWithPropertiesMixin mixin;
-    private IEntityFetchStrategy<TgPersistentEntityWithProperties> fetchStrategy;
 
     @Inject
     public TgPersistentEntityWithPropertiesDao(final IFilter filter) {
@@ -43,14 +42,14 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     }
 
     @Override
-    public IEntityFetchStrategy<TgPersistentEntityWithProperties> createFetchStrategy() {
-        return super.createFetchStrategy()
+    public IFetchProvider<TgPersistentEntityWithProperties> createFetchProvider() {
+        return super.createFetchProvider()
                 .with("key") // this property is "required" (necessary during saving) -- should be declared as fetching property
                 .with("integerProp", "moneyProp", "bigDecimalProp", "stringProp", "booleanProp", "dateProp")
                 .with("domainInitProp", "nonConflictingProp", "conflictingProp")
-                // .with("entityProp", efs(TgPersistentEntityWithProperties.class).with("key"))
+                // .with("entityProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key"))
                 .with("entityProp", "entityProp.key")
-                // .with("producerInitProp", efs(TgPersistentEntityWithProperties.class).with("key")
+                // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
                 .with("producerInitProp.key"); //
     }
 }

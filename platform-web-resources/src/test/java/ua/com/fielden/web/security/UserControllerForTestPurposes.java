@@ -8,7 +8,7 @@ import java.util.Set;
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -233,7 +233,7 @@ public class UserControllerForTestPurposes implements IUserController {
     }
 
     @Override
-    public IEntityFetchStrategy<User> getFetchStrategy() {
+    public IFetchProvider<User> getFetchProvider() {
         // TODO Auto-generated method stub
         return null;
     }

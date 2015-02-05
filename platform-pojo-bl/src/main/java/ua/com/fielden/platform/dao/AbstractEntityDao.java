@@ -4,7 +4,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.utils.EntityUtils.efs;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -13,7 +12,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.fetch.IEntityFetchStrategy;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -23,6 +22,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Provides common implementation shared between Hibernate and REST implementation of DAOs.
@@ -35,7 +35,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     private final Class<? extends Comparable> keyType;
     private final Class<T> entityType;
     private final QueryExecutionModel<T, EntityResultQueryModel<T>> defaultModel;
-    private IEntityFetchStrategy<T> fetchStrategy;
+    private IFetchProvider<T> fetchProvider;
 
     protected boolean getFilterable() {
         return false;
@@ -206,22 +206,22 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     }
 
     @Override
-    public final IEntityFetchStrategy<T> getFetchStrategy() {
-        if (fetchStrategy == null) {
-            fetchStrategy = createFetchStrategy();
+    public final IFetchProvider<T> getFetchProvider() {
+        if (fetchProvider == null) {
+            fetchProvider = createFetchProvider();
         }
-        return fetchStrategy;
+        return fetchProvider;
     }
 
     /**
-     * Creates entity fetch strategy for this entity companion.
+     * Creates fetch provider for this entity companion.
      * <p>
-     * Should be overridden to provide custom entity fetch strategy.
+     * Should be overridden to provide custom fetch provider.
      *
      * @return
      */
-    protected IEntityFetchStrategy<T> createFetchStrategy() {
-        // provides a very minimalistic version of entity fetch strategy by default (only id and version are included)
-        return efs(getEntityType());
+    protected IFetchProvider<T> createFetchProvider() {
+        // provides a very minimalistic version of fetch provider by default (only id and version are included)
+        return EntityUtils.fetch(getEntityType());
     }
 }
