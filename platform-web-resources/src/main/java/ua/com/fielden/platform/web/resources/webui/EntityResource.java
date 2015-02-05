@@ -12,7 +12,6 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -49,17 +48,16 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     }
 
     /**
-     * Handles GET requests resulting from RAO call to {@link IEntityDao#findById(Long)}
+     * Handles GET requests resulting from tg-entity-master <code>retrieve()</code> method (new or persisted entity).
      */
     @Get
     @Override
     public Representation get() throws ResourceException {
-        // process GET request
         return restUtil.singleJSONRepresentation(mixin.createEntityForRetrieval(entityId));
     }
 
     /**
-     * Handles POST request resulting from RAO call to method save.
+     * Handles POST requests resulting from tg-entity-master <code>save()</code> method (new or persisted entity).
      */
     @Post
     @Override
