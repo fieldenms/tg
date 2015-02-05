@@ -17,8 +17,8 @@ public class FlexLayoutTest {
                 .whenMedia(Device.MOBILE).set("[[[],[]],[[],[]],[[],[]],[[],[]]]");
         final DomElement flexRendered = flexLayout.render();
         assertEquals("the number of children is incorrect", 0, flexRendered.childCount());
-        assertEquals("the desktop layout constraints is incorrect", "[[[],[],[],[]],[[],[],[],[]]]", flexRendered.getAttr("whenDesktop").value);
-        assertEquals("the tablet layout constraints is incorrect", "[[[],[],[]],[[],[],[]],[[],[]]]", flexRendered.getAttr("whenTablet").value);
-        assertEquals("the phone layout constraints is incorrect", "[[[],[]],[[],[]],[[],[]],[[],[]]]", flexRendered.getAttr("whenMobile").value);
+        assertEquals("the desktop layout constraints is incorrect", "{{[[[],[],[],[]],[[],[],[],[]]]}}", flexRendered.getAttr("whenDesktop").value);
+        assertEquals("the tablet layout constraints is incorrect", "{{[[[],[],[]],[[],[],[]],[[],[]]]}}", flexRendered.getAttr("whenTablet").value);
+        assertEquals("the phone layout constraints is incorrect", "{{[[[],[]],[[],[]],[[],[]],[[],[]]]}}", flexRendered.getAttr("whenMobile").value);
     }
 }
