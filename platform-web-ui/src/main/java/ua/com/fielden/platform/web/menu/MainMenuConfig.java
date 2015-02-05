@@ -66,7 +66,7 @@ public class MainMenuConfig implements IMainMenuConfig {
     }
 
     @Override
-    public IWebApp endMenuConfig() {
+    public IWebApp done() {
         return webApplication;
     }
 

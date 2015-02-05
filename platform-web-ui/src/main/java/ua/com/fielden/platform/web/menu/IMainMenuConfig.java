@@ -66,6 +66,6 @@ public interface IMainMenuConfig {
      *
      * @return
      */
-    IWebApp endMenuConfig();
+    IWebApp done();
 
 }
