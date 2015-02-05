@@ -9,6 +9,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IAlso<T extends AbstractEntity<?>> extends ILayoutConfig {
+public interface IAlso<T extends AbstractEntity<?>> {
     IPropertySelector<T> also();
 }

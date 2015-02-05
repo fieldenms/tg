@@ -8,6 +8,6 @@ import ua.com.fielden.platform.web.interfaces.ILayout;
  * @author TG Team
  *
  */
-public interface ILayoutConfig extends IComplete {
-    ILayoutConfig setLayoutFor(final ILayout.Device device, final ILayout.Orientation orientation, final String flexString);
+public interface ILayoutConfig {
+    ILayoutConfigWithDone setLayoutFor(final ILayout.Device device, final ILayout.Orientation orientation, final String flexString);
 }
