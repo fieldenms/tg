@@ -189,4 +189,13 @@ public class EntityResourceMixin<T extends AbstractEntity<?>> {
         return dao.save(entity);
     }
 
+    /**
+     * Deletes the entity.
+     *
+     * @param entityId
+     */
+    public void delete(final Long entityId) {
+        dao.delete(entityFactory.newEntity(entityType, entityId));
+    }
+
 }

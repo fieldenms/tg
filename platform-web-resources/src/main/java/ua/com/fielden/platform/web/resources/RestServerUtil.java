@@ -170,7 +170,7 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation resultJSONRepresentation(final Result result) throws JsonProcessingException {
+    public Representation resultJSONRepresentation(final Result result) {
         logger.debug("Start building result JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);

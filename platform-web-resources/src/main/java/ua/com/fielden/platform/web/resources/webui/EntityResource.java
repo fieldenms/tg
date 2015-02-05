@@ -7,6 +7,7 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
@@ -19,6 +20,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * The web resource for entity serves as a back-end mechanism of entity retrieval, saving and deletion. It provides a base implementation for handling the following methods:
@@ -75,6 +78,18 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         return tryToSave(envelope);
     }
 
+    @Delete
+    @Override
+    public Representation delete() {
+        if (entityId == null) {
+            final String message = String.format("New entity was not persisted and thus can not be deleted. Actually this error should be prevented at the client-side.");
+            logger.error(message);
+            throw new IllegalStateException(message);
+        }
+
+        return delete(entityId);
+    }
+
     /**
      * Tries to save the changes for the entity and returns it in JSON format.
      *
@@ -106,6 +121,26 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         } catch (final Exception ex) {
             logger.error("An undesirable error has occured during saving of already successfully validated entity.", ex);
             throw new IllegalStateException(ex);
+        }
+    }
+
+    /**
+     * Tries to delete the entity with <code>entityId</code> and returns result. If successful -- result instance is <code>null</code>, otherwise -- result instance is also
+     * <code>null</code> (not-deletable entity should exist at the client side, no need to send it many times).
+     *
+     * @param entityId
+     *
+     * @return
+     * @throws JsonProcessingException
+     */
+    private Representation delete(final Long entityId) {
+        try {
+            mixin.delete(entityId);
+            return restUtil.resultJSONRepresentation(Result.successful(null));
+        } catch (final Exception e) {
+            final String message = String.format("The entity with id [%s] and type [%s] can not be deleted due to existing dependencies.", entityId, mixin.getEntityType().getSimpleName());
+            logger.error(message, e);
+            return restUtil.resultJSONRepresentation(Result.failure(message));
         }
     }
 
