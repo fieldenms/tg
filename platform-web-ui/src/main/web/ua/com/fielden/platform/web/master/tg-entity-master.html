@@ -32,6 +32,22 @@
                 return this.message;
             }
 
+            var SimultaneousSaveException = function() {
+                Object.call(this);
+
+                this.message = "Simultaneous save exception: the save process has been already started before and not ended. Please, block UI when the save was not completed.";
+            };
+            SimultaneousSaveException.prototype = Object.create(Object.prototype);
+            SimultaneousSaveException.prototype.constructor = SimultaneousSaveException;     
+
+            /**
+             * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+             * 
+            */
+            SimultaneousSaveException.prototype.toString = function() {
+                return this.message;
+            }
+
             Polymer({        
                 // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
                 currEntity: null, // represents the current entity
@@ -95,11 +111,13 @@
                  */
                 validate: function() {
                     var self = this;
+                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
+                    // (if the entity was not modified -- validate(holder) will start the error recovery process)
+
                     // cancel previous validation before starting new one! The results of previous validation are irrelevant!
                     self.$.validator.abortValidationIfAny();
-                    self.$.validator.validate(
-                        self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity)
-                    );
+                    self.$.validator.validate(self._reset(holder));
                 },
 
                 /**
@@ -112,8 +130,13 @@
                     this.onValidated(validatedEntity, newBindingEntity);
                 },
 
+                _reset: function(modifiedPropertiesHolder) {
+                    delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
+                    return modifiedPropertiesHolder;
+                },
+
                 extractModifiedPropertiesHolder: function(bindingEntity, originalBindingEntity) {
-                    var modPropHolder = {};
+                    var modPropHolder = { "@modified": false };
                     if (bindingEntity !== null) {
                         modPropHolder["id"] = bindingEntity["id"];
                         modPropHolder["version"] = bindingEntity["version"];
@@ -124,6 +147,7 @@
                             var originalValue = originalBindingEntity.get(propertyName);
                             if (!self.$.reflector.equalsEx(value, originalValue)) {
                                 modPropHolder[propertyName] = { "val" : value, "origVal" : originalValue };
+                                modPropHolder["@modified"] = true;
                             } else {
                                 modPropHolder[propertyName] = { "origVal" : originalValue };
                             }
@@ -140,14 +164,27 @@
                  */
                 save: function() {
                     var self = this;
-                    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
+
+                    if (self._savingInProgress()) {
+                        var SimultaneousSaveException = this._getSimultaneousSaveExceptionType();
+                        throw new SimultaneousSaveException();
+                    }
+
+                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    // cancel previous validation before starting saving process -- it includes validation process internally!
                     self.$.validator.abortValidationIfAny();
-                    // TODO what if there is already a request for saving started? self.abortSavingIfAny();
-                    self._abortSavingIfAny();
-                    self._saveModifiedProperties(
-                        self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity)
-                    );
+
+                    if (self._hasModified(holder)) {
+                        self._saveModifiedProperties(self._reset(holder));
+                    } else {
+                        self.$.validator.validate(self._reset(holder));
+                    }
                 },
+
+                _savingInProgress: function() {
+                    return this.$.ajaxSaverNew.loading || this.$.ajaxSaver.loading;
+                },
+
                 /**
                  * Starts the process of entity saving.
                  *
@@ -164,6 +201,17 @@
                         this.$.ajaxSaver.body = JSON.stringify(ser);
                         this.$.ajaxSaver.go();
                     }
+                },
+
+                /**
+                 * Returns 'true' if the entity has been modified from original, 'false' otherwise.
+                 * 
+                 * NOTE: it is designed to be used once (after that hasModified() will not be working for the same instance of modPropsHolder).
+                 *
+                 * @param modifiedPropertiesHolder -- the entity with modified properties
+                 */
+                _hasModified: function (modifiedPropertiesHolder) {
+                    return modifiedPropertiesHolder["@modified"];
                 },
 
                 /**
@@ -200,6 +248,7 @@
                     }
                     // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
                     var previousModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    self._reset(previousModifiedPropertiesHolder);
                     // New entity should be promoted to the local cache:
                     self.currEntity = entity;
                     self.currBindingEntity = self._extractBindingView(self.currEntity, previousModifiedPropertiesHolder);
@@ -277,6 +326,10 @@
 
                 _getUnsupportedConversionExceptionType: function() {
                     return UnsupportedConversionException;
+                },
+
+                _getSimultaneousSaveExceptionType: function() {
+                    return SimultaneousSaveException;
                 },
 
                 _getOriginalValue: function(entity, propName) {
