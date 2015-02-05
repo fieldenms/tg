@@ -1,76 +1,116 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-icon/core-icon.html">s
 <link rel="import" href="/resources/polymer/core-dropdown/core-dropdown.html">
 <link rel="import" href="/resources/polymer/core-input/core-input.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
+<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
+<link rel="import" href="/resources/polymer/core-style/core-style.html">
+<link rel="import" href="/resources/polymer/core-media-query/core-media-query.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
+<link rel="import" href="/resources/components/tg-calendar.html">
+<link rel="import" href="/resources/components/moment-component.html">
 
-<polymer-element name="datetime-picker" attributes="entity propertyName label">
+<core-style id="datetime-icon-decorator">
+
+    core-icon-button /deep/ core-icon[role="img"] {fill: {{g.paperInput.labelColor}};}
+    <!---->
+    #decorator:not(.invalid) core-icon-button:hover /deep/ core-icon, #decorator[focused]:not(.invalid) core-icon-button /deep/ core-icon {fill: {{g.paperInput.focusedColor}};}
+    <!---->
+    #decorator.invalid core-icon-button /deep/ core-icon { fill : {{g.paperInput.invalidColor}}; }
+    <!---->
+</core-style>
+
+<polymer-element name="datetime-picker" attributes="bindTo label">
     <template>
+        <core-style ref="datetime-icon-decorator"></core-style>
         <style>
-            #decorator:not([focused]):not(:hover) core-icon[aria-label="today"] {
-                visibility: hidden;
+            core-icon-button /deep/ core-icon[role="img"] {
+                height: 1.1em;
+                width: 1.1em;
+                padding: 0px;
+                margin: 0px;
+                vertical-align: top;
             }
-            #input-container {
-                display:inline-block;
-                width:100%;
-            }
-            #input-container > input[is="core-input"] {
-                width:100%;
-            }
-            #icon {
-                position: absolute;
-                bottom: 0;
-                right: 0;
-                background-color: white;
+            core-icon-button {
+                padding: 0px;
+                margin: 0px;
+                height: 1.1em;
+                width: 1.1em;
+                font: inherit;
             }
         </style>
-        <paper-input-decorator id="decorator" label="{{label}}" floatingLabel>
-            <div>
-                <div id="input-container">
-                    <input is="core-input" committedValue="{{entity[propertyName]}}">
+        <paper-input-decorator id="decorator" label="{{label}}" isInvalid="{{isInvalid}}" error="{{error}}" floatingLabel>
+            <div layout horizontal>
+                <div id="input-container" flex>
+                    <input id="input" is="core-input" value="{{valueToModify}}" committedValue="{{acceptedValue}}" style="width:100%">
                 </div>
                 <div id="icon">
-                    <core-icon on-click="{{showCalendar}}" icon="icons:{{calendarVisible ? 'check' : 'today'}}"></core-icon>
+                    <core-icon-button on-click="{{showCalendar}}" icon="today"></core-icon-buton>
                 </div>
             </div>
         </paper-input-decorator>
-
-
-        <!--
-        <div id="icon" style="position:absolute; bottom:0; right:0; background-color:white">
-        </div>
-        <shadow></shadow>
--->
-        <core-dropdown id="picker" opened="{{calendarVisible}}" relatedTarget="{{$.decorator}}" layered>
-            TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>TEST
-            <br>
-        </core-dropdown>
+        <paper-action-dialog class="date-time-picker" backdrop autoCloseDisabled opened="{{calendarVisible}}">
+            <tg-calendar id="datePicker" auto-vertical pickTime></tg-calendar>
+            <paper-button affirmative on-tap="{{cancelDate}}">Cancel</paper-button>
+            <paper-button affirmative autofocus on-tap="{{acceptDate}}">Ok</paper-button>
+        </paper-action-dialog>
     </template>
     <script>
-        Polymer({
-            ready: function () {
-                this.$.decorator.labelVisible = false;
-            },
-            showCalendar: function (e) {
-                this.calendarVisible = !this.calendarVisible;
-            }
-        });
+        (function () {
+            Polymer({
+                valueToModify: null,
+                acceptedValue: null,
+                isInvalid: false,
+                error: "",
+                ready: function () {
+                    this.$.decorator.labelVisible = false;
+                },
+                acceptedValueChanged: function (oldValue, newValue) {
+                    var acceptedMoment;
+                    console.log(moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a"));
+                    if (newValue) {
+                        acceptedMoment = moment(newValue.trim(), "L LT", true);
+                        if (acceptedMoment.isValid()) {
+                            this.isInvalid = false;
+                            this.bindTo = acceptedMoment.valueOf();
+                        } else {
+                            this.isInvalid = true;
+                            this.error = "The entered date is incorrect."
+                        }
+                    } else {
+                        this.isInvalid = false;
+                    }
+                },
+                bindToChanged: function (oldValue, newValue) {
+                    this.valueToModify = moment(newValue).format("L LT");
+                },
+                showCalendar: function (e) {
+                    var selectedMoment;
+                    this.calendarVisible = !this.calendarVisible;
+                    if (this.valueToModify) {
+                        selectedMoment = moment(this.valueToModify.trim(), "L LT", true);
+                        if (selectedMoment.isValid()) {
+                            this.$.datePicker.selectedDate = selectedMoment.valueOf();
+                            this.$.datePicker.selectedHour = selectedMoment.hour();
+                            this.$.datePicker.selectedMinute = selectedMoment.minute();
+                            return;
+                        }
+                    }
+                    this.$.datePicker.selectedDate = null;
+                    this.$.datePicker.selectedHour = 0;
+                    this.$.datePicker.selectedMinute = 0;
+                },
+                acceptDate: function () {
+                    this.valueToModify = moment(this.$.datePicker.selectedDate)
+                        .hour(this.$.datePicker.selectedHour)
+                        .minute(this.$.datePicker.selectedMinute)
+                        .format("L LT");
+                    this.acceptedValue = this.valueToModify;
+                    this.$.input.focus();
+                },
+                cancelDate: function () {
+                    this.$.input.focus();
+                }
+            });
+        })();
     </script>
 </polymer-element>

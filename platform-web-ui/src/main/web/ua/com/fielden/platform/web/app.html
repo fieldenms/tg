@@ -16,11 +16,12 @@
     <link rel="import" href="/resources/polymer/flatiron-director/flatiron-director.html">
     <link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
     <link rel="import" href="/resources/element_loader/load-element.html">
+    <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+    <link rel="import" href="/resources/components/moment-component.html">
 
     <style>
         body {
-            font-family: "Helvetica";
-            font-weight: 300;
+            font-family: "RobotoDraft";
         }
         core-animated-pages {
             width: 85%;
@@ -35,7 +36,7 @@
             font-size: 16px;
             background-color: white;
         }
-         body   core-toolbar {
+        body core-toolbar {
             background-color: #03a9f4;
             color: #fff;
         }
@@ -58,7 +59,14 @@
         core-menu > paper-item.core-selected {
             background: #e1f5fe;
         }
-        @media all and (max-width: 480px) {
+        html /deep/ .date-time-picker::shadow #scroller {
+            padding: 0px;
+        }
+        html /deep/ .date-time-picker::shadow #actions {
+            padding: 8px;
+            color: #03A9F4;
+        }
+        @media all and (max-width: 767px) {
             core-animated-pages {
                 width: 100%;
                 height: 100%;
@@ -100,8 +108,8 @@
             <div layout horizontal center-center center-justified fit>
                 <core-animated-pages id="pages" selected="{{route}}" valueattr="hash" on-core-animated-pages-transition-end="{{pageSelected}}" transitions="slide-from-right">
                     <template repeat="{{page in pages}}">
-                        <paper-shadow z="2" hash="{{page.hash}}" fit>
-                                <load-element import="{{page.url}}" attrs="{{page.attributes}}" on-after-load="{{afterElementLoad}}" auto?="{{!page.lazyLoad}}">Loading {{page.name}}...</load-element>
+                        <paper-shadow z="1" hash="{{page.hash}}" fit>
+                            <load-element import="{{page.url}}" attrs="{{page.attributes}}" on-after-load="{{afterElementLoad}}" auto?="{{!page.lazyLoad}}">Loading {{page.name}}...</load-element>
                         </paper-shadow>
                     </template>
                 </core-animated-pages>
@@ -117,9 +125,9 @@
                 DEFAULT_ROUTE = @defaultView,
                 scaffold,
                 pages;
-
+            
+            moment.locale("en-AU");
             template.pages = @pages;
-
             template.addEventListener('template-bound', function (e) {
                 scaffold = document.querySelector('#scaffold');
                 pages = document.querySelector('#pages');

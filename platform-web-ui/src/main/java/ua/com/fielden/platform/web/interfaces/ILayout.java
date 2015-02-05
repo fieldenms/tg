@@ -9,12 +9,13 @@ import ua.com.fielden.platform.web.component.AbstractWebComponent;
  *
  * @param <T>
  */
-public interface ILayout<T> extends IRenderable{
+public interface ILayout<T> extends IRenderable {
 
     /**
      * Adds the {@link AbstractWebComponent} to the layout manager.
      *
-     * @param component - a component to be added to layout manager.
+     * @param component
+     *            - a component to be added to layout manager.
      * @return
      */
     ILayout<T> add(AbstractWebComponent component);
@@ -22,8 +23,10 @@ public interface ILayout<T> extends IRenderable{
     /**
      * Adds the {@link AbstractWebComponent} to the layout manager.
      *
-     * @param component - a component to be added to layout manager
-     * @param constraints - additional layout configuration parameters for the component.
+     * @param component
+     *            - a component to be added to layout manager
+     * @param constraints
+     *            - additional layout configuration parameters for the component.
      * @return
      */
     ILayout<T> add(AbstractWebComponent component, T constraints);

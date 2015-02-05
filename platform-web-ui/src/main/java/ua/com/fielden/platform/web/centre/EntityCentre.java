@@ -16,12 +16,14 @@ public class EntityCentre {
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
      *
-     * @param menuItemType - the menu item type for which this entity centre is to be created.
-     * @param name - the name for this entity centre.
+     * @param menuItemType
+     *            - the menu item type for which this entity centre is to be created.
+     * @param name
+     *            - the name for this entity centre.
      */
     public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemType, final String name) {
-	this.menuItemType = menuItemType;
-	this.name = name;
+        this.menuItemType = menuItemType;
+        this.name = name;
     }
 
     /**
@@ -30,7 +32,7 @@ public class EntityCentre {
      * @return
      */
     public Class<? extends MiWithConfigurationSupport<?>> getMenuItemType() {
-	return this.menuItemType;
+        return this.menuItemType;
     }
 
     /**
@@ -39,7 +41,7 @@ public class EntityCentre {
      * @return
      */
     public String getName() {
-	return name;
+        return name;
     }
 
 }

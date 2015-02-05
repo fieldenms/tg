@@ -15,23 +15,23 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.web.WebAppConfig;
 
-public class MainWebApplicationResource extends ServerResource{
+public class MainWebApplicationResource extends ServerResource {
 
     private final WebAppConfig app;
 
     public MainWebApplicationResource(final WebAppConfig app, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	this.app = app;
+        init(context, request, response);
+        this.app = app;
     }
 
     @Override
     protected Representation get() throws ResourceException {
-	try {
-	    return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(app.run().getBytes("UTF-8"))));
-	} catch (final UnsupportedEncodingException e) {
-	    e.printStackTrace();
-	    throw new ResourceException(e);
-	}
+        try {
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(app.run().getBytes("UTF-8"))));
+        } catch (final UnsupportedEncodingException e) {
+            e.printStackTrace();
+            throw new ResourceException(e);
+        }
     }
 
 }
