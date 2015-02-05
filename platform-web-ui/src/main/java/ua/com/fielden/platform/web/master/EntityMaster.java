@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.master;
 
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dao.DefaultEntityProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -53,5 +54,17 @@ public class EntityMaster<T extends AbstractEntity<?>> {
      */
     public IEntityProducer<T> createEntityProducer(final Injector injector) {
         return entityProducerType == null ? new DefaultEntityProducer<T>(injector.getInstance(EntityFactory.class), this.entityType) : injector.getInstance(this.entityProducerType);
+    }
+
+    /**
+     * Creates value matcher instance.
+     *
+     * @param injector
+     * @return
+     */
+    public IValueMatcher<AbstractEntity<?>> createValueMatcher(final Injector injector, final String propertyName) {
+        // TODO implement
+        return null;
+        // return entityProducerType == null ? new DefaultEntityProducer<T>(injector.getInstance(EntityFactory.class), this.entityType) : injector.getInstance(this.entityProducerType);
     }
 }
