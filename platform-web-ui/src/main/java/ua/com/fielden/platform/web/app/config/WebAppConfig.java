@@ -47,7 +47,7 @@ public class WebAppConfig implements IWebAppConfig {
     }
 
     @Override
-    public IWebApp end() {
+    public IWebApp done() {
         return webApplication;
     }
 

@@ -39,6 +39,6 @@ public interface IWebAppConfig {
      *
      * @return
      */
-    IWebApp end();
+    IWebApp done();
 
 }
