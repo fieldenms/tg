@@ -120,8 +120,7 @@ public abstract class AbstractWebApp extends Application {
         //attachCentreResources(router, webApp);
 
         // Registering entity masters.
-        // FIXME Need to replace with appropriate API calls to register views, which includes masters
-        // attachMasterResources(router, webAppConfig.getMasters());
+        attachMasterResources(router, webApp.getMasters());
 
         // Registering web models.
         //attachCustomWebViewResources(router, webApp);

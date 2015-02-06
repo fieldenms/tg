@@ -57,9 +57,8 @@ public class WebApp extends AbstractWebApp {
         //        app.addCustomView(new CustomWebView(new CustomWebModel()));
 
         // Add entity masters.
-        // FIXME Need to resolve master registration
-        // app.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class)); // efs(EntityWithInteger.class).with("prop")
-        // app.addMaster(new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class));
+        webApp.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class)); // efs(EntityWithInteger.class).with("prop")
+        webApp.addMaster(new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class));
     }
 
     @Override
