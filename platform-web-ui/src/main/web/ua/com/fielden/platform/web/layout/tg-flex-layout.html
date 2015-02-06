@@ -4,12 +4,6 @@
 
 <polymer-element name="tg-flex-layout" attributes="whenDesktop whenTablet whenMobile debug">
     <template>
-        <style>
-            .debug {
-                border: 1px dashed red;
-            }
-        </style>
-        <div id="container" class="{{ {debug: debug} | tokenList }}" layout vertical></div>
         <content select=":not(text)" id="elements"></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <core-media-query query="max-width: {{$.appConfig.minTabletWidth - 1}}px" querymatches="{{mobileScreen}}" on-core-media-change="{{handleMobileScreen}}"></core-media-query>
@@ -22,15 +16,29 @@
                     var contentIndex = 0;
                     if (!Array.isArray(layout)) {
                         throw "The layout must be an array";
-                    } else {
-                        while (this.$.container.firstChild) {
-                            this.$.container.removeChild(this.$.container.firstChild);
+                    } 
+                    if (this.container) {
+                        while (this.container.firstChild) {
+                            this.container.removeChild(this.container.firstChild);
                         }
-                        removeStylesAndAttributes(this.$.container);
+                        removeStylesAndAttributes(this.container);
+                        this.container.setAttribute("layout", "");
+                        this.container.setAttribute("vertical", "");
+                        if (this.debug) {
+                            setDebugStyle(this.container);
+                        } else {
+                            removeDebugStyle(this.container);
+                        }
                         layout.forEach((function (layoutElem) {
-                            contentIndex = createFlexCell.bind(this)(this.$.container, layoutElem, contentIndex, true, this.debug);
+                            contentIndex = createFlexCell.bind(this)(this.container, layoutElem, contentIndex, true);
                         }).bind(this));
                     }
+                },
+                setDebugStyle = function(element) {
+                    element.style.border = "1px dashed red";
+                },
+                removeDebugStyle = function(element) {
+                     element.style.removeProperty("border");
                 },
                 removeStylesAndAttributes = function (element) {
                     if (element.stylesToRemove) {
@@ -46,7 +54,7 @@
                         delete element.attributesToRemove;
                     }
                 },
-                createFlexCell = function (container, layoutElem, contentIndex, horizontal, debug) {
+                createFlexCell = function (container, layoutElem, contentIndex, horizontal) {
                     var rowElement, styleValues, trimmedLayoutElement;
                     if (typeof layoutElem === "string") {
                         trimmedLayoutElement = layoutElem.trim();
@@ -75,13 +83,13 @@
                                 rowElement.setAttribute(horizontal ? "horizontal" : "vertical", "");
                             }
                         }
-                        if (debug) {
-                            rowElement.classList.add("debug");
+                        if (this.debug) {
+                            setDebugStyle(rowElement);
                         } else {
-                            rowElement.classList.remove("debug");
+                            removeDebugStyle(rowElement);
                         }
                         layoutElem.forEach((function (columnLayout) {
-                            contentIndex = createFlexCell.bind(this)(rowElement, columnLayout, contentIndex, !horizontal, debug);
+                            contentIndex = createFlexCell.bind(this)(rowElement, columnLayout, contentIndex, !horizontal);
                         }).bind(this));
                         container.appendChild(rowElement);
                     }
@@ -108,6 +116,9 @@
                     Array.prototype.forEach.call(this.$.elements.getDistributedNodes(), function (item) {
                         this.componentsToLayout.push(item);
                     }.bind(this));
+                    if (this.componentsToLayout.length > 0) {
+                        this.container = this.componentsToLayout[0].parentElement;
+                    }
                 },
                 created: function () {
                     this.whenMobile = [];

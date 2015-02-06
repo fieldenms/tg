@@ -3,7 +3,7 @@
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
 
-<polymer-element name="tg-main-menu-item" attributes="whenDesktop whenTablet whenMobile menuIcon menuItemTitle">
+<polymer-element name="tg-main-menu-item" attributes="whenDesktop whenTablet whenMobile menuIcon menuItemTitle" noscript>
      <style>
             .category {
                 margin: 4px;
@@ -25,11 +25,4 @@
             </tg-flex-layout>
         </paper-shadow>
     </template>
-    <script>
-        Polymer({
-            onMenuTap: function(e, detail) {
-                console.log("menu item tap test");
-            }
-        })
-    </script>
 </polymer-element>
