@@ -7,6 +7,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.web.WebAppConfig;
+import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.application.AbstractWebApp;
 import ua.com.fielden.platform.web.master.EntityMaster;
 
@@ -47,7 +48,7 @@ public class WebApp extends AbstractWebApp {
      * Configures the {@link WebAppConfig} with custom entity centres.
      */
     @Override
-    protected void initWebApplication(final WebAppConfig app) {
+    protected void initWebApplication(final IWebApp webApp) {
         // Add entity centres.
         //        app.addCentre(new EntityCentre(MiPerson.class, "Personnel"));
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
@@ -56,9 +57,9 @@ public class WebApp extends AbstractWebApp {
         //        app.addCustomView(new CustomWebView(new CustomWebModel()));
 
         // Add entity masters.
-        app.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class)); // efs(EntityWithInteger.class).with("prop")
-        app.addMaster(new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class)
-                );
+        // FIXME Need to resolve master registration
+        // app.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class)); // efs(EntityWithInteger.class).with("prop")
+        // app.addMaster(new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class));
     }
 
     @Override
