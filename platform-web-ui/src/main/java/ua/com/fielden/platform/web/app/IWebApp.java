@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.web.app;
 
+import java.util.List;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.app.config.IWebAppConfig;
+import ua.com.fielden.platform.web.master.EntityMaster;
 import ua.com.fielden.platform.web.menu.IMainMenuConfig;
 
 /**
@@ -24,4 +28,19 @@ public interface IWebApp {
      * @return
      */
     IMainMenuConfig configMainMenu();
+
+    /**
+     * TODO Temporal method for registering masters. Please remove and provide fluent interface.
+     *
+     * @param entityMaster
+     * @return
+     */
+    <T extends AbstractEntity<?>> IWebApp addMaster(final EntityMaster<T> entityMaster);
+
+    /**
+     * TODO Temporal method for getting masters. Please remove and provide fluent interface.
+     *
+     * @return
+     */
+    List<EntityMaster<? extends AbstractEntity<?>>> getMasters();
 }
