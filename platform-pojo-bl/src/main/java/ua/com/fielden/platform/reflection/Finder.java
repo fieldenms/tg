@@ -810,7 +810,7 @@ public class Finder {
      * @param dotNotationExp
      * @return
      */
-    public static <T extends Annotation> boolean isPropertyPresent(final Class<?> forType, final String dotNotationExp) {
+    public static boolean isPropertyPresent(final Class<?> forType, final String dotNotationExp) {
         try {
             return AnnotationReflector.getPropertyAnnotation(IsProperty.class, forType, dotNotationExp) != null;
         } catch (final IllegalArgumentException iae) {
@@ -943,7 +943,7 @@ public class Finder {
         // non-collectional properties must have their linkProperty specified explicitly, otherwise they're considered to be Many-to-One
         if (!collectionalProp && !isOne2One_association(type, dotNotationExp)) {
             throw new IllegalStateException("Non-collectional property " + dotNotationExp + " in type " + type.getName() + //
-                    " represents a Many-to-One association.");
+            " represents a Many-to-One association.");
         }
 
         // first check for a link property amongst key members

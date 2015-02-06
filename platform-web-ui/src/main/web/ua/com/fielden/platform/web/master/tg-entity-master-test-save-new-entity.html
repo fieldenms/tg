@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>entity-master</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+    <script src="/resources/polymer/polymer-test-tools/htmltest.js"></script>
+
+    <link rel="import" href="/resources/master/tg-entity-master.html">
+</head>
+
+<body unresolved>
+    <tg-entity-master id="master" user="SU" entitytype="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" entityid="new"></tg-entity-master>
+
+    <script>
+        document.addEventListener('polymer-ready', function() {
+            var master = document.querySelector('#master');
+            var self = this;
+
+            master.onSaved = function(potentiallySavedEntity, bindingEntity) {   
+                assert.isNotNull(potentiallySavedEntity.id, "Entity id should be not null.");
+                assert.strictEqual(potentiallySavedEntity.version, 0, "Entity version should be the same.");
+             
+                // value ok?
+                assert.ok(potentiallySavedEntity.get("stringProp"), "Property value should be initialised.");                
+                assert.strictEqual(potentiallySavedEntity.get("stringProp"), "okok", "Property value should be correct.");
+
+                // value is changed?
+                assert.strictEqual(potentiallySavedEntity.prop("stringProp").isChangedFromOriginal(), false, "Instance meta-prop should be changedFromOriginal.");
+
+                // value validationresult?
+                assert.strictEqual(potentiallySavedEntity.prop("stringProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+                // binding value ok?
+                assert.ok(bindingEntity.get("stringProp"), "Binding property should be initialised.");                
+                assert.strictEqual(bindingEntity.get("stringProp"), "okok", "Binding property should be correct number.");
+
+                done();
+            };
+
+            master.onRetrieved = function(entity, bindingEntity) {
+                assert.strictEqual(entity.id, null, "Entity id should be null.");
+                assert.strictEqual(entity.version, 0, "Entity version should be initial.");
+                // value ok?
+                assert.strictEqual(entity.get("stringProp"), null, "Property value should be correct.");
+
+                // value is changed?
+                assert.strictEqual(entity.prop("stringProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+                // value validationresult?
+                assert.strictEqual(entity.prop("stringProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+                // binding value ok?
+                assert.strictEqual(bindingEntity.get("stringProp"), null, "Binding property should be string entity representation.");
+                
+                // ACTUAL PROPERTY CHANGE            
+                bindingEntity.set("key", "KEY_TO_PASS_VALIDATION_BEFORE_SAVE");
+                bindingEntity.set("stringProp", "okok");
+
+                master.save(); 
+            };
+
+            master.retrieve();
+        });
+    </script>
+
+</body>
+
+</html>

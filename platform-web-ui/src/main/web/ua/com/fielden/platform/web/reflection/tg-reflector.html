@@ -229,12 +229,12 @@
             }
 
             /**
-             * Returns 'true' when the instance property is dirty, false otherwise.
+             * Returns 'true' when the instance property is changed from original, false otherwise.
              * 
-             * IMPORTANT: do not use '_dirty' field directly!
+             * IMPORTANT: do not use '_cfo' field directly!
             */
-            EntityInstanceProp.prototype.isDirty = function() {
-                return typeof this._dirty === 'undefined' ? false : this._dirty;
+            EntityInstanceProp.prototype.isChangedFromOriginal = function() {
+                return typeof this._cfo === 'undefined' ? false : this._cfo;
             }
 
             /**
@@ -329,7 +329,71 @@
              * IMPORTANT: do not use '@prop' field directly!
             */
             Entity.prototype.prop = function(name) {
+                this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
+                if (this._isObjectUndefined("@" + name)) {
+                    this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case when it was not JSON-serialised (all information was 'default')
+                }                
                 return this["@" + name];
+            }
+
+            /**
+             * Returns the property value for the entity.
+             * 
+             * IMPORTANT: do not use property field directly!
+            */
+            Entity.prototype.get = function(name) {
+                if (this._isObjectUndefined(name)) {
+                    throw new StrictProxyException(name, this.type()._simpleClassName());
+                }
+                return this[name];
+            }
+
+            /**
+             * Returns 'true' if there is an object member defined (not a function!) with a specified name, 'false' otherwise.
+             * 
+            */
+            Entity.prototype._isObjectUndefined = function(name) {
+                return (typeof this[name] === 'undefined') || (typeof this[name] === 'function');
+            }
+
+            /**
+             * Sets the property value for the entity.
+             * 
+             * IMPORTANT: do not use property field directly!
+            */
+            Entity.prototype.set = function(name, value) {
+                this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
+                return this[name] = value;
+            }
+
+            /**
+             * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
+             * 
+             * @param propertyCallback -- function(propertyName) to be called on each property
+            */
+            Entity.prototype.traverseProperties = function(propertyCallback) {
+                var entity = this;
+                for (var membName in entity) {
+                    if (entity.hasOwnProperty(membName) && membName[0] !== "@" && membName !== "_type" && membName !== "id" && membName !== "version") {
+                        propertyCallback(membName);
+                    }
+                }
+            }
+
+            var StrictProxyException = function(propName, simpleClassName) { // rawObject
+                Object.call(this);
+
+                this.message = "Strict proxy exception: the property [" + propName + "] does not exist in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
+            };
+            StrictProxyException.prototype = Object.create(Object.prototype);
+            StrictProxyException.prototype.constructor = StrictProxyException;     
+
+            /**
+             * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+             * 
+            */
+            StrictProxyException.prototype.toString = function() {
+                return this.message;
             }
 
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
@@ -346,12 +410,23 @@
                 },
                 typeTable = providePrototypes(@typeTable);
 
-            console.log("typeTable = ", typeTable);
-            // console.log("typeTable['34'].isCompositeEntity() = ", typeTable['34'].isCompositeEntity());
+            // console.log("typeTable = ", typeTable);
 
             Polymer({
                 getType: function(number) {
                     return typeTable[number];
+                },
+
+                findTypeByName: function(typeName) {
+                    for (var key in typeTable) {
+                        if (typeTable.hasOwnProperty(key)) {
+                            var entityType = typeTable[key];
+                            if (entityType.fullClassName() === typeName) {
+                                return entityType;
+                            }
+                        }
+                    }
+                    return null;
                 },
 
                 getEntityInstancePropType: function() {
@@ -360,6 +435,26 @@
 
                 getEntityType: function() {
                     return Entity;
+                },
+
+                getStrictProxyExceptionType: function() {
+                    return StrictProxyException;
+                },
+
+                /**
+                 * Returns 'true' if the regular values are equal, 'false' otherwise.
+                 */
+                equalsEx: function(value1, value2) {
+                    // if (value1) {
+                    //     if (!value2) {
+                    //         return false;
+                    //     } else {
+                    //         return ...
+                    //     }
+                    // }
+
+                    // TODO rectify whether this implementation is good:
+                    return value1 === value2;
                 }
             });
         })();

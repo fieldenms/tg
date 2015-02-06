@@ -103,46 +103,48 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                 }
 
                 if (value != null || !excludeNulls) {
-                    // write actual property
-                    generator.writeFieldName(name);
-                    generator.writeObject(value);
-
                     final MetaProperty<Object> metaProperty = entity.getProperty(name);
-                    final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
-                    if (!defaultValueContract.isEditableDefault(metaProperty)) {
-                        existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, defaultValueContract.getEditable(metaProperty));
-                    }
-                    if (!defaultValueContract.isDirtyDefault(metaProperty)) {
-                        existingMetaProps.put("_dirty", defaultValueContract.getDirty(metaProperty));
-                    }
-                    if (!defaultValueContract.isRequiredDefault(metaProperty)) {
-                        existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, defaultValueContract.getRequired(metaProperty));
-                    }
-                    if (!defaultValueContract.isVisibleDefault(metaProperty)) {
-                        existingMetaProps.put("_visible", defaultValueContract.getVisible(metaProperty));
-                    }
-                    if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
-                        existingMetaProps.put("_validationResult", defaultValueContract.getValidationResult(metaProperty));
-                    }
-                    final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
-                    final Integer min = minMax.getKey();
-                    final Integer max = minMax.getValue();
-                    if (!defaultValueContract.isMinDefault(min)) {
-                        existingMetaProps.put("_min", min);
-                    }
-                    if (!defaultValueContract.isMaxDefault(max)) {
-                        existingMetaProps.put("_max", max);
-                    }
+                    if (!metaProperty.isProxy()) {
+                        // write actual property
+                        generator.writeFieldName(name);
+                        generator.writeObject(value);
 
-                    // write actual meta-property
-                    if (!existingMetaProps.isEmpty()) {
-                        generator.writeFieldName("@" + name);
-                        generator.writeStartObject();
-                        for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
-                            generator.writeFieldName(nameAndVal.getKey());
-                            generator.writeObject(nameAndVal.getValue());
+                        final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
+                        if (!defaultValueContract.isEditableDefault(metaProperty)) {
+                            existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, defaultValueContract.getEditable(metaProperty));
                         }
-                        generator.writeEndObject();
+                        if (!defaultValueContract.isChangedFromOriginalDefault(metaProperty)) {
+                            existingMetaProps.put("_cfo", defaultValueContract.getChangedFromOriginal(metaProperty));
+                        }
+                        if (!defaultValueContract.isRequiredDefault(metaProperty)) {
+                            existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, defaultValueContract.getRequired(metaProperty));
+                        }
+                        if (!defaultValueContract.isVisibleDefault(metaProperty)) {
+                            existingMetaProps.put("_visible", defaultValueContract.getVisible(metaProperty));
+                        }
+                        if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
+                            existingMetaProps.put("_validationResult", defaultValueContract.getValidationResult(metaProperty));
+                        }
+                        final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
+                        final Integer min = minMax.getKey();
+                        final Integer max = minMax.getValue();
+                        if (!defaultValueContract.isMinDefault(min)) {
+                            existingMetaProps.put("_min", min);
+                        }
+                        if (!defaultValueContract.isMaxDefault(max)) {
+                            existingMetaProps.put("_max", max);
+                        }
+
+                        // write actual meta-property
+                        if (!existingMetaProps.isEmpty()) {
+                            generator.writeFieldName("@" + name);
+                            generator.writeStartObject();
+                            for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
+                                generator.writeFieldName(nameAndVal.getKey());
+                                generator.writeObject(nameAndVal.getValue());
+                            }
+                            generator.writeEndObject();
+                        }
                     }
                 }
             }

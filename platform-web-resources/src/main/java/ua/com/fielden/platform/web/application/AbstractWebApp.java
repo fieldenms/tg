@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.application;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -13,6 +14,7 @@ import org.restlet.Restlet;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.web.WebAppConfig;
@@ -22,11 +24,14 @@ import ua.com.fielden.platform.web.factories.MainMenuResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.factories.WebAppConfigResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebViewResourceFactory;
+import ua.com.fielden.platform.web.master.EntityMaster;
 
 import com.google.inject.Injector;
 
@@ -114,6 +119,9 @@ public abstract class AbstractWebApp extends Application {
         // Registering entity centres.
         //attachCentreResources(router, webApp);
 
+        // Registering entity masters.
+        attachMasterResources(router, webAppConfig.getMasters());
+
         // Registering web models.
         //attachCustomWebViewResources(router, webApp);
 
@@ -153,6 +161,18 @@ public abstract class AbstractWebApp extends Application {
     private void attachCustomWebViewResources(final Router router, final WebAppConfig webAppConfig) {
         logger.info("\t\tWeb models resources (generated) attaching...");
         router.attach("/webview/{webViewName}", new WebViewResourceFactory(webAppConfig.getCustomViews()));
+    }
+
+    /**
+     * Attaches all resources relevant to entity masters (entity resource, entity validation resource, UI resources etc.).
+     *
+     * @param router
+     * @param entityMasters
+     */
+    private void attachMasterResources(final Router router, final List<EntityMaster<? extends AbstractEntity<?>>> entityMasters) {
+        logger.info("\t\tEntity master resources attaching...");
+        router.attach("/users/{username}/entity/{entityType}/{entity-id}", new EntityResourceFactory(entityMasters, injector));
+        router.attach("/users/{username}/validation/{entityType}", new EntityValidationResourceFactory(entityMasters, injector));
     }
 
     /**

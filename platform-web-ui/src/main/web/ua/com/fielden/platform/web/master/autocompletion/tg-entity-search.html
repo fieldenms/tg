@@ -1,0 +1,44 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+
+<polymer-element name="tg-entity-search" attributes="user entitytype property onFound" hidden>
+    <template>
+        <tg-serialiser id="serialiser"></tg-serialiser>
+        <core-ajax id="ajaxSearcher" url="/users/{{user}}/autocompletion/{{entitytype}}/{{property}}" method="POST" handleas="json"></core-ajax> 
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                ready: function() { 
+                    var self = this;
+
+                    self.$.ajaxSearcher.addEventListener('core-response', function(e) {
+                        var foundEntities = self.$.serialiser.deserialise(e.detail.response).instance;
+                        self.onFound(foundEntities);
+                    });
+                },
+
+                /**
+                 * Starts the process of searching entities.
+                 *
+                 * @param paramsHolder -- the object with custom parameters
+                 */
+                search: function (searchString, paramsHolder) {
+                    paramsHolder["___searchString"] = searchString;
+                    var ser = this.$.serialiser.serialise(paramsHolder);
+
+                    this.$.ajaxSearcher.body = JSON.stringify(ser);
+                    this.$.ajaxSearcher.go();
+                },
+
+                /**
+                 * Cancels any unfinished validation that was requested earlier (if any).
+                 */
+                abortSearchIfAny: function() {
+                    this.$.ajaxSearcher.abort();
+                }
+            });
+        })();
+    </script>
+</polymer-element>

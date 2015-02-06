@@ -58,8 +58,10 @@
                                 }
                                 // All object properties will be copied to new object. Just skip "_type" property.
                                 for (property in obj) {
-                                    if (property !== "_type") {
-                                        serialisedObj[property] = serialise(obj[property]);
+                                    if (obj.hasOwnProperty(property)) {
+                                        if (property !== "_type") {
+                                            serialisedObj[property] = serialise(obj[property]);
+                                        }
                                     }
                                 }
                             } else {
@@ -69,6 +71,9 @@
                             return serialisedObj;
                         };
                     return serialise(envelope);
+                },
+                reflector: function() {
+                    return this.$.reflector;
                 },
                 deserialise: function (envelope) {
                     var objectMap = {},
