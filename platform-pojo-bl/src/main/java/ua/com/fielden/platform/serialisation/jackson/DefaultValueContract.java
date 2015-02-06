@@ -45,32 +45,32 @@ public class DefaultValueContract {
 
     ///////////////////////////////////////////////// DIRTY /////////////////////////////////////////////////
     /**
-     * Returns the default value of <code>dirty</code> property.
+     * Returns the default value of <code>changedFromOriginal</code> property.
      *
      * @return
      */
-    public boolean getDirtyDefault() {
+    public boolean getChangedFromOriginalDefault() {
         return false;
     }
 
     /**
-     * Returns the value of <code>dirty</code> property.
+     * Returns the value of <code>changedFromOriginal</code> property.
      *
      * @param metaProperty
      * @return
      */
-    public boolean getDirty(final MetaProperty<Object> metaProperty) {
-        return metaProperty == null ? getDirtyDefault() : metaProperty.isDirty();
+    public boolean getChangedFromOriginal(final MetaProperty<Object> metaProperty) {
+        return metaProperty == null ? getChangedFromOriginalDefault() : metaProperty.isChangedFromOriginal();
     }
 
     /**
-     * Returns <code>true</code> if the value of <code>dirty</code> property is default, <code>false</code> otherwise.
+     * Returns <code>true</code> if the value of <code>changedFromOriginal</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty
      * @return
      */
-    public boolean isDirtyDefault(final MetaProperty<Object> metaProperty) {
-        return EntityUtils.equalsEx(getDirty(metaProperty), getDirtyDefault());
+    public boolean isChangedFromOriginalDefault(final MetaProperty<Object> metaProperty) {
+        return EntityUtils.equalsEx(getChangedFromOriginal(metaProperty), getChangedFromOriginalDefault());
     }
 
     ///////////////////////////////////////////////// REQUIRED /////////////////////////////////////////////////

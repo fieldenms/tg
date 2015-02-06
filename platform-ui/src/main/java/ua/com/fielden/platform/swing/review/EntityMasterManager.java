@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import ua.com.fielden.platform.dao.DefaultEntityProducer;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -17,7 +18,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.model.callback.IPostInitCallback;
 import ua.com.fielden.platform.swing.review.factory.IEntityMasterFactory;

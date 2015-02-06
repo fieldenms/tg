@@ -170,7 +170,7 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation resultJSONRepresentation(final Result result) throws JsonProcessingException {
+    public Representation resultJSONRepresentation(final Result result) {
         logger.debug("Start building result JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);
@@ -314,7 +314,7 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public <T extends AbstractEntity> Representation singleJSONRepresentation(final T entity) throws JsonProcessingException {
+    public <T extends AbstractEntity> Representation singleJSONRepresentation(final T entity) {
         try {
             // create a Result enclosing entity list
             final Result result = entity != null ? new Result(entity, "OK") : new Result(null, new Exception("Could not find entity."));
@@ -423,6 +423,17 @@ public class RestServerUtil {
      */
     public Map<?, ?> restoreMap(final Representation representation) throws Exception {
         return serialiser.deserialise(representation.getStream(), Map.class);
+    }
+
+    /**
+     * Deserialises JSON representation of JS object into Java map.
+     *
+     * @param representation
+     * @return
+     * @throws Exception
+     */
+    public Map<?, ?> restoreJSONMap(final Representation representation) throws Exception {
+        return serialiser.deserialise(representation.getStream(), Map.class, SerialiserEngines.JACKSON);
     }
 
     public String getAppWidePublicKey() {

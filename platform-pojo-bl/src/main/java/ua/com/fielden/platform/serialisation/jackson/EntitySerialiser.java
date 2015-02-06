@@ -156,7 +156,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         return typeId(typeNumber) + "#" + newIdWithinTheType(entity, references);
     }
 
-    private static <M extends AbstractEntity<?>> String typeId(final Long typeNumber) {
+    public static <M extends AbstractEntity<?>> String typeId(final Long typeNumber) {
         return typeNumber.toString();
     }
 

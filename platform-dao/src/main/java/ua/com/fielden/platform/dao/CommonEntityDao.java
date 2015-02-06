@@ -2,13 +2,8 @@ package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.IOException;
@@ -46,7 +41,6 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
@@ -56,6 +50,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Validators;
 
@@ -441,9 +436,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             final Object oldValue = prop.getOriginalValue();
             final Object newValue = prop.getValue();
             final Object persistedValue = persistedEntity.get(name);
-            if ((persistedValue == null && oldValue != null && newValue != null) ||
-                    (persistedValue != null && oldValue == null && newValue == null) ||
-                    (persistedValue != null && !persistedValue.equals(oldValue) && !persistedValue.equals(newValue))) {
+            if (EntityUtils.isConflicting(newValue, oldValue, persistedValue)) {
                 return false;
             }
         }
@@ -604,8 +597,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Assigns values to all properties marked for assignment before save.
-     * This method should be used only during saving of new entities.
+     * Assigns values to all properties marked for assignment before save. This method should be used only during saving of new entities.
      *
      * @param entity
      */
@@ -644,7 +636,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * This method is used during saving of the modified entity, which has been persisted previously, and ensures that no removal of required assignable before save properties has happened.
+     * This method is used during saving of the modified entity, which has been persisted previously, and ensures that no removal of required assignable before save properties has
+     * happened.
      *
      * @param entity
      */

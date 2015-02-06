@@ -24,10 +24,12 @@ import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -98,65 +100,63 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
 
             // deserialise version -- should never be null
             final JsonNode versionJsonNode = node.get(AbstractEntity.VERSION); // the node should not be null itself
-            if (versionJsonNode.isNull()) {
-                throw new IllegalStateException("EntitySerialiser has got null 'version' property when reading entity of type [" + type.getName() + "].");
-            }
-            final Long version = versionJsonNode.asLong();
+            //            if (versionJsonNode.isNull()) {
+            //                throw new IllegalStateException("EntitySerialiser has got null 'version' property when reading entity of type [" + type.getName() + "].");
+            //            }
+            if (!versionJsonNode.isNull()) {
+                final Long version = versionJsonNode.asLong();
 
-            try {
-                // at this stage the field should be already accessible
-                versionField.set(entity, version);
-            } catch (final IllegalAccessException e) {
-                // developer error -- please ensure that all fields are accessible
-                e.printStackTrace();
-                logger.error("The field [" + versionField + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", e);
-                throw new RuntimeException(e);
-            } catch (final IllegalArgumentException e) {
-                e.printStackTrace();
-                logger.error("The field [" + versionField + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", e);
-                throw e;
+                try {
+                    // at this stage the field should be already accessible
+                    versionField.set(entity, version);
+                } catch (final IllegalAccessException e) {
+                    // developer error -- please ensure that all fields are accessible
+                    e.printStackTrace();
+                    logger.error("The field [" + versionField + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", e);
+                    throw new RuntimeException(e);
+                } catch (final IllegalArgumentException e) {
+                    e.printStackTrace();
+                    logger.error("The field [" + versionField + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", e);
+                    throw e;
+                }
             }
 
             //      entity.setInitialising(true);
             for (final CachedProperty prop : properties) {
-                final JsonNode propNode = node.get(prop.field().getName());
-                if (propNode.isNull()) {
+                final String propertyName = prop.field().getName();
+                final JsonNode propNode = node.get(propertyName);
+                if (propNode != null) {
+                    final Object value = determineValue(propNode, prop.field());
+                    if (value != null) {
+                        try {
+                            // at this stage the field should be already accessible
+                            prop.field().set(entity, value);
+                        } catch (final IllegalAccessException e) {
+                            // developer error -- please ensure that all fields are accessible
+                            e.printStackTrace();
+                            logger.error("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", e);
+                            throw new RuntimeException(e);
+                        } catch (final IllegalArgumentException e) {
+                            e.printStackTrace();
+                            logger.error("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", e);
+                            throw e;
+                        }
+                    }
                     if (!DynamicEntityClassLoader.isEnhanced(type)) {
-                        entity.getProperty(prop.field().getName()).setOriginalValue(null);
-                    }
-                } else {
-                    final JsonParser jsonParser = node.get(prop.field().getName()).traverse(mapper);
-                    final Object value;
-                    if (AbstractEntity.KEY.equals(prop.field().getName())) {
-                        value = jsonParser.readValueAs(AnnotationReflector.getKeyType(type));
-                    } else {
-                        value = mapper.readValue(jsonParser, constructType(mapper.getTypeFactory(), prop.field()));
-                    }
-                    try {
-                        // at this stage the field should be already accessible
-                        prop.field().set(entity, value);
-                    } catch (final IllegalAccessException e) {
-                        // developer error -- please ensure that all fields are accessible
-                        e.printStackTrace();
-                        logger.error("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", e);
-                        throw new RuntimeException(e);
-                    } catch (final IllegalArgumentException e) {
-                        e.printStackTrace();
-                        logger.error("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", e);
-                        throw e;
-                    }
-
-                    if (!DynamicEntityClassLoader.isEnhanced(type)) {
-                        entity.getProperty(prop.field().getName()).setOriginalValue(value);
+                        // this is very important -- original values for non-persistent entities should be left 'null'!
+                        final Object originalValue = entity.isPersisted() ? value : null;
+                        if (entity.isPersisted()) {
+                            entity.getProperty(propertyName).setOriginalValue(originalValue);
+                        }
                     }
                 }
-                final JsonNode metaPropNode = node.get("@" + prop.field().getName());
+                final JsonNode metaPropNode = node.get("@" + propertyName);
                 if (metaPropNode != null) {
                     if (metaPropNode.isNull()) {
-                        throw new IllegalStateException("EntitySerialiser has got null meta property '@" + prop.field().getName() + "' when reading entity of type [" + type.getName() + "].");
+                        throw new IllegalStateException("EntitySerialiser has got null meta property '@" + propertyName + "' when reading entity of type [" + type.getName() + "].");
                     }
-                    final MetaProperty metaProperty = entity.getProperty(prop.field().getName());
-                    provideDirty(metaProperty, metaPropNode);
+                    final MetaProperty metaProperty = entity.getProperty(propertyName);
+                    provideChangedFromOriginal(metaProperty, metaPropNode);
                     provideEditable(metaProperty, metaPropNode);
                     provideRequired(metaProperty, metaPropNode);
                     provideVisible(metaProperty, metaPropNode);
@@ -168,6 +168,34 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         }
     }
 
+    private Object determineValue(final JsonNode propNode, final Field propertyField) throws IOException, JsonMappingException, JsonParseException {
+        final Object value;
+        if (propNode.isNull()) {
+            value = null;
+        } else {
+            value = mapper.readValue(propNode.traverse(mapper), constructType(mapper.getTypeFactory(), propertyField));
+        }
+        return value;
+    }
+
+    //    private Object extractValue(final JsonNode propNode) {
+    //        if (propNode.isTextual()) {
+    //            return propNode.asText();
+    //        } else if (propNode.isBoolean()) {
+    //            return propNode.asBoolean();
+    //        } else if (propNode.isNumber()) {
+    //            if (propNode.isIntegralNumber()) {
+    //                return propNode.asLong(9999L);
+    //            } else if (propNode.isFloatingPointNumber()) {
+    //                return propNode.asDouble(9999.0);
+    //            } else {
+    //                throw new UnsupportedOperationException(String.format("Unsupported reflected number type for node [%s].", propNode));
+    //            }
+    //        } else {
+    //            throw new UnsupportedOperationException(String.format("Unsupported reflected value type for node [%s].", propNode));
+    //        }
+    //    }
+
     /**
      * Retrieves 'dirty' value from entity JSON tree.
      *
@@ -175,16 +203,16 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
      * @param metaPropNode
      * @return
      */
-    private void provideDirty(final MetaProperty metaProperty, final JsonNode metaPropNode) {
-        final JsonNode dirtyPropNode = metaPropNode.get("_dirty");
-        if (dirtyPropNode == null) {
+    private void provideChangedFromOriginal(final MetaProperty metaProperty, final JsonNode metaPropNode) {
+        final JsonNode changedPropNode = metaPropNode.get("_cfo");
+        if (changedPropNode == null) {
             // do nothing -- there is no node and that means that there is default value
         } else {
-            if (dirtyPropNode.isNull()) {
-                throw new IllegalStateException("EntitySerialiser has got null 'dirty' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
+            if (changedPropNode.isNull()) {
+                throw new IllegalStateException("EntitySerialiser has got null 'changedFromOriginal' inside meta property '@" + metaProperty.getName() + "' when reading entity of type [" + type.getName() + "].");
             }
             if (metaProperty != null) {
-                metaProperty.setDirty(dirtyPropNode.asBoolean());
+                metaProperty.setDirty(changedPropNode.asBoolean());
             }
         }
     }
@@ -275,7 +303,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     //    }
 
     private ResolvedType constructType(final TypeFactory typeFactory, final Field propertyField) {
-        final Class<?> fieldType = PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
+        final Class<?> fieldType = AbstractEntity.KEY.equals(propertyField.getName()) ? AnnotationReflector.getKeyType(type) : PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
         if (Set.class.isAssignableFrom(fieldType) || List.class.isAssignableFrom(fieldType)) {
             final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
             final Class<?> elementClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[0]);

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.tokens;
 
+import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 
@@ -10,6 +11,7 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenController;
  * A concrete implementation of {@link ISecurityTokenController} should take this special token into account for it to make any effect in accordance with the logic handling nested
  * security tokens.
  */
+@KeyTitle(value = "Always accessible token", desc = "Always accessible token.")
 public final class AlwaysAccessibleToken implements ISecurityToken {
 
 }

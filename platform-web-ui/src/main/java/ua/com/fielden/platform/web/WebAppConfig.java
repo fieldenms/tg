@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.master.EntityMaster;
@@ -38,7 +39,7 @@ public class WebAppConfig {
     /*
      * The properties below represent essential tg views: entity centres, entity masters. Also it is possible to specify custom view.
      */
-    private final List<EntityMaster> masters = new ArrayList<>();
+    private final List<EntityMaster<? extends AbstractEntity<?>>> masters = new ArrayList<>();
     private final Map<String, AbstractWebView<?>> customViews = new LinkedHashMap<>();
     private String defaultRoute = null;
 
@@ -135,6 +136,15 @@ public class WebAppConfig {
     }
 
     /**
+     * Adds new {@link EntityMaster} instance to this web application configuration.
+     *
+     * @param master
+     */
+    public <T extends AbstractEntity<?>> void addMaster(final EntityMaster<T> master) {
+        masters.add(master);
+    }
+
+    /**
      * Adds new {@link EntityCentre} instance to this web application configuration.
      *
      * @param centre
@@ -168,6 +178,15 @@ public class WebAppConfig {
 
     private String generateCustomViewHash(final AbstractWebView<?> webView) {
         return "webview/" + WebUtils.polymerTagName(webView);
+    }
+
+    /**
+     * Returns registered entity masters.
+     *
+     * @return
+     */
+    public List<EntityMaster<? extends AbstractEntity<?>>> getMasters() {
+        return Collections.unmodifiableList(masters);
     }
 
     /**

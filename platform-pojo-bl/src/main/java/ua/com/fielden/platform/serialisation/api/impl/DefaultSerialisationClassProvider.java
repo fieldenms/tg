@@ -207,8 +207,8 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
                 SubBaseEntity1.class,
                 SubBaseEntity2.class,
                 EntityWithCompositeKey.class,
-                EntityWithMoney.class //
-        );
+                EntityWithMoney.class
+                );
     }
 
     @Override

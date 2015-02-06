@@ -12,6 +12,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Provides common implementation shared between Hibernate and REST implementation of DAOs.
@@ -33,6 +35,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     private final Class<? extends Comparable> keyType;
     private final Class<T> entityType;
     private final QueryExecutionModel<T, EntityResultQueryModel<T>> defaultModel;
+    private IFetchProvider<T> fetchProvider;
 
     protected boolean getFilterable() {
         return false;
@@ -200,5 +203,25 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     @Override
     public void delete(final EntityResultQueryModel<T> model) {
         delete(model, Collections.<String, Object> emptyMap());
+    }
+
+    @Override
+    public final IFetchProvider<T> getFetchProvider() {
+        if (fetchProvider == null) {
+            fetchProvider = createFetchProvider();
+        }
+        return fetchProvider;
+    }
+
+    /**
+     * Creates fetch provider for this entity companion.
+     * <p>
+     * Should be overridden to provide custom fetch provider.
+     *
+     * @return
+     */
+    protected IFetchProvider<T> createFetchProvider() {
+        // provides a very minimalistic version of fetch provider by default (only id and version are included)
+        return EntityUtils.fetch(getEntityType());
     }
 }

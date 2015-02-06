@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>entity-master</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+    <script src="/resources/polymer/polymer-test-tools/htmltest.js"></script>
+
+    <link rel="import" href="/resources/master/tg-entity-master.html">
+</head>
+
+<body unresolved>
+    <tg-entity-master id="master" user="SU" entitytype="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" entityid="4"></tg-entity-master>
+
+    <script>
+        document.addEventListener('polymer-ready', function() {
+            var master = document.querySelector('#master');
+
+            master.onRetrieved = function(entity, bindingEntity) {
+                assert.strictEqual(entity.type().fullClassName(), "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "The type of entity response is not correct.");
+                assert.strictEqual(entity.id, 4, "The id of entity response is not correct.");
+                assert.strictEqual(entity.version, 0, "The version of entity response is not correct.");
+
+                // properties:
+                assert.strictEqual(entity.get("integerProp"), 43, "The entity response property is not correct.");                
+
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+                // try {
+                //     entity.get("desc");
+                //     assert.fail("", "", "The unfetched property for entity should throw an exception.");                    
+                // }
+                // catch (ex) {                   
+                //     if (ex instanceof chai.AssertionError) {
+                //         throw ex;
+                //     }
+                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionType(), true, "The exception thrown should be of type StrictProxyException.");                       
+                // }
+
+                // try {
+                //     entity.get("key");
+                //     assert.fail("", "", "The unfetched property for entity should throw an exception.");                    
+                // }
+                // catch (ex) {                   
+                //     if (ex instanceof chai.AssertionError) {
+                //         throw ex;
+                //     }
+                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionType(), true, "The exception thrown should be of type StrictProxyException.");                       
+                // }
+
+                // instance meta-properties
+                assert.strictEqual(entity.prop("integerProp").isChangedFromOriginal(), false, "The entity response instance prop should be not changedFromOriginal.");
+                assert.strictEqual(entity.prop("integerProp").validationResult(), null, "The entity response instance prop should have empty validation result.");
+                assert.strictEqual(entity.prop("integerProp").isRequired(), false, "The entity response instance prop should be not required.");
+                assert.strictEqual(entity.prop("integerProp").isEditable(), true, "The entity response instance prop should be editable.");
+                assert.strictEqual(entity.prop("integerProp").isVisible(), true, "The entity response instance prop should be visible.");
+
+                // binding value ok?
+                assert.ok(bindingEntity.get("integerProp"), "Binding property should be initialised.");                
+                assert.strictEqual(bindingEntity.get("integerProp"), 43, "Binding property should be string entity representation.");
+
+                done();
+            };
+
+            master.retrieve();
+        });
+    </script>
+
+</body>
+
+</html>
