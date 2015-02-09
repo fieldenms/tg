@@ -1,6 +1,7 @@
-package ua.com.fielden.platform.web.master.api.editors.textarea;
+package ua.com.fielden.platform.web.master.api.editors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.master.api.editors.textarea.ITextAreaConfig0;
 
 public interface ITextAreaConfig<T extends AbstractEntity<?>> extends ITextAreaConfig0<T> {
     /** Indicates whether the textarea should be resizable or not.
