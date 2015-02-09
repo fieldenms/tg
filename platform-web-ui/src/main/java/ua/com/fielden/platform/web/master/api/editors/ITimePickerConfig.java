@@ -4,6 +4,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.master.api.helpers.IAlso;
 import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
 
-public interface IBooleanConfig <T extends AbstractEntity<?>> extends IAlso<T>, ILayoutConfig {
+public interface ITimePickerConfig<T extends AbstractEntity<?>> extends IAlso<T>, ILayoutConfig {
 
 }
