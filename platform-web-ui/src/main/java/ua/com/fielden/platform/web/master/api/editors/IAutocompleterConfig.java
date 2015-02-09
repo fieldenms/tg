@@ -5,9 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.master.api.editors.autocompleter.IAutocompleterConfig0;
 
 /**
- * Provides an API for configuring an autocompleter.
- *
- * At this stage customisation is related to
+ * A configuration for an autocompleter that gets associated with a property of an entity type.
  *
  * @author TG Team
  *
