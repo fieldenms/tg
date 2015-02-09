@@ -11,15 +11,32 @@
         .test {
             border: 1px solid black;
         }
+        .long_text {
+           border: 1px solid black;
+           resize: none;
+        }
     </style>
 <body unresolved fullbleed>
     <template id="app" is="auto-binding">
-        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" debug><input class="test" type="text" value="test"><input class="test" type="text" value="test"><input class="test" type="text" value="test"><input class="test" type="text" value="test"></tg-flex-layout>
+        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" debug>
+                 <input class="test" type="text" value="test">
+                 <input class="test" type="text" value="test">
+                 <textarea class="long_text">
+                 Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                 Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                 Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                 Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                 </textarea>
+                 <input class="test" type="text" value="Try to make this input centred.">
+       </tg-flex-layout>
     </template>
 </body>
 <script>
     var app = document.querySelector("#app");
-    app.whenDesktop = ["padding: 20px", "height: 300px", ["justified", "margin-bottom: 20px", ["flex", "margin-right: 20px"],["flex"]],["justified", "flex", "center", [], []]];
+    app.whenDesktop = ["padding: 20px", "height: 300px", 
+                        ["justified", "margin-bottom: 20px", ["flex", "margin-right: 20px"],["flex"]],
+                        ["justified", "flex", ["flex", "margin-right: 20px"], ["flex", []]]
+                       ];
     app.whenTablet = [[[], []], [[], []]];
     app.whenMobile = [[],[],[],[]];
 </script>
