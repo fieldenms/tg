@@ -5,7 +5,7 @@
 <link rel="import" href="/tg-reflector">
 
 <!-- link rel="import" href="/resources/editors/datetime-picker.html" -->
-<link rel="import" href="/resources/editors/tg-string.html">
+<!-- link rel="import" href="/resources/editors/tg-string.html" -->
 
 <polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved" > <!-- hidden -->
     <template>
@@ -18,7 +18,7 @@
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
 
         <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
-        <tg-string id="editor" bindTo="{{currBindingEntity['stringProp']}}" onAcceptedValueChanged="{{validate}}" label="String prop"></tg-string>
+        <!-- tg-string id="editor" bindTo="{{currBindingEntity['stringProp']}}" onAcceptedValueChanged="{{validate}}" label="String prop"></tg-string -->
     </template>
     <script>
         (function () {
