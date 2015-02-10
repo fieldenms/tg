@@ -4,7 +4,10 @@
 <link rel="import" href="/resources/validation/tg-entity-validator.html">
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved" hidden>
+<!-- link rel="import" href="/resources/editors/datetime-picker.html" -->
+<link rel="import" href="/resources/editors/tg-string.html">
+
+<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved" > <!-- hidden -->
     <template>
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax> 
         <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax> 
@@ -13,6 +16,9 @@
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
+
+        <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
+        <tg-string id="editor" bindTo="{{currBindingEntity['stringProp']}}" onAcceptedValueChanged="{{validate}}" label="String prop"></tg-string>
     </template>
     <script>
         (function () {
@@ -51,7 +57,7 @@
             Polymer({        
                 // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
                 currEntity: null, // represents the current entity
-                currBindingEntity: null, // represents the view of current entity for binding
+                currBindingEntity: {}, /*{ dateProp: 10000, stringProp: "" }*/ // represents the view of current entity for binding
                 originalBindingEntity: null, // represents the view of original entity for binding.
 
                 /**
@@ -60,9 +66,12 @@
                 ready: function() { 
                     var self = this;
 
+                    console.log("self.currBindingEntity after the polymer became ready: ", self.currBindingEntity);
+
                     // IMPORTANT: it is crucial to bind the functions, which will potentially be passed
                     //            into other contexts (for e.g. onValidatedDefault will be used in tg-entity-validator),
                     //            with its original context!
+                    self.validate = self.validate.bind(self);
                     self.onValidatedDefault = self.onValidatedDefault.bind(self);
                     // self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
 
@@ -110,6 +119,7 @@
                  * Starts the process of entity validation (based on currBindingEntity).
                  */
                 validate: function() {
+                    console.log("validate");
                     var self = this;
                     var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
                     // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
@@ -135,13 +145,21 @@
                     return modifiedPropertiesHolder;
                 },
 
+                /**
+                 * Determines whether the specified object represents the entity.
+                 */
+                _isEntity: function (obj) {
+                    var Entity = this.$.reflector.getEntityType();
+                    return obj !== null && (obj instanceof Entity);
+                },
+
                 extractModifiedPropertiesHolder: function(bindingEntity, originalBindingEntity) {
                     var modPropHolder = { "@modified": false };
-                    if (bindingEntity !== null) {
+                    var self = this;
+                    if (self._isEntity(bindingEntity)) {
                         modPropHolder["id"] = bindingEntity["id"];
                         modPropHolder["version"] = bindingEntity["version"];
 
-                        var self = this;
                         bindingEntity.traverseProperties(function(propertyName) {
                             var value = bindingEntity.get(propertyName);
                             var originalValue = originalBindingEntity.get(propertyName);
@@ -339,7 +357,6 @@
                 },
 
                 rebind: function(bindingEntity) {
-                    // TODO implement
                 }
             });
         })();

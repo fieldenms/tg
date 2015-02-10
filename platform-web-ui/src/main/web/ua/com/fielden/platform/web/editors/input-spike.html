@@ -12,12 +12,15 @@
 <body unresolved fullbleed>
 
     <template is="auto-binding" id="app_template">
-        <tg-textfield committedValue="{{value}}" label="My Label"></tg-textfield>
+        <tg-textfield label="My Label" entity="{{entity}}" propertyName="myPropName"></tg-textfield>
     </template>
     <script>
         (function () {
 
             var template = document.querySelector('#app_template');
+            template.entity = {
+                myPropName: "Work out"
+            };
         })();
     </script>
 </body>
