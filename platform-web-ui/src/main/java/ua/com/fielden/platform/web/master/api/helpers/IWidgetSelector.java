@@ -1,19 +1,21 @@
 package ua.com.fielden.platform.web.master.api.helpers;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.master.api.editors.IAutocompleterConfig;
-import ua.com.fielden.platform.web.master.api.editors.ICheckboxConfig;
-import ua.com.fielden.platform.web.master.api.editors.IColourConfig;
-import ua.com.fielden.platform.web.master.api.editors.IDatePickerConfig;
-import ua.com.fielden.platform.web.master.api.editors.IDateTimePickerConfig;
-import ua.com.fielden.platform.web.master.api.editors.IDecimalConfig;
-import ua.com.fielden.platform.web.master.api.editors.IEmailConfig;
-import ua.com.fielden.platform.web.master.api.editors.IMoneyConfig;
-import ua.com.fielden.platform.web.master.api.editors.IMultilineTextConfig;
-import ua.com.fielden.platform.web.master.api.editors.IPhoneNumberConfig;
-import ua.com.fielden.platform.web.master.api.editors.ISinglelineTextConfig;
-import ua.com.fielden.platform.web.master.api.editors.ISpinnerConfig;
-import ua.com.fielden.platform.web.master.api.editors.ITimePickerConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IAutocompleterConfig;
+import ua.com.fielden.platform.web.master.api.widgets.ICheckboxConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IColourConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IDatePickerConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IDateTimePickerConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IDecimalConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IEmailConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IFileConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IHiddenTextConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IMoneyConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IMultilineTextConfig;
+import ua.com.fielden.platform.web.master.api.widgets.IPhoneNumberConfig;
+import ua.com.fielden.platform.web.master.api.widgets.ISinglelineTextConfig;
+import ua.com.fielden.platform.web.master.api.widgets.ISpinnerConfig;
+import ua.com.fielden.platform.web.master.api.widgets.ITimePickerConfig;
 
 /**
  *
@@ -28,6 +30,9 @@ public interface IWidgetSelector<T extends AbstractEntity<?>> {
     IAutocompleterConfig<T> asAutocompleter();
     ISinglelineTextConfig<T> asSinglelineText();
     IMultilineTextConfig<T> asMultilineText();
+    IHiddenTextConfig<T> asHiddenText();
+
+    IFileConfig<T> asFile();
 
     IDateTimePickerConfig<T> asDateTimePicker();
     IDatePickerConfig<T> asDatePicker();

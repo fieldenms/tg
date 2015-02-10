@@ -1,8 +1,8 @@
-package ua.com.fielden.platform.web.master.api.editors;
+package ua.com.fielden.platform.web.master.api.widgets;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.master.api.editors.autocompleter.IAutocompleterConfig0;
+import ua.com.fielden.platform.web.master.api.widgets.autocompleter.IAutocompleterConfig0;
 
 /**
  * A configuration for an autocompleter that gets associated with a property of an entity type.

@@ -19,7 +19,7 @@
 <body unresolved fullbleed>
     <template id="app" is="auto-binding">
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" debug>
-                 <input class="test" type="text" value="test">
+                 <input class="test" type="file" onchange="handleFiles(this.files)">
                  <input class="test" type="text" value="test">
                  <textarea class="long_text">
                  Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
@@ -39,6 +39,10 @@
                        ];
     app.whenTablet = [[[], []], [[], []]];
     app.whenMobile = [[],[],[],[]];
+    
+    function handleFiles(files) {
+        console.log(files[0]);
+    }
 </script>
 
 </html>

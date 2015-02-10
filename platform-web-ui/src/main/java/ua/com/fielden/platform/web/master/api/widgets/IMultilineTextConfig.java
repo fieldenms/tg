@@ -1,7 +1,7 @@
-package ua.com.fielden.platform.web.master.api.editors;
+package ua.com.fielden.platform.web.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.master.api.editors.multilinetext.IMultilineTextConfig0;
+import ua.com.fielden.platform.web.master.api.widgets.multilinetext.IMultilineTextConfig0;
 
 public interface IMultilineTextConfig<T extends AbstractEntity<?>> extends IMultilineTextConfig0<T> {
     /** Indicates whether the textarea should be resizable or not.

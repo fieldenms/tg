@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.master.api.editors.autocompleter;
+package ua.com.fielden.platform.web.master.api.widgets.autocompleter;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.master.api.helpers.IAlso;

@@ -22,7 +22,9 @@ public interface ISimpleMaster {
     public static void apiExample(final ISimpleMaster sm) {
         sm.forEntity(TgWorkOrder.class)
                 .addProp("vehicle").asAutocompleter().byDesc().also()
-                .addProp("status").asAutocompleter().withMatcher(IValueMatcher.class).byDescOnly()
+                .addProp("status").asAutocompleter().withMatcher(IValueMatcher.class).byDescOnly().also()
+                .addDivider().withTitle("Section Header").atLevel1().also()
+                .addDivider().atLevel2() // a subsection with no title
                 .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "[][flex]")
                 .setLayoutFor(Device.TABLET, Orientation.LANDSCAPE, "[][flex]")
                 .setLayoutFor(Device.TABLET, Orientation.PORTRAIT, "[][flex]")
