@@ -33,6 +33,9 @@ public class MainMenuItem implements IRenderable {
     @Override
     public DomElement render() {
         return new DomElement("tg-main-menu-item").
+                attr("layout", null).
+                attr("horizontal", null).
+                attr("flex", null).
                 attr("whenDesktop", "{{['background-image: url(" + backgroundImage + ")', 'center', 'end-justified', [], []]}}").
                 attr("whenTablet", "{{['background-image: url(" + backgroundImage + ")', 'center', 'end-justified', [], []]}}").
                 attr("whenMobile", "{{['background-image: url(" + backgroundImage + ")', 'center', 'end-justified', [], []]}}").
