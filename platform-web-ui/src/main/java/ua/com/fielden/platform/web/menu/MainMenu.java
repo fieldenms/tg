@@ -17,7 +17,7 @@ public class MainMenu implements IRenderable {
 
     private ILayout layout;
 
-    private final List<MainMenuItem> items = new ArrayList<>();
+    private final List<MainMenuItemConfig> items = new ArrayList<>();
 
     /**
      * Specifies the layout for the main menu.
@@ -30,7 +30,7 @@ public class MainMenu implements IRenderable {
         return this;
     }
 
-    public MainMenu addMenuItem(final MainMenuItem menuItem) {
+    public MainMenu addMenuItem(final MainMenuItemConfig menuItem) {
         this.items.add(menuItem);
         return this;
     }

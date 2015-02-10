@@ -120,11 +120,6 @@
                         this.container = this.componentsToLayout[0].parentElement;
                     }
                 },
-                created: function () {
-                    this.whenMobile = [];
-                    this.whenTablet = [];
-                    this.whenDesktop = [];
-                },
                 handleMobileScreen: function (e) {
                     if (e.detail.matches && this.whenMobile) {
                         setLayout.bind(this)(this.whenMobile);
