@@ -7,7 +7,7 @@
 <!-- link rel="import" href="/resources/editors/datetime-picker.html" -->
 <!-- link rel="import" href="/resources/editors/tg-string.html" -->
 
-<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved" > <!-- hidden -->
+<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete" > <!-- hidden -->
     <template>
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax> 
         <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax> 
@@ -80,12 +80,26 @@
                     });
 
                     self.$.ajaxSaver.addEventListener('core-response', function(e) {
-                        var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
-                        self._onSavedDefault(potentiallySavedEntity);
+                        if (e.detail.xhr.status === 200) {
+                            var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
+                            self._onSavedDefault(potentiallySavedEntity);                        
+                        }
                     });
                     self.$.ajaxSaverNew.addEventListener('core-response', function(e) {
-                        var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
-                        self._onSavedDefault(potentiallySavedEntity);
+                        if (e.detail.xhr.status === 200) {
+                            var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
+                            self._onSavedDefault(potentiallySavedEntity);
+                        }
+                    });
+                    self.$.ajaxSaver.addEventListener('core-complete', function(e) {
+                        if (e.detail.xhr.status === 200) {
+                            self.onSavedComplete();
+                        }
+                    });
+                    self.$.ajaxSaverNew.addEventListener('core-complete', function(e) {
+                        if (e.detail.xhr.status === 200) {
+                            self.onSavedComplete();
+                        }
                     });
                 },
 
@@ -95,6 +109,12 @@
                  */
                 retrieve: function () {
                     this.$.ajaxRetriever.go();
+                },
+
+                /**
+                 * Default implementation for onSavedComplete callback.
+                 */
+                onSavedComplete: function() {                    
                 },
 
                 /**
