@@ -4,8 +4,8 @@ import static org.apache.commons.lang.StringUtils.deleteWhitespace;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static org.apache.commons.lang.WordUtils.capitalize;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -20,36 +20,45 @@ public class MainMenuConfig implements IMainMenuConfig {
      * The {@link IWebApp} instance for which this main menu configuration object was created.
      */
     private final IWebApp webApplication;
-    private final List<MainMenuItemConfig> menuItems = new ArrayList<>();
+    private final LinkedHashMap<String, MainMenuItemConfig> menuItems = new LinkedHashMap<>();
     private final FlexLayout flexLayout = new FlexLayout();
 
-    private MainMenuItemConfig returnMenuItem, loginMenuItem, logoutMenuItem;
+    private String returnMenuItem = "", loginMenuItem = "", logoutMenuItem = "";
 
     public MainMenuConfig(final IWebApp webApplication) {
         this.webApplication = webApplication;
     }
 
     @Override
-    public IMainMenuItemConfig addMenuItem() {
-        return addMainMenuItem();
+    public IMainMenuItemConfig addMenuItem(final String title) {
+        if (!menuItems.containsKey(title)) {
+            final MainMenuItemConfig menuItemConfig = new MainMenuItemConfig(this, title);
+            menuItems.put(title, menuItemConfig);
+            return menuItemConfig;
+        } else {
+            throw new IllegalArgumentException("The menu item with " + title + " title already exists!");
+        }
     }
 
     @Override
-    public IMainMenuItemConfig addReturn() {
-        returnMenuItem = addMainMenuItem();
-        return returnMenuItem;
+    public IMainMenuItemConfig addReturn(final String title) {
+        final IMainMenuItemConfig menuItemConfig = addMenuItem(title);
+        this.returnMenuItem = title;
+        return menuItemConfig;
     }
 
     @Override
-    public IMainMenuItemConfig addLogout() {
-        logoutMenuItem = addMainMenuItem();
-        return logoutMenuItem;
+    public IMainMenuItemConfig addLogout(final String title) {
+        final IMainMenuItemConfig menuItemConfig = addMenuItem(title);
+        this.loginMenuItem = title;
+        return menuItemConfig;
     }
 
     @Override
-    public IMainMenuItemConfig addLogin() {
-        loginMenuItem = addMainMenuItem();
-        return loginMenuItem;
+    public IMainMenuItemConfig addLogin(final String title) {
+        final IMainMenuItemConfig menuItemConfig = addMenuItem(title);
+        this.logoutMenuItem = title;
+        return menuItemConfig;
     }
 
     @Override
@@ -65,13 +74,13 @@ public class MainMenuConfig implements IMainMenuConfig {
 
     public String generateMainMenu() {
         final DomElement flexElement = flexLayout.render();
-        for (final MainMenuItemConfig menuItem : menuItems) {
-            flexElement.add(menuItem.render().attr("id", generateMenuItemId(menuItem.getTitle())).attr("on-tap", "{{onMenuTap}}"));
+        for (final Map.Entry<String, MainMenuItemConfig> menuItem : menuItems.entrySet()) {
+            flexElement.add(menuItem.getValue().render().attr("id", generateMenuItemId(menuItem.getKey())).attr("on-tap", "{{onMenuTap}}"));
         }
         return ResourceLoader.getText("ua/com/fielden/platform/web/menu/tg-main-menu.html").
-                replaceAll("@returnId", "\"" + generateMenuItemId(returnMenuItem.getTitle()) + "\"").
-                replaceAll("@loginId", "\"" + generateMenuItemId(loginMenuItem.getTitle()) + "\"").
-                replaceAll("@logoutId", "\"" + generateMenuItemId(logoutMenuItem.getTitle()) + "\"").
+                replaceAll("@returnId", "\"" + generateMenuItemId(returnMenuItem) + "\"").
+                replaceAll("@loginId", "\"" + generateMenuItemId(loginMenuItem) + "\"").
+                replaceAll("@logoutId", "\"" + generateMenuItemId(logoutMenuItem) + "\"").
                 replaceAll("@menu", flexElement.toString());
     }
 
@@ -83,16 +92,5 @@ public class MainMenuConfig implements IMainMenuConfig {
      */
     private String generateMenuItemId(final String title) {
         return uncapitalize(deleteWhitespace(capitalize(title)));
-    }
-
-    /**
-     * Creates new main menu item and adds it to the list
-     *
-     * @return
-     */
-    private MainMenuItemConfig addMainMenuItem() {
-        final MainMenuItemConfig menuItemConfig = new MainMenuItemConfig(this);
-        menuItems.add(menuItemConfig);
-        return menuItemConfig;
     }
 }

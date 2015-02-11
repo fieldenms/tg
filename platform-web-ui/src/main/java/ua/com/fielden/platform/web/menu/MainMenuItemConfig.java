@@ -18,7 +18,11 @@ public class MainMenuItemConfig implements IMainMenuItemConfig, IRenderable {
     /**
      * Menu item title.
      */
-    private String title;
+    private final String title;
+    /**
+     * The description for this main menu item.
+     */
+    private String longDesc;
     /**
      * Path to the main menu item icon.
      */
@@ -40,13 +44,14 @@ public class MainMenuItemConfig implements IMainMenuItemConfig, IRenderable {
      * Creates new main menu item configuration object with main menu tow which this menu item belongs to.
      *
      */
-    public MainMenuItemConfig(final IMainMenuConfig mainMenuConfig) {
+    public MainMenuItemConfig(final IMainMenuConfig mainMenuConfig, final String title) {
         this.mainMenuConfig = mainMenuConfig;
+        this.title = title;
     }
 
     @Override
-    public IMainMenuItemConfig title(final String title) {
-        this.title = title;
+    public IMainMenuItemConfig longDesc(final String longDesc) {
+        this.longDesc = longDesc;
         return this;
     }
 
@@ -75,15 +80,11 @@ public class MainMenuItemConfig implements IMainMenuItemConfig, IRenderable {
 
     @Override
     public DomElement render() {
-        return new DomElement("paper-shadow").
+        return new DomElement("paper-shadow").clazz("category").
                 attr("z", "1").
-                add(flexLayout.render().style("background-image: url(" + backgroundImage + ")").
+                add(flexLayout.render().style("background-image: url(" + backgroundImage + ")", "background-position: 50%").
                         add(new DomElement("core-icon").attr("src", icon)).
                         add(new DomElement("pre").
                                 add(new InnerTextElement(title))));
-    }
-
-    String getTitle() {
-        return title;
     }
 }

@@ -11,32 +11,36 @@ import ua.com.fielden.platform.web.app.IWebApp;
 public interface IMainMenuConfig extends IMenuLayoutConfig<IMainMenuConfig> {
 
     /**
-     * Adds new main menu item to the menu configuration object.
+     * Adds new main menu item with specified title to the menu configuration object.
      *
+     * @param title
      * @return
      */
-    IMainMenuItemConfig addMenuItem();
+    IMainMenuItemConfig addMenuItem(String title);
 
     /**
      * Adds "Return" menu item. "Return" action closes main menu.
      *
+     * @param title
      * @return
      */
-    IMainMenuItemConfig addReturn();
+    IMainMenuItemConfig addReturn(String title);
 
     /**
      * Adds "Logout" menu item.
      *
+     * @param title
      * @return
      */
-    IMainMenuItemConfig addLogout();
+    IMainMenuItemConfig addLogout(String title);
 
     /**
      * Adds "Login" menu item.
      *
+     * @param title
      * @return
      */
-    IMainMenuItemConfig addLogin();
+    IMainMenuItemConfig addLogin(String title);
 
     /**
      * Finish to configure the application's main menu.

@@ -9,12 +9,12 @@ package ua.com.fielden.platform.web.menu;
 public interface IMainMenuItemConfig extends IMenuLayoutConfig<IMainMenuItemConfig> {
 
     /**
-     * Set the title for the main menu item.
+     * Set the long description for this main menu item.
      *
-     * @param title
+     * @param longDesc
      * @return
      */
-    IMainMenuItemConfig title(String title);
+    IMainMenuItemConfig longDesc(String londDesc);
 
     /**
      * Set the resource path to the main menu item icon.
