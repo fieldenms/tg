@@ -236,7 +236,12 @@ element.
 
     isSuccess: function(xhr) {
       var status = xhr.status || 0;
-      return !status || (status >= 200 && status < 300);
+      // IMPORTANT: it seems that the bug has been appeared in this check:
+      // correct version was == return (status >= 200 && status < 300);
+      // In cases when the user has aborted this xhr -- the status is 0 -- isSuccess() returns true
+      //     and 'core-response' event is fired instead of 'core-error'!
+      // Please carefully use e.detail.xhr.status inside 'core-response' callback anyway.
+      return /* !status || */ (status >= 200 && status < 300);
     },
 
     processResponse: function(xhr) {

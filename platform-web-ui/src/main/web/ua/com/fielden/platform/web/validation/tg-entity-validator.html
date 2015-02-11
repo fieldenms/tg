@@ -14,8 +14,12 @@
                     var self = this;
 
                     self.$.ajaxSender.addEventListener('core-response', function(e) {
-                        var validatedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
-                        self.onValidated(validatedEntity);
+                        if (e.detail.xhr.status === 200) {
+                            var validatedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
+                            self.onValidated(validatedEntity);
+                        } else {
+                            console.warn('The bad status for core-response has appeared! status === ', e.detail.xhr.status);
+                        }
                     });
                 },
 
