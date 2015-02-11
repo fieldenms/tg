@@ -36,7 +36,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  *
  */
 public class EntityResource<T extends AbstractEntity<?>> extends ServerResource {
-    private final EntityResourceMixin<T> mixin;
+    private final EntityResourceUtils<T> utils;
     private final RestServerUtil restUtil;
     private final Long entityId;
     private final Logger logger = Logger.getLogger(getClass());
@@ -44,7 +44,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     public EntityResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
-        mixin = new EntityResourceMixin<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
+        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
         this.restUtil = restUtil;
 
         final String entityIdString = request.getAttributes().get("entity-id").toString();
@@ -57,7 +57,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return restUtil.singleJSONRepresentation(mixin.createEntityForRetrieval(entityId));
+        return restUtil.singleJSONRepresentation(utils.createEntityForRetrieval(entityId));
     }
 
     /**
@@ -97,10 +97,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return
      */
     private Representation tryToSave(final Representation envelope) {
-        final Map<String, Object> modifiedPropertiesHolder = mixin.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        final Map<String, Object> modifiedPropertiesHolder = utils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
-        final T validationPrototype = mixin.createEntityForRetrieval(this.entityId);
-        final T potentiallySaved = save(mixin.apply(modifiedPropertiesHolder, validationPrototype));
+        final T validationPrototype = utils.createEntityForRetrieval(this.entityId);
+        final T potentiallySaved = save(utils.apply(modifiedPropertiesHolder, validationPrototype));
         return restUtil.singleJSONRepresentation(potentiallySaved);
     }
 
@@ -114,7 +114,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         try {
             final Result validationResult = validatedEntity.isValid();
             if (validationResult.isSuccessful()) {
-                return mixin.save(validatedEntity);
+                return utils.save(validatedEntity);
             } else {
                 return validatedEntity;
             }
@@ -135,10 +135,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation delete(final Long entityId) {
         try {
-            mixin.delete(entityId);
+            utils.delete(entityId);
             return restUtil.resultJSONRepresentation(Result.successful(null));
         } catch (final Exception e) {
-            final String message = String.format("The entity with id [%s] and type [%s] can not be deleted due to existing dependencies.", entityId, mixin.getEntityType().getSimpleName());
+            final String message = String.format("The entity with id [%s] and type [%s] can not be deleted due to existing dependencies.", entityId, utils.getEntityType().getSimpleName());
             logger.error(message, e);
             return restUtil.resultJSONRepresentation(Result.failure(message));
         }

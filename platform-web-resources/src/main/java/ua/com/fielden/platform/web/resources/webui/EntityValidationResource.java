@@ -26,14 +26,14 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class EntityValidationResource<T extends AbstractEntity<?>> extends ServerResource {
-    private final EntityResourceMixin<T> mixin;
+    private final EntityResourceUtils<T> utils;
     private final RestServerUtil restUtil;
     private final Logger logger = Logger.getLogger(getClass());
 
     public EntityValidationResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
-        mixin = new EntityResourceMixin<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
+        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
         this.restUtil = restUtil;
     }
 
@@ -43,14 +43,14 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final Map<String, Object> modifiedPropertiesHolder = mixin.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        final Map<String, Object> modifiedPropertiesHolder = utils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
 
         // Initialises the "validation prototype" entity, which modification will be made upon:
-        final T validationPrototype = mixin.createEntityForRetrieval(id);
-        return restUtil.singleJSONRepresentation(mixin.apply(modifiedPropertiesHolder, validationPrototype));
+        final T validationPrototype = utils.createEntityForRetrieval(id);
+        return restUtil.singleJSONRepresentation(utils.apply(modifiedPropertiesHolder, validationPrototype));
     }
 
 }

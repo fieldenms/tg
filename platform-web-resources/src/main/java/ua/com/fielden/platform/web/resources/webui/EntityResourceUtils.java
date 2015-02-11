@@ -26,7 +26,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class EntityResourceMixin<T extends AbstractEntity<?>> {
+public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private final EntityFactory entityFactory;
     private final Logger logger = Logger.getLogger(getClass());
     private final Class<T> entityType;
@@ -35,7 +35,7 @@ public class EntityResourceMixin<T extends AbstractEntity<?>> {
     private final IEntityProducer<T> entityProducer;
     private final ICompanionObjectFinder companionFinder;
 
-    public EntityResourceMixin(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder) {
+    public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder) {
         this.entityType = entityType;
         this.companionFinder = companionFinder;
         this.dao = companionFinder.<IEntityDao<T>, T> find(this.entityType);
