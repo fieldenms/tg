@@ -18,7 +18,7 @@
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
 
         <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
-        <!-- tg-string id="editor" bindTo="{{currBindingEntity['stringProp']}}" onAcceptedValueChanged="{{validate}}" label="String prop"></tg-string -->
+        <!-- tg-string bindTo="{{currBindingEntity['stringProp']}}" onAcceptedValueChanged="{{validate}}" label="{{_title(currEntity, 'stringProp')}}"></tg-string -->
     </template>
     <script>
         (function () {
@@ -71,9 +71,12 @@
                     // IMPORTANT: it is crucial to bind the functions, which will potentially be passed
                     //            into other contexts (for e.g. onValidatedDefault will be used in tg-entity-validator),
                     //            with its original context!
+                    self.retrieve = self.retrieve.bind(self);
+                    self.save = self.save.bind(self);
                     self.validate = self.validate.bind(self);
                     self.onValidatedDefault = self.onValidatedDefault.bind(self);
-                    // self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
+                    self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
+                    self._title = self._title.bind(self);
 
                     self.$.ajaxRetriever.addEventListener('core-response', function(e) {
                         self.onRetrievedDefault(e);
@@ -101,6 +104,22 @@
                             self.onSavedComplete();
                         }
                     });
+                },
+
+                _title: function(entity, property) {
+                    if (typeof this.$ !== 'undefined' && this._isEntity(entity)) {
+                        console.log("_title entity", entity);
+                        console.log("_title entity type", entity.type());
+                        console.log("_title entity type prop", entity.type().prop(property));
+                        console.log("_title entity type prop title", entity.type().prop(property).title());
+                        return entity.type().prop(property).title();
+                    } else {
+                        return "Not yet initialised currEntity, from which to get title!";
+                    }
+
+                    // return () ? entity.prop(property).title() : "Not yet initialised currEntity, from which to get title!";
+
+                    // (typeof this.currEntity === 'undefined' || this.currEntity === null) ? "Not yet initialised currEntity, from which to get title!" : this.currEntity/*.prop(property).title()*/;
                 },
 
                 //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
