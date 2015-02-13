@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -93,10 +94,6 @@ public class BaseEntQueryTCase1 {
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
 
-    static {
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-    }
 
     protected static Type hibtype(final String name) {
         return typeResolver.basic(name);
@@ -108,6 +105,17 @@ public class BaseEntQueryTCase1 {
 
     protected static final EntQueryGenerator1 qb = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER);
 
+    static {
+        hibTypeDefaults.put(Date.class, DateTimeType.class);
+        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+        try {
+            metadata.putAll((new MetadataGenerator(qb)).generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
+        } catch (final Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
     //private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery1 entSourceQry(final QueryModel qryModel) {

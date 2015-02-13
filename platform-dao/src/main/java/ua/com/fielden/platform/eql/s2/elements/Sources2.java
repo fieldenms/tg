@@ -13,6 +13,12 @@ public class Sources2 implements IElement2 {
         this.compounds = compounds;
     }
 
+    public Sources2(final ISource2 main) {
+        super();
+        this.main = main;
+        this.compounds = new ArrayList<CompoundSource2>();
+    }
+
     @Override
     public boolean ignore() {
         return false;

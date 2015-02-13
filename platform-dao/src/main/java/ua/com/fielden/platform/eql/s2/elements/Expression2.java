@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Expression2 implements ISingleOperand2 {
@@ -14,6 +15,13 @@ public class Expression2 implements ISingleOperand2 {
         this.items = items;
     }
 
+    public Expression2(final ISingleOperand2 first) {
+        super();
+        this.first = first;
+        this.items = new ArrayList<CompoundSingleOperand2>();
+    }
+    
+    
     @Override
     public boolean ignore() {
         return false;
