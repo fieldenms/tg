@@ -6,6 +6,7 @@ import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.master.api.actions.EnabledState;
+import ua.com.fielden.platform.web.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
  *
  */
 public interface ISimpleMaster {
-    public static class ShowMessageDlg implements IPreAction {
+    public static class ShowMessageDlg implements IPostAction {
         public ShowMessageDlg(final String msg) {
         }
 
@@ -29,7 +30,7 @@ public interface ISimpleMaster {
         }
     }
 
-    public static class ToastUserWithMessage implements IPreAction {
+    public static class ToastUserWithMessage implements IPostAction {
 
         public ToastUserWithMessage(final String toastMsg) {
         }
