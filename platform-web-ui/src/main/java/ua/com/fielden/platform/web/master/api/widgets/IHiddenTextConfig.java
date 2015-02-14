@@ -14,6 +14,6 @@ import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
  *
  * @param <T>
  */
-public interface IHiddenTextConfig<T extends AbstractEntity<?>> extends IAlso<T>, ILayoutConfig {
+public interface IHiddenTextConfig<T extends AbstractEntity<?>> extends IAlso<T> {
 
 }

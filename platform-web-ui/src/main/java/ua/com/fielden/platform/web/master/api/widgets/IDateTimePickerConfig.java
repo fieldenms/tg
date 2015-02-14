@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.master.api.helpers.IAlso;
-import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
 
 /**
 * A configuration for an datetime picker component that gets associated with a property of type <code>Date</code> that resembles both date and time.
@@ -14,6 +13,6 @@ import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
 *
 * @param <T>
 */
-public interface IDateTimePickerConfig<T extends AbstractEntity<?>> extends IAlso<T>, ILayoutConfig {
+public interface IDateTimePickerConfig<T extends AbstractEntity<?>> extends IAlso<T> {
 
 }

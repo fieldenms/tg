@@ -17,6 +17,6 @@ import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
  *
  * @param <T>
  */
-public interface ISpinnerConfig<T extends AbstractEntity<?>> extends IAlso<T>, ILayoutConfig {
+public interface ISpinnerConfig<T extends AbstractEntity<?>> extends IAlso<T> {
 
 }

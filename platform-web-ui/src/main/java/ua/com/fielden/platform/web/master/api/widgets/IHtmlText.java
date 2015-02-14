@@ -15,6 +15,6 @@ import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
  * @author TG Team
  *
  */
-public interface IHtmlText<T extends AbstractEntity<?>> extends IAlso<T>, ILayoutConfig {
+public interface IHtmlText<T extends AbstractEntity<?>> extends IAlso<T> {
 
 }

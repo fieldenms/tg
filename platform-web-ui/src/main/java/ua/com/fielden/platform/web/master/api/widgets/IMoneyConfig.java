@@ -13,6 +13,6 @@ import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
  *
  * @param <T>
  */
-public interface IMoneyConfig<T extends AbstractEntity<?>> extends IAlso<T>, ILayoutConfig {
+public interface IMoneyConfig<T extends AbstractEntity<?>> extends IAlso<T> {
 
 }

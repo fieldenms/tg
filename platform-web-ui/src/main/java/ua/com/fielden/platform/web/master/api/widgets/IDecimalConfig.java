@@ -14,6 +14,6 @@ import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
  * @param <T>
  */
 
-public interface IDecimalConfig<T extends AbstractEntity<?>> extends IAlso<T>, ILayoutConfig {
+public interface IDecimalConfig<T extends AbstractEntity<?>> extends IAlso<T> {
 
 }

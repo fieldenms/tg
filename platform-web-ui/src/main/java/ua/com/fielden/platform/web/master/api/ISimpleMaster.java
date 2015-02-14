@@ -57,19 +57,28 @@ public interface ISimpleMaster {
     public static void apiExample(final ISimpleMaster sm) {
         sm.forEntity(TgWorkOrder.class)
                 .addProp("vehicle").asAutocompleter().byDesc()
-                .withAction(TgWorkOrder.class) // should really except only functional entities
-                .preAction(new StartInfiniteBlockingPane("Executing message...", "pane-name"))
-                .postActionSuccess(new ToastUserWithMessage("Completed successfully")) // there is no need to imperatively state "stop infinite blocking pane", as this should be automatically understood from the context
-                .postActionError(new ShowMessageDlg("The action has completed with error: {{error}}"))
-                .enabledWhen(EnabledState.EDIT)
-                .useIcon("icon name").shortDesc("could be used as title").longDesc("this description appeares in as a ")
+                    .withAction(TgWorkOrder.class) // should really except only functional entities
+                        .preAction(new StartInfiniteBlockingPane("Executing message...", "pane-name"))
+                        .postActionSuccess(new ToastUserWithMessage("Completed successfully")) // there is no need to imperatively state "stop infinite blocking pane", as this should be automatically understood from the context
+                        .postActionError(new ShowMessageDlg("The action has completed with error: {{error}}"))
+                        .enabledWhen(EnabledState.EDIT)
+                        .useIcon("icon name").shortDesc("could be used as title").longDesc("this description appeares in as a ")
                 .also()
                 .addHtmlLabel("<p>This is some long text, which might spanned into several lines if necessary and may reference master entity properties. "
                         + "The main idea is to provder application developers with the abilit to add arbitrary, not boundn to any property text, to a view.</p>")
                 .also()
                 .addProp("status").asAutocompleter().withMatcher(IValueMatcher.class).byDescOnly().also()
-                .addDivider().withTitle("Section Header").atLevel1().also()
+                .addDivider().withTitle("Section Header").atLevel1()
+                .also()
                 .addDivider().atLevel2() // a subsection with no title
+                .also()
+                .addProp("desc").asMultilineText().resizable()
+                .also()
+                .addAction(TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&New") // & defines keyboard binding
+                .addAction(TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&Edit")
+                .addAction(TgWorkOrder.class).enabledWhen(EnabledState.EDIT).shortDesc("&Save")
+                .addAction(TgWorkOrder.class).enabledWhen(EnabledState.EDIT).shortDesc("&Cancel")
+                .addAction(TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&Refresh")
                 .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "[][flex]")
                 .setLayoutFor(Device.TABLET, Orientation.LANDSCAPE, "[][flex]")
                 .setLayoutFor(Device.TABLET, Orientation.PORTRAIT, "[][flex]")
