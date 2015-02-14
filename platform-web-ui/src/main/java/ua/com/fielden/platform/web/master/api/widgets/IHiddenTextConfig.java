@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.master.api.actions.IPropertyActionConfig;
 import ua.com.fielden.platform.web.master.api.helpers.IAlso;
-import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
 
 /**
  *
@@ -14,6 +14,6 @@ import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
  *
  * @param <T>
  */
-public interface IHiddenTextConfig<T extends AbstractEntity<?>> extends IAlso<T> {
+public interface IHiddenTextConfig<T extends AbstractEntity<?>> extends IAlso<T>, IPropertyActionConfig<T> {
 
 }

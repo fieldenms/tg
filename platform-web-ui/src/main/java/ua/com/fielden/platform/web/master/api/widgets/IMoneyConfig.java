@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.master.api.actions.IPropertyActionConfig;
 import ua.com.fielden.platform.web.master.api.helpers.IAlso;
-import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
 
 /**
  * A configuration for a widget to edit <code>Money</code> properties.
@@ -13,6 +13,6 @@ import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
  *
  * @param <T>
  */
-public interface IMoneyConfig<T extends AbstractEntity<?>> extends IAlso<T> {
+public interface IMoneyConfig<T extends AbstractEntity<?>> extends IAlso<T>, IPropertyActionConfig<T> {
 
 }

@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.master.api.actions.IPropertyActionConfig;
 import ua.com.fielden.platform.web.master.api.helpers.IAlso;
-import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
 
 /**
 * A configuration for an date picker component (without a time portion) that gets associated with a property of type <code>Date</code> that resembles date only.
@@ -14,6 +14,6 @@ import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
 *
 * @param <T>
 */
-public interface IDatePickerConfig<T extends AbstractEntity<?>> extends IAlso<T> {
+public interface IDatePickerConfig<T extends AbstractEntity<?>> extends IAlso<T>, IPropertyActionConfig<T> {
 
 }

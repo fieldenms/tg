@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.master.api.helpers.IAlso;
-import ua.com.fielden.platform.web.master.api.helpers.ILayoutConfig;
 
 /**
  * This is a configuration for a widget that expects a plain HTML. The basic idea for using it, is to create large textual labels as part of any master.
