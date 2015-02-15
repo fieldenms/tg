@@ -77,6 +77,8 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("hidden").asHiddenText().skipValidation()
                 .also()
+                    .addProp("attachedFile").asFile().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
