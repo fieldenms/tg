@@ -87,6 +87,8 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("decimalValue").asDecimal().skipValidation()
                 .also()
+                    .addProp("integerValue").asSpinner().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
