@@ -93,6 +93,8 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("booleanProp").asCheckbox().skipValidation()
                 .also()
+                    .addProp("phone").asPhoneNumber().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()

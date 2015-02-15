@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.web.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.master.api.actions.IPropertyActionConfig;
-import ua.com.fielden.platform.web.master.api.helpers.IAlso;
+import ua.com.fielden.platform.web.master.api.widgets.phonenumber.IPhoneNumberConfig0;
 
 /**
  *
@@ -16,6 +15,15 @@ import ua.com.fielden.platform.web.master.api.helpers.IAlso;
  *
  * @param <T>
  */
-public interface IPhoneNumberConfig<T extends AbstractEntity<?>> extends IAlso<T>, IPropertyActionConfig<T> {
+public interface IPhoneNumberConfig<T extends AbstractEntity<?>> extends IPhoneNumberConfig0<T> {
+    /**
+     * This declaration indicates that an asynchronous validation to a corresponding property should be skipped.
+     * This should be done for optimisation reasons only in relation to properties that have heavy validation.
+     * It should be understood the actual validation would anyway take place upon entity saving.
+     *
+     * @param matcher
+     * @return
+     */
+    IPhoneNumberConfig0<T> skipValidation();
 
 }
