@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.master.api.widgets;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.master.api.widgets.autocompleter.IAutocompleterConfig0;
 
@@ -14,11 +13,12 @@ import ua.com.fielden.platform.web.master.api.widgets.autocompleter.IAutocomplet
 public interface IAutocompleterConfig<T extends AbstractEntity<?>> extends IAutocompleterConfig0<T> {
 
     /**
-     * A method to provide custom value matcher type.
+     * This declaration indicates that an asynchronous validation to a corresponding property should be skipped.
+     * This should be done for optimisation reasons only in relation to properties that have heavy validation.
+     * It should be understood the actual validation would anyway take place upon entity saving.
      *
      * @param matcher
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    IAutocompleterConfig0<T> withMatcher(final Class<IValueMatcher> matcherType);
+    IAutocompleterConfig0<T> skipValidation();
 }
