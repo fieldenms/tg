@@ -83,6 +83,8 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("date").asDatePicker().skipValidation()
                 .also()
+                    .addProp("time").asTimePicker().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
