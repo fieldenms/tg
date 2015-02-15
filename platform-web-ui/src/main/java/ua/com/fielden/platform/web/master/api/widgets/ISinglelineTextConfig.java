@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.master.api.widgets.autocompleter.IAutocompleterConfig0;
 import ua.com.fielden.platform.web.master.api.widgets.singlelinetext.ISinglelineTextConfig0;
 
 /**
@@ -25,5 +24,5 @@ public interface ISinglelineTextConfig<T extends AbstractEntity<?>> extends ISin
      * @param matcher
      * @return
      */
-    IAutocompleterConfig0<T> skipValidation();
+    ISinglelineTextConfig0<T> skipValidation();
 }

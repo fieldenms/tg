@@ -75,7 +75,7 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("singleLineComment").asSinglelineText().skipValidation()
                 .also()
-                    .addProp("desc").asMultilineText().resizable()
+                    .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
                     .addAction(TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&New") // & defines keyboard binding
