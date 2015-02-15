@@ -73,6 +73,8 @@ public interface ISimpleMaster {
                 .also()
                     .addDivider().atLevel2() // a subsection with no title
                 .also()
+                    .addProp("singleLineComment").asSinglelineText().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
