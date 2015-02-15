@@ -75,6 +75,8 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("singleLineComment").asSinglelineText().skipValidation()
                 .also()
+                    .addProp("hidden").asHiddenText().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
