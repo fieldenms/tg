@@ -97,6 +97,8 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("email").asEmail().skipValidation()
                 .also()
+                    .addProp("thresholdColour").asColour().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
