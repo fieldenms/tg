@@ -95,6 +95,8 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("phone").asPhoneNumber().skipValidation()
                 .also()
+                    .addProp("email").asEmail().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
