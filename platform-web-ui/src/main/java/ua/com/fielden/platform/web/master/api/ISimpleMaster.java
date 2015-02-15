@@ -79,6 +79,8 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("attachedFile").asFile().skipValidation()
                 .also()
+                    .addProp("dateTime").asDateTimePicker().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
