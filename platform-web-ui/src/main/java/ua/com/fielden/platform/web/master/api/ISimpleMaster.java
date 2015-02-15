@@ -85,6 +85,8 @@ public interface ISimpleMaster {
                 .also()
                     .addProp("time").asTimePicker().skipValidation()
                 .also()
+                    .addProp("decimalValue").asDecimal().skipValidation()
+                .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
                     .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
