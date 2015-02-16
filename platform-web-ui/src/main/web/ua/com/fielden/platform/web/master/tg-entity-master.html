@@ -5,23 +5,31 @@
 <link rel="import" href="/tg-reflector">
 
 <!-- link rel="import" href="/resources/editors/datetime-picker.html" -->
-<!-- link rel="import" href="/resources/editors/tg-string.html" -->
+<link rel="import" href="/resources/editors/tg-string-editor.html">
+<link rel="import" href="/resources/editors/tg-integer-editor.html">
+<link rel="import" href="/resources/editors/tg-float-editor.html">
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
 
-<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete" > <!-- hidden -->
+<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete" >
     <template>
-        <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax> 
-        <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax> 
-        <core-ajax id="ajaxSaverNew" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax> 
-
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
 
-        <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
-        <!-- tg-string bindTo="{{currBindingEntity['stringProp']}}" onAcceptedValueChanged="{{validate}}" label="{{_title(currEntity, 'stringProp')}}"></tg-string -->
+        <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax> 
+        <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax> 
+        <core-ajax id="ajaxSaverNew" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax> 
+
+        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" > <!-- debug -->
+            <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
+            <tg-integer-editor entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" msg="{{_msg(currEntity, 'integerProp')}}" msgType="{{_msgType(currEntity, 'integerProp')}}"></tg-integer-editor>
+            <tg-string-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" msg="{{_msg(currEntity, 'entityProp')}}" msgType="{{_msgType(currEntity, 'entityProp')}}"></tg-string-editor>
+            <tg-float-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" msg="{{_msg(currEntity, 'bigDecimalProp')}}" msgType="{{_msgType(currEntity, 'bigDecimalProp')}}"></tg-float-editor>
+            <tg-string-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" msg="{{_msg(currEntity, 'stringProp')}}" msgType="{{_msgType(currEntity, 'stringProp')}}"></tg-string-editor>
+        </tg-flex-layout>
     </template>
     <script>
-        (function () {
+        (function () { // _bindingValue(currBindingEntity, 'stringProp')
             var UnsupportedConversionException = function(value) {
                 Object.call(this);
 
@@ -77,6 +85,9 @@
                     self.onValidatedDefault = self.onValidatedDefault.bind(self);
                     self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
                     self._title = self._title.bind(self);
+                    self._desc = self._desc.bind(self);
+                    self._msg = self._msg.bind(self);
+                    self._msgType = self._msgType.bind(self);
 
                     self.$.ajaxRetriever.addEventListener('core-response', function(e) {
                         self.onRetrievedDefault(e);
@@ -106,22 +117,76 @@
                     });
                 },
 
+                whenDesktop: ['horizontal', ["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"]],
+                whenTablet: ['horizontal', ["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"]],
+                whenMobile: ['horizontal', ["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"]],
+
+                /** 
+                 * The function for binding property title. The argument 'entity' will be changed in future. Polymer will listen to that change.
+                 */
                 _title: function(entity, property) {
-                    if (typeof this.$ !== 'undefined' && this._isEntity(entity)) {
-                        console.log("_title entity", entity);
-                        console.log("_title entity type", entity.type());
-                        console.log("_title entity type prop", entity.type().prop(property));
-                        console.log("_title entity type prop title", entity.type().prop(property).title());
-                        return entity.type().prop(property).title();
+                    if (typeof this.$ !== 'undefined') {
+                        if (this._isEntity(entity)) {
+                            // console.log("_title entity", entity);
+                            // console.log("_title entity type", entity.type());
+                            // console.log("_title entity type prop", entity.type().prop(property));
+                            // console.log("_title entity type prop title", entity.type().prop(property).title());
+                            return entity.type().prop(property).title();
+                        } else {
+                            return "Not yet initialised currEntity, from which to get title!";
+                        }
                     } else {
-                        return "Not yet initialised currEntity, from which to get title!";
+                        return "Not yet initialised this.$!";
                     }
-
-                    // return () ? entity.prop(property).title() : "Not yet initialised currEntity, from which to get title!";
-
-                    // (typeof this.currEntity === 'undefined' || this.currEntity === null) ? "Not yet initialised currEntity, from which to get title!" : this.currEntity/*.prop(property).title()*/;
                 },
 
+                /** 
+                 * The function for binding property desc. The argument 'entity' will be changed in future. Polymer will listen to that change.
+                 */
+                _desc: function(entity, property) {
+                    if (typeof this.$ !== 'undefined') {
+                        if (this._isEntity(entity)) {
+                            return entity.type().prop(property).desc();
+                        } else {
+                            return "Not yet initialised currEntity, from which to get desc!";
+                        }
+                    } else {
+                        return "Not yet initialised this.$!";
+                    }
+                },      
+
+                /** 
+                 * The function for binding property validation msg. The argument 'entity' will be changed in future. Polymer will listen to that change.
+                 */
+                _msg: function(entity, property) {
+                    if (typeof this.$ !== 'undefined') {
+                        if (this._isEntity(entity)) {                            
+                            var validationResult = entity.prop(property).validationResult();
+                            return (validationResult === null) ? '' : validationResult.message;
+                        } else {
+                            return "Not yet initialised currEntity, from which to get validation message!";
+                        }
+                    } else {
+                        return "Not yet initialised this.$!";
+                    }
+                },   
+
+                /** 
+                 * The function for binding property validation msg type. The argument 'entity' will be changed in future. Polymer will listen to that change.
+                 */
+                _msgType: function(entity, property) {
+                    if (typeof this.$ !== 'undefined') {
+                        if (this._isEntity(entity)) {                            
+                            var validationResult = entity.prop(property).validationResult();
+                            return (validationResult === null) ? 'NONE' : 
+                                (this._isError(validationResult) ? 'ERROR' : "WARNING");
+                        } else {
+                            return "ERROR";
+                        }
+                    } else {
+                        return "ERROR";
+                    }
+                },   
                 //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
                 /**
                  * Starts the process of entity retrieval (based on current entityid).
@@ -188,8 +253,7 @@
                  * Determines whether the specified object represents the entity.
                  */
                 _isEntity: function (obj) {
-                    var Entity = this.$.reflector.getEntityType();
-                    return obj !== null && (obj instanceof Entity);
+                    return obj !== null && (obj instanceof this.$.reflector.getEntityType());
                 },
 
                 extractModifiedPropertiesHolder: function(bindingEntity, originalBindingEntity) {
