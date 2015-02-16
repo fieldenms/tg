@@ -22,8 +22,7 @@ public class PrimTypePropInfo extends AbstractPropInfo {
     @Override
     public AbstractPropInfo resolve(final String dotNotatedSubPropName) {
         if (dotNotatedSubPropName != null) {
-            System.out.println("name = " + getName() + "; propType = " + getPropType() + "; resolving NOT NULL -- " + dotNotatedSubPropName);
-            throw new IllegalStateException("Resolve method should get [null] as parameter");
+            throw new IllegalStateException("Resolve method should get [null] as parameter instead of [" + dotNotatedSubPropName + "].\nAdditional info: name = " + getName() + "; propType = " + getPropType() + ";");
         }
         return this;
     }
