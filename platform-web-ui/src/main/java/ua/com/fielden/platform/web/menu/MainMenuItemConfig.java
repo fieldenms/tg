@@ -2,6 +2,9 @@ package ua.com.fielden.platform.web.menu;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.web.app.WebAppUtils;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -19,6 +22,10 @@ public class MainMenuItemConfig implements IMainMenuItemConfig, IRenderable {
      * Menu item title.
      */
     private final String title;
+    /**
+     * Type of view with which this menu item is associated (master, centre or null if this menu item is not associated with view)
+     */
+    private final Class<?> typeOfView;
     /**
      * The description for this main menu item.
      */
@@ -44,9 +51,10 @@ public class MainMenuItemConfig implements IMainMenuItemConfig, IRenderable {
      * Creates new main menu item configuration object with main menu tow which this menu item belongs to.
      *
      */
-    public MainMenuItemConfig(final IMainMenuConfig mainMenuConfig, final String title) {
+    public MainMenuItemConfig(final IMainMenuConfig mainMenuConfig, final String title, final Class<?> typeOfView) {
         this.mainMenuConfig = mainMenuConfig;
         this.title = title;
+        this.typeOfView = typeOfView;
     }
 
     @Override
@@ -86,5 +94,21 @@ public class MainMenuItemConfig implements IMainMenuItemConfig, IRenderable {
                         add(new DomElement("core-icon").attr("src", icon)).
                         add(new DomElement("pre").
                                 add(new InnerTextElement(title))));
+    }
+
+    /**
+     * Returns the {@link DomElement} that corresponds to the menu item's view.
+     *
+     * @return
+     */
+    public DomElement renderViewElement() {
+        if (typeOfView == null) {
+            return null;
+        } else if (AbstractEntity.class.isAssignableFrom(typeOfView)) {
+            return new DomElement("load-element").attr("import", "/users/oleh/master/" + WebAppUtils.generateMasterName(typeOfView)).attr("auto", null);
+        } else if (MiWithConfigurationSupport.class.isAssignableFrom(typeOfView)) {
+            return null;
+        }
+        return null;
     }
 }

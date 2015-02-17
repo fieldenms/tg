@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Flex layout example</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="tg-flex-layout.html">
+
+    <body unresolved fullbleed>
+        <template id="app" is="auto-binding">
+            <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" debug>
+                <input type="text">
+                <input type="text">
+                <input type="text">
+                <input type="text">
+            </tg-flex-layout>
+        </template>
+    </body>
+    <script>
+        var app = document.querySelector("#app");
+        app.whenDesktop = ['margin: 10px', 'width: 300px', 'horizontal', ['margin: 10px', 'vertical', ['margin: 10px'], ['margin: 10px']], ['margin: 10px', 'vertical', ['margin: 10px'], ['margin: 10px']]];
+        app.whenTablet = [[[], []], [[], []]];
+        app.whenMobile = [[], [], [], []];
+    </script>
+
+</html>

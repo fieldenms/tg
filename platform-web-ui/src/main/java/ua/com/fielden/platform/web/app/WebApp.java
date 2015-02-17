@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.app;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -66,7 +67,17 @@ public class WebApp implements IWebApp {
      */
     public String generateWebApp() {
         return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-web-app.html").
-                replaceAll("@title", title);
+                replaceAll("@title", title).
+                replaceAll("@views", mainMenuConfig.generateMenuViews());
+    }
+
+    /**
+     * Returns the map of entity masters for this web application.
+     *
+     * @return
+     */
+    public Map<String, String> getMasterMap() {
+        return webAppConfig.getMasters();
     }
 
     @Override

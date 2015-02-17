@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebViewResourceFactory;
@@ -121,6 +123,7 @@ public abstract class AbstractWebApp extends Application {
 
         // Registering entity masters.
         attachMasterResources(router, webApp.getMasters());
+        attachMasterComponentsResources(router, webApp.getMasterMap());
 
         // Registering web models.
         //attachCustomWebViewResources(router, webApp);
@@ -141,6 +144,11 @@ public abstract class AbstractWebApp extends Application {
         router.attach("/tg-reflector", new TgReflectorComponentResourceFactory(injector));
 
         return router;
+    }
+
+    private void attachMasterComponentsResources(final Router router, final Map<String, String> masterMap) {
+        logger.info("\t\tMaster components resource attaching...");
+        router.attach("/users/{username}/master/{masterName}", new MasterComponentResourceFactory(masterMap));
     }
 
     /**

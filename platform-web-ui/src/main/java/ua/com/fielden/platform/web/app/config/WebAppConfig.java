@@ -1,7 +1,13 @@
 package ua.com.fielden.platform.web.app.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.WebAppUtils;
+import ua.com.fielden.platform.web.master.api.IMaster;
 
 /**
  * Implementation of the {@link IWebAppConfig}.
@@ -18,6 +24,11 @@ public class WebAppConfig implements IWebAppConfig {
 
     private int minDesktopWidth = 980, minTabletWidth = 768;
     private String locale = "en-AU";
+
+    /**
+     * Holds the map between master component name and their master component.
+     */
+    private final Map<String, String> mastersMap = new HashMap<>();
 
     /**
      * Creates new instance of {@link WebAppConfig} for the specified {@link IWebApp} instance.
@@ -51,6 +62,16 @@ public class WebAppConfig implements IWebAppConfig {
         return webApplication;
     }
 
+    @Override
+    public <T extends AbstractEntity<?>> IWebAppConfig addMaster(final Class<T> entityType, final IMaster<T> master) {
+        mastersMap.put(WebAppUtils.generateMasterName(entityType), master.build().toString());
+        return this;
+    }
+
+    public Map<String, String> getMasters() {
+        return mastersMap;
+    }
+
     /**
      * Generates the html representation of the web application configuration object
      *
@@ -65,5 +86,4 @@ public class WebAppConfig implements IWebAppConfig {
                 replaceAll("@minTabletWidth", Integer.toString(this.minTabletWidth)).
                 replaceAll("@locale", "\"" + locale + "\"");
     }
-
 }
