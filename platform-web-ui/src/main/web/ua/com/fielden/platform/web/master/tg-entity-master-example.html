@@ -20,15 +20,6 @@
             document.addEventListener('polymer-ready', function() {
                 var master = document.querySelector('#master'); 
 
-                    // var refresher = document.querySelector('#refresher');
-                    // var saver = document.querySelector('#saver');
-                    // var validator = document.querySelector('#validator');
-
-                    // Polymer.addEventListener(refresher, 'tap', master.retrieve);
-                    // Polymer.addEventListener(saver, 'tap', master.save);
-                    // Polymer.addEventListener(validator, 'tap', master.validate);
-
-
                 master.onRetrieved = function(entity, bindingEntity) {
                     console.log("onRetrieved");
                 };
