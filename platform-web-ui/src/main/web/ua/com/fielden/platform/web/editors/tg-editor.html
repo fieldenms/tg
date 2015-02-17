@@ -5,63 +5,63 @@
 <polymer-element name="tg-editor">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
-		<!-- <p>editingValue: {{editingValue}}</p>
+        <!-- <p>editingValue: {{editingValue}}</p>
         <p>commValue: {{commValue}}</p>
 		<p>acceptedValue: {{acceptedValue}}</p>
         <p>entity.get(propertyName): {{_bindingValue(entity, propertyName)}}</p> -->
     </template>
     <script>
-        Polymer('tg-editor', {            
-        	publish: {
-              /**
-		       	* The title for this editor. It normally appears as the caption for the editor.
-       			*
-       			* @attribute title
-       			* @type string
-       			* @default 'Unknown title. Please specify the title for the editor.'
-       			*/
-			    propTitle: 'Unknown title. Please specify the title for the editor.',	   
+        Polymer('tg-editor', {
+            publish: {
+                /**
+                 * The title for this editor. It normally appears as the caption for the editor.
+                 *
+                 * @attribute title
+                 * @type string
+                 * @default 'Unknown title. Please specify the title for the editor.'
+                 */
+                propTitle: 'Unknown title. Please specify the title for the editor.',
 
-               /**
-		       	* The description for this editor.
-       			*
-       			* @attribute desc
-       			* @type string
-       			* @default 'Unknown desc. Please specify the desc for the editor.'
-       			*/
-			    propDesc: 'Unknown desc. Please specify the desc for the editor.',	         
+                /**
+                 * The description for this editor.
+                 *
+                 * @attribute desc
+                 * @type string
+                 * @default 'Unknown desc. Please specify the desc for the editor.'
+                 */
+                propDesc: 'Unknown desc. Please specify the desc for the editor.',
 
-			    /**
-			     * This published property specifies to what entity this editor should be bound.
-			     */ 
+                /**
+                 * This published property specifies to what entity this editor should be bound.
+                 */
                 entity: null,
-			    /**
-			     * This published property specifies to what property this editor should be bound.
-			     */ 
+                /**
+                 * This published property specifies to what property this editor should be bound.
+                 */
                 propertyName: null,
 
-				/**
-				 * This callback should be used for custom action after the 'acceptedValue' has been changed (for e.g. validation).
-				 */
-				onAcceptedValueChanged: null,
+                /**
+                 * This callback should be used for custom action after the 'acceptedValue' has been changed (for e.g. validation).
+                 */
+                onAcceptedValueChanged: null,
 
-				/**
-				 * The message about the state of the editor (most likely validation message).
-				 */
-				msg: '',			
+                /**
+                 * The message about the state of the editor (most likely validation message).
+                 */
+                msg: '',
 
-				/**
-			 	* The message type (ERROR validation or stale conflict, WARNING validation or staleness etc.).
-			 	*/
-				msgType: '' // NONE 'ERROR', 'WARNING', 'INFO'
-        	},
+                /**
+                 * The message type (ERROR validation or stale conflict, WARNING validation or staleness etc.).
+                 */
+                msgType: '' // NONE 'ERROR', 'WARNING', 'INFO'
+            },
 
-        	/**
-        	 * The value being edited (main editing capability). If there are other editing views in this editor -- maintain their editingValues separately.
+            /**
+             * The value being edited (main editing capability). If there are other editing views in this editor -- maintain their editingValues separately.
              *
              * This value is of the data type for editing (main editing capability), most likely String.
-        	 */
-        	editingValue: '',
+             */
+            editingValue: '',
 
             /**
              * The value being committed (main editing capability). If there are other editing views in this editor -- maintain their committedValues separately.
@@ -70,15 +70,15 @@
              */
             commValue: '',
 
-        	/**
-        	 * The value being accepted after the editing. The commit can be done using 'TAB off' or 'Enter key pressed'.
+            /**
+             * The value being accepted after the editing. The commit can be done using 'TAB off' or 'Enter key pressed'.
              *
              * This value is of the data type for concrete component, for e.g. for tg-datetime-picker it is Number, tg-textfield -- String etc.
              * The type strictly conforms to the type of 'bindTo' attribute.
-        	 */
-			acceptedValue: '',
+             */
+            acceptedValue: '',
 
-            ready: function() {
+            ready: function () {
                 this.$.decorator.labelVisible = false;
                 console.log("parent ready");
             },
@@ -86,13 +86,13 @@
             /** 
              * The function for binding property value. The argument 'entity' will be changed in future. Polymer will listen to that change.
              */
-            _bindingValue: function(entity, propertyName) {
+            _bindingValue: function (entity, propertyName) {
                 console.log("_bindingValue entity", entity);
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(entity)) {
                         console.log("_bindingValue prop value", entity.get(propertyName));
-                            // console.log("_title entity type prop", entity.type().prop(propertyName));
-                            // console.log("_title entity type prop title", entity.type().prop(propertyName).title());
+                        // console.log("_title entity type prop", entity.type().prop(propertyName));
+                        // console.log("_title entity type prop title", entity.type().prop(propertyName).title());
                         return entity.get(propertyName);
                     } else {
                         return "Not yet initialised currBindingEntity, from which to get binding value!";
@@ -110,17 +110,17 @@
             },
 
             /**
-    		 * This method is called during editing.
-    		 */ 
-		    editingValueChanged: function(oldValue, newValue) {
-            	console.log("editingValueChanged", oldValue, newValue);
-      			this.$.decorator.updateLabelVisibility(this.editingValue);
-    		},
+             * This method is called during editing.
+             */
+            editingValueChanged: function (oldValue, newValue) {
+                console.log("editingValueChanged", oldValue, newValue);
+                this.$.decorator.updateLabelVisibility(this.editingValue);
+            },
 
-    		/**
-    		 * This method is called once the entity was changed from the outside of the component.
-    		 */ 
-            entityChanged: function(oldValue, newValue) {
+            /**
+             * This method is called once the entity was changed from the outside of the component.
+             */
+            entityChanged: function (oldValue, newValue) {
                 console.log("entityChanged", oldValue, newValue);
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(newValue)) {
@@ -135,34 +135,34 @@
 
             /**
              * This method is called once the the accepted value was changed after the editor has commited its value.
-             */ 
-            commValueChanged: function(oldValue, newValue) {
+             */
+            commValueChanged: function (oldValue, newValue) {
                 console.log("commValueChanged", oldValue, newValue);
                 this.acceptedValue = this.convertFromString(newValue);
-            }, 
+            },
 
-    		/**
-    		 * This method is called once the the accepted value was changed after the editor has commited its value.
-    		 */ 
-			acceptedValueChanged: function(oldValue, newValue) {
-            	console.log("acceptedValueChanged", oldValue, newValue);
+            /**
+             * This method is called once the the accepted value was changed after the editor has commited its value.
+             */
+            acceptedValueChanged: function (oldValue, newValue) {
+                console.log("acceptedValueChanged", oldValue, newValue);
 
-            	this.entity.set(this.propertyName, newValue);
-            	this.onAcceptedValueChanged();
-            }, 
+                this.entity.set(this.propertyName, newValue);
+                this.onAcceptedValueChanged();
+            },
 
             /**
              * Converts the value into string representation (which is used in edititing / comm values). Please implement this method in descendant component.
              */
-            convertToString: function(value) {
+            convertToString: function (value) {
                 // return "" + value;
-                throw "Conversion into string is not specified for this component.";
+                throw "Conversion to string is not specified for this component.";
             },
 
             /**
              * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component. Please implement this method in descendant component.
              */
-            convertFromString: function(strValue) {
+            convertFromString: function (strValue) {
                 // return strValue;
                 throw "Conversion from string into entity property type is not specified for this component.";
             }

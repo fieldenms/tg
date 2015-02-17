@@ -10,17 +10,18 @@
 <link rel="import" href="/resources/editors/tg-float-editor.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 
-<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete" >
+<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
 
-        <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax> 
-        <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax> 
-        <core-ajax id="ajaxSaverNew" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax> 
+        <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax>
+        <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax>
+        <core-ajax id="ajaxSaverNew" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax>
 
-        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" > <!-- debug -->
+        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
+            <!-- debug -->
             <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
             <tg-integer-editor entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" msg="{{_msg(currEntity, 'integerProp')}}" msgType="{{_msgType(currEntity, 'integerProp')}}"></tg-integer-editor>
             <tg-string-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" msg="{{_msg(currEntity, 'entityProp')}}" msgType="{{_msgType(currEntity, 'entityProp')}}"></tg-string-editor>
@@ -30,48 +31,49 @@
     </template>
     <script>
         (function () { // _bindingValue(currBindingEntity, 'stringProp')
-            var UnsupportedConversionException = function(value) {
+            var UnsupportedConversionException = function (value) {
                 Object.call(this);
 
                 this.message = "Unsupported conversion exception: the conversion for value [" + value + "] is unsupported at this stage. Value typeof === " + (typeof value) + ".";
             };
             UnsupportedConversionException.prototype = Object.create(Object.prototype);
-            UnsupportedConversionException.prototype.constructor = UnsupportedConversionException;     
+            UnsupportedConversionException.prototype.constructor = UnsupportedConversionException;
 
             /**
              * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
-             * 
-            */
-            UnsupportedConversionException.prototype.toString = function() {
+             *
+             */
+            UnsupportedConversionException.prototype.toString = function () {
                 return this.message;
             }
 
-            var SimultaneousSaveException = function() {
+            var SimultaneousSaveException = function () {
                 Object.call(this);
 
-                this.message = "Simultaneous save exception: the save process has been already started before and not ended. Please, block UI when the save was not completed.";
+                this.message = "Simultaneous save exception: the save process has been already started before and not ended. Please, block UI until the save action completes.";
             };
             SimultaneousSaveException.prototype = Object.create(Object.prototype);
-            SimultaneousSaveException.prototype.constructor = SimultaneousSaveException;     
+            SimultaneousSaveException.prototype.constructor = SimultaneousSaveException;
 
             /**
              * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
-             * 
-            */
-            SimultaneousSaveException.prototype.toString = function() {
+             *
+             */
+            SimultaneousSaveException.prototype.toString = function () {
                 return this.message;
             }
 
-            Polymer({        
+            Polymer({
                 // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
                 currEntity: null, // represents the current entity
-                currBindingEntity: {}, /*{ dateProp: 10000, stringProp: "" }*/ // represents the view of current entity for binding
+                currBindingEntity: {},
+                /*{ dateProp: 10000, stringProp: "" }*/ // represents the view of current entity for binding
                 originalBindingEntity: null, // represents the view of original entity for binding.
 
                 /**
                  * Initialisation block. It has all children web components already initialised.
                  */
-                ready: function() { 
+                ready: function () {
                     var self = this;
 
                     console.log("self.currBindingEntity after the polymer became ready: ", self.currBindingEntity);
@@ -89,42 +91,42 @@
                     self._msg = self._msg.bind(self);
                     self._msgType = self._msgType.bind(self);
 
-                    self.$.ajaxRetriever.addEventListener('core-response', function(e) {
+                    self.$.ajaxRetriever.addEventListener('core-response', function (e) {
                         self.onRetrievedDefault(e);
                     });
 
-                    self.$.ajaxSaver.addEventListener('core-response', function(e) {
-                        if (e.detail.xhr.status === 200) {
-                            var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
-                            self._onSavedDefault(potentiallySavedEntity);                        
-                        }
-                    });
-                    self.$.ajaxSaverNew.addEventListener('core-response', function(e) {
+                    self.$.ajaxSaver.addEventListener('core-response', function (e) {
                         if (e.detail.xhr.status === 200) {
                             var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
                             self._onSavedDefault(potentiallySavedEntity);
                         }
                     });
-                    self.$.ajaxSaver.addEventListener('core-complete', function(e) {
+                    self.$.ajaxSaverNew.addEventListener('core-response', function (e) {
+                        if (e.detail.xhr.status === 200) {
+                            var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
+                            self._onSavedDefault(potentiallySavedEntity);
+                        }
+                    });
+                    self.$.ajaxSaver.addEventListener('core-complete', function (e) {
                         if (e.detail.xhr.status === 200) {
                             self.onSavedComplete();
                         }
                     });
-                    self.$.ajaxSaverNew.addEventListener('core-complete', function(e) {
+                    self.$.ajaxSaverNew.addEventListener('core-complete', function (e) {
                         if (e.detail.xhr.status === 200) {
                             self.onSavedComplete();
                         }
                     });
                 },
 
-                whenDesktop: ['horizontal', ["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"]],
-                whenTablet: ['horizontal', ["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"]],
-                whenMobile: ['horizontal', ["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"],["margin-right: 20px"]],
+                whenDesktop: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+                whenTablet: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+                whenMobile: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
 
                 /** 
                  * The function for binding property title. The argument 'entity' will be changed in future. Polymer will listen to that change.
                  */
-                _title: function(entity, property) {
+                _title: function (entity, property) {
                     if (typeof this.$ !== 'undefined') {
                         if (this._isEntity(entity)) {
                             // console.log("_title entity", entity);
@@ -143,7 +145,7 @@
                 /** 
                  * The function for binding property desc. The argument 'entity' will be changed in future. Polymer will listen to that change.
                  */
-                _desc: function(entity, property) {
+                _desc: function (entity, property) {
                     if (typeof this.$ !== 'undefined') {
                         if (this._isEntity(entity)) {
                             return entity.type().prop(property).desc();
@@ -153,14 +155,14 @@
                     } else {
                         return "Not yet initialised this.$!";
                     }
-                },      
+                },
 
                 /** 
                  * The function for binding property validation msg. The argument 'entity' will be changed in future. Polymer will listen to that change.
                  */
-                _msg: function(entity, property) {
+                _msg: function (entity, property) {
                     if (typeof this.$ !== 'undefined') {
-                        if (this._isEntity(entity)) {                            
+                        if (this._isEntity(entity)) {
                             var validationResult = entity.prop(property).validationResult();
                             return (validationResult === null) ? '' : validationResult.message;
                         } else {
@@ -169,16 +171,16 @@
                     } else {
                         return "Not yet initialised this.$!";
                     }
-                },   
+                },
 
                 /** 
                  * The function for binding property validation msg type. The argument 'entity' will be changed in future. Polymer will listen to that change.
                  */
-                _msgType: function(entity, property) {
+                _msgType: function (entity, property) {
                     if (typeof this.$ !== 'undefined') {
-                        if (this._isEntity(entity)) {                            
+                        if (this._isEntity(entity)) {
                             var validationResult = entity.prop(property).validationResult();
-                            return (validationResult === null) ? 'NONE' : 
+                            return (validationResult === null) ? 'NONE' :
                                 (this._isError(validationResult) ? 'ERROR' : "WARNING");
                         } else {
                             return "ERROR";
@@ -186,7 +188,7 @@
                     } else {
                         return "ERROR";
                     }
-                },   
+                },
                 //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
                 /**
                  * Starts the process of entity retrieval (based on current entityid).
@@ -198,20 +200,19 @@
                 /**
                  * Default implementation for onSavedComplete callback.
                  */
-                onSavedComplete: function() {                    
-                },
+                onSavedComplete: function () {},
 
                 /**
                  * Default implementation for onPreRetrieved callback.
                  */
-                onPreRetrieved: function(entity) {
+                onPreRetrieved: function (entity) {
                     return entity;
                 },
 
                 /**
                  * Default implementation for onRetrieved callback.
                  */
-                onRetrievedDefault: function(e) {
+                onRetrievedDefault: function (e) {
                     var entity = this.onPreRetrieved(this.$.serialiser.deserialise(e.detail.response).instance);
                     var newBindingEntity = this.onEntityReceived(entity, true);
                     // custom external action
@@ -222,7 +223,7 @@
                 /**
                  * Starts the process of entity validation (based on currBindingEntity).
                  */
-                validate: function() {
+                validate: function () {
                     console.log("validate");
                     var self = this;
                     var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
@@ -237,14 +238,14 @@
                 /**
                  * Default implementation for onValidated callback.
                  */
-                onValidatedDefault: function(validatedEntity) {
+                onValidatedDefault: function (validatedEntity) {
                     var wasStale = validatedEntity.version > this.currEntity.version;
                     var newBindingEntity = this.onEntityReceived(validatedEntity, wasStale);
                     // custom external action
                     this.onValidated(validatedEntity, newBindingEntity);
                 },
 
-                _reset: function(modifiedPropertiesHolder) {
+                _reset: function (modifiedPropertiesHolder) {
                     delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
                     return modifiedPropertiesHolder;
                 },
@@ -256,21 +257,28 @@
                     return obj !== null && (obj instanceof this.$.reflector.getEntityType());
                 },
 
-                extractModifiedPropertiesHolder: function(bindingEntity, originalBindingEntity) {
-                    var modPropHolder = { "@modified": false };
+                extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
+                    var modPropHolder = {
+                        "@modified": false
+                    };
                     var self = this;
                     if (self._isEntity(bindingEntity)) {
                         modPropHolder["id"] = bindingEntity["id"];
                         modPropHolder["version"] = bindingEntity["version"];
 
-                        bindingEntity.traverseProperties(function(propertyName) {
+                        bindingEntity.traverseProperties(function (propertyName) {
                             var value = bindingEntity.get(propertyName);
                             var originalValue = originalBindingEntity.get(propertyName);
                             if (!self.$.reflector.equalsEx(value, originalValue)) {
-                                modPropHolder[propertyName] = { "val" : value, "origVal" : originalValue };
+                                modPropHolder[propertyName] = {
+                                    "val": value,
+                                    "origVal": originalValue
+                                };
                                 modPropHolder["@modified"] = true;
                             } else {
-                                modPropHolder[propertyName] = { "origVal" : originalValue };
+                                modPropHolder[propertyName] = {
+                                    "origVal": originalValue
+                                };
                             }
                         });
                     }
@@ -283,7 +291,7 @@
                 /**
                  * Starts the process of entity saving (based on currBindingEntity).
                  */
-                save: function() {
+                save: function () {
                     var self = this;
 
                     if (self._savingInProgress()) {
@@ -302,7 +310,7 @@
                     }
                 },
 
-                _savingInProgress: function() {
+                _savingInProgress: function () {
                     return this.$.ajaxSaverNew.loading || this.$.ajaxSaver.loading;
                 },
 
@@ -326,7 +334,7 @@
 
                 /**
                  * Returns 'true' if the entity has been modified from original, 'false' otherwise.
-                 * 
+                 *
                  * NOTE: it is designed to be used once (after that hasModified() will not be working for the same instance of modPropsHolder).
                  *
                  * @param modifiedPropertiesHolder -- the entity with modified properties
@@ -338,7 +346,7 @@
                 /**
                  * Cancels any unfinished saving that was requested earlier (if any).
                  */
-                _abortSavingIfAny: function() {
+                _abortSavingIfAny: function () {
                     this.$.ajaxSaver.abort();
                     this.$.ajaxSaverNew.abort();
                 },
@@ -346,14 +354,14 @@
                 /**
                  * Default implementation for onSaved callback.
                  */
-                _onSavedDefault: function(potentiallySavedEntity) {
+                _onSavedDefault: function (potentiallySavedEntity) {
                     var wasStale = potentiallySavedEntity.version > this.currEntity.version;
                     var newBindingEntity = this.onEntityReceived(potentiallySavedEntity, wasStale);
                     // custom external action
                     this.onSaved(potentiallySavedEntity, newBindingEntity);
                 },
 
-                _idConvert: function(id) {
+                _idConvert: function (id) {
                     return id === null ? "new" : ("" + id);
                 },
 
@@ -361,7 +369,7 @@
                 /**
                  * Provides default action after fresh entity has been received. Rebinds the entity.
                  */
-                onEntityReceived: function(entity, updateOriginalBindingEntity) {
+                onEntityReceived: function (entity, updateOriginalBindingEntity) {
                     var self = this;
                     // After the entity has received, potentially its id has been updated:
                     if (self._idConvert(entity.id) !== self.entityid) {
@@ -380,14 +388,14 @@
 
                     // After the new entity has appeared it should be rebinded:
                     self.rebind(self.currBindingEntity);
-                    return self.currBindingEntity;                    
+                    return self.currBindingEntity;
                 },
 
-                _isError: function(result) {
+                _isError: function (result) {
                     return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result";
                 },
 
-                _extractBindingView: function(entity, previousModifiedPropertiesHolder) {
+                _extractBindingView: function (entity, previousModifiedPropertiesHolder) {
                     var self = this;
                     var Entity = self.$.reflector.getEntityType();
                     var bindingView = new Entity();
@@ -396,7 +404,7 @@
                     bindingView["id"] = entity["id"];
                     bindingView["version"] = entity["version"];
 
-                    entity.traverseProperties(function(propertyName) {
+                    entity.traverseProperties(function (propertyName) {
                         if (self._isError(entity.prop(propertyName).validationResult())) {
                             bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
                         } else {
@@ -408,7 +416,7 @@
                     return bindingView;
                 },
 
-                _extractOriginalBindingView: function(entity) {
+                _extractOriginalBindingView: function (entity) {
                     var self = this;
                     var Entity = self.$.reflector.getEntityType();
                     var bindingView = new Entity();
@@ -417,7 +425,7 @@
                     bindingView["id"] = entity["id"];
                     bindingView["version"] = entity["version"];
 
-                    entity.traverseProperties(function(propertyName) {
+                    entity.traverseProperties(function (propertyName) {
                         bindingView[propertyName] = self._getOriginalValue(entity, propertyName);
                     });
 
@@ -425,12 +433,12 @@
                     return bindingView;
                 },
 
-                _convert: function(value) {
+                _convert: function (value) {
                     if (value === null) { // 'null' is the missing value representation for TG web editors
                         return null;
                     } else if (value instanceof this.$.reflector.getEntityType()) {
                         // TODO complete implementation with appropriate composite entity cases etc.
-                        return value.get("key"); 
+                        return value.get("key");
                     } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
                         return value;
                     } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
@@ -439,28 +447,27 @@
                         return value;
                     } else if (typeof value === "string") { // for string value -- return the same value for editors
                         return value;
-                    } else { 
+                    } else {
                         var UnsupportedConversionException = this._getUnsupportedConversionExceptionType();
                         throw new UnsupportedConversionException(value);
                     }
                 },
 
-                _getUnsupportedConversionExceptionType: function() {
+                _getUnsupportedConversionExceptionType: function () {
                     return UnsupportedConversionException;
                 },
 
-                _getSimultaneousSaveExceptionType: function() {
+                _getSimultaneousSaveExceptionType: function () {
                     return SimultaneousSaveException;
                 },
 
-                _getOriginalValue: function(entity, propName) {
+                _getOriginalValue: function (entity, propName) {
                     var value = entity.get(propName); // automatic check whether the property is fetched
                     var instanceMetaProperty = entity.constructor.prototype.prop.call(entity, propName);
-                    return /*entity.prop(propName)*/instanceMetaProperty.isChangedFromOriginal() ? null : this._convert(value);
+                    return /*entity.prop(propName)*/ instanceMetaProperty.isChangedFromOriginal() ? null : this._convert(value);
                 },
 
-                rebind: function(bindingEntity) {
-                }
+                rebind: function (bindingEntity) {}
             });
         })();
     </script>
