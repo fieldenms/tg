@@ -6,8 +6,8 @@
 
 <polymer-element name="tg-singleline-text-editor" extends="tg-editor">
     <template>
-        <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" isInvalid="{{msgType === 'ERROR'}}" error="{{msgType === 'ERROR' ? msg : ''}}" disabled?="{{_isDisabled()}}">
-            <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled()}}"> <!-- on-change="{{changeAction}}" -->
+        <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" isInvalid="{{msgType === 'ERROR'}}" error="{{msgType === 'ERROR' ? msg : ''}}" disabled?="{{_isDisabled(currentState)}}">
+            <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}"> <!-- on-change="{{changeAction}}" -->
         </paper-input-decorator>
         <shadow></shadow>
         <!-- <p>$.input.committedValue: {{$.input.committedValue}}</p> -->

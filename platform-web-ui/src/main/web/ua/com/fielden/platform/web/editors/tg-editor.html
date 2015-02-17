@@ -2,7 +2,7 @@
 
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-editor" attributes="entity propertyName onAcceptedValueChanged msg msgType propTitle propDesc state">
+<polymer-element name="tg-editor" attributes="entity propertyName onAcceptedValueChanged msg msgType propTitle propDesc currentState">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <!-- <p>editingValue: {{editingValue}}</p>
@@ -65,7 +65,10 @@
                  * 
                  * The initial state can be VIEW or EDIT.
                  */
-                state: null
+                currentState: {
+                    value: null,
+                    reflect: true
+                }
             },
 
             /**
@@ -98,13 +101,13 @@
             /**
              * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state).
              */
-            _isDisabled: function() {
-                if (this.state === 'VIEW') {
+            _isDisabled: function(state) {
+                if (state === undefined || state === 'VIEW') {
                     return true;
-                } else if (this.state === 'EDIT') {
+                } else if (state === 'EDIT') {
                     return false;                    
                 } else {
-                    throw "Unsupported state exception: " + this.state + ".";
+                    throw "Unsupported state exception: " + state + ".";
                 }
             },
 

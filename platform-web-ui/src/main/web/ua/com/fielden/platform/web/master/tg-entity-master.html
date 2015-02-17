@@ -4,9 +4,7 @@
 <link rel="import" href="/resources/validation/tg-entity-validator.html">
 <link rel="import" href="/tg-reflector">
 
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-
-<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete state">
+<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete currentState">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -15,10 +13,6 @@
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax>
         <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax>
         <core-ajax id="ajaxSaverNew" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax>
-
-        <paper-button id="refreshButton" raised roll="button" on-tap="{{retrieve}}">Refresh</paper-button> 
-        <paper-button id="saveButton" raised roll="button" on-tap="{{save}}">Save</paper-button>
-        <paper-button id="validateButton" raised roll="button" on-tap="{{validate}}">Validate</paper-button>
     </template>
     <script>
         (function () { // _bindingValue(currBindingEntity, 'stringProp')
@@ -55,24 +49,46 @@
             }
 
             Polymer({
-                // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
+                publish: {
+                    /**
+                     * The state for the entity master.
+                     *
+                     * The master can be only in two states: EDIT and VIEW. The state EDIT 
+                     * allows user to edit properties and use some actions (as it was defined in Java API with 'enabledWhen').
+                     *
+                    * The state VIEW allows user to review the entity properties and do some actions (as it was defined in 
+                     * Java API with 'enabledWhen').
+                    * 
+                     * The initial state can be VIEW or EDIT.
+                    */
+                    currentState: {
+                        value: null,
+                        reflect: true
+                    }
+                    // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
+                },
                 currEntity: null, // represents the current entity
-                currBindingEntity: {},
-                /*{ dateProp: 10000, stringProp: "" }*/ // represents the view of current entity for binding
+                currBindingEntity: {}, /*{ dateProp: 10000, stringProp: "" }*/ // represents the view of current entity for binding
                 originalBindingEntity: null, // represents the view of original entity for binding.
 
                 /**
-                 * The state for the entity master.
+                 * The map of actions by their name ids.
                  *
-                 * The master can be only in two states: EDIT and VIEW. The state EDIT 
-                 * allows user to edit properties and use some actions (as it was defined in Java API with 'enabledWhen').
-                 *
-                 * The state VIEW allows user to review the entity properties and do some actions (as it was defined in 
-                 * Java API with 'enabledWhen').
+                 * Every action consists of three callbacks ('preAction', 'postActionSuccess', 'postActionError') and
+                 * 'shortDesc', 'longDesc', 'icon' + 'enabledStates'.
                  * 
-                 * The initial state can be VIEW or EDIT.
+                 * 'EnabledStates' are the states in which the action is enabled.
                  */
-                state: null,
+                actions: null,
+
+                /**
+                 * Initialisation block (after 'ready'). It is designated to use for inner object / arrays initialisation.
+                 */
+                created: function() {
+                    this.actions = {};
+                    // TODO ...
+                    this.actions['NEW'] = {};
+                },
 
                 /**
                  * Initialisation block. It has all children web components already initialised.
@@ -89,6 +105,8 @@
                     self.retrieve = self.retrieve.bind(self);
                     self.save = self.save.bind(self);
                     self.validate = self.validate.bind(self);
+                    self.edit = self.edit.bind(self);
+                    self.view = self.view.bind(self);
                     self.onValidatedDefault = self.onValidatedDefault.bind(self);
                     self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
                     self._title = self._title.bind(self);
@@ -218,6 +236,28 @@
                     var newBindingEntity = this.onEntityReceived(entity, true);
                     // custom external action
                     this.onRetrieved(entity, newBindingEntity);
+                },
+
+                /**
+                 * Changes the state to 'EDIT'.
+                 */
+                edit: function () {
+                    if (this.currentState === 'EDIT') {
+                        console.warn("The master is already in EDIT state. state == ", this.currentState);
+                    } else {
+                        this.currentState = 'EDIT';
+                    }
+                },
+
+                /**
+                 * Changes the state to 'VIEW'.
+                 */
+                view: function () {
+                    if (this.currentState === 'VIEW') {
+                        console.warn("The master is already in VIEW state. state == ", this.currentState);
+                    } else {
+                        this.currentState = 'VIEW';
+                    }
                 },
 
                 //////////////////////////////////////// VALIDATION ////////////////////////////////////////
