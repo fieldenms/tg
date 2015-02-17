@@ -10,27 +10,24 @@
     <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
 
     <link rel="import" href="/resources/master/tg-entity-master.html">
-    <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 </head>
 
 <body unresolved fullbleed>
     <tg-entity-master id="master" user="SU" entitytype="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" entityid="14"></tg-entity-master>
-    <paper-button id="refresher" raised roll="button">Refresh</paper-button>
-    <paper-button id="saver" raised roll="button">Save</paper-button>
-    <paper-button id="validator" raised roll="button">Validate</paper-button>
 
     <script>
         (function () {            
             document.addEventListener('polymer-ready', function() {
-                var refresher = document.querySelector('#refresher');
-                var saver = document.querySelector('#saver');
-                var validator = document.querySelector('#validator');
+                var master = document.querySelector('#master'); 
 
-                var master = document.querySelector('#master');
+                    // var refresher = document.querySelector('#refresher');
+                    // var saver = document.querySelector('#saver');
+                    // var validator = document.querySelector('#validator');
 
-                Polymer.addEventListener(refresher, 'tap', master.retrieve);
-                Polymer.addEventListener(saver, 'tap', master.save);
-                Polymer.addEventListener(validator, 'tap', master.validate);
+                    // Polymer.addEventListener(refresher, 'tap', master.retrieve);
+                    // Polymer.addEventListener(saver, 'tap', master.save);
+                    // Polymer.addEventListener(validator, 'tap', master.validate);
+
 
                 master.onRetrieved = function(entity, bindingEntity) {
                     console.log("onRetrieved");

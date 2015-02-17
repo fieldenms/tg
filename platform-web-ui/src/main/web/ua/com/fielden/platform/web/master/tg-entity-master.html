@@ -5,10 +5,11 @@
 <link rel="import" href="/tg-reflector">
 
 <!-- link rel="import" href="/resources/editors/datetime-picker.html" -->
-<link rel="import" href="/resources/editors/tg-string-editor.html">
+<link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
 <link rel="import" href="/resources/editors/tg-integer-editor.html">
-<link rel="import" href="/resources/editors/tg-float-editor.html">
+<link rel="import" href="/resources/editors/tg-decimal-editor.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
 <polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete">
     <template>
@@ -24,10 +25,13 @@
             <!-- debug -->
             <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
             <tg-integer-editor entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" msg="{{_msg(currEntity, 'integerProp')}}" msgType="{{_msgType(currEntity, 'integerProp')}}"></tg-integer-editor>
-            <tg-string-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" msg="{{_msg(currEntity, 'entityProp')}}" msgType="{{_msgType(currEntity, 'entityProp')}}"></tg-string-editor>
-            <tg-float-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" msg="{{_msg(currEntity, 'bigDecimalProp')}}" msgType="{{_msgType(currEntity, 'bigDecimalProp')}}"></tg-float-editor>
-            <tg-string-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" msg="{{_msg(currEntity, 'stringProp')}}" msgType="{{_msgType(currEntity, 'stringProp')}}"></tg-string-editor>
+            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" msg="{{_msg(currEntity, 'entityProp')}}" msgType="{{_msgType(currEntity, 'entityProp')}}"></tg-singleline-text-editor>
+            <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" msg="{{_msg(currEntity, 'bigDecimalProp')}}" msgType="{{_msgType(currEntity, 'bigDecimalProp')}}"></tg-decimal-editor>
+            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" msg="{{_msg(currEntity, 'stringProp')}}" msgType="{{_msgType(currEntity, 'stringProp')}}"></tg-singleline-text-editor>
         </tg-flex-layout>
+        <paper-button id="refresher" raised roll="button" on-tap="{{retrieve}}">Refresh</paper-button> 
+        <paper-button id="saver" raised roll="button" on-tap="{{save}}">Save</paper-button>
+        <paper-button id="validator" raised roll="button" on-tap="{{validate}}">Validate</paper-button>
     </template>
     <script>
         (function () { // _bindingValue(currBindingEntity, 'stringProp')
@@ -81,9 +85,9 @@
                     // IMPORTANT: it is crucial to bind the functions, which will potentially be passed
                     //            into other contexts (for e.g. onValidatedDefault will be used in tg-entity-validator),
                     //            with its original context!
-                    self.retrieve = self.retrieve.bind(self);
-                    self.save = self.save.bind(self);
-                    self.validate = self.validate.bind(self);
+                    // self.retrieve = self.retrieve.bind(self);
+                    // self.save = self.save.bind(self);
+                    // self.validate = self.validate.bind(self);
                     self.onValidatedDefault = self.onValidatedDefault.bind(self);
                     self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
                     self._title = self._title.bind(self);
@@ -117,6 +121,14 @@
                             self.onSavedComplete();
                         }
                     });
+
+                    // var refresher = self.$.refresher;
+                    // var saver = self.$.saver;
+                    // var validator = self.$.validator;
+
+                    // Polymer.addEventListener(refresher, 'tap', self.retrieve);
+                    // Polymer.addEventListener(saver, 'tap', self.save);
+                    // Polymer.addEventListener(validator, 'tap', self.validate);
                 },
 
                 whenDesktop: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],

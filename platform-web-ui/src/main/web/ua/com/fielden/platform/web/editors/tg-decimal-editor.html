@@ -4,16 +4,16 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
 <link rel="import" href="/resources/polymer/core-input/core-input.html">
 
-<polymer-element name="tg-string-editor" extends="tg-editor">
+<polymer-element name="tg-decimal-editor" extends="tg-editor">
     <template>
         <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" isInvalid="{{msgType === 'ERROR'}}" error="{{msgType === 'ERROR' ? msg : ''}}">
-            <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}"> <!-- on-change="{{changeAction}}" -->
+            <input id="input" is="core-input" type="number" preventInvalidInput value="{{editingValue}}" committedValue="{{commValue}}"> 
         </paper-input-decorator>
         <shadow></shadow>
         <!-- <p>$.input.committedValue: {{$.input.committedValue}}</p> -->
     </template>
     <script>
-        Polymer('tg-string-editor', {            
+        Polymer('tg-decimal-editor', {            
             /**
              * Converts the value into string representation (which is used in edititing / comm values).
              */
@@ -22,10 +22,10 @@
             },
 
             /**
-             * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
+             * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
              */
             convertFromString: function(strValue) {
-                return strValue;
+                return parseFloat(strValue);
             }
         });
     </script>
