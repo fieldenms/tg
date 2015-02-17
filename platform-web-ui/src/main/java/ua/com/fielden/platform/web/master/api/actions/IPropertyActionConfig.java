@@ -11,5 +11,5 @@ import ua.com.fielden.platform.web.master.api.actions.property.IPropertyActionCo
  * @param <T>
  */
 public interface IPropertyActionConfig<T extends AbstractEntity<?>> {
-    IPropertyActionConfig0<T> withAction(final Class<? extends AbstractEntity<?>> functionalEntity);
+    IPropertyActionConfig0<T> withAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity);
 }

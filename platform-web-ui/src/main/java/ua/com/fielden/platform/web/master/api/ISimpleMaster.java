@@ -57,7 +57,7 @@ public interface ISimpleMaster {
     public static void apiExample(final ISimpleMaster sm) {
         sm.forEntity(TgWorkOrder.class)
                     .addProp("vehicle").asAutocompleter().byDesc()
-                    .withAction(TgWorkOrder.class) // should really except only functional entities
+                    .withAction("#snatchBackVehicle", TgWorkOrder.class) // should really except only functional entities
                     .preAction(new StartInfiniteBlockingPane("Executing message...", "pane-name"))
                     .postActionSuccess(new ToastUserWithMessage("Completed successfully")) // there is no need to imperatively state "stop infinite blocking pane", as this should be automatically understood from the context
                     .postActionError(new ShowMessageDlg("The action has completed with error: {{error}}"))
@@ -100,13 +100,13 @@ public interface ISimpleMaster {
                     .addProp("thresholdColour").asColour().skipValidation()
                 .also()
                     .addProp("desc").asMultilineText().skipValidation().resizable()
-                    .withAction(TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
+                    .withAction("#validateDesc", TgWorkOrder.class).enabledWhen(EnabledState.ANY).icon("my cool icon")
                 .also()
-                    .addAction(TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&New") // & defines keyboard binding
-                    .addAction(TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&Edit")
-                    .addAction(TgWorkOrder.class).enabledWhen(EnabledState.EDIT).shortDesc("&Save")
-                    .addAction(TgWorkOrder.class).enabledWhen(EnabledState.EDIT).shortDesc("&Cancel")
-                    .addAction(TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&Refresh")
+                    .addAction("#new", TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&New") // & defines keyboard binding
+                    .addAction("#edit", TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&Edit")
+                    .addAction("#save", TgWorkOrder.class).enabledWhen(EnabledState.EDIT).shortDesc("&Save")
+                    .addAction("#cancel", TgWorkOrder.class).enabledWhen(EnabledState.EDIT).shortDesc("&Cancel")
+                    .addAction("#refresh", TgWorkOrder.class).enabledWhen(EnabledState.VIEW).shortDesc("&Refresh")
                 .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "[][flex]")
                 .setLayoutFor(Device.TABLET, Orientation.LANDSCAPE, "[][flex]")
                 .setLayoutFor(Device.TABLET, Orientation.PORTRAIT, "[][flex]")
