@@ -6,7 +6,7 @@
 
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete">
+<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete state">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -62,6 +62,19 @@
                 originalBindingEntity: null, // represents the view of original entity for binding.
 
                 /**
+                 * The state for the entity master.
+                 *
+                 * The master can be only in two states: EDIT and VIEW. The state EDIT 
+                 * allows user to edit properties and use some actions (as it was defined in Java API with 'enabledWhen').
+                 *
+                 * The state VIEW allows user to review the entity properties and do some actions (as it was defined in 
+                 * Java API with 'enabledWhen').
+                 * 
+                 * The initial state can be VIEW or EDIT.
+                 */
+                state: null,
+
+                /**
                  * Initialisation block. It has all children web components already initialised.
                  */
                 ready: function () {
@@ -110,10 +123,6 @@
                         }
                     });
                 },
-
-                whenDesktop: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
-                whenTablet: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
-                whenMobile: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
 
                 /** 
                  * The function for binding property title. The argument 'entity' will be changed in future. Polymer will listen to that change.

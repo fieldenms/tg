@@ -6,8 +6,8 @@
 
 <polymer-element name="tg-integer-editor" extends="tg-editor">
     <template>
-        <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" isInvalid="{{msgType === 'ERROR'}}" error="{{msgType === 'ERROR' ? msg : ''}}">
-            <input id="input" is="core-input" type="number" preventInvalidInput value="{{editingValue}}" committedValue="{{commValue}}"> 
+        <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" isInvalid="{{msgType === 'ERROR'}}" error="{{msgType === 'ERROR' ? msg : ''}}" disabled?="{{_isDisabled()}}">
+            <input id="input" is="core-input" type="number" preventInvalidInput value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled()}}"> 
         </paper-input-decorator>
         <shadow></shadow>
         <!-- <p>$.input.committedValue: {{$.input.committedValue}}</p> -->
