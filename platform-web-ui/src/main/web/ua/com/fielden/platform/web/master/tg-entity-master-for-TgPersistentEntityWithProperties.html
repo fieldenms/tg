@@ -1,0 +1,38 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
+<link rel="import" href="/resources/editors/tg-integer-editor.html">
+<link rel="import" href="/resources/editors/tg-decimal-editor.html">
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="import" href="/resources/master/tg-entity-master.html">
+
+<polymer-element name="tg-entity-master-for-TgPersistentEntityWithProperties" extends="tg-entity-master">
+    <template>
+        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
+            <!-- debug -->
+            <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
+            <tg-integer-editor entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" msg="{{_msg(currEntity, 'integerProp')}}" msgType="{{_msgType(currEntity, 'integerProp')}}"></tg-integer-editor>
+            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" msg="{{_msg(currEntity, 'entityProp')}}" msgType="{{_msgType(currEntity, 'entityProp')}}"></tg-singleline-text-editor>
+            <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" msg="{{_msg(currEntity, 'bigDecimalProp')}}" msgType="{{_msgType(currEntity, 'bigDecimalProp')}}"></tg-decimal-editor>
+            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" msg="{{_msg(currEntity, 'stringProp')}}" msgType="{{_msgType(currEntity, 'stringProp')}}"></tg-singleline-text-editor>
+        </tg-flex-layout>
+        <shadow></shadow>            
+    </template>
+    <script>
+        (function () {
+            Polymer('tg-entity-master-for-TgPersistentEntityWithProperties', {
+                /**
+                 * Initialisation block. It has all children web components already initialised.
+                 */
+                ready: function () {
+                    this.super();
+                    console.log("child ready");
+                },
+
+                whenDesktop: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+                whenTablet: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+                whenMobile: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]]
+            });
+        })();
+    </script>
+</polymer-element>
