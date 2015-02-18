@@ -317,7 +317,20 @@ public class RestServerUtil {
     public <T extends AbstractEntity> Representation singleJSONRepresentation(final T entity) {
         try {
             // create a Result enclosing entity list
-            final Result result = entity != null ? new Result(entity, "OK") : new Result(null, new Exception("Could not find entity."));
+            final Result result;
+            if (entity != null) {
+                // TODO provide representing of invalid entities using unsuccessful result. Check whether it is good approach, because it triggers
+                // revalidation!
+
+                //                final Result valid = entity.isValid();
+                //                if (valid.isSuccessful()) {
+                result = new Result(entity, "OK");
+                //                } else {
+                //                    result = new Result(entity, valid.getMessage(), valid.getEx());
+                //                }
+            } else {
+                result = new Result(null, new Exception("Could not find entity."));
+            }
             final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
             return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
         } catch (final Exception ex) {
