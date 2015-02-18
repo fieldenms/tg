@@ -11,8 +11,8 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.master.EntityMaster;
 import ua.com.fielden.platform.web.view.AbstractWebView;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
  * The web application configurator. Allows one to specify which entity centre, entity master and other custom parameters for the application.

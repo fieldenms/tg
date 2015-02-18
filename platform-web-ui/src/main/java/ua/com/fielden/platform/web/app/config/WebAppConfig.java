@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.app.WebAppUtils;
-import ua.com.fielden.platform.web.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 /**
  * Implementation of the {@link IWebAppConfig}.

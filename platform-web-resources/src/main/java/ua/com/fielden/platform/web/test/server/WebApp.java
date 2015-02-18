@@ -9,7 +9,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.web.WebAppConfig;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.application.AbstractWebApp;
-import ua.com.fielden.platform.web.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import com.google.inject.Injector;
 

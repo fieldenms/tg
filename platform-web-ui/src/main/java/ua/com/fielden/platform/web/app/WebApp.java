@@ -9,9 +9,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.config.IWebAppConfig;
 import ua.com.fielden.platform.web.app.config.WebAppConfig;
-import ua.com.fielden.platform.web.master.EntityMaster;
 import ua.com.fielden.platform.web.menu.IMainMenuConfig;
 import ua.com.fielden.platform.web.menu.MainMenuConfig;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
  * The implementation for web application.

@@ -33,7 +33,7 @@ import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactor
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebViewResourceFactory;
-import ua.com.fielden.platform.web.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import com.google.inject.Injector;
 

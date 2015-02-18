@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.app.config;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.app.IWebApp;
-import ua.com.fielden.platform.web.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 /**
  * Web application's global configuration object.

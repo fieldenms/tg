@@ -4,8 +4,8 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.app.config.IWebAppConfig;
-import ua.com.fielden.platform.web.master.EntityMaster;
 import ua.com.fielden.platform.web.menu.IMainMenuConfig;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
  * API for web application configuring.

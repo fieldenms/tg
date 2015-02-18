@@ -16,9 +16,9 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.web.master.EntityMaster;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EntityResource;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import com.google.inject.Injector;
 
