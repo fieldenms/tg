@@ -455,6 +455,27 @@
 
                     // TODO rectify whether this implementation is good:
                     return value1 === value2;
+                },
+
+                /**
+                 * Determines whether the result represents the error.
+                 */
+                isError: function (result) {
+                    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result" && (typeof result.ex !== 'undefined');
+                },
+
+                /**
+                 * Creates the entity with concrete type, specified as 'typeName' string.
+                 */
+                newEntity: function(typeName) {
+                    var self = this;
+                    var Entity = self.getEntityType();
+                    var newOne = new Entity();
+
+                    newOne["_type"] = self.findTypeByName(typeName);
+                    newOne["id"] = null;
+                    newOne["version"] = 0;
+                    return newOne;
                 }
             });
         })();

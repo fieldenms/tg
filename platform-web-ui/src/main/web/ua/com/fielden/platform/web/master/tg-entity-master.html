@@ -200,7 +200,7 @@
                         if (this._isEntity(entity)) {
                             var validationResult = entity.prop(property).validationResult();
                             return (validationResult === null) ? 'NONE' :
-                                (this._isError(validationResult) ? 'ERROR' : "WARNING");
+                                (this.$.reflector.isError(validationResult) ? 'ERROR' : "WARNING");
                         } else {
                             return "ERROR";
                         }
@@ -432,21 +432,14 @@
                     return self.currBindingEntity;
                 },
 
-                _isError: function (result) {
-                    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result";
-                },
-
                 _extractBindingView: function (entity, previousModifiedPropertiesHolder) {
                     var self = this;
-                    var Entity = self.$.reflector.getEntityType();
-                    var bindingView = new Entity();
-
-                    bindingView["_type"] = entity["_type"];
+                    bindingView = self.$.reflector.newEntity(entity.type().fullClassName());
                     bindingView["id"] = entity["id"];
                     bindingView["version"] = entity["version"];
 
                     entity.traverseProperties(function (propertyName) {
-                        if (self._isError(entity.prop(propertyName).validationResult())) {
+                        if (self.$.reflector.isError(entity.prop(propertyName).validationResult())) {
                             bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
                         } else {
                             bindingView[propertyName] = self._convert(entity.get(propertyName));
