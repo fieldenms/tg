@@ -1,22 +1,38 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 
-public interface ProgressiveInterfacesSpike {
+public interface ProgressiveInterfacesWithBranchingSpike {
 
     interface OpenParenthesis {
         Operand begin();
     }
     
     interface Operand {
-        UnknownOperation prop();
+        AddOperation prop();
     }
     
-    interface UnknownOperation {
-        ArithmeticalOperationSecondArgument add();
-        ComparisonOperationSecondArgument gt();
+    interface IfTrue {
+    	I1 add(); 
+    	I1 sub(); 
+    }
+    
+    interface I1 {
+    	I2 otherwise();
+    }
+    
+    interface I2 {
+    	ArithmeticalOperationSecondArgument add();
+    	ArithmeticalOperationSecondArgument sub();
+    }
+    
+    interface AddOperation {
+        IfTrue ifTrue(boolean status);
+
+    	ArithmeticalOperationSecondArgument add();
     }
     
     interface ArithmeticalOperatorOrEnd {
+        IfTrue ifTrue(boolean status);
         ArithmeticalOperationSecondArgument add();
         void end();
     }
@@ -34,10 +50,6 @@ public interface ProgressiveInterfacesSpike {
         ComparisonOperator prop();
     }
 
-    interface ComparisonOperator {
-        ComparisonOperationSecondArgument gt();
-    }
-
     interface ComparisonOperationSecondArgument {
         LogicalOperatorOrEnd prop();
     }
@@ -49,8 +61,7 @@ public interface ProgressiveInterfacesSpike {
         
         a.begin().prop().add().prop().end();
         
-        a.begin().prop().gt().prop().end();
-        
-        a.begin().prop().gt().prop().and().prop().gt().prop().end();
+        boolean status = true;
+        a.begin().prop().ifTrue(status).add().otherwise().add().prop().ifTrue(status).add().otherwise().sub().prop().add().prop().end();
     }
 }
