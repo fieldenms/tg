@@ -13,7 +13,7 @@
                     <input id="input" is="core-input" type="number" preventInvalidInput value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">        
                 </div>
                 <div id="icon" hidden?="{{!action}}">
-                    <tg-property-action user="{{action.user}}" entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}"></tg-property-action>
+                    <tg-property-action user="{{action.user}}" entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
                 </div>
             </div>
         </paper-input-decorator>

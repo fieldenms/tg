@@ -4,7 +4,7 @@
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
 
-<polymer-element name="tg-action" attributes="user entitytype preAction postActionSuccess postActionError enabledStates">
+<polymer-element name="tg-action" attributes="user entitytype preAction postActionSuccess postActionError enabledStates currentState">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -35,7 +35,12 @@
                 /**
                  * A list of the states in which the action can be enabled.
                  */
-                enabledStates: null
+                enabledStates: null,
+
+                /**
+                 * The state of the parent view.
+                 */
+                currentState: null
             },
 
             /**
@@ -49,6 +54,13 @@
                  * TODO TODO TODO TODO TODO TODO TODO TODO TODO 
                  */
             enabled: true,
+
+            /**
+             * Returns whether the action is enabled in current moment.
+             */
+            isEnabled: function(currentState, enabled) {
+                return this.enabledStates.indexOf(currentState) >= 0 && enabled;
+            },            
 
             /**
              * Executes the action.

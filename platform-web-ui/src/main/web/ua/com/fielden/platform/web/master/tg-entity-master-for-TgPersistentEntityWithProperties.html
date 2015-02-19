@@ -19,7 +19,7 @@
             <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" msg="{{_msg(currEntity, 'bigDecimalProp')}}" msgType="{{_msgType(currEntity, 'bigDecimalProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-decimal-editor>
             <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" msg="{{_msg(currEntity, 'stringProp')}}" msgType="{{_msgType(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-singleline-text-editor>
 
-            <tg-entity-action user="{{actions['EXPORT'].user}}" entitytype="{{actions['EXPORT'].entitytype}}" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}"></tg-entity-action>
+            <tg-entity-action user="{{actions['EXPORT'].user}}" entitytype="{{actions['EXPORT'].entitytype}}" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
             <paper-button id="refreshButton" raised roll="button" on-tap="{{retrieve}}">Refresh</paper-button> 
             <paper-button id="saveButton" raised roll="button" on-tap="{{save}}">Save</paper-button>
             <paper-button id="validateButton" raised roll="button" on-tap="{{validate}}">Validate</paper-button>
@@ -45,7 +45,7 @@
                         entitytype: "ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity",
                         shortDesc: 'Export ...',
                         longDesc: 'Export action for TgPersistentEntityWithProperties ...',
-                        enabledStates: ['VIEW', 'EDIT'],
+                        enabledStates: ['EDIT'],
                         preAction: function() {
                             var functionalEntity = {id:null, version:0};// self.$.reflector.newEntity("ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity");
                             // functionalEntity.parentEntity = null;
