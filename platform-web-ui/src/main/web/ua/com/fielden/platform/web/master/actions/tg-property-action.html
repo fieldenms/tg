@@ -1,0 +1,50 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/master/actions/tg-action.html">
+<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
+
+<polymer-element name="tg-property-action" attributes="user entitytype preAction postActionSuccess postActionError enabledStates icon longDesc">
+    <template>
+        <style>
+            core-icon-button /deep/ core-icon[role="img"] {
+                height: 1.0em;
+                width: 1.0em;
+                padding: 0px;
+                margin: 0px;
+                vertical-align: top;
+            }
+            core-icon-button {
+                padding: 0px;
+                margin: 0px;
+                height: 1.0em;
+                width: 1.0em;
+                font: inherit;
+            }
+        </style>
+        <tg-action id="action" user="{{user}}" entitytype="{{entitytype}}" preAction="{{preAction}}" postActionSuccess="{{postActionSuccess}}" postActionError="{{postActionError}}"></tg-action>
+        <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{onTap}}" disabled?="{{!$.action.enabled}}"></core-icon-button> 
+    </template>
+    <script>
+        Polymer('tg-property-action', {
+            publish: {
+                /**
+                 * Long description for the action.
+                 */
+                longDesc: null,
+
+                /**
+                 * The icon specificator (string id).
+                 */
+                icon: null
+            },
+
+            ready: function () {
+                console.log("ready");
+            },
+
+            onTap: function() {
+                this.$.action.run();
+            } 
+        });
+    </script>
+</polymer-element>

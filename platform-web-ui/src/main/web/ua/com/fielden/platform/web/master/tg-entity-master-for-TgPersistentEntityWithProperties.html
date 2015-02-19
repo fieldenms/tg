@@ -14,12 +14,12 @@
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
             <!-- debug -->
             <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
-            <tg-integer-editor entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" msg="{{_msg(currEntity, 'integerProp')}}" msgType="{{_msgType(currEntity, 'integerProp')}}" currentState="{{currentState}}"></tg-integer-editor>
-            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" msg="{{_msg(currEntity, 'entityProp')}}" msgType="{{_msgType(currEntity, 'entityProp')}}" currentState="{{currentState}}"></tg-singleline-text-editor> <!-- action="{{actions['SNATCH_BACK_VEHICLE']}}" -->
-            <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" msg="{{_msg(currEntity, 'bigDecimalProp')}}" msgType="{{_msgType(currEntity, 'bigDecimalProp')}}" currentState="{{currentState}}"></tg-decimal-editor>
-            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" msg="{{_msg(currEntity, 'stringProp')}}" msgType="{{_msgType(currEntity, 'stringProp')}}" currentState="{{currentState}}"></tg-singleline-text-editor>
+            <tg-integer-editor entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" msg="{{_msg(currEntity, 'integerProp')}}" msgType="{{_msgType(currEntity, 'integerProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-integer-editor>
+            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" msg="{{_msg(currEntity, 'entityProp')}}" msgType="{{_msgType(currEntity, 'entityProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-singleline-text-editor>
+            <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" msg="{{_msg(currEntity, 'bigDecimalProp')}}" msgType="{{_msgType(currEntity, 'bigDecimalProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-decimal-editor>
+            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" msg="{{_msg(currEntity, 'stringProp')}}" msgType="{{_msgType(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-singleline-text-editor>
 
-            <tg-entity-action user="{{user}}" entitytype="ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}" icon="{{actions['EXPORT'].icon}}"></tg-entity-action>
+            <tg-entity-action user="{{actions['EXPORT'].user}}" entitytype="{{actions['EXPORT'].entitytype}}" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}"></tg-entity-action>
             <paper-button id="refreshButton" raised roll="button" on-tap="{{retrieve}}">Refresh</paper-button> 
             <paper-button id="saveButton" raised roll="button" on-tap="{{save}}">Save</paper-button>
             <paper-button id="validateButton" raised roll="button" on-tap="{{validate}}">Validate</paper-button>
@@ -31,17 +31,20 @@
         (function () {
             Polymer('tg-entity-master-for-TgPersistentEntityWithProperties', {
                 /**
-                 * Initialisation block (after 'ready'). It is designated to use for inner object / arrays initialisation.
+                 * Initialisation block. It has all children web components already initialised.
                  */
-                created: function() {
+                ready: function () {
                     this.super();
+                    console.log("child ready");
+
                     var self = this;
 
                     // TODO smth. like this should be generated here:
                     this.actions['EXPORT'] = {
+                        user: self.user,
+                        entitytype: "ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity",
                         shortDesc: 'Export ...',
                         longDesc: 'Export action for TgPersistentEntityWithProperties ...',
-                        icon: 'icon.ico',
                         enabledStates: ['VIEW', 'EDIT'],
                         preAction: function() {
                             var functionalEntity = {id:null, version:0};// self.$.reflector.newEntity("ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity");
@@ -52,37 +55,32 @@
                         }, 
                         postActionSuccess: function(entity) {
                             console.log("postActionSuccess entity", entity);
-                            // kusok kodu
                         }, 
                         postActionError: function(resultWithError) {
                             console.log("postActionError resultWithError", resultWithError);
-                            // kusok kodu
                         }
                     };
 
                     this.actions['SNATCH_BACK_VEHICLE'] = {
-                        shortDesc: 'Snatch back ...',
+                        user: self.user,
+                        entitytype: "ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity", // TODO make separate functional entity
                         longDesc: 'Snatch back sddsd ...',
-                        icon: 'icon.ico',
-                        enabledStates: ['VIEW', 'EDIT'],
+                        icon: 'trending-up',
+                        enabledStates: ['VIEW'],
                         preAction: function() {
-                            // kusok kodu
+                            var functionalEntity = {id:null, version:0};// self.$.reflector.newEntity("ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity");
+                            // functionalEntity.parentEntity = null;
+                            functionalEntity.parentEntity = { val: self.currEntity.get("key"), origVal: null };
+                            // functionalEntity.set("parentEntity", { val: self.currEntity.get("key"), origVal: null });
+                            return functionalEntity;
                         }, 
                         postActionSuccess: function(entity) {
-                            // kusok kodu
+                            console.log("postActionSuccess entity", entity);
                         }, 
                         postActionError: function(resultWithError) {
-                            // kusok kodu
+                            console.log("postActionError resultWithError", resultWithError);
                         }
-                    };
-                },
-
-                /**
-                 * Initialisation block. It has all children web components already initialised.
-                 */
-                ready: function () {
-                    this.super();
-                    console.log("child ready");
+                    };                    
                 },
 
                 whenDesktop: ['vertical', 

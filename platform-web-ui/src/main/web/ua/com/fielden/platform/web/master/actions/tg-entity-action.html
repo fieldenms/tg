@@ -3,9 +3,9 @@
 <link rel="import" href="/resources/master/actions/tg-action.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<polymer-element name="tg-entity-action" attributes="user entitytype preAction postActionSuccess postActionError enabledStates shortDesc longDesc icon">
+<polymer-element name="tg-entity-action" attributes="user entitytype preAction postActionSuccess postActionError enabledStates shortDesc longDesc">
     <template>
-        <tg-action id="action" user="{{user}}" entitytype="{{entitytype}}" preAction="{{preAction}}" postActionSuccess="{{postActionSuccess}}" postActionError="{{postActionError}}"></tg-action>
+        <tg-action id="action" user="{{user}}" entitytype="{{entitytype}}" preAction="{{preAction}}" postActionSuccess="{{postActionSuccess}}" postActionError="{{postActionError}}" enabledStates="{{enabledStates}}"></tg-action>
         <paper-button id="actionButton" raised roll="button" on-tap="{{onTap}}" disabled?="{{!$.action.enabled}}">{{shortDesc}}</paper-button> 
     </template>
     <script>
@@ -19,12 +19,7 @@
                 /**
                  * Long description for the action.
                  */
-                longDesc: null,
-
-                /**
-                 * The icon specificator (string id).
-                 */
-                icon: null
+                longDesc: null
             },
 
             ready: function () {
