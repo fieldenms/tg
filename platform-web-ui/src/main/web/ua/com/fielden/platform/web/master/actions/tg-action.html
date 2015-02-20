@@ -59,7 +59,12 @@
              * Returns whether the action is enabled in current moment.
              */
             isEnabled: function(currentState, enabled) {
-                return this.enabledStates.indexOf(currentState) >= 0 && enabled;
+                if (this.enabledStates) {
+                    return this.enabledStates.indexOf(currentState) >= 0 && enabled;
+                } else {
+                    console.warn("isEnabled: enabledStates is not ready at this stage! enabledStates == ", this.enabledStates);
+                    return false;
+                }
             },            
 
             /**

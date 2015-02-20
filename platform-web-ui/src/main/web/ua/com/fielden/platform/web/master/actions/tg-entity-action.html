@@ -3,10 +3,10 @@
 <link rel="import" href="/resources/master/actions/tg-action.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<polymer-element name="tg-entity-action" attributes="user entitytype preAction postActionSuccess postActionError enabledStates shortDesc longDesc  currentState">
+<polymer-element name="tg-entity-action" attributes="shortDesc longDesc" extends="tg-action">
     <template>
-        <tg-action id="action" user="{{user}}" entitytype="{{entitytype}}" preAction="{{preAction}}" postActionSuccess="{{postActionSuccess}}" postActionError="{{postActionError}}" enabledStates="{{enabledStates}}" currentState="{{currentState}}"></tg-action>
-        <paper-button id="actionButton" raised roll="button" on-tap="{{onTap}}" disabled?="{{isDisabled($.action.currentState, $.action.enabled)}}">{{shortDesc}}</paper-button> 
+        <shadow></shadow>
+        <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(currentState, enabled)}}">{{shortDesc}}</paper-button> 
     </template>
     <script>
         Polymer('tg-entity-action', {
@@ -20,23 +20,7 @@
                  * Long description for the action.
                  */
                 longDesc: null
-            },
-
-            isDisabled: function(currentState, enabled) {
-                if (typeof this.$ !== 'undefined') {
-                    return !this.$.action.isEnabled(currentState, enabled);
-                } else {
-                    return true;
-                }
-            },
-
-            ready: function () {
-                console.log("ready");
-            },
-
-            onTap: function() {
-                this.$.action.run();
-            } 
+            }
         });
     </script>
 </polymer-element>

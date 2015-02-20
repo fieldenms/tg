@@ -3,7 +3,7 @@
 <link rel="import" href="/resources/master/actions/tg-action.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 
-<polymer-element name="tg-property-action" attributes="user entitytype preAction postActionSuccess postActionError enabledStates icon longDesc  currentState">
+<polymer-element name="tg-property-action" attributes="icon longDesc" extends="tg-action">
     <template>
         <style>
             core-icon-button /deep/ core-icon[role="img"] {
@@ -21,8 +21,8 @@
                 font: inherit;
             }
         </style>
-        <tg-action id="action" user="{{user}}" entitytype="{{entitytype}}" preAction="{{preAction}}" postActionSuccess="{{postActionSuccess}}" postActionError="{{postActionError}}" enabledStates="{{enabledStates}}" currentState="{{currentState}}"></tg-action>
-        <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{onTap}}" disabled?="{{isDisabled($.action.currentState, $.action.enabled)}}"></core-icon-button> 
+        <shadow></shadow>
+        <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}" disabled?="{{!isEnabled(currentState, enabled)}}"></core-icon-button> 
     </template>
     <script>
         Polymer('tg-property-action', {
@@ -36,23 +36,7 @@
                  * The icon specificator (string id).
                  */
                 icon: null
-            },
-
-            isDisabled: function(currentState, enabled) {
-                if (typeof this.$ !== 'undefined') {
-                    return !this.$.action.isEnabled(currentState, enabled);
-                } else {
-                    return true;
-                }
-            },
-
-            ready: function () {
-                console.log("ready");
-            },
-
-            onTap: function() {
-                this.$.action.run();
-            } 
+            }
         });
     </script>
 </polymer-element>
