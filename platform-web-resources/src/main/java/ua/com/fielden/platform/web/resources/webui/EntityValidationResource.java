@@ -50,7 +50,8 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
 
         // Initialises the "validation prototype" entity, which modification will be made upon:
         final T validationPrototype = utils.createEntityForRetrieval(id);
-        return restUtil.singleJSONRepresentation(utils.apply(modifiedPropertiesHolder, validationPrototype));
+        final T applied = utils.apply(modifiedPropertiesHolder, validationPrototype);
+        return restUtil.singleJSONRepresentation(applied);
     }
 
 }

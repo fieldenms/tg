@@ -100,7 +100,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         final Map<String, Object> modifiedPropertiesHolder = utils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
         final T validationPrototype = utils.createEntityForRetrieval(this.entityId);
-        final T potentiallySaved = save(utils.apply(modifiedPropertiesHolder, validationPrototype));
+        final T applied = utils.apply(modifiedPropertiesHolder, validationPrototype);
+        final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
         return restUtil.singleJSONRepresentation(potentiallySaved);
     }
 

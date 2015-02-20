@@ -5,7 +5,6 @@
 <link rel="import" href="/resources/editors/tg-decimal-editor.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/master/tg-entity-master.html">
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/master/actions/tg-entity-action.html">
 
 <polymer-element name="tg-entity-master-for-TgPersistentEntityWithProperties" extends="tg-entity-master">
@@ -19,17 +18,15 @@
             <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" msg="{{_msg(currEntity, 'bigDecimalProp')}}" msgType="{{_msgType(currEntity, 'bigDecimalProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-decimal-editor>
             <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" msg="{{_msg(currEntity, 'stringProp')}}" msgType="{{_msgType(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-singleline-text-editor>
 
-            <tg-entity-action user="{{actions['EXPORT'].user}}" entitytype="{{actions['EXPORT'].entitytype}}" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
-            <paper-button id="refreshButton" raised roll="button" on-tap="{{retrieve}}">Refresh</paper-button> 
-            <paper-button id="saveButton" raised roll="button" on-tap="{{save}}">Save</paper-button>
-            <paper-button id="validateButton" raised roll="button" on-tap="{{validate}}">Validate</paper-button>
-            <paper-button id="editButton" raised roll="button" on-tap="{{edit}}">Edit</paper-button>
-
             <tg-entity-action action="{{actions['REFRESH'].action}}" onAction="{{onRetrievedDefault}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
 
             <tg-entity-action action="{{actions['EDIT'].action}}" onAction="{{actions['EDIT'].onAction}}" enabledStates="{{actions['EDIT'].enabledStates}}" shortDesc="{{actions['EDIT'].shortDesc}}" longDesc="{{actions['EDIT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
+            <tg-entity-action action="{{actions['VIEW'].action}}" onAction="{{actions['VIEW'].onAction}}" enabledStates="{{actions['VIEW'].enabledStates}}" shortDesc="{{actions['VIEW'].shortDesc}}" longDesc="{{actions['VIEW'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
 
-            <paper-button id="viewButton" raised roll="button" on-tap="{{view}}">View</paper-button>
+            <tg-entity-action action="{{actions['VALIDATE'].action}}" onAction="{{onValidatedDefault}}" enabledStates="{{actions['VALIDATE'].enabledStates}}" shortDesc="{{actions['VALIDATE'].shortDesc}}" longDesc="{{actions['VALIDATE'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
+            <tg-entity-action action="{{actions['SAVE'].action}}" onAction="{{onSavedDefault}}" enabledStates="{{actions['SAVE'].enabledStates}}" shortDesc="{{actions['SAVE'].shortDesc}}" longDesc="{{actions['SAVE'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
+
+            <tg-entity-action user="{{actions['EXPORT'].user}}" entitytype="{{actions['EXPORT'].entitytype}}" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
         </tg-flex-layout>
     </template>
     <script>
@@ -46,16 +43,32 @@
 
                     // TODO smth. like this should be generated here:
                     this.actions['REFRESH'] = {
-                        shortDesc: 'REFRESH ACTION ...',
+                        shortDesc: 'REFRESH',
                         longDesc: 'REFRESH ACTION for TgPersistentEntityWithProperties ...',
                         enabledStates: ['EDIT', 'VIEW'],
                         action: function() {
                             self.retrieve();
                         }
                     };
+                    this.actions['VALIDATE'] = {
+                        shortDesc: 'VALIDATE',
+                        longDesc: 'VALIDATE ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['EDIT'],
+                        action: function() {
+                            self.validate();
+                        }
+                    };
+                    this.actions['SAVE'] = {
+                        shortDesc: 'SAVE',
+                        longDesc: 'SAVE ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['EDIT'],
+                        action: function() {
+                            self.save();
+                        }
+                    };
 
                     this.actions['EDIT'] = {
-                        shortDesc: 'EDIT ACTION ...',
+                        shortDesc: 'EDIT',
                         longDesc: 'EDIT ACTION for TgPersistentEntityWithProperties ...',
                         enabledStates: ['VIEW'],
                         action: function() {
@@ -65,11 +78,23 @@
                         onAction: function(e) {                            
                         }
                     };
+                    this.actions['VIEW'] = {
+                        shortDesc: 'VIEW',
+                        longDesc: 'VIEW ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['EDIT'],
+                        action: function() {
+                            self.view();
+                            this.onAction(null);
+                        },
+                        onAction: function(e) {                            
+                        }
+                    };
+
 
                     this.actions['EXPORT'] = {
                         user: self.user,
                         entitytype: "ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity",
-                        shortDesc: 'Export ...',
+                        shortDesc: 'EXPORT',
                         longDesc: 'Export action for TgPersistentEntityWithProperties ...',
                         enabledStates: ['EDIT'],
                         preAction: function() {
@@ -110,12 +135,27 @@
                 },
 
                 whenDesktop: ['vertical', 
-                    ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
-                    ['horizontal', ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"]] 
+                    ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+                    ['horizontal', 'justified', ["margin-right: 80px"], 
+                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]], 
+                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
+                            []] 
                 ],
 
-                whenTablet: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
-                whenMobile: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]]
+                whenTablet: ['vertical', 
+                    ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+                    ['horizontal', 'justified', ["margin-right: 80px"], 
+                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]], 
+                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
+                            []] 
+                ],
+                whenMobile: ['vertical', 
+                    ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+                    ['horizontal', 'justified', ["margin-right: 80px"], 
+                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]], 
+                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
+                            []] 
+                ]
             });
         })();
     </script>

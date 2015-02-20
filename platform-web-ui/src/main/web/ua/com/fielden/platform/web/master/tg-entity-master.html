@@ -109,6 +109,7 @@
                     self.view = self.view.bind(self);
                     self.onValidatedDefault = self.onValidatedDefault.bind(self);
                     self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
+                    self.onSavedDefault = self.onSavedDefault.bind(self);
                     self._title = self._title.bind(self);
                     self._desc = self._desc.bind(self);
                     self._msg = self._msg.bind(self);
@@ -121,13 +122,13 @@
                     self.$.ajaxSaver.addEventListener('core-response', function (e) {
                         if (e.detail.xhr.status === 200) {
                             var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
-                            self._onSavedDefault(potentiallySavedEntity);
+                            self.onSavedDefault(potentiallySavedEntity);
                         }
                     });
                     self.$.ajaxSaverNew.addEventListener('core-response', function (e) {
                         if (e.detail.xhr.status === 200) {
                             var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
-                            self._onSavedDefault(potentiallySavedEntity);
+                            self.onSavedDefault(potentiallySavedEntity);
                         }
                     });
                     self.$.ajaxSaver.addEventListener('core-complete', function (e) {
@@ -344,11 +345,14 @@
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     self.$.validator.abortValidationIfAny();
 
-                    if (self._hasModified(holder)) {
-                        self._saveModifiedProperties(self._reset(holder));
-                    } else {
-                        self.$.validator.validate(self._reset(holder));
-                    }
+                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+                    //            This check will be done on server -- and appropriate onSavedDefault callback will be triggered.
+                    self._saveModifiedProperties(self._reset(holder));
+                    // if (self._hasModified(holder)) {
+                    //     self._saveModifiedProperties(self._reset(holder));
+                    // } else {
+                    //     self.$.validator.validate(self._reset(holder));
+                    // }
                 },
 
                 _savingInProgress: function () {
@@ -395,7 +399,7 @@
                 /**
                  * Default implementation for onSaved callback.
                  */
-                _onSavedDefault: function (potentiallySavedEntity) {
+                onSavedDefault: function (potentiallySavedEntity) {
                     var wasStale = potentiallySavedEntity.version > this.currEntity.version;
                     var newBindingEntity = this.onEntityReceived(potentiallySavedEntity, wasStale);
                     // custom external action

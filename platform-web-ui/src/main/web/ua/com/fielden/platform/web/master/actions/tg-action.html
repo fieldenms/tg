@@ -108,7 +108,7 @@
             },
 
             _afterExecution: function() {
-                console.log("after execution");
+                console.log(this.shortDesc + ": after execution");
                 this.enabled = true;
             },
 
@@ -131,9 +131,8 @@
                 var self = this;
                 console.log("onAction changed, old = ", oldValue, newValue);
                 if (newValue && !self.upgraded) {
-                    self.onAction = function(e) {
-                        newValue(e);
-                        console.log("Hura!")
+                    self.onAction = function(smth) {
+                        newValue(smth);
                         self._afterExecution();
                     };
                     self.upgraded = true;
