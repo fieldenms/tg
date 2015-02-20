@@ -44,16 +44,26 @@
             },
 
             /**
-                 * TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-                 * TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-                 * TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-                 * TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-                 * TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-                 * TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-                 * TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-                 * TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-                 */
+             * This inner state is triggered by the action itself after the action button has been pressed (enabled:=false) and after the action
+             * has been executed (enabled:=true).
+             */
             enabled: true,
+            onActionUpgraded: false,
+
+            /**
+             * Initialisation block.
+             */
+            ready: function () {
+                var self = this;
+
+                self.run = self.run.bind(self);
+
+                self.$.actionExecutor.addEventListener('core-response', function (e) {
+                    if (e.detail.xhr.status === 200) {
+                        self._onExecuted(self.$.serialiser.deserialise(e.detail.response));
+                    }
+                });
+            },            
 
             /**
              * Returns whether the action is enabled in current moment.
@@ -67,14 +77,6 @@
                     return false;
                 }
             },            
-
-            // currentStateChanged: function(oldValue, newValue) {
-            //     console.log("currentStateChanged old ", oldValue, newValue);
-            // },
-
-            // enabledStatesChanged: function(oldValue, newValue) {
-            //     console.log("enabledStatesChanged old ", oldValue, newValue);
-            // },
 
             /**
              * Executes the action.
@@ -112,30 +114,15 @@
                 this.enabled = true;
             },
 
-            ready: function () {
-                console.log("ready");
-                var self = this;
-
-                self.run = self.run.bind(self);
-
-                self.$.actionExecutor.addEventListener('core-response', function (e) {
-                    if (e.detail.xhr.status === 200) {
-                        self._onExecuted(self.$.serialiser.deserialise(e.detail.response));
-                    }
-                });
-            },
-
-            upgraded: false,
-
             onActionChanged: function(oldValue, newValue) {
                 var self = this;
                 console.log("onAction changed, old = ", oldValue, newValue);
-                if (newValue && !self.upgraded) {
+                if (newValue && !self.onActionUpgraded) {
                     self.onAction = function(smth) {
                         newValue(smth);
                         self._afterExecution();
                     };
-                    self.upgraded = true;
+                    self.onActionUpgraded = true;
                 }
             }
         });
