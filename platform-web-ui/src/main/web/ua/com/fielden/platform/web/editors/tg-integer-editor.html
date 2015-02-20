@@ -18,7 +18,7 @@
             </div>
         </paper-input-decorator>
         <shadow></shadow>
-        <!-- <p>$.input.committedValue: {{$.input.committedValue}}</p> -->
+        <p>$.input.committedValue: {{$.input.committedValue}}</p>
     </template>
     <script>
         Polymer('tg-integer-editor', {            
@@ -34,6 +34,10 @@
              */
             convertFromString: function(strValue) {
                 return parseInt(strValue);
+            },
+
+            commit: function() {
+                this.$.input.commit();
             }
         });
     </script>

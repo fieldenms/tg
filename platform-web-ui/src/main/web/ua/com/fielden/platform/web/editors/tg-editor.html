@@ -2,13 +2,13 @@
 
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-editor" attributes="entity propertyName onAcceptedValueChanged msg msgType propTitle propDesc currentState action">
+<polymer-element name="tg-editor" attributes="entity propertyName onAcceptedValueChanged msg msgType propTitle propDesc currentState action externalRefreshCycle">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
-        <!-- <p>editingValue: {{editingValue}}</p>
+        <p>editingValue: {{editingValue}}</p>
         <p>commValue: {{commValue}}</p>
 		<p>acceptedValue: {{acceptedValue}}</p>
-        <p>entity.get(propertyName): {{_bindingValue(entity, propertyName)}}</p> -->
+        <p>entity.get(propertyName): {{_bindingValue(entity, propertyName)}}</p>
     </template>
     <script>
         Polymer('tg-editor', {
@@ -75,7 +75,9 @@
                  *
                  * If the action attribute is not specified -- no action button should be displayed.
                  */
-                action: null
+                action: null,
+
+                externalRefreshCycle: null
             },
 
             /**
@@ -100,9 +102,10 @@
              */
             acceptedValue: '',
 
+            refreshCycleStarted: false,
+
             ready: function () {
                 this.$.decorator.labelVisible = false;
-                console.log("parent ready");
             },
 
             /**
@@ -122,7 +125,7 @@
              * The function for binding property value. The argument 'entity' will be changed in future. Polymer will listen to that change.
              */
             _bindingValue: function (entity, propertyName) {
-                console.log("_bindingValue entity", entity);
+                // console.log("_bindingValue entity", entity);
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(entity)) {
                         console.log("_bindingValue prop value", entity.get(propertyName));
@@ -148,15 +151,20 @@
              * This method is called during editing.
              */
             editingValueChanged: function (oldValue, newValue) {
-                console.log("editingValueChanged", oldValue, newValue);
+                console.log("editingValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
+
                 this.$.decorator.updateLabelVisibility(this.editingValue);
+
+                if (this.refreshCycleStarted) {
+                    this.commit();
+                }
             },
 
             /**
              * This method is called once the entity was changed from the outside of the component.
              */
             entityChanged: function (oldValue, newValue) {
-                console.log("entityChanged", oldValue, newValue);
+                console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(newValue)) {
                         this.editingValue = this.convertToString(newValue.get(this.propertyName));
@@ -172,7 +180,7 @@
              * This method is called once the the accepted value was changed after the editor has commited its value.
              */
             commValueChanged: function (oldValue, newValue) {
-                console.log("commValueChanged", oldValue, newValue);
+                console.log("commValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
                 this.acceptedValue = this.convertFromString(newValue);
             },
 
@@ -180,26 +188,44 @@
              * This method is called once the the accepted value was changed after the editor has commited its value.
              */
             acceptedValueChanged: function (oldValue, newValue) {
-                console.log("acceptedValueChanged", oldValue, newValue);
+                console.log("acceptedValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
 
-                this.entity.set(this.propertyName, newValue);
-                this.onAcceptedValueChanged();
+                if (this.refreshCycleStarted) {
+                    this.refreshCycleStarted = false;
+                } else {
+                    this.entity.set(this.propertyName, newValue);
+                    this.onAcceptedValueChanged();
+                }
             },
 
             /**
-             * Converts the value into string representation (which is used in edititing / comm values). Please implement this method in descendant component.
+             * Converts the value into string representation (which is used in edititing / comm values). Please implement this method in descendant editor.
              */
             convertToString: function (value) {
                 // return "" + value;
-                throw "Conversion to string is not specified for this component.";
+                throw "Conversion to string is not specified for this editor.";
             },
 
             /**
-             * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component. Please implement this method in descendant component.
+             * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component. Please implement this method in descendant editor.
              */
             convertFromString: function (strValue) {
                 // return strValue;
-                throw "Conversion from string into entity property type is not specified for this component.";
+                throw "Conversion from string into entity property type is not specified for this editor.";
+            },
+
+            /**
+             * Commits editing value.
+             */
+            commit: function () {
+                throw "Commit functionality is not specified for this editor.";
+            },
+
+            externalRefreshCycleChanged: function (oldValue, newValue) {
+                if (newValue === "ACTIVATED") {
+                    console.log("externalRefreshCycleChanged", oldValue, newValue);
+                    this.refreshCycleStarted = true;
+                }
             }
         });
     </script>

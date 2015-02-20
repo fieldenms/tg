@@ -48,7 +48,7 @@
                 return this.message;
             }
 
-            Polymer({
+            Polymer("tg-entity-master", {
                 publish: {
                     /**
                      * The state for the entity master.
@@ -65,8 +65,12 @@
                         value: null,
                         reflect: true
                     }
+
                     // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
                 },
+
+                refreshCycleMode: null,
+
                 currEntity: null, // represents the current entity
                 currBindingEntity: {}, /*{ dateProp: 10000, stringProp: "" }*/ // represents the view of current entity for binding
                 originalBindingEntity: null, // represents the view of original entity for binding.
@@ -114,6 +118,8 @@
                     self._desc = self._desc.bind(self);
                     self._msg = self._msg.bind(self);
                     self._msgType = self._msgType.bind(self);
+                    self.startRefreshCycleModeForEditors = self.startRefreshCycleModeForEditors.bind(self);
+                    self.resetRefreshCycleModeForEditors = self.resetRefreshCycleModeForEditors.bind(self);
 
                     self.$.ajaxRetriever.addEventListener('core-response', function (e) {
                         self.onRetrievedDefault(e);
@@ -215,6 +221,7 @@
                  */
                 retrieve: function () {
                     this.$.ajaxRetriever.go();
+                    this.startRefreshCycleModeForEditors();
                 },
 
                 /**
@@ -234,6 +241,7 @@
                  */
                 onRetrievedDefault: function (e) {
                     var entity = this.onPreRetrieved(this.$.serialiser.deserialise(e.detail.response).instance);
+                    // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(entity, true);
                     // custom external action
                     this.onRetrieved(entity, newBindingEntity);
@@ -341,6 +349,8 @@
                         throw new SimultaneousSaveException();
                     }
 
+                    self.startRefreshCycleModeForEditors();
+
                     var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     self.$.validator.abortValidationIfAny();
@@ -401,6 +411,7 @@
                  */
                 onSavedDefault: function (potentiallySavedEntity) {
                     var wasStale = potentiallySavedEntity.version > this.currEntity.version;
+                    // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(potentiallySavedEntity, wasStale);
                     // custom external action
                     this.onSaved(potentiallySavedEntity, newBindingEntity);
@@ -408,6 +419,29 @@
 
                 _idConvert: function (id) {
                     return id === null ? "new" : ("" + id);
+                },
+
+                refreshCycleModeChanged: function (oldValue, newValue) {                    
+                    console.log("refreshCycleModeChanged", oldValue, newValue);
+                },
+
+                /**
+                 * Initialises a special state for the editors called "refresh cycle". In this state
+                 * the editors promotes their values through the chain: entity => editingValue (commit) => commValue => acceptedValue.
+                 * 
+                 * If the state is simple -- the value promotes through the next chain: editingValue (commit) => commValue => acceptedValue =>
+                 * => entity prop value (validate) => new entity prop.
+                 */
+                startRefreshCycleModeForEditors: function() {
+                    console.log("startRefreshCycleModeForEditors: prev refreshCycleMode =", this.refreshCycleMode);
+                    this.refreshCycleMode = "ACTIVATED";
+                    console.log("startRefreshCycleModeForEditors: refreshCycleMode =", this.refreshCycleMode);
+                },
+
+                resetRefreshCycleModeForEditors: function() {
+                    console.log("resetRefreshCycleModeForEditors: prev refreshCycleMode =", this.refreshCycleMode);
+                    this.refreshCycleMode = null;
+                    console.log("resetRefreshCycleModeForEditors: refreshCycleMode =", this.refreshCycleMode);
                 },
 
                 //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
@@ -425,14 +459,14 @@
                     self._reset(previousModifiedPropertiesHolder);
                     // New entity should be promoted to the local cache:
                     self.currEntity = entity;
+                    // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
                     self.currBindingEntity = self._extractBindingView(self.currEntity, previousModifiedPropertiesHolder);
+                    this.resetRefreshCycleModeForEditors();
 
                     if (updateOriginalBindingEntity) {
                         self.originalBindingEntity = self._extractOriginalBindingView(self.currEntity);
                     }
 
-                    // After the new entity has appeared it should be rebinded:
-                    self.rebind(self.currBindingEntity);
                     return self.currBindingEntity;
                 },
 
@@ -503,9 +537,7 @@
                     var value = entity.get(propName); // automatic check whether the property is fetched
                     var instanceMetaProperty = entity.constructor.prototype.prop.call(entity, propName);
                     return /*entity.prop(propName)*/ instanceMetaProperty.isChangedFromOriginal() ? null : this._convert(value);
-                },
-
-                rebind: function (bindingEntity) {}
+                }
             });
         })();
     </script>
