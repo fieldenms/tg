@@ -24,6 +24,11 @@
             <paper-button id="saveButton" raised roll="button" on-tap="{{save}}">Save</paper-button>
             <paper-button id="validateButton" raised roll="button" on-tap="{{validate}}">Validate</paper-button>
             <paper-button id="editButton" raised roll="button" on-tap="{{edit}}">Edit</paper-button>
+
+            <tg-entity-action action="{{actions['REFRESH'].action}}" onAction="{{onRetrievedDefault}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
+
+            <tg-entity-action action="{{actions['EDIT'].action}}" onAction="{{actions['EDIT'].onAction}}" enabledStates="{{actions['EDIT'].enabledStates}}" shortDesc="{{actions['EDIT'].shortDesc}}" longDesc="{{actions['EDIT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
+
             <paper-button id="viewButton" raised roll="button" on-tap="{{view}}">View</paper-button>
         </tg-flex-layout>
     </template>
@@ -40,6 +45,27 @@
                     var self = this;
 
                     // TODO smth. like this should be generated here:
+                    this.actions['REFRESH'] = {
+                        shortDesc: 'REFRESH ACTION ...',
+                        longDesc: 'REFRESH ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['EDIT', 'VIEW'],
+                        action: function() {
+                            self.retrieve();
+                        }
+                    };
+
+                    this.actions['EDIT'] = {
+                        shortDesc: 'EDIT ACTION ...',
+                        longDesc: 'EDIT ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['VIEW'],
+                        action: function() {
+                            self.edit();
+                            this.onAction(null);
+                        },
+                        onAction: function(e) {                            
+                        }
+                    };
+
                     this.actions['EXPORT'] = {
                         user: self.user,
                         entitytype: "ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity",
@@ -85,7 +111,7 @@
 
                 whenDesktop: ['vertical', 
                     ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
-                    ['horizontal', ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"]] 
+                    ['horizontal', ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"], ["margin-right: 40px"]] 
                 ],
 
                 whenTablet: ['horizontal', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],

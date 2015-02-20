@@ -22,7 +22,7 @@
             }
         </style>
         <shadow></shadow>
-        <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}" disabled?="{{!isEnabled(currentState, enabled)}}"></core-icon-button> 
+        <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}"></core-icon-button> 
     </template>
     <script>
         Polymer('tg-property-action', {

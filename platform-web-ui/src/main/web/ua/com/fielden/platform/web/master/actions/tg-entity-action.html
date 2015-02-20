@@ -6,7 +6,7 @@
 <polymer-element name="tg-entity-action" attributes="shortDesc longDesc" extends="tg-action">
     <template>
         <shadow></shadow>
-        <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(currentState, enabled)}}">{{shortDesc}}</paper-button> 
+        <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">{{shortDesc}}</paper-button> 
     </template>
     <script>
         Polymer('tg-entity-action', {
