@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.functional.paginator.Page;
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IQueryRunner.class)
-public class QueryRunner extends AbstractEntity<String> implements IFunctionalEntity{
+public class QueryRunner extends AbstractEntity<String> implements IFunctionalEntity {
     private static final long serialVersionUID = 2994126659101256859L;
 
     @IsProperty
@@ -34,10 +34,10 @@ public class QueryRunner extends AbstractEntity<String> implements IFunctionalEn
     private Page page;
 
     @Observable
-//    @EntityExists(Page.class)
+    //    @EntityExists(Page.class)
     public QueryRunner setPage(final Page page) {
-	this.page = page;
-	return this;
+        this.page = page;
+        return this;
     }
 
     @IsProperty
@@ -47,26 +47,26 @@ public class QueryRunner extends AbstractEntity<String> implements IFunctionalEn
 
     @Observable
     public QueryRunner setPageCapacity(final Integer pageCapacity) {
-	this.pageCapacity = pageCapacity;
-	return this;
+        this.pageCapacity = pageCapacity;
+        return this;
     }
 
     public Integer getPageCapacity() {
-	return pageCapacity;
+        return pageCapacity;
     }
 
     public Page getPage() {
-	return page;
+        return page;
     }
 
     @Observable
-//    @EntityExists(QueryEntity.class)
+    //    @EntityExists(QueryEntity.class)
     public QueryRunner setQuery(final QueryEntity query) {
-	this.query = query;
-	return this;
+        this.query = query;
+        return this;
     }
 
     public QueryEntity getQuery() {
-	return query;
+        return query;
     }
 }

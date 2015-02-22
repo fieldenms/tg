@@ -37,22 +37,22 @@ public class FetchProp extends AbstractEntity<String> {
 
     @Observable
     public FetchProp setOrdering(final Ordering ordering) {
-	this.ordering = ordering;
-	return this;
+        this.ordering = ordering;
+        return this;
     }
 
     public Ordering getOrdering() {
-	return ordering;
+        return ordering;
     }
 
     @Observable
     public FetchProp setSummary(final List<String> summary) {
-	this.summary.clear();
-	this.summary.addAll(summary);
-	return this;
+        this.summary.clear();
+        this.summary.addAll(summary);
+        return this;
     }
 
     public List<String> getSummary() {
-	return Collections.unmodifiableList(summary);
+        return Collections.unmodifiableList(summary);
     }
 }

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
  * @author TG Team
  *
  */
-public interface ISimpleMaster {
+public interface ISimpleMasterConfig {
     public static class ShowMessageDlg implements IPostAction {
         public ShowMessageDlg(final String msg) {
         }
@@ -54,7 +54,7 @@ public interface ISimpleMaster {
     <T extends AbstractEntity<?>> IPropertySelector<T> forEntity(Class<T> type);
 
     // TODO Needs to be removed in a fullness of time. This method exists here purely to demonstrate API fluency as part of the development.
-    public static void apiExample(final ISimpleMaster sm) {
+    public static void apiExample(final ISimpleMasterConfig sm) {
         sm.forEntity(TgWorkOrder.class)
                     .addProp("vehicle").asAutocompleter().byDesc()
                     .withAction("#snatchBackVehicle", TgWorkOrder.class) // should really except only functional entities

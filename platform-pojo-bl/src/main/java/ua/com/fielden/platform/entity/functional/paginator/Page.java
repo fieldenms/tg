@@ -58,42 +58,42 @@ public class Page extends AbstractEntity<String> {
 
     @Observable
     public Page setNumberOfPages(final Integer numberOfPages) {
-	this.numberOfPages = numberOfPages;
-	return this;
+        this.numberOfPages = numberOfPages;
+        return this;
     }
 
     public Integer getNumberOfPages() {
-	return numberOfPages;
+        return numberOfPages;
     }
 
     @Observable
     public Page setPageNo(final Integer pageNo) {
-	this.pageNo = pageNo;
-	return this;
+        this.pageNo = pageNo;
+        return this;
     }
 
     public Integer getPageNo() {
-	return pageNo;
+        return pageNo;
     }
 
     @Observable
     public Page setSummary(final AbstractEntity<?> summary) {
-	this.summary = summary;
-	return this;
+        this.summary = summary;
+        return this;
     }
 
     public AbstractEntity<?> getSummary() {
-	return summary;
+        return summary;
     }
 
     @Observable
     public Page setResults(final List<AbstractEntity<?>> results) {
-	this.results.clear();
-	this.results.addAll(results);
-	return this;
+        this.results.clear();
+        this.results.addAll(results);
+        return this;
     }
 
     public List<AbstractEntity<?>> getResults() {
-	return Collections.unmodifiableList(results);
+        return Collections.unmodifiableList(results);
     }
 }

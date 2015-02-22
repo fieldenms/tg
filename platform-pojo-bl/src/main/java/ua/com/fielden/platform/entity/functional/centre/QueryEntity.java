@@ -53,37 +53,37 @@ public class QueryEntity extends AbstractEntity<String> {
 
     @Observable
     public QueryEntity setFetchProperties(final Map<String, FetchProp> fetchProperties) {
-	this.fetchProperties = fetchProperties;
-	return this;
+        this.fetchProperties = fetchProperties;
+        return this;
     }
 
     public Map<String, FetchProp> getFetchProperties() {
-	return fetchProperties;
+        return fetchProperties;
     }
 
     @Observable
     public QueryEntity setCriteriaProperties(final Map<String, CritProp> criteriaProperties) {
-	this.criteriaProperties = criteriaProperties;
-	return this;
+        this.criteriaProperties = criteriaProperties;
+        return this;
     }
 
     public Map<String, CritProp> getCriteriaProperties() {
-	return criteriaProperties;
+        return criteriaProperties;
     }
 
     @Observable
     public QueryEntity setEntityType(final String entityType) {
-	this.entityType = entityType;
-	return this;
+        this.entityType = entityType;
+        return this;
     }
 
     public String getEntityType() {
-	return entityType;
+        return entityType;
     }
 
     @SuppressWarnings("unchecked")
     public Class<AbstractEntity<?>> getActualEntityType() {
-	return (Class<AbstractEntity<?>>) findClass(entityType);
+        return (Class<AbstractEntity<?>>) findClass(entityType);
     }
 
     public List<QueryProperty> getQueryProperties() {

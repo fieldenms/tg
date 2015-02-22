@@ -43,41 +43,41 @@ public class CritProp extends AbstractEntity<String> {
 
     @Observable
     public CritProp setSingle(final boolean single) {
-	this.single = single;
-	return this;
+        this.single = single;
+        return this;
     }
 
     public boolean isSingle() {
-	return single;
+        return single;
     }
 
     @Observable
     public CritProp setPropType(final String type) {
-	this.propType = type;
-	return this;
+        this.propType = type;
+        return this;
     }
 
     public String getPropType() {
-	return propType;
+        return propType;
     }
 
     @Observable
     public CritProp setValue2(final Object value2) {
-	this.value2 = value2;
-	return this;
+        this.value2 = value2;
+        return this;
     }
 
     public Object getValue2() {
-	return value2;
+        return value2;
     }
 
     @Observable
     public CritProp setValue1(final Object value1) {
-	this.value1 = value1;
-	return this;
+        this.value1 = value1;
+        return this;
     }
 
     public Object getValue1() {
-	return value1;
+        return value1;
     }
 }
