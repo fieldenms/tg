@@ -26,14 +26,14 @@
              * Converts the value into string representation (which is used in edititing / comm values).
              */
             convertToString: function(value) {
-                return "" + value;
+                return value === null ? "" : "" + value;
             },
 
             /**
              * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
              */
             convertFromString: function(strValue) {
-                return parseInt(strValue);
+                return strValue === '' ? null : parseInt(strValue);
             },
 
             commit: function() {

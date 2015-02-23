@@ -21,19 +21,19 @@
         <p>$.input.committedValue: {{$.input.committedValue}}</p>
     </template>
     <script>
-        Polymer('tg-singleline-text-editor', {            
+        Polymer('tg-singleline-text-editor', {
             /**
              * Converts the value into string representation (which is used in edititing / comm values).
              */
             convertToString: function(value) {
-                return "" + value;
+                return value === null ? "" : "" + value;
             },
 
             /**
              * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
              */
             convertFromString: function(strValue) {
-                return strValue;
+                return strValue === '' ? null : strValue;
             },
 
             commit: function() {
