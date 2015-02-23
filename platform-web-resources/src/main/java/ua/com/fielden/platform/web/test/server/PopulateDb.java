@@ -118,7 +118,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties staleEnt1New = save(staleEnt1.setConflictingProp("persistently modified"));
         System.out.println("staleEnt1New.getVersion() == " + staleEnt1New.getVersion());
 
-        final TgPersistentEntityWithProperties exampleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23.0)));
+        final TgPersistentEntityWithProperties exampleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23.0)).setDateProp(new DateTime(960000L).toDate()));
         System.out.println("exampleEnt1.getId() == " + exampleEnt1.getId());
 
         try {

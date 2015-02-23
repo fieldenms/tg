@@ -1,0 +1,7 @@
+ html /deep/ .date-time-picker::shadow #scroller {
+ 	padding: 0px;
+ }
+ html /deep/ .date-time-picker::shadow #actions {
+ 	padding: 8px;
+ 	color: #03A9F4;
+ }

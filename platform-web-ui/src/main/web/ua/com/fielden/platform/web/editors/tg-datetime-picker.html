@@ -8,6 +8,7 @@
 <link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="/resources/components/tg-calendar.html">
 <link rel="import" href="/resources/components/moment-component.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
 
 <core-style id="datetime-icon-decorator">
 
@@ -19,7 +20,7 @@
     <!---->
 </core-style>
 
-<polymer-element name="datetime-picker" attributes="bindTo label">
+<polymer-element name="tg-datetime-picker" extends="tg-editor" attributes="bindTo label">
     <template>
         <core-style ref="datetime-icon-decorator"></core-style>
         <style>
@@ -38,10 +39,10 @@
                 font: inherit;
             }
         </style>
-        <paper-input-decorator id="decorator" label="{{label}}" isInvalid="{{isInvalid}}" error="{{error}}" floatingLabel>
+        <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" isInvalid="{{_msgType(entity, propertyName, editorValidationMsg) === 'ERROR'}}" error="{{_msgType(entity, propertyName, editorValidationMsg) === 'ERROR' ? _msg(entity, propertyName, editorValidationMsg) : ''}}" disabled?="{{_isDisabled(currentState)}}">
             <div layout horizontal>
                 <div id="input-container" flex>
-                    <input id="input" is="core-input" value="{{valueToModify}}" committedValue="{{acceptedValue}}" style="width:100%">
+                    <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}" style="width:100%">
                 </div>
                 <div id="icon">
                     <core-icon-button on-click="{{showCalendar}}" icon="today"></core-icon-buton>
@@ -53,41 +54,47 @@
             <paper-button affirmative on-tap="{{cancelDate}}">Cancel</paper-button>
             <paper-button affirmative autofocus on-tap="{{acceptDate}}">Ok</paper-button>
         </paper-action-dialog>
+        <shadow></shadow>
+        <p>$.input.committedValue: {{$.input.committedValue}}</p>
     </template>
     <script>
         (function () {
             Polymer({
-                valueToModify: null,
-                acceptedValue: null,
-                isInvalid: false,
-                error: "",
-                ready: function () {
-                    this.$.decorator.labelVisible = false;
-                },
-                acceptedValueChanged: function (oldValue, newValue) {
-                    var acceptedMoment;
-                    console.log(moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a"));
-                    if (newValue) {
-                        acceptedMoment = moment(newValue.trim(), "L LT", true);
+                isAcceptingDateFromPicker: false,
+
+                /**
+                 * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
+                 */
+                convertFromString: function(strValue) {
+                    // console.log(moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a"));
+                    if (strValue) {
+                        var acceptedMoment = moment(strValue.trim(), "L LT", true);
                         if (acceptedMoment.isValid()) {
-                            this.isInvalid = false;
-                            this.bindTo = acceptedMoment.valueOf();
-                        } else {
-                            this.isInvalid = true;
-                            this.error = "The entered date is incorrect."
+                            return acceptedMoment.valueOf();
+                        } else {          
+                            throw "The entered date is incorrect."
                         }
                     } else {
-                        this.isInvalid = false;
+                        return null;
                     }
                 },
-                bindToChanged: function (oldValue, newValue) {
-                    this.valueToModify = moment(newValue).format("L LT");
+
+                /**
+                 * Converts the value into string representation (which is used in editing / comm values).
+                 */
+                convertToString: function(value) {
+                    if (value === null) {
+                        return "";
+                    } else {
+                        return moment(value).format("L LT");
+                    }
                 },
+
                 showCalendar: function (e) {
                     var selectedMoment;
                     this.calendarVisible = !this.calendarVisible;
-                    if (this.valueToModify) {
-                        selectedMoment = moment(this.valueToModify.trim(), "L LT", true);
+                    if (this.editingValue) {
+                        selectedMoment = moment(this.editingValue.trim(), "L LT", true);
                         if (selectedMoment.isValid()) {
                             this.$.datePicker.selectedDate = selectedMoment.valueOf();
                             this.$.datePicker.selectedHour = selectedMoment.hour();
@@ -100,13 +107,23 @@
                     this.$.datePicker.selectedMinute = 0;
                 },
                 acceptDate: function () {
-                    this.valueToModify = moment(this.$.datePicker.selectedDate)
+                    this.isAcceptingDateFromPicker = true;
+                    this.editingValue = moment(this.$.datePicker.selectedDate)
                         .hour(this.$.datePicker.selectedHour)
                         .minute(this.$.datePicker.selectedMinute)
                         .format("L LT");
-                    this.acceptedValue = this.valueToModify;
-                    this.$.input.focus();
+                    this.$.input.focus();                    
                 },
+
+                editingValueChanged: function (oldValue, newValue) {                    
+                    this.super([oldValue, newValue]);
+                    if (this.isAcceptingDateFromPicker) {
+                        this.isAcceptingDateFromPicker = false;
+
+                        this.commit();    
+                    }
+                },
+
                 cancelDate: function () {
                     this.$.input.focus();
                 }

@@ -1,8 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
+<link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
 <link rel="import" href="/resources/editors/tg-integer-editor.html">
 <link rel="import" href="/resources/editors/tg-decimal-editor.html">
+<link rel="import" href="/resources/editors/tg-datetime-picker.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/actions/tg-entity-action.html">
@@ -13,10 +15,12 @@
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
             <!-- debug -->
             <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
-            <tg-integer-editor entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" msg="{{_msg(currEntity, 'integerProp')}}" msgType="{{_msgType(currEntity, 'integerProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
-            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" msg="{{_msg(currEntity, 'entityProp')}}" msgType="{{_msgType(currEntity, 'entityProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
-            <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" msg="{{_msg(currEntity, 'bigDecimalProp')}}" msgType="{{_msgType(currEntity, 'bigDecimalProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
-            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" msg="{{_msg(currEntity, 'stringProp')}}" msgType="{{_msgType(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
+            <tg-integer-editor entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
+            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
+            <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
+            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
+            <tg-multiline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-multiline-text-editor>
+            <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="dateProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'dateProp')}}" propDesc="{{_desc(currEntity, 'dateProp')}}" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>            
 
             <tg-entity-action action="{{actions['REFRESH'].action}}" onAction="{{onRetrievedDefault}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
 
@@ -135,7 +139,7 @@
                 },
 
                 whenDesktop: ['vertical', 
-                    ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+                    ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
                     ['horizontal', 'justified', ["margin-right: 80px"], 
                             ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]], 
                             ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
