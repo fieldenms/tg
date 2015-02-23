@@ -145,7 +145,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         } else if (Boolean.class.isAssignableFrom(propertyType)) {
             return reflectedValue == null ? null : reflectedValue;
         } else if (Date.class.isAssignableFrom(propertyType)) {
-            return reflectedValue == null ? null : new Date(((Integer) reflectedValue).longValue());
+            return reflectedValue == null ? null : (reflectedValue instanceof Integer ? new Date(((Integer) reflectedValue).longValue()) : new Date((Long) reflectedValue));
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
             return reflectedValue == null ? null : (reflectedValue instanceof Integer ? new BigDecimal((Integer) reflectedValue) : new BigDecimal((Double) reflectedValue));
         } else if (Money.class.isAssignableFrom(propertyType)) {

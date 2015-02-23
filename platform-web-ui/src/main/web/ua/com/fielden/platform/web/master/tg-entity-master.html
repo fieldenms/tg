@@ -116,8 +116,6 @@
                     self.onSavedDefault = self.onSavedDefault.bind(self);
                     self._title = self._title.bind(self);
                     self._desc = self._desc.bind(self);
-                    self._msg = self._msg.bind(self);
-                    self._msgType = self._msgType.bind(self);
                     self.startRefreshCycleModeForEditors = self.startRefreshCycleModeForEditors.bind(self);
                     self.resetRefreshCycleModeForEditors = self.resetRefreshCycleModeForEditors.bind(self);
 
@@ -183,38 +181,6 @@
                     }
                 },
 
-                /** 
-                 * The function for binding property validation msg. The argument 'entity' will be changed in future. Polymer will listen to that change.
-                 */
-                _msg: function (entity, property) {
-                    if (typeof this.$ !== 'undefined') {
-                        if (this._isEntity(entity)) {
-                            var validationResult = entity.prop(property).validationResult();
-                            return (validationResult === null) ? '' : validationResult.message;
-                        } else {
-                            return "Not yet initialised currEntity, from which to get validation message!";
-                        }
-                    } else {
-                        return "Not yet initialised this.$!";
-                    }
-                },
-
-                /** 
-                 * The function for binding property validation msg type. The argument 'entity' will be changed in future. Polymer will listen to that change.
-                 */
-                _msgType: function (entity, property) {
-                    if (typeof this.$ !== 'undefined') {
-                        if (this._isEntity(entity)) {
-                            var validationResult = entity.prop(property).validationResult();
-                            return (validationResult === null) ? 'NONE' :
-                                (this.$.reflector.isError(validationResult) ? 'ERROR' : "WARNING");
-                        } else {
-                            return "ERROR";
-                        }
-                    } else {
-                        return "ERROR";
-                    }
-                },
                 //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
                 /**
                  * Starts the process of entity retrieval (based on current entityid).
@@ -479,6 +445,7 @@
                     entity.traverseProperties(function (propertyName) {
                         if (self.$.reflector.isError(entity.prop(propertyName).validationResult())) {
                             bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                            bindingView["@" + propertyName + "_result"] = entity.prop(propertyName).validationResult();
                         } else {
                             bindingView[propertyName] = self._convert(entity.get(propertyName));
                         }

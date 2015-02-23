@@ -2,7 +2,7 @@
 
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-editor" attributes="entity propertyName onAcceptedValueChanged msg msgType propTitle propDesc currentState action externalRefreshCycle">
+<polymer-element name="tg-editor" attributes="entity propertyName onAcceptedValueChanged propTitle propDesc currentState action externalRefreshCycle">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <p>editingValue: {{editingValue}}</p>
@@ -48,12 +48,17 @@
                 /**
                  * The message about the state of the editor (most likely validation message).
                  */
-                msg: '',
+                // msg: '',
+
+                /**
+                 * The message about the editor-specific validation. If 'null' -- the validation was successfull.
+                 */
+                editorValidationMsg: '',
 
                 /**
                  * The message type (ERROR validation or stale conflict, WARNING validation or staleness etc.).
                  */
-                msgType: '', // NONE 'ERROR', 'WARNING', 'INFO'
+                // msgType: '', // NONE 'ERROR', 'WARNING', 'INFO'
 
                 /**
                  * The state for the editor.
@@ -105,7 +110,11 @@
             refreshCycleStarted: false,
 
             ready: function () {
+                var self = this;
                 this.$.decorator.labelVisible = false;
+
+                self._msg = self._msg.bind(self);
+                self._msgType = self._msgType.bind(self);
             },
 
             /**
@@ -181,7 +190,14 @@
              */
             commValueChanged: function (oldValue, newValue) {
                 console.log("commValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
-                this.acceptedValue = this.convertFromString(newValue);
+                try {
+                    this.acceptedValue = this.convertFromString(newValue);
+                    this.editorValidationMsg = '';
+                }
+                catch (error) {
+                    console.log("commValueChanged catched", error, this);
+                    this.editorValidationMsg = error;
+                }                
             },
 
             /**
@@ -199,7 +215,7 @@
             },
 
             /**
-             * Converts the value into string representation (which is used in edititing / comm values). Please implement this method in descendant editor.
+             * Converts the value into string representation (which is used in editing / comm values). Please implement this method in descendant editor.
              */
             convertToString: function (value) {
                 // return "" + value;
@@ -207,7 +223,7 @@
             },
 
             /**
-             * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component. Please implement this method in descendant editor.
+             * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component. Please implement this method in descendant editor.
              */
             convertFromString: function (strValue) {
                 // return strValue;
@@ -226,7 +242,54 @@
                     console.log("externalRefreshCycleChanged", oldValue, newValue);
                     this.refreshCycleStarted = true;
                 }
-            }
+            },
+
+                            /** 
+                 * The function for binding property validation msg. The argument 'entity' will be changed in future. Polymer will listen to that change.
+                 */
+                _msg: function (entity, property, editorValidationMsg) {                    
+                    if (editorValidationMsg) {
+                        return editorValidationMsg;
+                    } else if (typeof this.$ !== 'undefined') {
+                        if (this._isEntity(entity)) {
+                            // var validationResult = entity.prop(property).validationResult();
+                            return (typeof entity["@" + property + "_result"] === 'undefined') ? '' : entity["@" + property + "_result"].message;
+                        } else {
+                            return "Not yet initialised currEntity, from which to get validation message!";
+                        }
+                    } else {
+                        return "Not yet initialised this.$!";
+                    }
+                },
+
+                /** 
+                 * The function for binding property validation msg type. The argument 'entity' will be changed in future. Polymer will listen to that change.
+                 */
+                _msgType: function (entity, property, editorValidationMsg) {
+                    console.log("_msgType", entity, property, editorValidationMsg);
+                    if (editorValidationMsg) {
+                        return "ERROR";
+                    } else if (typeof this.$ !== 'undefined') {
+                        if (this._isEntity(entity)) {
+                            var res = (typeof entity["@" + property + "_result"] === 'undefined') ? 'NONE' :
+                                (this.$.reflector.isError(entity["@" + property + "_result"]) ? 'ERROR' : "WARNING");
+                            console.log("_msgType", entity, property, editorValidationMsg, "_msgType=", res);
+                            return res;
+                        } else {
+                            return "ERROR";
+                        }
+                    } else {
+                        return "ERROR";
+                    }
+                },
+
+                /**
+                 * Determines whether the specified object represents the entity.
+                 */
+                _isEntity: function (obj) {
+                    return obj !== null && (obj instanceof this.$.reflector.getEntityType());
+                }
+
         });
     </script>
 </polymer-element>
