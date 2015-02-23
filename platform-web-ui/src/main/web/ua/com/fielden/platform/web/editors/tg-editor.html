@@ -234,7 +234,9 @@
              * Commits editing value.
              */
             commit: function () {
-                throw "Commit functionality is not specified for this editor.";
+                console.log("commit");
+                // this.$.input.commit();
+                this.commValue = this.editingValue;
             },
 
             externalRefreshCycleChanged: function (oldValue, newValue) {

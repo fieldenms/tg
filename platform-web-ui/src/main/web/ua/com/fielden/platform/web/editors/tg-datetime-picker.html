@@ -60,6 +60,8 @@
     <script>
         (function () {
             Polymer({
+                isAcceptingDateFromPicker: false,
+
                 /**
                  * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
                  */
@@ -88,11 +90,6 @@
                     }
                 },
 
-                commit: function() {
-                    console.log("datetime picker commit");
-                    this.$.input.commit();
-                },
-
                 showCalendar: function (e) {
                     var selectedMoment;
                     this.calendarVisible = !this.calendarVisible;
@@ -110,13 +107,23 @@
                     this.$.datePicker.selectedMinute = 0;
                 },
                 acceptDate: function () {
+                    this.isAcceptingDateFromPicker = true;
                     this.editingValue = moment(this.$.datePicker.selectedDate)
                         .hour(this.$.datePicker.selectedHour)
                         .minute(this.$.datePicker.selectedMinute)
                         .format("L LT");
-                    this.commit();
-                    this.$.input.focus();
+                    this.$.input.focus();                    
                 },
+
+                editingValueChanged: function (oldValue, newValue) {                    
+                    this.super([oldValue, newValue]);
+                    if (this.isAcceptingDateFromPicker) {
+                        this.isAcceptingDateFromPicker = false;
+
+                        this.commit();    
+                    }
+                },
+
                 cancelDate: function () {
                     this.$.input.focus();
                 }
