@@ -10,6 +10,7 @@
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 <link rel="stylesheet" href="/resources/editors/tg-datetime-picker.css">
+<link rel="import" href="/resources/master/actions/tg-property-action.html">
 
 <core-style id="datetime-icon-decorator">
 
@@ -46,7 +47,10 @@
                     <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
                 </div>
                 <div id="icon">
-                    <core-icon-button on-click="{{showCalendar}}" icon="today"></core-icon-buton>
+                    <core-icon-button on-click="{{showCalendar}}" icon="today" disabled?="{{_isDisabled(currentState)}}"></core-icon-buton>
+                </div>
+                <div id="action_icon" hidden?="{{!action}}">
+                    <tg-property-action user="{{action.user}}" entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
                 </div>
             </div>
         </paper-input-decorator>
