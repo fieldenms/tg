@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
 <link rel="import" href="/resources/editors/tg-integer-editor.html">
 <link rel="import" href="/resources/editors/tg-decimal-editor.html">
+<link rel="import" href="/resources/editors/tg-boolean-editor.html">
 <link rel="import" href="/resources/editors/tg-datetime-picker.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/master/tg-entity-master.html">
@@ -21,6 +22,7 @@
             <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
             <tg-multiline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-multiline-text-editor>
             <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="dateProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'dateProp')}}" propDesc="{{_desc(currEntity, 'dateProp')}}" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>            
+            <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="booleanProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'booleanProp')}}" propDesc="{{_desc(currEntity, 'booleanProp')}}" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-boolean-editor>
 
             <tg-entity-action action="{{actions['REFRESH'].action}}" onAction="{{onRetrievedDefault}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
 
@@ -139,7 +141,7 @@
                 },
 
                 whenDesktop: ['vertical', 
-                    ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+                    ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
                     ['horizontal', 'justified', ["margin-right: 80px"], 
                             ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]], 
                             ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
