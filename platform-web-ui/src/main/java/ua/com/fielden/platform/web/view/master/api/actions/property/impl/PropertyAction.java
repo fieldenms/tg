@@ -20,7 +20,7 @@ public class PropertyAction extends AbstractAction implements IExecutable {
      * @param functionalEntityType
      * @param propertyName
      */
-    public PropertyAction(final String name, final String actionComponentPath, final Class<? extends AbstractEntity<?>> functionalEntityType, final IPreAction preAction, final IPostAction postActionSuccess, final IPostAction postActionError, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc) {
-        super(name, actionComponentPath, functionalEntityType, preAction, postActionSuccess, postActionError, enabledState, icon, shortDesc, longDesc);
+    public PropertyAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntityType, final IPreAction preAction, final IPostAction postActionSuccess, final IPostAction postActionError, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc) {
+        super(name, "master/actions/tg-property-action.html", functionalEntityType, preAction, postActionSuccess, postActionError, enabledState, icon, shortDesc, longDesc);
     }
 }
