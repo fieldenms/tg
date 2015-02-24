@@ -10,7 +10,7 @@
         <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" isInvalid="{{_msgType(entity, propertyName, editorValidationMsg) === 'ERROR'}}" error="{{_msgType(entity, propertyName, editorValidationMsg) === 'ERROR' ? _msg(entity, propertyName, editorValidationMsg) : ''}}" disabled?="{{_isDisabled(currentState)}}">
             <div layout horizontal>
                 <div id="input-container" flex>
-                    <input id="input" is="core-input" type="number" preventInvalidInput value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
+                    <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
                 </div>
                 <div id="icon" hidden?="{{!action}}">
                     <tg-property-action user="{{action.user}}" entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
@@ -33,7 +33,14 @@
              * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
              */
             convertFromString: function(strValue) {
-                return strValue === '' ? null : parseFloat(strValue);
+                if (strValue === '') {
+                    return null;   
+                }
+                // var convertedNumber = (+strValue);
+                if (isNaN(strValue)) {
+                    throw "The entered number is incorrect."
+                }
+                return (+strValue);
             }
         });
     </script>
