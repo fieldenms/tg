@@ -103,7 +103,7 @@ public class DomElement {
      * @return
      */
     public int childCount() {
-	return children.size();
+        return children.size();
     }
 
     /**
@@ -257,6 +257,20 @@ public class DomElement {
     }
 
     /**
+     * Provides the set of attributes for this {@link DomElement} instance.
+     *
+     * @param attributes
+     *            - the map of [the attribute name for which value should be set; the value to be set for the specifed attribute name].
+     * @return
+     */
+    public DomElement attrs(final Map<String, Object> attributes) {
+        attributes.forEach((name, val) -> {
+            attr(name, val);
+        });
+        return this;
+    }
+
+    /**
      * Returns the value for the specified attribute name.
      *
      * @param name
@@ -264,7 +278,7 @@ public class DomElement {
      * @return
      */
     public Attribute<?> getAttr(final String name) {
-	return attrs.containsKey(name) ? attrs.get(name) : null;
+        return attrs.containsKey(name) ? attrs.get(name) : null;
     }
 
     /**
