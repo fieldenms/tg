@@ -14,7 +14,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 /**
- * Represents web server resource that retrievers the entity centre configuration and returns it to the client..
+ * Represents web server resource that returns entity master component for specified entity type to the client.
  *
  * @author TG Team
  *

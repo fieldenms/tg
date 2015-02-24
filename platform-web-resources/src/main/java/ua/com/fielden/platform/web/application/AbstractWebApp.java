@@ -32,7 +32,6 @@ import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFacto
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.WebViewResourceFactory;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import com.google.inject.Injector;
@@ -158,18 +157,6 @@ public abstract class AbstractWebApp extends Application {
      * @param injector
      */
     protected abstract void attachFunctionalEntities(final Router router, final Injector injector);
-
-    /**
-     * Configures router for entity centre resource.
-     *
-     * @param router
-     * @param webAppConfig
-     *            - holds the entity centre configurations.
-     */
-    private void attachCustomWebViewResources(final Router router, final WebAppConfig webAppConfig) {
-        logger.info("\t\tWeb models resources (generated) attaching...");
-        router.attach("/webview/{webViewName}", new WebViewResourceFactory(webAppConfig.getCustomViews()));
-    }
 
     /**
      * Attaches all resources relevant to entity masters (entity resource, entity validation resource, UI resources etc.).
