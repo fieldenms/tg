@@ -1,6 +1,7 @@
-package ua.com.fielden.platform.web.view.master.api.widgets.impl;
+package ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
  * The implementation box for singleline text widgets.
