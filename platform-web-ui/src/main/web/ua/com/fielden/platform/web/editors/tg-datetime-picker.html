@@ -9,6 +9,7 @@
 <link rel="import" href="/resources/components/tg-calendar.html">
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
+<link rel="stylesheet" href="/resources/editors/tg-datetime-picker.css">
 
 <core-style id="datetime-icon-decorator">
 
@@ -42,7 +43,7 @@
         <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" isInvalid="{{_msgType(entity, propertyName, editorValidationMsg) === 'ERROR'}}" error="{{_msgType(entity, propertyName, editorValidationMsg) === 'ERROR' ? _msg(entity, propertyName, editorValidationMsg) : ''}}" disabled?="{{_isDisabled(currentState)}}">
             <div layout horizontal>
                 <div id="input-container" flex>
-                    <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}" style="width:100%">
+                    <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
                 </div>
                 <div id="icon">
                     <core-icon-button on-click="{{showCalendar}}" icon="today"></core-icon-buton>
