@@ -48,55 +48,6 @@
                     var self = this;
 
                     // TODO smth. like this should be generated here:
-                    this.actions['REFRESH'] = {
-                        shortDesc: 'REFRESH',
-                        longDesc: 'REFRESH ACTION for TgPersistentEntityWithProperties ...',
-                        enabledStates: ['EDIT', 'VIEW'],
-                        action: function() {
-                            self.retrieve();
-                        }
-                    };
-                    this.actions['VALIDATE'] = {
-                        shortDesc: 'VALIDATE',
-                        longDesc: 'VALIDATE ACTION for TgPersistentEntityWithProperties ...',
-                        enabledStates: ['EDIT'],
-                        action: function() {
-                            self.validate();
-                        }
-                    };
-                    this.actions['SAVE'] = {
-                        shortDesc: 'SAVE',
-                        longDesc: 'SAVE ACTION for TgPersistentEntityWithProperties ...',
-                        enabledStates: ['EDIT'],
-                        action: function() {
-                            self.save();
-                        }
-                    };
-
-                    this.actions['EDIT'] = {
-                        shortDesc: 'EDIT',
-                        longDesc: 'EDIT ACTION for TgPersistentEntityWithProperties ...',
-                        enabledStates: ['VIEW'],
-                        action: function() {
-                            self.edit();
-                            this.onAction(null);
-                        },
-                        onAction: function(e) {                            
-                        }
-                    };
-                    this.actions['VIEW'] = {
-                        shortDesc: 'VIEW',
-                        longDesc: 'VIEW ACTION for TgPersistentEntityWithProperties ...',
-                        enabledStates: ['EDIT'],
-                        action: function() {
-                            self.view();
-                            this.onAction(null);
-                        },
-                        onAction: function(e) {                            
-                        }
-                    };
-
-
                     this.actions['EXPORT'] = {
                         user: self.user,
                         entitytype: "ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity",

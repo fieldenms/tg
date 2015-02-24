@@ -145,6 +145,54 @@
                             self.onSavedComplete();
                         }
                     });
+
+                    self.actions['REFRESH'] = {
+                        shortDesc: 'REFRESH',
+                        longDesc: 'REFRESH ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['EDIT', 'VIEW'],
+                        action: function() {
+                            self.retrieve();
+                        }
+                    };
+                    self.actions['VALIDATE'] = {
+                        shortDesc: 'VALIDATE',
+                        longDesc: 'VALIDATE ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['EDIT'],
+                        action: function() {
+                            self.validate();
+                        }
+                    };
+                    self.actions['SAVE'] = {
+                        shortDesc: 'SAVE',
+                        longDesc: 'SAVE ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['EDIT'],
+                        action: function() {
+                            self.save();
+                        }
+                    };
+
+                    self.actions['EDIT'] = {
+                        shortDesc: 'EDIT',
+                        longDesc: 'EDIT ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['VIEW'],
+                        action: function() {
+                            self.edit();
+                            this.onAction(null);
+                        },
+                        onAction: function(e) {                            
+                        }
+                    };
+                    self.actions['VIEW'] = {
+                        shortDesc: 'VIEW',
+                        longDesc: 'VIEW ACTION for TgPersistentEntityWithProperties ...',
+                        enabledStates: ['EDIT'],
+                        action: function() {
+                            self.view();
+                            this.onAction(null);
+                        },
+                        onAction: function(e) {                            
+                        }
+                    };
                 },
 
                 /** 
