@@ -1,0 +1,29 @@
+{
+    "name": "tg-autocompleter",
+    "version": "0.0.0",
+    "authors": [
+    "01es <oles@fielden.com.au>"
+  ],
+    "description": "A control for selecting one or multiple entities based on the specified search criteria",
+    "keywords": [
+    "web-component",
+    "web-components",
+    "polymer",
+    "snatchback"
+  ],
+    "main": "tg-autocompleter.html",
+    "license": "MIT",
+    "homepage": "https://github.com/01es/autocompleter/",
+    "ignore": [
+    "/.*",
+    "/tests/"
+  ],
+    "dependencies": {
+        "polymer": "Polymer/polymer#^0.5.1",
+        "core-selector": "Polymer/core-selector#~0.5.1",
+        "paper-elements": "Polymer/paper-elements#~0.5.1"
+    },
+    "devDependencies": {
+        "web-component-tester": "Polymer/web-component-tester#^2.0.0-rc1"
+    }
+}
