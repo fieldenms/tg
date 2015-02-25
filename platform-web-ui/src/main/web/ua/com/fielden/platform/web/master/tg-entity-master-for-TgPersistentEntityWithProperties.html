@@ -9,6 +9,7 @@
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/actions/tg-entity-action.html">
+<link rel="import" href="/resources/master/actions/tg-action.html">
 
 <polymer-element name="tg-entity-master-for-TgPersistentEntityWithProperties" extends="tg-entity-master">
     <template>
@@ -24,13 +25,13 @@
             <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="dateProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'dateProp')}}" propDesc="{{_desc(currEntity, 'dateProp')}}" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-datetime-picker>            
             <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="booleanProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'booleanProp')}}" propDesc="{{_desc(currEntity, 'booleanProp')}}" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}" action="{{actions['SNATCH_BACK_VEHICLE']}}"></tg-boolean-editor>
 
-            <tg-entity-action action="{{actions['REFRESH'].action}}" onAction="{{onRetrievedDefault}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
+            <tg-action action="{{actions['REFRESH'].action}}" onAction="{{onRetrievedDefault}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
-            <tg-entity-action action="{{actions['EDIT'].action}}" onAction="{{actions['EDIT'].onAction}}" enabledStates="{{actions['EDIT'].enabledStates}}" shortDesc="{{actions['EDIT'].shortDesc}}" longDesc="{{actions['EDIT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
-            <tg-entity-action action="{{actions['VIEW'].action}}" onAction="{{actions['VIEW'].onAction}}" enabledStates="{{actions['VIEW'].enabledStates}}" shortDesc="{{actions['VIEW'].shortDesc}}" longDesc="{{actions['VIEW'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
+            <tg-action action="{{actions['EDIT'].action}}" onAction="{{actions['EDIT'].onAction}}" enabledStates="{{actions['EDIT'].enabledStates}}" shortDesc="{{actions['EDIT'].shortDesc}}" longDesc="{{actions['EDIT'].longDesc}}" currentState="{{currentState}}"></tg-action>
+            <tg-action action="{{actions['VIEW'].action}}" onAction="{{actions['VIEW'].onAction}}" enabledStates="{{actions['VIEW'].enabledStates}}" shortDesc="{{actions['VIEW'].shortDesc}}" longDesc="{{actions['VIEW'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
-            <tg-entity-action action="{{actions['VALIDATE'].action}}" onAction="{{onValidatedDefault}}" enabledStates="{{actions['VALIDATE'].enabledStates}}" shortDesc="{{actions['VALIDATE'].shortDesc}}" longDesc="{{actions['VALIDATE'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
-            <tg-entity-action action="{{actions['SAVE'].action}}" onAction="{{onSavedDefault}}" enabledStates="{{actions['SAVE'].enabledStates}}" shortDesc="{{actions['SAVE'].shortDesc}}" longDesc="{{actions['SAVE'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
+            <tg-action action="{{actions['VALIDATE'].action}}" onAction="{{onValidatedDefault}}" enabledStates="{{actions['VALIDATE'].enabledStates}}" shortDesc="{{actions['VALIDATE'].shortDesc}}" longDesc="{{actions['VALIDATE'].longDesc}}" currentState="{{currentState}}"></tg-action>
+            <tg-action action="{{actions['SAVE'].action}}" onAction="{{onSavedDefault}}" enabledStates="{{actions['SAVE'].enabledStates}}" shortDesc="{{actions['SAVE'].shortDesc}}" longDesc="{{actions['SAVE'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
             <tg-entity-action user="{{actions['EXPORT'].user}}" entitytype="{{actions['EXPORT'].entitytype}}" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
         </tg-flex-layout>
@@ -72,6 +73,7 @@
                     self.actions['SNATCH_BACK_VEHICLE'] = {
                         user: self.user,
                         entitytype: "ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity", // TODO make separate functional entity
+                        shortDesc: 'PROP ACTION',
                         longDesc: 'Snatch back sddsd ...',
                         icon: 'trending-up',
                         enabledStates: ['VIEW'],

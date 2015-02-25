@@ -1,9 +1,9 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/master/actions/tg-action.html">
+<link rel="import" href="/resources/master/actions/tg-functional-action.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 
-<polymer-element name="tg-property-action" attributes="icon longDesc" extends="tg-action">
+<polymer-element name="tg-property-action" extends="tg-functional-action">
     <template>
         <style>
             core-icon-button /deep/ core-icon[role="img"] {
@@ -26,17 +26,6 @@
     </template>
     <script>
         Polymer('tg-property-action', {
-            publish: {
-                /**
-                 * Long description for the action.
-                 */
-                longDesc: null,
-
-                /**
-                 * The icon specificator (string id).
-                 */
-                icon: null
-            }
         });
     </script>
 </polymer-element>

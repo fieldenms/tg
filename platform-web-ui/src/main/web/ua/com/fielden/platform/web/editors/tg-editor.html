@@ -143,9 +143,7 @@
                 // console.log("_bindingValue entity", entity);
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(entity)) {
-                        console.log("_bindingValue prop value", entity.get(propertyName));
-                        // console.log("_title entity type prop", entity.type().prop(propertyName));
-                        // console.log("_title entity type prop title", entity.type().prop(propertyName).title());
+                        // console.log("_bindingValue prop value", entity.get(propertyName));
                         return entity.get(propertyName);
                     } else {
                         return "Not yet initialised currBindingEntity, from which to get binding value!";
@@ -179,7 +177,7 @@
              * This method is called once the entity was changed from the outside of the component.
              */
             entityChanged: function (oldValue, newValue) {
-                console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
+                // console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(newValue)) {
                         this.editingValue = this.convertToString(newValue.get(this.propertyName));

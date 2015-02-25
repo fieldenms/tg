@@ -1,26 +1,15 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/master/actions/tg-action.html">
+<link rel="import" href="/resources/master/actions/tg-functional-action.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<polymer-element name="tg-entity-action" attributes="shortDesc longDesc" extends="tg-action">
+<polymer-element name="tg-entity-action" extends="tg-functional-action">
     <template>
         <shadow></shadow>
         <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">{{shortDesc}}</paper-button> 
     </template>
     <script>
         Polymer('tg-entity-action', {
-            publish: {
-                /**
-                 * Short description for the action (for instance can be used as button title).
-                 */
-                shortDesc: null,
-
-                /**
-                 * Long description for the action.
-                 */
-                longDesc: null
-            }
         });
     </script>
 </polymer-element>

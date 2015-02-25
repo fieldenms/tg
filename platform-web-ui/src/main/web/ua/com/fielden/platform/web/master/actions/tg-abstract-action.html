@@ -1,0 +1,85 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/tg-reflector">
+
+<polymer-element name="tg-abstract-action" attributes="enabledStates currentState shortDesc longDesc icon">
+    <template>
+        <tg-reflector id="reflector"></tg-reflector>
+    </template>
+    <script>
+        Polymer('tg-abstract-action', {
+            publish: {
+                /**
+                 * A list of the states in which the action can be enabled.
+                 */
+                enabledStates: null,
+
+                /**
+                 * The state of the parent view.
+                 */
+                currentState: null,
+
+                /**
+                 * Short description for the action (for e.g. it can be used as button title).
+                 */
+                shortDesc: null,
+
+                /**
+                 * Long description for the action.
+                 */
+                longDesc: null,
+
+                /**
+                 * The icon specificator (string id).
+                 */
+                icon: null
+            },
+
+            /**
+             * This inner state is triggered by the action itself after the action button has been pressed (enabled:=false) and after the action
+             * has been executed (enabled:=true).
+             */
+            enabled: true,
+
+            /**
+             * Initialisation block.
+             */
+            ready: function () {
+                var self = this;
+
+                self.run = self.run.bind(self);
+            },            
+
+            /**
+             * Returns whether the action is enabled in current moment.
+             */
+            isEnabled: function(enabledStates, currentState, enabled) {
+                if (enabledStates) {
+                    // console.log("isEnabled successful: enabledStates == ", enabledStates, "currentState == ", currentState, "enabled == ", enabled);
+                    return enabledStates.indexOf(currentState) >= 0 && enabled;
+                } else {
+                    console.warn("isEnabled: enabledStates is not ready at this stage! enabledStates == ", enabledStates);
+                    return false;
+                }
+            },            
+
+            /**
+             * Executes the action.
+             *
+             * Please override this method in descendands to implement specific execution logic.
+             */
+            run: function() {
+            	this.enabled = false;
+            	console.log(this.shortDesc + ": execute");
+            },
+
+            /**
+			 * The function that is invoked after the action has completed (error or success).
+			 */
+            afterExecution: function() {
+                console.log(this.shortDesc + ": after execution");
+                this.enabled = true;
+            }
+        });
+    </script>
+</polymer-element>
