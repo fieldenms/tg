@@ -137,6 +137,8 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
                 .also()
                 .addProp("bigDecimalProp").asDecimal().skipValidation()
                 .also()
+                .addProp("integerProp").asSpinner().skipValidation()
+                .also()
 
                 // ENTITY CUSTOM ACTIONS
                 .addAction("#export", TgPersistentEntityWithProperties.class)
