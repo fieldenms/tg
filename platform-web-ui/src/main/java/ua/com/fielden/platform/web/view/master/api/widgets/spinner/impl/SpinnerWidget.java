@@ -18,7 +18,7 @@ public class SpinnerWidget extends AbstractWidget {
      * @param propertyName
      */
     public SpinnerWidget(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
-        super("editors/tg-integer-editor.html", entityType, propertyName);
+        super("editors/tg-integer-editor", entityType, propertyName);
     }
 
 }

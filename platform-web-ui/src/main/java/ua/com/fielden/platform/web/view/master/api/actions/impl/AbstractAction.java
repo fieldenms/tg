@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.view.master.api.actions.impl;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -16,7 +17,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  * @author TG Team
  *
  */
-public abstract class AbstractAction {
+public abstract class AbstractAction implements IImportable {
     private final String name;
     private EnabledState enabledState;
     private String icon;
@@ -118,5 +119,10 @@ public abstract class AbstractAction {
         attrs.put("currentState", "{{currentState}}");
 
         return attrs;
+    }
+
+    @Override
+    public String importPath() {
+        return actionComponentPath;
     }
 }

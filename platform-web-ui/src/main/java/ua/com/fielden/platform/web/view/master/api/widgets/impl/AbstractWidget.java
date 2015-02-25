@@ -7,6 +7,7 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.actions.property.impl.PropertyAction;
 
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.property.impl.Propert
  * @author TG Team
  *
  */
-public abstract class AbstractWidget implements IRenderable {
+public abstract class AbstractWidget implements IRenderable, IImportable {
     private final Class<? extends AbstractEntity<?>> entityType;
     private final String propertyName;
     private final String title;
@@ -138,14 +139,19 @@ public abstract class AbstractWidget implements IRenderable {
     public static String extractNameFrom(final String path) {
         final int lastSlashInd = path.lastIndexOf('/');
         if (lastSlashInd < 0) {
-            return path.substring(0, path.indexOf('.'));
+            return path;
         } else {
-            return path.substring(lastSlashInd + 1, path.indexOf('.'));
+            return path.substring(lastSlashInd + 1);
         }
     }
 
     public AbstractWidget skipValidation() {
         this.skipValidation = true;
         return this;
+    }
+
+    @Override
+    public String importPath() {
+        return widgetPath;
     }
 }

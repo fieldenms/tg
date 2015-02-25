@@ -18,6 +18,6 @@ public class PropertyAction extends AbstractFunctionalAction implements IExecuta
      * @param propertyName
      */
     public PropertyAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntityType) {
-        super(name, "master/actions/tg-property-action.html", functionalEntityType);
+        super(name, "master/actions/tg-property-action", functionalEntityType);
     }
 }

@@ -20,7 +20,7 @@ public class EntityAction extends AbstractFunctionalAction implements IRenderabl
      * @param propertyName
      */
     public EntityAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntityType) {
-        super(name, "master/actions/tg-entity-action.html", functionalEntityType);
+        super(name, "master/actions/tg-entity-action", functionalEntityType);
     }
 
     @Override

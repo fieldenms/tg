@@ -17,6 +17,6 @@ public class SinglelineTextWidget extends AbstractWidget {
      * @param propertyName
      */
     public SinglelineTextWidget(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
-        super("editors/tg-singleline-text-editor.html", entityType, propertyName);
+        super("editors/tg-singleline-text-editor", entityType, propertyName);
     }
 }

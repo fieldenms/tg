@@ -18,7 +18,7 @@ public class MultilineTextWidget extends AbstractWidget {
      * @param propertyName
      */
     public MultilineTextWidget(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
-        super("editors/tg-multiline-text-editor.html", entityType, propertyName);
+        super("editors/tg-multiline-text-editor", entityType, propertyName);
     }
 
     public MultilineTextWidget resizable() {

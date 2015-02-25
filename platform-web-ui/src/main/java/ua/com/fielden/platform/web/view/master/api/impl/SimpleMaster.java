@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import ua.com.fielden.platform.dom.DomContainer;
@@ -74,9 +75,16 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
 
     @Override
     public IRenderable done() {
+        final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
+        importPaths.add("polymer/polymer/polymer");
+        importPaths.add("master/tg-entity-master");
+
         final StringBuilder propertyActionsStr = new StringBuilder();
         final DomElement editorContainer = layout.render();
+
+        importPaths.add(layout.importPath());
         widgets.forEach(widget -> {
+            importPaths.add(widget.widget().importPath());
             editorContainer.add(widget.widget().render());
             if (widget.widget().action() != null) {
                 propertyActionsStr.append(widget.widget().action().code().toString());
@@ -86,11 +94,13 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
         final StringBuilder entityActionsStr = new StringBuilder();
         final DomContainer actionContainer = new DomContainer();
         entityActions.forEach(action -> {
+            importPaths.add(action.action().importPath());
             actionContainer.add(action.action().render());
             entityActionsStr.append(action.action().code().toString());
         });
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html").
+                replace("<!--@imports-->", createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
                 replace("<!--@editors-->", editorContainer.toString()).
                 replace("<!--@actions-->", actionContainer.toString()).
@@ -103,6 +113,20 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
                 return new InnerTextElement(entityMasterStr);
             }
         };
+    }
+
+    /**
+     * Creates import statements from a list of paths.
+     *
+     * @param importPaths
+     * @return
+     */
+    private String createImports(final LinkedHashSet<String> importPaths) {
+        final StringBuilder sb = new StringBuilder();
+        importPaths.forEach(path -> {
+            sb.append("<link rel=\"import\" href=\"/resources/" + path + ".html\">\n");
+        });
+        return sb.toString();
     }
 
     public static void main(final String[] args) {

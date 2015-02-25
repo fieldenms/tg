@@ -18,7 +18,7 @@ public class DecimalWidget extends AbstractWidget {
      * @param propertyName
      */
     public DecimalWidget(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
-        super("editors/tg-decimal-editor.html", entityType, propertyName);
+        super("editors/tg-decimal-editor", entityType, propertyName);
     }
 
 }

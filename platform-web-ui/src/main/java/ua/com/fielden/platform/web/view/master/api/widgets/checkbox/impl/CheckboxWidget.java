@@ -18,7 +18,7 @@ public class CheckboxWidget extends AbstractWidget {
      * @param propertyName
      */
     public CheckboxWidget(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
-        super("editors/tg-boolean-editor.html", entityType, propertyName);
+        super("editors/tg-boolean-editor", entityType, propertyName);
     }
 
 }

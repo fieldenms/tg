@@ -18,7 +18,7 @@ public class DateTimePickerWidget extends AbstractWidget {
      * @param propertyName
      */
     public DateTimePickerWidget(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
-        super("editors/tg-datetime-picker.html", entityType, propertyName);
+        super("editors/tg-datetime-picker", entityType, propertyName);
     }
 
 }

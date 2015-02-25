@@ -8,6 +8,7 @@ import java.util.Map;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.component.AbstractWebComponent;
+import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.ILayout;
 
 /**
@@ -16,7 +17,8 @@ import ua.com.fielden.platform.web.interfaces.ILayout;
  * @author TG Team
  *
  */
-public class FlexLayout implements ILayout {
+public class FlexLayout implements ILayout, IImportable {
+    private final String flexLayoutPath = "layout/tg-flex-layout";
 
     /**
      * Helper interface, it just hides the device sensitive layout API. Introduced in order to provide chaining API.
@@ -112,5 +114,10 @@ public class FlexLayout implements ILayout {
     public ILayout add(final AbstractWebComponent component) {
         this.components.add(component);
         return this;
+    }
+
+    @Override
+    public String importPath() {
+        return flexLayoutPath;
     }
 }

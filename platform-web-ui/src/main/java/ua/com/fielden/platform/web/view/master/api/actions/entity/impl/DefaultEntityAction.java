@@ -23,7 +23,7 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable {
      * @param propertyName
      */
     public DefaultEntityAction(final String name, final String onActionFunction) {
-        super(name, "master/actions/tg-action.html");
+        super(name, "master/actions/tg-action");
         this.onActionFunction = onActionFunction;
     }
 
