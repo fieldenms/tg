@@ -133,6 +133,8 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
                 .also()
                 .addProp("dateProp").asDateTimePicker().skipValidation()
                 .also()
+                .addProp("booleanProp").asCheckbox().skipValidation()
+                .also()
 
                 // ENTITY CUSTOM ACTIONS
                 .addAction("#export", TgPersistentEntityWithProperties.class)

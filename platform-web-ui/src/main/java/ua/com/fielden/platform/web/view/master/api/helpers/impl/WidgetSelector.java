@@ -18,8 +18,10 @@ import ua.com.fielden.platform.web.view.master.api.widgets.IPhoneNumberConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ISinglelineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ISpinnerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ITimePickerConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.CheckboxWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.CheckboxConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DateTimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.MultilineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.SinglelineTextConfig;
@@ -106,8 +108,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public ICheckboxConfig<T> asCheckbox() {
-        // TODO Auto-generated method stub
-        return null;
+        widget = new CheckboxWidget(simpleMaster.entityType, propertyName);
+        return new CheckboxConfig<>((CheckboxWidget) widget, simpleMaster);
     }
 
     @Override
