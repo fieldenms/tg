@@ -122,6 +122,10 @@ public abstract class AbstractWidget implements IRenderable {
         return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
     }
 
+    public PropertyAction action() {
+        return action;
+    }
+
     /**
      * Extracts widget name from its path.
      *

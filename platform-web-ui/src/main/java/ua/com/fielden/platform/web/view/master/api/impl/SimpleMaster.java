@@ -3,14 +3,23 @@ package ua.com.fielden.platform.web.view.master.api.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.dom.DomContainer;
+import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
+import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDone;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
@@ -65,7 +74,84 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
 
     @Override
     public IRenderable done() {
-        // TODO Auto-generated method stub
-        return null;
+        final StringBuilder propertyActionsStr = new StringBuilder();
+        final DomElement editorContainer = layout.render();
+        widgets.forEach(widget -> {
+            editorContainer.add(widget.widget().render());
+            if (widget.widget().action() != null) {
+                propertyActionsStr.append(widget.widget().action().code().toString());
+            }
+        });
+
+        final StringBuilder entityActionsStr = new StringBuilder();
+        final DomContainer actionContainer = new DomContainer();
+        entityActions.forEach(action -> {
+            actionContainer.add(action.action().render());
+            entityActionsStr.append(action.action().code().toString());
+        });
+
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html").
+                replace("@entity_type", entityType.getSimpleName()).
+                replace("<!--@editors-->", editorContainer.toString()).
+                replace("<!--@actions-->", actionContainer.toString()).
+                replace("//@entityActions", entityActionsStr.toString()).
+                replace("//@propertyActions", propertyActionsStr.toString());
+        return new IRenderable() {
+
+            @Override
+            public DomElement render() {
+                return new InnerTextElement(entityMasterStr);
+            }
+        };
+    }
+
+    public static void main(final String[] args) {
+        final SimpleMasterConfig sm = new SimpleMasterConfig();
+        final IRenderable masterRenderable = sm.forEntity(TgPersistentEntityWithProperties.class)
+                .addProp("stringProp").asSinglelineText()
+                .withAction("#validateDesc", TgPersistentEntityWithProperties.class).preAction(new IPreAction() {
+
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionSuccess(new IPostAction() {
+
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionError(new IPostAction() {
+
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).enabledWhen(EnabledState.ANY).icon("trending-up")
+                .also()
+                .addAction("#export", TgPersistentEntityWithProperties.class).preAction(new IPreAction() {
+
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionSuccess(new IPostAction() {
+
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionError(new IPostAction() {
+
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).enabledWhen(EnabledState.VIEW).shortDesc("Export")
+                .setLayoutFor(Device.DESKTOP, null, "[[]]")
+                .setLayoutFor(Device.TABLET, null, "[[]]")
+                .setLayoutFor(Device.TABLET, null, "[[]]")
+                .done();
+        System.out.println(masterRenderable.render().toString());
     }
 }
