@@ -2,10 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.actions.property.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
-import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractFunctionalAction;
-import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
-import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
  * The implementation box for property actions.
@@ -20,7 +17,7 @@ public class PropertyAction extends AbstractFunctionalAction implements IExecuta
      * @param functionalEntityType
      * @param propertyName
      */
-    public PropertyAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntityType, final IPreAction preAction, final IPostAction postActionSuccess, final IPostAction postActionError, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc) {
-        super(name, null, functionalEntityType, preAction, postActionSuccess, postActionError, enabledState, icon, shortDesc, longDesc);
+    public PropertyAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntityType) {
+        super(name, null, functionalEntityType);
     }
 }

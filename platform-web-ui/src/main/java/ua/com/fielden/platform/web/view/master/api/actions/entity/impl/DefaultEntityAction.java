@@ -5,7 +5,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
-import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 
 /**
@@ -23,8 +22,8 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable {
      * @param functionalEntityType
      * @param propertyName
      */
-    public DefaultEntityAction(final String name, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc, final String onActionFunction) {
-        super(name, "master/actions/tg-action.html", enabledState, icon, shortDesc, longDesc);
+    public DefaultEntityAction(final String name, final String onActionFunction) {
+        super(name, "master/actions/tg-action.html");
         this.onActionFunction = onActionFunction;
     }
 

@@ -18,10 +18,10 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  */
 public abstract class AbstractAction {
     private final String name;
-    private final EnabledState enabledState;
-    private final String icon;
-    private final String shortDesc;
-    private final String longDesc;
+    private EnabledState enabledState;
+    private String icon;
+    private String shortDesc;
+    private String longDesc;
     private final String actionComponentName;
     private final String actionComponentPath;
 
@@ -31,34 +31,14 @@ public abstract class AbstractAction {
      * @param functionalEntityType
      * @param propertyName
      */
-    public AbstractAction(final String name, final String actionComponentPath, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc) {
+    public AbstractAction(final String name, final String actionComponentPath) {
         this.name = name;
         this.actionComponentName = AbstractWidget.extractNameFrom(actionComponentPath);
         this.actionComponentPath = actionComponentPath;
-        this.enabledState = enabledState;
-        this.icon = icon;
-        this.shortDesc = shortDesc;
-        this.longDesc = longDesc;
     }
 
     protected String name() {
         return name;
-    }
-
-    protected EnabledState enabledState() {
-        return enabledState;
-    }
-
-    protected String icon() {
-        return icon;
-    }
-
-    protected String shortDesc() {
-        return shortDesc;
-    }
-
-    protected String longDesc() {
-        return longDesc;
     }
 
     protected String actionComponentName() {
@@ -67,6 +47,38 @@ public abstract class AbstractAction {
 
     protected String actionComponentPath() {
         return actionComponentPath;
+    }
+
+    public void setEnabledState(final EnabledState enabledState) {
+        this.enabledState = enabledState;
+    }
+
+    public void setIcon(final String icon) {
+        this.icon = icon;
+    }
+
+    public void setShortDesc(final String shortDesc) {
+        this.shortDesc = shortDesc;
+    }
+
+    public void setLongDesc(final String longDesc) {
+        this.longDesc = longDesc;
+    }
+
+    public EnabledState enabledState() {
+        return enabledState;
+    }
+
+    public String icon() {
+        return icon;
+    }
+
+    public String shortDesc() {
+        return shortDesc;
+    }
+
+    public String longDesc() {
+        return longDesc;
     }
 
     protected String enabledStatesString() {

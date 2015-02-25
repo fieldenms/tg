@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.view.master.api.actions.property.impl.PropertyAction;
 
 /**
  * The base implementation box for generic information for all widgets.
@@ -27,6 +28,7 @@ public abstract class AbstractWidget implements IRenderable {
     private final String desc;
     private final String widgetName;
     private final String widgetPath;
+    private PropertyAction action;
 
     /**
      * Creates {@link AbstractWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -43,6 +45,11 @@ public abstract class AbstractWidget implements IRenderable {
         final Pair<String, String> titleDesc = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
         this.title = titleDesc.getKey();
         this.desc = titleDesc.getValue();
+    }
+
+    public PropertyAction initAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
+        this.action = new PropertyAction(name, functionalEntity);
+        return this.action;
     }
 
     /**

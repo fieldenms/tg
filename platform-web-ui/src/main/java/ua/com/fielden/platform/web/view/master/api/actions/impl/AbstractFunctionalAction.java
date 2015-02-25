@@ -6,7 +6,6 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
@@ -22,8 +21,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
  */
 public abstract class AbstractFunctionalAction extends AbstractAction implements IExecutable {
     private final Class<? extends AbstractEntity<?>> functionalEntityType;
-    private final IPreAction preAction;
-    private final IPostAction postActionSuccess, postActionError;
+    private IPreAction preAction;
+    private IPostAction postActionSuccess, postActionError;
 
     /**
      * Creates {@link AbstractFunctionalAction} from <code>functionalEntityType</code> type and other parameters.
@@ -31,29 +30,26 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
      * @param functionalEntityType
      * @param propertyName
      */
-    public AbstractFunctionalAction(final String name, final String actionComponentPath, final Class<? extends AbstractEntity<?>> functionalEntityType, final IPreAction preAction, final IPostAction postActionSuccess, final IPostAction postActionError, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc) {
-        super(name, actionComponentPath, enabledState, icon, shortDesc, longDesc);
+    public AbstractFunctionalAction(final String name, final String actionComponentPath, final Class<? extends AbstractEntity<?>> functionalEntityType) {
+        super(name, actionComponentPath);
 
         this.functionalEntityType = functionalEntityType;
-        this.preAction = preAction;
-        this.postActionSuccess = postActionSuccess;
-        this.postActionError = postActionError;
     }
 
     protected Class<? extends AbstractEntity<?>> functionalEntityType() {
         return functionalEntityType;
     }
 
-    protected IPreAction preAction() {
-        return preAction;
+    public void setPreAction(final IPreAction preAction) {
+        this.preAction = preAction;
     }
 
-    protected IPostAction postActionSuccess() {
-        return postActionSuccess;
+    public void setPostActionSuccess(final IPostAction postActionSuccess) {
+        this.postActionSuccess = postActionSuccess;
     }
 
-    protected IPostAction postActionError() {
-        return postActionError;
+    public void setPostActionError(final IPostAction postActionError) {
+        this.postActionError = postActionError;
     }
 
     @Override
@@ -69,18 +65,18 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
                 "    preAction: function() {\n" + //
                 "        var functionalEntity = {id:null, version:0};\n" + //
                 "        var masterEntity = self.currEntity;\n" + //
-                "        " + this.preAction().build().toString() + "\n" + //
+                "        " + this.preAction.build().toString() + "\n" + //
                 // TODO provide convenient API for setting values during preAction building
                 // "        functionalEntity.parentEntity = { val: self.currEntity.get('key'), origVal: null };\n" + //
                 "        return functionalEntity;\n" + //
                 "    },\n" + //
                 "    postActionSuccess: function(entity) {\n" + //
                 "        console.log('postActionSuccess entity', entity);\n" + //
-                "        " + this.postActionSuccess().build().toString() + "\n" + //
+                "        " + this.postActionSuccess.build().toString() + "\n" + //
                 "    },\n" + //
                 "    postActionError: function(resultWithError) {\n" + //
                 "        console.log('postActionError resultWithError', resultWithError);\n" + //
-                "        " + this.postActionError().build().toString() + "\n" + //
+                "        " + this.postActionError.build().toString() + "\n" + //
                 "    }\n" + //
                 "};\n\n";//
 
