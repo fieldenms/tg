@@ -37,7 +37,12 @@ public abstract class AbstractAction {
         this.actionComponentPath = actionComponentPath;
     }
 
-    protected String name() {
+    /**
+     * The name of the action.
+     *
+     * @return
+     */
+    public String name() {
         return name;
     }
 

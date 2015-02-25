@@ -101,7 +101,9 @@ public abstract class AbstractWidget implements IRenderable {
         attrs.put("propTitle", this.title);
         attrs.put("propDesc", this.desc);
         attrs.put("currentState", "{{currentState}}");
-        // TODO attrs.put("action", "{{actions['SNATCH_BACK_VEHICLE']}}");
+        if (this.action != null) {
+            attrs.put("action", "{{actions['" + this.action.name() + "']}}");
+        }
         attrs.put("externalRefreshCycle", "{{refreshCycleMode}}");
         return attrs;
     }
