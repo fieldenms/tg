@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.view.master.api.helpers.ISkipValidation;
 import ua.com.fielden.platform.web.view.master.api.widgets.money.IMoneyConfig0;
 
 /**
@@ -12,14 +13,5 @@ import ua.com.fielden.platform.web.view.master.api.widgets.money.IMoneyConfig0;
  *
  * @param <T>
  */
-public interface IMoneyConfig<T extends AbstractEntity<?>> extends IMoneyConfig0<T> {
-    /**
-     * This declaration indicates that an asynchronous validation to a corresponding property should be skipped.
-     * This should be done for optimisation reasons only in relation to properties that have heavy validation.
-     * It should be understood the actual validation would anyway take place upon entity saving.
-     *
-     * @param matcher
-     * @return
-     */
-    IMoneyConfig0<T> skipValidation();
+public interface IMoneyConfig<T extends AbstractEntity<?>> extends IMoneyConfig0<T>, ISkipValidation<IMoneyConfig0<T>> {
 }
