@@ -135,6 +135,8 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
                 .also()
                 .addProp("booleanProp").asCheckbox().skipValidation()
                 .also()
+                .addProp("bigDecimalProp").asDecimal().skipValidation()
+                .also()
 
                 // ENTITY CUSTOM ACTIONS
                 .addAction("#export", TgPersistentEntityWithProperties.class)
