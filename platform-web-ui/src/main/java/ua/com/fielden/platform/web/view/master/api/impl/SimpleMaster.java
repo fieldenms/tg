@@ -109,40 +109,57 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
         final SimpleMasterConfig sm = new SimpleMasterConfig();
         final IRenderable masterRenderable = sm.forEntity(TgPersistentEntityWithProperties.class)
                 .addProp("stringProp").asSinglelineText()
-                .withAction("#validateDesc", TgPersistentEntityWithProperties.class).preAction(new IPreAction() {
-
+                .withAction("#validateDesc", TgPersistentEntityWithProperties.class)
+                .preAction(new IPreAction() {
                     @Override
                     public JsCode build() {
                         return new JsCode("");
                     }
                 }).postActionSuccess(new IPostAction() {
-
                     @Override
                     public JsCode build() {
                         return new JsCode("");
                     }
                 }).postActionError(new IPostAction() {
-
                     @Override
                     public JsCode build() {
                         return new JsCode("");
                     }
                 }).enabledWhen(EnabledState.ANY).icon("trending-up")
                 .also()
-                .addAction("#export", TgPersistentEntityWithProperties.class).preAction(new IPreAction() {
 
+                .addProp("stringProp").asSinglelineText()
+                .withAction("#validateDesc", TgPersistentEntityWithProperties.class)
+                .preAction(new IPreAction() {
                     @Override
                     public JsCode build() {
                         return new JsCode("");
                     }
                 }).postActionSuccess(new IPostAction() {
-
                     @Override
                     public JsCode build() {
                         return new JsCode("");
                     }
                 }).postActionError(new IPostAction() {
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).enabledWhen(EnabledState.ANY).icon("trending-up")
+                .also()
 
+                .addAction("#export", TgPersistentEntityWithProperties.class)
+                .preAction(new IPreAction() {
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionSuccess(new IPostAction() {
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionError(new IPostAction() {
                     @Override
                     public JsCode build() {
                         return new JsCode("");

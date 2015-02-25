@@ -23,6 +23,7 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     private final Class<? extends AbstractEntity<?>> functionalEntityType;
     private IPreAction preAction;
     private IPostAction postActionSuccess, postActionError;
+    private final String indent = "\t\t    ";
 
     /**
      * Creates {@link AbstractFunctionalAction} from <code>functionalEntityType</code> type and other parameters.
@@ -55,30 +56,30 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     @Override
     public JsCode code() {
         final String code =
-                "self.actions['" + this.name() + "'] = {\n" + //
-                "    user: self.user,\n" + //
-                "    entitytype: '" + this.functionalEntityType().getName() + "',\n" + //
-                "    shortDesc: '" + this.shortDesc() + "',\n" + //
-                (this.longDesc() == null ? "" : "    longDesc: '" + this.longDesc() + "',\n") + //
-                (this.icon() == null ? "" : "    icon: '" + this.icon() + "',\n") + //
-                "    enabledStates: [" + this.enabledStatesString() + "],\n" + //
-                "    preAction: function() {\n" + //
-                "        var functionalEntity = {id:null, version:0};\n" + //
-                "        var masterEntity = self.currEntity;\n" + //
-                "        " + this.preAction.build().toString() + "\n" + //
+                indent + "self.actions['" + this.name() + "'] = {\n" + //
+                indent + "    user: self.user,\n" + //
+                indent + "    entitytype: '" + this.functionalEntityType().getName() + "',\n" + //
+                indent + "    shortDesc: '" + this.shortDesc() + "',\n" + //
+                (this.longDesc() == null ? "" : indent + "    longDesc: '" + this.longDesc() + "',\n") + //
+                (this.icon() == null ? "" : indent + "    icon: '" + this.icon() + "',\n") + //
+                indent + "    enabledStates: [" + this.enabledStatesString() + "],\n" + //
+                indent + "    preAction: function() {\n" + //
+                indent + "        var functionalEntity = {id:null, version:0};\n" + //
+                indent + "        var masterEntity = self.currEntity;\n" + //
+                indent + "        " + this.preAction.build().toString() + "\n" + //
                 // TODO provide convenient API for setting values during preAction building
                 // "        functionalEntity.parentEntity = { val: self.currEntity.get('key'), origVal: null };\n" + //
-                "        return functionalEntity;\n" + //
-                "    },\n" + //
-                "    postActionSuccess: function(entity) {\n" + //
-                "        console.log('postActionSuccess entity', entity);\n" + //
-                "        " + this.postActionSuccess.build().toString() + "\n" + //
-                "    },\n" + //
-                "    postActionError: function(resultWithError) {\n" + //
-                "        console.log('postActionError resultWithError', resultWithError);\n" + //
-                "        " + this.postActionError.build().toString() + "\n" + //
-                "    }\n" + //
-                "};\n\n";//
+                indent + "        return functionalEntity;\n" + //
+                indent + "    },\n" + //
+                indent + "    postActionSuccess: function(entity) {\n" + //
+                indent + "        console.log('postActionSuccess entity', entity);\n" + //
+                indent + "        " + this.postActionSuccess.build().toString() + "\n" + //
+                indent + "    },\n" + //
+                indent + "    postActionError: function(resultWithError) {\n" + //
+                indent + "        console.log('postActionError resultWithError', resultWithError);\n" + //
+                indent + "        " + this.postActionError.build().toString() + "\n" + //
+                indent + "    }\n" + //
+                indent + "};\n";//
 
         return new JsCode(code);
     }

@@ -14,7 +14,10 @@
 <polymer-element name="tg-@entity_type-master" extends="tg-entity-master" layout vertical>
     <template>
         <shadow></shadow>
-        <!--@editors-->
+
+        <!--EDITORS DOM (GENERATED) -->
+<!--@editors-->
+
         <div layout horizontal wrap>
             <tg-action action="{{actions['REFRESH'].action}}" onAction="{{onRetrievedDefault}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
@@ -24,7 +27,9 @@
             <tg-action action="{{actions['VALIDATE'].action}}" onAction="{{onValidatedDefault}}" enabledStates="{{actions['VALIDATE'].enabledStates}}" shortDesc="{{actions['VALIDATE'].shortDesc}}" longDesc="{{actions['VALIDATE'].longDesc}}" currentState="{{currentState}}"></tg-action>
             <tg-action action="{{actions['SAVE'].action}}" onAction="{{onSavedDefault}}" enabledStates="{{actions['SAVE'].enabledStates}}" shortDesc="{{actions['SAVE'].shortDesc}}" longDesc="{{actions['SAVE'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
-            <!--@actions-->
+            <!--ENTITY ACTIONS DOM (GENERATED) -->
+<!--@actions-->
+
         </div>
         
     </template>
@@ -36,14 +41,13 @@
                  */
                 ready: function () {
                     this.super();
-                    console.log("child ready");
 
                     var self = this;
 
-                    // TODO smth. like this should be generated here:
-                    //@entityActions
-
-                    //@propertyActions
+                    // ENTITY ACTIONS (GENERATED)
+//@entityActions
+                    // PROPERTY ACTIONS (GENERATED)
+//@propertyActions
                 }
             });
         })();
