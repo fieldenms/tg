@@ -109,6 +109,7 @@
                     self.retrieve = self.retrieve.bind(self);
                     self.save = self.save.bind(self);
                     self.validate = self.validate.bind(self);
+                    self.doNotValidate = self.doNotValidate.bind(self);
                     self.edit = self.edit.bind(self);
                     self.view = self.view.bind(self);
                     self.onValidatedDefault = self.onValidatedDefault.bind(self);
@@ -298,6 +299,13 @@
                     self.$.validator.abortValidationIfAny();
                     self.$.validator.validate(self._reset(holder));
                 },
+
+                /**
+                 * The function that explicitly says that validation is skipped.
+                 */
+                doNotValidate: function () {
+                    console.log("do not validate");
+                },                
 
                 /**
                  * Default implementation for onValidated callback.

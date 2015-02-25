@@ -29,6 +29,7 @@ public abstract class AbstractWidget implements IRenderable {
     private final String widgetName;
     private final String widgetPath;
     private PropertyAction action;
+    private boolean skipValidation = false;
 
     /**
      * Creates {@link AbstractWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -97,7 +98,7 @@ public abstract class AbstractWidget implements IRenderable {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
         attrs.put("entity", "{{currBindingEntity}}");
         attrs.put("propertyName", this.propertyName);
-        attrs.put("onAcceptedValueChanged", "{{validate}}");
+        attrs.put("onAcceptedValueChanged", this.skipValidation ? "{{doNotValidate}}" : "{{validate}}");
         attrs.put("propTitle", this.title);
         attrs.put("propDesc", this.desc);
         attrs.put("currentState", "{{currentState}}");
@@ -144,13 +145,7 @@ public abstract class AbstractWidget implements IRenderable {
     }
 
     public AbstractWidget skipValidation() {
-        // TODO Auto-generated method stub
-        // TODO implement.
-        // TODO implement.
-        // TODO implement.
-        // TODO implement.
-        // TODO implement.
-        // TODO implement.
+        this.skipValidation = true;
         return this;
     }
 }
