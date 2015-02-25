@@ -108,6 +108,7 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
     public static void main(final String[] args) {
         final SimpleMasterConfig sm = new SimpleMasterConfig();
         final IRenderable masterRenderable = sm.forEntity(TgPersistentEntityWithProperties.class)
+                // PROPERTY EDITORS
                 .addProp("stringProp").asSinglelineText()
                 .withAction("#validateDesc", TgPersistentEntityWithProperties.class)
                 .preAction(new IPreAction() {
@@ -128,26 +129,10 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
                 }).enabledWhen(EnabledState.ANY).icon("trending-up")
                 .also()
 
-                .addProp("stringProp").asSinglelineText()
-                .withAction("#validateDesc", TgPersistentEntityWithProperties.class)
-                .preAction(new IPreAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionSuccess(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionError(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).enabledWhen(EnabledState.ANY).icon("trending-up")
+                .addProp("stringProp").asMultilineText()
                 .also()
 
+                // ENTITY CUSTOM ACTIONS
                 .addAction("#export", TgPersistentEntityWithProperties.class)
                 .preAction(new IPreAction() {
                     @Override

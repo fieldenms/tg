@@ -19,7 +19,9 @@ import ua.com.fielden.platform.web.view.master.api.widgets.ISinglelineTextConfig
 import ua.com.fielden.platform.web.view.master.api.widgets.ISpinnerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ITimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.MultilineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.SinglelineTextConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl.MultilineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 
 public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelector<T> {
@@ -48,8 +50,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IMultilineTextConfig<T> asMultilineText() {
-        // TODO Auto-generated method stub
-        return null;
+        widget = new MultilineTextWidget(simpleMaster.entityType, propertyName);
+        return new MultilineTextConfig<>((MultilineTextWidget) widget, simpleMaster);
     }
 
     @Override

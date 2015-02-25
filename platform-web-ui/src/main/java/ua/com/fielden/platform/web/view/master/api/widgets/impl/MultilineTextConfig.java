@@ -4,16 +4,17 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.actions.property.IPropertyActionConfig0;
 import ua.com.fielden.platform.web.view.master.api.actions.property.impl.PropertyActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
-import ua.com.fielden.platform.web.view.master.api.widgets.ISinglelineTextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.ISinglelineTextConfig0;
-import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.IMultilineTextConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.IMultilineTextConfig0;
+import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.IMultilineTextConfig1;
+import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl.MultilineTextWidget;
 
-public class SinglelineTextConfig<T extends AbstractEntity<?>> implements ISinglelineTextConfig<T>, ISinglelineTextConfig0<T> {
+public class MultilineTextConfig<T extends AbstractEntity<?>> implements IMultilineTextConfig<T>, IMultilineTextConfig0<T>, IMultilineTextConfig1<T> {
 
     private final IPropertySelector<T> propSelector;
-    private final SinglelineTextWidget widget;
+    private final MultilineTextWidget widget;
 
-    public SinglelineTextConfig(final SinglelineTextWidget widget, final IPropertySelector<T> propSelector) {
+    public MultilineTextConfig(final MultilineTextWidget widget, final IPropertySelector<T> propSelector) {
         this.propSelector = propSelector;
         this.widget = widget;
     }
@@ -29,8 +30,14 @@ public class SinglelineTextConfig<T extends AbstractEntity<?>> implements ISingl
     }
 
     @Override
-    public ISinglelineTextConfig0<T> skipValidation() {
+    public IMultilineTextConfig0<T> skipValidation() {
         this.widget.skipValidation();
+        return this;
+    }
+
+    @Override
+    public IMultilineTextConfig1<T> resizable() {
+        this.widget.resizable();
         return this;
     }
 

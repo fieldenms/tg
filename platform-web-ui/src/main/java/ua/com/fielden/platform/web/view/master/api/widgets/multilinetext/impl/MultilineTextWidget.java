@@ -21,6 +21,15 @@ public class MultilineTextWidget extends AbstractWidget {
         super("editors/tg-multiline-text-editor.html", entityType, propertyName);
     }
 
-    //TODO must provide an ability to specify whether multiline text widget is resizable or not. Also provide an attribute in the appropriate
-    //polymer component that specify whether multiline text widget is resizable or not.
+    public MultilineTextWidget resizable() {
+        // TODO implement
+        // TODO implement
+        // TODO implement
+        // TODO implement
+        // TODO implement
+
+        // TODO must provide an ability to specify whether multiline text widget is resizable or not. Also provide an attribute in the appropriate
+        // polymer component that specify whether multiline text widget is resizable or not.
+        return this;
+    }
 }

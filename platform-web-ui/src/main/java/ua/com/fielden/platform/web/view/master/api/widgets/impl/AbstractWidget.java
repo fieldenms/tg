@@ -140,4 +140,15 @@ public abstract class AbstractWidget implements IRenderable {
             return path.substring(lastSlashInd + 1, path.indexOf('.'));
         }
     }
+
+    public AbstractWidget skipValidation() {
+        // TODO Auto-generated method stub
+        // TODO implement.
+        // TODO implement.
+        // TODO implement.
+        // TODO implement.
+        // TODO implement.
+        // TODO implement.
+        return this;
+    }
 }
