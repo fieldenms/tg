@@ -1,28 +1,23 @@
 package ua.com.fielden.platform.web.view.master.api.actions.impl;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
-import ua.com.fielden.platform.web.minijs.JsCode;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
-import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
-import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
  * The base implementation box for generic information for all actions.
  *
- * The information includes <code>functionalEntityType</code> type, <code>enabledWhen</code> parameter, <code>shortDesc</code> etc.
+ * The information includes <code>enabledWhen</code> parameter, <code>shortDesc</code> etc.
  *
- * All action implementations (entity-, property-actions) should be based on this one and should be extended by action-specific configuration data.
+ * All action implementations should be based on this one and should be extended by action-specific configuration data.
  *
  * @author TG Team
  *
  */
-public abstract class AbstractAction implements IExecutable {
+public abstract class AbstractAction {
     private final String name;
-    private final Class<? extends AbstractEntity<?>> functionalEntityType;
-    private final IPreAction preAction;
-    private final IPostAction postActionSuccess, postActionError;
     private final EnabledState enabledState;
     private final String icon;
     private final String shortDesc;
@@ -36,14 +31,10 @@ public abstract class AbstractAction implements IExecutable {
      * @param functionalEntityType
      * @param propertyName
      */
-    public AbstractAction(final String name, final String actionComponentPath, final Class<? extends AbstractEntity<?>> functionalEntityType, final IPreAction preAction, final IPostAction postActionSuccess, final IPostAction postActionError, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc) {
+    public AbstractAction(final String name, final String actionComponentPath, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc) {
         this.name = name;
         this.actionComponentName = AbstractWidget.extractNameFrom(actionComponentPath);
         this.actionComponentPath = actionComponentPath;
-        this.functionalEntityType = functionalEntityType;
-        this.preAction = preAction;
-        this.postActionSuccess = postActionSuccess;
-        this.postActionError = postActionError;
         this.enabledState = enabledState;
         this.icon = icon;
         this.shortDesc = shortDesc;
@@ -52,22 +43,6 @@ public abstract class AbstractAction implements IExecutable {
 
     protected String name() {
         return name;
-    }
-
-    protected Class<? extends AbstractEntity<?>> functionalEntityType() {
-        return functionalEntityType;
-    }
-
-    protected IPreAction preAction() {
-        return preAction;
-    }
-
-    protected IPostAction postActionSuccess() {
-        return postActionSuccess;
-    }
-
-    protected IPostAction postActionError() {
-        return postActionError;
     }
 
     protected EnabledState enabledState() {
@@ -100,34 +75,31 @@ public abstract class AbstractAction implements IExecutable {
                         EnabledState.VIEW.equals(this.enabledState) ? "'VIEW'" : "'UNDEFINED'";
     }
 
-    @Override
-    public JsCode code() {
-        final String code =
-                "self.actions['" + this.name() + "'] = {\n" + //
-                "    user: self.user,\n" + //
-                "    entitytype: '" + this.functionalEntityType().getName() + "',\n" + //
-                "    shortDesc: '" + this.shortDesc() + "',\n" + //
-                (this.longDesc() == null ? "" : "    longDesc: '" + this.longDesc() + "',\n") + //
-                (this.icon() == null ? "" : "    icon: '" + this.icon() + "',\n") + //
-                "    enabledStates: [" + this.enabledStatesString() + "],\n" + //
-                "    preAction: function() {\n" + //
-                "        var functionalEntity = {id:null, version:0};\n" + //
-                "        var masterEntity = self.currEntity;\n" + //
-                "        " + this.preAction().build().toString() + "\n" + //
-                // TODO provide convenient API for setting values during preAction building
-                // "        functionalEntity.parentEntity = { val: self.currEntity.get('key'), origVal: null };\n" + //
-                "        return functionalEntity;\n" + //
-                "    },\n" + //
-                "    postActionSuccess: function(entity) {\n" + //
-                "        console.log('postActionSuccess entity', entity);\n" + //
-                "        " + this.postActionSuccess().build().toString() + "\n" + //
-                "    },\n" + //
-                "    postActionError: function(resultWithError) {\n" + //
-                "        console.log('postActionError resultWithError', resultWithError);\n" + //
-                "        " + this.postActionError().build().toString() + "\n" + //
-                "    }\n" + //
-                "};\n\n";//
+    /**
+     * Creates an attributes that will be used for entity action component generation.
+     * <p>
+     * Please, implement this method in descendants (for concrete entity actions) to extend the attributes set by action-specific attributes.
+     *
+     * @return
+     */
+    protected abstract Map<String, Object> createCustomAttributes();
 
-        return new JsCode(code);
+    /**
+     * Creates an attributes that will be used for entity action component generation.
+     *
+     * @return
+     */
+    protected Map<String, Object> createAttributes() {
+        final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
+
+        final String actionSelector = "actions['" + this.name() + "']";
+        attrs.put("user", "{{" + actionSelector + ".user}}");
+        attrs.put("entitytype", "{{" + actionSelector + ".entitytype}}");
+        attrs.put("enabledStates", "{{" + actionSelector + ".enabledStates}}");
+        attrs.put("shortDesc", "{{" + actionSelector + ".shortDesc}}");
+        attrs.put("longDesc", "{{" + actionSelector + ".longDesc}}");
+        attrs.put("currentState", "{{currentState}}");
+
+        return attrs;
     }
 }

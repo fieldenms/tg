@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.view.master.api.actions.property.impl;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
-import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractFunctionalAction;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
  * @author TG Team
  *
  */
-public class PropertyAction extends AbstractAction implements IExecutable {
+public class PropertyAction extends AbstractFunctionalAction implements IExecutable {
     /**
      * Creates {@link PropertyAction} from <code>functionalEntityType</code> type and other parameters.
      *
@@ -21,6 +21,6 @@ public class PropertyAction extends AbstractAction implements IExecutable {
      * @param propertyName
      */
     public PropertyAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntityType, final IPreAction preAction, final IPostAction postActionSuccess, final IPostAction postActionError, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc) {
-        super(name, "master/actions/tg-property-action.html", functionalEntityType, preAction, postActionSuccess, postActionError, enabledState, icon, shortDesc, longDesc);
+        super(name, null, functionalEntityType, preAction, postActionSuccess, postActionError, enabledState, icon, shortDesc, longDesc);
     }
 }

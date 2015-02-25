@@ -3,7 +3,10 @@ package ua.com.fielden.platform.web.view.master.api.actions.entity.impl;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 
 /**
  * The implementation box for default entity actions (like 'Refresh', 'Edit' etc.).
@@ -11,7 +14,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
  * @author TG Team
  *
  */
-public class DefaultEntityAction extends AbstractEntityAction {
+public class DefaultEntityAction extends AbstractAction implements IRenderable {
     private final String onActionFunction;
 
     /**
@@ -21,7 +24,7 @@ public class DefaultEntityAction extends AbstractEntityAction {
      * @param propertyName
      */
     public DefaultEntityAction(final String name, final EnabledState enabledState, final String icon, final String shortDesc, final String longDesc, final String onActionFunction) {
-        super(name, null, null, null, null, enabledState, icon, shortDesc, longDesc);
+        super(name, "master/actions/tg-action.html", enabledState, icon, shortDesc, longDesc);
         this.onActionFunction = onActionFunction;
     }
 
@@ -39,5 +42,10 @@ public class DefaultEntityAction extends AbstractEntityAction {
 
     private String onActionFunction() {
         return onActionFunction;
+    }
+
+    @Override
+    public DomElement render() {
+        return new DomElement(this.actionComponentName()).attrs(createAttributes()).attrs(createCustomAttributes());
     }
 }
