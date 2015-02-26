@@ -67,7 +67,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
             final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
 
-            final EntityAutocompletionResource<AbstractEntity<?>> resource = new EntityAutocompletionResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, propertyName, master.createValueMatcher(injector, propertyName), injector.getInstance(ICompanionObjectFinder.class), restUtil, getContext(), request, response);
+            final EntityAutocompletionResource<AbstractEntity<?>> resource = new EntityAutocompletionResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, propertyName, master.createValueMatcher(propertyName), injector.getInstance(ICompanionObjectFinder.class), restUtil, getContext(), request, response);
             resource.handle();
         }
     }

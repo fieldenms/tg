@@ -44,7 +44,7 @@ import com.google.inject.Injector;
  */
 public abstract class AbstractWebApp extends Application {
 
-    private final Injector injector;
+    protected final Injector injector;
     // TODO when authentication mechanism will be implemented then user name won't be needed any longer.
     private final String username;
     /**

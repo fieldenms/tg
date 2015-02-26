@@ -20,6 +20,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     private final Class<T> entityType;
     private final Class<? extends IEntityProducer<T>> entityProducerType;
     private final IRenderable masterComponent;
+    private final Injector injector;
 
     /**
      * Creates master for the specified <code>entityType</code> and <code>entityProducerType</code>.
@@ -29,10 +30,11 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @param masterComponent
      *
      */
-    public EntityMaster(final Class<T> entityType, final Class<? extends IEntityProducer<T>> entityProducerType, final IRenderable masterComponent) {
+    public EntityMaster(final Class<T> entityType, final Class<? extends IEntityProducer<T>> entityProducerType, final IRenderable masterComponent, final Injector injector) {
         this.entityType = entityType;
         this.entityProducerType = entityProducerType;
         this.masterComponent = masterComponent;
+        this.injector = injector;
     }
 
     /**
@@ -42,8 +44,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @param masterComponent
      *
      */
-    public EntityMaster(final Class<T> entityType, final IRenderable masterComponent) {
-        this(entityType, null, masterComponent);
+    public EntityMaster(final Class<T> entityType, final IRenderable masterComponent, final Injector injector) {
+        this(entityType, null, masterComponent, injector);
     }
 
     public Class<T> getEntityType() {
@@ -56,7 +58,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @param injector
      * @return
      */
-    public IEntityProducer<T> createEntityProducer(final Injector injector) {
+    public IEntityProducer<T> createEntityProducer() {
         return entityProducerType == null ? new DefaultEntityProducer<T>(injector.getInstance(EntityFactory.class), this.entityType)
                 : injector.getInstance(this.entityProducerType);
     }
@@ -67,7 +69,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @param injector
      * @return
      */
-    public IValueMatcher<AbstractEntity<?>> createValueMatcher(final Injector injector, final String propertyName) {
+    public IValueMatcher<AbstractEntity<?>> createValueMatcher(final String propertyName) {
         // TODO implement
         return null;
         // return entityProducerType == null ? new DefaultEntityProducer<T>(injector.getInstance(EntityFactory.class), this.entityType) : injector.getInstance(this.entityProducerType);

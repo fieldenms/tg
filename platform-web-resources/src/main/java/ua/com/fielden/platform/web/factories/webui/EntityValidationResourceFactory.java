@@ -63,7 +63,7 @@ public class EntityValidationResourceFactory extends Restlet {
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
             final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
 
-            final EntityValidationResource<AbstractEntity<?>> resource = new EntityValidationResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(injector), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
+            final EntityValidationResource<AbstractEntity<?>> resource = new EntityValidationResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
             resource.handle();
         }
     }
