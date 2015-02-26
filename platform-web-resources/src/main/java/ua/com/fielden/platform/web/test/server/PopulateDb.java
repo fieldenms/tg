@@ -105,11 +105,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(9999L).toDate()));
         System.out.println("dateEnt1.getId() == " + dateEnt1.getId());
 
-        final TgPersistentEntityWithProperties defaultEnt = save(new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
+        final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
                 // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
                 // .setProducerInitProp(ent1)
                 .setIntegerProp(7).setMoneyProp(new Money(new BigDecimal(7))).setBigDecimalProp(new BigDecimal(7.7))
-                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()));
+                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate());
+        de.setDesc("Default entity description");
+        final TgPersistentEntityWithProperties defaultEnt = save(de);
         System.out.println("defaultEnt.getId() == " + defaultEnt.getId());
 
         final TgPersistentEntityWithProperties staleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY10").setConflictingProp("initial").setNonConflictingProp("initial"));
@@ -119,7 +121,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties staleEnt1New = save(staleEnt1.setConflictingProp("persistently modified"));
         System.out.println("staleEnt1New.getVersion() == " + staleEnt1New.getVersion());
 
-        final TgPersistentCompositeEntity compositeEnt1 = save(new_composite(TgPersistentCompositeEntity.class, defaultEnt, 10));
+        final TgPersistentCompositeEntity ce = new_composite(TgPersistentCompositeEntity.class, defaultEnt, 10);
+        ce.setDesc("Default composite entity description");
+        final TgPersistentCompositeEntity compositeEnt1 = save(ce);
         System.out.println("compositeEnt1.getId() == " + compositeEnt1.getId());
 
         final TgPersistentEntityWithProperties exampleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23.0)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compositeEnt1));

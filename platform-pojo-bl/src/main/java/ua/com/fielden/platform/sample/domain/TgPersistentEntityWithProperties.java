@@ -86,6 +86,11 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Composite prop", desc = "Composite prop")
     private TgPersistentCompositeEntity compositeProp;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Money prop", desc = "Money prop")
+    private Money moneyProp;
+
     @Observable
     @EntityExists(TgPersistentCompositeEntity.class)
     public TgPersistentEntityWithProperties setCompositeProp(final TgPersistentCompositeEntity compositeProp) {
@@ -177,11 +182,6 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     public BigDecimal getBigDecimalProp() {
         return bigDecimalProp;
     }
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Money prop", desc = "Money prop")
-    private Money moneyProp;
 
     @Observable
     public TgPersistentEntityWithProperties setMoneyProp(final Money moneyProp) {

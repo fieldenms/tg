@@ -504,6 +504,11 @@
                             bindingView["@" + propertyName + "_result"] = entity.prop(propertyName).validationResult();
                         } else {
                             bindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
+
+                            var value = entity.get(propertyName);
+                            if (self._isEntity(value)) {
+                                bindingView["@" + propertyName + "_desc"] = self.$.reflector.convert(value.get("desc"));
+                            }
                         }
                     });
 
