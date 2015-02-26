@@ -11,6 +11,8 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/core-transition/core-transition.html">
 <link rel="import" href="/resources/polymer/core-transition/core-transition-css.html">
+<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
+<!--link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.css"-->
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/components/lodash-lib.html">
 
@@ -34,10 +36,17 @@
         <link rel="stylesheet" href="tg-autocompleter.css">
 
         <div id="all" relative>
+
             <paper-input-decorator id="decorator" label="{{label}}" floatingLabel>
                 <div id="input" layout horizontal>
                     <div id="input-container" flex>
-                        <input is="core-input" id="trigger" on-input="{{onInput}}" style="width:100%" placeholder="type ">
+                        <!-- if label is empty then the tooltip is not shown -->
+                        <core-tooltip position="bottom" style="width:100%" disabled="{{!tooltip}}">
+                            <input is="core-input" id="trigger" on-input="{{onInput}}" style="width:100%" placeholder="type">
+                            <span class="autocompleter-tooltip" tip>
+                                {{tooltip}}
+                            </span>
+                        </core-tooltip>
                     </div>
                     <div id="icon">
                         <template if="{{isSearching}}">
@@ -49,6 +58,7 @@
                     </div>
                 </div>
             </paper-input-decorator>
+
 
             <core-overlay id="overlay" class="tg-snatchback" autoFocusDisabled on-core-overlay-open-completed="{{suggestionsOpened}}">
                 <paper-shadow z="1">
@@ -102,18 +112,30 @@
 
         Polymer({
             "page-size": 10,
+            tooltip: "",
             multi: false,
             label: "Autocompleter",
             separator: ",",
             isSearching: false,
             /* Handles click on button OK, which confirms selection and assignes it to the input field. */
             onOkClick: function () {
+                // clear tooltip text
+                this.tooltip = "";
+                if (Object.keys(this.selectedItems).length > 1) {
+                    this.tooltip = "There are " + Object.keys(this.selectedItems).length + " entities selected."
+                } else if (Object.keys(this.selectedItems).length === 1) {
+                    this.tooltip = this.selectedItems[Object.getOwnPropertyNames(this.selectedItems)[0]].desc;
+                }
+
+                console.log(this.tooltip);
+
+
                 var selectedItemsToStr = _.map(this.selectedItems, function (obj) {
                     return obj.key
                 }).toString();
 
                 this.selectedItems = {};
-                
+
                 if (selectedItemsToStr) {
                     if (this.multi) {
                         var before = this.$.trigger.value.substring(0, this.replaceFromIndex + 1);
@@ -149,7 +171,7 @@
                 }
                 console.log('selected items: ', this.selectedItems);
             },
-            
+
             /* regular expression to highlight found matches */
             searchQuery: "",
 
@@ -286,6 +308,9 @@
                 this.isSearching = true;
                 if (this.startSearchTimerCallback) {
                     clearTimeout(this.startSearchTimerCallback);
+                }
+                if (!this.$.trigger.value) {
+                    this.tooltip = "";
                 }
                 this.startSearchTimerCallback = setTimeout(this.search.bind(this), 700);
             },
