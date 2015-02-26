@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.application;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -122,7 +121,6 @@ public abstract class AbstractWebApp extends Application {
 
         // Registering entity masters.
         attachMasterResources(router, webApp.getMasters());
-        attachMasterComponentsResources(router, webApp.getMasterMap());
 
         // Registering web models.
         //attachCustomWebViewResources(router, webApp);
@@ -145,11 +143,6 @@ public abstract class AbstractWebApp extends Application {
         return router;
     }
 
-    private void attachMasterComponentsResources(final Router router, final Map<String, String> masterMap) {
-        logger.info("\t\tMaster components resource attaching...");
-        router.attach("/users/{username}/master/{masterName}", new MasterComponentResourceFactory(masterMap));
-    }
-
     /**
      * Attach custom functional entities to the router.
      *
@@ -162,12 +155,13 @@ public abstract class AbstractWebApp extends Application {
      * Attaches all resources relevant to entity masters (entity resource, entity validation resource, UI resources etc.).
      *
      * @param router
-     * @param entityMasters
+     * @param masters
      */
-    private void attachMasterResources(final Router router, final List<EntityMaster<? extends AbstractEntity<?>>> entityMasters) {
+    private void attachMasterResources(final Router router, final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> masters) {
         logger.info("\t\tEntity master resources attaching...");
-        router.attach("/users/{username}/entity/{entityType}/{entity-id}", new EntityResourceFactory(entityMasters, injector));
-        router.attach("/users/{username}/validation/{entityType}", new EntityValidationResourceFactory(entityMasters, injector));
+        router.attach("/users/{username}/entity/{entityType}/{entity-id}", new EntityResourceFactory(masters, injector));
+        router.attach("/users/{username}/validation/{entityType}", new EntityValidationResourceFactory(masters, injector));
+        router.attach("/users/{username}/master/{entityType}", new MasterComponentResourceFactory(masters));
     }
 
     /**

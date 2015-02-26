@@ -6,8 +6,7 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebApp;
-import ua.com.fielden.platform.web.app.WebAppUtils;
-import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
  * Implementation of the {@link IWebAppConfig}.
@@ -28,7 +27,7 @@ public class WebAppConfig implements IWebAppConfig {
     /**
      * Holds the map between master component name and their master component.
      */
-    private final Map<String, String> mastersMap = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new HashMap<>();
 
     /**
      * Creates new instance of {@link WebAppConfig} for the specified {@link IWebApp} instance.
@@ -63,12 +62,12 @@ public class WebAppConfig implements IWebAppConfig {
     }
 
     @Override
-    public <T extends AbstractEntity<?>> IWebAppConfig addMaster(final Class<T> entityType, final IMaster<T> master) {
-        mastersMap.put(WebAppUtils.generateMasterName(entityType), master.build().toString());
+    public <T extends AbstractEntity<?>> IWebAppConfig addMaster(final Class<T> entityType, final EntityMaster<T> master) {
+        mastersMap.put(entityType, master);
         return this;
     }
 
-    public Map<String, String> getMasters() {
+    public Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> getMasters() {
         return mastersMap;
     }
 

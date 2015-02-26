@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.factories.webui;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.restlet.Request;
@@ -40,15 +39,13 @@ public class EntityResourceFactory extends Restlet {
     /**
      * Instantiates a factory for entity resources.
      *
-     * @param masters
+     * @param masters2
      *            -- a list of {@link EntityMaster}s from which fetch models and other information arrive
      * @param injector
      */
-    public EntityResourceFactory(final List<EntityMaster<? extends AbstractEntity<?>>> masters, final Injector injector) {
+    public EntityResourceFactory(final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> masters, final Injector injector) {
         this.masters = new LinkedHashMap<>();
-        for (final EntityMaster<? extends AbstractEntity<?>> master : masters) {
-            this.masters.put(master.getEntityType(), master);
-        }
+        this.masters.putAll(masters);
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);

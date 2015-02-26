@@ -5,6 +5,8 @@ import ua.com.fielden.platform.dao.DefaultEntityProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 import com.google.inject.Injector;
 
@@ -14,32 +16,34 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-public class EntityMaster<T extends AbstractEntity<?>> {
+public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     private final Class<T> entityType;
     private final Class<? extends IEntityProducer<T>> entityProducerType;
+    private final IRenderable masterComponent;
 
     /**
      * Creates master for the specified <code>entityType</code> and <code>entityProducerType</code>.
      *
      * @param entityType
-     * @param fetchStrategy
      * @param entityProducerType
+     * @param masterComponent
      *
      */
-    public EntityMaster(final Class<T> entityType, final Class<? extends IEntityProducer<T>> entityProducerType) {
+    public EntityMaster(final Class<T> entityType, final Class<? extends IEntityProducer<T>> entityProducerType, final IRenderable masterComponent) {
         this.entityType = entityType;
         this.entityProducerType = entityProducerType;
+        this.masterComponent = masterComponent;
     }
 
     /**
      * Creates master for the specified <code>entityType</code> and default entity producer.
      *
      * @param entityType
-     * @param fetchStrategy
+     * @param masterComponent
      *
      */
-    public EntityMaster(final Class<T> entityType) {
-        this(entityType, null);
+    public EntityMaster(final Class<T> entityType, final IRenderable masterComponent) {
+        this(entityType, null, masterComponent);
     }
 
     public Class<T> getEntityType() {
@@ -53,7 +57,8 @@ public class EntityMaster<T extends AbstractEntity<?>> {
      * @return
      */
     public IEntityProducer<T> createEntityProducer(final Injector injector) {
-        return entityProducerType == null ? new DefaultEntityProducer<T>(injector.getInstance(EntityFactory.class), this.entityType) : injector.getInstance(this.entityProducerType);
+        return entityProducerType == null ? new DefaultEntityProducer<T>(injector.getInstance(EntityFactory.class), this.entityType)
+                : injector.getInstance(this.entityProducerType);
     }
 
     /**
@@ -67,4 +72,10 @@ public class EntityMaster<T extends AbstractEntity<?>> {
         return null;
         // return entityProducerType == null ? new DefaultEntityProducer<T>(injector.getInstance(EntityFactory.class), this.entityType) : injector.getInstance(this.entityProducerType);
     }
+
+    @Override
+    public IRenderable build() {
+        return masterComponent;
+    }
+
 }

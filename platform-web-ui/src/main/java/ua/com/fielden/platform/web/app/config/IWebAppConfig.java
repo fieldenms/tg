@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.app.config;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.app.IWebApp;
-import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
  * Web application's global configuration object.
@@ -43,7 +43,7 @@ public interface IWebAppConfig {
      * @param master
      * @return
      */
-    <T extends AbstractEntity<?>> IWebAppConfig addMaster(Class<T> entityType, IMaster<T> master);
+    <T extends AbstractEntity<?>> IWebAppConfig addMaster(Class<T> entityType, EntityMaster<T> master);
 
     /**
      * Finish to configure the web application.

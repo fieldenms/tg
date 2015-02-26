@@ -13,6 +13,9 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
+
 /**
  * Represents web server resource that returns entity master component for specified entity type to the client.
  *
@@ -21,7 +24,7 @@ import org.restlet.resource.ServerResource;
  */
 public class MasterComponentResource extends ServerResource {
 
-    private final String master;
+    private final EntityMaster<? extends AbstractEntity<?>> master;
 
     /**
      * Creates {@link MasterComponentResource} and initialises it with master instance.
@@ -32,7 +35,7 @@ public class MasterComponentResource extends ServerResource {
      * @param response
      */
     public MasterComponentResource(//
-    final String master,//
+    final EntityMaster<? extends AbstractEntity<?>> master,//
             final Context context, //
             final Request request, //
             final Response response) {
@@ -43,7 +46,7 @@ public class MasterComponentResource extends ServerResource {
     @Override
     protected Representation get() throws ResourceException {
         try {
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(master.getBytes("UTF-8"))));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(master.build().render().toString().getBytes("UTF-8"))));
         } catch (final UnsupportedEncodingException e) {
             e.printStackTrace();
             throw new ResourceException(e);

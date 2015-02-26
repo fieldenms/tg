@@ -4,7 +4,6 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.WebAppUtils;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -105,10 +104,17 @@ public class MainMenuItemConfig implements IMainMenuItemConfig, IRenderable {
         if (typeOfView == null) {
             return null;
         } else if (AbstractEntity.class.isAssignableFrom(typeOfView)) {
-            return new DomElement("load-element").attr("import", "/users/oleh/master/" + WebAppUtils.generateMasterName(typeOfView)).attr("auto", null);
+            return new DomElement("load-element").
+                    attr("import", "/users/{{user}}/master/" + typeOfView.getSimpleName()).
+                    attr("elementName", generateMasterName(typeOfView)).
+                    attr("auto", null);
         } else if (MiWithConfigurationSupport.class.isAssignableFrom(typeOfView)) {
             return null;
         }
         return null;
+    }
+
+    private String generateMasterName(final Class<?> clazz) {
+        return "tg-" + clazz.getSimpleName() + "-master.html";
     }
 }

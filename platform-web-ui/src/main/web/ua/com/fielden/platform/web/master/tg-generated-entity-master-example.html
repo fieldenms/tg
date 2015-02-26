@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>simple-entity-master-example</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+
+    <link rel="import" href="/users/SU/master/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+
+    </head>
+
+<body unresolved fullbleed>
+    <tg-TgPersistentEntityWithProperties-master id="master" user="SU" entitytype="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" entityid="14" currentState="VIEW"></tg-TgPersistentEntityWithProperties-master>
+
+    <script>
+        (function () {            
+            document.addEventListener('polymer-ready', function() {
+                var master = document.querySelector('#master'); 
+
+                master.onRetrieved = function(entity, bindingEntity) {
+                    console.log("onRetrieved");
+                };
+
+                master.onValidated = function(validatedEntity, bindingEntity) {
+                    console.log("onValidated");
+                };
+
+                master.onSaved = function(potentiallySavedEntity, newBindingEntity) {
+                    console.log("onSaved");
+                };
+
+                // master.retrieve();
+            });
+
+        })();
+
+
+    </script>
+
+</body>
+
+</html>

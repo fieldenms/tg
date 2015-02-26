@@ -11,7 +11,14 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.web.WebAppConfig;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.application.AbstractWebApp;
+import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
+import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
+import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterConfig;
 
 import com.google.inject.Injector;
 
@@ -59,10 +66,67 @@ public class WebApp extends AbstractWebApp {
         //        app.addCustomView(new CustomWebView(new CustomWebModel()));
 
         // Add entity masters.
-        webApp.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class)); // efs(EntityWithInteger.class).with("prop")
-        webApp.addMaster(new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class));
-        webApp.addMaster(new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class));
-        webApp.addMaster(new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionalEntity.class));
+        final SimpleMasterConfig sm = new SimpleMasterConfig();
+        final IRenderable masterRenderable = sm.forEntity(TgPersistentEntityWithProperties.class)
+                // PROPERTY EDITORS
+                .addProp("stringProp").asSinglelineText()
+                .withAction("#validateDesc", TgPersistentEntityWithProperties.class)
+                .preAction(new IPreAction() {
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionSuccess(new IPostAction() {
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionError(new IPostAction() {
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).enabledWhen(EnabledState.ANY).icon("trending-up")
+                .also()
+
+                .addProp("stringProp").asMultilineText()
+                .also()
+                .addProp("dateProp").asDateTimePicker().skipValidation()
+                .also()
+                .addProp("booleanProp").asCheckbox().skipValidation()
+                .also()
+                .addProp("bigDecimalProp").asDecimal().skipValidation()
+                .also()
+                .addProp("integerProp").asSpinner().skipValidation()
+                .also()
+
+                // ENTITY CUSTOM ACTIONS
+                .addAction("#export", TgPersistentEntityWithProperties.class)
+                .preAction(new IPreAction() {
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionSuccess(new IPostAction() {
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).postActionError(new IPostAction() {
+                    @Override
+                    public JsCode build() {
+                        return new JsCode("");
+                    }
+                }).enabledWhen(EnabledState.VIEW).shortDesc("Export")
+                .setLayoutFor(Device.DESKTOP, null, "[[]]")
+                .setLayoutFor(Device.TABLET, null, "[[]]")
+                .setLayoutFor(Device.TABLET, null, "[[]]")
+                .done();
+        webApp.configApp().
+                addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null)). // efs(EntityWithInteger.class).with("prop")
+                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterRenderable)).
+                addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class)).
+                addMaster(TgExportFunctionlEntity.class, new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionlEntity.class, null)).done();
     }
 
     @Override

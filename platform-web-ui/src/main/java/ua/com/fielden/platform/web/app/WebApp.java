@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.app;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -76,22 +75,7 @@ public class WebApp implements IWebApp {
      *
      * @return
      */
-    public Map<String, String> getMasterMap() {
+    public Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> getMasters() {
         return webAppConfig.getMasters();
-    }
-
-    @Override
-    public <T extends AbstractEntity<?>> IWebApp addMaster(final EntityMaster<T> entityMaster) {
-        masters.add(entityMaster);
-        return this;
-    }
-
-    /**
-     * Returns registered entity masters.
-     *
-     * @return
-     */
-    public List<EntityMaster<? extends AbstractEntity<?>>> getMasters() {
-        return Collections.unmodifiableList(masters);
     }
 }
