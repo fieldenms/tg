@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.view.master.api.helpers;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.actions.IEntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlText;
+import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
 /**
  *
@@ -19,6 +19,6 @@ public interface IPropertySelector<T extends AbstractEntity<?>> extends IEntityA
 
     IDividerConfig<T> addDivider();
 
-    IHtmlText<T> addHtmlLabel(final String htmlText);
+    IHtmlTextConfig<T> addHtmlLabel(final String htmlText);
 
 }

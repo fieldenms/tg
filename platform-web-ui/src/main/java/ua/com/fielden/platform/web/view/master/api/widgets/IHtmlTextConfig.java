@@ -14,6 +14,6 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IAlso;
  * @author TG Team
  *
  */
-public interface IHtmlText<T extends AbstractEntity<?>> extends IAlso<T> {
+public interface IHtmlTextConfig<T extends AbstractEntity<?>> extends IAlso<T> {
 
 }

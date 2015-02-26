@@ -27,7 +27,7 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlText;
+import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
 public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelector<T>, ILayoutConfig, ILayoutConfigWithDone {
 
@@ -62,7 +62,7 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
     }
 
     @Override
-    public IHtmlText<T> addHtmlLabel(final String htmlText) {
+    public IHtmlTextConfig<T> addHtmlLabel(final String htmlText) {
         // TODO Auto-generated method stub
         return null;
     }
