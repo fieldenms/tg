@@ -124,7 +124,7 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
     private String createImports(final LinkedHashSet<String> importPaths) {
         final StringBuilder sb = new StringBuilder();
         importPaths.forEach(path -> {
-            sb.append("<link rel=\"import\" href=\"/resources/" + path + ".html\">\n");
+            sb.append("<link rel='import' href='/resources/" + path + ".html'>\n");
         });
         return sb.toString();
     }
