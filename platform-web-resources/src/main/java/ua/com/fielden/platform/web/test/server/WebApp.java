@@ -53,6 +53,45 @@ public class WebApp extends AbstractWebApp {
         super(context, injector, new String[0], name, desc, owner, author, username);
     }
 
+    private static class PreAction implements IPreAction {
+        private final String code;
+
+        public PreAction(final String code) {
+            this.code = code;
+        }
+
+        @Override
+        public JsCode build() {
+            return new JsCode(code);
+        }
+    }
+
+    private static class PostActionSuccess implements IPostAction {
+        private final String code;
+
+        public PostActionSuccess(final String code) {
+            this.code = code;
+        }
+
+        @Override
+        public JsCode build() {
+            return new JsCode(code);
+        }
+    }
+
+    private static class PostActionError implements IPostAction {
+        private final String code;
+
+        public PostActionError(final String code) {
+            this.code = code;
+        }
+
+        @Override
+        public JsCode build() {
+            return new JsCode(code);
+        }
+    }
+
     /**
      * Configures the {@link WebAppConfig} with custom entity centres.
      */
@@ -65,62 +104,106 @@ public class WebApp extends AbstractWebApp {
         //        app.addCustomView(new MyProfile(), true);
         //        app.addCustomView(new CustomWebView(new CustomWebModel()));
 
+        final String mr = "'margin-right: 20px'";
         // Add entity masters.
         final SimpleMasterConfig sm = new SimpleMasterConfig();
         final IRenderable masterRenderable = sm.forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
-                .addProp("stringProp").asSinglelineText()
-                .withAction("#validateDesc", TgPersistentEntityWithProperties.class)
-                .preAction(new IPreAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionSuccess(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionError(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).enabledWhen(EnabledState.ANY).icon("trending-up")
+                .addProp("integerProp").asSpinner()
+                /*      */.withAction("#exportIntegerProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export integer prop")
+                //      */.longDesc("Export integer property") SHORT-CUT
                 .also()
-
+                .addProp("entityProp").asSinglelineText()
+                /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
+                //      */.preAction SHORT-CUT
+                //      */.postActionSuccess SHORT-CUT
+                //      */.postActionError SHORT-CUT
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export entity prop")
+                /*      */.longDesc("Export entity property")
+                .also()
+                .addProp("bigDecimalProp").asDecimal()
+                /*      */.withAction("#exportBigDecimalProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export bigDecimal prop")
+                /*      */.longDesc("Export bigDecimal property")
+                .also()
+                .addProp("stringProp").asSinglelineText().skipValidation()
+                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export string prop")
+                /*      */.longDesc("Export string property")
+                .also()
                 .addProp("stringProp").asMultilineText()
+                /*      */.withAction("#exportMultiStringProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export multi string prop")
+                /*      */.longDesc("Export multi string property")
                 .also()
-                .addProp("dateProp").asDateTimePicker().skipValidation()
+                .addProp("dateProp").asDateTimePicker()
+                /*      */.withAction("#exportDateProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export date prop")
+                /*      */.longDesc("Export date property")
                 .also()
-                .addProp("booleanProp").asCheckbox().skipValidation()
+                .addProp("booleanProp").asCheckbox()
+                /*      */.withAction("#exportBooleanProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export boolean prop")
+                /*      */.longDesc("Export boolean property")
                 .also()
-                .addProp("bigDecimalProp").asDecimal().skipValidation()
-                .also()
-                .addProp("integerProp").asSpinner().skipValidation()
+                .addProp("compositeProp").asSinglelineText()
+                /*      */.withAction("#exportCompositeProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export composite prop")
+                /*      */.longDesc("Export composite property")
                 .also()
 
                 // ENTITY CUSTOM ACTIONS
-                .addAction("#export", TgPersistentEntityWithProperties.class)
-                .preAction(new IPreAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionSuccess(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionError(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).enabledWhen(EnabledState.VIEW).shortDesc("Export")
-                .setLayoutFor(Device.DESKTOP, null, "[[]]")
-                .setLayoutFor(Device.TABLET, null, "[[]]")
-                .setLayoutFor(Device.TABLET, null, "[[]]")
+                .addAction("#export", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.EDIT)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("Export")
+                /*      */.longDesc("Export action")
+                .setLayoutFor(Device.DESKTOP, null, "['horizontal', 'justified', [mr], [mr], [mr], [mr], [mr], [mr], [mr], [mr]]".replaceAll("mr", mr))
+                .setLayoutFor(Device.TABLET, null, "['vertical', "
+                        + "['horizontal', 'justified', [mr], [mr], [mr], [mr]],"
+                        + "['horizontal', 'justified', [mr], [mr], [mr], [mr]]"
+                        + "]".replaceAll("mr", mr))
                 .done();
         webApp.configApp().
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null)). // efs(EntityWithInteger.class).with("prop")

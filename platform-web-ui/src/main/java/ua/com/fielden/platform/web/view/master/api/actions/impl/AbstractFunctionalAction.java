@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.web.view.master.api.actions.impl;
 
+import static java.lang.String.format;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
+
+import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -23,7 +28,7 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     private final Class<? extends AbstractEntity<?>> functionalEntityType;
     private IPreAction preAction;
     private IPostAction postActionSuccess, postActionError;
-    private final String indent = "\t\t    ";
+    private final String indent = "                    ";
 
     /**
      * Creates {@link AbstractFunctionalAction} from <code>functionalEntityType</code> type and other parameters.
@@ -56,32 +61,84 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     @Override
     public JsCode code() {
         final String code =
-                indent + "self.actions['" + this.name() + "'] = {\n" + //
-                indent + "    user: self.user,\n" + //
-                indent + "    entitytype: '" + this.functionalEntityType().getName() + "',\n" + //
-                indent + "    shortDesc: '" + this.shortDesc() + "',\n" + //
-                (this.longDesc() == null ? "" : indent + "    longDesc: '" + this.longDesc() + "',\n") + //
-                (this.icon() == null ? "" : indent + "    icon: '" + this.icon() + "',\n") + //
-                indent + "    enabledStates: [" + this.enabledStatesString() + "],\n" + //
-                indent + "    preAction: function() {\n" + //
-                indent + "        var functionalEntity = {id:null, version:0};\n" + //
-                indent + "        var masterEntity = self.currEntity;\n" + //
-                indent + "        " + this.preAction.build().toString() + "\n" + //
-                // TODO provide convenient API for setting values during preAction building
-                // "        functionalEntity.parentEntity = { val: self.currEntity.get('key'), origVal: null };\n" + //
-                indent + "        return functionalEntity;\n" + //
-                indent + "    },\n" + //
-                indent + "    postActionSuccess: function(entity) {\n" + //
-                indent + "        console.log('postActionSuccess entity', entity);\n" + //
-                indent + "        " + this.postActionSuccess.build().toString() + "\n" + //
-                indent + "    },\n" + //
-                indent + "    postActionError: function(resultWithError) {\n" + //
-                indent + "        console.log('postActionError resultWithError', resultWithError);\n" + //
-                indent + "        " + this.postActionError.build().toString() + "\n" + //
-                indent + "    }\n" + //
-                indent + "};\n";//
+                wrap0("self.actions['%s'] = {", name(), () -> name()) + //
+                wrap0("    user: self.user,") + //
+                wrap0("    entitytype: '%s',", functionalEntityType(), () -> functionalEntityType().getName()) + //
+                wrap0("    shortDesc: '%s',", shortDesc()) + //
+                wrap1("    longDesc: '%s',", longDesc()) + //
+                wrap1("    icon: '%s',", icon()) + //
+                wrap0("    enabledStates: [%s],", enabledStatesString()) + //
+                wrap0("    preAction: function() {") + //
+                wrap0("        var functionalEntity = {id:null, version:0};") + //
+                wrap0("        var masterEntity = self.currEntity;") + //
+                wrap0("        functionalEntity.key = { val: 'NoMatter', origVal: null };") + //
+                wrap0("        // THE PLACE FOR CUSTOM LOGIC:") + //
+                wrap1("        %s", preAction, () -> preAction.build().toString()) + //
+                //             TODO provide convenient API for setting values during preAction building
+                //    "        functionalEntity.parentEntity = { val: self.currEntity.get('key'), origVal: null };") + //
+                wrap0("        return functionalEntity;") + //
+                wrap0("    },") + //
+                wrap0("    postActionSuccess: function(entity) {") + //
+                wrap0("        console.log('postActionSuccess entity', entity);") + //
+                wrap1("        %s", postActionSuccess, () -> this.postActionSuccess.build().toString()) + //
+                wrap0("    },") + //
+                wrap0("    postActionError: function(resultWithError) {") + //
+                wrap0("        console.log('postActionError resultWithError', resultWithError);") + //
+                wrap1("        %s", postActionError, () -> postActionError.build().toString()) + //
+                wrap0("    }") + //
+                wrap0("};");//
 
         return new JsCode(code);
+    }
+
+    private String wrap0(final String code) {
+        return indent + format(code) + "\n";
+    }
+
+    private String wrap0(final String code, final Object smth) {
+        return wrap0(code, smth, () -> smth.toString());
+    }
+
+    /**
+     * Wraps the code into indentation and line-ending symbols.
+     *
+     * <code>smth</code> is required parameter. If <code>null</code> -- {@link NullPointerException} will throw.
+     *
+     * @param code
+     * @param smth
+     * @param f
+     * @return
+     */
+    private String wrap0(final String code, final Object smth, final Supplier<String> f) {
+        if (smth == null) {
+            throw new NullPointerException();
+        }
+        return wrap_1(code, f.get());
+    }
+
+    private String wrap1(final String code, final Object smth) {
+        return wrap1(code, smth, () -> smth.toString());
+    }
+
+    /**
+     * Wraps the code into indentation and line-ending symbols.
+     *
+     * <code>smth</code> is the optional parameter. If <code>null</code> -- all line will be disregarded.
+     *
+     * @param code
+     * @param smth
+     * @param f
+     * @return
+     */
+    private String wrap1(final String code, final Object smth, final Supplier<String> f) {
+        if (smth == null) {
+            return "";
+        }
+        return wrap_1(code, f.get());
+    }
+
+    private String wrap_1(final String code, final String insertionCode) {
+        return StringUtils.isEmpty(insertionCode) ? "" : indent + format(code, insertionCode) + "\n";
     }
 
     @Override
