@@ -101,7 +101,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
                     final Object newValue = convert(getEntityType(), name, valAndOrigVal.get("val"));
-                    if (!isEntityStale) {
+                    if (notFoundEntity(getEntityType(), name, valAndOrigVal.get("val"), newValue)) {
+                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"))));
+                    } else if (!isEntityStale) {
                         entity.set(name, newValue);
                     } else {
                         final Object staleOriginalValue = convert(getEntityType(), name, valAndOrigVal.get("origVal"));
@@ -124,6 +126,19 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             }
         }
         return entity;
+    }
+
+    /**
+     * Returns <code>true</code> if the property is of entity type and the entity was not found by the search string (reflectedValue), <code>false</code> otherwise.
+     *
+     * @param type
+     * @param propertyName
+     * @param reflectedValue
+     * @param newValue
+     * @return
+     */
+    private boolean notFoundEntity(final Class<T> type, final String propertyName, final Object reflectedValue, final Object newValue) {
+        return reflectedValue != null && newValue == null && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
     }
 
     /**
