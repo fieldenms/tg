@@ -15,6 +15,7 @@ import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
+import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -118,8 +119,15 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties staleEnt1New = save(staleEnt1.setConflictingProp("persistently modified"));
         System.out.println("staleEnt1New.getVersion() == " + staleEnt1New.getVersion());
 
-        final TgPersistentEntityWithProperties exampleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23.0)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true));
+        final TgPersistentCompositeEntity compositeEnt1 = save(new_composite(TgPersistentCompositeEntity.class, defaultEnt, 10));
+        System.out.println("compositeEnt1.getId() == " + compositeEnt1.getId());
+
+        final TgPersistentEntityWithProperties exampleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23.0)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compositeEnt1));
         System.out.println("exampleEnt1.getId() == " + exampleEnt1.getId());
+
+        //
+        //        final TgPersistentEntityWithProperties ent1WithCompositeProp = save(new_(TgPersistentEntityWithProperties.class, "KEY12").setCompositeProp(compositeEnt1));
+        //        System.out.println("ent1WithCompositeProp.getId() == " + ent1WithCompositeProp.getId());
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

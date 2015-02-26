@@ -503,7 +503,7 @@
                             bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
                             bindingView["@" + propertyName + "_result"] = entity.prop(propertyName).validationResult();
                         } else {
-                            bindingView[propertyName] = self._convert(entity.get(propertyName));
+                            bindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
                         }
                     });
 
@@ -528,26 +528,6 @@
                     return bindingView;
                 },
 
-                _convert: function (value) {
-                    if (value === null) { // 'null' is the missing value representation for TG web editors
-                        return null;
-                    } else if (value instanceof this.$.reflector.getEntityType()) {
-                        // TODO complete implementation with appropriate composite entity cases etc.
-                        return value.get("key");
-                    } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
-                        return value;
-                    } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
-                        return value;
-                    } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
-                        return value;
-                    } else if (typeof value === "string") { // for string value -- return the same value for editors
-                        return value;
-                    } else {
-                        var UnsupportedConversionException = this._getUnsupportedConversionExceptionType();
-                        throw new UnsupportedConversionException(value);
-                    }
-                },
-
                 _getUnsupportedConversionExceptionType: function () {
                     return UnsupportedConversionException;
                 },
@@ -559,7 +539,7 @@
                 _getOriginalValue: function (entity, propName) {
                     var value = entity.get(propName); // automatic check whether the property is fetched
                     var instanceMetaProperty = entity.constructor.prototype.prop.call(entity, propName);
-                    return /*entity.prop(propName)*/ instanceMetaProperty.isChangedFromOriginal() ? null : this._convert(value);
+                    return /*entity.prop(propName)*/ instanceMetaProperty.isChangedFromOriginal() ? null : this.$.reflector.convert(value);
                 }
             });
         })();

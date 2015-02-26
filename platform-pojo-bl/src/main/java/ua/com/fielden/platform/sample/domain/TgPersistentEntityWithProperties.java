@@ -81,6 +81,22 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Conflicting prop", desc = "Conflicting prop")
     private String conflictingProp;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Composite prop", desc = "Composite prop")
+    private TgPersistentCompositeEntity compositeProp;
+
+    @Observable
+    @EntityExists(TgPersistentCompositeEntity.class)
+    public TgPersistentEntityWithProperties setCompositeProp(final TgPersistentCompositeEntity compositeProp) {
+        this.compositeProp = compositeProp;
+        return this;
+    }
+
+    public TgPersistentCompositeEntity getCompositeProp() {
+        return compositeProp;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setConflictingProp(final String conflictingProp) {
         this.conflictingProp = conflictingProp;

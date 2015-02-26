@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
 import java.util.Map;
@@ -10,14 +14,17 @@ import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -135,9 +142,16 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             if (reflectedValue == null) {
                 return null;
             }
-            final IEntityDao propertyCompanion = getCompanionFinder().find(propertyType);
-            // TODO complete implementation with appropriate composite entity cases etc.
-            return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
+            final Class<AbstractEntity<?>> entityPropertyType = propertyType;
+
+            final IEntityDao<AbstractEntity<?>> propertyCompanion = getCompanionFinder().<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType);
+
+            final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
+            /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList((String) reflectedValue))).//
+            /*      */model();
+            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(getFetchProvider().fetchFor(propertyName).fetchModel()).model();
+            return propertyCompanion.getEntity(qem);
+            // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue == null ? null : reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {

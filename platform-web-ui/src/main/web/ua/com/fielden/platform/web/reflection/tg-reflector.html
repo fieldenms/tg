@@ -476,7 +476,61 @@
                     newOne["id"] = null;
                     newOne["version"] = 0;
                     return newOne;
+                },
+
+                convert: function (value) {
+                    if (value === null) { // 'null' is the missing value representation for TG web editors
+                        return null;
+                    } else if (value instanceof Entity) {
+                        return (value.type().isCompositeEntity()) ? this.convertCompositeEntity(value) : this.convertSimpleEntity(value);
+                    } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
+                        return value;
+                    } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
+                        return value;
+                    } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
+                        return value;
+                    } else if (typeof value === "string") { // for string value -- return the same value for editors
+                        return value;
+                    } else {
+                        throw new UnsupportedConversionException(value);
+                    }
+                },
+
+                /**
+                 * The method to convert entity to String.
+                 *
+                 */
+                convertSimpleEntity: function(entity) {
+                    return this.convert(entity.get("key"));
+                },
+
+                /**
+                 * The method to convert composite entity to String.
+                 *
+                 * IMPORTANT: this is the mirror of the java method DynamicEntityKey.toString(). So, please be carefull and maintain it 
+                 * in accordance with java counterpart.
+                 */
+                convertCompositeEntity: function(compositeEntity) {
+                    var compositeKeyNames = compositeEntity.type().compositeKeyNames();
+                    var compositeKeySeparator = compositeEntity.type().compositeKeySeparator();
+
+                    var str = "";
+                    var first = true;
+                    for (var i = 0; i < compositeKeyNames.length; i++) {
+                        var compositePartName = compositeKeyNames[i];
+                        var compositePart = compositeEntity.get(compositePartName);
+                        if (compositePart !== null) {
+                            if (first) {
+                                str = str + this.convert(compositePart);
+                                first = false;
+                            } else {
+                                str = str + compositeKeySeparator + this.convert(compositePart);
+                            }
+                        }
+                    }
+                    return str;
                 }
+
             });
         })();
     </script>

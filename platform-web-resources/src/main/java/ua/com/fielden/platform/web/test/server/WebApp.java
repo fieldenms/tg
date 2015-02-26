@@ -4,6 +4,7 @@ import org.restlet.Context;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -60,6 +61,7 @@ public class WebApp extends AbstractWebApp {
         // Add entity masters.
         webApp.addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class)); // efs(EntityWithInteger.class).with("prop")
         webApp.addMaster(new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class));
+        webApp.addMaster(new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class));
         webApp.addMaster(new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionalEntity.class));
     }
 
