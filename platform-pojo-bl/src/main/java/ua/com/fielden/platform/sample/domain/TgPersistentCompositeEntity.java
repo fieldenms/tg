@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 /**
  * One-2-Many entity object.
@@ -50,7 +49,6 @@ public class TgPersistentCompositeEntity extends AbstractEntity<DynamicEntityKey
     }
 
     @Observable
-    @EntityExists(TgPersistentEntityWithProperties.class)
     public TgPersistentCompositeEntity setKey1(final TgPersistentEntityWithProperties value) {
         this.key1 = value;
         return this;

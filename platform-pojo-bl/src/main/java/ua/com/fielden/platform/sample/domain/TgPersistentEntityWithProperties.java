@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.types.Money;
 
@@ -92,7 +91,6 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     private Money moneyProp;
 
     @Observable
-    @EntityExists(TgPersistentCompositeEntity.class)
     public TgPersistentEntityWithProperties setCompositeProp(final TgPersistentCompositeEntity compositeProp) {
         this.compositeProp = compositeProp;
         return this;
@@ -133,7 +131,6 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgPersistentEntityWithProperties.class)
     public TgPersistentEntityWithProperties setProducerInitProp(final TgPersistentEntityWithProperties producerInitProp) {
         this.producerInitProp = producerInitProp;
         return this;
@@ -194,7 +191,6 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgPersistentEntityWithProperties.class)
     public TgPersistentEntityWithProperties setEntityProp(final TgPersistentEntityWithProperties entityProp) {
         this.entityProp = entityProp;
         return this;
