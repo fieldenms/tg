@@ -29,11 +29,11 @@ public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends S
     private final Class<T> entityType;
     private final String propertyName;
     private final RestServerUtil restUtil;
-    private final IValueMatcher valueMatcher; // should be IContextValueMatcher
+    private final IValueMatcher<T> valueMatcher; // should be IContextValueMatcher
     private final IFetchProvider<T> fetchProvider;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public EntityAutocompletionResource(final Class<T> entityType, final String propertyName, final IValueMatcher valueMatcher, final ICompanionObjectFinder companionFinder, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityAutocompletionResource(final Class<T> entityType, final String propertyName, final IValueMatcher<T> valueMatcher, final ICompanionObjectFinder companionFinder, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
         this.entityType = entityType;
@@ -56,7 +56,7 @@ public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends S
 
         // TODO valueMatcher.setContext <- from paramsHolder
         valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
-        final List<AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString);
+        final List<T> entities = valueMatcher.findMatchesWithModel(searchString);
 
         return restUtil.listJSONRepresentation(entities);
     }
