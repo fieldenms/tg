@@ -64,7 +64,7 @@
                             <paper-spinner id="spinner" active="{{isSearching}}" class="blue" alt="searching"></paper-spinner>
                         </template>
                         <template if="{{!isSearching}}">
-                            <core-icon-button class="search-button" on-click="{{onInput}}" icon="search"></core-icon-buton>
+                            <core-icon-button class="search-button" on-click="{{onInput}}" icon="search" disabled?="{{_isDisabled(currentState)}}"></core-icon-buton>
                         </template>
                     </div>
                     <div id="action_icon" hidden?="{{!action}}">
