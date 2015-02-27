@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources.webui;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -13,6 +14,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -51,10 +53,12 @@ public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends S
     public Representation post(final Representation envelope) throws ResourceException {
         final Map<String, Object> paramsHolder = restoreParamsHolderFrom(envelope, restUtil);
 
-        final Object searchStringVal = paramsHolder.get("___searchString");
-        final String searchString = (String) searchStringVal;
+        final String searchStringVal = (String) paramsHolder.get("___searchString");
+
+        final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
 
         // TODO valueMatcher.setContext <- from paramsHolder
+
         valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
         final List<T> entities = valueMatcher.findMatchesWithModel(searchString);
 
