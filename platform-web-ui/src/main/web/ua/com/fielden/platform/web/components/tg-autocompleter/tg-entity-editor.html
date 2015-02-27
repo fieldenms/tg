@@ -141,14 +141,14 @@
                  */
                 composite: false,
                 /*
-                 * Should contain a text to be displayed as an editor tooltip.
-                 * The tooltip does not get displayed if the value is empty (or null for that matter).
-                 */
-                tooltip: "",
-                /*
                  * A helper flag to driver the internal editor logic.
                  */
                 isSearching: false,
+
+                /**
+                 * Contains the description of currently chosen entity (if no entity was chosen -- null -- then valueDesc is also null).
+                 */
+                valueDesc: null,
 
                 /**
                  * The bound to this editor property of the bound entity should be of String type.
@@ -331,12 +331,6 @@
                     if (this.startSearchTimerCallback) {
                         clearTimeout(this.startSearchTimerCallback);
                     }
-
-                    // in case the editor was just cleared from value, set property description as tooltip
-                    if (!this.$.input.value) {
-                        //this.tooltip = "TODO: Property desc should be displayed in case of an empty input.";
-                        this.tooltip = this.propDesc;
-                    }
                     this.startSearchTimerCallback = setTimeout(this.search.bind(this), 300);
                 },
 
@@ -358,8 +352,6 @@
                 abortSearch: function () {
                     this.$.ajaxSearcher.abort();
                 },
-                
-                valueDesc: null,
                 
                 tooltipBinding: function(valueDesc, propDesc) {
                     if (valueDesc) {
@@ -385,8 +377,6 @@
                 ready: function () {
                     var self = this;
 
-                    // self.tooltip = self.propDesc;
-
                     self.$.ajaxSearcher.addEventListener('core-response', function (e) {
                         // TODO: check to make sure the result is an expected one... array of entities....
                         var foundEntities = self.$.serialiser.deserialise(e.detail.response).instance;
@@ -400,14 +390,9 @@
                  */
                 onOkClick: function () {
                     // clear tooltip text
-                    this.tooltip = "";
                     if (this.selectedItem) {
-                        // TODO need to check if this works....
-                        this.tooltip = this.selectedItem.desc;
+                        this.valueDesc = this.selectedItem.get("desc");
                     }
-
-                    console.log("tooltip:", this.tooltip);
-
 
                     var selectedItemToStr = this.selectedItem.key;
 
