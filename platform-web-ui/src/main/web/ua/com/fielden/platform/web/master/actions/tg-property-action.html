@@ -2,6 +2,7 @@
 
 <link rel="import" href="/resources/master/actions/tg-functional-action.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
+<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 
 <polymer-element name="tg-property-action" extends="tg-functional-action">
     <template>
@@ -22,7 +23,12 @@
             }
         </style>
         <shadow></shadow>
-        <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}"></core-icon-button> 
+        <core-tooltip position="bottom" style="width:100%" disabled="{{!longDesc}}">
+            <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}"></core-icon-button> 
+            <span class="autocompleter-tooltip" tip>
+                {{longDesc}}
+            </span>
+        </core-tooltip>
     </template>
     <script>
         Polymer('tg-property-action', {

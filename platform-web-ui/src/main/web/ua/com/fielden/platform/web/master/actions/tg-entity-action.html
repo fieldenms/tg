@@ -2,11 +2,17 @@
 
 <link rel="import" href="/resources/master/actions/tg-functional-action.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 
 <polymer-element name="tg-entity-action" extends="tg-functional-action">
     <template>
         <shadow></shadow>
-        <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">{{shortDesc}}</paper-button> 
+        <core-tooltip position="bottom" style="width:100%" disabled="{{!longDesc}}">
+	        <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">{{shortDesc}}</paper-button> 
+            <span class="autocompleter-tooltip" tip>
+                {{longDesc}}
+            </span>
+        </core-tooltip>
     </template>
     <script>
         Polymer('tg-entity-action', {
