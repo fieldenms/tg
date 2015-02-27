@@ -292,6 +292,13 @@
              */
             _isEntity: function (obj) {
                 return obj !== null && (obj instanceof this.$.reflector.getEntityType());
+            },
+
+            /**
+             * Binding function for tooltips.
+             */   
+            tooltip: function(propDesc) {
+                return propDesc;
             }
         });
     </script>

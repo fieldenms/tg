@@ -32,37 +32,37 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Integer prop", desc = "Integer prop")
+    @Title(value = "Integer prop", desc = "Integer prop desc")
     private Integer integerProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "Entity prop", desc = "Entity prop")
+    @Title(value = "Entity prop", desc = "Entity prop desc")
     private TgPersistentEntityWithProperties entityProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "BigDecimal prop", desc = "BigDecimal prop")
+    @Title(value = "BigDecimal prop", desc = "BigDecimal prop desc")
     private BigDecimal bigDecimalProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "String prop", desc = "String prop")
+    @Title(value = "String prop", desc = "String prop desc")
     private String stringProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "Boolean prop", desc = "Boolean prop")
+    @Title(value = "Boolean prop", desc = "Boolean prop desc")
     private Boolean booleanProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "Date prop", desc = "Date prop")
+    @Title(value = "Date prop", desc = "Date prop desc")
     private Date dateProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "Producer initialised prop", desc = "Producer initialised prop")
+    @Title(value = "Producer initialised prop", desc = "Producer initialised prop desc")
     private TgPersistentEntityWithProperties producerInitProp;
 
     @IsProperty
@@ -72,22 +72,22 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Non-conflicting prop", desc = "Non-conflicting prop")
+    @Title(value = "Non-conflicting prop", desc = "Non-conflicting prop desc")
     private String nonConflictingProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "Conflicting prop", desc = "Conflicting prop")
+    @Title(value = "Conflicting prop", desc = "Conflicting prop desc")
     private String conflictingProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "Composite prop", desc = "Composite prop")
+    @Title(value = "Composite prop", desc = "Composite prop desc")
     private TgPersistentCompositeEntity compositeProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "Money prop", desc = "Money prop")
+    @Title(value = "Money prop", desc = "Money prop desc")
     private Money moneyProp;
 
     @Observable
