@@ -24,6 +24,7 @@ import ua.com.fielden.platform.web.factories.MainMenuResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.factories.WebAppConfigResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
@@ -162,6 +163,7 @@ public abstract class AbstractWebApp extends Application {
         router.attach("/users/{username}/entity/{entityType}/{entity-id}", new EntityResourceFactory(masters, injector));
         router.attach("/users/{username}/validation/{entityType}", new EntityValidationResourceFactory(masters, injector));
         router.attach("/users/{username}/master/{entityType}", new MasterComponentResourceFactory(masters));
+        router.attach("/users/{{username}}/autocompletion/{{entityType}}/{{property}}", new EntityAutocompletionResourceFactory(masters, injector));
     }
 
     /**

@@ -44,7 +44,7 @@ public class EntityResourceFactory extends Restlet {
      * @param injector
      */
     public EntityResourceFactory(final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> masters, final Injector injector) {
-        this.masters = new LinkedHashMap<>();
+        this.masters = new LinkedHashMap<>(masters.size());
         this.masters.putAll(masters);
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
