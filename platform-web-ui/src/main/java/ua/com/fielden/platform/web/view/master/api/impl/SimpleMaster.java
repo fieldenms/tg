@@ -10,13 +10,17 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
+import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig4;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
@@ -46,6 +50,29 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
         final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new EntityAction(name, functionalEntity), this);
         entityActions.add(entityAction);
         return entityAction;
+    }
+
+    @Override
+    public IEntityActionConfig4<T> addAction(final MasterActions masterAction) {
+        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getOnAction(masterAction)), this);
+        entityActions.add(entityAction);
+        return entityAction;
+    }
+
+    private String getOnAction(final MasterActions masterAction) {
+        if (MasterActions.REFRESH == masterAction) {
+            return "onRetrievedDefault";
+        } else if (MasterActions.VALIDATE == masterAction) {
+            return "onValidatedDefault";
+        } else if (MasterActions.SAVE == masterAction) {
+            return "onSavedDefault";
+        } else if (MasterActions.EDIT == masterAction) {
+            return "actions['EDIT'].onAction";
+        } else if (MasterActions.VIEW == masterAction) {
+            return "actions['VIEW'].onAction";
+        } else {
+            throw new UnsupportedOperationException(masterAction.toString());
+        }
     }
 
     @Override
@@ -95,8 +122,12 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
         final DomContainer actionContainer = new DomContainer();
         entityActions.forEach(action -> {
             importPaths.add(action.action().importPath());
-            actionContainer.add(action.action().render());
-            entityActionsStr.append(action.action().code().toString());
+            if (action.action() instanceof IRenderable) {
+                actionContainer.add(((IRenderable) action.action()).render());
+            }
+            if (action.action() instanceof IExecutable) {
+                entityActionsStr.append(((IExecutable) action.action()).code().toString());
+            }
         });
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html").

@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.web.view.master.api.actions.impl;
 
+import static java.lang.String.format;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
+
+import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
@@ -25,6 +30,7 @@ public abstract class AbstractAction implements IImportable {
     private String longDesc;
     private final String actionComponentName;
     private final String actionComponentPath;
+    private final String indent = "                    ";
 
     /**
      * Creates {@link AbstractAction} from <code>functionalEntityType</code> type and other parameters.
@@ -124,5 +130,55 @@ public abstract class AbstractAction implements IImportable {
     @Override
     public String importPath() {
         return actionComponentPath;
+    }
+
+    protected String wrap0(final String code) {
+        return indent + format(code) + "\n";
+    }
+
+    protected String wrap0(final String code, final Object smth) {
+        return wrap0(code, smth, () -> smth.toString());
+    }
+
+    /**
+     * Wraps the code into indentation and line-ending symbols.
+     *
+     * <code>smth</code> is required parameter. If <code>null</code> -- {@link NullPointerException} will throw.
+     *
+     * @param code
+     * @param smth
+     * @param f
+     * @return
+     */
+    protected String wrap0(final String code, final Object smth, final Supplier<String> f) {
+        if (smth == null) {
+            throw new NullPointerException();
+        }
+        return wrap_1(code, f.get());
+    }
+
+    protected String wrap1(final String code, final Object smth) {
+        return wrap1(code, smth, () -> smth.toString());
+    }
+
+    /**
+     * Wraps the code into indentation and line-ending symbols.
+     *
+     * <code>smth</code> is the optional parameter. If <code>null</code> -- all line will be disregarded.
+     *
+     * @param code
+     * @param smth
+     * @param f
+     * @return
+     */
+    protected String wrap1(final String code, final Object smth, final Supplier<String> f) {
+        if (smth == null) {
+            return "";
+        }
+        return wrap_1(code, f.get());
+    }
+
+    private String wrap_1(final String code, final String insertionCode) {
+        return StringUtils.isEmpty(insertionCode) ? "" : indent + format(code, insertionCode) + "\n";
     }
 }

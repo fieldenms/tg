@@ -17,6 +17,7 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
+import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterConfig;
@@ -191,6 +192,11 @@ public class WebApp extends AbstractWebApp {
                 /*      */.longDesc("Export composite property")
                 .also()
 
+                .addAction(MasterActions.REFRESH)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("REFRESH2")
+                /*      */.longDesc("REFRESH2 action")
+
                 // ENTITY CUSTOM ACTIONS
                 .addAction("#export", TgExportFunctionalEntity.class)
                 /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
@@ -200,6 +206,12 @@ public class WebApp extends AbstractWebApp {
                 //      */.icon("trending-up") SHORT-CUT
                 /*      */.shortDesc("Export")
                 /*      */.longDesc("Export action")
+
+                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.EDIT)
+                .addAction(MasterActions.VIEW)
+
                 .setLayoutFor(Device.DESKTOP, null, "['horizontal', 'justified', [mr], [mr], [mr], [mr], [mr], [mr], [mr], [mr]]".replaceAll("mr", mr))
                 .setLayoutFor(Device.TABLET, null, "['vertical', "
                         + "['horizontal', 'justified', [mr], [mr], [mr], [mr]],"

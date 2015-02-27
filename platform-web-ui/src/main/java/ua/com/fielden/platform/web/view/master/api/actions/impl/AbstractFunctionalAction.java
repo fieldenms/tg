@@ -1,12 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.actions.impl;
 
-import static java.lang.String.format;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Supplier;
-
-import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -28,7 +23,6 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     private final Class<? extends AbstractEntity<?>> functionalEntityType;
     private IPreAction preAction;
     private IPostAction postActionSuccess, postActionError;
-    private final String indent = "                    ";
 
     /**
      * Creates {@link AbstractFunctionalAction} from <code>functionalEntityType</code> type and other parameters.
@@ -89,56 +83,6 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
                 wrap0("};");//
 
         return new JsCode(code);
-    }
-
-    private String wrap0(final String code) {
-        return indent + format(code) + "\n";
-    }
-
-    private String wrap0(final String code, final Object smth) {
-        return wrap0(code, smth, () -> smth.toString());
-    }
-
-    /**
-     * Wraps the code into indentation and line-ending symbols.
-     *
-     * <code>smth</code> is required parameter. If <code>null</code> -- {@link NullPointerException} will throw.
-     *
-     * @param code
-     * @param smth
-     * @param f
-     * @return
-     */
-    private String wrap0(final String code, final Object smth, final Supplier<String> f) {
-        if (smth == null) {
-            throw new NullPointerException();
-        }
-        return wrap_1(code, f.get());
-    }
-
-    private String wrap1(final String code, final Object smth) {
-        return wrap1(code, smth, () -> smth.toString());
-    }
-
-    /**
-     * Wraps the code into indentation and line-ending symbols.
-     *
-     * <code>smth</code> is the optional parameter. If <code>null</code> -- all line will be disregarded.
-     *
-     * @param code
-     * @param smth
-     * @param f
-     * @return
-     */
-    private String wrap1(final String code, final Object smth, final Supplier<String> f) {
-        if (smth == null) {
-            return "";
-        }
-        return wrap_1(code, f.get());
-    }
-
-    private String wrap_1(final String code, final String insertionCode) {
-        return StringUtils.isEmpty(insertionCode) ? "" : indent + format(code, insertionCode) + "\n";
     }
 
     @Override

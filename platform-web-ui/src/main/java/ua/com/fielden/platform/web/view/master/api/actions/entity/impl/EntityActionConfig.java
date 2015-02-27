@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
+import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig1;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig2;
@@ -12,6 +13,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig6;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
+import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractFunctionalAction;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDone;
@@ -19,10 +22,10 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMaster;
 
 public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IEntityActionConfig6<T>, IEntityActionConfig7<T> {
 
-    private final EntityAction action;
+    private final AbstractAction action;
     private final SimpleMaster<T> simpleMaster;
 
-    public EntityActionConfig(final EntityAction action, final SimpleMaster<T> simpleMaster) {
+    public EntityActionConfig(final AbstractAction action, final SimpleMaster<T> simpleMaster) {
         this.action = action;
         this.simpleMaster = simpleMaster;
     }
@@ -30,6 +33,11 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     @Override
     public IEntityActionConfig0<T> addAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
         return simpleMaster.addAction(name, functionalEntity);
+    }
+
+    @Override
+    public IEntityActionConfig4<T> addAction(final MasterActions masterAction) {
+        return simpleMaster.addAction(masterAction);
     }
 
     @Override
@@ -63,23 +71,23 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
 
     @Override
     public IEntityActionConfig2<T> postActionSuccess(final IPostAction postActionSuccess) {
-        action.setPostActionSuccess(postActionSuccess);
+        ((AbstractFunctionalAction) action).setPostActionSuccess(postActionSuccess);
         return this;
     }
 
     @Override
     public IEntityActionConfig3<T> postActionError(final IPostAction postActionError) {
-        action.setPostActionError(postActionError);
+        ((AbstractFunctionalAction) action).setPostActionError(postActionError);
         return this;
     }
 
     @Override
     public IEntityActionConfig1<T> preAction(final IPreAction preAction) {
-        action.setPreAction(preAction);
+        ((AbstractFunctionalAction) action).setPreAction(preAction);
         return this;
     }
 
-    public EntityAction action() {
+    public AbstractAction action() {
         return action;
     }
 }
