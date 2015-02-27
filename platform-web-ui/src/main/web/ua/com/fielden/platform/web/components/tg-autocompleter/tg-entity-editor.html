@@ -129,6 +129,12 @@
             }
 
             Polymer('tg-entity-editor', {
+                /*
+                 * A flag that is used to differentiate the source of
+                 * the value change in method editingValueChanged.
+                 * There are two possible sources -- manual entry and selection of a list.
+                 */
+                isAcceptingValueFromSuggestions: false,
                 /* 
                  * Indicates what kind of entity value is expected for the bound property -- with simple or composite key.
                  * This effect the way found values are rendered in the overlay with suggested values.
@@ -385,7 +391,10 @@
                     this.selectedItem = null;
 
                     if (selectedItemToStr) {
-                        this.$.input.value = selectedItemToStr;
+                        this.isAcceptingValueFromSuggestions = true;
+                        this.editingValue = selectedItemToStr;
+                        //this.$.input.value = selectedItemToStr;
+                        //this.editingValue = selectedItemToStr;
                     }
 
                     this.$.overlay.close();
@@ -403,6 +412,14 @@
                     this.$.input.focus();
                 },
 
+                editingValueChanged: function (oldValue, newValue) {
+                    this.super([oldValue, newValue]);
+                    if (this.isAcceptingValueFromSuggestions) {
+                        this.isAcceptingValueFromSuggestions = false;
+
+                        this.commit();
+                    }
+                },
             });
         })();
     </script>
