@@ -52,10 +52,10 @@
                 <div layout horizontal>
                     <div id="input-container" flex>
                         <!-- if tooltip is empty then the core-tooltip is not shown -->
-                        <core-tooltip position="bottom" style="width:100%" disabled="{{!tooltip}}">
+                        <core-tooltip position="bottom" style="width:100%" disabled="{{!tooltipBinding(valueDesc, propDesc)}}">
                             <input is="core-input" id="input" on-input="{{onInput}}" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
                             <span class="autocompleter-tooltip" tip>
-                                {{tooltip}}
+                                {{tooltipBinding(valueDesc, propDesc)}}
                             </span>
                         </core-tooltip>
                     </div>
@@ -358,11 +358,34 @@
                 abortSearch: function () {
                     this.$.ajaxSearcher.abort();
                 },
+                
+                valueDesc: null,
+                
+                tooltipBinding: function(valueDesc, propDesc) {
+                    if (valueDesc) {
+                        return valueDesc;
+                    } else {
+                        return propDesc;
+                    }
+                },
+                
+                entityChanged: function (oldValue, newValue) {
+                    this.super([oldValue, newValue]);
+                    
+                    console.log("entityChanged: newValue === ", newValue);
+                    if (this._isEntity(newValue)) {
+                        if (newValue.get(this.propertyName) !== null) {
+                            this.valueDesc = newValue.get("@" + this.propertyName + "_desc");
+                        } else {
+                            this.valueDesc = null;
+                        }
+                    }
+                },
 
                 ready: function () {
                     var self = this;
 
-                    self.tooltip = self.propDesc;
+                    // self.tooltip = self.propDesc;
 
                     self.$.ajaxSearcher.addEventListener('core-response', function (e) {
                         // TODO: check to make sure the result is an expected one... array of entities....
