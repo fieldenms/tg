@@ -36,7 +36,7 @@
     .invalid paper-spinner { width: 1.0em; height:1.0em; border-color : {{g.paperInput.invalidColor}}; }
 </core-style>
 
-<polymer-element name="tg-entity-editor" attributes="composite" extends="tg-editor">
+<polymer-element name="tg-entity-editor" attributes="composite user entityType" extends="tg-editor">
     <template>
         <!-- CSS -->
         <core-style ref="search-icon-decorator"></core-style>
@@ -44,7 +44,7 @@
 
         <!-- request related components -->
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <core-ajax id="ajaxSearcher" url="/users/{{user}}/autocompletion/{{entitytype}}/{{property}}" method="POST" handleas="json"></core-ajax>
+        <core-ajax id="ajaxSearcher" url="/users/{{user}}/autocompletion/{{entityType}}/{{propertyName}}" method="POST" handleas="json"></core-ajax>
 
         <!-- structure of representation -->
         <div id="all" relative>
@@ -278,10 +278,11 @@
                     // collect new matching values
                     if (this.searchQuery) {
                         // prepare the AJAX request based on the raw search string
+                        var paramsHolder = {};
                         paramsHolder["___searchString"] = inputText;
                         var serialisedSearchQuery = this.$.serialiser.serialise(paramsHolder);
 
-                        this.$.ajaxSearcher.body = JSON.stringify(ser);
+                        this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
                         this.$.ajaxSearcher.go();
                     }
 
@@ -315,7 +316,7 @@
                     // a new search is about to begin
                     this.isSearching = true;
                     // clear any search request in already in progress
-                    abortSearch();
+                    this.abortSearch();
                     // clear timeout if there is one
                     if (this.startSearchTimerCallback) {
                         clearTimeout(this.startSearchTimerCallback);
@@ -323,7 +324,8 @@
 
                     // in case the editor was just cleared from value, set property description as tooltip
                     if (!this.$.input.value) {
-                        this.tooltip = "TODO: Property desc should be displayed in case of an empty input.";
+                        //this.tooltip = "TODO: Property desc should be displayed in case of an empty input.";
+                        this.tooltip = this.propDesc;
                     }
                     this.startSearchTimerCallback = setTimeout(this.search.bind(this), 300);
                 },
@@ -349,6 +351,8 @@
 
                 ready: function () {
                     var self = this;
+
+                    self.tooltip = self.propDesc;
 
                     self.$.ajaxSearcher.addEventListener('core-response', function (e) {
                         // TODO: check to make sure the result is an expected one... array of entities....

@@ -6,6 +6,7 @@
 <link rel="import" href="/resources/editors/tg-decimal-editor.html">
 <link rel="import" href="/resources/editors/tg-boolean-editor.html">
 <link rel="import" href="/resources/editors/tg-datetime-picker.html">
+<link rel="import" href="/resources/components/tg-autocompleter/tg-entity-editor.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/actions/tg-entity-action.html">
@@ -17,22 +18,23 @@
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
             <!-- debug -->
             <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
-            <tg-integer-editor         entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
-            <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
-            <tg-decimal-editor         entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
+            <tg-integer-editor entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
+            <!--tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor-->
+            <tg-entity-editor entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-entity-editor>
+            <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
             <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{doNotValidate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
-            <tg-multiline-text-editor  entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-multiline-text-editor>
-            <tg-datetime-picker        entity="{{currBindingEntity}}" propertyName="dateProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'dateProp')}}" propDesc="{{_desc(currEntity, 'dateProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>            
-            <tg-boolean-editor         entity="{{currBindingEntity}}" propertyName="booleanProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'booleanProp')}}" propDesc="{{_desc(currEntity, 'booleanProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-boolean-editor>
+            <tg-multiline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-multiline-text-editor>
+            <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="dateProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'dateProp')}}" propDesc="{{_desc(currEntity, 'dateProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>
+            <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="booleanProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'booleanProp')}}" propDesc="{{_desc(currEntity, 'booleanProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-boolean-editor>
             <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="compositeProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'compositeProp')}}" propDesc="{{_desc(currEntity, 'compositeProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
 
-            <tg-action action="{{actions['REFRESH'].action}}"  onAction="{{onRetrievedDefault}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-action>
+            <tg-action action="{{actions['REFRESH'].action}}" onAction="{{onRetrievedDefault}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
-            <tg-action action="{{actions['EDIT'].action}}"     onAction="{{actions['EDIT'].onAction}}" enabledStates="{{actions['EDIT'].enabledStates}}" shortDesc="{{actions['EDIT'].shortDesc}}" longDesc="{{actions['EDIT'].longDesc}}" currentState="{{currentState}}"></tg-action>
-            <tg-action action="{{actions['VIEW'].action}}"     onAction="{{actions['VIEW'].onAction}}" enabledStates="{{actions['VIEW'].enabledStates}}" shortDesc="{{actions['VIEW'].shortDesc}}" longDesc="{{actions['VIEW'].longDesc}}" currentState="{{currentState}}"></tg-action>
+            <tg-action action="{{actions['EDIT'].action}}" onAction="{{actions['EDIT'].onAction}}" enabledStates="{{actions['EDIT'].enabledStates}}" shortDesc="{{actions['EDIT'].shortDesc}}" longDesc="{{actions['EDIT'].longDesc}}" currentState="{{currentState}}"></tg-action>
+            <tg-action action="{{actions['VIEW'].action}}" onAction="{{actions['VIEW'].onAction}}" enabledStates="{{actions['VIEW'].enabledStates}}" shortDesc="{{actions['VIEW'].shortDesc}}" longDesc="{{actions['VIEW'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
             <tg-action action="{{actions['VALIDATE'].action}}" onAction="{{onValidatedDefault}}" enabledStates="{{actions['VALIDATE'].enabledStates}}" shortDesc="{{actions['VALIDATE'].shortDesc}}" longDesc="{{actions['VALIDATE'].longDesc}}" currentState="{{currentState}}"></tg-action>
-            <tg-action action="{{actions['SAVE'].action}}"     onAction="{{onSavedDefault}}" enabledStates="{{actions['SAVE'].enabledStates}}" shortDesc="{{actions['SAVE'].shortDesc}}" longDesc="{{actions['SAVE'].longDesc}}" currentState="{{currentState}}"></tg-action>
+            <tg-action action="{{actions['SAVE'].action}}" onAction="{{onSavedDefault}}" enabledStates="{{actions['SAVE'].enabledStates}}" shortDesc="{{actions['SAVE'].shortDesc}}" longDesc="{{actions['SAVE'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
             <tg-entity-action user="{{actions['EXPORT'].user}}" entitytype="{{actions['EXPORT'].entitytype}}" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
         </tg-flex-layout>
@@ -56,17 +58,23 @@
                         shortDesc: 'EXPORT',
                         longDesc: 'Export action for TgPersistentEntityWithProperties ...',
                         enabledStates: ['EDIT'],
-                        preAction: function() {
-                            var functionalEntity = {id:null, version:0};// self.$.reflector.newEntity("ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity");
+                        preAction: function () {
+                            var functionalEntity = {
+                                id: null,
+                                version: 0
+                            }; // self.$.reflector.newEntity("ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity");
                             // functionalEntity.parentEntity = null;
-                            functionalEntity.parentEntity = { val: self.currEntity.get("key"), origVal: null };
+                            functionalEntity.parentEntity = {
+                                val: self.currEntity.get("key"),
+                                origVal: null
+                            };
                             // functionalEntity.set("parentEntity", { val: self.currEntity.get("key"), origVal: null });
                             return functionalEntity;
-                        }, 
-                        postActionSuccess: function(entity) {
+                        },
+                        postActionSuccess: function (entity) {
                             console.log("postActionSuccess entity", entity);
-                        }, 
-                        postActionError: function(resultWithError) {
+                        },
+                        postActionError: function (resultWithError) {
                             console.log("postActionError resultWithError", resultWithError);
                         }
                     };
@@ -78,43 +86,49 @@
                         longDesc: 'Snatch back sddsd ...',
                         icon: 'trending-up',
                         enabledStates: ['VIEW'],
-                        preAction: function() {
-                            var functionalEntity = {id:null, version:0};// self.$.reflector.newEntity("ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity");
+                        preAction: function () {
+                            var functionalEntity = {
+                                id: null,
+                                version: 0
+                            }; // self.$.reflector.newEntity("ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity");
                             // functionalEntity.parentEntity = null;
-                            functionalEntity.parentEntity = { val: self.currEntity.get("key"), origVal: null };
+                            functionalEntity.parentEntity = {
+                                val: self.currEntity.get("key"),
+                                origVal: null
+                            };
                             // functionalEntity.set("parentEntity", { val: self.currEntity.get("key"), origVal: null });
                             return functionalEntity;
-                        }, 
-                        postActionSuccess: function(entity) {
+                        },
+                        postActionSuccess: function (entity) {
                             console.log("postActionSuccess entity", entity);
-                        }, 
-                        postActionError: function(resultWithError) {
+                        },
+                        postActionError: function (resultWithError) {
                             console.log("postActionError resultWithError", resultWithError);
                         }
-                    };                    
+                    };
                 },
 
-                whenDesktop: ['vertical', 
+                whenDesktop: ['vertical',
                     ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
-                    ['horizontal', 'justified', ["margin-right: 80px"], 
-                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]], 
+                    ['horizontal', 'justified', ["margin-right: 80px"],
                             ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
-                            []] 
+                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
+                            []]
                 ],
 
-                whenTablet: ['vertical', 
+                whenTablet: ['vertical',
                     ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
-                    ['horizontal', 'justified', ["margin-right: 80px"], 
-                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]], 
+                    ['horizontal', 'justified', ["margin-right: 80px"],
                             ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
-                            []] 
+                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
+                            []]
                 ],
-                whenMobile: ['vertical', 
+                whenMobile: ['vertical',
                     ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
-                    ['horizontal', 'justified', ["margin-right: 80px"], 
-                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]], 
+                    ['horizontal', 'justified', ["margin-right: 80px"],
                             ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
-                            []] 
+                            ['horizontal', ["margin-right: 20px"], ["margin-right: 80px"]],
+                            []]
                 ]
             });
         })();
