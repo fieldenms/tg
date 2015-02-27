@@ -81,7 +81,7 @@
                             <template repeat="{{v in matchedValues}}">
                                 <paper-item class="tg-item" value="{{v.key}}" noink layout vertical>
                                     <!-- font-size:0 is a hack to enforce no space between the highlighted and not highlighted part of the key value -->
-                                    <div flex style="font-size: 0">
+                                    <div flex style="font-size: 0" two>
                                         <template repeat="{{s in matchedParts(v.key)}}">
                                             <template if="{{s.matched}}">
                                                 <span class="key-value key-value-highlighted">{{s.part}}</span>
@@ -251,7 +251,6 @@
                  * The function that actually perform the search and opensup the overlay with matched values.
                  */
                 search: function () {
-                    this.isSearching = true;
                     // need to implement the actuall search 
                     // what is the query string?
                     var inputText = this.$.input.value;
@@ -259,7 +258,8 @@
 
                     // prep this.searchQuery for highlighting of the matching parts in the search result
                     if (!inputText) {
-                        this.searchQuery = ""
+                        this.searchQuery = "";
+                        this.isSearching = false;
                     } else {
                         this.searchQuery = replaceAll('*', '\\w*', inputText);
                     }
@@ -277,6 +277,7 @@
 
                     // collect new matching values
                     if (this.searchQuery) {
+                        this.isSearching = true;
                         // prepare the AJAX request based on the raw search string
                         var paramsHolder = {};
                         paramsHolder["___searchString"] = inputText;
@@ -288,6 +289,9 @@
 
                 },
 
+                /*
+                 * Handles the search respons.
+                 */
                 onFound: function (entities) {
                     console.log("# of found entities: ", entities.length);
                     // TODO: Need to handle entities some how
@@ -301,7 +305,7 @@
                     if (!this.$.overlay.opened && this.matchedValues.length > 0) {
                         this.$.overlay.style.position = 'absolute';
                         this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
-                        this.$.overlay.style.width = this.$.decorator.offsetWidth + 'px';
+                        //this.$.overlay.style['min-width'] = this.$.decorator.offsetWidth < 350 ? '350px' : this.$.decorator.offsetWidth + 'px';
                         this.$.overlay.toggle();
                     } else if (this.$.overlay.opened && this.matchedValues.length == 0) {
                         this.$.overlay.toggle();
