@@ -119,7 +119,7 @@ public class WebApp extends AbstractWebApp {
                 /*      */.shortDesc("Export integer prop")
                 //      */.longDesc("Export integer property") SHORT-CUT
                 .also()
-                .addProp("entityProp").asSinglelineText()
+                .addProp("entityProp").asSinglelineText() // TODO once autocompletion API is implemented, properties of entity types should be added to masters asAutocompleter()
                 /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 //      */.preAction SHORT-CUT
                 //      */.postActionSuccess SHORT-CUT
