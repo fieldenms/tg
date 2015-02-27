@@ -82,27 +82,27 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         // populate testing entities
-        final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43));
+        final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setDesc("Description for entity with key 1."));
         System.out.println("ent1.getId() == " + ent1.getId());
-        final TgPersistentEntityWithProperties ent2 = save(new_(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14));
+        final TgPersistentEntityWithProperties ent2 = save(new_(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14).setDesc("Description for entity with key 2."));
         System.out.println("ent2.getId() == " + ent2.getId());
-        final TgPersistentEntityWithProperties ent3 = save(new_(TgPersistentEntityWithProperties.class, "KEY3").setIntegerProp(15));
+        final TgPersistentEntityWithProperties ent3 = save(new_(TgPersistentEntityWithProperties.class, "KEY3").setIntegerProp(15).setDesc("Description for entity with key 3."));
         System.out.println("ent3.getId() == " + ent3.getId());
         save(ent2.setEntityProp(ent3));
 
-        final TgPersistentEntityWithProperties moneyEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY4").setMoneyProp(new Money(new BigDecimal(23.0))));
+        final TgPersistentEntityWithProperties moneyEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY4").setMoneyProp(new Money(new BigDecimal(23.0))).setDesc("Description for entity with key 4."));
         System.out.println("moneyEnt1.getId() == " + moneyEnt1.getId());
 
-        final TgPersistentEntityWithProperties bigDecimalEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)));
+        final TgPersistentEntityWithProperties bigDecimalEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5."));
         System.out.println("bigDecimalEnt1.getId() == " + bigDecimalEnt1.getId());
 
-        final TgPersistentEntityWithProperties stringEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY6").setStringProp("ok"));
+        final TgPersistentEntityWithProperties stringEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY6").setStringProp("ok").setDesc("Description for entity with key 6."));
         System.out.println("stringEnt1.getId() == " + stringEnt1.getId());
 
-        final TgPersistentEntityWithProperties booleanEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true));
+        final TgPersistentEntityWithProperties booleanEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7."));
         System.out.println("booleanEnt1.getId() == " + booleanEnt1.getId());
 
-        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(9999L).toDate()));
+        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(9999L).toDate()).setDesc("Description for entity with key 8."));
         System.out.println("dateEnt1.getId() == " + dateEnt1.getId());
 
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
@@ -114,7 +114,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties defaultEnt = save(de);
         System.out.println("defaultEnt.getId() == " + defaultEnt.getId());
 
-        final TgPersistentEntityWithProperties staleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY10").setConflictingProp("initial").setNonConflictingProp("initial"));
+        final TgPersistentEntityWithProperties staleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY10").setConflictingProp("initial").setNonConflictingProp("initial").setDesc("Description for entity with key 10."));
         System.out.println("staleEnt1.getId() == " + staleEnt1.getId());
         System.out.println("staleEnt1.getVersion() == " + staleEnt1.getVersion());
 
@@ -126,7 +126,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentCompositeEntity compositeEnt1 = save(ce);
         System.out.println("compositeEnt1.getId() == " + compositeEnt1.getId());
 
-        final TgPersistentEntityWithProperties exampleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23.0)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compositeEnt1));
+        final TgPersistentEntityWithProperties exampleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23.0)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compositeEnt1).setDesc("Description for entity with key 11."));
         System.out.println("exampleEnt1.getId() == " + exampleEnt1.getId());
 
         //

@@ -96,6 +96,13 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
         return this;
     }
 
+    @Override
+    @Observable
+    public TgPersistentEntityWithProperties setDesc(final String desc) {
+        super.setDesc(desc);
+        return this;
+    }
+
     public TgPersistentCompositeEntity getCompositeProp() {
         return compositeProp;
     }
