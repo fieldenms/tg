@@ -14,6 +14,7 @@
                 margin: 0px;
                 vertical-align: top;
             }
+            
             core-icon-button {
                 padding: 0px;
                 margin: 0px;
@@ -23,15 +24,14 @@
             }
         </style>
         <shadow></shadow>
-        <core-tooltip position="bottom" style="width:100%" disabled="{{!longDesc}}">
-            <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}"></core-icon-button> 
-            <span class="autocompleter-tooltip" tip>
+        <core-tooltip position="bottom" class="delayed" style="width:100%" disabled="{{!longDesc}}">
+            <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}"></core-icon-button>
+            <span class="span-tooltip" tip>
                 {{longDesc}}
             </span>
         </core-tooltip>
     </template>
     <script>
-        Polymer('tg-property-action', {
-        });
+        Polymer('tg-property-action', {});
     </script>
 </polymer-element>

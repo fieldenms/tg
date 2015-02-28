@@ -4,6 +4,23 @@
 
 <polymer-element name="tg-abstract-action" attributes="enabledStates currentState shortDesc longDesc icon">
     <template>
+        <style>
+            :host::shadow * /deep/ core-tooltip::shadow #tooltip {
+                white-space: normal;
+            }
+            
+            :host::shadow * /deep/ core-tooltip .span-tooltip {
+                line-height: 15px;
+            }
+            
+            :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
+            :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
+                opacity: 1;
+                -webkit-transition-delay: 1s;
+                transition-delay: 1s;
+                transform: translate3d(0px, 0px, 0px);
+            }
+        </style>
         <tg-reflector id="reflector"></tg-reflector>
     </template>
     <script>
@@ -48,12 +65,12 @@
                 var self = this;
 
                 self.run = self.run.bind(self);
-            },            
+            },
 
             /**
              * Returns whether the action is enabled in current moment.
              */
-            isEnabled: function(enabledStates, currentState, enabled) {
+            isEnabled: function (enabledStates, currentState, enabled) {
                 if (enabledStates) {
                     // console.log("isEnabled successful: enabledStates == ", enabledStates, "currentState == ", currentState, "enabled == ", enabled);
                     return enabledStates.indexOf(currentState) >= 0 && enabled;
@@ -61,22 +78,22 @@
                     console.warn("isEnabled: enabledStates is not ready at this stage! enabledStates == ", enabledStates);
                     return false;
                 }
-            },            
+            },
 
             /**
              * Executes the action.
              *
              * Please override this method in descendands to implement specific execution logic.
              */
-            run: function() {
-            	this.enabled = false;
-            	console.log(this.shortDesc + ": execute");
+            run: function () {
+                this.enabled = false;
+                console.log(this.shortDesc + ": execute");
             },
 
             /**
-			 * The function that is invoked after the action has completed (error or success).
-			 */
-            afterExecution: function() {
+             * The function that is invoked after the action has completed (error or success).
+             */
+            afterExecution: function () {
                 console.log(this.shortDesc + ": after execution");
                 this.enabled = true;
             }
