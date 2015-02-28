@@ -79,9 +79,9 @@
                     <div class="tg-snatchback-suggestions">
                         <core-selector id="suggestions" valueattr="value" class="tg-snatchback-suggestions" on-core-select="{{onSelectItem}}">
                             <template repeat="{{v in matchedValues}}">
-                                <paper-item class="tg-item" value="{{v.key}}" noink layout vertical>
+                                <paper-item class="tg-item" value="{{v.key}}" noink horizontal layout center>
                                     <!-- font-size:0 is a hack to enforce no space between the highlighted and not highlighted part of the key value -->
-                                    <div flex style="font-size: 0" two>
+                                    <div flex style="font-size: 0;white-space: nowrap" two>
                                         <template repeat="{{s in matchedParts(v.key)}}">
                                             <template if="{{s.matched}}">
                                                 <span class="key-value key-value-highlighted">{{s.part}}</span>
@@ -304,6 +304,7 @@
                     //       Potentially additional conversion is required
                     for (var index = 0; index < entities.length; index++) {
                         console.log(entities[index].key);
+                        // TODO var strKey = this.$.reflector.convert(entities[index])
                         this.matchedValues.push(entities[index]);
                     }
 
@@ -352,18 +353,18 @@
                 abortSearch: function () {
                     this.$.ajaxSearcher.abort();
                 },
-                
-                tooltipBinding: function(valueDesc, propDesc) {
+
+                tooltipBinding: function (valueDesc, propDesc) {
                     if (valueDesc) {
                         return valueDesc;
                     } else {
                         return this.tooltip(propDesc);
                     }
                 },
-                
+
                 entityChanged: function (oldValue, newValue) {
                     this.super([oldValue, newValue]);
-                    
+
                     console.log("entityChanged: newValue === ", newValue);
                     if (this._isEntity(newValue)) {
                         if (newValue.get(this.propertyName) !== null) {
