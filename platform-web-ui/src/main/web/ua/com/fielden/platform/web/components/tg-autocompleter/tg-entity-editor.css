@@ -13,15 +13,6 @@
         width: 1.1em;
         font: inherit;
     }
-    
-    * /deep/ core-tooltip::shadow #tooltip {
-        min-width: 250px;
-        white-space: normal;
-    }
-    
-    * /deep/ core-tooltip .autocompleter-tooltip {
-        line-height: 15px;
-    }
     /*paper-spinner.blue::shadow .circle {
         border-color: black;
     }*/

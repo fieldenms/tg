@@ -9,11 +9,27 @@
                 width: 100%;
                 box-sizing: border-box;
             }
+            
+            :host::shadow * /deep/ core-tooltip::shadow #tooltip {
+                white-space: normal;
+            }
+            
+            :host::shadow * /deep/ core-tooltip .span-tooltip {
+                line-height: 15px;
+            }
+            
+            :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
+            :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
+                opacity: 1;
+                -webkit-transition-delay: 1s;
+                transition-delay: 1s;
+                transform: translate3d(0px, 0px, 0px);
+            }
         </style>
         <tg-reflector id="reflector"></tg-reflector>
         <p>editingValue: {{editingValue}}</p>
         <p>commValue: {{commValue}}</p>
-		<p>acceptedValue: {{acceptedValue}}</p>
+        <p>acceptedValue: {{acceptedValue}}</p>
         <p>_bindingValue(currBindingEntity, propertyName): {{_bindingValue(entity, propertyName)}}</p>
     </template>
     <script>
@@ -69,11 +85,11 @@
                 /**
                  * The state for the editor.
                  *
-                 * The editor can be only in two states: EDIT and VIEW. The state EDIT 
+                 * The editor can be only in two states: EDIT and VIEW. The state EDIT
                  * allows user to edit property.
                  *
                  * The state VIEW allows user to review the property.
-                 * 
+                 *
                  * The initial state can be VIEW or EDIT.
                  */
                 currentState: {
@@ -126,11 +142,11 @@
             /**
              * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state).
              */
-            _isDisabled: function(state) {
+            _isDisabled: function (state) {
                 if (state === undefined || state === 'VIEW') {
                     return true;
                 } else if (state === 'EDIT') {
-                    return false;                    
+                    return false;
                 } else {
                     throw "Unsupported state exception: " + state + ".";
                 }
@@ -197,11 +213,10 @@
                 try {
                     this.acceptedValue = this.convertFromString(newValue);
                     this.editorValidationMsg = '';
-                }
-                catch (error) {
+                } catch (error) {
                     console.log("commValueChanged catched", error, this);
                     this.editorValidationMsg = error;
-                }                
+                }
             },
 
             /**
@@ -253,7 +268,7 @@
             /** 
              * The function for binding property validation msg. The argument 'entity' will be changed in future. Polymer will listen to that change.
              */
-            _msg: function (entity, property, editorValidationMsg) {                    
+            _msg: function (entity, property, editorValidationMsg) {
                 if (editorValidationMsg) {
                     return editorValidationMsg;
                 } else if (typeof this.$ !== 'undefined') {
@@ -296,8 +311,8 @@
 
             /**
              * Binding function for tooltips.
-             */   
-            tooltip: function(propDesc) {
+             */
+            tooltip: function (propDesc) {
                 return propDesc;
             }
         });

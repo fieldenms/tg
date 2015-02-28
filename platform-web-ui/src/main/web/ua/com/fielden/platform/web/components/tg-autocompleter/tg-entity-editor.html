@@ -52,9 +52,9 @@
                 <div layout horizontal>
                     <div id="input-container" flex>
                         <!-- if tooltip is empty then the core-tooltip is not shown -->
-                        <core-tooltip position="bottom" style="width:100%" disabled="{{!tooltipBinding(valueDesc, propDesc)}}">
+                        <core-tooltip position="bottom" class="delayed" style="width:100%" disabled="{{!tooltipBinding(valueDesc, propDesc)}}">
                             <input is="core-input" id="input" on-input="{{onInput}}" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
-                            <span class="autocompleter-tooltip" tip>
+                            <span class="span-tooltip" tip>
                                 {{tooltipBinding(valueDesc, propDesc)}}
                             </span>
                         </core-tooltip>
