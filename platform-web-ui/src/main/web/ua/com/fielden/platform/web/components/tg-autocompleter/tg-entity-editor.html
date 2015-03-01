@@ -64,7 +64,7 @@
                             <paper-spinner id="spinner" active="{{isSearching}}" class="blue" alt="searching"></paper-spinner>
                         </template>
                         <template if="{{!isSearching}}">
-                            <core-icon-button class="search-button" on-tap="{{onInput}}" icon="search" disabled?="{{_isDisabled(currentState)}}"></core-icon-buton>
+                            <core-icon-button class="search-button" on-tap="{{onSearchButtonTap}}" icon="search" disabled?="{{_isDisabled(currentState)}}"></core-icon-buton>
                         </template>
                     </div>
                     <div id="action_icon" hidden?="{{!action}}">
@@ -280,6 +280,25 @@
                         clearTimeout(this.startSearchTimerCallback);
                     }
                     this.startSearchTimerCallback = setTimeout(this.search.bind(this), 500);
+                },
+
+                /*
+                 * Handles search button click. It's behaviour is similar, but yet different than that of onInput.
+                 * It enforece search, but without a typing delay timer, and also it assigned * if input is empty to show first matching values.
+                 */
+                onSearchButtonTap: function () {
+                    this.$.input.focus();
+
+                    if (!this.$.input.value) {
+                        this.$.input.value = "*";
+                    }
+
+                    this.abortSearch();
+                    // clear timeout if there is one
+                    if (this.startSearchTimerCallback) {
+                        clearTimeout(this.startSearchTimerCallback);
+                    }
+                    this.search();
                 },
 
                 /* 

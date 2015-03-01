@@ -54,13 +54,14 @@ public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends S
         final Map<String, Object> paramsHolder = restoreParamsHolderFrom(envelope, restUtil);
 
         final String searchStringVal = (String) paramsHolder.get("___searchString");
+        logger.debug(String.format("SEARCH STRING %s", searchStringVal));
 
         final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
-
+        logger.debug(String.format("SEARCH STRING %s", searchString));
         // TODO valueMatcher.setContext <- from paramsHolder
 
         valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
-        final List<T> entities = valueMatcher.findMatchesWithModel(searchString);
+        final List<T> entities = valueMatcher.findMatchesWithModel(searchString !=null ? searchString : "%");
 
         return restUtil.listJSONRepresentation(entities);
     }
