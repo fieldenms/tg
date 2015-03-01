@@ -53,7 +53,7 @@
                     <div id="input-container" flex>
                         <!-- if tooltip is empty then the core-tooltip is not shown -->
                         <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltipBinding(valueDesc, propDesc)}}">
-                            <input is="core-input" id="input" on-input="{{onInput}}" on-blur="{{onBlur}}" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
+                            <input is="core-input" id="input" on-input="{{onInput}}" on-focus="{{onFocus}}" on-blur="{{onBlur}}" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
                             <span class="span-tooltip" tip>
                                 {{tooltipBinding(valueDesc, propDesc)}}
                             </span>
@@ -267,6 +267,21 @@
                 /* A position of the end of the search string the input value. */
                 replaceToIndex: 0,
 
+                /* Tracks whether the input is in focus. */
+                hasFocus: false,
+                /* 
+                 * A callback to react to an input event to trigger search.
+                 */
+                onInput: function () {
+                    // clear any search request in already in progress
+                    this.abortSearch();
+                    // clear timeout if there is one
+                    if (this.startSearchTimerCallback) {
+                        clearTimeout(this.startSearchTimerCallback);
+                    }
+                    this.startSearchTimerCallback = setTimeout(this.search.bind(this), 500);
+                },
+
                 /* 
                  * The function that actually perform the search and opensup the overlay with matched values.
                  */
@@ -286,9 +301,8 @@
                     console.log('searchQuery as RegEx: ', this.searchQuery);
 
                     // clear selection in the overlay, which could have been left there from last search
-                    if (this.$.suggestions.selected) {
-                        this.$.suggestions.selected.length = 0;
-                    }
+                    this.$.suggestions.selected = null;
+
                     // also need to remove matched values from the last search
                     // in preparation for new search result
                     while (this.matchedValues.length > 0) {
@@ -296,7 +310,7 @@
                     }
 
                     // collect new matching values
-                    if (this.searchQuery) {
+                    if (this.searchQuery && this.hasFocus === true) {
                         this.isSearching = true;
                         // prepare the AJAX request based on the raw search string
                         var paramsHolder = {};
@@ -305,6 +319,8 @@
 
                         this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
                         this.$.ajaxSearcher.go();
+                    } else if (this.$.overlay.opened) { // make sure overlay is closed is no search is performed
+                        this.$.overlay.toggle();
                     }
 
                 },
@@ -323,31 +339,21 @@
                     }
 
                     // once we found the matching values show them, but only if there are some
-                    if (!this.$.overlay.opened && this.matchedValues.length > 0) {
-                        this.$.overlay.style.position = 'absolute';
-                        this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
-                        //this.$.overlay.style['min-width'] = this.$.decorator.offsetWidth < 350 ? '350px' : this.$.decorator.offsetWidth + 'px';
-                        this.$.overlay.toggle();
-                    } else if (this.$.overlay.opened && this.matchedValues.length == 0) {
-                        this.$.overlay.toggle();
+                    if (this.hasFocus === true) {
+                        if (!this.$.overlay.opened && this.matchedValues.length > 0) {
+                            this.$.overlay.style.position = 'absolute';
+                            this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
+                            //this.$.overlay.style['min-width'] = this.$.decorator.offsetWidth < 350 ? '350px' : this.$.decorator.offsetWidth + 'px';
+                            this.$.overlay.toggle();
+                        } else if (this.$.overlay.opened && this.matchedValues.length == 0) {
+                            this.$.overlay.toggle();
+                        }
                     }
                     this.isSearching = false;
                 },
 
                 /* A timer callback object, which is used to implement typing delay before initiating the search. */
                 startSearchTimerCallback: null,
-                /* a callback to reack to an input event to trigger search */
-                onInput: function () {
-                    // a new search is about to begin
-                    this.isSearching = true;
-                    // clear any search request in already in progress
-                    this.abortSearch();
-                    // clear timeout if there is one
-                    if (this.startSearchTimerCallback) {
-                        clearTimeout(this.startSearchTimerCallback);
-                    }
-                    this.startSearchTimerCallback = setTimeout(this.search.bind(this), 300);
-                },
 
                 /* Indicates whether the OnAcceptedValueChanged event handler needs to be invoked as part of other handlers. */
                 enforceOnAcceptedValueChanged: false,
@@ -383,10 +389,15 @@
                  * result of user action (e.g. tab off) then property revalidation logic is invoked.
                  */
                 onBlur: function () {
+                    this.hasFocus = false;
                     if (this.$.overlay.opened === false && this.enforceOnAcceptedValueChanged === true) {
                         this.enforceOnAcceptedValueChanged = false;
                         this.onAcceptedValueChanged();
                     }
+                },
+
+                onFocus: function () {
+                    this.hasFocus = true;
                 },
 
                 /* to store matching values */
