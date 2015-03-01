@@ -348,12 +348,17 @@
                  * Handles the search respons.
                  */
                 onFound: function (entities) {
+                    console.log("ENTITIES: ", entities);
                     console.log("# of found entities: ", entities.length);
                     // TODO: Need to handle entities some how
                     //       Potentially additional conversion is required
                     for (var index = 0; index < entities.length; index++) {
+                        // Entity is converted to a string representation of its key.
+                        // This includes correct conversion of simple and composite entities
+                        var key = this.$.reflector.convert(entities[index]);
+                        entities[index].key = key;
                         console.log(entities[index].key);
-                        // TODO var strKey = this.$.reflector.convert(entities[index])
+
                         this.matchedValues.push(entities[index]);
                     }
 
