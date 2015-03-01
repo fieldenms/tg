@@ -59,13 +59,13 @@
             </paper-input-decorator>
 
 
-            <core-overlay id="overlay" class="tg-snatchback" autoFocusDisabled on-core-overlay-open-completed="{{suggestionsOpened}}">
+            <core-overlay id="overlay" class="tg-snatchback" tabIndex="-1" autoFocusDisabled on-core-overlay-open-completed="{{suggestionsOpened}}">
                 <paper-shadow z="1">
                     <!-- list of suggestions, each item can be selected with space (TODO) -->
                     <div class="tg-snatchback-suggestions">
-                        <core-selector id="suggestions" valueattr="value" class="tg-snatchback-suggestions" on-core-select="{{onSelectItem}}" multi="{{multi}}">
+                        <core-selector id="suggestions" tabIndex="-1" valueattr="value" class="tg-snatchback-suggestions" on-core-select="{{onSelectItem}}" multi="{{multi}}">
                             <template repeat="{{v in matchedValues}}">
-                                <paper-item class="tg-item" value="{{v.key}}" noink layout vertical>
+                                <paper-item tabIndex="-1" class="tg-item" value="{{v.key}}" noink layout vertical>
                                     <!-- font-size:0 is a hack to enforce no space between the highlighted and not highlighted part of the key value -->
                                     <div flex style="font-size: 0">
                                         <template repeat="{{s in matchedParts(v.key)}}">
