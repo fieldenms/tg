@@ -82,7 +82,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         // populate testing entities
-        final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setDesc("Description for entity with key 1."));
+        final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43)
+                .setDesc("Description for entity with key 1. This is a relatively long description to demonstrate how well does is behave during value autocompletion."));
         System.out.println("ent1.getId() == " + ent1.getId());
         final TgPersistentEntityWithProperties ent2 = save(new_(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14).setDesc("Description for entity with key 2."));
         System.out.println("ent2.getId() == " + ent2.getId());

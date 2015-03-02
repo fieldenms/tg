@@ -18,6 +18,7 @@
 <link rel="import" href="/resources/components/lodash-lib.html">
 
 <link rel="import" href="/resources/editors/tg-editor.html">
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/master/actions/tg-property-action.html">
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
@@ -76,28 +77,36 @@
             <core-overlay id="overlay" class="tg-snatchback" autoFocusDisabled on-core-overlay-open="{{onOpenChanged}}">
                 <paper-shadow z="1">
                     <!-- list of suggestions, each item can be selected with space (TODO) -->
-                    <div class="tg-snatchback-suggestions" tabIndex="-1">
+                    <div class="tg-snatchback-suggestions">
                         <core-selector id="suggestions" valueattr="value" class="tg-snatchback-suggestions" on-core-select="{{onSelectItem}}">
                             <template repeat="{{v in matchedValues}}">
-                                <paper-item class="tg-item" value="{{v.key}}" noink horizontal layout center>
+                                <paper-item class="tg-item" value="{{v.key}}" noink>
+                                    <!--tg-flex-layout class="tg-snatchback" whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}"-->
                                     <!-- font-size:0 is a hack to enforce no space between the highlighted and not highlighted part of the key value -->
-                                    <div flex style="font-size: 0;white-space: nowrap" two>
-                                        <template repeat="{{s in matchedParts(v.key)}}">
-                                            <template if="{{s.matched}}">
-                                                <span class="key-value key-value-highlighted">{{s.part}}</span>
+                                    <div vertical wrap layout>
+                                        <!--  -->
+                                        <div style="font-size: 0;white-space: nowrap;">
+                                            <template repeat="{{s in matchedParts(v.key)}}">
+                                                <template if="{{s.matched}}">
+                                                    <span class="key-value key-value-highlighted">{{s.part}}</span>
+                                                </template>
+                                                <template if="{{!s.matched}}">
+                                                    <span class="key-value">{{s.part}}</span>
+                                                </template>
                                             </template>
-                                            <template if="{{!s.matched}}">
-                                                <span class="key-value">{{s.part}}</span>
-                                            </template>
-                                        </template>
+                                        </div>
+                                        <div class="desc-value">
+                                            {{v.desc}}
+                                        </div>
                                     </div>
-                                    <div class="desc-value" flex three>{{v.desc}}</div>
+
+                                    <!--/tg-flex-layout-->
                                 </paper-item>
                             </template>
                         </core-selector>
                     </div>
                     <!-- toolbar -->
-                    <div id="toolbar" style="border-top: thin solid #ccc; padding: 8px;" layout horizontal justified center>
+                    <div id="toolbar" style="border-top: thin solid #ccc; padding: 8px" layout horizontal justified center>
                         <div id="paginator" layout horizontal center>
                             <core-icon-button class="tg-snatchback-button" icon="chevron-left"></core-icon-button>
                             <core-icon-button class="tg-snatchback-button" icon="chevron-right"></core-icon-button>
@@ -522,7 +531,11 @@
                     this.overlayCancelled = true;
                     this.$.overlay.close();
                     this.$.input.focus();
-                }
+                },
+
+                whenDesktop: ['vertical', [], []],
+                whenTablet: ['vertical', [], []],
+                whenMobile: ['vertical', [], []]
             });
         })();
     </script>
