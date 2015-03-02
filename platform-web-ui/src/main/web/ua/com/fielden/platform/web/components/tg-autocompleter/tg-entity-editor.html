@@ -96,7 +96,7 @@
                                             </template>
                                         </div>
                                         <div class="additional-prop">
-                                            <span class="prop-name">Description:</span>
+                                            <span class="prop-name">{{propTitleByName(v, "desc")}}:</span>
                                             <span>
                                                 {{v.desc}}
                                             </span>
@@ -104,7 +104,7 @@
                                         <template if="{{isComposite(v)}}">
                                             <template repeat="{{p in keyMembers(v)}}">
                                                 <div class="additional-prop">
-                                                    <span class="prop-name">{{p}}:</span>
+                                                    <span class="prop-name">{{propTitleByName(v, p)}}:</span>
                                                     <span>{{propValueByName(v, p)}}</span>
                                                 </div>
                                             </template>
@@ -564,10 +564,21 @@
                 },
 
                 /*
+                 * Determines a title of the specified entity.propName.
+                 */
+                propTitleByName: function (entity, propName) {
+                    if (entity.type().prop(propName)) {
+                        return entity.type().prop(propName).title();
+                    } else {
+                        return propName;
+                    }
+                },
+
+                /*
                  * Obtains a value of the specified by name property for the passed in entity.
                  */
-                propValueByName: function (entity, keyName) {
-                    return this.$.reflector.convert(entity.get(keyName));
+                propValueByName: function (entity, propName) {
+                    return this.$.reflector.convert(entity.get(propName));
                 },
 
                 /* TG Flex parameters for layouting autocompleted values -- not yet used. */
