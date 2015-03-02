@@ -29,11 +29,11 @@
     <!-- -->
     .invalid core-icon-button /deep/ core-icon { fill : {{g.paperInput.invalidColor}}; }
     <!-- -->
-    paper-spinner { width: 1.0em; height:1.0em; }
+    paper-spinner { padding: 0px; margin: 0px; width: 12px; height: 12px; }
     <!-- -->
     paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
     <!-- -->
-    .invalid paper-spinner { width: 1.0em; height:1.0em; border-color : {{g.paperInput.invalidColor}}; }
+    .invalid paper-spinner { width: 12px; height: 12px; border-color : {{g.paperInput.invalidColor}}; }
 </core-style>
 
 <polymer-element name="tg-entity-editor" attributes="composite user entityType" extends="tg-editor">

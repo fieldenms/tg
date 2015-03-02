@@ -9,8 +9,8 @@
     .search-button {
         padding: 0px;
         margin: 0px;
-        height: 1.1em;
-        width: 1.1em;
+        height: 1.0em;
+        width: 1.0em;
         font: inherit;
     }
     /*paper-spinner.blue::shadow .circle {
