@@ -95,17 +95,17 @@
                                                 </template>
                                             </template>
                                         </div>
-                                        <div class="desc-value">
-                                            <span style="font-weight: bold;">Description:</span>
+                                        <div class="additional-prop">
+                                            <span class="prop-name">Description:</span>
                                             <span>
                                                 {{v.desc}}
                                             </span>
                                         </div>
                                         <template if="{{isComposite(v)}}">
                                             <template repeat="{{p in keyMembers(v)}}">
-                                                <div class="desc-value">
-                                                    <span style="font-weight: bold;">{{p}}:</span>
-                                                    <span>{{keyMemberValue(v, p)}}</span>
+                                                <div class="additional-prop">
+                                                    <span class="prop-name">{{p}}:</span>
+                                                    <span>{{propValueByName(v, p)}}</span>
                                                 </div>
                                             </template>
                                         </template>
@@ -564,10 +564,9 @@
                 },
 
                 /*
-                 * Obtains the value of a composite key member for an passed in entity.
-                 * Expects the first passed in argument value to be a composite entity.
+                 * Obtains a value of the specified by name property for the passed in entity.
                  */
-                keyMemberValue: function (entity, keyName) {
+                propValueByName: function (entity, keyName) {
                     return this.$.reflector.convert(entity.get(keyName));
                 },
 

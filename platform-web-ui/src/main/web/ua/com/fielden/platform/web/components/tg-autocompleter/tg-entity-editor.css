@@ -52,13 +52,18 @@
         background-color: #ffff46;
     }
     
-    .desc-value {
+    .additional-prop {
         font-size: x-small;
         min-width: 150px;
         white-space: normal;
         padding-left: 1em;
         padding-top: 0.5em;
         line-height: 15px;
+    }
+    
+    .prop-name {
+        font-weight: bold;
+        padding-right: 0.5em;
     }
     
     .tg-item:hover {
