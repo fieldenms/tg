@@ -101,6 +101,14 @@
                                                 {{v.desc}}
                                             </span>
                                         </div>
+                                        <template if="{{isComposite(v)}}">
+                                            <template repeat="{{p in keyMembers(v)}}">
+                                                <div class="desc-value">
+                                                    <span style="font-weight: bold;">{{p}}:</span>
+                                                    <span>{{keyMemberValue(v, p)}}</span>
+                                                </div>
+                                            </template>
+                                        </template>
                                     </div>
 
                                     <!--/tg-flex-layout-->
@@ -141,6 +149,7 @@
             }
 
             Polymer('tg-entity-editor', {
+
                 /*
                  * Initialises ajaxSearcher.
                  */
@@ -536,6 +545,33 @@
                     this.$.input.focus();
                 },
 
+                /* A helper method to determine whether the passed in value is a composite entity. */
+                isComposite: function (value) {
+                    console.log("CHECKING IS COMPOSITE")
+                    if (this._isEntity(value)) {
+                        return value.type().isCompositeEntity();
+                    } else {
+                        return false;
+                    }
+                },
+
+                /* 
+                 * Returns an array of composite key member names.
+                 * Expects the passed in argument value to be a composite entity.
+                 */
+                keyMembers: function (entity) {
+                    return entity.type().compositeKeyNames();
+                },
+
+                /*
+                 * Obtains the value of a composite key member for an passed in entity.
+                 * Expects the first passed in argument value to be a composite entity.
+                 */
+                keyMemberValue: function (entity, keyName) {
+                    return this.$.reflector.convert(entity.get(keyName));
+                },
+
+                /* TG Flex parameters for layouting autocompleted values -- not yet used. */
                 whenDesktop: ['vertical', [], []],
                 whenTablet: ['vertical', [], []],
                 whenMobile: ['vertical', [], []]
