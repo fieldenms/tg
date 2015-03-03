@@ -2,6 +2,8 @@ package ua.com.fielden.platform.serialisation.jackson;
 
 import java.util.LinkedHashMap;
 
+import org.apache.log4j.Logger;
+
 /**
  * Utility to register entity types with sequential numbers (type table).
  *
@@ -12,6 +14,7 @@ public class EntityTypeInfoGetter {
     private final LinkedHashMap<Long, EntityType> typeTable = new LinkedHashMap<>();
     private final LinkedHashMap<String, EntityType> typeTableByName = new LinkedHashMap<>();
     private Long typeCount = 1L;
+    private final Logger logger = Logger.getLogger(getClass());
 
     public EntityType get(final Long typeNumber) {
         return typeTable.get(typeNumber);
@@ -33,9 +36,9 @@ public class EntityTypeInfoGetter {
             typeTableByName.put(entityType.getKey(), entityType);
             entityType.endInitialising();
 
-            System.err.println("Registering new type with number [" + entityType.get_number() + "] = " + entityType);
+            logger.error("Registering new type with number [" + entityType.get_number() + "] = " + entityType);
         } else {
-            System.err.println("Is trying to register already registered new type [" + entityType.getKey() + "]. Has disregarded.");
+            logger.error("Is trying to register already registered new type [" + entityType.getKey() + "]. Has disregarded.");
         }
         return typeTableByName.get(entityType.getKey());
     }
