@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -40,6 +43,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<EntityActionConfig<T>> entityActions = new ArrayList<>();
     private final FlexLayout layout = new FlexLayout();
+
+    @SuppressWarnings("rawtypes")
+    private final Map<String, Class<IValueMatcher>> valueMatcherForProps = new HashMap<>();
 
     public Class<T> entityType;
 
@@ -81,9 +87,19 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IWidgetSelector<T> addProp(final String propName) {
-        final WidgetSelector<T> widget = new WidgetSelector<>(this, propName);
+        final WidgetSelector<T> widget = new WidgetSelector<>(this, propName, new WithMatcherCallback());
         widgets.add(widget);
         return widget;
+    }
+
+    /**
+     * A callback for recording custom matcher that are specified for property autocompletion.
+     *
+     */
+    public class WithMatcherCallback {
+        public void assign(final String propName, final Class<IValueMatcher> matcher) {
+            valueMatcherForProps.put(propName, matcher);
+        }
     }
 
     @Override
@@ -141,14 +157,13 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 replace("//@propertyActions", propertyActionsStr.toString());
 
         final IRenderable representation = new IRenderable() {
-
             @Override
             public DomElement render() {
                 return new InnerTextElement(entityMasterStr);
             }
         };
 
-        return new SimpleMasterConfig<T>(representation);
+        return new SimpleMasterConfig<T>(representation, valueMatcherForProps);
     }
 
     /**

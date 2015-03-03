@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
+import java.util.Map;
+
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
@@ -15,15 +18,28 @@ import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 public class SimpleMasterConfig<T extends AbstractEntity<?>> implements ISimpleMasterConfig<T> {
 
     private final IRenderable renderableRepresentation;
+    @SuppressWarnings("rawtypes")
+    private final Map<String, Class<IValueMatcher>> valueMatcherForProps;
+
 
     // TODO More arguments to be added
-    public SimpleMasterConfig(final IRenderable renderableRepresentation) {
+    @SuppressWarnings("rawtypes")
+    public SimpleMasterConfig(
+            final IRenderable renderableRepresentation,
+            final Map<String, Class<IValueMatcher>> valueMatcherForProps) {
         this.renderableRepresentation = renderableRepresentation;
+        this.valueMatcherForProps = valueMatcherForProps;
     }
 
     @Override
     public IRenderable render() {
         return renderableRepresentation;
+    }
+
+    @Override
+    @SuppressWarnings("rawtypes")
+    public Map<String, Class<IValueMatcher>> propValueMatchers() {
+        return valueMatcherForProps;
     }
 
 }

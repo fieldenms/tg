@@ -41,15 +41,28 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     private AbstractWidget widget;
 
-    public WidgetSelector(final SimpleMasterBuilder<T> simpleMaster, final String propertyName) {
+    private final SimpleMasterBuilder<T>.WithMatcherCallback withMatcherCallbank;
+
+    public WidgetSelector(
+            final SimpleMasterBuilder<T> simpleMaster,
+            final String propertyName,
+            final SimpleMasterBuilder<T>.WithMatcherCallback withMatcherCallbank) {
         this.smBuilder = simpleMaster;
         this.propertyName = propertyName;
+        this.withMatcherCallbank = withMatcherCallbank;
     }
+
+    public WidgetSelector(
+            final SimpleMasterBuilder<T> simpleMaster,
+            final String propertyName) {
+        this(simpleMaster, propertyName, null);
+    }
+
 
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
         widget = new EntityAutocompletionWidget(smBuilder.entityType, propertyName);
-        return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder);
+        return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
     }
 
     @Override
