@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 
 import com.google.inject.Injector;
 
@@ -23,7 +24,7 @@ import com.google.inject.Injector;
 public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     private final Class<T> entityType;
     private final Class<? extends IEntityProducer<T>> entityProducerType;
-    private final IRenderable masterComponent;
+    private final ISimpleMasterConfig<T> smConfig;
     private final ICompanionObjectFinder coFinder;
     private final Injector injector;
 
@@ -38,12 +39,12 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     public EntityMaster(
             final Class<T> entityType,
             final Class<? extends IEntityProducer<T>> entityProducerType,
-            final IRenderable masterComponent,
+                    final ISimpleMasterConfig<T> smConfig,
             final ICompanionObjectFinder coFinder,
             final Injector injector) {
         this.entityType = entityType;
         this.entityProducerType = entityProducerType;
-        this.masterComponent = masterComponent;
+        this.smConfig = smConfig;
         this.coFinder = coFinder;
         this.injector = injector;
     }
@@ -55,8 +56,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @param masterComponent
      *
      */
-    public EntityMaster(final Class<T> entityType, final IRenderable masterComponent, final Injector injector) {
-        this(entityType, null, masterComponent, injector.getInstance(ICompanionObjectFinder.class), injector);
+    public EntityMaster(final Class<T> entityType, final ISimpleMasterConfig<T> smConfig, final Injector injector) {
+        this(entityType, null, smConfig, injector.getInstance(ICompanionObjectFinder.class), injector);
     }
 
     public Class<T> getEntityType() {
@@ -93,7 +94,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
 
     @Override
     public IRenderable build() {
-        return masterComponent;
+        return smConfig.render();
     }
 
 }

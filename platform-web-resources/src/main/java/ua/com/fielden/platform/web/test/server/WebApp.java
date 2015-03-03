@@ -219,11 +219,9 @@ public class WebApp extends AbstractWebApp {
                         + "]".replaceAll("mr", mr))
                 .done();
 
-        final IRenderable masterRenderable = masterConfig.render();
-
         webApp.configApp().
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector)). // efs(EntityWithInteger.class).with("prop")
-                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterRenderable, injector.getInstance(ICompanionObjectFinder.class), injector)).
+                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterConfig, injector.getInstance(ICompanionObjectFinder.class), injector)).
                 addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class, null, injector)).
                 addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionalEntity.class, null, injector)).done();
     }
