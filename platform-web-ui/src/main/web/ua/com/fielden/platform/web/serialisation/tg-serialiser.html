@@ -92,6 +92,10 @@
                             for (property in obj) {
                                 if (property !== "@id" && property[0] === "@" && property !== "@instanceType" && property !== "@resultType" && property !== "@id_ref") {
                                     deserialisedObject[property] = deserialiseMetaProperty(obj[property]);
+                                } else if (property === "@instanceType" && typeof obj[property] === 'object') {
+                                    // new type has appeared -- need to be registered inside serialiser!
+                                    self.$.reflector.registerEntityType(obj[property]);
+                                    deserialisedObject[property] = deserialise(obj[property].key);
                                 } else if (property !== "@id") {
                                     deserialisedObject[property] = deserialise(obj[property]);
                                 }
@@ -120,7 +124,11 @@
                                     deserialisedObject = new Entity();
                                     // deserialisedObject = {};
 
-                                    deserialisedObject["_type"] = self.$.reflector.getType(typeIndex);
+                                    var foundType = self.$.reflector.getType(typeIndex);
+                                    if (!foundType) {
+                                        throw "Can not find the type with number [" + typeIndex + "]";
+                                    }
+                                    deserialisedObject["_type"] = foundType;
                                     objectMap[obj["@id"]] = deserialisedObject;
                                 } else {
                                     deserialisedObject = {};

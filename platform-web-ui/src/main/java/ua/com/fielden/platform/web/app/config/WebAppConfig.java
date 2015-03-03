@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.web.app.config;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -25,9 +28,14 @@ public class WebAppConfig implements IWebAppConfig {
     private String locale = "en-AU";
 
     /**
-     * Holds the map between master component name and their master component.
+     * Holds the map between master's entity type and its master component.
      */
     private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new HashMap<>();
+
+    /**
+     * Holds the map between entity centre's menu item type and entity centre.
+     */
+    private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> centreMap = new LinkedHashMap<>();
 
     /**
      * Creates new instance of {@link WebAppConfig} for the specified {@link IWebApp} instance.
@@ -67,8 +75,18 @@ public class WebAppConfig implements IWebAppConfig {
         return this;
     }
 
+    @Override
+    public <M extends MiWithConfigurationSupport<?>> IWebAppConfig addCentre(final Class<M> menuType, final EntityCentre centre) {
+        centreMap.put(menuType, centre);
+        return this;
+    }
+
     public Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> getMasters() {
         return mastersMap;
+    }
+
+    public Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> getCentres() {
+        return centreMap;
     }
 
     /**

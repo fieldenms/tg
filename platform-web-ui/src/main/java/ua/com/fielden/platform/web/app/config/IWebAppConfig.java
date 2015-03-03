@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.app.config;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -44,6 +46,15 @@ public interface IWebAppConfig {
      * @return
      */
     <T extends AbstractEntity<?>> IWebAppConfig addMaster(Class<T> entityType, EntityMaster<T> master);
+
+    /**
+     * Adds the entity centre to web application configuration object.
+     *
+     * @param menuType
+     * @param centre
+     * @return
+     */
+    <M extends MiWithConfigurationSupport<?>> IWebAppConfig addCentre(Class<M> menuType, EntityCentre centre);
 
     /**
      * Finish to configure the web application.

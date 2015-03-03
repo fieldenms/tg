@@ -417,6 +417,16 @@
                     return typeTable[number];
                 },
 
+                /**
+                 * Registers new entity type inside the type table.
+                 */
+                registerEntityType: function(newType) {
+                    var registeredType = new EntityType(newType);
+                    typeTable[newType['_number']] = registeredType;
+                    console.log("Registering new type with number ", newType['_number'], registeredType);
+                    return registeredType;
+                },
+
                 findTypeByName: function(typeName) {
                     for (var key in typeTable) {
                         if (typeTable.hasOwnProperty(key)) {

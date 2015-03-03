@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.web.app;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.config.IWebAppConfig;
 import ua.com.fielden.platform.web.app.config.WebAppConfig;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.menu.IMainMenuConfig;
 import ua.com.fielden.platform.web.menu.MainMenuConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -23,7 +23,6 @@ public class WebApp implements IWebApp {
     private final String title;
     private final WebAppConfig webAppConfig;
     private final MainMenuConfig mainMenuConfig;
-    private final List<EntityMaster<? extends AbstractEntity<?>>> masters = new ArrayList<>(); // TODO temporal
 
     public WebApp(final String title) {
         this.title = title;
@@ -77,5 +76,14 @@ public class WebApp implements IWebApp {
      */
     public Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> getMasters() {
         return webAppConfig.getMasters();
+    }
+
+    /**
+     * Returns the map of entity centres for this web application.
+     *
+     * @return
+     */
+    public Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> getCentres() {
+        return webAppConfig.getCentres();
     }
 }

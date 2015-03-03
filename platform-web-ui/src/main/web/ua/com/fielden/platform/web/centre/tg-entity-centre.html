@@ -1,11 +1,13 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-tabs/paper-tabs.html">
-<link rel="import" href="/resources/polymer/paper-tab/paper-tab.html">
+<link rel="import" href="/resources/polymer/paper-tabs/paper-tab.html">
 <link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
 <link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-from-right.html">
+<link rel="import" href="/tg-reflector">
 
 <polymer-element name="tg-entity-centre">
     <template>
+        <tg-serialiser id="serialiser"></tg-serialiser>
         <style>
         </style>
         <paper-tabs selected="{{selected}}">

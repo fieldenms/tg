@@ -4,6 +4,7 @@ import org.restlet.Context;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
@@ -12,8 +13,8 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.web.WebAppConfig;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.application.AbstractWebApp;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
-import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
@@ -101,7 +102,7 @@ public class WebApp extends AbstractWebApp {
     @Override
     protected void initWebApplication(final IWebApp webApp) {
         // Add entity centres.
-        //        app.addCentre(new EntityCentre(MiPerson.class, "Personnel"));
+        webApp.configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties"));
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);

@@ -8,8 +8,12 @@ import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
+import ua.com.fielden.platform.criteria.generator.impl.GeneratedEntityControllerStub;
 import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.EntityAttachmentAssociationDao;
+import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -142,6 +146,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
         bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
+        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
+        bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class).in(Scopes.SINGLETON);
 
         // user security related bindings
         bind(IUserRoleDao.class).to(UserRoleDao.class);

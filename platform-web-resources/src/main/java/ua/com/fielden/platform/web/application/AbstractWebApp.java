@@ -17,7 +17,6 @@ import org.restlet.routing.Template;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
-import ua.com.fielden.platform.web.WebAppConfig;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.app.WebApp;
 import ua.com.fielden.platform.web.factories.MainMenuResourceFactory;
@@ -118,7 +117,7 @@ public abstract class AbstractWebApp extends Application {
         router.attach("/tg-web-app/tg-main-menu.html", new MainMenuResourceFactory(webApp));
 
         // Registering entity centres.
-        //attachCentreResources(router, webApp);
+        attachCentreResources(router, webApp);
 
         // Registering entity masters.
         attachMasterResources(router, webApp.getMasters());
@@ -170,12 +169,12 @@ public abstract class AbstractWebApp extends Application {
      * Configures router for entity centre resource.
      *
      * @param router
-     * @param webAppConfig
+     * @param webApp
      *            - holds the entity centre configurations.
      */
-    private void attachCentreResources(final Router router, final WebAppConfig webAppConfig) {
+    private void attachCentreResources(final Router router, final WebApp webApp) {
         logger.info("\t\tCentre resources attaching...");
-        router.attach("/users/{username}/centre/{centreName}", new CentreResourceFactory(webAppConfig.getCentres(), injector));
+        router.attach("/users/{username}/centre/{centreName}", new CentreResourceFactory(webApp.getCentres(), injector));
     }
 
     /**
