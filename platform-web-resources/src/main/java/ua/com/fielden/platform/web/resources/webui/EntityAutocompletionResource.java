@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.resources.webui;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;

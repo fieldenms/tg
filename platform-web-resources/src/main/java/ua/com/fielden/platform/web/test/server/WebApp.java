@@ -16,6 +16,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
@@ -108,7 +109,7 @@ public class WebApp extends AbstractWebApp {
 
         final String mr = "'margin-right: 20px'";
         // Add entity masters.
-        final SimpleMasterConfig sm = new SimpleMasterConfig();
+        final ISimpleMasterConfig sm = new SimpleMasterConfig();
         final IRenderable masterRenderable = sm.forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("integerProp").asSpinner()
@@ -121,7 +122,7 @@ public class WebApp extends AbstractWebApp {
                 /*      */.shortDesc("Export integer prop")
                 //      */.longDesc("Export integer property") SHORT-CUT
                 .also()
-                .addProp("entityProp").asSinglelineText() // TODO once autocompletion API is implemented, properties of entity types should be added to masters asAutocompleter()
+                .addProp("entityProp").asAutocompleter() // TODO once autocompletion API is implemented, properties of entity types should be added to masters asAutocompleter()
                 /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 //      */.preAction SHORT-CUT
                 //      */.postActionSuccess SHORT-CUT
@@ -181,7 +182,7 @@ public class WebApp extends AbstractWebApp {
                 /*      */.shortDesc("Export boolean prop")
                 /*      */.longDesc("Export boolean property")
                 .also()
-                .addProp("compositeProp").asSinglelineText()
+                .addProp("compositeProp").asAutocompleter()
                 /*      */.withAction("#exportCompositeProp", TgExportFunctionalEntity.class)
                 /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
                 /*      */.postActionSuccess(new PostActionSuccess(""))

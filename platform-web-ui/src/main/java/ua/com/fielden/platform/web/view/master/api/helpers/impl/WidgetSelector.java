@@ -18,6 +18,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.IPhoneNumberConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ISinglelineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ISpinnerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ITimePickerConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.CheckboxWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.CheckboxConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DateTimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DecimalConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.EntityAutocompletionConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.MultilineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.SinglelineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.SpinnerConfig;
@@ -46,8 +48,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
-        // TODO Auto-generated method stub
-        return null;
+        widget = new EntityAutocompletionWidget(simpleMaster.entityType, propertyName);
+        return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, simpleMaster);
     }
 
     @Override
@@ -64,14 +66,12 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IHiddenTextConfig<T> asHiddenText() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("HiddenText widget is not yet supported.");
     }
 
     @Override
     public IFileConfig<T> asFile() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("File widget is not yet supported.");
     }
 
     @Override
@@ -82,14 +82,12 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDatePickerConfig<T> asDatePicker() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("DatePicker widget is not yet supported.");
     }
 
     @Override
     public ITimePickerConfig<T> asTimePicker() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("TimePicker widget is not yet supported.");
     }
 
     @Override
@@ -106,8 +104,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IMoneyConfig<T> asMoney() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("Money widget is not yet supported.");
     }
 
     @Override
@@ -118,20 +115,17 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IPhoneNumberConfig<T> asPhoneNumber() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("PhoneNumber widget is not yet supported.");
     }
 
     @Override
     public IEmailConfig<T> asEmail() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("Email widget is not yet supported.");
     }
 
     @Override
     public IColourConfig<T> asColour() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("ColourPicker widget is not yet supported.");
     }
 
     public AbstractWidget widget() {
