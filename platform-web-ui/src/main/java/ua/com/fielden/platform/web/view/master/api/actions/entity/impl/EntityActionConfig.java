@@ -18,31 +18,31 @@ import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractFunction
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDone;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMaster;
+import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IEntityActionConfig6<T>, IEntityActionConfig7<T> {
 
     private final AbstractAction action;
-    private final SimpleMaster<T> simpleMaster;
+    private final SimpleMasterBuilder<T> simpleMasterBuilder;
 
-    public EntityActionConfig(final AbstractAction action, final SimpleMaster<T> simpleMaster) {
+    public EntityActionConfig(final AbstractAction action, final SimpleMasterBuilder<T> simpleMaster) {
         this.action = action;
-        this.simpleMaster = simpleMaster;
+        this.simpleMasterBuilder = simpleMaster;
     }
 
     @Override
     public IEntityActionConfig0<T> addAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
-        return simpleMaster.addAction(name, functionalEntity);
+        return simpleMasterBuilder.addAction(name, functionalEntity);
     }
 
     @Override
     public IEntityActionConfig4<T> addAction(final MasterActions masterAction) {
-        return simpleMaster.addAction(masterAction);
+        return simpleMasterBuilder.addAction(masterAction);
     }
 
     @Override
-    public ILayoutConfigWithDone setLayoutFor(final Device device, final Orientation orientation, final String flexString) {
-        return simpleMaster.setLayoutFor(device, orientation, flexString);
+    public ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Orientation orientation, final String flexString) {
+        return simpleMasterBuilder.setLayoutFor(device, orientation, flexString);
     }
 
     @Override

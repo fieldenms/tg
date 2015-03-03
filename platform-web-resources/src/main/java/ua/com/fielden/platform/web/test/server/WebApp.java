@@ -21,7 +21,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterConfig;
+import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 import com.google.inject.Injector;
 
@@ -109,8 +109,7 @@ public class WebApp extends AbstractWebApp {
 
         final String mr = "'margin-right: 20px'";
         // Add entity masters.
-        final ISimpleMasterConfig sm = new SimpleMasterConfig();
-        final IRenderable masterRenderable = sm.forEntity(TgPersistentEntityWithProperties.class)
+        final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfig = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("integerProp").asSpinner()
                 /*      */.withAction("#exportIntegerProp", TgExportFunctionalEntity.class)
@@ -219,6 +218,9 @@ public class WebApp extends AbstractWebApp {
                         + "['horizontal', 'justified', [mr], [mr], [mr], [mr]]"
                         + "]".replaceAll("mr", mr))
                 .done();
+
+        final IRenderable masterRenderable = masterConfig.render();
+
         webApp.configApp().
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector)). // efs(EntityWithInteger.class).with("prop")
                 addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterRenderable, injector.getInstance(ICompanionObjectFinder.class), injector)).

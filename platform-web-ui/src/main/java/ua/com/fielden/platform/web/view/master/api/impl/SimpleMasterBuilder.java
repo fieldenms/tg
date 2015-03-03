@@ -16,6 +16,8 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
+import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
@@ -33,16 +35,18 @@ import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
-public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelector<T>, ILayoutConfig, ILayoutConfigWithDone {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T> {
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<EntityActionConfig<T>> entityActions = new ArrayList<>();
     private final FlexLayout layout = new FlexLayout();
 
-    public final Class<T> entityType;
+    public Class<T> entityType;
 
-    public SimpleMaster(final Class<T> entityType) {
-        this.entityType = entityType;
+    @Override
+    public IPropertySelector<T> forEntity(final Class<T> type) {
+        this.entityType = type;
+        return this;
     }
 
     @Override
@@ -84,24 +88,22 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
 
     @Override
     public IDividerConfig<T> addDivider() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("Divider is not yet supported.");
     }
 
     @Override
     public IHtmlTextConfig<T> addHtmlLabel(final String htmlText) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("HTML label is not yet supported.");
     }
 
     @Override
-    public ILayoutConfigWithDone setLayoutFor(final Device device, final Orientation orientation, final String flexString) {
+    public ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Orientation orientation, final String flexString) {
         layout.whenMedia(device, orientation).set(flexString);
         return this;
     }
 
     @Override
-    public IRenderable done() {
+    public ISimpleMasterConfig<T> done() {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
         importPaths.add("master/tg-entity-master");
@@ -137,13 +139,16 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
                 replace("<!--@actions-->", actionContainer.toString()).
                 replace("//@entityActions", entityActionsStr.toString()).
                 replace("//@propertyActions", propertyActionsStr.toString());
-        return new IRenderable() {
+
+        final IRenderable representation = new IRenderable() {
 
             @Override
             public DomElement render() {
                 return new InnerTextElement(entityMasterStr);
             }
         };
+
+        return new SimpleMasterConfig<T>(representation);
     }
 
     /**
@@ -161,8 +166,8 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
     }
 
     public static void main(final String[] args) {
-        final SimpleMasterConfig sm = new SimpleMasterConfig();
-        final IRenderable masterRenderable = sm.forEntity(TgPersistentEntityWithProperties.class)
+        final SimpleMasterBuilder<TgPersistentEntityWithProperties> sm = new SimpleMasterBuilder<>();
+        final ISimpleMasterConfig<TgPersistentEntityWithProperties> smConfig = sm.forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("stringProp").asSinglelineText()
                 .withAction("#validateDesc", TgPersistentEntityWithProperties.class)
@@ -217,6 +222,7 @@ public class SimpleMaster<T extends AbstractEntity<?>> implements IPropertySelec
                 .setLayoutFor(Device.TABLET, null, "[[]]")
                 .setLayoutFor(Device.TABLET, null, "[[]]")
                 .done();
-        System.out.println(masterRenderable.render().toString());
+        System.out.println(smConfig.render().toString());
     }
+
 }

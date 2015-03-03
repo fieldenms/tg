@@ -16,22 +16,21 @@ public class EntityAutocompletionConfig<T extends AbstractEntity<?>>
     public EntityAutocompletionConfig(final EntityAutocompletionWidget widget, final IPropertySelector<T> propSelector) {
         super(widget, propSelector);
     }
-
     @Override
     public IAutocompleterConfig1<T> withMatcher(final Class<IValueMatcher> matcherType) {
-        // TODO Auto-generated method stub
+        widget().setMatcherType(matcherType);
         return this;
     }
 
     @Override
     public IAutocompleterConfig2<T> byDesc() {
-        // TODO Auto-generated method stub
+        widget().setShouldSearchByDesc(true);
         return this;
     }
 
     @Override
     public IAutocompleterConfig2<T> byDescOnly() {
-        // TODO Auto-generated method stub
+        widget().setShouldSearchByDescOnly(true);
         return this;
     }
 

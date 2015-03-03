@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.helpers;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.ILayout;
 
 /**
@@ -8,6 +9,6 @@ import ua.com.fielden.platform.web.interfaces.ILayout;
  * @author TG Team
  *
  */
-public interface ILayoutConfig {
-    ILayoutConfigWithDone setLayoutFor(final ILayout.Device device, final ILayout.Orientation orientation, final String flexString);
+public interface ILayoutConfig<T extends AbstractEntity<?>> {
+    ILayoutConfigWithDone<T> setLayoutFor(final ILayout.Device device, final ILayout.Orientation orientation, final String flexString);
 }

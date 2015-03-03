@@ -1,14 +1,29 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
-import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 
-public class SimpleMasterConfig implements ISimpleMasterConfig {
+/**
+ *
+ * This is the default implementation for contract {@link ISimpleMasterConfig}.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
+public class SimpleMasterConfig<T extends AbstractEntity<?>> implements ISimpleMasterConfig<T> {
+
+    private final IRenderable renderableRepresentation;
+
+    // TODO More arguments to be added
+    public SimpleMasterConfig(final IRenderable renderableRepresentation) {
+        this.renderableRepresentation = renderableRepresentation;
+    }
 
     @Override
-    public <T extends AbstractEntity<?>> IPropertySelector<T> forEntity(final Class<T> type) {
-        return new SimpleMaster<>(type);
+    public IRenderable render() {
+        return renderableRepresentation;
     }
 
 }

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.helpers.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMaster;
+import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.widgets.IAutocompleterConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ICheckboxConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IColourConfig;
@@ -36,32 +36,32 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
 
 public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelector<T> {
 
-    public final SimpleMaster<T> simpleMaster;
+    public final SimpleMasterBuilder<T> smBuilder;
     public final String propertyName;
 
     private AbstractWidget widget;
 
-    public WidgetSelector(final SimpleMaster<T> simpleMaster, final String propertyName) {
-        this.simpleMaster = simpleMaster;
+    public WidgetSelector(final SimpleMasterBuilder<T> simpleMaster, final String propertyName) {
+        this.smBuilder = simpleMaster;
         this.propertyName = propertyName;
     }
 
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
-        widget = new EntityAutocompletionWidget(simpleMaster.entityType, propertyName);
-        return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, simpleMaster);
+        widget = new EntityAutocompletionWidget(smBuilder.entityType, propertyName);
+        return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder);
     }
 
     @Override
     public ISinglelineTextConfig<T> asSinglelineText() {
-        widget = new SinglelineTextWidget(simpleMaster.entityType, propertyName);
-        return new SinglelineTextConfig<>((SinglelineTextWidget) widget, simpleMaster);
+        widget = new SinglelineTextWidget(smBuilder.entityType, propertyName);
+        return new SinglelineTextConfig<>((SinglelineTextWidget) widget, smBuilder);
     }
 
     @Override
     public IMultilineTextConfig<T> asMultilineText() {
-        widget = new MultilineTextWidget(simpleMaster.entityType, propertyName);
-        return new MultilineTextConfig<>((MultilineTextWidget) widget, simpleMaster);
+        widget = new MultilineTextWidget(smBuilder.entityType, propertyName);
+        return new MultilineTextConfig<>((MultilineTextWidget) widget, smBuilder);
     }
 
     @Override
@@ -76,8 +76,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDateTimePickerConfig<T> asDateTimePicker() {
-        widget = new DateTimePickerWidget(simpleMaster.entityType, propertyName);
-        return new DateTimePickerConfig<>((DateTimePickerWidget) widget, simpleMaster);
+        widget = new DateTimePickerWidget(smBuilder.entityType, propertyName);
+        return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
     }
 
     @Override
@@ -92,14 +92,14 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDecimalConfig<T> asDecimal() {
-        widget = new DecimalWidget(simpleMaster.entityType, propertyName);
-        return new DecimalConfig<>((DecimalWidget) widget, simpleMaster);
+        widget = new DecimalWidget(smBuilder.entityType, propertyName);
+        return new DecimalConfig<>((DecimalWidget) widget, smBuilder);
     }
 
     @Override
     public ISpinnerConfig<T> asSpinner() {
-        widget = new SpinnerWidget(simpleMaster.entityType, propertyName);
-        return new SpinnerConfig<>((SpinnerWidget) widget, simpleMaster);
+        widget = new SpinnerWidget(smBuilder.entityType, propertyName);
+        return new SpinnerConfig<>((SpinnerWidget) widget, smBuilder);
     }
 
     @Override
@@ -109,8 +109,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public ICheckboxConfig<T> asCheckbox() {
-        widget = new CheckboxWidget(simpleMaster.entityType, propertyName);
-        return new CheckboxConfig<>((CheckboxWidget) widget, simpleMaster);
+        widget = new CheckboxWidget(smBuilder.entityType, propertyName);
+        return new CheckboxConfig<>((CheckboxWidget) widget, smBuilder);
     }
 
     @Override
