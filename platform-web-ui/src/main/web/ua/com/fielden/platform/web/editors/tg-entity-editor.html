@@ -235,6 +235,7 @@
                 */
                 matchedParts: function matchedParts(str) {
                     var parts = [];
+                    var text = str.toUpperCase();
                     // if all is matched then return a single value
                     if ("\\w*" == this.searchQuery) {
                         parts.push({
@@ -246,11 +247,12 @@
                         return parts;
                     }
 
+
                     // otherwise split 
                     var searchExp = new RegExp(this.searchQuery, 'g', 'i');
                     var match;
                     var startIndex = 0;
-                    while ((match = searchExp.exec(str)) !== null) {
+                    while ((match = searchExp.exec(text)) !== null) {
                         if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
                             var part = {
                                 part: str.substring(startIndex, match.index),
@@ -274,7 +276,7 @@
                     // check if there is an unmatched part at the end
                     if (startIndex < str.length) {
                         var part = {
-                            part: str.substring(startIndex, str.length),
+                            part: str.substring(startIndex, text.length),
                             matched: false
                         };
                         parts.push(part);
@@ -337,7 +339,7 @@
                         this.searchQuery = "";
                         this.isSearching = false;
                     } else {
-                        this.searchQuery = replaceAll('*', '\\w*', inputText);
+                        this.searchQuery = replaceAll('*', '\\w*', inputText.toUpperCase());
                     }
                     console.log('searchQuery as RegEx: ', this.searchQuery);
 
