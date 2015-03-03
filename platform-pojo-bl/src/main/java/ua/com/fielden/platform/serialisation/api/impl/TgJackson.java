@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -41,7 +40,6 @@ import ua.com.fielden.platform.serialisation.jackson.serialisers.PageSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -102,13 +100,10 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, true).register();
         for (final Class<?> type : provider.classes()) {
             if (AbstractEntity.class.isAssignableFrom(type)) {
-                final EntityType entityTypeInfo = new EntitySerialiser<AbstractEntity<?>>((Class<AbstractEntity<?>>) type, this.module, this, this.factory).register();
-                entityTypeInfoGetter.register(entityTypeInfo);
+                registerNewEntityType((Class<AbstractEntity<?>>) type);
             }
         }
     }
-
-    private final Set<String> registeredNewTypes = new HashSet<>();
 
     /**
      * Registers the new type and returns the [number; EntityType].
@@ -116,18 +111,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @param newType
      * @return
      */
-    public Pair<Long, EntityType> registerNewType(final Class<AbstractEntity<?>> newType) {
-        if (!registeredNewTypes.contains(newType.getName())) {
-            final EntityType entityTypeInfo = new EntitySerialiser<AbstractEntity<?>>(newType, this.module, this, this.factory).register();
-            entityTypeInfoGetter.register(entityTypeInfo);
-            System.err.println("Registering new type with number [" + entityTypeInfo.get_number() + "] = " + entityTypeInfo);
-            registeredNewTypes.add(newType.getName());
-            return new Pair<>(entityTypeInfo.get_number(), entityTypeInfo);
-        } else {
-            System.err.println("Is trying to register already registered new type [" + newType + "].");
-            throw new IllegalStateException("Is trying to register already registered new type [" + newType + "].");
-            // return new Pair<>(entityTypeInfo.get_number(), entityTypeInfo);
-        }
+    public EntityType registerNewEntityType(final Class<AbstractEntity<?>> newType) {
+        final EntityType entityTypeInfo = new EntitySerialiser<AbstractEntity<?>>(newType, this.module, this, this.factory).register();
+        return entityTypeInfoGetter.register(entityTypeInfo);
     }
 
     //

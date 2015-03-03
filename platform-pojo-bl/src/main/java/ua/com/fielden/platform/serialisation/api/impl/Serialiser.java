@@ -26,6 +26,7 @@ public class Serialiser implements ISerialiser {
         this.factory = factory;
         createTgKryo(factory, provider); // the serialiser engine will be set automatically
         this.tgJackson = new TgJackson(factory, provider);
+        System.err.println("Serialiser INIT done");
     }
 
     protected ISerialiserEngine createTgKryo(final EntityFactory factory, final ISerialisationClassProvider provider) {

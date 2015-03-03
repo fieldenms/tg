@@ -15,6 +15,7 @@
     <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
     <link rel="import" href="/resources/centre/tg-entity-centre.html">
     <link rel="import" href="/resources/serialisation/tg-serialiser.html">
+    <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
     <style>
         body {
@@ -38,8 +39,10 @@
             <div>
                 <tg-entity-centre id="centre"></tg-entity-centre>
             </div>
-            <core-ajax id="config_retriever" url="/users/SU/centre/{{centreName}}" handleas="json" on-core-response="{{onCritLoadResponse}}" on-core-error="{{onCritLoadError}}" auto></core-ajax>
+            <core-ajax id="config_retriever" url="/users/SU/centre/{{centreName}}" handleas="json" on-core-response="{{onCritLoadResponse}}" on-core-error="{{onCritLoadError}}"></core-ajax>
         </core-header-panel>
+
+        <paper-button id="runner" raised roll="button" on-tap="{{run}}">Run</paper-button>
     </template>
 
     <script>
@@ -57,9 +60,11 @@
             centre.onCritLoadError = function(e, detail, sender) {
                 console.log("error loading centre");
             };
+            centre.run = function() {
+                centre.$.config_retriever.go();
+            };
             
             document.addEventListener('polymer-ready', function () {
-                var centre = document.querySelector('#centre');
                 //TODO finish example
             });
 

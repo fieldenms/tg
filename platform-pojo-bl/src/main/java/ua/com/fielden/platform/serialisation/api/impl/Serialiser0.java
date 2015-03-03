@@ -20,6 +20,7 @@ public class Serialiser0 extends Serialiser implements ISerialiser0 {
     @Deprecated
     public Serialiser0(final EntityFactory factory, final ISerialisationClassProvider provider) {
         super(factory, provider);
+        System.err.println("Serialiser0 INIT done");
     }
 
     @Override

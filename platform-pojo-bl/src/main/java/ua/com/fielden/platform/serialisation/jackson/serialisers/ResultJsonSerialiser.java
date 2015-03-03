@@ -6,10 +6,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
-import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -48,8 +46,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                 // TODO potentially extend support for generated types
                 // TODO potentially extend support for generated types
                 final Class<AbstractEntity<?>> newType = (Class<AbstractEntity<?>>) type;
-                final Pair<Long, EntityType> numberAndType = tgJackson.registerNewType(newType);
-                generator.writeObject(numberAndType.getValue());
+                generator.writeObject(tgJackson.registerNewEntityType(newType));
             } else {
                 generator.writeObject(type.getName());
             }
