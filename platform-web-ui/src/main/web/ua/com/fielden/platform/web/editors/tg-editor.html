@@ -196,7 +196,11 @@
                 // console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(newValue)) {
-                        this.editingValue = this.convertToString(newValue.get(this.propertyName));
+                        var newEditingValue = this.convertToString(newValue.get(this.propertyName));
+                        if (newEditingValue === this.editingValue && this.refreshCycleStarted) {
+                            this.refreshCycleStarted = false;
+                        }
+                        this.editingValue = newEditingValue;
                     } else {
                         console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
                     }
@@ -227,6 +231,7 @@
 
                 if (this.refreshCycleStarted) {
                     this.refreshCycleStarted = false;
+                    console.log("acceptedValueChanged should become false. refreshCycleStarted ==", this.refreshCycleStarted);
                 } else {
                     this.entity.set(this.propertyName, newValue);
                     this.onAcceptedValueChanged();
