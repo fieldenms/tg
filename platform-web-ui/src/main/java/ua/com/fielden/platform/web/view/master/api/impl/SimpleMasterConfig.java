@@ -21,8 +21,6 @@ public class SimpleMasterConfig<T extends AbstractEntity<?>> implements ISimpleM
     @SuppressWarnings("rawtypes")
     private final Map<String, Class<IValueMatcher>> valueMatcherForProps;
 
-
-    // TODO More arguments to be added
     @SuppressWarnings("rawtypes")
     public SimpleMasterConfig(
             final IRenderable renderableRepresentation,
@@ -38,8 +36,8 @@ public class SimpleMasterConfig<T extends AbstractEntity<?>> implements ISimpleM
 
     @Override
     @SuppressWarnings("rawtypes")
-    public Map<String, Class<IValueMatcher>> propValueMatchers() {
-        return valueMatcherForProps;
+    public Class<IValueMatcher> matcherTypeFor(final String propName) {
+        return valueMatcherForProps.get(propName);
     }
 
 }

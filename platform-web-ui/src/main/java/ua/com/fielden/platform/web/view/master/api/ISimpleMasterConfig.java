@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.view.master.api;
 
-import java.util.Map;
-
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -21,11 +19,11 @@ public interface ISimpleMasterConfig<T extends AbstractEntity<?>> {
      */
     IRenderable render();
 
-    @SuppressWarnings("rawtypes")
     /**
-     * Returns a map between properties and custom value matchers.
+     * Returns custom matcher type for the specified property.
      *
      * @return
      */
-    Map<String, Class<IValueMatcher>> propValueMatchers();
+    @SuppressWarnings("rawtypes")
+    Class<IValueMatcher> matcherTypeFor(final String propName);
 }

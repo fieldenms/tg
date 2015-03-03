@@ -39,7 +39,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     public EntityMaster(
             final Class<T> entityType,
             final Class<? extends IEntityProducer<T>> entityProducerType,
-                    final ISimpleMasterConfig<T> smConfig,
+            final ISimpleMasterConfig<T> smConfig,
             final ICompanionObjectFinder coFinder,
             final Injector injector) {
         this.entityType = entityType;
@@ -81,14 +81,20 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @param injector
      * @return
      */
+    @SuppressWarnings("unchecked")
     public IValueMatcher<AbstractEntity<?>> createValueMatcher(final String propertyName) {
-        // TODO: Currently only the default value matcher is used
-        //       However, in future the value matcher should be obtained from property editor configuration
+        final IValueMatcher<AbstractEntity<?>> matcher;
 
-        final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
-        final IEntityDao<?> co = coFinder.find((Class<AbstractEntity<?>>) propertyType);
+        @SuppressWarnings("rawtypes")
+        final Class<IValueMatcher> matcherType = smConfig.matcherTypeFor(propertyName);
+        if (matcherType != null) {
+            matcher = injector.getInstance(matcherType);
+        } else {
+            final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
+            final IEntityDao<?> co = coFinder.find((Class<AbstractEntity<?>>) propertyType);
 
-        final IValueMatcher<AbstractEntity<?>> matcher = (IValueMatcher<AbstractEntity<?>>) EntityQueryValueMatcher.matchByKey(co);
+            matcher = (IValueMatcher<AbstractEntity<?>>) EntityQueryValueMatcher.matchByKey(co);
+        }
         return matcher;
     }
 
