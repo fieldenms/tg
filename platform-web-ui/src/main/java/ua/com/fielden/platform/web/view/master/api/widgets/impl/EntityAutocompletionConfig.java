@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.impl;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherByDesc;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
@@ -36,14 +37,26 @@ public class EntityAutocompletionConfig<T extends AbstractEntity<?>>
 
     @Override
     public IAutocompleterConfig2<T> byDesc() {
+        assertMatcherForDescSearch();
         widget().setShouldSearchByDesc(true);
         return this;
     }
 
     @Override
     public IAutocompleterConfig2<T> byDescOnly() {
+        assertMatcherForDescSearch();
         widget().setShouldSearchByDescOnly(true);
         return this;
+    }
+
+    /**
+     * Ensures that only appropriate matchers are used for search by desc.
+     * This assertion serves as an early runtime check for validity of UI setup.
+     */
+    private void assertMatcherForDescSearch() {
+        if (widget().getMatcherType() == null || !IValueMatcherByDesc.class.isAssignableFrom(widget().getMatcherType())) {
+            throw new IllegalStateException("Search by description is permitted only if an appropriate value matcher is provided.");
+        }
     }
 
     @Override
