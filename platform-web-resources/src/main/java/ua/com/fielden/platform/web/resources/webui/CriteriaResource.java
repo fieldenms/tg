@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -18,49 +20,54 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
- * Represents web server resource that retrievers the entity centre configuration and returns it to the client..
+ * The web resource for criteria serves as a back-end mechanism of criteria retrieval. It provides a base implementation for handling the following methods:
+ * <ul>
+ * <li>retrieve entity -- GET request.
+ * </ul>
  *
  * @author TG Team
  *
  */
-public class CentreResource extends ServerResource {
+public class CriteriaResource extends ServerResource {
+    private final Logger logger = Logger.getLogger(getClass());
+
+    private final RestServerUtil restUtil;
 
     private final EntityCentre centre;
     private final IGlobalDomainTreeManager gdtm;
     private final ICriteriaGenerator critGenerator;
-    private final RestServerUtil restUtil;
 
-    /**
-     * Creates {@link CentreResource} and initialises it with {@link EntityCentre} instance.
-     *
-     * @param centre
-     * @param context
-     * @param request
-     * @param response
-     * @param gdtm
-     */
-    public CentreResource(//
-    final EntityCentre centre,//
-            final Context context, //
-            final Request request, //
-            final Response response, //
-            final IGlobalDomainTreeManager gdtm,//
-            final ICriteriaGenerator critGenerator, //
-            final RestServerUtil restUtil) {
+    public CriteriaResource(
+            final RestServerUtil restUtil,
+            final EntityCentre centre,
+            final IGlobalDomainTreeManager gdtm,
+            final ICriteriaGenerator critGenerator,
+
+            final Context context,
+            final Request request,
+            final Response response) {
         init(context, request, response);
         this.centre = centre;
         this.gdtm = gdtm;
         this.critGenerator = critGenerator;
+
         this.restUtil = restUtil;
     }
 
+    /**
+     * Handles GET requests resulting from tg-entity-master <code>retrieve()</code> method (new or persisted entity).
+     */
+    @Get
     @Override
-    protected Representation get() throws ResourceException {
+    public Representation get() throws ResourceException {
         gdtm.initEntityCentreManager(centre.getMenuItemType(), null);
         final ICentreDomainTreeManagerAndEnhancer cdtmae = gdtm.getEntityCentreManager(centre.getMenuItemType(), null);
         final EntityType entityTypeAnnotation = centre.getMenuItemType().getAnnotation(EntityType.class);
         if (entityTypeAnnotation != null) {
             final Class<AbstractEntity<?>> entityType = (Class<AbstractEntity<?>>) entityTypeAnnotation.value();
+
+            //    TODO     entityProducer = new DefaultEntityProducer<AbstractEntity<?>>(entityFactory, criteriaType);
+
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> criteria = critGenerator.generateCentreQueryCriteria(entityType, cdtmae);
             return restUtil.singleJSONRepresentation(criteria);
         }

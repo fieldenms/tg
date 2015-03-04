@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
 <link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-from-right.html">
 <link rel="import" href="/tg-reflector">
+<link rel="import" href="/resources/centre/tg-selection-criteria.html">
 
 <polymer-element name="tg-entity-centre">
     <template>
@@ -15,7 +16,8 @@
             <paper-tab>Details</paper-tab>
         </paper-tabs>
         <core-animated-pages selected="{{selected}}" transitions="slide-from-right">
-            <div>Selection criteria</div>
+            <tg-selection-criteria id="selection_criteria" user="SU" mitype="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties"></tg-selection-criteria>
+
             <div>Details view</div>
         </core-animated-pages>
     </template>

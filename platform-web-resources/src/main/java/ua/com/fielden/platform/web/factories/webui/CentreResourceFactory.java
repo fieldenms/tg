@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.factories.webui;
 
-import java.util.Map;
-
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -14,8 +12,7 @@ import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.app.WebApp;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreResource;
 
@@ -28,11 +25,11 @@ import com.google.inject.Injector;
  *
  */
 public class CentreResourceFactory extends Restlet {
-    private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> centres;
     private final Injector injector;
     private final ISerialiser serialiser;
     private final ICriteriaGenerator critGenerator;
     private final RestServerUtil restUtil;
+    private final WebApp webApp;
 
     /**
      * Creates the {@link CentreResourceFactory} instance with map of available entity centres and {@link GlobalDomainTreeManager} instance (will be removed or enhanced later.)
@@ -40,8 +37,8 @@ public class CentreResourceFactory extends Restlet {
      * @param centres
      * @param injector
      */
-    public CentreResourceFactory(final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> centres, final Injector injector) {
-        this.centres = centres;
+    public CentreResourceFactory(final WebApp webApp, final Injector injector) {
+        this.webApp = webApp;
         this.injector = injector;
         this.serialiser = injector.getInstance(ISerialiser.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
@@ -60,7 +57,7 @@ public class CentreResourceFactory extends Restlet {
         final IGlobalDomainTreeManager gdtm = injector.getInstance(IGlobalDomainTreeManager.class);
 
         if (Method.GET.equals(request.getMethod())) {
-            new CentreResource(centres.get(ClassesRetriever.findClass(request.getAttributes().get("centreName").toString())), getContext(), request, response, gdtm, critGenerator, restUtil, this.serialiser).handle();
+            new CentreResource(webApp.getCentres().get(ClassesRetriever.findClass(request.getAttributes().get("centreName").toString())), getContext(), request, response, gdtm, critGenerator, restUtil).handle();
         }
     }
 }

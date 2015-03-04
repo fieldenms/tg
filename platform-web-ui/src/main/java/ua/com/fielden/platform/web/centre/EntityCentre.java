@@ -43,5 +43,4 @@ public class EntityCentre {
     public String getName() {
         return name;
     }
-
 }

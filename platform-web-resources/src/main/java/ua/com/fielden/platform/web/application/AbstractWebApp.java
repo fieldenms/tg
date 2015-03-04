@@ -24,6 +24,7 @@ import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.factories.WebAppConfigResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
@@ -174,7 +175,8 @@ public abstract class AbstractWebApp extends Application {
      */
     private void attachCentreResources(final Router router, final WebApp webApp) {
         logger.info("\t\tCentre resources attaching...");
-        router.attach("/users/{username}/centre/{centreName}", new CentreResourceFactory(webApp.getCentres(), injector));
+        router.attach("/users/{username}/criteria/{mitype}", new CriteriaResourceFactory(webApp, injector));
+        router.attach("/users/{username}/centre/{centreName}", new CentreResourceFactory(webApp, injector));
     }
 
     /**

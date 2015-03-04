@@ -61,7 +61,10 @@
                 console.log("error loading centre");
             };
             centre.run = function() {
-                centre.$.config_retriever.go();
+                // centre.$.config_retriever.go();
+                console.log("centre.$.centre =", centre.$.centre);
+                console.log("centre.$.centre.$ =", centre.$.centre.$);
+                centre.$.centre.$.selection_criteria.retrieve();
             };
             
             document.addEventListener('polymer-ready', function () {
