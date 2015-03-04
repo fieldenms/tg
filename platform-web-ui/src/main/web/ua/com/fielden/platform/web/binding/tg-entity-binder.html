@@ -2,7 +2,7 @@
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-entity-binder" attributes="user onRetrieved onValidated onPreRetrieved">
+<polymer-element name="tg-entity-binder" attributes="user onRetrieved onValidated onPreRetrieved currentState">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -14,7 +14,24 @@
         (function () { // _bindingValue(currBindingEntity, 'stringProp')
             Polymer("tg-entity-binder", {
                 publish: {
+                    /**
+                     * The state for the entity master.
+                     *
+                     * The master can be only in two states: EDIT and VIEW. The state EDIT 
+                     * allows user to edit properties and use some actions (as it was defined in Java API with 'enabledWhen').
+                     *
+                    * The state VIEW allows user to review the entity properties and do some actions (as it was defined in 
+                     * Java API with 'enabledWhen').
+                    * 
+                     * The initial state can be VIEW or EDIT.
+                    */
+                    currentState: {
+                        value: null,
+                        reflect: true
+                    }
                 },
+
+                refreshCycleMode: null,
 
                 currEntity: null, // represents the current entity
                 currBindingEntity: {}, /*{ dateProp: 10000, stringProp: "" }*/ // represents the view of current entity for binding

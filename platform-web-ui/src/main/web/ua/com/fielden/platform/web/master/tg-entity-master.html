@@ -1,13 +1,11 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
-<link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/resources/validation/tg-entity-validator.html">
-<link rel="import" href="/tg-reflector">
+<link rel="import" href="/resources/binding/tg-entity-binder.html">
 
-<polymer-element name="tg-entity-master" attributes="user entitytype entityid onRetrieved onValidated onSaved onPreRetrieved onSavedComplete currentState">
+<polymer-element name="tg-entity-master" extends="tg-entity-binder" attributes="entitytype entityid onSaved onSavedComplete currentState">
     <template>
-        <tg-reflector id="reflector"></tg-reflector>
-        <tg-serialiser id="serialiser"></tg-serialiser>
+        <shadow></shadow>
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
 
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax>
@@ -16,22 +14,6 @@
     </template>
     <script>
         (function () { // _bindingValue(currBindingEntity, 'stringProp')
-            var UnsupportedConversionException = function (value) {
-                Object.call(this);
-
-                this.message = "Unsupported conversion exception: the conversion for value [" + value + "] is unsupported at this stage. Value typeof === " + (typeof value) + ".";
-            };
-            UnsupportedConversionException.prototype = Object.create(Object.prototype);
-            UnsupportedConversionException.prototype.constructor = UnsupportedConversionException;
-
-            /**
-             * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
-             *
-             */
-            UnsupportedConversionException.prototype.toString = function () {
-                return this.message;
-            }
-
             var SimultaneousSaveException = function () {
                 Object.call(this);
 
@@ -50,30 +32,8 @@
 
             Polymer("tg-entity-master", {
                 publish: {
-                    /**
-                     * The state for the entity master.
-                     *
-                     * The master can be only in two states: EDIT and VIEW. The state EDIT 
-                     * allows user to edit properties and use some actions (as it was defined in Java API with 'enabledWhen').
-                     *
-                    * The state VIEW allows user to review the entity properties and do some actions (as it was defined in 
-                     * Java API with 'enabledWhen').
-                    * 
-                     * The initial state can be VIEW or EDIT.
-                    */
-                    currentState: {
-                        value: null,
-                        reflect: true
-                    }
-
                     // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
                 },
-
-                refreshCycleMode: null,
-
-                currEntity: null, // represents the current entity
-                currBindingEntity: {}, /*{ dateProp: 10000, stringProp: "" }*/ // represents the view of current entity for binding
-                originalBindingEntity: null, // represents the view of original entity for binding.
 
                 /**
                  * The map of actions by their name ids.
@@ -89,6 +49,7 @@
                  * Initialisation block (after 'ready'). It is designated to use for inner object / arrays initialisation.
                  */
                 created: function() {
+                    this.super();
                     this.actions = {};
                     // TODO ...
                     this.actions['NEW'] = {};
@@ -99,30 +60,18 @@
                  */
                 ready: function () {
                     var self = this;
-                    console.log("parent ready");
-
-                    console.log("self.currBindingEntity after the polymer became ready: ", self.currBindingEntity);
+                    self.super();
+                    console.log("child ready");
 
                     // IMPORTANT: it is crucial to bind the functions, which will potentially be passed
                     //            into other contexts (for e.g. onValidatedDefault will be used in tg-entity-validator),
                     //            with its original context!
-                    self.retrieve = self.retrieve.bind(self);
                     self.save = self.save.bind(self);
-                    self.validate = self.validate.bind(self);
-                    self.doNotValidate = self.doNotValidate.bind(self);
                     self.edit = self.edit.bind(self);
                     self.view = self.view.bind(self);
-                    self.onValidatedDefault = self.onValidatedDefault.bind(self);
-                    self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
                     self.onSavedDefault = self.onSavedDefault.bind(self);
                     self._title = self._title.bind(self);
                     self._desc = self._desc.bind(self);
-                    self.startRefreshCycleModeForEditors = self.startRefreshCycleModeForEditors.bind(self);
-                    self.resetRefreshCycleModeForEditors = self.resetRefreshCycleModeForEditors.bind(self);
-
-                    self.$.ajaxRetriever.addEventListener('core-response', function (e) {
-                        self.onRetrievedDefault(e);
-                    });
 
                     self.$.ajaxSaver.addEventListener('core-response', function (e) {
                         if (e.detail.xhr.status === 200) {
@@ -196,6 +145,20 @@
                     };
                 },
 
+                /**
+                 * The core-ajax component for entity retrieval. 
+                 */
+                ajaxRetriever: function() {
+                    return this.$.ajaxRetriever;
+                },
+
+                /**
+                 * The tg-entity-validator component for entity validation. 
+                 */
+                validator: function() {
+                    return this.$.validator;
+                },
+
                 /** 
                  * The function for binding property title. The argument 'entity' will be changed in future. Polymer will listen to that change.
                  */
@@ -232,35 +195,9 @@
 
                 //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
                 /**
-                 * Starts the process of entity retrieval (based on current entityid).
-                 */
-                retrieve: function () {
-                    this.$.ajaxRetriever.go();
-                    this.startRefreshCycleModeForEditors();
-                },
-
-                /**
                  * Default implementation for onSavedComplete callback.
                  */
                 onSavedComplete: function () {},
-
-                /**
-                 * Default implementation for onPreRetrieved callback.
-                 */
-                onPreRetrieved: function (entity) {
-                    return entity;
-                },
-
-                /**
-                 * Default implementation for onRetrieved callback.
-                 */
-                onRetrievedDefault: function (e) {
-                    var entity = this.onPreRetrieved(this.$.serialiser.deserialise(e.detail.response).instance);
-                    // this.startRefreshCycleModeForEditors();
-                    var newBindingEntity = this.onEntityReceived(entity, true);
-                    // custom external action
-                    this.onRetrieved(entity, newBindingEntity);
-                },
 
                 /**
                  * Changes the state to 'EDIT'.
@@ -282,81 +219,6 @@
                     } else {
                         this.currentState = 'VIEW';
                     }
-                },
-
-                //////////////////////////////////////// VALIDATION ////////////////////////////////////////
-                /**
-                 * Starts the process of entity validation (based on currBindingEntity).
-                 */
-                validate: function () {
-                    console.log("validate");
-                    var self = this;
-                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
-                    // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
-                    // (if the entity was not modified -- validate(holder) will start the error recovery process)
-
-                    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
-                    self.$.validator.abortValidationIfAny();
-                    self.$.validator.validate(self._reset(holder));
-                },
-
-                /**
-                 * The function that explicitly says that validation is skipped.
-                 */
-                doNotValidate: function () {
-                    console.log("do not validate");
-                },                
-
-                /**
-                 * Default implementation for onValidated callback.
-                 */
-                onValidatedDefault: function (validatedEntity) {
-                    var wasStale = validatedEntity.version > this.currEntity.version;
-                    var newBindingEntity = this.onEntityReceived(validatedEntity, wasStale);
-                    // custom external action
-                    this.onValidated(validatedEntity, newBindingEntity);
-                },
-
-                _reset: function (modifiedPropertiesHolder) {
-                    delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
-                    return modifiedPropertiesHolder;
-                },
-
-                /**
-                 * Determines whether the specified object represents the entity.
-                 */
-                _isEntity: function (obj) {
-                    return obj !== null && (obj instanceof this.$.reflector.getEntityType());
-                },
-
-                extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
-                    var modPropHolder = {
-                        "@modified": false
-                    };
-                    var self = this;
-                    if (self._isEntity(bindingEntity)) {
-                        modPropHolder["id"] = bindingEntity["id"];
-                        modPropHolder["version"] = bindingEntity["version"];
-
-                        bindingEntity.traverseProperties(function (propertyName) {
-                            var value = bindingEntity.get(propertyName);
-                            var originalValue = originalBindingEntity.get(propertyName);
-                            if (!self.$.reflector.equalsEx(value, originalValue)) {
-                                modPropHolder[propertyName] = {
-                                    "val": value,
-                                    "origVal": originalValue
-                                };
-                                modPropHolder["@modified"] = true;
-                            } else {
-                                modPropHolder[propertyName] = {
-                                    "origVal": originalValue
-                                };
-                            }
-                        });
-                    }
-
-                    console.log("       bindingEntity + originalBindingEntity + modPropHolder", bindingEntity, originalBindingEntity, modPropHolder);
-                    return modPropHolder;
                 },
 
                 //////////////////////////////////////// SAVING ////////////////////////////////////////
@@ -439,112 +301,9 @@
                     this.onSaved(potentiallySavedEntity, newBindingEntity);
                 },
 
-                _idConvert: function (id) {
-                    return id === null ? "new" : ("" + id);
-                },
-
-                refreshCycleModeChanged: function (oldValue, newValue) {                    
-                    console.log("refreshCycleModeChanged", oldValue, newValue);
-                },
-
-                /**
-                 * Initialises a special state for the editors called "refresh cycle". In this state
-                 * the editors promotes their values through the chain: entity => editingValue (commit) => commValue => acceptedValue.
-                 * 
-                 * If the state is simple -- the value promotes through the next chain: editingValue (commit) => commValue => acceptedValue =>
-                 * => entity prop value (validate) => new entity prop.
-                 */
-                startRefreshCycleModeForEditors: function() {
-                    console.log("startRefreshCycleModeForEditors: prev refreshCycleMode =", this.refreshCycleMode);
-                    this.refreshCycleMode = "ACTIVATED";
-                    console.log("startRefreshCycleModeForEditors: refreshCycleMode =", this.refreshCycleMode);
-                },
-
-                resetRefreshCycleModeForEditors: function() {
-                    console.log("resetRefreshCycleModeForEditors: prev refreshCycleMode =", this.refreshCycleMode);
-                    this.refreshCycleMode = null;
-                    console.log("resetRefreshCycleModeForEditors: refreshCycleMode =", this.refreshCycleMode);
-                },
-
                 //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
-                /**
-                 * Provides default action after fresh entity has been received. Rebinds the entity.
-                 */
-                onEntityReceived: function (entity, updateOriginalBindingEntity) {
-                    var self = this;
-                    // After the entity has received, potentially its id has been updated:
-                    if (self._idConvert(entity.id) !== self.entityid) {
-                        self.entityid = self._idConvert(entity.id);
-                    }
-                    // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
-                    var previousModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
-                    self._reset(previousModifiedPropertiesHolder);
-                    // New entity should be promoted to the local cache:
-                    self.currEntity = entity;
-                    // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
-                    self.currBindingEntity = self._extractBindingView(self.currEntity, previousModifiedPropertiesHolder);
-                    this.resetRefreshCycleModeForEditors();
-
-                    if (updateOriginalBindingEntity) {
-                        self.originalBindingEntity = self._extractOriginalBindingView(self.currEntity);
-                    }
-
-                    return self.currBindingEntity;
-                },
-
-                _extractBindingView: function (entity, previousModifiedPropertiesHolder) {
-                    var self = this;
-                    bindingView = self.$.reflector.newEntity(entity.type().fullClassName());
-                    bindingView["id"] = entity["id"];
-                    bindingView["version"] = entity["version"];
-
-                    entity.traverseProperties(function (propertyName) {
-                        if (self.$.reflector.isError(entity.prop(propertyName).validationResult())) {
-                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
-                            bindingView["@" + propertyName + "_result"] = entity.prop(propertyName).validationResult();
-                        } else {
-                            bindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
-
-                            var value = entity.get(propertyName);
-                            if (self._isEntity(value)) {
-                                bindingView["@" + propertyName + "_desc"] = self.$.reflector.convert(value.get("desc"));
-                            }
-                        }
-                    });
-
-                    console.log("       entity + bindingView", entity, bindingView);
-                    return bindingView;
-                },
-
-                _extractOriginalBindingView: function (entity) {
-                    var self = this;
-                    var Entity = self.$.reflector.getEntityType();
-                    var bindingView = new Entity();
-
-                    bindingView["_type"] = entity["_type"];
-                    bindingView["id"] = entity["id"];
-                    bindingView["version"] = entity["version"];
-
-                    entity.traverseProperties(function (propertyName) {
-                        bindingView[propertyName] = self._getOriginalValue(entity, propertyName);
-                    });
-
-                    console.log("       entity + originalBindingView", entity, bindingView);
-                    return bindingView;
-                },
-
-                _getUnsupportedConversionExceptionType: function () {
-                    return UnsupportedConversionException;
-                },
-
                 _getSimultaneousSaveExceptionType: function () {
                     return SimultaneousSaveException;
-                },
-
-                _getOriginalValue: function (entity, propName) {
-                    var value = entity.get(propName); // automatic check whether the property is fetched
-                    var instanceMetaProperty = entity.constructor.prototype.prop.call(entity, propName);
-                    return /*entity.prop(propName)*/ instanceMetaProperty.isChangedFromOriginal() ? null : this.$.reflector.convert(value);
                 }
             });
         })();
