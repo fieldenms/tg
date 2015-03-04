@@ -396,6 +396,22 @@
                 return this.message;
             }
 
+            var UnsupportedConversionException = function (value) {
+                Object.call(this);
+
+                this.message = "Unsupported conversion exception: the conversion for value [" + value + "] is unsupported at this stage. Value typeof === " + (typeof value) + ".";
+            };
+            UnsupportedConversionException.prototype = Object.create(Object.prototype);
+            UnsupportedConversionException.prototype.constructor = UnsupportedConversionException;
+
+            /**
+             * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+             *
+             */
+            UnsupportedConversionException.prototype.toString = function () {
+                return this.message;
+            }
+
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
             var providePrototypes = function(typeTable) {
                     for (var key in typeTable) {
