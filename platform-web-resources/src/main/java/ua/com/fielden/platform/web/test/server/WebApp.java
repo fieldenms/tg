@@ -223,10 +223,11 @@ public class WebApp extends AbstractWebApp {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, null, "['horizontal', 'justified', [mr], [mr], [mr], [mr], [mr], [mr], [mr], [mr]]".replaceAll("mr", mr))
-                .setLayoutFor(Device.TABLET, null, "['vertical', "
-                        + "['horizontal', 'justified', [mr], [mr], [mr], [mr]],"
-                        + "['horizontal', 'justified', [mr], [mr], [mr], [mr]]"
+                .setLayoutFor(Device.DESKTOP, null, "['vertical', 'justified', 'margin:20px', [[mr], [mr], [mr], [mr], [mr]], [[mr], [mr], [mr], [mr]]]".replaceAll("mr", mr))
+                .setLayoutFor(Device.TABLET, null, "['vertical', 'margin:20px',"
+                        + "['horizontal', 'justified', [mr], [mr], [mr]],"
+                        + "['horizontal', 'justified', [mr], [mr], [mr]],"
+                        + "['horizontal', 'justified', [mr], [mr], [mr]]"
                         + "]".replaceAll("mr", mr))
                 .done();
 
