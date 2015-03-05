@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.util.Map;
-
-import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -28,7 +25,6 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class EntityValidationResource<T extends AbstractEntity<?>> extends ServerResource {
     private final EntityResourceUtils<T> utils;
     private final RestServerUtil restUtil;
-    private final Logger logger = Logger.getLogger(getClass());
 
     public EntityValidationResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
         init(context, request, response);
@@ -43,15 +39,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final Map<String, Object> modifiedPropertiesHolder = utils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-
-        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
-
-        // Initialises the "validation prototype" entity, which modification will be made upon:
-        final T validationPrototype = utils.createEntityForRetrieval(id);
-        final T applied = utils.apply(modifiedPropertiesHolder, validationPrototype);
+        final T applied = utils.constructEntity(envelope, restUtil).getKey();
         return restUtil.singleJSONRepresentation(applied);
     }
-
 }

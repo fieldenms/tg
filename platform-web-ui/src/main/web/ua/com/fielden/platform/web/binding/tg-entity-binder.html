@@ -56,6 +56,7 @@
                     self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
                     self.startRefreshCycleModeForEditors = self.startRefreshCycleModeForEditors.bind(self);
                     self.resetRefreshCycleModeForEditors = self.resetRefreshCycleModeForEditors.bind(self);
+                    self.createModifiedPropertiesHolder = self.createModifiedPropertiesHolder.bind(self);
 
                     self.ajaxRetriever().addEventListener('core-response', function (e) {
                         self.onRetrievedDefault(e);
@@ -176,6 +177,12 @@
 
                     console.log("       bindingEntity + originalBindingEntity + modPropHolder", bindingEntity, originalBindingEntity, modPropHolder);
                     return modPropHolder;
+                },
+
+                createModifiedPropertiesHolder: function() {
+                    var self = this;
+                    var mph = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    return self._reset(mph);
                 },
 
                 _idConvert: function (id) {

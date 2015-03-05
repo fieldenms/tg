@@ -10,6 +10,7 @@ import org.restlet.data.Method;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
@@ -32,6 +33,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
 
     private final Injector injector;
     private final RestServerUtil restUtil;
+    private final EntityFactory factory;
     private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> masters;
 
     /**
@@ -46,6 +48,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
         this.masters.putAll(masters);
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
+        this.factory = injector.getInstance(EntityFactory.class);
     }
 
     @Override
@@ -64,7 +67,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
 
             final IValueMatcherWithContext<? extends AbstractEntity<?>, AbstractEntity<?>> valueMatcher = master.createValueMatcher(propertyName);
 
-            final EntityAutocompletionResource resource = new EntityAutocompletionResource(entityType, propertyName, valueMatcher, injector.getInstance(ICompanionObjectFinder.class), restUtil, getContext(), request, response);
+            final EntityAutocompletionResource resource = new EntityAutocompletionResource(entityType, propertyName, master.createEntityProducer(), factory, valueMatcher, injector.getInstance(ICompanionObjectFinder.class), restUtil, getContext(), request, response);
             resource.handle();
         }
     }

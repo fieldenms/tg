@@ -25,6 +25,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -35,7 +36,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private final EntityFactory entityFactory;
-    private final Logger logger = Logger.getLogger(getClass());
+    private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
     private final Class<T> entityType;
     private final IFetchProvider<T> fetchProvider;
     private final IEntityDao<T> dao;
@@ -97,7 +98,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         // iterate through modified properties:
         for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
             final String name = nameAndVal.getKey();
-            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION)) {
+            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
                     final Object newValue = convert(getEntityType(), name, valAndOrigVal.get("val"));
@@ -199,7 +200,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param envelope
      * @return
      */
-    public Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
+    private Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
         try {
             return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
         } catch (final Exception ex) {
@@ -227,4 +228,50 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         dao.delete(entityFactory.newEntity(entityType, entityId));
     }
 
+    /**
+     * Constructs the entity from the client envelope.
+     * <p>
+     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
+     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
+     * <p>
+     * All normal properties will be applied in 'validationPrototype'.
+     *
+     * @param envelope
+     * @param restUtil
+     * @return applied validationPrototype and modifiedPropertiesHolder map
+     */
+    public Pair<T, Map<String, Object>> constructEntity(final Representation envelope, final RestServerUtil restUtil, final Long id) {
+        final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        final T applied = createAppliedEntity(id, modifiedPropertiesHolder);
+        return new Pair<>(applied, modifiedPropertiesHolder);
+    }
+
+    private T createAppliedEntity(final Long id, final Map<String, Object> modifiedPropertiesHolder) {
+        // Initialises the "validation prototype" entity, which modification will be made upon:
+        final T validationPrototype = createEntityForRetrieval(id);
+        final T applied = apply(modifiedPropertiesHolder, validationPrototype);
+        return applied;
+    }
+
+    /**
+     * Constructs the entity from the client envelope.
+     * <p>
+     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
+     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
+     * <p>
+     * All normal properties will be applied in 'validationPrototype'.
+     *
+     * @param envelope
+     * @param restUtil
+     * @return applied validationPrototype and modifiedPropertiesHolder map
+     */
+    public Pair<T, Map<String, Object>> constructEntity(final Representation envelope, final RestServerUtil restUtil) {
+        final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+
+        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
+        final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
+
+        final T applied = createAppliedEntity(id, modifiedPropertiesHolder);
+        return new Pair<>(applied, modifiedPropertiesHolder);
+    }
 }

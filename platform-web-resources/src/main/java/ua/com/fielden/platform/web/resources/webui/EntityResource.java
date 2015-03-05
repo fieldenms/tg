@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -97,10 +95,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return
      */
     private Representation tryToSave(final Representation envelope) {
-        final Map<String, Object> modifiedPropertiesHolder = utils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-
-        final T validationPrototype = utils.createEntityForRetrieval(this.entityId);
-        final T applied = utils.apply(modifiedPropertiesHolder, validationPrototype);
+        final T applied = utils.constructEntity(envelope, restUtil, this.entityId).getKey();
         final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
         return restUtil.singleJSONRepresentation(potentiallySaved);
     }

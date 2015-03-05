@@ -37,7 +37,7 @@
     .invalid paper-spinner { width: 12px; height: 12px; border-color : {{g.paperInput.invalidColor}}; }
 </core-style>
 
-<polymer-element name="tg-entity-editor" attributes="composite user entityType" extends="tg-editor">
+<polymer-element name="tg-entity-editor" attributes="composite user entityType createModifiedPropertiesHolder" extends="tg-editor">
     <template>
         <!-- CSS -->
         <core-style ref="search-icon-decorator"></core-style>
@@ -355,10 +355,10 @@
                     // collect new matching values
                     if (this.searchQuery && this.hasFocus === true) {
                         this.isSearching = true;
+
                         // prepare the AJAX request based on the raw search string
-                        var paramsHolder = {};
-                        paramsHolder["searchString"] = inputText;
-                        paramsHolder["context"] = this.entity;
+                        var paramsHolder = this.createModifiedPropertiesHolder();
+                        paramsHolder["@searchString"] = inputText;                        
                         var serialisedSearchQuery = this.$.serialiser.serialise(paramsHolder);
 
                         this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);

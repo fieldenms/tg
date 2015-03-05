@@ -14,10 +14,12 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -26,22 +28,26 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends ServerResource {
-    private final Class<T> entityType;
+public class EntityAutocompletionResource<PARENT_TYPE extends AbstractEntity<?>> extends ServerResource {
+    private final EntityResourceUtils<PARENT_TYPE> utils;
+    private final Class<PARENT_TYPE> entityType;
     private final String propertyName;
     private final RestServerUtil restUtil;
-    private final IValueMatcherWithContext<?, T> valueMatcher; // should be IContextValueMatcher
-    private final IFetchProvider<T> fetchProvider;
+    private final IValueMatcherWithContext<PARENT_TYPE, ? extends AbstractEntity<?>> valueMatcher;
+    private final IFetchProvider<PARENT_TYPE> fetchProvider;
     private final Logger logger = Logger.getLogger(getClass());
 
     public EntityAutocompletionResource(
-                    final Class<T> entityType,
-                    final String propertyName,
-                    final IValueMatcherWithContext<?, T> valueMatcher,
-                    final ICompanionObjectFinder companionFinder,
-                    final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+            final Class<PARENT_TYPE> entityType,
+            final String propertyName,
+            final IEntityProducer<PARENT_TYPE> entityProducer,
+            final EntityFactory entityFactory,
+            final IValueMatcherWithContext<PARENT_TYPE, ? extends AbstractEntity<?>> valueMatcher,
+            final ICompanionObjectFinder companionFinder,
+            final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
+        utils = new EntityResourceUtils<PARENT_TYPE>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
         this.entityType = entityType;
         this.propertyName = propertyName;
         this.valueMatcher = valueMatcher;
@@ -55,37 +61,21 @@ public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends S
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final Map<String, Object> paramsHolder = restoreParamsHolderFrom(envelope, restUtil);
+        final Pair<PARENT_TYPE, Map<String, Object>> entityAndHolder = utils.constructEntity(envelope, restUtil);
+        final PARENT_TYPE context = entityAndHolder.getKey();
+        logger.error("context = " + context);
+        final Map<String, Object> paramsHolder = entityAndHolder.getValue();
 
-        final String searchStringVal = (String) paramsHolder.get("searchString");
+        final String searchStringVal = (String) paramsHolder.get("@searchString"); // custom property inside paramsHolder
         logger.debug(String.format("SEARCH STRING %s", searchStringVal));
 
         final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
         logger.debug(String.format("SEARCH STRING %s", searchString));
-        // TODO valueMatcher.setContext <- from paramsHolder
-        final Object context = paramsHolder.get("context");
-        System.out.println(context);
 
-
-        valueMatcher.setFetchModel((fetch<T>) fetchProvider.fetchFor(propertyName).fetchModel());
-        final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString !=null ? searchString : "%");
+        valueMatcher.setContext(context);
+        valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
+        final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
         return restUtil.listJSONRepresentation(entities);
     }
-
-    /**
-     * Restores the holder of parameters into the map [paramName; paramValue].
-     *
-     * @param envelope
-     * @return
-     */
-    public Map<String, Object> restoreParamsHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
-        try {
-            return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during deserialisation of modified properties holder, which should be validated.", ex);
-            throw new IllegalStateException(ex);
-        }
-    }
-
 }
