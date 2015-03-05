@@ -59,8 +59,9 @@ public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends S
         logger.debug(String.format("SEARCH STRING %s", searchString));
         // TODO valueMatcher.setContext <- from paramsHolder
 
-        valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
-        final List<T> entities = valueMatcher.findMatchesWithModel(searchString !=null ? searchString : "%");
+        //valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
+        //final List<T> entities = valueMatcher.findMatchesWithModel(searchString !=null ? searchString : "%");
+        final List<T> entities = valueMatcher.findMatches(searchString !=null ? searchString : "%");
 
         return restUtil.listJSONRepresentation(entities);
     }

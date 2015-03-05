@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -43,7 +44,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
     /**
      * Creates standard {@link EntityPropertyEditorWithLocator} editor with entity locator for entity centre.
-     * 
+     *
      * @return
      */
     public static EntityPropertyEditorWithLocator createEntityPropertyEditorWithLocatorForCentre(//
@@ -173,7 +174,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
     }
 
     private BoundedValidationLayer<AutocompleterTextFieldLayer> createEditorWithLocator(//
-    final AbstractEntity bindingEntity,//
+            final AbstractEntity bindingEntity,//
             final String bindingPropertyName,//
             final LocatorConfigurationModel locatorConfigurationModel, //
             final Class entityType,//
@@ -186,8 +187,15 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
         if (!AbstractEntity.class.isAssignableFrom(entityType)) {
             throw new RuntimeException("Could not determined an editor for property " + getPropertyName() + " of type " + entityType + ".");
         }
-        return (BoundedValidationLayer<AutocompleterTextFieldLayer>) ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(bindingEntity, bindingPropertyName, //
-                locatorConfigurationModel, entityType, getValueMatcher(), "key", secondaryExpressions(entityType), //
+
+        return (BoundedValidationLayer<AutocompleterTextFieldLayer>) ComponentFactory.createOnFocusLostAutocompleterWithEntityLocator(//
+                bindingEntity,
+                bindingPropertyName, //
+                locatorConfigurationModel,
+                entityType,
+                getValueMatcher(),
+                "key",
+                secondaryExpressions(entityType), //
                 highlightProperties(entityType), caption, isSingle ? null : ",", toolTip, stringBinding, editorCase);
     }
 
@@ -216,7 +224,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
         return props.toArray(new Pair[0]);
     }
 
-    private static class EntityLocatorValueMatcher<T extends AbstractEntity<?>, R extends AbstractEntity<?>> implements IValueMatcher<T> {
+    private static class EntityLocatorValueMatcher<T extends AbstractEntity<?>, R extends AbstractEntity<?>> implements IValueMatcherWithFetch<T> {
 
         private final IValueMatcher<T> autocompleterValueMatcher;
 
@@ -255,7 +263,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
         /**
          * Set the binded property editor for this value matcher. The binded property editor must have reference on to this value matcher. Otherwise it throws
          * {@link IllegalArgumentException}.
-         * 
+         *
          * @param bindedPropertyEditor
          */
         public void setBindedPropertyEditor(final EntityPropertyEditorWithLocator bindedPropertyEditor) {
@@ -275,13 +283,19 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
         }
 
         @Override
-        public <FT extends AbstractEntity<?>> fetch<FT> getFetchModel() {
-            return autocompleterValueMatcher.getFetchModel();
+        public fetch<T> getFetchModel() {
+            if (autocompleterValueMatcher instanceof IValueMatcherWithFetch) {
+                return ((IValueMatcherWithFetch)autocompleterValueMatcher).getFetchModel();
+            }
+
+            return null;
         }
 
         @Override
-        public <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel) {
-            autocompleterValueMatcher.setFetchModel(fetchModel);
+        public void setFetchModel(final fetch<T> fetchModel) {
+            if (autocompleterValueMatcher instanceof IValueMatcherWithFetch) {
+                ((IValueMatcherWithFetch)autocompleterValueMatcher).setFetchModel(fetchModel);
+            }
         }
 
         @Override
@@ -319,7 +333,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
                 if (fetchModel == null) {
                     return autocompleterValueMatcher.findMatches(value);
                 } else {
-                    return autocompleterValueMatcher.findMatchesWithModel(value);
+                    return ((IValueMatcherWithFetch)autocompleterValueMatcher).findMatchesWithModel(value);
                 }
             }
 
@@ -327,7 +341,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
         /**
          * Set properties to highlight in autocompleter.
-         * 
+         *
          * @param highlight
          */
         private void highlightKeyProps(final boolean highlight) {
@@ -340,9 +354,9 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
         /**
          * Initialises the property editor's autocompleter. Set highlight for first and second value.
-         * 
+         *
          * @param ldtme
-         * 
+         *
          */
         private void initEditor(final ILocatorDomainTreeManagerAndEnhancer ldtme) {
             if (bindedPropertyEditor != null && ldtme.isUseForAutocompletion()) {
@@ -374,7 +388,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
          * 1) GLOBAL locator is requested (refresh + get + discard) at the beginning of 'property editor' history. <br>
          * It will not be requested later (during 'property editor' lifecycle) due to heavy-weight nature of request. <br>
          * 2) LOCAL locator is just taken (refresh + get + discard) from {@link LocatorManager}. No queries are needed for that. <br>
-         * 
+         *
          * @return
          */
         private ILocatorDomainTreeManagerAndEnhancer ldtme() {

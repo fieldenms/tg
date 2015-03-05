@@ -636,9 +636,6 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> boolean isCompositeEntity(final Class<T> entityType) {
-        // this was the old implementation:
-        // return Finder.getKeyMembers(entityType).size() > 1;
-
         final KeyType keyAnnotation = AnnotationReflector.getAnnotation(entityType, KeyType.class);
 
         if (keyAnnotation != null) {

@@ -25,4 +25,11 @@ public interface IValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T> 
      * @param context
      */
     void setContext(final CONTEXT context);
+
+    /**
+     * Provides access to the context, which is needed in order to use it in custom autocompletion logic.
+     *
+     * @return
+     */
+    CONTEXT getContext();
 }
