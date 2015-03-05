@@ -18,7 +18,6 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -34,7 +33,8 @@ public class EntityAutocompletionResource<PARENT_TYPE extends AbstractEntity<?>>
     private final String propertyName;
     private final RestServerUtil restUtil;
     private final IValueMatcherWithContext<PARENT_TYPE, ? extends AbstractEntity<?>> valueMatcher;
-    private final IFetchProvider<PARENT_TYPE> fetchProvider;
+    // private final IFetchProvider<PARENT_TYPE> fetchProvider;
+    private final ICompanionObjectFinder coFinder;
     private final Logger logger = Logger.getLogger(getClass());
 
     public EntityAutocompletionResource(
@@ -51,8 +51,8 @@ public class EntityAutocompletionResource<PARENT_TYPE extends AbstractEntity<?>>
         this.entityType = entityType;
         this.propertyName = propertyName;
         this.valueMatcher = valueMatcher;
-        this.fetchProvider = companionFinder.find(this.entityType).getFetchProvider();
         this.restUtil = restUtil;
+        this.coFinder = companionFinder;
     }
 
     /**
@@ -73,7 +73,7 @@ public class EntityAutocompletionResource<PARENT_TYPE extends AbstractEntity<?>>
         logger.debug(String.format("SEARCH STRING %s", searchString));
 
         valueMatcher.setContext(context);
-        valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
+        valueMatcher.setFetchModel(EntityResourceUtils.fetchForProperty(coFinder, entityType, propertyName).fetchModel());
         final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
         return restUtil.listJSONRepresentation(entities);

@@ -71,8 +71,17 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @return
      */
     public IEntityProducer<T> createEntityProducer() {
-        return entityProducerType == null ? new DefaultEntityProducer<T>(injector.getInstance(EntityFactory.class), this.entityType)
+        return entityProducerType == null ? createDefaultEntityProducer(injector.getInstance(EntityFactory.class), this.entityType)
                 : injector.getInstance(this.entityProducerType);
+    }
+
+    /**
+     * Creates default entity producer instance.
+     *
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IEntityProducer<T> createDefaultEntityProducer(final EntityFactory factory, final Class<T> entityType) {
+        return new DefaultEntityProducer<T>(factory, entityType);
     }
 
     /**
@@ -82,18 +91,28 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @return
      */
     public <V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createValueMatcher(final String propertyName) {
-        final IValueMatcherWithContext<T, V> matcher;
-
         final Class<IValueMatcherWithContext<T, V>> matcherType = smConfig.matcherTypeFor(propertyName);
+        final IValueMatcherWithContext<T, V> matcher;
         if (matcherType != null) {
             matcher = injector.getInstance(matcherType);
         } else {
-            final Class<V> propertyType = (Class<V>) PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
-            final IEntityDao<V> co = coFinder.find(propertyType);
-
-            matcher = new FallbackValueMatcherWithContext<T, V>(co);
+            matcher = createDefaultValueMatcher(propertyName, entityType, coFinder);
         }
         return matcher;
+    }
+
+    /**
+     * Creates default value matcher with context for the specified entity property.
+     *
+     * @param propertyName
+     * @param entityType
+     * @param coFinder
+     * @return
+     */
+    public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcher(final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
+        final Class<V> propertyType = (Class<V>) PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
+        final IEntityDao<V> co = coFinder.find(propertyType);
+        return new FallbackValueMatcherWithContext<T, V>(co);
     }
 
     @Override

@@ -5,6 +5,8 @@ import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -89,6 +91,22 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Money prop", desc = "Money prop desc")
     private Money moneyProp;
+
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @MapTo
+    @Title(value = "Crit-only entity prop", desc = "Crit-only entity prop desc")
+    private TgPersistentEntityWithProperties critOnlyEntityProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setCritOnlyEntityProp(final TgPersistentEntityWithProperties critOnlyEntityProp) {
+        this.critOnlyEntityProp = critOnlyEntityProp;
+        return this;
+    }
+
+    public TgPersistentEntityWithProperties getCritOnlyEntityProp() {
+        return critOnlyEntityProp;
+    }
 
     @Observable
     public TgPersistentEntityWithProperties setCompositeProp(final TgPersistentCompositeEntity compositeProp) {

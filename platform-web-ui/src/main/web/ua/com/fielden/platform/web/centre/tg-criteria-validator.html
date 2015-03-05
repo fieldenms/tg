@@ -1,0 +1,48 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+
+<polymer-element name="tg-criteria-validator" attributes="user mitype onValidated" hidden>
+    <template>
+        <tg-serialiser id="serialiser"></tg-serialiser>
+        <core-ajax id="ajaxSender" url="/users/{{user}}/criteria/{{mitype}}" method="POST" handleas="json"></core-ajax> 
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                ready: function() { 
+                    var self = this;
+
+                    self.$.ajaxSender.addEventListener('core-response', function(e) {
+                        if (e.detail.xhr.status === 200) {
+                            var validatedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
+                            self.onValidated(validatedEntity);
+                        } else {
+                            console.warn('The bad status for core-response has appeared! status === ', e.detail.xhr.status);
+                        }
+                    });
+                },
+
+                /**
+                 * Starts the process of entity validation.
+                 *
+                 * @param modifiedPropertiesHolder -- the entity with modified properties
+                 */
+                validate: function (modifiedPropertiesHolder) {
+                    // console.log("validate: modifiedPropertiesHolder", modifiedPropertiesHolder);
+                    var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
+                    // console.log("validate: serialised modifiedPropertiesHolder", ser);
+                    this.$.ajaxSender.body = JSON.stringify(ser);
+                    this.$.ajaxSender.go();
+                },
+
+                /**
+                 * Cancels any unfinished validation that was requested earlier (if any).
+                 */
+                abortValidationIfAny: function() {
+                    this.$.ajaxSender.abort();
+                }
+            });
+        })();
+    </script>
+</polymer-element>

@@ -7,7 +7,9 @@ import org.restlet.data.Method;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -31,6 +33,7 @@ public class CriteriaResourceFactory extends Restlet {
     private final Injector injector;
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
+    private final ICompanionObjectFinder companionFinder;
     private final WebApp webApp;
     private final ICriteriaGenerator critGenerator;
 
@@ -44,13 +47,14 @@ public class CriteriaResourceFactory extends Restlet {
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.factory = injector.getInstance(EntityFactory.class);
+        this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
     }
 
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
-        if (Method.GET == request.getMethod()) {
+        if (Method.GET == request.getMethod() || Method.POST == request.getMethod()) {
             final String username = (String) request.getAttributes().get("username");
             injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 
@@ -60,7 +64,7 @@ public class CriteriaResourceFactory extends Restlet {
 
             final IGlobalDomainTreeManager gdtm = injector.getInstance(IGlobalDomainTreeManager.class);
 
-            final CriteriaResource resource = new CriteriaResource(restUtil, centre, gdtm, this.critGenerator, getContext(), request, response);
+            final CriteriaResource<AbstractEntity<?>> resource = new CriteriaResource<>(restUtil, factory, companionFinder, centre, gdtm, this.critGenerator, getContext(), request, response);
             resource.handle();
         }
     }

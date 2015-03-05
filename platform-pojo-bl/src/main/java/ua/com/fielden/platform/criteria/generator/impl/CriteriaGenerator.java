@@ -20,6 +20,7 @@ import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.LocatorEntityQueryCriteriaToEnhance;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.dao.DefaultEntityProducer;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
@@ -38,6 +39,7 @@ import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.MasterEntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.RequiredAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
@@ -48,7 +50,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -110,13 +111,19 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                         newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
                     }
                 }
+                newProperties.add(createMasterEntityTypeNewProperty(root));
                 final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
                 queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) cl.startModification(entityClass.getName()).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
                 generatedClasses.put(cdtme, queryCriteriaClass);
             }
 
-            final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = entityFactory.newByKey(queryCriteriaClass, "not required");
+            final DefaultEntityProducer<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityProducer = new DefaultEntityProducer<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass);
+            entityProducer.newEntity();
+            final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = entityProducer.newEntity(); // entityFactory.newByKey(queryCriteriaClass, "not required");
+            entity.beginInitialising();
+            entity.setKey("not required");
+            entity.endInitialising();
 
             //Set dao for generated entity query criteria.
             final Field daoField = Finder.findFieldByName(EntityQueryCriteria.class, "dao");
@@ -168,6 +175,16 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     /**
+     * Generates marker with master type.
+     *
+     * @param root
+     * @return
+     */
+    private static NewProperty createMasterEntityTypeNewProperty(final Class<?> root) {
+        return new NewProperty("________________masterTypeMarker", String.class, false, "Master Type Marker", "Master Type Marker Desc", new MasterEntityTypeAnnotation().newInstance((Class<? extends AbstractEntity<?>>) root));
+    }
+
+    /**
      * Generates criteria property with appropriate annotations.
      *
      * @param root
@@ -205,9 +222,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             annotations.add(new BeforeChangeAnnotation(
                     new Handler[] {
                             new HandlerAnnotation(EntityExistsValidator.class).
-                            non_ordinary(new ClassParam[] { ParamAnnotation.classParam("coFinder", ICompanionObjectFinder.class) }).
-                            clazz(new ClassParam[] { ParamAnnotation.classParam("type", newPropertyType) }).
-                            newInstance() }
+                                    non_ordinary(new ClassParam[] { ParamAnnotation.classParam("coFinder", ICompanionObjectFinder.class) }).
+                                    clazz(new ClassParam[] { ParamAnnotation.classParam("type", newPropertyType) }).
+                                    newInstance() }
                     ).newInstance());
         }
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());

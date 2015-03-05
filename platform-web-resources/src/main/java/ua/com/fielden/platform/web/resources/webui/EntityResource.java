@@ -55,7 +55,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return restUtil.singleJSONRepresentation(utils.createEntityForRetrieval(entityId));
+        return restUtil.singleJSONRepresentation(utils.createValidationPrototype(entityId));
     }
 
     /**

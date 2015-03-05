@@ -29,8 +29,8 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     public EntityValidationResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
-        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
         this.restUtil = restUtil;
+        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
     }
 
     /**

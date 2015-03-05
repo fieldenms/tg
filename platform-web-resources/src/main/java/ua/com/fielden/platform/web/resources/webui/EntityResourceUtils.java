@@ -16,12 +16,15 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.MasterEntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
@@ -38,7 +41,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private final EntityFactory entityFactory;
     private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
     private final Class<T> entityType;
-    private final IFetchProvider<T> fetchProvider;
     private final IEntityDao<T> dao;
     private final IEntityProducer<T> entityProducer;
     private final ICompanionObjectFinder companionFinder;
@@ -48,7 +50,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         this.companionFinder = companionFinder;
         this.dao = companionFinder.<IEntityDao<T>, T> find(this.entityType);
 
-        this.fetchProvider = this.dao.getFetchProvider();
         this.entityFactory = entityFactory;
         this.entityProducer = entityProducer;
     }
@@ -60,10 +61,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *            -- entity identifier
      * @return
      */
-    public T createEntityForRetrieval(final Long id) {
+    public T createValidationPrototype(final Long id) {
         final T entity;
         if (id != null) {
-            entity = dao.findById(id, fetchProvider.fetchModel());
+            entity = dao.findById(id, dao.getFetchProvider().fetchModel());
         } else {
             entity = entityProducer.newEntity();
         }
@@ -78,9 +79,32 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         return companionFinder;
     }
 
-    public IFetchProvider<T> getFetchProvider() {
-        return fetchProvider;
+    public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
+        if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
+            final Class<? extends AbstractEntity<?>> masterType = AnnotationReflector.getPropertyAnnotation(MasterEntityType.class, entityType, "________________masterTypeMarker").value();
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            // TODO  propertyName.substring(propertyName.lastIndexOf("_") + 1); VERY BAD APPROACH!
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            final String originalPropertyName = propertyName.substring(propertyName.lastIndexOf("_") + 1);
+
+            return coFinder.find(masterType).getFetchProvider().fetchFor(originalPropertyName);
+        } else {
+            return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
+        }
     }
+
+    //    public IFetchProvider<T> getFetchProvider() {
+    //        return this.dao.getFetchProvider();
+    //    }
 
     /**
      * Applies the values from <code>dirtyPropertiesHolder</code> into the <code>entity</code>. The values needs to be converted from the client-side component-specific form into
@@ -165,7 +189,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
             /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList((String) reflectedValue))).//
             /*      */model();
-            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(getFetchProvider().fetchFor(propertyName).fetchModel()).model();
+            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, entityType, propertyName).fetchModel()).model();
             return propertyCompanion.getEntity(qem);
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
         } else if (EntityUtils.isString(propertyType)) {
@@ -246,9 +270,27 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         return new Pair<>(applied, modifiedPropertiesHolder);
     }
 
+    /**
+     * Constructs the entity from the client envelope.
+     * <p>
+     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
+     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
+     * <p>
+     * All normal properties will be applied in 'validationPrototype'.
+     *
+     * @param envelope
+     * @param restUtil
+     * @return applied validationPrototype and modifiedPropertiesHolder map
+     */
+    public Pair<T, Map<String, Object>> constructEntity(final Representation envelope, final RestServerUtil restUtil, final T validationPrototype) {
+        final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        final T applied = apply(modifiedPropertiesHolder, validationPrototype);
+        return new Pair<>(applied, modifiedPropertiesHolder);
+    }
+
     private T createAppliedEntity(final Long id, final Map<String, Object> modifiedPropertiesHolder) {
         // Initialises the "validation prototype" entity, which modification will be made upon:
-        final T validationPrototype = createEntityForRetrieval(id);
+        final T validationPrototype = createValidationPrototype(id);
         final T applied = apply(modifiedPropertiesHolder, validationPrototype);
         return applied;
     }

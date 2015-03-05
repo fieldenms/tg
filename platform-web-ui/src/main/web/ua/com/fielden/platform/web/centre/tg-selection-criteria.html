@@ -3,25 +3,29 @@
 <link rel="import" href="/resources/binding/tg-entity-binder.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/editors/tg-integer-editor.html">
+<link rel="import" href="/resources/editors/tg-entity-editor.html">
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
-<link rel="import" href="/resources/validation/tg-entity-validator.html">
+<link rel="import" href="/resources/centre/tg-criteria-validator.html">
 
 <polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype">
     <template>
         <shadow></shadow>
-        <!-- tg-entity-validator id="validator" user="{{user}}" mitype="{{mitype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator -->
+        <tg-criteria-validator id="validator" user="{{user}}" mitype="{{mitype}}" onvalidated="{{onValidatedDefault}}"></tg-criteria-validator>
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/criteria/{{mitype}}" method="GET" handleas="json"></core-ajax>
 
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
             <tg-integer-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_integerProp_from" onAcceptedValueChanged="{{validate}}" propTitle="Integer prop FROM" propDesc="Integer prop FROM criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
             <tg-integer-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_integerProp_to" onAcceptedValueChanged="{{validate}}" propTitle="Integer prop TO" propDesc="Integer prop TO criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
+            <tg-entity-editor entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_critOnlyEntityProp" onAcceptedValueChanged="{{validate}}" propTitle="Crit-only entity prop SINGLE" propDesc="Crit-only entity prop SINGLE criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-editor>
         </tg-flex-layout>
     </template>
     <script>
         Polymer('tg-selection-criteria', {
-            whenDesktop: ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"]],
-            whenTablet: ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"]],
-            whenMobile: ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"]],
+            entitytype: null,
+
+            whenDesktop: ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+            whenTablet: ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
+            whenMobile: ['horizontal', 'justified', ["margin-right: 20px"], ["margin-right: 20px"], ["margin-right: 20px"]],
 
             currentState: "EDIT",
 
@@ -40,6 +44,7 @@
             },
 
             onRetrieved: function(entity, bindingEntity) {
+                this.entitytype = entity.type().fullClassName();
                 console.log("onRetrieved");
             },
 

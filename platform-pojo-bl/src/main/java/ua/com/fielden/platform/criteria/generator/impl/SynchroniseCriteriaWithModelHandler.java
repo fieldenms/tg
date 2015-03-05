@@ -24,17 +24,20 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
     @Override
     public void handle(final MetaProperty<Object> property, final Object newValue) {
         final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = (EntityQueryCriteria<CDTME, T, IEntityDao<T>>) property.getEntity();
-        final IAddToCriteriaTickManager ftm = entity.getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        final Class<T> root = entity.getEntityClass();
-        final boolean isSecond = CriteriaReflector.isSecondParam(entity.getType(), property.getName());
-        final String propertyName = CriteriaReflector.getCriteriaProperty(entity.getType(), property.getName());
-        final Object currValue = isSecond ? ftm.getValue2(root, propertyName) : ftm.getValue(root, propertyName);
-        final IAddToCriteriaTickRepresentation ftr = entity.getCentreDomainTreeMangerAndEnhancer().getRepresentation().getFirstTick();
-        if (!EntityUtils.equalsEx(currValue, newValue)) {
-            if (isSecond) {
-                ftm.setValue2(root, propertyName, newValue);
-            } else {
-                ftm.setValue(root, propertyName, newValue);
+        final CDTME cdtmae = entity.getCentreDomainTreeMangerAndEnhancer();
+        if (cdtmae != null) {
+            final IAddToCriteriaTickManager ftm = cdtmae.getFirstTick();
+            final Class<T> root = entity.getEntityClass();
+            final boolean isSecond = CriteriaReflector.isSecondParam(entity.getType(), property.getName());
+            final String propertyName = CriteriaReflector.getCriteriaProperty(entity.getType(), property.getName());
+            final Object currValue = isSecond ? ftm.getValue2(root, propertyName) : ftm.getValue(root, propertyName);
+            final IAddToCriteriaTickRepresentation ftr = entity.getCentreDomainTreeMangerAndEnhancer().getRepresentation().getFirstTick();
+            if (!EntityUtils.equalsEx(currValue, newValue)) {
+                if (isSecond) {
+                    ftm.setValue2(root, propertyName, newValue);
+                } else {
+                    ftm.setValue(root, propertyName, newValue);
+                }
             }
         }
     }

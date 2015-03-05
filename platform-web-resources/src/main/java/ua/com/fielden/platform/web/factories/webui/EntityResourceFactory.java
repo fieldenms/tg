@@ -63,7 +63,7 @@ public class EntityResourceFactory extends Restlet {
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
             final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
 
-            final EntityResource<AbstractEntity<?>> resource = new EntityResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
+            final EntityResource<AbstractEntity<?>> resource = new EntityResource<>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
             resource.handle();
         }
     }
