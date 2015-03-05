@@ -57,12 +57,15 @@ public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends S
     public Representation post(final Representation envelope) throws ResourceException {
         final Map<String, Object> paramsHolder = restoreParamsHolderFrom(envelope, restUtil);
 
-        final String searchStringVal = (String) paramsHolder.get("___searchString");
+        final String searchStringVal = (String) paramsHolder.get("searchString");
         logger.debug(String.format("SEARCH STRING %s", searchStringVal));
 
         final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
         logger.debug(String.format("SEARCH STRING %s", searchString));
         // TODO valueMatcher.setContext <- from paramsHolder
+        final Object context = paramsHolder.get("context");
+        System.out.println(context);
+
 
         valueMatcher.setFetchModel((fetch<T>) fetchProvider.fetchFor(propertyName).fetchModel());
         final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString !=null ? searchString : "%");

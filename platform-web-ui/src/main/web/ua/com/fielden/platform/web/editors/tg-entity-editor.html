@@ -357,7 +357,8 @@
                         this.isSearching = true;
                         // prepare the AJAX request based on the raw search string
                         var paramsHolder = {};
-                        paramsHolder["___searchString"] = inputText;
+                        paramsHolder["searchString"] = inputText;
+                        paramsHolder["context"] = this.entity;
                         var serialisedSearchQuery = this.$.serialiser.serialise(paramsHolder);
 
                         this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
