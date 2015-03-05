@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Entity Grid Inspector Example</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+
+    <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+    <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
+    <link rel="import" href="/resources/egi/tg-property-column.html">
+    <link rel="import" href="/tg-reflector">
+
+    <style>
+        body {
+            font-family: "RobotoDraft";
+        }
+    </style>
+
+</head>
+
+<body unresolved fullbleed layout vertical>
+
+    <template id="egi_example" is="auto-binding">
+        <tg-reflector id="reflector"></tg-reflector>
+        <tg-entity-grid-inspector entityType="{{entityType}}" entities="{{entities}}">
+            <tg-property-column property="integerProp"></tg-property-column>
+            <tg-property-column property="stringProp"></tg-property-column>
+            <tg-property-column property="bigDecimalProp"></tg-property-column>
+        </tg-entity-grid-inspector>
+    </template>
+
+    <script>
+        (function () {
+            var egiExample = document.querySelector('#egi_example'),
+                i = 0,
+                entity = null;
+            egiExample.entityType = "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties";
+            egiExample.entities = [];
+            for(i = 0; i < 5; i+=1) {
+                console.log(egiExample.$);
+                entity = egiExample.$.reflector.newEntity(egiExample.entityType);
+                entity.set("integerProp", i);
+                entity.set("stringProp", "string property " + i);
+                entity.set("bigDecimalProp", i + 1.0);
+                egiExample.entities.push(entity);
+            }
+            document.addEventListener('polymer-ready', function () {
+                console.log(egiExample.$);
+            });
+
+        })();
+    </script>
+
+</body>
+
+</html>

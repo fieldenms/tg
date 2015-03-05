@@ -1,0 +1,47 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-media-query/core-media-query.html">
+<link rel="import" href="/tg-web-app/tg-app-config.html">
+<link rel="import" href="/tg-reflector">
+
+<polymer-element name="tg-entity-grid-inspector" attributes="entityType entities">
+    <template>
+        <content id="column_selector" select="tg-prperty-column"></content>
+        <tg-app-config id="appConfig"></tg-app-config>
+        <tg-reflector id="reflector"></tg-reflector>
+        <core-media-query query="max-width: {{$.appConfig.minTabletWidth - 1}}px" querymatches="{{mobileScreen}}"></core-media-query>
+        <core-media-query query="(min-width: {{$.appConfig.minTabletWidth}}px) and (max-width: {{$.appConfig.minDesktopWidth - 1}}px)" querymatches="{{tabletScreen}}"></core-media-query>
+        <core-media-query query="min-width: {{$.appConfig.minDesktopWidth}}px" querymatches="{{desktopScreen}}"></core-media-query>
+        <template if="{{desktopScreen || tabletScreen}}">
+            <div layout horizontal>
+                <template repeat="{{column in columns}}">
+                    <div layout vertical>
+                        <div>{{getTitle(column)}}</div>
+                        <template repeat="{{entity in entities}}">
+                            <div>{{getValue(entity, column)}}</div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+        <template if="{{mobileScreen}}">
+
+        </template>
+    </template>
+    <script>
+        Polymer({
+            ready: function () {
+                this.columns = [];
+                Array.prototype.forEach.call(this.$.column_selector.getDistributedNodes(), function (item) {
+                    this.columns.push(item);
+                }.bind(this));
+            },
+            getTitle: function(propertyName) {
+                var type = this.$.reflector.findTypeByName(entityType);
+                return type.prop(propertyName).title();
+            },
+            getValue: function(entity, propertyName) {
+                return entity.get(propertyName);
+            }
+        });
+    </script>
+</polymer-element>
