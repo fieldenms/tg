@@ -58,9 +58,11 @@ implements IValueMatcherWithContext<CONTEXT, T>, IValueMatcherWithFetch<T> {
     }
 
     @Override
-    public List<T> findMatchesWithModel(final String value) {
-
-        return null;
+    public List<T> findMatchesWithModel(final String searchString) {
+        final ICompoundCondition0<T> incompleteEql =select(dao.getEntityType()).where().prop(KEY).iLike().val(searchString);
+        final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), incompleteEql);
+        final OrderingModel ordering = orderBy().yield(KEY).asc().model();
+        return dao.getFirstEntities(from(queryModel).with(ordering).with(fetchModel).model(), pageSize);
     }
 
 

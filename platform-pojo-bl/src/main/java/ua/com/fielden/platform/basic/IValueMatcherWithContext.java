@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @param <CONTEXT> -- the type of execution context
  * @param <T> -- the type of autocompleted values
  */
-public interface IValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T> extends IValueMatcher<T> {
+public interface IValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends IValueMatcherWithFetch<T> {
 
     /**
      * Sets execution context. Value matcher throws an exception if the context is not provided.

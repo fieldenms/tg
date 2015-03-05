@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
@@ -24,6 +24,5 @@ public interface ISimpleMasterConfig<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    Class<IValueMatcher> matcherTypeFor(final String propName);
+    <V extends AbstractEntity<?>> Class<IValueMatcherWithContext<T, V>> matcherTypeFor(final String propName);
 }

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.view.master;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.basic.autocompleter.EntityQueryValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
+import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.DefaultEntityProducer;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
@@ -81,19 +81,17 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @param injector
      * @return
      */
-    @SuppressWarnings("unchecked")
-    public IValueMatcher<AbstractEntity<?>> createValueMatcher(final String propertyName) {
-        final IValueMatcher<AbstractEntity<?>> matcher;
+    public <V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createValueMatcher(final String propertyName) {
+        final IValueMatcherWithContext<T, V> matcher;
 
-        @SuppressWarnings("rawtypes")
-        final Class<IValueMatcher> matcherType = smConfig.matcherTypeFor(propertyName);
+        final Class<IValueMatcherWithContext<T, V>> matcherType = smConfig.matcherTypeFor(propertyName);
         if (matcherType != null) {
             matcher = injector.getInstance(matcherType);
         } else {
-            final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
-            final IEntityDao<?> co = coFinder.find((Class<AbstractEntity<?>>) propertyType);
+            final Class<V> propertyType = (Class<V>) PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
+            final IEntityDao<V> co = coFinder.find(propertyType);
 
-            matcher = (IValueMatcher<AbstractEntity<?>>) EntityQueryValueMatcher.matchByKey(co);
+            matcher = new FallbackValueMatcherWithContext<T, V>(co);
         }
         return matcher;
     }

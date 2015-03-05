@@ -223,6 +223,9 @@ public class RestServerUtil {
     public <T extends AbstractEntity> Representation listJSONRepresentation(final List<T> entities) {
         logger.debug("Start building JSON entities representation.");
         try {
+            if (entities == null) {
+                throw new IllegalArgumentException("The provided list of entities is null.");
+            }
             // create a Result enclosing entity list
             final Result result = new Result(new ArrayList<T>(entities), "All is cool");
             final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);

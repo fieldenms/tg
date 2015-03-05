@@ -8,6 +8,7 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
@@ -61,7 +62,9 @@ public class EntityAutocompletionResourceFactory extends Restlet {
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
             final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
 
-            final EntityAutocompletionResource<AbstractEntity<?>> resource = new EntityAutocompletionResource<AbstractEntity<?>>((Class<AbstractEntity<?>>) entityType, propertyName, master.createValueMatcher(propertyName), injector.getInstance(ICompanionObjectFinder.class), restUtil, getContext(), request, response);
+            final IValueMatcherWithContext<? extends AbstractEntity<?>, AbstractEntity<?>> valueMatcher = master.createValueMatcher(propertyName);
+
+            final EntityAutocompletionResource resource = new EntityAutocompletionResource(entityType, propertyName, valueMatcher, injector.getInstance(ICompanionObjectFinder.class), restUtil, getContext(), request, response);
             resource.handle();
         }
     }

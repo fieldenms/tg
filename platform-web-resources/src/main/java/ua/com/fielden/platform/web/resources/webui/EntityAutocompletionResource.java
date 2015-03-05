@@ -12,9 +12,8 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -26,21 +25,26 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends ServerResource {
-    private final Class<T> entityType;
+public class EntityAutocompletionResource extends ServerResource {
+    private final Class<? extends AbstractEntity<?>> entityType;
     private final String propertyName;
     private final RestServerUtil restUtil;
-    private final IValueMatcher<T> valueMatcher; // should be IContextValueMatcher
-    private final IFetchProvider<T> fetchProvider;
+    private final IValueMatcherWithContext<?, ?> valueMatcher; // should be IContextValueMatcher
+    private final IFetchProvider<?> fetchProvider;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public EntityAutocompletionResource(final Class<T> entityType, final String propertyName, final IValueMatcher<T> valueMatcher, final ICompanionObjectFinder companionFinder, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public EntityAutocompletionResource(
+                    final Class<? extends AbstractEntity<?>> entityType,
+                    final String propertyName,
+                    final IValueMatcherWithContext<?, ?> valueMatcher,
+                    final ICompanionObjectFinder companionFinder,
+                    final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
         this.entityType = entityType;
         this.propertyName = propertyName;
         this.valueMatcher = valueMatcher;
-        this.fetchProvider = companionFinder.<IEntityDao<T>, T> find(this.entityType).getFetchProvider();
+        this.fetchProvider = companionFinder.find(this.entityType).getFetchProvider();
         this.restUtil = restUtil;
     }
 
@@ -59,9 +63,8 @@ public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends S
         logger.debug(String.format("SEARCH STRING %s", searchString));
         // TODO valueMatcher.setContext <- from paramsHolder
 
-        //valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
-        //final List<T> entities = valueMatcher.findMatchesWithModel(searchString !=null ? searchString : "%");
-        final List<T> entities = valueMatcher.findMatches(searchString !=null ? searchString : "%");
+        valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
+        final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString !=null ? searchString : "%");
 
         return restUtil.listJSONRepresentation(entities);
     }
