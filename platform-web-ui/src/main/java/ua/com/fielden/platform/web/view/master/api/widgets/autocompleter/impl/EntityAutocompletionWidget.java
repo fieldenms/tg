@@ -28,6 +28,7 @@ public class EntityAutocompletionWidget extends AbstractWidget {
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("createModifiedPropertiesHolder", "{{createModifiedPropertiesHolder}}");
         attrs.put("user", "{{user}}");
         attrs.put("entitytype", "{{entitytype}}");
         return attrs;
