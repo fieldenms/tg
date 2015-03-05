@@ -17,6 +17,7 @@ import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -25,18 +26,18 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class EntityAutocompletionResource extends ServerResource {
-    private final Class<? extends AbstractEntity<?>> entityType;
+public class EntityAutocompletionResource<T extends AbstractEntity<?>> extends ServerResource {
+    private final Class<T> entityType;
     private final String propertyName;
     private final RestServerUtil restUtil;
-    private final IValueMatcherWithContext<?, ?> valueMatcher; // should be IContextValueMatcher
-    private final IFetchProvider<?> fetchProvider;
+    private final IValueMatcherWithContext<?, T> valueMatcher; // should be IContextValueMatcher
+    private final IFetchProvider<T> fetchProvider;
     private final Logger logger = Logger.getLogger(getClass());
 
     public EntityAutocompletionResource(
-                    final Class<? extends AbstractEntity<?>> entityType,
+                    final Class<T> entityType,
                     final String propertyName,
-                    final IValueMatcherWithContext<?, ?> valueMatcher,
+                    final IValueMatcherWithContext<?, T> valueMatcher,
                     final ICompanionObjectFinder companionFinder,
                     final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
@@ -63,7 +64,7 @@ public class EntityAutocompletionResource extends ServerResource {
         logger.debug(String.format("SEARCH STRING %s", searchString));
         // TODO valueMatcher.setContext <- from paramsHolder
 
-        valueMatcher.setFetchModel(fetchProvider.fetchFor(propertyName).fetchModel());
+        valueMatcher.setFetchModel((fetch<T>) fetchProvider.fetchFor(propertyName).fetchModel());
         final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString !=null ? searchString : "%");
 
         return restUtil.listJSONRepresentation(entities);
