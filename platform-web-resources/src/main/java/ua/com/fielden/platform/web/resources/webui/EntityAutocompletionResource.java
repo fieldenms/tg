@@ -27,27 +27,26 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class EntityAutocompletionResource<PARENT_TYPE extends AbstractEntity<?>> extends ServerResource {
-    private final EntityResourceUtils<PARENT_TYPE> utils;
-    private final Class<PARENT_TYPE> entityType;
+public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>> extends ServerResource {
+    private final EntityResourceUtils<CONTEXT> utils;
+    private final Class<CONTEXT> entityType;
     private final String propertyName;
     private final RestServerUtil restUtil;
-    private final IValueMatcherWithContext<PARENT_TYPE, ? extends AbstractEntity<?>> valueMatcher;
-    // private final IFetchProvider<PARENT_TYPE> fetchProvider;
+    private final IValueMatcherWithContext<CONTEXT, ? extends AbstractEntity<?>> valueMatcher;
     private final ICompanionObjectFinder coFinder;
     private final Logger logger = Logger.getLogger(getClass());
 
     public EntityAutocompletionResource(
-            final Class<PARENT_TYPE> entityType,
+            final Class<CONTEXT> entityType,
             final String propertyName,
-            final IEntityProducer<PARENT_TYPE> entityProducer,
+            final IEntityProducer<CONTEXT> entityProducer,
             final EntityFactory entityFactory,
-            final IValueMatcherWithContext<PARENT_TYPE, ? extends AbstractEntity<?>> valueMatcher,
+            final IValueMatcherWithContext<CONTEXT, ? extends AbstractEntity<?>> valueMatcher,
             final ICompanionObjectFinder companionFinder,
             final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
-        utils = new EntityResourceUtils<PARENT_TYPE>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
+        utils = new EntityResourceUtils<CONTEXT>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
         this.entityType = entityType;
         this.propertyName = propertyName;
         this.valueMatcher = valueMatcher;
@@ -61,8 +60,8 @@ public class EntityAutocompletionResource<PARENT_TYPE extends AbstractEntity<?>>
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final Pair<PARENT_TYPE, Map<String, Object>> entityAndHolder = utils.constructEntity(envelope, restUtil);
-        final PARENT_TYPE context = entityAndHolder.getKey();
+        final Pair<CONTEXT, Map<String, Object>> entityAndHolder = utils.constructEntity(envelope, restUtil);
+        final CONTEXT context = entityAndHolder.getKey();
         logger.error("context = " + context);
         final Map<String, Object> paramsHolder = entityAndHolder.getValue();
 
