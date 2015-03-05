@@ -477,7 +477,11 @@
                     console.log("entityChanged: newValue === ", newValue);
                     if (this._isEntity(newValue)) {
                         if (newValue.get(this.propertyName) !== null) {
-                            this.valueDesc = newValue.get("@" + this.propertyName + "_desc");
+                            if (newValue._isObjectUndefined("@" + this.propertyName + "_result")) { // if valid -- desc should exist!
+                                this.valueDesc = newValue.get("@" + this.propertyName + "_desc");
+                            } else { // if invalid -- use validation message
+                                this.valueDesc = newValue.get("@" + this.propertyName + "_result").message;
+                            }
                         } else {
                             this.valueDesc = null;
                         }
