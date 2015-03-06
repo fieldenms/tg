@@ -283,18 +283,18 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
         }
 
         @Override
-        public fetch<T> getFetchModel() {
+        public fetch<T> getFetch() {
             if (autocompleterValueMatcher instanceof IValueMatcherWithFetch) {
-                return ((IValueMatcherWithFetch)autocompleterValueMatcher).getFetchModel();
+                return ((IValueMatcherWithFetch)autocompleterValueMatcher).getFetch();
             }
 
             return null;
         }
 
         @Override
-        public void setFetchModel(final fetch<T> fetchModel) {
+        public void setFetch(final fetch<T> fetchModel) {
             if (autocompleterValueMatcher instanceof IValueMatcherWithFetch) {
-                ((IValueMatcherWithFetch)autocompleterValueMatcher).setFetchModel(fetchModel);
+                ((IValueMatcherWithFetch)autocompleterValueMatcher).setFetch(fetchModel);
             }
         }
 
@@ -305,7 +305,7 @@ public class EntityPropertyEditorWithLocator extends AbstractEntityPropertyEdito
 
         @Override
         public List<T> findMatchesWithModel(final String value) {
-            return findMatches(value, getFetchModel());
+            return findMatches(value, getFetch());
         }
 
         @SuppressWarnings("unchecked")

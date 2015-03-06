@@ -18,12 +18,12 @@ public interface IValueMatcherWithFetch<T extends AbstractEntity<?>> extends IVa
      * Return the provided custom fetch strategy for entity retrieval.
      *
      */
-    fetch<T> getFetchModel();
+    fetch<T> getFetch();
 
     /**
      * Sets a custom fetch strategy for entity retrieval.
      */
-    void setFetchModel(final fetch<T> fetchModel);
+    void setFetch(final fetch<T> fetchModel);
 
     /**
      * The same as {@link #findMatches(String)}, but uses a the provided custom fetch strategy when retrieving entities.

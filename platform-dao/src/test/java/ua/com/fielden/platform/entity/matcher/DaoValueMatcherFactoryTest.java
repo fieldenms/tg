@@ -51,7 +51,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
 
         final IValueMatcherWithFetch<TgWagonClass> matcher = (IValueMatcherWithFetch<TgWagonClass>) vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
         //matcher.setQueryModel(select(WagonClass.class).with("compatibles", select(WagonClassCompatibility.class).model()));
-        matcher.setFetchModel(fetch(TgWagonClass.class).with("compatibles", fetch(TgWagonClassCompatibility.class)));
+        matcher.setFetch(fetch(TgWagonClass.class).with("compatibles", fetch(TgWagonClassCompatibility.class)));
         assertNotNull("Should have constructed a value matcher.", matcher);
         List<TgWagonClass> result = matcher.findMatches("W%");
         assertEquals("Incorrect number of matching values.", 2, result.size());

@@ -68,12 +68,12 @@ implements IValueMatcherWithContext<CONTEXT, T>, IValueMatcherWithFetch<T> {
 
 
     @Override
-    public fetch<T> getFetchModel() {
+    public fetch<T> getFetch() {
         return fetchModel;
     }
 
     @Override
-    public void setFetchModel(final fetch<T> fetchModel) {
+    public void setFetch(final fetch<T> fetchModel) {
         this.fetchModel = fetchModel;
     }
 
