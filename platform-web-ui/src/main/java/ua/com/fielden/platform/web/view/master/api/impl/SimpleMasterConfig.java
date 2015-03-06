@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.impl;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
@@ -18,13 +18,11 @@ import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 public class SimpleMasterConfig<T extends AbstractEntity<?>> implements ISimpleMasterConfig<T> {
 
     private final IRenderable renderableRepresentation;
-    @SuppressWarnings("rawtypes")
-    private final Map<String, Class<IValueMatcher>> valueMatcherForProps;
+    private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps;
 
-    @SuppressWarnings("rawtypes")
     public SimpleMasterConfig(
             final IRenderable renderableRepresentation,
-            final Map<String, Class<IValueMatcher>> valueMatcherForProps) {
+            final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps) {
         this.renderableRepresentation = renderableRepresentation;
         this.valueMatcherForProps = valueMatcherForProps;
     }
@@ -35,8 +33,7 @@ public class SimpleMasterConfig<T extends AbstractEntity<?>> implements ISimpleM
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
-    public Class<IValueMatcher> matcherTypeFor(final String propName) {
+    public Class<? extends IValueMatcherWithContext<T, ?>> matcherTypeFor(final String propName) {
         return valueMatcherForProps.get(propName);
     }
 

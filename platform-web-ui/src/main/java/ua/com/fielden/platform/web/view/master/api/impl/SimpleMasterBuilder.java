@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -44,8 +44,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final List<EntityActionConfig<T>> entityActions = new ArrayList<>();
     private final FlexLayout layout = new FlexLayout();
 
-    @SuppressWarnings("rawtypes")
-    private final Map<String, Class<IValueMatcher>> valueMatcherForProps = new HashMap<>();
+    private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     public Class<T> entityType;
 
@@ -97,7 +96,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
      *
      */
     public class WithMatcherCallback {
-        public void assign(final String propName, final Class<IValueMatcher> matcher) {
+        public void assign(final String propName, final Class<? extends IValueMatcherWithContext<T, ?>> matcher) {
             valueMatcherForProps.put(propName, matcher);
         }
     }

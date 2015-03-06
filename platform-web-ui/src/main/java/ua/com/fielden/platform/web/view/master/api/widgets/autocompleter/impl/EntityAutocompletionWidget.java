@@ -17,7 +17,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 public class EntityAutocompletionWidget extends AbstractWidget {
 
     @SuppressWarnings("rawtypes")
-    private Class<IValueMatcher> matcherType;
+    private Class<? extends IValueMatcher> matcherType;
     private boolean shouldSearchByDesc = false;
     private boolean shouldSearchByDescOnly = false;
 
@@ -35,13 +35,13 @@ public class EntityAutocompletionWidget extends AbstractWidget {
     };
 
     @SuppressWarnings("rawtypes")
-    public EntityAutocompletionWidget setMatcherType(final Class<IValueMatcher> matcherType) {
+    public EntityAutocompletionWidget setMatcherType(final Class<? extends IValueMatcher> matcherType) {
         this.matcherType = matcherType;
         return this;
     }
 
     @SuppressWarnings("rawtypes")
-    public Class<IValueMatcher> getMatcherType() {
+    public Class<? extends IValueMatcher> getMatcherType() {
         return matcherType;
     }
 

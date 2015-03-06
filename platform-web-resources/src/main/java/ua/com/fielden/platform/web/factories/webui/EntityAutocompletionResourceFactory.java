@@ -67,7 +67,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
             final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
             final ICompanionObjectFinder coFinder = injector.getInstance(ICompanionObjectFinder.class);
 
-            final IValueMatcherWithContext<? extends AbstractEntity<?>, AbstractEntity<?>> valueMatcher;
+            final IValueMatcherWithContext<?, ?> valueMatcher;
             final IEntityProducer<? extends AbstractEntity<?>> entityProducer;
             if (master != null) {
                 valueMatcher = master.createValueMatcher(propertyName);

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.impl;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.IValueMatcherByDesc;
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
@@ -29,7 +29,7 @@ public class EntityAutocompletionConfig<T extends AbstractEntity<?>>
     }
 
     @Override
-    public IAutocompleterConfig1<T> withMatcher(@SuppressWarnings("rawtypes") final Class<IValueMatcher> matcherType) {
+    public IAutocompleterConfig1<T> withMatcher(final Class<? extends IValueMatcherWithContext<T, ?>> matcherType) {
         widget().setMatcherType(matcherType);
         withMatcherCallbank.assign(widget().propertyName() , matcherType);
         return this;

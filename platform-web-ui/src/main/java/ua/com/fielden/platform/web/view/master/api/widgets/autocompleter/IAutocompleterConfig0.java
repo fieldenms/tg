@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 public interface IAutocompleterConfig0<T extends AbstractEntity<?>> extends IAutocompleterConfig1<T> {
@@ -10,6 +10,5 @@ public interface IAutocompleterConfig0<T extends AbstractEntity<?>> extends IAut
      * @param matcher
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    IAutocompleterConfig1<T> withMatcher(final Class<IValueMatcher> matcherType);
+    IAutocompleterConfig1<T> withMatcher(final Class<? extends IValueMatcherWithContext<T, ?>> matcherType);
 }

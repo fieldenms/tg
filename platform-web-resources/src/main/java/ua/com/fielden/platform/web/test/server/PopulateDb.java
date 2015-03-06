@@ -91,13 +91,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         System.out.println("ent3.getId() == " + ent3.getId());
         save(ent2.setEntityProp(ent3));
 
-        final TgPersistentEntityWithProperties moneyEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY4").setMoneyProp(new Money(new BigDecimal(23.0))).setDesc("Description for entity with key 4."));
+        final TgPersistentEntityWithProperties moneyEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money(new BigDecimal(23.0))).setDesc("Description for entity with key 4."));
         System.out.println("moneyEnt1.getId() == " + moneyEnt1.getId());
 
         final TgPersistentEntityWithProperties bigDecimalEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5."));
         System.out.println("bigDecimalEnt1.getId() == " + bigDecimalEnt1.getId());
 
-        final TgPersistentEntityWithProperties stringEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY6").setStringProp("ok").setDesc("Description for entity with key 6."));
+        final TgPersistentEntityWithProperties stringEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6."));
         System.out.println("stringEnt1.getId() == " + stringEnt1.getId());
 
         final TgPersistentEntityWithProperties booleanEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7."));

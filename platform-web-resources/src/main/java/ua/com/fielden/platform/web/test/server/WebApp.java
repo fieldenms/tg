@@ -16,6 +16,7 @@ import ua.com.fielden.platform.web.application.AbstractWebApp;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
@@ -122,7 +123,7 @@ public class WebApp extends AbstractWebApp {
                 /*      */.shortDesc("Export integer prop")
                 //      */.longDesc("Export integer property") SHORT-CUT
                 .also()
-                .addProp("entityProp").asAutocompleter()
+                .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
                 /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 //      */.preAction SHORT-CUT
                 //      */.postActionSuccess SHORT-CUT

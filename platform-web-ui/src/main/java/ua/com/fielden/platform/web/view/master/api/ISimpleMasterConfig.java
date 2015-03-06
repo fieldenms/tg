@@ -24,5 +24,5 @@ public interface ISimpleMasterConfig<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    <V extends AbstractEntity<?>> Class<IValueMatcherWithContext<T, V>> matcherTypeFor(final String propName);
+    Class<? extends IValueMatcherWithContext<T, ?>> matcherTypeFor(final String propName);
 }

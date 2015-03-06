@@ -31,6 +31,7 @@ implements IValueMatcherWithContext<CONTEXT, T>, IValueMatcherWithFetch<T> {
     private final IEntityDao<T> dao;
     private final fetch<T> defaultFetchModel;
     private fetch<T> fetchModel;
+    private CONTEXT context;
 
     private int pageSize = 10;
 
@@ -74,6 +75,21 @@ implements IValueMatcherWithContext<CONTEXT, T>, IValueMatcherWithFetch<T> {
     @Override
     public void setFetchModel(final fetch<T> fetchModel) {
         this.fetchModel = fetchModel;
+    }
+
+    @Override
+    public CONTEXT getContext() {
+        return context;
+    }
+
+    @Override
+    public void setContext(final CONTEXT context) {
+        this.context = context;
+    }
+
+    @Override
+    public Integer getPageSize() {
+        return 10;
     }
 
 

@@ -90,9 +90,9 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @param injector
      * @return
      */
-    public <V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createValueMatcher(final String propertyName) {
-        final Class<IValueMatcherWithContext<T, V>> matcherType = smConfig.matcherTypeFor(propertyName);
-        final IValueMatcherWithContext<T, V> matcher;
+    public IValueMatcherWithContext<T, ?> createValueMatcher(final String propertyName) {
+        final Class<? extends IValueMatcherWithContext<T, ?>> matcherType = smConfig.matcherTypeFor(propertyName);
+        final IValueMatcherWithContext<T, ?> matcher;
         if (matcherType != null) {
             matcher = injector.getInstance(matcherType);
         } else {
