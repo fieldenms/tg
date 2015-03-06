@@ -50,6 +50,17 @@
 
             onValidated: function(validatedEntity, bindingEntity) {
                 console.log("onValidated");
+            },
+
+            extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
+                var modPropHolder = this.super([bindingEntity, originalBindingEntity]);
+                if (this._isEntity(bindingEntity)) {
+                    console.log("       !!! IMPORTANT !!! Using [", bindingEntity, "] for @criteriaType!");
+                    console.log("       !!! IMPORTANT !!! Using [", bindingEntity.type(), "] for @criteriaType!");
+                    console.log("       !!! IMPORTANT !!! Using [", bindingEntity.type().fullClassName(), "] for @criteriaType!");
+                    modPropHolder["@criteriaType"] = bindingEntity.type().fullClassName();
+                }
+                return modPropHolder;
             }
         });
     </script>

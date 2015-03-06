@@ -9,7 +9,9 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -66,6 +68,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
             final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
             final ICompanionObjectFinder coFinder = injector.getInstance(ICompanionObjectFinder.class);
+            final IGlobalDomainTreeManager gdtm = injector.getInstance(IGlobalDomainTreeManager.class);
+            final ICriteriaGenerator critGenerator = injector.getInstance(ICriteriaGenerator.class);
 
             final IValueMatcherWithContext<?, ?> valueMatcher;
             final IEntityProducer<? extends AbstractEntity<?>> entityProducer;
@@ -77,7 +81,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                 entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType);
             }
 
-            final EntityAutocompletionResource resource = new EntityAutocompletionResource(entityType, propertyName, entityProducer, factory, valueMatcher, coFinder, restUtil, getContext(), request, response);
+            final EntityAutocompletionResource resource = new EntityAutocompletionResource(entityType, propertyName, entityProducer, factory, valueMatcher, coFinder, gdtm, critGenerator, restUtil, getContext(), request, response);
             resource.handle();
         }
     }

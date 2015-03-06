@@ -16,13 +16,11 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.MasterEntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Money;
@@ -81,30 +79,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
-            final Class<? extends AbstractEntity<?>> masterType = AnnotationReflector.getPropertyAnnotation(MasterEntityType.class, entityType, "________________masterTypeMarker").value();
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            // TODO  propertyName.substring(propertyName.lastIndexOf("_") + 1); VERY BAD APPROACH!
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            final String originalPropertyName = propertyName.substring(propertyName.lastIndexOf("_") + 1);
-
+            final Class<? extends AbstractEntity<?>> masterType = CriteriaResource.getMasterType(entityType);
+            final String originalPropertyName = CriteriaResource.getOriginalPropertyName(propertyName);
             return coFinder.find(masterType).getFetchProvider().fetchFor(originalPropertyName);
         } else {
             return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
         }
     }
-
-    //    public IFetchProvider<T> getFetchProvider() {
-    //        return this.dao.getFetchProvider();
-    //    }
 
     /**
      * Applies the values from <code>dirtyPropertiesHolder</code> into the <code>entity</code>. The values needs to be converted from the client-side component-specific form into
@@ -114,7 +95,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param entity
      * @return
      */
-    public T apply(final Map<String, Object> modifiedPropertiesHolder, final T entity) {
+    public static <M extends AbstractEntity<?>> M apply(final Map<String, Object> modifiedPropertiesHolder, final M entity, final ICompanionObjectFinder companionFinder) {
+        final Class<M> type = (Class<M>) entity.getType();
         final Object arrivedVersionVal = modifiedPropertiesHolder.get(AbstractEntity.VERSION);
         final Long version = ((Integer) arrivedVersionVal).longValue();
         final boolean isEntityStale = entity.getVersion() > version;
@@ -125,13 +107,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    final Object newValue = convert(getEntityType(), name, valAndOrigVal.get("val"));
-                    if (notFoundEntity(getEntityType(), name, valAndOrigVal.get("val"), newValue)) {
+                    final Object newValue = convert(type, name, valAndOrigVal.get("val"), companionFinder);
+                    if (notFoundEntity(type, name, valAndOrigVal.get("val"), newValue)) {
                         entity.getProperty(name).setDomainValidationResult(Result.failure(entity, String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"))));
                     } else if (!isEntityStale) {
                         entity.set(name, newValue);
                     } else {
-                        final Object staleOriginalValue = convert(getEntityType(), name, valAndOrigVal.get("origVal"));
+                        final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
                         if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
                             entity.getProperty(name).setDomainValidationResult(Result.failure(entity, "The property has been recently changed by other user. Please revert property value to resolve conflict."));
                         } else {
@@ -142,7 +124,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     if (!isEntityStale) {
                         // do nothing
                     } else {
-                        final Object originalValue = convert(getEntityType(), name, valAndOrigVal.get("origVal"));
+                        final Object originalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
                         if (EntityUtils.isStale(originalValue, entity.get(name))) {
                             entity.getProperty(name).setDomainValidationResult(Result.warning(entity, "The property has been recently changed by other user."));
                         }
@@ -162,7 +144,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param newValue
      * @return
      */
-    private boolean notFoundEntity(final Class<T> type, final String propertyName, final Object reflectedValue, final Object newValue) {
+    private static <M extends AbstractEntity<?>> boolean notFoundEntity(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
         return reflectedValue != null && newValue == null && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
     }
 
@@ -174,7 +156,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param reflectedValue
      * @return
      */
-    private Object convert(final Class<T> type, final String propertyName, final Object reflectedValue) {
+    private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final ICompanionObjectFinder companionFinder) {
         final Class propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
 
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
@@ -184,12 +166,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             }
             final Class<AbstractEntity<?>> entityPropertyType = propertyType;
 
-            final IEntityDao<AbstractEntity<?>> propertyCompanion = getCompanionFinder().<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType);
+            final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType);
 
             final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
             /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList((String) reflectedValue))).//
             /*      */model();
-            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, entityType, propertyName).fetchModel()).model();
+            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
             return propertyCompanion.getEntity(qem);
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
         } else if (EntityUtils.isString(propertyType)) {
@@ -224,7 +206,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param envelope
      * @return
      */
-    private Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
+    public static Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
         try {
             return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
         } catch (final Exception ex) {
@@ -264,10 +246,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public Pair<T, Map<String, Object>> constructEntity(final Representation envelope, final RestServerUtil restUtil, final Long id) {
-        final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-        final T applied = createAppliedEntity(id, modifiedPropertiesHolder);
-        return new Pair<>(applied, modifiedPropertiesHolder);
+    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final Long id) {
+        return constructEntity(modifiedPropertiesHolder, createValidationPrototype(id), getCompanionFinder());
     }
 
     /**
@@ -278,21 +258,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * <p>
      * All normal properties will be applied in 'validationPrototype'.
      *
-     * @param envelope
-     * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public Pair<T, Map<String, Object>> constructEntity(final Representation envelope, final RestServerUtil restUtil, final T validationPrototype) {
-        final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-        final T applied = apply(modifiedPropertiesHolder, validationPrototype);
-        return new Pair<>(applied, modifiedPropertiesHolder);
-    }
-
-    private T createAppliedEntity(final Long id, final Map<String, Object> modifiedPropertiesHolder) {
-        // Initialises the "validation prototype" entity, which modification will be made upon:
-        final T validationPrototype = createValidationPrototype(id);
-        final T applied = apply(modifiedPropertiesHolder, validationPrototype);
-        return applied;
+    public static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final ICompanionObjectFinder companionFinder) {
+        return new Pair<>(apply(modifiedPropertiesHolder, validationPrototype, companionFinder), modifiedPropertiesHolder);
     }
 
     /**
@@ -303,17 +272,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * <p>
      * All normal properties will be applied in 'validationPrototype'.
      *
-     * @param envelope
-     * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public Pair<T, Map<String, Object>> constructEntity(final Representation envelope, final RestServerUtil restUtil) {
-        final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-
+    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder) {
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
 
-        final T applied = createAppliedEntity(id, modifiedPropertiesHolder);
-        return new Pair<>(applied, modifiedPropertiesHolder);
+        return constructEntity(modifiedPropertiesHolder, id);
     }
 }

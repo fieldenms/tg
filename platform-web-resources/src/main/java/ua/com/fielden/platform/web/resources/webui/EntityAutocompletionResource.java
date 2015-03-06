@@ -14,11 +14,14 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -35,6 +38,8 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     private final RestServerUtil restUtil;
     private final IValueMatcherWithContext<CONTEXT, T> valueMatcher;
     private final ICompanionObjectFinder coFinder;
+    private final IGlobalDomainTreeManager gdtm;
+    private final ICriteriaGenerator critGenerator;
     private final Logger logger = Logger.getLogger(getClass());
 
     public EntityAutocompletionResource(
@@ -44,6 +49,8 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final EntityFactory entityFactory,
             final IValueMatcherWithContext<CONTEXT, T> valueMatcher,
             final ICompanionObjectFinder companionFinder,
+            final IGlobalDomainTreeManager gdtm,
+            final ICriteriaGenerator critGenerator,
             final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
@@ -53,6 +60,8 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
         this.valueMatcher = valueMatcher;
         this.restUtil = restUtil;
         this.coFinder = companionFinder;
+        this.gdtm = gdtm;
+        this.critGenerator = critGenerator;
     }
 
     /**
@@ -61,9 +70,15 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final Pair<CONTEXT, Map<String, Object>> entityAndHolder = utils.constructEntity(envelope, restUtil);
+        final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        final Pair<CONTEXT, Map<String, Object>> entityAndHolder;
+        if (modifiedPropertiesHolder.get("@criteriaType") == null) {
+            entityAndHolder = utils.constructEntity(modifiedPropertiesHolder);
+        } else {
+            entityAndHolder = constructCriteriaEntity(modifiedPropertiesHolder);
+        }
         final CONTEXT context = entityAndHolder.getKey();
-        logger.error("context = " + context);
+        logger.debug("context = " + context);
         final Map<String, Object> paramsHolder = entityAndHolder.getValue();
 
         final String searchStringVal = (String) paramsHolder.get("@searchString"); // custom property inside paramsHolder
@@ -73,10 +88,16 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
         logger.debug(String.format("SEARCH STRING %s", searchString));
 
         valueMatcher.setContext(context);
-        final fetch<T> fetch = EntityResourceUtils.<CONTEXT, T>fetchForProperty(coFinder, entityType, propertyName).fetchModel();
+        final fetch<T> fetch = EntityResourceUtils.<CONTEXT, T> fetchForProperty(coFinder, entityType, propertyName).fetchModel();
         valueMatcher.setFetch(fetch);
         final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
         return restUtil.listJSONRepresentation(entities);
+    }
+
+    private Pair<CONTEXT, Map<String, Object>> constructCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder) {
+        final Class<? extends AbstractEntity<?>> criteriaType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass((String) modifiedPropertiesHolder.get("@criteriaType"));
+        final CONTEXT valPrototype = (CONTEXT) CriteriaResource.createCriteriaValidationPrototype(CriteriaResource.getMiType(criteriaType), gdtm, critGenerator);
+        return EntityResourceUtils.constructEntity(modifiedPropertiesHolder, valPrototype, coFinder);
     }
 }

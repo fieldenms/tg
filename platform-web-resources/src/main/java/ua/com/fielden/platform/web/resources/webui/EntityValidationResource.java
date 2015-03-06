@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.util.Map;
+
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -39,7 +41,8 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final T applied = utils.constructEntity(envelope, restUtil).getKey();
+        final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        final T applied = utils.constructEntity(modifiedPropertiesHolder).getKey();
         return restUtil.singleJSONRepresentation(applied);
     }
 }
