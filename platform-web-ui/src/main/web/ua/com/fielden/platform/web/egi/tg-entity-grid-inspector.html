@@ -5,7 +5,7 @@
 
 <polymer-element name="tg-entity-grid-inspector" attributes="entityType entities">
     <template>
-        <content id="column_selector" select="tg-prperty-column"></content>
+        <content id="column_selector" select="tg-property-column" hidden></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
         <core-media-query query="max-width: {{$.appConfig.minTabletWidth - 1}}px" querymatches="{{mobileScreen}}"></core-media-query>
@@ -35,12 +35,12 @@
                     this.columns.push(item);
                 }.bind(this));
             },
-            getTitle: function(propertyName) {
-                var type = this.$.reflector.findTypeByName(entityType);
-                return type.prop(propertyName).title();
+            getTitle: function(column) {
+                var type = this.$.reflector.findTypeByName(this.entityType);
+                return type.prop(column.property).title();
             },
-            getValue: function(entity, propertyName) {
-                return entity.get(propertyName);
+            getValue: function(entity, column) {
+                return entity.get(column.property);
             }
         });
     </script>

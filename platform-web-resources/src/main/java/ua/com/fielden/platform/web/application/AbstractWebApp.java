@@ -23,8 +23,9 @@ import ua.com.fielden.platform.web.factories.MainMenuResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.factories.WebAppConfigResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
@@ -138,6 +139,8 @@ public abstract class AbstractWebApp extends Application {
 
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
+        //For egi example TODO remove later.
+        router.attach("/test/egi", new EgiExampleResourceFactory(injector));
         // type meta info resource
         router.attach("/tg-reflector", new TgReflectorComponentResourceFactory(injector));
 

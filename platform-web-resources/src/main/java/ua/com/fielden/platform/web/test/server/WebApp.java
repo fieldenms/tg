@@ -110,7 +110,7 @@ public class WebApp extends AbstractWebApp {
         //        app.addCustomView(new MyProfile(), true);
         //        app.addCustomView(new CustomWebView(new CustomWebModel()));
 
-        final String mr = "'margin-right: 20px'";
+        final String mr = "'margin-right: 20px', 'width:300px'";
         // Add entity masters.
         final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfig = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
