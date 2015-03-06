@@ -31,6 +31,8 @@ public class EntityAutocompletionWidget extends AbstractWidget {
         attrs.put("createModifiedPropertiesHolder", "{{createModifiedPropertiesHolder}}");
         attrs.put("user", "{{user}}");
         attrs.put("entitytype", "{{entitytype}}");
+        attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
+
         return attrs;
     };
 

@@ -37,7 +37,7 @@
     .invalid paper-spinner { width: 12px; height: 12px; border-color : {{g.paperInput.invalidColor}}; }
 </core-style>
 
-<polymer-element name="tg-entity-editor" attributes="composite user entityType createModifiedPropertiesHolder" extends="tg-editor">
+<polymer-element name="tg-entity-editor" attributes="composite user entityType createModifiedPropertiesHolder hightlightDesc" extends="tg-editor">
     <template>
         <!-- CSS -->
         <core-style ref="search-icon-decorator"></core-style>
@@ -97,20 +97,25 @@
                                         </div>
                                         <div class="additional-prop">
                                             <span class="prop-name">{{propTitleByName(v, "desc")}}:</span>
-                                            <div style="font-size: 0">
-                                                <template repeat="{{d in matchedParts(v.desc)}}">
-                                                    <template if="{{d.matched}}">
-                                                        <span class="key-value key-value-highlighted">{{d.part}}</span>
-                                                    </template>
-                                                    <template if="{{!d.matched}}">
-                                                        <!-- need to preserve spaces in the text immediately after the matched part -->
-                                                        <template repeat="{{sp in spaces(d.part)}}">
-                                                            <span class="key-value">&nbsp;</span>
+                                            <template if="{{!hightlightDesc}}">
+                                                <span class="key-value">{{v.desc}}</span>
+                                            </template>
+                                            <template if="{{hightlightDesc}}">
+                                                <div style="font-size: 0">
+                                                    <template repeat="{{d in matchedParts(v.desc)}}">
+                                                        <template if="{{d.matched}}">
+                                                            <span class="key-value key-value-highlighted">{{d.part}}</span>
                                                         </template>
-                                                        <span class="key-value">{{d.part}}</span>
+                                                        <template if="{{!d.matched}}">
+                                                            <!-- need to preserve spaces in the text immediately after the matched part -->
+                                                            <template repeat="{{sp in spaces(d.part)}}">
+                                                                <span class="key-value">&nbsp;</span>
+                                                            </template>
+                                                            <span class="key-value">{{d.part}}</span>
+                                                        </template>
                                                     </template>
-                                                </template>
-                                            </div>
+                                                </div>
+                                            </template>
                                         </div>
                                         <template if="{{isComposite(v)}}">
                                             <template repeat="{{p in keyMembers(v)}}">
@@ -239,6 +244,8 @@
                  * Regular expression to search for and highlight found matches
                  */
                 searchQuery: "",
+
+                hightlightDesc: false,
 
                 /* Returns an array of parts of a string that corresponds to a key (or desc) property value of the returned entity, 
                    split by matching and non-matching portions;
