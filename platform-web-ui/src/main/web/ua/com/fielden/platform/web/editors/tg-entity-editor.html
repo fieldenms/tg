@@ -97,9 +97,20 @@
                                         </div>
                                         <div class="additional-prop">
                                             <span class="prop-name">{{propTitleByName(v, "desc")}}:</span>
-                                            <span>
-                                                {{v.desc}}
-                                            </span>
+                                            <div style="font-size: 0">
+                                                <template repeat="{{d in matchedParts(v.desc)}}">
+                                                    <template if="{{d.matched}}">
+                                                        <span class="key-value key-value-highlighted">{{d.part}}</span>
+                                                    </template>
+                                                    <template if="{{!d.matched}}">
+                                                        <!-- need to preserve spaces in the text immediately after the matched part -->
+                                                        <template repeat="{{sp in spaces(d.part)}}">
+                                                            <span class="key-value">&nbsp;</span>
+                                                        </template>
+                                                        <span class="key-value">{{d.part}}</span>
+                                                    </template>
+                                                </template>
+                                            </div>
                                         </div>
                                         <template if="{{isComposite(v)}}">
                                             <template repeat="{{p in keyMembers(v)}}">
@@ -240,7 +251,7 @@
                     if ("\\w*" == this.searchQuery) {
                         parts.push({
                             part: str,
-                            matched: true
+                            matched: false
                         });
                         return parts;
                     } else if ('' == this.searchQuery) {
@@ -286,6 +297,21 @@
                     return parts;
                 },
 
+                /**
+                 * Creates an array equal in size to the number of spacaes in the provided text.
+                 * This function is used during rendering of found values in order to preserve spaces in the text when braking it to matching and non-matching parts.
+                 */
+                spaces: function (text) {
+                    var parts = [];
+                    var index = 0;
+                    while (index < text.length && text.substring(index, index + 1) === ' ') {
+                        parts.push(index);
+                        index = index + 1;
+                    }
+                    console.log("PARTS ", parts);
+                    return parts;
+                },
+
                 /* A position of the start of the search string the input value. */
                 replaceFromIndex: 0,
                 /* A position of the end of the search string the input value. */
@@ -325,13 +351,22 @@
                     this.search();
                 },
 
+                /**
+                 * Cleans input text.
+                 */
+                prepInput: function (str) {
+                    if (str) {
+                        return str.replace(/\*\*/g, "*");
+                    }
+                    return str;
+                },
                 /* 
                  * The function that actually perform the search and opensup the overlay with matched values.
                  */
                 search: function () {
                     // need to implement the actuall search 
                     // what is the query string?
-                    var inputText = this.$.input.value;
+                    var inputText = this.prepInput(this.$.input.value);
                     console.log('raw search query (to be send to server): ', inputText);
 
                     // prep this.searchQuery for highlighting of the matching parts in the search result
@@ -358,7 +393,7 @@
 
                         // prepare the AJAX request based on the raw search string
                         var paramsHolder = this.createModifiedPropertiesHolder();
-                        paramsHolder["@searchString"] = inputText;                        
+                        paramsHolder["@searchString"] = inputText;
                         var serialisedSearchQuery = this.$.serialiser.serialise(paramsHolder);
 
                         this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
