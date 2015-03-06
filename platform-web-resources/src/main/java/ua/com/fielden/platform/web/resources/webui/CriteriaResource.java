@@ -13,6 +13,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -142,20 +143,8 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
      * @param propertyName
      * @return
      */
-    public static String getOriginalPropertyName(final String propertyName) {
-        // TODO
-        // TODO
-        // TODO
-        // TODO
-        // TODO
-        // TODO  propertyName.substring(propertyName.lastIndexOf("_") + 1); VERY BAD APPROACH!
-        // TODO
-        // TODO
-        // TODO
-        // TODO
-        // TODO
-        // TODO
-        return propertyName.substring(propertyName.lastIndexOf("_") + 1);
+    public static String getOriginalPropertyName(final Class<?> criteriaClass, final String propertyName) {
+        return CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
     }
 
     /**

@@ -80,7 +80,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
             final Class<? extends AbstractEntity<?>> masterType = CriteriaResource.getMasterType(entityType);
-            final String originalPropertyName = CriteriaResource.getOriginalPropertyName(propertyName);
+            final String originalPropertyName = CriteriaResource.getOriginalPropertyName(entityType, propertyName);
             return coFinder.find(masterType).getFetchProvider().fetchFor(originalPropertyName);
         } else {
             return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
