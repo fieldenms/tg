@@ -47,13 +47,13 @@ implements IValueMatcherWithContext<CONTEXT, T>, IValueMatcherWithFetch<T> {
      * @param incompleteEql
      * @return
      */
-    protected abstract EntityResultQueryModel<T> completeEqlBasedOnContext(final CONTEXT context, final ICompoundCondition0<T> incompleteEql);
+    protected abstract EntityResultQueryModel<T> completeEqlBasedOnContext(final CONTEXT context, final String searchString, final ICompoundCondition0<T> incompleteEql);
 
 
     @Override
     public List<T> findMatches(final String searchString) {
         final ICompoundCondition0<T> incompleteEql =select(dao.getEntityType()).where().prop(KEY).iLike().val(searchString);
-        final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), incompleteEql);
+        final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         final OrderingModel ordering = orderBy().yield(KEY).asc().model();
         return dao.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).model(), pageSize);
     }
@@ -61,7 +61,7 @@ implements IValueMatcherWithContext<CONTEXT, T>, IValueMatcherWithFetch<T> {
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
         final ICompoundCondition0<T> incompleteEql =select(dao.getEntityType()).where().prop(KEY).iLike().val(searchString);
-        final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), incompleteEql);
+        final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         final OrderingModel ordering = orderBy().yield(KEY).asc().model();
         return dao.getFirstEntities(from(queryModel).with(ordering).with(fetchModel).model(), pageSize);
     }

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.test.matchers;
 
+import ua.com.fielden.platform.basic.IValueMatcherByDesc;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithContext;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
@@ -9,15 +11,16 @@ import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import com.google.inject.Inject;
 
 /**
- * A demo context-dependent matcher that adds condition to the search query in case some predicated holds for the provided context.
+ * A demo matcher that searches not only by key, but also by desc propert.
  *
  * @author TG Team
  *
  */
-public class ContextMatcher extends AbstractSearchEntityByKeyWithContext<TgPersistentEntityWithProperties, TgPersistentEntityWithProperties> {
+public class SearchAlsoByDescMatcher extends AbstractSearchEntityByKeyWithContext<TgPersistentEntityWithProperties, TgPersistentEntityWithProperties>
+    implements IValueMatcherByDesc<TgPersistentEntityWithProperties>{
 
     @Inject
-    public ContextMatcher(final ITgPersistentEntityWithProperties dao) {
+    public SearchAlsoByDescMatcher(final ITgPersistentEntityWithProperties dao) {
         super(dao);
     }
 
@@ -26,10 +29,7 @@ public class ContextMatcher extends AbstractSearchEntityByKeyWithContext<TgPersi
             final TgPersistentEntityWithProperties context,
             final String searchString,
             final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
-        if (context.getIntegerProp() != null && context.getIntegerProp() > 50) {
-            return incompleteEql.and().prop("integerProp").ge().val(50).model();
-        }
-        return incompleteEql.model();
+        return incompleteEql.or().prop(AbstractEntity.DESC).iLike().val(searchString).model();
     }
 
 }

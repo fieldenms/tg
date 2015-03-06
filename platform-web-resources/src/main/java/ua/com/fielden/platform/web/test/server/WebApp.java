@@ -17,6 +17,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
+import ua.com.fielden.platform.web.test.matchers.SearchAlsoByDescMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
@@ -133,7 +134,7 @@ public class WebApp extends AbstractWebApp {
                 /*      */.shortDesc("Export entity prop")
                 /*      */.longDesc("Export entity property")
                 .also()
-                .addProp("critOnlyEntityProp").asAutocompleter()
+                .addProp("critOnlyEntityProp").asAutocompleter().withMatcher(SearchAlsoByDescMatcher.class).byDesc()
                 /*      */.withAction("#exportCritOnlyEntityProp", TgExportFunctionalEntity.class)
                 /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
                 /*      */.postActionSuccess(new PostActionSuccess(""))

@@ -36,7 +36,10 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
     }
 
     @Override
-    protected EntityResultQueryModel<T> completeEqlBasedOnContext(final CONTEXT context, final ICompoundCondition0<T> incompleteEql) {
+    protected EntityResultQueryModel<T> completeEqlBasedOnContext(
+            final CONTEXT context,
+            final String searchString,
+            final ICompoundCondition0<T> incompleteEql) {
         return incompleteEql.model();
     }
 
