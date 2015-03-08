@@ -1,6 +1,12 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -98,6 +104,56 @@ public class DynamicEntityClassLoader extends ClassLoader {
             final ClassReader cr = new ClassReader(currentType);
             final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
             final AdvancedAddPropertyAdapter cv = new AdvancedAddPropertyAdapter(cw, namingService, propertiesToAdd);
+            cr.accept(cv, ClassReader.SKIP_FRAMES);
+            currentType = cw.toByteArray();
+            currentName = cv.getEnhancedName().replace('/', '.');
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new IllegalStateException(e);
+        }
+
+        return this;
+    }
+
+    /**
+     *
+     * Adds the specified class level annotation to the class.
+     * <p>
+     * It is important that these annotation have their target specified as <code>TYPE</code> and retention as
+     * <code>RUNTIME</code>. Otherwise, method throws an illegal argument exception.
+     *
+     * @param annotations
+     * @return
+     */
+    public DynamicEntityClassLoader addClassAnnotations(final Annotation... annotations) {
+        if (currentType == null || currentName == null) {
+            throw new IllegalStateException("Current type or name are not specified.");
+        }
+
+        if (annotations == null || annotations.length == 0) {
+            return this;
+        }
+
+        // let's validate provided annotations
+        for (final Annotation annot : annotations) {
+            // check retention policy
+            final Retention retention = annot.annotationType().getAnnotation(Retention.class);
+            if (retention == null || retention.value() != RetentionPolicy.RUNTIME) {
+                throw new IllegalArgumentException(String.format("The provided annotation %s should have runtime retention policy.", annot.annotationType().getSimpleName()));
+            }
+
+            // check target
+            final Target target = annot.annotationType().getAnnotation(Target.class);
+            if (target == null || Arrays.stream(target.value()).filter(t -> t == ElementType.TYPE).count() == 0) {
+                throw new IllegalArgumentException(String.format("The provided annotation %s should have runtime retention policy.", annot.annotationType().getSimpleName()));
+            }
+        }
+
+        // proceed with type construction
+        try {
+            final ClassReader cr = new ClassReader(currentType);
+            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+            final AdvancedAddClassAnnotationAdapter cv = new AdvancedAddClassAnnotationAdapter(cw, namingService, annotations);
             cr.accept(cv, ClassReader.SKIP_FRAMES);
             currentType = cw.toByteArray();
             currentName = cv.getEnhancedName().replace('/', '.');
