@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import org.joda.time.DateTime;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -15,7 +14,6 @@ import org.restlet.resource.ServerResource;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -46,19 +44,28 @@ public class EgiExampleResource extends ServerResource {
 
     private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory) {
         return Arrays.asList(
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43)
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setStringProp("String prop value 1").setBigDecimalProp(BigDecimal.valueOf(1.0))
                         .setDesc("Description for entity with key 1. This is a relatively long description to demonstrate how well does is behave during value autocompletion."),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14).setDesc("Description for entity with key 2."),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY3").setIntegerProp(15).setDesc("Description for entity with key 3."),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money(new BigDecimal(23.0))).setDesc("Description for entity with key 4."),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5."),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6."),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7."),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(9999L).toDate()).setDesc("Description for entity with key 8."),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "DEFAULT_KEY").setIntegerProp(7).setMoneyProp(new Money(new BigDecimal(7))).setBigDecimalProp(new BigDecimal(7.7))
-                        .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setDesc("Default entity description"),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY10").setConflictingProp("initial").setNonConflictingProp("initial").setDesc("Description for entity with key 10."),
-                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setBigDecimalProp(new BigDecimal(23.0)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setDesc("Description for entity with key 11.")
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14).setStringProp("String prop value 2").setBigDecimalProp(BigDecimal.valueOf(2.0))
+                        .setDesc("Description for entity with key 2."),
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY3").setIntegerProp(15).setStringProp("String prop value 3").setBigDecimalProp(BigDecimal.valueOf(3.0))
+                        .setDesc("Description for entity with key 3."),
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setStringProp("String prop value 4").setBigDecimalProp(BigDecimal.valueOf(4.0))
+                        .setDesc("Description for entity with key 4."),
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY5").setIntegerProp(64).setStringProp("String prop value 5").setBigDecimalProp(BigDecimal.valueOf(5.0))
+                        .setDesc("Description for entity with key 5."),
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("String prop value 6").setBigDecimalProp(BigDecimal.valueOf(6.0))
+                        .setDesc("Description for entity with key 6."),
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY7").setIntegerProp(65).setStringProp("String prop value 7").setBigDecimalProp(BigDecimal.valueOf(7.0))
+                        .setDesc("Description for entity with key 7."),
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY8").setIntegerProp(66).setStringProp("String prop value 8").setBigDecimalProp(BigDecimal.valueOf(8.0))
+                        .setDesc("Description for entity with key 8."),
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY9").setIntegerProp(7).setStringProp("String prop value 9").setBigDecimalProp(BigDecimal.valueOf(9.0))
+                        .setDesc("Default entity description"),
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY10").setIntegerProp(7).setStringProp("String prop value 10").setBigDecimalProp(BigDecimal.valueOf(10.0))
+                        .setDesc("Description for entity with key 10."),
+                entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY11").setIntegerProp(43).setStringProp("String prop value 11").setBigDecimalProp(new BigDecimal(23.0))
+                        .setDesc("Description for entity with key 11.")
                 );
     }
 }

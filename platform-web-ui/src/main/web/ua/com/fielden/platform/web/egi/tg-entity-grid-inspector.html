@@ -3,29 +3,45 @@
 <link rel="import" href="/tg-web-app/tg-app-config.html">
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-entity-grid-inspector" attributes="entityType entities">
+<polymer-element name="tg-entity-grid-inspector" attributes="entityType entities" layout vertical>
     <template>
+        <style>
+            .table-container {
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+        </style>
         <content id="column_selector" select="tg-property-column" hidden></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
         <core-media-query query="max-width: {{$.appConfig.minTabletWidth - 1}}px" querymatches="{{mobileScreen}}"></core-media-query>
         <core-media-query query="(min-width: {{$.appConfig.minTabletWidth}}px) and (max-width: {{$.appConfig.minDesktopWidth - 1}}px)" querymatches="{{tabletScreen}}"></core-media-query>
         <core-media-query query="min-width: {{$.appConfig.minDesktopWidth}}px" querymatches="{{desktopScreen}}"></core-media-query>
-        <template if="{{desktopScreen || tabletScreen}}">
-            <div layout horizontal>
+        <table>
+            <tr>
                 <template repeat="{{column in columns}}">
-                    <div layout vertical>
-                        <div>{{getTitle(column)}}</div>
-                        <template repeat="{{entity in entities}}">
-                            <div>{{getValue(entity, column)}}</div>
-                        </template>
-                    </div>
+                    <td style="width: {{column.width}}">{{getTitle(column)}}</td>
                 </template>
-            </div>
-        </template>
-        <template if="{{mobileScreen}}">
-
-        </template>
+            </tr>
+        </table>
+        <div class="table-container">
+            <table>
+                <template repeat="{{entity in entities}}">
+                    <tr>
+                        <template repeat="{{column in columns}}">
+                            <td style="width: {{column.width}}">{{getValue(entity, column)}}</td>
+                        </template>
+                    </tr>
+                </template>
+            </table>
+        </div>
+        <table>
+            <tr>
+                <template repeat="{{column in columns}}">
+                    <td style="width: {{column.width}}">total</td>
+                </template>
+            </tr>
+        </table>
     </template>
     <script>
         Polymer({
@@ -35,11 +51,11 @@
                     this.columns.push(item);
                 }.bind(this));
             },
-            getTitle: function(column) {
+            getTitle: function (column) {
                 var type = this.$.reflector.findTypeByName(this.entityType);
                 return type.prop(column.property).title();
             },
-            getValue: function(entity, column) {
+            getValue: function (entity, column) {
                 return entity.get(column.property);
             }
         });
