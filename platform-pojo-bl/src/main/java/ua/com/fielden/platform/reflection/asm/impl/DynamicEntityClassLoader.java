@@ -119,8 +119,8 @@ public class DynamicEntityClassLoader extends ClassLoader {
      *
      * Adds the specified class level annotation to the class.
      * <p>
-     * It is important that these annotation have their target specified as <code>TYPE</code> and retention as
-     * <code>RUNTIME</code>. Otherwise, method throws an illegal argument exception.
+     * It is important that these annotation have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code>. Otherwise, method throws an illegal argument
+     * exception.
      *
      * @param annotations
      * @return
@@ -145,7 +145,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
             // check target
             final Target target = annot.annotationType().getAnnotation(Target.class);
             if (target == null || Arrays.stream(target.value()).filter(t -> t == ElementType.TYPE).count() == 0) {
-                throw new IllegalArgumentException(String.format("The provided annotation %s should have runtime retention policy.", annot.annotationType().getSimpleName()));
+                throw new IllegalArgumentException(String.format("The provided annotation %s should have 'type' target.", annot.annotationType().getSimpleName()));
             }
         }
 

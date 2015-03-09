@@ -21,7 +21,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.swing.menu.MiType;
 import ua.com.fielden.platform.swing.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
@@ -99,13 +98,13 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     }
 
     /**
-     * Generates marker with mi type.
+     * Generates annotation with mi type.
      *
      * @param miType
      * @return
      */
-    private static NewProperty createMiTypeNewProperty(final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        return new NewProperty("________________masterTypeMarker", String.class, false, "Master Type Marker", "Master Type Marker Desc", new MiTypeAnnotation().newInstance(miType));
+    private static MiType createMiTypeAnnotation(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        return new MiTypeAnnotation().newInstance(miType);
     }
 
     /**
@@ -115,7 +114,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
      * @return
      */
     public static Class<? extends MiWithConfigurationSupport<?>> getMiType(final Class<? extends AbstractEntity<?>> criteriaType) {
-        final MiType annotation = AnnotationReflector.getPropertyAnnotation(MiType.class, criteriaType, "________________masterTypeMarker"); // criteriaType.getAnnotation(MasterEntityType.class);
+        final MiType annotation = AnnotationReflector.getAnnotation(criteriaType, MiType.class);
         if (annotation == null) {
             throw new IllegalStateException(String.format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
         }
@@ -193,7 +192,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
             final ICriteriaGenerator critGenerator) {
         final ICentreDomainTreeManagerAndEnhancer cdtmae = getCurrentCentreManager(gdtm, miType);
         final Class<AbstractEntity<?>> entityType = getEntityType(miType);
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = critGenerator.generateCentreQueryCriteria(entityType, cdtmae, createMiTypeNewProperty(miType));
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = critGenerator.generateCentreQueryCriteria(entityType, cdtmae, createMiTypeAnnotation(miType));
         return validationPrototype;
     }
 }
