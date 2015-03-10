@@ -116,6 +116,7 @@
             label: "Autocompleter",
             separator: ",",
             isSearching: false,
+
             /* Handles click on button OK, which confirms selection and assignes it to the input field. */
             onOkClick: function () {
                 // clear tooltip text
@@ -151,6 +152,7 @@
                 this.$.trigger.selectionStart = this.multi ? this.replaceFromIndex + 1 : this.replaceFromIndex;
                 this.$.trigger.selectionEnd = this.$.trigger.selectionStart + selectedItemsToStr.length;
             },
+
             /* Handles click on button Cancel. */
             onCancelClick: function () {
                 this.$.overlay.close();
