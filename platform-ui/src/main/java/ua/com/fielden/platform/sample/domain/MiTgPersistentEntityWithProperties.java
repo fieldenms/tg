@@ -37,9 +37,11 @@ public class MiTgPersistentEntityWithProperties extends MiWithConfigurationSuppo
                 // addCriteria(cdtme, "").// empty means entity itself, which gets represented by key
                 addCriteria(cdtme, "desc").
                         addCriteria(cdtme, "critOnlyEntityProp").
+                        addCriteria(cdtme, "entityProp").
                         addCriteria(cdtme, "integerProp");
                 logger.debug("\tAdded criteria.");
 
+                cdtme.getFirstTick().setValue(root(), "entityProp", entityVal("KE*", "AB*"));
                 cdtme.getFirstTick().setValue(root(), "critOnlyEntityProp", null);
                 cdtme.getFirstTick().setValue(root(), "integerProp", 3);
                 cdtme.getFirstTick().setValue2(root(), "integerProp", 9);

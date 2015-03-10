@@ -517,6 +517,8 @@
                         return value;
                     } else if (typeof value === "string") { // for string value -- return the same value for editors
                         return value;
+                    } else if (value.constructor === Array) { // for Array value -- return the same value for tg-entity-search-criteria editor
+                        return value;
                     } else {
                         throw new UnsupportedConversionException(value);
                     }

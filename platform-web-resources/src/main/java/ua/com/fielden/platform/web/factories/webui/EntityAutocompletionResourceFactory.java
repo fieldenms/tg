@@ -18,7 +18,9 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.CriteriaResource;
 import ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -77,8 +79,15 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                 valueMatcher = master.createValueMatcher(propertyName);
                 entityProducer = master.createEntityProducer();
             } else { // in case of generated entities like EntityQueryCriteria -- there is no corresponding master registered. So -- use default producer and value matcher
-                valueMatcher = EntityMaster.createDefaultValueMatcher(propertyName, entityType, coFinder);
-                entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType);
+                if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
+                    final Class<? extends AbstractEntity<?>> originalType = CriteriaResource.getMasterType(entityType);
+                    final String originalPropertyName = CriteriaResource.getOriginalPropertyName(entityType, propertyName);
+                    valueMatcher = EntityMaster.createDefaultValueMatcher(originalPropertyName, originalType, coFinder);
+                    entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType);
+                } else {
+                    valueMatcher = EntityMaster.createDefaultValueMatcher(propertyName, entityType, coFinder);
+                    entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType);
+                }
             }
 
             final EntityAutocompletionResource resource = new EntityAutocompletionResource(entityType, propertyName, entityProducer, factory, valueMatcher, coFinder, gdtm, critGenerator, restUtil, getContext(), request, response);
