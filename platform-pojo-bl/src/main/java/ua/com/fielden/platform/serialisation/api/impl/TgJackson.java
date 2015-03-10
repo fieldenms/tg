@@ -168,7 +168,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
             EntitySerialiser.getContext().reset();
             final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
-            logger.error("Serialised JSON = |" + new String(bytes, Charsets.UTF_8) + "|.");
+            logger.info("Serialised JSON = |" + new String(bytes, Charsets.UTF_8) + "|.");
 
             return bytes;
         } catch (final JsonProcessingException e) {

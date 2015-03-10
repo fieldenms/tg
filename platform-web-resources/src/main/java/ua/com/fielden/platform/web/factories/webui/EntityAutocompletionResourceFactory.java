@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.factories.webui;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -35,7 +36,7 @@ import com.google.inject.Injector;
  *
  */
 public class EntityAutocompletionResourceFactory extends Restlet {
-
+    private final Logger logger = Logger.getLogger(getClass());
     private final Injector injector;
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
@@ -82,6 +83,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                 if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
                     final Class<? extends AbstractEntity<?>> originalType = CriteriaResource.getMasterType(entityType);
                     final String originalPropertyName = CriteriaResource.getOriginalPropertyName(entityType, propertyName);
+                    // final DynamicPropertyAnalyser dpa = new DynamicPropertyAnalyser(originalType, originalPropertyName);
+                    // logger.error("entityType = " + entityType + " propertyName = " + propertyName + " originalType = " + originalType + " originalPropertyName = " + originalPropertyName + " dpa.getCriteriaFullName() = " + dpa.getCriteriaFullName());
                     valueMatcher = EntityMaster.createDefaultValueMatcher(originalPropertyName, originalType, coFinder);
                     entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType);
                 } else {

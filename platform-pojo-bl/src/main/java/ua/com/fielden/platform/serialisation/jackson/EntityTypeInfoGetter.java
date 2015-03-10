@@ -36,9 +36,9 @@ public class EntityTypeInfoGetter {
             typeTableByName.put(entityType.getKey(), entityType);
             entityType.endInitialising();
 
-            logger.error("Registering new type with number [" + entityType.get_number() + "] = " + entityType);
+            logger.debug("Registering new type with number [" + entityType.get_number() + "] = " + entityType);
         } else {
-            logger.error("Is trying to register already registered new type [" + entityType.getKey() + "]. Has disregarded.");
+            logger.warn("Is trying to register already registered new type [" + entityType.getKey() + "]. Has disregarded.");
         }
         return typeTableByName.get(entityType.getKey());
     }

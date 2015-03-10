@@ -81,7 +81,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
             final Class<? extends AbstractEntity<?>> masterType = CriteriaResource.getMasterType(entityType);
             final String originalPropertyName = CriteriaResource.getOriginalPropertyName(entityType, propertyName);
-            return coFinder.find(masterType).getFetchProvider().fetchFor(originalPropertyName);
+
+            final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
+            return isEntityItself ? (IFetchProvider<V>) coFinder.find(masterType).getFetchProvider() : coFinder.find(masterType).getFetchProvider().fetchFor(originalPropertyName);
         } else {
             return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
         }
@@ -109,13 +111,17 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
                     final Object newValue = convert(type, name, valAndOrigVal.get("val"), companionFinder);
                     if (notFoundEntity(type, name, valAndOrigVal.get("val"), newValue)) {
-                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"))));
+                        final String msg = String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"));
+                        logger.info(msg);
+                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
                     } else if (!isEntityStale) {
                         entity.set(name, newValue);
                     } else {
                         final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
                         if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
-                            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, "The property has been recently changed by other user. Please revert property value to resolve conflict."));
+                            final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
+                            logger.info(msg);
+                            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
                         } else {
                             entity.set(name, newValue);
                         }
@@ -126,7 +132,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     } else {
                         final Object originalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
                         if (EntityUtils.isStale(originalValue, entity.get(name))) {
-                            entity.getProperty(name).setDomainValidationResult(Result.warning(entity, "The property has been recently changed by other user."));
+                            final String msg = "The property has been recently changed by other user.";
+                            logger.info(msg);
+                            entity.getProperty(name).setDomainValidationResult(Result.warning(entity, msg));
                         }
                     }
                 }

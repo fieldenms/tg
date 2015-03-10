@@ -39,6 +39,18 @@
 		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>
+	<logger name="ua.com.fielden.platform.serialisation.api.impl.TgJackson" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.web.resources.webui.EntityResourceUtils" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
 	
 	<logger name="ua.com.fielden.platform.dao.QueryExecutionModel" additivity="false">
 		<level value="off" />

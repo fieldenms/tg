@@ -110,7 +110,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @return
      */
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IValueMatcherWithContext<T, V> createDefaultValueMatcher(final String propertyName, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
-        final Class<V> propertyType = (Class<V>) PropertyTypeDeterminator.determinePropertyType(entityType, propertyName);
+        final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
+        final Class<V> propertyType = (Class<V>) (isEntityItself ? entityType : PropertyTypeDeterminator.determinePropertyType(entityType, propertyName));
         final IEntityDao<V> co = coFinder.find(propertyType);
         return new FallbackValueMatcherWithContext<T, V>(co);
     }

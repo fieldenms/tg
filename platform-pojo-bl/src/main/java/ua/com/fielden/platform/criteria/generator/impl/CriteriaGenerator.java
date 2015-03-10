@@ -143,8 +143,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
 
             return entity;
         } catch (final Exception e) {
-            logger.error(e);
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);
         }
     }
@@ -193,7 +192,8 @@ public class CriteriaGenerator implements ICriteriaGenerator {
             final Method setter = isEntityItself ? null : Reflector.obtainPropertySetter(managedType, propertyName);
             hasEntityExists = setter == null ? false : AnnotationReflector.isAnnotationPresent(setter, EntityExists.class);
         } catch (final NoSuchMethodException e) {
-            logger.error("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName(), e);
+            // TODO if this is an error -- please handle it appropriately, if not -- please remove rigorous logging
+            logger.warn("Couldn't found an setter for property " + propertyName + " on the type " + managedType.getSimpleName());
         }
         final boolean finalHasEntityExists = hasEntityExists;
         final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType);

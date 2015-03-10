@@ -167,8 +167,6 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        // final Class<AbstractEntity<?>> criteriaType = (Class<AbstractEntity<?>>) validationPrototype.getType();
-        // final EntityResourceUtils<AbstractEntity<?>> utils = new EntityResourceUtils<AbstractEntity<?>>(criteriaType, new DefaultEntityProducer<AbstractEntity<?>>(factory, criteriaType), factory, restUtil, companionFinder);
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator);
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntity(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();

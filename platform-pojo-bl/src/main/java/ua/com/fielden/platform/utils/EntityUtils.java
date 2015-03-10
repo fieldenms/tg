@@ -575,7 +575,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isBoolean(final Class<?> type) {
-        return boolean.class.isAssignableFrom(type);
+        return boolean.class.isAssignableFrom(type) || Boolean.class.isAssignableFrom(type);
     }
 
     /**
@@ -814,7 +814,7 @@ public class EntityUtils {
      * @param instance
      * @return
      */
-    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final String ... proxiesProps) {
+    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final String... proxiesProps) {
         final List<String> proxied = Arrays.asList(proxiesProps);
         if (!(instance instanceof AbstractUnionEntity) && instance.getProperties().containsKey("key")) {
             final Object keyValue = instance.get("key");
