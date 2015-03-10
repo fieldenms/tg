@@ -80,7 +80,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return restUtil.singleJSONRepresentation(createCriteriaValidationPrototype(miType, gdtm, critGenerator));
+        return restUtil.singleJSONRepresentation(createCriteriaValidationPrototype(miType, gdtm, critGenerator).resetMetaState());
     }
 
     /**
