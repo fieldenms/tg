@@ -29,20 +29,12 @@
     <template id="egi_example" is="auto-binding" layout vertical center-justified center>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <core-ajax id="data_retriever" url="/test/egi" handleas="json" on-core-response="{{onDataRetrieved}}" auto></core-ajax>
-        <div layout vertical style="height:550px; overflow:hidden">
-            <div>test</div>
-            <div>test</div>
-            <div>test</div>
-            <div>test</div>
-            <div layout vertical flex>
-                <tg-entity-grid-inspector entityType="{{entityType}}" entities="{{entities}}">
-                    <tg-property-column property="desc" width="200px"></tg-property-column>
-                    <tg-property-column property="integerProp" width="80px"></tg-property-column>
-                    <tg-property-column property="stringProp" width="100px"></tg-property-column>
-                    <tg-property-column property="bigDecimalProp" width="100px"></tg-property-column>
-                </tg-entity-grid-inspector>
-            </div>
-        </div>
+        <tg-entity-grid-inspector entityType="{{entityType}}" entities="{{entities}}">
+            <tg-property-column property="desc" width="200px" type="String" columnTitle="Description" columnDesc="Description tooltip"></tg-property-column>
+            <tg-property-column property="integerProp" width="80px" type="Integer" columnTitle="Integer property" columnDesc="Integer property tooltip"></tg-property-column>
+            <tg-property-column property="stringProp" width="100px" type="String" columnTitle="String property" columnDesc="String property tooltip"></tg-property-column>
+            <tg-property-column property="bigDecimalProp" width="100px" type="BigDecimal" columnTitle="Big decimal property" columnDesc="Big decimal property tooltip"></tg-property-column>
+        </tg-entity-grid-inspector>
     </template>
 
     <script>
