@@ -15,6 +15,8 @@
     <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
     <link rel="import" href="/resources/egi/tg-property-column.html">
     <link rel="import" href="/resources/serialisation/tg-serialiser.html">
+    <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
+    <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 
     <style>
         body {
@@ -30,10 +32,46 @@
         <tg-serialiser id="serialiser"></tg-serialiser>
         <core-ajax id="data_retriever" url="/test/egi" handleas="json" on-core-response="{{onDataRetrieved}}" auto></core-ajax>
         <tg-entity-grid-inspector entityType="{{entityType}}" entities="{{entities}}">
-            <tg-property-column property="desc" width="200px" type="String" columnTitle="Description" columnDesc="Description tooltip"></tg-property-column>
-            <tg-property-column property="integerProp" width="80px" type="Integer" columnTitle="Integer property" columnDesc="Integer property tooltip"></tg-property-column>
-            <tg-property-column property="stringProp" width="100px" type="String" columnTitle="String property" columnDesc="String property tooltip"></tg-property-column>
-            <tg-property-column property="bigDecimalProp" width="100px" type="BigDecimal" columnTitle="Big decimal property" columnDesc="Big decimal property tooltip"></tg-property-column>
+            <tg-property-column property="desc" width="400px" type="String" columnTitle="Description" columnDesc="Description tooltip"></tg-property-column>
+            <tg-property-column property="integerProp" width="150px" type="Integer" columnTitle="Integer property" columnDesc="Integer property tooltip"></tg-property-column>
+            <tg-property-column property="stringProp" width="200px" type="String" columnTitle="String property" columnDesc="String property tooltip"></tg-property-column>
+            <tg-property-column property="bigDecimalProp" width="150px" type="BigDecimal" columnTitle="Big decimal property" columnDesc="Big decimal property tooltip"></tg-property-column>
+            <core-tooltip class="entity-specific-action">
+                <core-icon-button icon="today"></core-icon-button>
+                <span class="span-tooltip" tip>Create new entity</span>
+            </core-tooltip>
+            <core-tooltip class="entity-specific-action">
+                <core-icon-button icon="today"></core-icon-button>
+                <span class="span-tooltip" tip>Edit selected entity</span>
+            </core-tooltip>
+            <core-tooltip class="entity-specific-action">
+                <core-icon-button icon="today"></core-icon-button>
+                <span class="span-tooltip" tip>Delete selected entity</span>
+            </core-tooltip>
+            <core-tooltip class="standart-action">
+                <core-icon-button icon="today"></core-icon-button>
+                <span class="span-tooltip" tip>Export to Excel</span>
+            </core-tooltip>
+            <core-tooltip class="standart-action">
+                <core-icon-button icon="today"></core-icon-button>
+                <span class="span-tooltip" tip>First page</span>
+            </core-tooltip>
+            <core-tooltip class="standart-action">
+                <core-icon-button icon="today"></core-icon-button>
+                <span class="span-tooltip" tip>Previous page</span>
+            </core-tooltip>
+            <core-tooltip class="standart-action">
+                <core-icon-button icon="today"></core-icon-button>
+                <span class="span-tooltip" tip>Next page</span>
+            </core-tooltip>
+            <core-tooltip class="standart-action">
+                <core-icon-button icon="today"></core-icon-button>
+                <span class="span-tooltip" tip>Last page</span>
+            </core-tooltip>
+            <core-tooltip class="standart-action">
+                <core-icon-button icon="today"></core-icon-button>
+                <span class="span-tooltip" tip>Refresh</span>
+            </core-tooltip>
         </tg-entity-grid-inspector>
     </template>
 
