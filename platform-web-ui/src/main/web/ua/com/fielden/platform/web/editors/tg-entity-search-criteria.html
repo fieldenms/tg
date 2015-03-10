@@ -547,12 +547,11 @@
                 entityChanged: function (oldValue, newValue) {
                     this.super([oldValue, newValue]);
 
-                    console.log("entityChanged: newValue === ", newValue);
+                    // console.log("entityChanged: newValue === ", newValue);
                     if (this._isEntity(newValue)) {
                         if (newValue.get(this.propertyName) !== null) {
                             if (newValue._isObjectUndefined("@" + this.propertyName + "_result")) { // if valid -- desc should exist!
                                 if (newValue.get(this.propertyName).constructor === Array) { // the property holds an array of strings!
-                                    console.log("YES, array", newValue.get(this.propertyName));
                                     this.valueDesc = this.convertToString(newValue.get(this.propertyName));
                                 } else {
                                     this.valueDesc = newValue.get("@" + this.propertyName + "_desc");

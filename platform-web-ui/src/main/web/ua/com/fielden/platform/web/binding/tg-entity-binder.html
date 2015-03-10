@@ -201,15 +201,11 @@
                  * => entity prop value (validate) => new entity prop.
                  */
                 startRefreshCycleModeForEditors: function() {
-                    console.log("startRefreshCycleModeForEditors: prev refreshCycleMode =", this.refreshCycleMode);
                     this.refreshCycleMode = "ACTIVATED";
-                    console.log("startRefreshCycleModeForEditors: refreshCycleMode =", this.refreshCycleMode);
                 },
 
                 resetRefreshCycleModeForEditors: function() {
-                    console.log("resetRefreshCycleModeForEditors: prev refreshCycleMode =", this.refreshCycleMode);
                     this.refreshCycleMode = null;
-                    console.log("resetRefreshCycleModeForEditors: refreshCycleMode =", this.refreshCycleMode);
                 },
 
                 //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
@@ -258,7 +254,7 @@
                         }
                     });
 
-                    console.log("       entity + bindingView", entity, bindingView);
+                    // console.log("       entity + bindingView", entity, bindingView);
                     return bindingView;
                 },
 
@@ -275,7 +271,7 @@
                         bindingView[propertyName] = self._getOriginalValue(entity, propertyName);
                     });
 
-                    console.log("       entity + originalBindingView", entity, bindingView);
+                    // console.log("       entity + originalBindingView", entity, bindingView);
                     return bindingView;
                 },
 
