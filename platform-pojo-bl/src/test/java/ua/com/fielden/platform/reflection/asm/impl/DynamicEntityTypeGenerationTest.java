@@ -509,7 +509,7 @@ public class DynamicEntityTypeGenerationTest {
                     .endModification();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals("The provided annotation IsProperty should have runtime retention policy.", ex.getMessage());
+            assertEquals("The provided annotation IsProperty should have 'type' target.", ex.getMessage());
         }
 
     }
