@@ -11,17 +11,23 @@ td {
     color: #607D8B;
     cursor: pointer;
 }
-.table-container {
+/*.table-container {
     overflow-y: auto;
     overflow-x: hidden;
-}
-.normal-color {
+}*/
+tbody>tr.normal-color:not([selected]) {
     background-color: white;
 }
-.alternate-color {
+tbody>tr.alternate-color:not([selected]) {
     background-color: #F5F5F5;
 }
-.header-color {
+tbody>tr:hover:not([selected]) {
+    background-color: #E1F5FE;
+}
+tbody>tr[selected] {
+    background-color: #B3E5FC;
+}
+thead>tr.header-color {
     background-color: #0288D1;
     color: white;
 }
@@ -37,4 +43,8 @@ core-tooltip.delayed:focus::shadow .core-tooltip {
     -webkit-transition-delay: 1s;
     transition-delay: 1s;
     transform: translate3d(0px, 0px, 0px);
+}
+paper-checkbox::shadow #checkbox.checked {
+  background-color: #0288D1;
+  border-color: #0288D1;
 }

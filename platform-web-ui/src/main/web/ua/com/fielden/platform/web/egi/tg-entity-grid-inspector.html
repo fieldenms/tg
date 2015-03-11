@@ -30,7 +30,7 @@
                 <content select=".standart-action">
             </div>
         </div>
-        <table>
+        <table id="grid">
             <thead>
                 <tr class="header-color">
                     <th></th>
@@ -46,8 +46,10 @@
             </thead>
             <tbody>
                 <template repeat="{{entity, entityIndex in entities}}">
-                    <tr class="{{entityIndex % 2 === 0 ? 'normal-color' : 'alternate-color'}}">
-                        <td><paper-checkbox></paper-checkbox></td>
+                    <tr class="{{entityIndex % 2 === 0 ? 'normal-color' : 'alternate-color'}}" selected?="{{selectionModel[entityIndex]}}">
+                        <td>
+                            <paper-checkbox index="{{entityIndex}}" on-change="{{onSelectionChanged}}"></paper-checkbox>
+                        </td>
                         <template repeat="{{column in columns}}">
                             <td style="width: {{column.width}}">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
@@ -72,8 +74,23 @@
     </template>
     <script>
         (function () {
+            var areEqual = function (a, b) {
+                    return a.id === b.id;
+                },
+                hasEntity = function(entity, entities) {
+                    var i = 0;
+                    for (i = 0; i < entities.length; i += 1) {
+                        if (areEqual(entity, entities[i])) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+
             Polymer({
                 ready: function () {
+                    this.selectionModel = [];
+                    this.selectedEntities = [];
                     this.columns = [];
                     Array.prototype.forEach.call(this.$.column_selector.getDistributedNodes(), function (item) {
                         this.columns.push(item);
@@ -92,6 +109,38 @@
                     } else {
                         return entity.get(column.property);
                     }
+                },
+                onSelectionChanged: function (e, detail, source) {
+                    var index = +source.getAttribute("index");
+                    if (source.checked) {
+                        this.selectionModel[index] = true;
+                        this.selectedEntities.push(this.entities[index]);
+                    } else {
+                        this.selectionModel[index] = false;
+                        this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
+                    }
+                },
+                getSelectedEntities: function () {
+                    return this.selectedEntities;
+                },
+                getSelectedRows: function () {
+                    var selectedRows = [];
+                    this.selectionModel.forEach(function(elem, elemIndex) {
+                        if (elem) {
+                            selectedRows.push(elemIndex);
+                        }
+                    }.bind(this));
+                    return selectedRows;
+                },
+                entitiesChanged: function (oldValue, newValue) {
+                    this.selectionModel = [];
+                    newValue.forEach(function (entity) {
+                        this.selectionModel.push(hasEntity(entity, this.getSelectedEntities))
+                    }.bind(this));
+                },
+                clearSelection: function() {
+                    this.selectionModel = [];
+                    this.selectedEntities = [];
                 }
             });
         })();
