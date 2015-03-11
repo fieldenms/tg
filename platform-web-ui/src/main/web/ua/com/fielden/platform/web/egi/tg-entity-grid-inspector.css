@@ -1,23 +1,15 @@
 table {
     border-collapse: collapse;
 }
-th:first-of-type {
-    border-top-left-radius: 5px;
-}
-th:last-of-type {
-    border-top-right-radius: 5px;
+th, td {
+    padding: 0.75em 1.5em;
 }
 th {
-    padding: 10px;
-}
-tbody>tr:last-of-type>td:first-of-type {
-    border-bottom-left-radius: 5px;
-}
-tbody>tr:last-of-type>td:last-of-type {
-    border-bottom-right-radius: 5px;
+    cursor: default;
 }
 td {
-    padding: 10px;
+    color: #607D8B;
+    cursor: pointer;
 }
 .table-container {
     overflow-y: auto;
@@ -27,10 +19,11 @@ td {
     background-color: white;
 }
 .alternate-color {
-    background-color: #B3E5FC;
+    background-color: #F5F5F5;
 }
 .header-color {
-    background-color: #4FC3F7;
+    background-color: #0288D1;
+    color: white;
 }
 * /deep/ core-tooltip::shadow #tooltip {
     white-space: normal;
