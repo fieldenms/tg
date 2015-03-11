@@ -24,43 +24,43 @@
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/criteria/{{mitype}}" method="GET" handleas="json"></core-ajax>
 
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
-            <tg-criterion orNull="true" not="false">
+            <tg-criterion orNull="{{propertyModel[''].orNull}}" not="{{propertyModel[''].not}}">
                 <tg-entity-search-criteria entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_" onAcceptedValueChanged="{{validate}}" propTitle="Key prop MULTI" propDesc="Key prop MULTI criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-search-criteria>
             </tg-criterion>
 
-            <tg-criterion orNull="true" not="false">
+            <tg-criterion orNull="{{propertyModel['desc'].orNull}}" not="{{propertyModel['desc'].not}}">
                 <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_desc" onAcceptedValueChanged="{{validate}}" propTitle="Desc MULTI" propDesc="Desc MULTI criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
             </tg-criterion>
 
-            <tg-range-criterion orNull="true" not="false" exclusive="false" exclusive2="true">
+            <tg-range-criterion orNull="{{propertyModel['integerProp'].orNull}}" not="{{propertyModel['integerProp'].not}}" exclusive="{{propertyModel['integerProp'].exclusive}}" exclusive2="{{propertyModel['integerProp'].exclusive2}}">
                 <tg-integer-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_integerProp_from" onAcceptedValueChanged="{{validate}}" propTitle="Integer prop FROM" propDesc="Integer prop FROM criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
                 <tg-integer-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_integerProp_to" onAcceptedValueChanged="{{validate}}" propTitle="Integer prop TO" propDesc="Integer prop TO criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
             </tg-range-criterion>
 
-            <tg-criterion orNull="true" not="false">
+            <tg-criterion orNull="{{propertyModel['entityProp'].orNull}}" not="{{propertyModel['entityProp'].not}}">
                 <tg-entity-search-criteria entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_entityProp" onAcceptedValueChanged="{{validate}}" propTitle="Entity prop MULTI" propDesc="Entity prop MULTI criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-search-criteria>
             </tg-criterion>
 
-            <tg-range-criterion orNull="true" not="false" exclusive="false" exclusive2="true">
+            <tg-range-criterion orNull="{{propertyModel['bigDecimalProp'].orNull}}" not="{{propertyModel['bigDecimalProp'].not}}" exclusive="{{propertyModel['bigDecimalProp'].exclusive}}" exclusive2="{{propertyModel['bigDecimalProp'].exclusive2}}">
                 <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_bigDecimalProp_from" onAcceptedValueChanged="{{validate}}" propTitle="BigDecimal prop FROM" propDesc="BigDecimal prop FROM criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
                 <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_bigDecimalProp_to" onAcceptedValueChanged="{{validate}}" propTitle="BigDecimal prop TO" propDesc="BigDecimal prop TO criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
             </tg-range-criterion>
 
-            <tg-criterion orNull="true" not="false">
+            <tg-criterion orNull="{{propertyModel['booleanProp'].orNull}}" not="{{propertyModel['booleanProp'].not}}">
                 <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_booleanProp_is" onAcceptedValueChanged="{{validate}}" propTitle="Boolean prop IS" propDesc="Boolean prop IS criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-boolean-editor>
                 <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_booleanProp_not" onAcceptedValueChanged="{{validate}}" propTitle="Boolean prop NOT" propDesc="Boolean prop NOT criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-boolean-editor>
             </tg-criterion>
 
-            <tg-date-range-criterion orNull="true" not="false" exclusive="false" exclusive2="true" datePrefix="PREV" dateMnemonic="MONTH" andBefore="true">
+            <tg-date-range-criterion orNull="{{propertyModel['dateProp'].orNull}}" not="{{propertyModel['dateProp'].not}}" exclusive="{{propertyModel['dateProp'].exclusive}}" exclusive2="{{propertyModel['dateProp'].exclusive2}}" datePrefix="{{propertyModel['dateProp'].datePrefix}}" dateMnemonic="{{propertyModel['dateProp'].dateMnemonic}}" andBefore="{{propertyModel['dateProp'].andBefore}}">
                 <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_dateProp_from" onAcceptedValueChanged="{{validate}}" propTitle="Date prop FROM" propDesc="Date prop FROM criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>
                 <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_dateProp_to" onAcceptedValueChanged="{{validate}}" propTitle="Date prop TO" propDesc="Date prop TO criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>
             </tg-date-range-criterion>
 
-            <tg-criterion orNull="true" not="false">
+            <tg-criterion orNull="{{propertyModel['compositeProp'].orNull}}" not="{{propertyModel['compositeProp'].not}}">
                 <tg-entity-search-criteria entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_compositeProp" onAcceptedValueChanged="{{validate}}" propTitle="Composite prop MULTI" propDesc="Composite prop MULTI criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-search-criteria>
             </tg-criterion>
 
-            <tg-criterion orNull="true" not="false">
+            <tg-criterion orNull="{{propertyModel['critOnlyEntityProp'].orNull}}" not="{{propertyModel['critOnlyEntityProp'].not}}">
                 <tg-entity-editor entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_critOnlyEntityProp" onAcceptedValueChanged="{{validate}}" propTitle="Crit-only entity prop SINGLE" propDesc="Crit-only entity prop SINGLE criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-editor>
             </tg-criterion>
         </tg-flex-layout>
@@ -69,6 +69,62 @@
         var mr = "margin-right: 40px";
         Polymer('tg-selection-criteria', {
             entitytype: null,
+
+            propertyModel: {
+                "": {
+                    orNull: true,
+                    not: false
+                },
+
+                "desc": {
+                    orNull: true,
+                    not: false
+                },
+
+                "integerProp": {
+                    orNull: true,
+                    not: false,
+                    exclusive: false,
+                    exclusive2: true
+                },
+
+                "entityProp": {
+                    orNull: true,
+                    not: false
+                },
+
+                "bigDecimalProp": {
+                    orNull: true,
+                    not: false,
+                    exclusive: false,
+                    exclusive2: true
+                },
+
+                "booleanProp": {
+                    orNull: true,
+                    not: false
+                },
+
+                "dateProp": {
+                    orNull: true,
+                    not: false,
+                    exclusive: false,
+                    exclusive2: true,
+                    datePrefix: "PREV",
+                    dateMnemonic: "MONTH",
+                    andBefore: "true"
+                },
+
+                "compositeProp": {
+                    orNull: true,
+                    not: false
+                },
+
+                "critOnlyEntityProp": {
+                    orNull: true,
+                    not: false
+                }
+            },
 
             whenDesktop: ['vertical',               ['horizontal', 'justified', [mr], [mr]], 
                                                    ['horizontal', 'justified', [mr], [mr]], 
@@ -108,6 +164,13 @@
                 var modPropHolder = this.super([bindingEntity, originalBindingEntity, currBindingEntityCopy]);
                 if (this._isEntity(bindingEntity)) {
                     modPropHolder["@criteriaType"] = bindingEntity.type().fullClassName();
+
+                    // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
+                    for (var property in this.propertyModel) {
+                        if (this.propertyModel.hasOwnProperty(property)) {
+                            modPropHolder["@" + property] = this.propertyModel[property];
+                        }
+                    }
                 }
                 return modPropHolder;
             }
