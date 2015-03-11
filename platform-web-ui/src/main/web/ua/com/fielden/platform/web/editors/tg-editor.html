@@ -25,6 +25,10 @@
                 transition-delay: 1s;
                 transform: translate3d(0px, 0px, 0px);
             }
+            
+            :host::shadow #input.upper-case {
+                text-transform: uppercase;
+            }
         </style>
         <tg-reflector id="reflector"></tg-reflector>
         <p>editingValue: {{editingValue}}</p>

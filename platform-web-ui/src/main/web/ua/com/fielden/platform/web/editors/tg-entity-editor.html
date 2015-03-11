@@ -54,7 +54,7 @@
                     <div id="input-container" flex>
                         <!-- if tooltip is empty then the core-tooltip is not shown -->
                         <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltipBinding(valueDesc, propDesc)}}">
-                            <input is="core-input" id="input" on-input="{{onInput}}" on-focus="{{onFocus}}" on-blur="{{onBlur}}" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
+                            <input is="core-input" id="input" class="upper-case" on-input="{{onInput}}" on-focus="{{onFocus}}" on-blur="{{onBlur}}" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
                             <span class="span-tooltip" tip>
                                 {{tooltipBinding(valueDesc, propDesc)}}
                             </span>
