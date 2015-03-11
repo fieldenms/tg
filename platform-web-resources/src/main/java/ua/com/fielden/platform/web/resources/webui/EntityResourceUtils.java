@@ -108,6 +108,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final String name = nameAndVal.getKey();
             if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
+                // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
                     final Object newValue = convert(type, name, valAndOrigVal.get("val"), companionFinder);
                     if (notFoundEntity(type, name, valAndOrigVal.get("val"), newValue)) {

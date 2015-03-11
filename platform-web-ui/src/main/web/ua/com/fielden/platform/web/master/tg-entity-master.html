@@ -13,7 +13,7 @@
         <core-ajax id="ajaxSaverNew" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax>
     </template>
     <script>
-        (function () { // _bindingValue(currBindingEntity, 'stringProp')
+        (function () {
             var SimultaneousSaveException = function () {
                 Object.call(this);
 
@@ -235,7 +235,7 @@
 
                     self.startRefreshCycleModeForEditors();
 
-                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     self.$.validator.abortValidationIfAny();
 

@@ -78,8 +78,8 @@
                 console.log("onValidated");
             },
 
-            extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
-                var modPropHolder = this.super([bindingEntity, originalBindingEntity]);
+            extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity, currBindingEntityCopy) {
+                var modPropHolder = this.super([bindingEntity, originalBindingEntity, currBindingEntityCopy]);
                 if (this._isEntity(bindingEntity)) {
                     modPropHolder["@criteriaType"] = bindingEntity.type().fullClassName();
                 }

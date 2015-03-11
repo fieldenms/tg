@@ -49,7 +49,7 @@
                     // ACTUAL PROPERTY CHANGE                
                     bindingEntity.set("stringProp", "okok");
                 } else {
-                    assert.isNotNull(potentiallySavedEntity.id, "Entity id should remain null.");
+                    assert.isNotNull(potentiallySavedEntity.id, "Entity id should remain not null.");
                     assert.strictEqual(potentiallySavedEntity.version, 1, "Entity version should be increased.");
              
                     // value ok?

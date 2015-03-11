@@ -11,7 +11,7 @@
         <!-- core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax -->
     </template>
     <script>
-        (function () { // _bindingValue(currBindingEntity, 'stringProp')
+        (function () {
             Polymer("tg-entity-binder", {
                 publish: {
                     /**
@@ -34,7 +34,8 @@
                 refreshCycleMode: null,
 
                 currEntity: null, // represents the current entity
-                currBindingEntity: {}, /*{ dateProp: 10000, stringProp: "" }*/ // represents the view of current entity for binding
+                currBindingEntity: {}, // represents the view of current entity for binding
+                currBindingEntityCopy: {}, // represents the copy of the view of current entity for binding (used for determination of the 'modified' values)
                 originalBindingEntity: null, // represents the view of original entity for binding.
 
                 /**
@@ -111,7 +112,7 @@
                 validate: function () {
                     console.log("validate");
                     var self = this;
-                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
                     // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
                     // (if the entity was not modified -- validate(holder) will start the error recovery process)
 
@@ -149,7 +150,7 @@
                     return obj !== null && (obj instanceof this.$.reflector.getEntityType());
                 },
 
-                extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
+                extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity, bindingEntityCopy) {
                     var modPropHolder = {
                         "@modified": false
                     };
@@ -160,14 +161,23 @@
 
                         bindingEntity.traverseProperties(function (propertyName) {
                             var value = bindingEntity.get(propertyName);
+                            var prevValue = bindingEntityCopy.get(propertyName);
                             var originalValue = originalBindingEntity.get(propertyName);
-                            if (!self.$.reflector.equalsEx(value, originalValue)) {
+                            // VERY IMPORTANT: the property is considered to be 'modified'
+                            //                 in the case when its value does not equal to previous value (not original!).
+                            // 
+                            //                 The "modified" property is marked by existence of "val" sub-property.
+                            //
+                            //                 All modified properties will be applied on the server upon the validation prototype.
+                            if (!self.$.reflector.equalsEx(value, prevValue)) {
+                                // the property is 'modified'
                                 modPropHolder[propertyName] = {
                                     "val": value,
                                     "origVal": originalValue
                                 };
                                 modPropHolder["@modified"] = true;
                             } else {
+                                // the property is 'unmodified'
                                 modPropHolder[propertyName] = {
                                     "origVal": originalValue
                                 };
@@ -181,7 +191,7 @@
 
                 createModifiedPropertiesHolder: function() {
                     var self = this;
-                    var mph = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    var mph = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
                     return self._reset(mph);
                 },
 
@@ -219,12 +229,13 @@
                         self.entityid = self._idConvert(entity.id);
                     }
                     // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
-                    var previousModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    var previousModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
                     self._reset(previousModifiedPropertiesHolder);
                     // New entity should be promoted to the local cache:
                     self.currEntity = entity;
                     // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
                     self.currBindingEntity = self._extractBindingView(self.currEntity, previousModifiedPropertiesHolder);
+                    self.currBindingEntityCopy = self._extractBindingView(self.currEntity, previousModifiedPropertiesHolder);
                     this.resetRefreshCycleModeForEditors();
 
                     if (updateOriginalBindingEntity) {
