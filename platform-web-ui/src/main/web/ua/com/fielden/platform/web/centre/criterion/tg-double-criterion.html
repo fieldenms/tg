@@ -1,0 +1,32 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="import" href="/resources/centre/criterion/tg-criterion.html">
+
+<polymer-element name="tg-double-criterion" extends="tg-criterion" attributes="exclusive exclusive2">
+    <template>
+        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
+        	<p>exclusive: {{exclusive}}</p>
+	        <shadow>
+	        </shadow>	        
+	        <p>exclusive2: {{exclusive2}}</p>
+    	</tg-flex-layout>
+    </template>
+    <script>
+        Polymer('tg-double-criterion', {
+            publish: {
+                /**
+                 * This published property specifies whether left operand of 'double' criterion should be 'exclusive'.
+                 */
+                exclusive: false,
+
+                /**
+                 * This published property specifies whether right operand of 'double' criterion should be 'exclusive'.
+                 */
+                exclusive2: false,
+            },
+
+            whenDesktop: ['horizontal', 'justified', [mr], [mr], [mr]] // 1 component <shadow> and 2 components outside it for debugging
+        });
+    </script>
+</polymer-element>

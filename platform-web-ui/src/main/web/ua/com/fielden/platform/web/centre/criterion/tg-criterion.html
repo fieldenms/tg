@@ -1,0 +1,36 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/tg-reflector">
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
+
+<polymer-element name="tg-criterion" attributes="orNull not">
+    <template>
+        <tg-reflector id="reflector"></tg-reflector>
+        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
+        	<p>orNull: {{orNull}}</p>
+	        <content>
+	        </content>	        
+	        <p>not: {{not}}</p>
+    	</tg-flex-layout>
+    </template>
+    <script>
+        var mr = "margin-right: 20px";
+        Polymer('tg-criterion', {
+            publish: {
+                /**
+                 * This published property specifies whether 'missing value' will be also considered in search queries.
+                 */
+                orNull: false,
+
+                /**
+                 * This published property specifies whether the criterion should be negated.
+                 */
+                not: false
+            },
+
+            whenDesktop: ['horizontal', 'justified', [mr], [mr], [mr]], // 1 component <content> and 2 components outside it for debugging
+            whenTablet: this.whenDesktop,
+            whenMobile: this.whenDesktop,
+        });
+    </script>
+</polymer-element>

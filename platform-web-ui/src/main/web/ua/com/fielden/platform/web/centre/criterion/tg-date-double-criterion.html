@@ -1,0 +1,38 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="import" href="/resources/centre/criterion/tg-double-criterion.html">
+
+<polymer-element name="tg-date-double-criterion" extends="tg-double-criterion" attributes="datePrefix dateMnemonic andBefore">
+    <template>
+        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
+        	<p>datePrefix: {{datePrefix}}</p>
+	        <shadow>
+	        </shadow>	        
+	        <p>dateMnemonic: {{dateMnemonic}}</p>
+	        <p>andBefore: {{andBefore}}</p>
+    	</tg-flex-layout>
+    </template>
+    <script>
+        Polymer('tg-date-double-criterion', {
+            publish: {
+                /**
+                 * This published property specifies the 'date prefix' for this date criterion.
+                 */
+                datePrefix: null, // values 'PREV', 'CURR', 'NEXT'. (see DateRangePrefixEnum.java)
+
+                /**
+                 * This published property specifies the 'date mnemonic' for this date criterion.
+                 */
+                dateMnemonic: null, // values 'DAY', 'MONTH', 'WEEK', 'YEAR' etc. (see MnemonicEnum.java)
+
+                /**
+                 * This published property specifies the 'and before' for this date criterion.
+                 */
+                andBefore: null // values 'null', 'true', 'false'
+            },
+
+            whenDesktop: ['horizontal', 'justified', [mr], [mr], [mr], [mr]] // 1 component <shadow> and 3 components outside it for debugging
+        });
+    </script>
+</polymer-element>
