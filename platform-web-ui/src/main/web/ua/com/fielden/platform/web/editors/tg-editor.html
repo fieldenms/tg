@@ -29,6 +29,14 @@
             :host::shadow #input.upper-case {
                 text-transform: uppercase;
             }
+            
+            :host::shadow paper-input-decorator.required /deep/ .label-text {
+                color: #4CAF50;
+            }
+            
+            :host::shadow paper-input-decorator[focused].required /deep/ .label-text {
+                color: #4CAF50;
+            }
         </style>
         <tg-reflector id="reflector"></tg-reflector>
         <!-- p>editingValue: {{editingValue}}</p>
@@ -212,7 +220,7 @@
                 }
             },
 
-            editorValidationMsgChanged: function(oldValue, newValue) {
+            editorValidationMsgChanged: function (oldValue, newValue) {
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(this.entity)) {
                         this.bindMessages(this.entity, this.propertyName, newValue);
@@ -299,34 +307,51 @@
                         } else {
                             this.resetMessages();
                         }
+
+                        this.bindUppercase(entity, property);
+
                     } else {
                         this.resetMessages();
+                        this.resetMetaPropDecorations();
                     }
                 } else {
                     this.resetMessages();
+                    this.resetMetaPropDecorations();
                 }
             },
 
-            resetMessages: function () {
+            bindUppercase: function (entity, property) {
+                if (typeof entity["@" + property + "_uppercase"] !== 'undefined') {
+                    this.$.input.classList.add("upper-case");
+                } else {
+                    this.$.input.classList.remove("upper-case");
+                }
+            },
+
+            resetMetaPropDecorations: function () {
                 this.$.decorator.classList.remove("required");
+            },
+
+            resetMessages: function () {
                 this.$.decorator.isInvalid = false;
                 this.$.decorator.error = "";
             },
 
             bindError: function (msg) {
                 this.resetMessages();
+                this.$.decorator.classList.remove("required");
                 this.$.decorator.isInvalid = true;
                 this.$.decorator.error = msg;
             },
 
             bindWarning: function (msg) {
                 this.resetMessages();
+                this.$.decorator.classList.remove("required");
                 this.$.decorator.isInvalid = true;
-                this.$.decorator.error = "WARNING :) " + msg;
+                this.$.decorator.error = "WARNING: " + msg;
             },
 
             bindRequired: function () {
-                console.log("          !!!! BIND REQUIRED !!!!");
                 this.resetMessages();
                 this.$.decorator.classList.add("required");
             },

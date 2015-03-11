@@ -17,14 +17,14 @@
                     /**
                      * The state for the entity master.
                      *
-                     * The master can be only in two states: EDIT and VIEW. The state EDIT 
+                     * The master can be only in two states: EDIT and VIEW. The state EDIT
                      * allows user to edit properties and use some actions (as it was defined in Java API with 'enabledWhen').
                      *
-                    * The state VIEW allows user to review the entity properties and do some actions (as it was defined in 
+                     * The state VIEW allows user to review the entity properties and do some actions (as it was defined in
                      * Java API with 'enabledWhen').
-                    * 
+                     *
                      * The initial state can be VIEW or EDIT.
-                    */
+                     */
                     currentState: {
                         value: null,
                         reflect: true
@@ -65,16 +65,16 @@
                 },
 
                 /**
-                 * The core-ajax component for entity retrieval. 
+                 * The core-ajax component for entity retrieval.
                  */
-                ajaxRetriever: function() {
+                ajaxRetriever: function () {
                     throw "ajaxRetriever: not implemented";
                 },
 
                 /**
-                 * The tg-entity-validator component for entity validation. 
+                 * The tg-entity-validator component for entity validation.
                  */
-                validator: function() {
+                validator: function () {
                     throw "validator: not implemented";
                 },
 
@@ -126,7 +126,7 @@
                  */
                 doNotValidate: function () {
                     console.log("do not validate");
-                },                
+                },
 
                 /**
                  * Default implementation for onValidated callback.
@@ -189,7 +189,7 @@
                     return modPropHolder;
                 },
 
-                createModifiedPropertiesHolder: function() {
+                createModifiedPropertiesHolder: function () {
                     var self = this;
                     var mph = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
                     return self._reset(mph);
@@ -199,22 +199,22 @@
                     return id === null ? "new" : ("" + id);
                 },
 
-                refreshCycleModeChanged: function (oldValue, newValue) {                    
+                refreshCycleModeChanged: function (oldValue, newValue) {
                     console.log("refreshCycleModeChanged", oldValue, newValue);
                 },
 
                 /**
                  * Initialises a special state for the editors called "refresh cycle". In this state
                  * the editors promotes their values through the chain: entity => editingValue (commit) => commValue => acceptedValue.
-                 * 
+                 *
                  * If the state is simple -- the value promotes through the next chain: editingValue (commit) => commValue => acceptedValue =>
                  * => entity prop value (validate) => new entity prop.
                  */
-                startRefreshCycleModeForEditors: function() {
+                startRefreshCycleModeForEditors: function () {
                     this.refreshCycleMode = "ACTIVATED";
                 },
 
-                resetRefreshCycleModeForEditors: function() {
+                resetRefreshCycleModeForEditors: function () {
                     this.refreshCycleMode = null;
                 },
 
@@ -265,8 +265,12 @@
 
                             if (self.$.reflector.isWarning(entity.prop(propertyName).validationResult())) {
                                 bindingView["@" + propertyName + "_warning"] = entity.prop(propertyName).validationResult();
-                            } else if (entity.prop(propertyName).isRequired()) {
+                            }
+                            if (entity.prop(propertyName).isRequired()) {
                                 bindingView["@" + propertyName + "_required"] = true;
+                            }
+                            if (entity.type().prop(propertyName).isUpperCase()) {
+                                bindingView["@" + propertyName + "_uppercase"] = true;
                             }
                         }
                     });

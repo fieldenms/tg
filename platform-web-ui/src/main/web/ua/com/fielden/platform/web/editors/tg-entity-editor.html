@@ -634,7 +634,12 @@
                 /* TG Flex parameters for layouting autocompleted values -- not yet used. */
                 whenDesktop: ['vertical', [], []],
                 whenTablet: ['vertical', [], []],
-                whenMobile: ['vertical', [], []]
+                whenMobile: ['vertical', [], []],
+
+                /*
+                 * Overridden to suppress the base logic in order to have entity editor always in uppercase as defined for the input tag.
+                 */
+                bindUppercase: function (entity, property) {},
             });
         })();
     </script>
