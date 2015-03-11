@@ -73,6 +73,7 @@
             master.onRetrieved = function(entity, bindingEntity) {
                 // ACTUAL PROPERTY CHANGE                
                 bindingEntity.set("stringProp", "ok");
+                bindingEntity.set("requiredValidatedProp", 30);
                 bindingEntity.set("key", "KEY_" + (new Date()).getTime());
 
                 master.save(); 

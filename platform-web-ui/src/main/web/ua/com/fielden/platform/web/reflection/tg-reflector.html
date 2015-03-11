@@ -491,6 +491,13 @@
                 },
 
                 /**
+                 * Determines whether the result represents the warning.
+                 */
+                isWarning: function (result) {
+                    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
+                },
+
+                /**
                  * Creates the entity with concrete type, specified as 'typeName' string.
                  */
                 newEntity: function(typeName) {

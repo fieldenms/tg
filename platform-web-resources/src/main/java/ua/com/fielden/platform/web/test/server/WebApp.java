@@ -204,6 +204,16 @@ public class WebApp extends AbstractWebApp {
                 /*      */.shortDesc("Export composite prop")
                 /*      */.longDesc("Export composite property")
                 .also()
+                .addProp("requiredValidatedProp").asSpinner()
+                /*      */.withAction("#exportRequiredValidatedProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export requiredValidated prop")
+                /*      */.longDesc("Export requiredValidated prop")
+                .also()
 
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
@@ -225,7 +235,7 @@ public class WebApp extends AbstractWebApp {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, null, "['vertical', 'justified', 'margin:20px', [[mr], [mr], [mr], [mr], [mr]], [[mr], [mr], [mr], [mr]]]".replaceAll("mr", mr))
+                .setLayoutFor(Device.DESKTOP, null, "['vertical', 'justified', 'margin:20px', [[mr], [mr], [mr], [mr], [mr]], [[mr], [mr], [mr], [mr], [mr]]]".replaceAll("mr", mr))
                 .setLayoutFor(Device.TABLET, null, "['vertical', 'margin:20px',"
                         + "['horizontal', 'justified', [mr], [mr], [mr]],"
                         + "['horizontal', 'justified', [mr], [mr], [mr]],"

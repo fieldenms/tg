@@ -80,3 +80,12 @@
     .tg-snatchback-button {
         color: #03A9F4;
     }
+
+    /* Classes for meta-info decoration (required) */
+    paper-input-decorator.required /deep/ .label-text {
+       color: #4CAF50;
+    }
+
+    paper-input-decorator[focused].required /deep/ .label-text {
+        color: #4CAF50;
+    }

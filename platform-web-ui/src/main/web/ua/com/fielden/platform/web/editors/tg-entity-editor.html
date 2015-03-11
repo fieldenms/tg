@@ -49,7 +49,7 @@
 
         <!-- structure of representation -->
         <div id="all" relative>
-            <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" isInvalid="{{_msgType(entity, propertyName, editorValidationMsg) === 'ERROR'}}" error="{{_msgType(entity, propertyName, editorValidationMsg) === 'ERROR' ? _msg(entity, propertyName, editorValidationMsg) : ''}}" disabled?="{{_isDisabled(currentState)}}">
+            <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
                 <div layout horizontal>
                     <div id="input-container" flex>
                         <!-- if tooltip is empty then the core-tooltip is not shown -->
@@ -519,10 +519,10 @@
                     // console.log("entityChanged: newValue === ", newValue);
                     if (this._isEntity(newValue)) {
                         if (newValue.get(this.propertyName) !== null) {
-                            if (newValue._isObjectUndefined("@" + this.propertyName + "_result")) { // if valid -- desc should exist!
+                            if (newValue._isObjectUndefined("@" + this.propertyName + "_error")) { // if valid -- desc should exist!
                                 this.valueDesc = newValue.get("@" + this.propertyName + "_desc");
                             } else { // if invalid -- use validation message
-                                this.valueDesc = newValue.get("@" + this.propertyName + "_result").message;
+                                this.valueDesc = newValue.get("@" + this.propertyName + "_error").message;
                             }
                         } else {
                             this.valueDesc = null;

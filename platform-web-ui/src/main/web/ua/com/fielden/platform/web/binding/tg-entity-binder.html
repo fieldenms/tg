@@ -243,13 +243,19 @@
                     entity.traverseProperties(function (propertyName) {
                         if (self.$.reflector.isError(entity.prop(propertyName).validationResult())) {
                             bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
-                            bindingView["@" + propertyName + "_result"] = entity.prop(propertyName).validationResult();
+                            bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                         } else {
                             bindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
 
                             var value = entity.get(propertyName);
                             if (self._isEntity(value)) {
                                 bindingView["@" + propertyName + "_desc"] = self.$.reflector.convert(value.get("desc"));
+                            }
+
+                            if (self.$.reflector.isWarning(entity.prop(propertyName).validationResult())) {
+                                bindingView["@" + propertyName + "_warning"] = entity.prop(propertyName).validationResult();
+                            } else if (entity.prop(propertyName).isRequired()) {
+                                bindingView["@" + propertyName + "_required"] = true;
                             }
                         }
                     });

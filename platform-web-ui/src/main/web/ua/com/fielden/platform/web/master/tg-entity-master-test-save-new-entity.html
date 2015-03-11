@@ -56,6 +56,7 @@
                 assert.strictEqual(bindingEntity.get("stringProp"), null, "Binding property should be string entity representation.");
                 
                 // ACTUAL PROPERTY CHANGE            
+                bindingEntity.set("requiredValidatedProp", 30);
                 bindingEntity.set("key", "KEY_TO_PASS_VALIDATION_BEFORE_SAVE_" + (new Date()).getTime());
                 bindingEntity.set("stringProp", "okok");
 

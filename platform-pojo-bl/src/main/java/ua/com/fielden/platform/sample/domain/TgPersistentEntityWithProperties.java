@@ -14,8 +14,12 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -97,6 +101,23 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Crit-only entity prop", desc = "Crit-only entity prop desc")
     private TgPersistentEntityWithProperties critOnlyEntityProp;
+
+    @IsProperty
+    @MapTo
+    @Required
+    @BeforeChange(@Handler(RequiredValidatedPropValidator.class))
+    @Title(value = "Required validated prop", desc = "Required validated prop desc")
+    private Integer requiredValidatedProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setRequiredValidatedProp(final Integer requiredValidatedProp) {
+        this.requiredValidatedProp = requiredValidatedProp;
+        return this;
+    }
+
+    public Integer getRequiredValidatedProp() {
+        return requiredValidatedProp;
+    }
 
     @Observable
     public TgPersistentEntityWithProperties setCritOnlyEntityProp(final TgPersistentEntityWithProperties critOnlyEntityProp) {

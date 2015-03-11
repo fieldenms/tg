@@ -138,9 +138,6 @@
             ready: function () {
                 var self = this;
                 this.$.decorator.labelVisible = false;
-
-                self._msg = self._msg.bind(self);
-                self._msgType = self._msgType.bind(self);
             },
 
             /**
@@ -205,11 +202,25 @@
                             this.refreshCycleStarted = false;
                         }
                         this.editingValue = newEditingValue;
+
+                        this.bindMessages(newValue, this.propertyName, this.editorValidationMsg);
                     } else {
                         console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
                     }
                 } else {
                     console.log("entityChanged: Not yet initialised this.$!");
+                }
+            },
+
+            editorValidationMsgChanged: function(oldValue, newValue) {
+                if (typeof this.$ !== 'undefined') {
+                    if (this._isEntity(this.entity)) {
+                        this.bindMessages(this.entity, this.propertyName, newValue);
+                    } else {
+                        console.log("editorValidationMsgChanged: Not yet initialised currBindingEntity, from which to get binding value!");
+                    }
+                } else {
+                    console.log("editorValidationMsgChanged: Not yet initialised this.$!");
                 }
             },
 
@@ -274,41 +285,50 @@
                 }
             },
 
-            /** 
-             * The function for binding property validation msg. The argument 'entity' will be changed in future. Polymer will listen to that change.
-             */
-            _msg: function (entity, property, editorValidationMsg) {
+            bindMessages: function (entity, property, editorValidationMsg) {
                 if (editorValidationMsg) {
-                    return editorValidationMsg;
+                    this.bindError(editorValidationMsg);
                 } else if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(entity)) {
-                        // var validationResult = entity.prop(property).validationResult();
-                        return (typeof entity["@" + property + "_result"] === 'undefined') ? '' : entity["@" + property + "_result"].message;
+                        if (typeof entity["@" + property + "_error"] !== 'undefined') {
+                            this.bindError(entity["@" + property + "_error"].message);
+                        } else if (typeof entity["@" + property + "_warning"] !== 'undefined') {
+                            this.bindWarning(entity["@" + property + "_warning"].message);
+                        } else if (typeof entity["@" + property + "_required"] !== 'undefined') {
+                            this.bindRequired();
+                        } else {
+                            this.resetMessages();
+                        }
                     } else {
-                        return "Not yet initialised currEntity, from which to get validation message!";
+                        this.resetMessages();
                     }
                 } else {
-                    return "Not yet initialised this.$!";
+                    this.resetMessages();
                 }
             },
 
-            /** 
-             * The function for binding property validation msg type. The argument 'entity' will be changed in future. Polymer will listen to that change.
-             */
-            _msgType: function (entity, property, editorValidationMsg) {
-                if (editorValidationMsg) {
-                    return "ERROR";
-                } else if (typeof this.$ !== 'undefined') {
-                    if (this._isEntity(entity)) {
-                        var res = (typeof entity["@" + property + "_result"] === 'undefined') ? 'NONE' :
-                            (this.$.reflector.isError(entity["@" + property + "_result"]) ? 'ERROR' : "WARNING");
-                        return res;
-                    } else {
-                        return "ERROR";
-                    }
-                } else {
-                    return "ERROR";
-                }
+            resetMessages: function () {
+                this.$.decorator.classList.remove("required");
+                this.$.decorator.isInvalid = false;
+                this.$.decorator.error = "";
+            },
+
+            bindError: function (msg) {
+                this.resetMessages();
+                this.$.decorator.isInvalid = true;
+                this.$.decorator.error = msg;
+            },
+
+            bindWarning: function (msg) {
+                this.resetMessages();
+                this.$.decorator.isInvalid = true;
+                this.$.decorator.error = "WARNING :) " + msg;
+            },
+
+            bindRequired: function () {
+                console.log("          !!!! BIND REQUIRED !!!!");
+                this.resetMessages();
+                this.$.decorator.classList.add("required");
             },
 
             /**
