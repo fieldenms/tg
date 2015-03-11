@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/core-media-query/core-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
+<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/tg-web-app/tg-app-config.html">
 <link rel="import" href="/tg-reflector">
 
@@ -9,6 +10,8 @@
     <template>
         <link rel="stylesheet" href="/resources/egi/tg-entity-grid-inspector.css">
         <content id="column_selector" select="tg-property-column" hidden></content>
+        <content id="primary_action_selector" select="tg-primary-instance-action" hidden></content>
+        <content id="secondary_action_selector" select="tg-secondary-instance-action" hidden></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
         <core-media-query query="max-width: {{$.appConfig.minTabletWidth - 1}}px" querymatches="{{mobileScreen}}"></core-media-query>
@@ -30,10 +33,13 @@
                 <content select=".standart-action">
             </div>
         </div>
-        <table id="grid">
+        <table>
             <thead>
                 <tr class="header-color">
                     <th></th>
+                    <template if="{{primaryAction}}">
+                        <th></th>
+                    </template>
                     <template repeat="{{column in columns}}">
                         <th style="width: {{column.width}}" align="left">
                             <core-tooltip position="bottom" class="delayed" style="width:100%">
@@ -41,6 +47,9 @@
                                 <span class="span-tooltip" tip>{{column.columnDesc}}</span>
                             </core-tooltip>
                         </th>
+                    </template>
+                    <template if="{{secondaryActions.length >= 1 }}">
+                        <th></th>
                     </template>
                 </tr>
             </thead>
@@ -50,11 +59,27 @@
                         <td>
                             <paper-checkbox index="{{entityIndex}}" on-change="{{onSelectionChanged}}"></paper-checkbox>
                         </td>
+                        <template if="{{primaryAction}}">
+                            <td class="action-column">
+                                <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                    <core-icon-button icon="today"></core-icon-button>
+                                    <span class="span-tooltip" tip>{{primaryAction.actionDesc}}</span>
+                                </core-tooltip>
+                            </td>
+                        </template>
                         <template repeat="{{column in columns}}">
                             <td style="width: {{column.width}}">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     {{getValue(entity, column)}}
                                     <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
+                                </core-tooltip>
+                            </td>
+                        </template>
+                        <template if="{{secondaryActions.length >= 1 }}">
+                            <td class="action-column">
+                                <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                    <core-icon-button icon="today"></core-icon-button>
+                                    <span class="span-tooltip" tip>{{primaryAction.actionDesc}}</span>
                                 </core-tooltip>
                             </td>
                         </template>
@@ -77,7 +102,7 @@
             var areEqual = function (a, b) {
                     return a.id === b.id;
                 },
-                hasEntity = function(entity, entities) {
+                hasEntity = function (entity, entities) {
                     var i = 0;
                     for (i = 0; i < entities.length; i += 1) {
                         if (areEqual(entity, entities[i])) {
@@ -92,8 +117,14 @@
                     this.selectionModel = [];
                     this.selectedEntities = [];
                     this.columns = [];
+                    this.primaryAction = null;
+                    this.secondaryActions = [];
                     Array.prototype.forEach.call(this.$.column_selector.getDistributedNodes(), function (item) {
                         this.columns.push(item);
+                    }.bind(this));
+                    this.primaryAction = this.$.primary_action_selector.getDistributedNodes().length > 0 ? this.$.primary_action_selector.getDistributedNodes()[0] : null;
+                    Array.prototype.forEach.call(this.$.secondary_action_selector.getDistributedNodes(), function (item) {
+                        this.secondaryActions.push(item);
                     }.bind(this));
                 },
                 getTooltip: function (entity, column) {
@@ -125,7 +156,7 @@
                 },
                 getSelectedRows: function () {
                     var selectedRows = [];
-                    this.selectionModel.forEach(function(elem, elemIndex) {
+                    this.selectionModel.forEach(function (elem, elemIndex) {
                         if (elem) {
                             selectedRows.push(elemIndex);
                         }
@@ -138,7 +169,7 @@
                         this.selectionModel.push(hasEntity(entity, this.getSelectedEntities))
                     }.bind(this));
                 },
-                clearSelection: function() {
+                clearSelection: function () {
                     this.selectionModel = [];
                     this.selectedEntities = [];
                 }

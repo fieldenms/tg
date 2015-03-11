@@ -1,13 +1,13 @@
 table {
     border-collapse: collapse;
 }
-th, td {
+th:not(.action-column), td:not(.action-column) {
     padding: 0.75em 1.5em;
 }
 th {
     cursor: default;
 }
-td {
+td:not(.action-column) {
     color: #607D8B;
     cursor: pointer;
 }
