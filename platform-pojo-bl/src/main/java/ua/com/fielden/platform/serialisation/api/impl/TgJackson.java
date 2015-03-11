@@ -96,8 +96,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * Register all serialisers / deserialisers for entity types present in TG app.
      */
     protected void registerEntityTypes(final ISerialisationClassProvider provider, final TgJacksonModule module) {
-        new EntitySerialiser<EntityType>(EntityType.class, this.module, this, this.factory, true).register();
-        new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, true).register();
+        new EntitySerialiser<EntityType>(EntityType.class, this.module, this, this.factory, entityTypeInfoGetter, true);
+        new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, entityTypeInfoGetter, true);
         for (final Class<?> type : provider.classes()) {
             if (AbstractEntity.class.isAssignableFrom(type)) {
                 registerNewEntityType((Class<AbstractEntity<?>>) type);
@@ -112,14 +112,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @return
      */
     public EntityType registerNewEntityType(final Class<AbstractEntity<?>> newType) {
-        final EntityType entityTypeInfo = new EntitySerialiser<AbstractEntity<?>>(newType, this.module, this, this.factory).register();
-        return entityTypeInfoGetter.register(entityTypeInfo);
+        return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter).getEntityTypeInfo();
     }
-
-    //
-    //    protected void registerAbstractEntitySerialiser() {
-    //        addSerialiser(AbstractEntity.class, new EntitySerialiser());
-    //    }
 
     @Override
     public <T> T deserialise(final byte[] content, final Class<T> type) throws Exception {

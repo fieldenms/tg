@@ -38,37 +38,37 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class EntitySerialiser<T extends AbstractEntity<?>> {
     public static final String ENTITY_JACKSON_REFERENCES = "entity-references";
     private final Class<T> type;
-    private final EntityJsonSerialiser<T> serialiser;
-    private final EntityJsonDeserialiser<T> deserialiser;
     private final List<CachedProperty> properties;
-    private final TgJacksonModule module;
     private final EntityFactory factory;
-    private final EntityType entityType;
+    private final EntityType entityTypeInfo;
     private final DefaultValueContract defaultValueContract;
 
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory) {
-        this(type, module, mapper, factory, false);
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter) {
+        this(type, module, mapper, factory, entityTypeInfoGetter, false);
     }
 
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final boolean excludeNulls) {
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls) {
         this.type = type;
         this.factory = factory;
+
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        entityType = this.factory.newEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
-        entityType.beginInitialising();
-        entityType.setKey(type.getName());
 
         defaultValueContract = new DefaultValueContract();
-        serialiser = new EntityJsonSerialiser<T>(type, properties, entityType, defaultValueContract, excludeNulls);
-        deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityType, defaultValueContract);
-        this.module = module;
-    }
+        this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter);
 
-    public EntityType register() {
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, defaultValueContract, excludeNulls);
+        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, defaultValueContract);
+
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);
         module.addDeserializer(type, deserialiser);
+    }
+
+    private EntityType createEntityTypeInfo(final EntityTypeInfoGetter entityTypeInfoGetter) {
+        final EntityType entityTypeInfo = this.factory.newEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
+        entityTypeInfo.beginInitialising();
+        entityTypeInfo.setKey(type.getName());
 
         if (EntityUtils.isCompositeEntity(type)) {
             final List<String> compositeKeyNames = new ArrayList<>();
@@ -76,19 +76,19 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             for (final Field keyMember : keyMembers) {
                 compositeKeyNames.add(keyMember.getName());
             }
-            entityType.set_compositeKeyNames(compositeKeyNames);
+            entityTypeInfo.set_compositeKeyNames(compositeKeyNames);
 
             final String compositeKeySeparator = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) type);
             if (!defaultValueContract.isCompositeKeySeparatorDefault(compositeKeySeparator)) {
-                entityType.set_compositeKeySeparator(compositeKeySeparator);
+                entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!defaultValueContract.isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
-            entityType.set_entityTitle(entityTitleAndDesc.getKey());
+            entityTypeInfo.set_entityTitle(entityTitleAndDesc.getKey());
         }
         if (!defaultValueContract.isEntityDescDefault(type, entityTitleAndDesc.getValue())) {
-            entityType.set_entityDesc(entityTitleAndDesc.getValue());
+            entityTypeInfo.set_entityDesc(entityTitleAndDesc.getValue());
         }
 
         if (!properties.isEmpty()) {
@@ -146,10 +146,13 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
                 props.put(name, entityTypeProp);
             }
-            entityType.set_props(props);
+            entityTypeInfo.set_props(props);
         }
+        return entityTypeInfoGetter.register(entityTypeInfo); // the number will be populated here!
+    }
 
-        return entityType;
+    public EntityType getEntityTypeInfo() {
+        return entityTypeInfo;
     }
 
     public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final Long typeNumber) {

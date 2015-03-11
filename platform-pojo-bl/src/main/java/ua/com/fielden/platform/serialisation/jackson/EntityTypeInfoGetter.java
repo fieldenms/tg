@@ -30,6 +30,16 @@ public class EntityTypeInfoGetter {
      * @param entityType
      */
     public EntityType register(final EntityType entityType) {
+        if (EntityType.class.getName().equals(entityType.getKey()) || EntityTypeProp.class.getName().equals(entityType.getKey())) {
+            if (EntityType.class.getName().equals(entityType.getKey())) {
+                entityType.set_number(0L);
+            } else {
+                entityType.set_number(1L);
+            }
+            entityType.endInitialising();
+            return entityType;
+        }
+
         if (!typeTableByName.containsKey(entityType.getKey())) {
             typeCount = typeCount + 1;
             typeTable.put(typeCount, entityType.set_number(typeCount)); // starting from 2 (0 and 1 are reserved for special types EntityType and EntityTypeProp)

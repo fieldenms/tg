@@ -95,7 +95,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 entity = factory.newEntity(type, id);
             }
 
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, typeNumber());
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
             references.putEntity(newReference, entity);
 
             // deserialise version -- should never be null
@@ -320,9 +320,5 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             // TODO no other collectional types are supported at this stage -- should be added one by one
             return typeFactory.constructType(fieldType);
         }
-    }
-
-    private Long typeNumber() {
-        return entityType.get_number();
     }
 }

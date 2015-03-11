@@ -14,7 +14,6 @@ import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeProp;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.utils.Pair;
@@ -34,6 +33,10 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
     public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final DefaultValueContract defaultValueContract, final boolean excludeNulls) {
         super(type);
+        if (entityType.get_number() == null) {
+            throw new IllegalStateException("The number of the type [" + entityType + "] should be populated to be ready for serialisation.");
+        }
+
         this.type = type;
         this.properties = properties;
         this.entityType = entityType;
@@ -67,7 +70,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, typeNumber());
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
             references.putReference(entity, newReference);
 
             generator.writeStartObject();
@@ -151,10 +154,5 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         }
-    }
-
-    private Long typeNumber() {
-        return entityType.getKey().equals(EntityType.class.getName()) ? 0L :
-                entityType.getKey().equals(EntityTypeProp.class.getName()) ? 1L : entityType.get_number();
     }
 }
