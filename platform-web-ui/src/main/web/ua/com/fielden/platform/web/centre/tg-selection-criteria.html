@@ -14,8 +14,8 @@
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
 <link rel="import" href="/resources/centre/tg-criteria-validator.html">
 <link rel="import" href="/resources/centre/criterion/tg-criterion.html">
-<link rel="import" href="/resources/centre/criterion/tg-double-criterion.html">
-<link rel="import" href="/resources/centre/criterion/tg-date-double-criterion.html">
+<link rel="import" href="/resources/centre/criterion/tg-range-criterion.html">
+<link rel="import" href="/resources/centre/criterion/tg-date-range-criterion.html">
 
 <polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype">
     <template>
@@ -32,29 +32,29 @@
                 <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_desc" onAcceptedValueChanged="{{validate}}" propTitle="Desc MULTI" propDesc="Desc MULTI criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
             </tg-criterion>
 
-            <tg-double-criterion orNull="true" not="false" exclusive="false" exclusive2="true">
+            <tg-range-criterion orNull="true" not="false" exclusive="false" exclusive2="true">
                 <tg-integer-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_integerProp_from" onAcceptedValueChanged="{{validate}}" propTitle="Integer prop FROM" propDesc="Integer prop FROM criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
                 <tg-integer-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_integerProp_to" onAcceptedValueChanged="{{validate}}" propTitle="Integer prop TO" propDesc="Integer prop TO criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
-            </tg-double-criterion>
+            </tg-range-criterion>
 
             <tg-criterion orNull="true" not="false">
                 <tg-entity-search-criteria entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_entityProp" onAcceptedValueChanged="{{validate}}" propTitle="Entity prop MULTI" propDesc="Entity prop MULTI criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-search-criteria>
             </tg-criterion>
 
-            <tg-double-criterion orNull="true" not="false" exclusive="false" exclusive2="true">
+            <tg-range-criterion orNull="true" not="false" exclusive="false" exclusive2="true">
                 <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_bigDecimalProp_from" onAcceptedValueChanged="{{validate}}" propTitle="BigDecimal prop FROM" propDesc="BigDecimal prop FROM criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
                 <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_bigDecimalProp_to" onAcceptedValueChanged="{{validate}}" propTitle="BigDecimal prop TO" propDesc="BigDecimal prop TO criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
-            </tg-double-criterion>
+            </tg-range-criterion>
 
             <tg-criterion orNull="true" not="false">
                 <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_booleanProp_is" onAcceptedValueChanged="{{validate}}" propTitle="Boolean prop IS" propDesc="Boolean prop IS criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-boolean-editor>
                 <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_booleanProp_not" onAcceptedValueChanged="{{validate}}" propTitle="Boolean prop NOT" propDesc="Boolean prop NOT criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-boolean-editor>
             </tg-criterion>
 
-            <tg-date-double-criterion orNull="true" not="false" exclusive="false" exclusive2="true" datePrefix="PREV" dateMnemonic="MONTH" andBefore="true">
+            <tg-date-range-criterion orNull="true" not="false" exclusive="false" exclusive2="true" datePrefix="PREV" dateMnemonic="MONTH" andBefore="true">
                 <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_dateProp_from" onAcceptedValueChanged="{{validate}}" propTitle="Date prop FROM" propDesc="Date prop FROM criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>
                 <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_dateProp_to" onAcceptedValueChanged="{{validate}}" propTitle="Date prop TO" propDesc="Date prop TO criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>
-            </tg-date-double-criterion>
+            </tg-date-range-criterion>
 
             <tg-criterion orNull="true" not="false">
                 <tg-entity-search-criteria entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_compositeProp" onAcceptedValueChanged="{{validate}}" propTitle="Composite prop MULTI" propDesc="Composite prop MULTI criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-search-criteria>

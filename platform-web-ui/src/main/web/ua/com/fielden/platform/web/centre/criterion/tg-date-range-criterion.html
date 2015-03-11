@@ -1,9 +1,9 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
-<link rel="import" href="/resources/centre/criterion/tg-double-criterion.html">
+<link rel="import" href="/resources/centre/criterion/tg-range-criterion.html">
 
-<polymer-element name="tg-date-double-criterion" extends="tg-double-criterion" attributes="datePrefix dateMnemonic andBefore">
+<polymer-element name="tg-date-range-criterion" extends="tg-range-criterion" attributes="datePrefix dateMnemonic andBefore">
     <template>
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
         	<p>datePrefix: {{datePrefix}}</p>
@@ -14,7 +14,7 @@
     	</tg-flex-layout>
     </template>
     <script>
-        Polymer('tg-date-double-criterion', {
+        Polymer('tg-date-range-criterion', {
             publish: {
                 /**
                  * This published property specifies the 'date prefix' for this date criterion.

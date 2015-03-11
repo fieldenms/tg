@@ -3,7 +3,7 @@
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/centre/criterion/tg-criterion.html">
 
-<polymer-element name="tg-double-criterion" extends="tg-criterion" attributes="exclusive exclusive2">
+<polymer-element name="tg-range-criterion" extends="tg-criterion" attributes="exclusive exclusive2">
     <template>
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
         	<p>exclusive: {{exclusive}}</p>
@@ -13,15 +13,15 @@
     	</tg-flex-layout>
     </template>
     <script>
-        Polymer('tg-double-criterion', {
+        Polymer('tg-range-criterion', {
             publish: {
                 /**
-                 * This published property specifies whether left operand of 'double' criterion should be 'exclusive'.
+                 * This published property specifies whether left operand of 'range' criterion should be 'exclusive'.
                  */
                 exclusive: false,
 
                 /**
-                 * This published property specifies whether right operand of 'double' criterion should be 'exclusive'.
+                 * This published property specifies whether right operand of 'range' criterion should be 'exclusive'.
                  */
                 exclusive2: false,
             },
