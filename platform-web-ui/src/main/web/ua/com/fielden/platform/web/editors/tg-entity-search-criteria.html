@@ -598,11 +598,6 @@
                  * Handles overlay's button Ok click, which confirms selection and assigns it to the input field.
                  */
                 onOkClick: function () {
-                    // clear tooltip text
-                    //if (this.selectedItems) {
-                    //    this.valueDesc = this.selectedItem.get("desc");
-                    //}
-
                     var selectedItemsToStr = _.map(this.selectedItems, function (obj) {
                         return obj.key
                     }).toString();
