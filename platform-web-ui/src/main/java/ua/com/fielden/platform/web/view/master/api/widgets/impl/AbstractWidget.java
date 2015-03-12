@@ -31,6 +31,7 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     private final String widgetPath;
     private PropertyAction action;
     private boolean skipValidation = false;
+    private boolean debug = false;
 
     /**
      * Creates {@link AbstractWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -97,6 +98,9 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
      */
     private Map<String, Object> createAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
+        if (isDebug()) {
+            attrs.put("debug", "true");
+        }
         attrs.put("entity", "{{currBindingEntity}}");
         attrs.put("propertyName", this.propertyName);
         attrs.put("onAcceptedValueChanged", this.skipValidation ? "{{doNotValidate}}" : "{{validate}}");
@@ -153,5 +157,13 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     @Override
     public String importPath() {
         return widgetPath;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(final boolean debug) {
+        this.debug = debug;
     }
 }
