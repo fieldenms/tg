@@ -97,7 +97,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
 
     private Pair<CONTEXT, Map<String, Object>> constructCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder) {
         final Class<? extends AbstractEntity<?>> criteriaType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass((String) modifiedPropertiesHolder.get("@criteriaType"));
-        final CONTEXT valPrototype = (CONTEXT) CriteriaResource.createCriteriaValidationPrototype(CriteriaResource.getMiType(criteriaType), gdtm, critGenerator);
+        final CONTEXT valPrototype = (CONTEXT) CriteriaResource.createCriteriaValidationPrototype(CriteriaResource.getMiType(criteriaType), gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         return EntityResourceUtils.constructEntity(modifiedPropertiesHolder, valPrototype, coFinder);
     }
 }

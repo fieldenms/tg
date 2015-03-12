@@ -90,6 +90,17 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
+     * Determines the version that is shipped with 'modifiedPropertiesHolder'.
+     *
+     * @param modifiedPropertiesHolder
+     * @return
+     */
+    public static Long getVersion(final Map<String, Object> modifiedPropertiesHolder) {
+        final Object arrivedVersionVal = modifiedPropertiesHolder.get(AbstractEntity.VERSION);
+        return ((Integer) arrivedVersionVal).longValue();
+    }
+
+    /**
      * Applies the values from <code>dirtyPropertiesHolder</code> into the <code>entity</code>. The values needs to be converted from the client-side component-specific form into
      * the values, which can be set into Java entity's property.
      *
@@ -99,9 +110,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public static <M extends AbstractEntity<?>> M apply(final Map<String, Object> modifiedPropertiesHolder, final M entity, final ICompanionObjectFinder companionFinder) {
         final Class<M> type = (Class<M>) entity.getType();
-        final Object arrivedVersionVal = modifiedPropertiesHolder.get(AbstractEntity.VERSION);
-        final Long version = ((Integer) arrivedVersionVal).longValue();
-        final boolean isEntityStale = entity.getVersion() > version;
+        final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
 
         // iterate through modified properties:
         for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
@@ -300,6 +309,20 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final ICompanionObjectFinder companionFinder) {
         return new Pair<>(apply(modifiedPropertiesHolder, validationPrototype, companionFinder), modifiedPropertiesHolder);
+    }
+
+    /**
+     * Constructs the entity from the client envelope and resets the original values of the entity to be equal to the values.
+     * <p>
+     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
+     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
+     * <p>
+     * All normal properties will be applied in 'validationPrototype'.
+     *
+     * @return applied validationPrototype and modifiedPropertiesHolder map
+     */
+    public static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> constructEntityAndResetMetaValues(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final ICompanionObjectFinder companionFinder) {
+        return new Pair<>((M) apply(modifiedPropertiesHolder, validationPrototype, companionFinder).resetMetaState(), modifiedPropertiesHolder);
     }
 
     /**

@@ -64,6 +64,19 @@ public class DefaultValueContract {
     }
 
     /**
+     * Returns the value of <code>originalValue</code> property.
+     *
+     * @param metaProperty
+     * @return
+     */
+    public Object getOriginalValue(final MetaProperty<Object> metaProperty) {
+        if (metaProperty == null) {
+            throw new IllegalStateException("If the meta property does not exist -- original value population is unsupported.");
+        }
+        return metaProperty.getOriginalValue();
+    }
+
+    /**
      * Returns <code>true</code> if the value of <code>changedFromOriginal</code> property is default, <code>false</code> otherwise.
      *
      * @param metaProperty

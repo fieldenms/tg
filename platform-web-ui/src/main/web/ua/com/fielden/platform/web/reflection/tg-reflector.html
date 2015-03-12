@@ -253,6 +253,21 @@
             }
 
             /**
+             * Returns original value in case when the property is changed from original and the entity is persisted.
+             *
+             * IMPORTANT: do not use '_originalVal' field directly!
+             */
+            EntityInstanceProp.prototype.originalValue = function () {
+                if (!this.isChangedFromOriginal()) {
+                    throw "No one should access originalValue for not changed from original property.";
+                }
+                if (!this.entity().isPersisted()) {
+                    throw "No one should access originalValue for not persisted entity.";
+                }
+                return this._originalVal;
+            }
+
+            /**
              * Returns 'true' when the instance property is required, false otherwise.
              *
              * IMPORTANT: do not use '_required' field directly!
@@ -364,6 +379,27 @@
             }
 
             /**
+             * Returns the original property value for the entity.
+             *
+             */
+            Entity.prototype.getOriginal = function (propName) {
+                var value = this.get(propName);
+                if (this.isPersisted()) {
+                    var instanceMetaProperty = this.constructor.prototype.prop.call(this, propName);
+                    if (instanceMetaProperty.isChangedFromOriginal()) {
+                        if (typeof instanceMetaProperty['_originalVal'] === 'undefined') {
+                            throw "instanceMetaProperty has no _originalVal when it is crucial!";
+                        }
+                        return instanceMetaProperty._originalVal;
+                    } else {
+                        return value;
+                    } 
+                } else {
+                    return null;
+                }
+            }
+
+            /**
              * Returns 'true' if there is an object member defined (not a function!) with a specified name, 'false' otherwise.
              *
              */
@@ -441,6 +477,13 @@
                     }
                 });
                 return first;
+            }
+
+            /**
+             * Returns 'true' if the entity was persisted before and 'false' otherwise.
+             */
+            Entity.prototype.isPersisted = function () {
+                return this.id !== null;
             }
 
             var StrictProxyException = function (propName, simpleClassName) { // rawObject

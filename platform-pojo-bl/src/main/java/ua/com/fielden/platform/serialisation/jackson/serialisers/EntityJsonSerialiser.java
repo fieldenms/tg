@@ -118,6 +118,11 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         }
                         if (!defaultValueContract.isChangedFromOriginalDefault(metaProperty)) {
                             existingMetaProps.put("_cfo", defaultValueContract.getChangedFromOriginal(metaProperty));
+                            if (entity.isPersisted()) {
+                                // if (!defaultValueContract.isOriginalValueDefault(metaProperty)) {
+                                existingMetaProps.put("_originalVal", defaultValueContract.getOriginalValue(metaProperty));
+                                // }
+                            }
                         }
                         if (!defaultValueContract.isRequiredDefault(metaProperty)) {
                             existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, defaultValueContract.getRequired(metaProperty));

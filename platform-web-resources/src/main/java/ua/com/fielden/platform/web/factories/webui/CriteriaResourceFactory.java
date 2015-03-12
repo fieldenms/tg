@@ -64,7 +64,7 @@ public class CriteriaResourceFactory extends Restlet {
 
             final IGlobalDomainTreeManager gdtm = injector.getInstance(IGlobalDomainTreeManager.class);
 
-            final CriteriaResource<AbstractEntity<?>> resource = new CriteriaResource<>(restUtil, factory, companionFinder, centre, gdtm, this.critGenerator, getContext(), request, response);
+            final CriteriaResource<AbstractEntity<?>> resource = new CriteriaResource<>(restUtil, companionFinder, centre, gdtm, this.critGenerator, getContext(), request, response);
             resource.handle();
         }
     }

@@ -56,7 +56,6 @@ core-style
 
                 currEntity: null, // represents the current entity
                 currBindingEntity: {}, // represents the view of current entity for binding
-                currBindingEntityCopy: {}, // represents the copy of the view of current entity for binding (used for determination of the 'modified' values)
                 originalBindingEntity: null, // represents the view of original entity for binding.
                 showProgress: false, // toast related
 
@@ -141,7 +140,7 @@ core-style
                     this.openToast("Refreshed", false);
 
                     // this.startRefreshCycleModeForEditors();
-                    var newBindingEntity = this.onEntityReceived(entity, true);
+                    var newBindingEntity = this.onEntityReceived(entity);
                     // custom external action
                     this.onRetrieved(entity, newBindingEntity);
                 },
@@ -156,7 +155,7 @@ core-style
 
                     this.openToast("Validating...", true);
 
-                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
+                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
                     // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
                     // (if the entity was not modified -- validate(holder) will start the error recovery process)
 
@@ -178,8 +177,7 @@ core-style
                 onValidatedDefault: function (validatedEntity) {
                     this.openToast(this.toastMsg("Validation", validatedEntity), false);
 
-                    var wasStale = validatedEntity.version > this.currEntity.version;
-                    var newBindingEntity = this.onEntityReceived(validatedEntity, wasStale);
+                    var newBindingEntity = this.onEntityReceived(validatedEntity);
                     // custom external action
                     this.onValidated(validatedEntity, newBindingEntity);
                 },
@@ -196,7 +194,7 @@ core-style
                     return obj !== null && (obj instanceof this.$.reflector.getEntityType());
                 },
 
-                extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity, bindingEntityCopy) {
+                extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
                     var modPropHolder = {
                         "@modified": false
                     };
@@ -207,15 +205,14 @@ core-style
 
                         bindingEntity.traverseProperties(function (propertyName) {
                             var value = bindingEntity.get(propertyName);
-                            var prevValue = bindingEntityCopy.get(propertyName);
                             var originalValue = originalBindingEntity.get(propertyName);
                             // VERY IMPORTANT: the property is considered to be 'modified'
-                            //                 in the case when its value does not equal to previous value (not original!).
+                            //                 in the case when its value does not equal to original value.
                             // 
                             //                 The "modified" property is marked by existence of "val" sub-property.
                             //
                             //                 All modified properties will be applied on the server upon the validation prototype.
-                            if (!self.$.reflector.equalsEx(value, /*prevValue*/ originalValue)) {
+                            if (!self.$.reflector.equalsEx(value, originalValue)) {
                                 // the property is 'modified'
                                 modPropHolder[propertyName] = {
                                     "val": value,
@@ -230,14 +227,13 @@ core-style
                             }
                         });
                     }
-
-                    console.log("       bindingEntity + originalBindingEntity + modPropHolder", bindingEntity, originalBindingEntity, modPropHolder);
+                    console.log("       extractModifiedPropertiesHolder: modPropHolder", modPropHolder);
                     return modPropHolder;
                 },
 
                 createModifiedPropertiesHolder: function () {
                     var self = this;
-                    var mph = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
+                    var mph = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
                     return self._reset(mph);
                 },
 
@@ -268,26 +264,24 @@ core-style
                 /**
                  * Provides default action after fresh entity has been received. Rebinds the entity.
                  */
-                onEntityReceived: function (entity, updateOriginalBindingEntity) {
+                onEntityReceived: function (entity) {
                     var self = this;
                     // After the entity has received, potentially its id has been updated:
                     if (self._idConvert(entity.id) !== self.entityid) {
                         self.entityid = self._idConvert(entity.id);
                     }
                     // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
-                    var previousModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
+                    var previousModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
                     self._reset(previousModifiedPropertiesHolder);
                     // New entity should be promoted to the local cache:
                     self.currEntity = entity;
                     // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
                     self.currBindingEntity = self._extractBindingView(self.currEntity, previousModifiedPropertiesHolder);
-                    self.currBindingEntityCopy = self._extractBindingView(self.currEntity, previousModifiedPropertiesHolder);
+                    self.originalBindingEntity = self._extractOriginalBindingView(self.currEntity);
+
                     this.resetRefreshCycleModeForEditors();
 
-                    if (updateOriginalBindingEntity) {
-                        self.originalBindingEntity = self._extractOriginalBindingView(self.currEntity);
-                    }
-
+                    console.log("       onEntityReceived: currBindingEntity + originalBindingEntity", self.currBindingEntity, self.originalBindingEntity);
                     return self.currBindingEntity;
                 },
 
@@ -337,17 +331,11 @@ core-style
                     bindingView["version"] = entity["version"];
 
                     entity.traverseProperties(function (propertyName) {
-                        bindingView[propertyName] = self._getOriginalValue(entity, propertyName);
+                        bindingView[propertyName] = self.$.reflector.convert(entity.getOriginal(propertyName)); 
                     });
 
                     // console.log("       entity + originalBindingView", entity, bindingView);
                     return bindingView;
-                },
-
-                _getOriginalValue: function (entity, propName) {
-                    var value = entity.get(propName); // automatic check whether the property is fetched
-                    var instanceMetaProperty = entity.constructor.prototype.prop.call(entity, propName);
-                    return /*entity.prop(propName)*/ instanceMetaProperty.isChangedFromOriginal() ? null : this.$.reflector.convert(value);
                 }
             });
         })();

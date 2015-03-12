@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -18,9 +19,9 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.menu.MiType;
 import ua.com.fielden.platform.swing.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
@@ -39,20 +40,17 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends ServerResource {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final static Logger logger = Logger.getLogger(CriteriaResource.class);
 
     private final RestServerUtil restUtil;
-    private final EntityFactory factory;
     private final ICompanionObjectFinder companionFinder;
 
-    private final EntityCentre centre;
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final IGlobalDomainTreeManager gdtm;
     private final ICriteriaGenerator critGenerator;
 
     public CriteriaResource(
             final RestServerUtil restUtil,
-            final EntityFactory factory,
             final ICompanionObjectFinder companionFinder,
 
             final EntityCentre centre,
@@ -65,10 +63,8 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         init(context, request, response);
 
         this.restUtil = restUtil;
-        this.factory = factory;
         this.companionFinder = companionFinder;
 
-        this.centre = centre;
         miType = centre.getMenuItemType();
         this.gdtm = gdtm;
         this.critGenerator = critGenerator;
@@ -80,7 +76,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return restUtil.singleJSONRepresentation(createCriteriaValidationPrototype(miType, gdtm, critGenerator).resetMetaState());
+        return restUtil.singleJSONRepresentation(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L) /*.resetMetaState() */);
     }
 
     /**
@@ -168,8 +164,8 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator);
-        final AbstractEntity<?> applied = EntityResourceUtils.constructEntity(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+        final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
         return restUtil.singleJSONRepresentation(applied);
     }
@@ -187,10 +183,42 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> createCriteriaValidationPrototype(
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final IGlobalDomainTreeManager gdtm,
-            final ICriteriaGenerator critGenerator) {
+            final ICriteriaGenerator critGenerator,
+            final Long previousVersion) {
         final ICentreDomainTreeManagerAndEnhancer cdtmae = getCurrentCentreManager(gdtm, miType);
         final Class<AbstractEntity<?>> entityType = getEntityType(miType);
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = critGenerator.generateCentreQueryCriteria(entityType, cdtmae, createMiTypeAnnotation(miType));
+
+        final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
+        final boolean idAccessible = idField.isAccessible();
+        idField.setAccessible(true);
+        try {
+            idField.set(validationPrototype, 333L); // here the fictional id is populated to mark the entity as persisted!
+            idField.setAccessible(idAccessible);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            idField.setAccessible(idAccessible);
+            logger.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+
+        final Field versionField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.VERSION);
+        final boolean accessible = versionField.isAccessible();
+        versionField.setAccessible(true);
+        try {
+            // Here the version of validation prototype is set to be increased comparing to previousVersion.
+            // This action is necessary to indicate that the criteria entity was changed (by other fictional user) since new modifications arrive.
+            // But to be clear -- the criteria entity is 'changed' because it is originated from ICDTMAE, which has been changed during previous validation cycle.
+            versionField.set(validationPrototype, previousVersion + 1);
+            versionField.setAccessible(accessible);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            versionField.setAccessible(accessible);
+            logger.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+
+        // The meta state reset is necessary to make the entity like 'just saved and retrieved from the database' (originalValues should be equal to values)
+        validationPrototype.resetMetaState();
+
         return validationPrototype;
     }
 }

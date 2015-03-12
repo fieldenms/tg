@@ -236,7 +236,7 @@
 
                     self.startRefreshCycleModeForEditors();
 
-                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
+                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     self.$.validator.abortValidationIfAny();
 
@@ -297,9 +297,8 @@
                 onSavedDefault: function (potentiallySavedEntity) {
                     this.openToast(this.toastMsg("Saving", potentiallySavedEntity), false);
 
-                    var wasStale = potentiallySavedEntity.version > this.currEntity.version;
                     // this.startRefreshCycleModeForEditors();
-                    var newBindingEntity = this.onEntityReceived(potentiallySavedEntity, wasStale);
+                    var newBindingEntity = this.onEntityReceived(potentiallySavedEntity);
                     // custom external action
                     this.onSaved(potentiallySavedEntity, newBindingEntity);
                 },
