@@ -36,7 +36,12 @@
         <table>
             <thead>
                 <tr class="header-color">
-                    <th></th>
+                    <th>
+                        <core-tooltip position="bottom" class="delayed" style="width:100%">
+                            <paper-checkbox checked="{{selectAll}}" on-core-change="{{onAllSelectionChanged}}"></paper-checkbox>
+                            <span class="span-tooltip" tip>{{selectAll ? 'Unselect': 'Select'}} All entities</span>
+                        </core-tooltip>
+                    </th>
                     <template if="{{primaryAction}}">
                         <th></th>
                     </template>
@@ -57,7 +62,10 @@
                 <template repeat="{{entity, entityIndex in entities}}">
                     <tr class="{{entityIndex % 2 === 0 ? 'normal-color' : 'alternate-color'}}" selected?="{{selectionModel[entityIndex]}}">
                         <td>
-                            <paper-checkbox index="{{entityIndex}}" on-change="{{onSelectionChanged}}"></paper-checkbox>
+                            <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
+                                <span class="span-tooltip" tip>{{selectionModel[entityIndex] ? 'Unselect': 'Select'}} this entity</span>
+                            </core-tooltip>
                         </td>
                         <template if="{{primaryAction}}">
                             <td class="action-column">
@@ -141,15 +149,26 @@
                         return entity.get(column.property);
                     }
                 },
+                onAllSelectionChanged: function (e, detail, source) {
+                    var i = 0;
+                    for (i = 0; i < this.selectionModel.length; i += 1) {
+                        this.selectionModel[i] = source.checked;
+                    }
+                },
                 onSelectionChanged: function (e, detail, source) {
                     var index = +source.getAttribute("index");
                     if (source.checked) {
-                        this.selectionModel[index] = true;
-                        this.selectedEntities.push(this.entities[index]);
+                        if (this.selectedEntities.indexOf(this.entities[index]) < 0) {
+                            this.selectedEntities.push(this.entities[index]);
+                            this.selectionModel[index] = true;
+                        }
                     } else {
-                        this.selectionModel[index] = false;
-                        this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
+                        if (this.selectedEntities.indexOf(this.entities[index]) >= 0) {
+                            this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
+                            this.selectionModel[index] = false;
+                        }
                     }
+                    console.log(this.getSelectedRows(), this.getSelectedEntities(), this.selectionModel);
                 },
                 getSelectedEntities: function () {
                     return this.selectedEntities;
