@@ -3,6 +3,20 @@
 <polymer-element name="tg-reflector" hidden>
     <script>
         (function () {
+            /**
+             * Determines whether the result represents the error.
+             */
+            var isError0 = function (result) {
+                return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result" && (typeof result.ex !== 'undefined');
+            };
+
+            /**
+             * Determines whether the result represents the warning.
+             */
+            var isWarning0 = function (result) {
+                return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
+            };
+
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityType ////////////////////////////////////////// 
             var EntityType = function (rawObject) {
                 Object.call(this);
@@ -381,6 +395,54 @@
                 }
             }
 
+            /**
+             * Determines whether the entity is valid, which means that there are no invalid properties.
+             *
+             */
+            Entity.prototype.isValid = function () {
+                return this.firstFailure() === null;
+            }
+
+            /**
+             * Finds the first failure for the properties of this entity, if any.
+             *
+             */
+            Entity.prototype.firstFailure = function () {
+                var self = this;
+                var first = null;
+                self.traverseProperties(function (propName) {
+                    if (isError0(self.prop(propName).validationResult())) {
+                        first = self.prop(propName).validationResult();
+                        return;
+                    }
+                });
+                return first;
+            }
+
+            /**
+             * Determines whether the entity is valid with warning, which means that there are no invalid properties but the properties with warnings exist.
+             *
+             */
+            Entity.prototype.isValidWithWarning = function () {
+                return this.firstFailure() === null && this.firstWarning() !== null;
+            }
+
+            /**
+             * Finds the first warning for the properties of this entity, if any.
+             *
+             */
+            Entity.prototype.firstWarning = function () {
+                var self = this;
+                var first = null;
+                self.traverseProperties(function (propName) {
+                    if (isWarning0(self.prop(propName).validationResult())) {
+                        first = self.prop(propName).validationResult();
+                        return;
+                    }
+                });
+                return first;
+            }
+
             var StrictProxyException = function (propName, simpleClassName) { // rawObject
                 Object.call(this);
 
@@ -488,14 +550,14 @@
                  * Determines whether the result represents the error.
                  */
                 isError: function (result) {
-                    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result" && (typeof result.ex !== 'undefined');
+                    return isError0(result);
                 },
 
                 /**
                  * Determines whether the result represents the warning.
                  */
                 isWarning: function (result) {
-                    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
+                    return isWarning0(result);
                 },
 
                 /**

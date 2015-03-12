@@ -1,39 +1,17 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
-<link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
-<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/validation/tg-entity-validator.html">
 <link rel="import" href="/resources/binding/tg-entity-binder.html">
-
-<core-style id="progress-indicator">
-    core-icon-button /deep/ core-icon[role="img"] { fill: {{g.paperInput.labelColor}}; }
-    <!-- -->
-    core-icon-button:hover /deep/ core-icon, #decorator[focused] /deep/ core-icon { fill: {{g.paperInput.focusedColor}}; }
-    <!-- -->
-    .invalid core-icon-button /deep/ core-icon { fill : {{g.paperInput.invalidColor}}; }
-    <!-- -->
-    paper-spinner { padding: 0px; margin: 0px; width: 18px; height: 18px; }
-    <!-- -->
-    paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
-</core-style>
-
 
 <polymer-element name="tg-entity-master" extends="tg-entity-binder" attributes="entitytype entityid onSaved onSavedComplete currentState">
     <template>
         <shadow></shadow>
-        <core-style ref="progress-indicator"></core-style>
 
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
 
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax>
         <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax>
         <core-ajax id="ajaxSaverNew" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax>
-
-        <paper-toast id="toast" text="" opened="false">
-            <template if="{{showProgress}}">
-                <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="searching"></paper-spinner>
-            </template>
-        </paper-toast>
     </template>
     <script>
         (function () {
@@ -243,16 +221,13 @@
                 },
 
                 //////////////////////////////////////// SAVING ////////////////////////////////////////
-                showProgress: false,
                 /**
                  * Starts the process of entity saving (based on currBindingEntity).
                  */
                 save: function () {
                     var self = this;
 
-                    this.showProgress = true;
-                    this.$.toast.text = "Saving";
-                    this.$.toast.opened = true;
+                    this.openToast("Saving...", true);
 
                     if (self._savingInProgress()) {
                         var SimultaneousSaveException = this._getSimultaneousSaveExceptionType();
@@ -320,16 +295,7 @@
                  * Default implementation for onSaved callback.
                  */
                 onSavedDefault: function (potentiallySavedEntity) {
-                    // TODO show toas with success or error
-                    //this.showProgress = false;
-                    this.$.toast.text = "Save completed";
-                    this.$.toast.opened = true;
-                    console.log("SAVED COMPLETE... determining failed properties ");
-                    var self = this;
-                    self.currEntity.traverseProperties(function (propName) {
-                        console.log(self.currEntity.prop(propName).validationResult());
-                    });
-
+                    this.openToast(this.toastMsg("Saving", potentiallySavedEntity), false);
 
                     var wasStale = potentiallySavedEntity.version > this.currEntity.version;
                     // this.startRefreshCycleModeForEditors();

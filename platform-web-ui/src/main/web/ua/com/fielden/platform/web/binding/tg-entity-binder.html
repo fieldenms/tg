@@ -1,6 +1,21 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/tg-reflector">
+<link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+core-style
+
+<core-style id="progress-indicator">
+    core-icon-button /deep/ core-icon[role="img"] { fill: {{g.paperInput.labelColor}}; }
+    <!-- -->
+    core-icon-button:hover /deep/ core-icon, #decorator[focused] /deep/ core-icon { fill: {{g.paperInput.focusedColor}}; }
+    <!-- -->
+    .invalid core-icon-button /deep/ core-icon { fill : {{g.paperInput.invalidColor}}; }
+    <!-- -->
+    paper-spinner { padding: 0px; margin: 0px; width: 18px; height: 18px; }
+    <!-- -->
+    paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
+</core-style>
 
 <polymer-element name="tg-entity-binder" attributes="user onRetrieved onValidated onPreRetrieved currentState">
     <template>
@@ -9,6 +24,12 @@
         <!-- tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator -->
 
         <!-- core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax -->
+        <core-style ref="progress-indicator"></core-style>
+        <paper-toast id="toast" text="" opened="false">
+            <template if="{{showProgress}}">
+                <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="searching"></paper-spinner>
+            </template>
+        </paper-toast>
     </template>
     <script>
         (function () {
@@ -37,6 +58,7 @@
                 currBindingEntity: {}, // represents the view of current entity for binding
                 currBindingEntityCopy: {}, // represents the copy of the view of current entity for binding (used for determination of the 'modified' values)
                 originalBindingEntity: null, // represents the view of original entity for binding.
+                showProgress: false, // toast related
 
                 /**
                  * Initialisation block. It has all children web components already initialised.
@@ -65,6 +87,21 @@
                 },
 
                 /**
+                 * Opens the toast with some message and with indication whether progress is started.
+                 */
+                openToast: function(msg, showProgress) { /* TODO add msgType param and populate its meaning */
+                    this.showProgress = showProgress;
+                    this.$.toast.text = msg;
+                    this.$.toast.opened = true;
+                },
+
+                toastMsg: function(actionName, entity) {
+                    return !entity.isValid() ? (actionName + " failure [" + entity.firstFailure().message + "]") : (
+                                entity.isValidWithWarning() ? (actionName + " success with warning [" + entity.firstWarning().message + "]") : actionName + " success"    
+                        );
+                },
+
+                /**
                  * The core-ajax component for entity retrieval.
                  */
                 ajaxRetriever: function () {
@@ -83,6 +120,8 @@
                  * Starts the process of entity retrieval (based on current entityid).
                  */
                 retrieve: function () {
+                    this.openToast("Refresh...", true);
+
                     this.ajaxRetriever().go();
                     this.startRefreshCycleModeForEditors();
                 },
@@ -99,6 +138,8 @@
                  */
                 onRetrievedDefault: function (e) {
                     var entity = this.onPreRetrieved(this.$.serialiser.deserialise(e.detail.response).instance);
+                    this.openToast("Refreshed", false);
+
                     // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(entity, true);
                     // custom external action
@@ -112,6 +153,9 @@
                 validate: function () {
                     console.log("validate");
                     var self = this;
+
+                    this.openToast("Validating...", true);
+
                     var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity, self.currBindingEntityCopy);
                     // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
                     // (if the entity was not modified -- validate(holder) will start the error recovery process)
@@ -132,6 +176,8 @@
                  * Default implementation for onValidated callback.
                  */
                 onValidatedDefault: function (validatedEntity) {
+                    this.openToast(this.toastMsg("Validation", validatedEntity), false);
+
                     var wasStale = validatedEntity.version > this.currEntity.version;
                     var newBindingEntity = this.onEntityReceived(validatedEntity, wasStale);
                     // custom external action

@@ -145,6 +145,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 }
             }
         }
+        // IMPORTANT: the check for invalid will populate 'required' checks.
+        //            It is necessary in case when some property becomes required after the change of other properties.
+        entity.isValid();
+
         return entity;
     }
 
