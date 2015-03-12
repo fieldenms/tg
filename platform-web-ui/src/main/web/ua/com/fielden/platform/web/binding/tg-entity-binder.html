@@ -169,7 +169,7 @@
                             //                 The "modified" property is marked by existence of "val" sub-property.
                             //
                             //                 All modified properties will be applied on the server upon the validation prototype.
-                            if (!self.$.reflector.equalsEx(value, prevValue)) {
+                            if (!self.$.reflector.equalsEx(value, /*prevValue*/ originalValue)) {
                                 // the property is 'modified'
                                 modPropHolder[propertyName] = {
                                     "val": value,

@@ -115,6 +115,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                         final String msg = String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"));
                         logger.info(msg);
                         entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+                    } else if (multipleFoundEntities(type, name, valAndOrigVal.get("val"), newValue)) {
+                        final String msg = String.format("Multiple entities have been found for [%s].", valAndOrigVal.get("val"));
+                        logger.info(msg);
+                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
                     } else if (!isEntityStale) {
                         entity.set(name, newValue);
                     } else {
@@ -158,6 +162,19 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
+     * Returns <code>true</code> if the property is of entity type and multiple entities ware found by the search string (reflectedValue), <code>false</code> otherwise.
+     *
+     * @param type
+     * @param propertyName
+     * @param reflectedValue
+     * @param newValue
+     * @return
+     */
+    private static <M extends AbstractEntity<?>> boolean multipleFoundEntities(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
+        return reflectedValue != null && Arrays.asList().equals(newValue) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
+    }
+
+    /**
      * Converts <code>reflectedValue</code> (which is a string, number, boolean or null) into a value of appropriate type (the type of actual property).
      *
      * @param type
@@ -181,7 +198,15 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList((String) reflectedValue))).//
             /*      */model();
             final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
-            return propertyCompanion.getEntity(qem);
+            try {
+                return propertyCompanion.getEntity(qem);
+            } catch (final IllegalArgumentException e) {
+                if (e.getMessage().equals("The provided query model leads to retrieval of more than one entity (2).")) {
+                    return Arrays.asList();
+                } else {
+                    throw e;
+                }
+            }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue == null ? null : reflectedValue;
