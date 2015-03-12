@@ -1,7 +1,8 @@
 table {
     border-collapse: collapse;
 }
-th:not(.action-column), td:not(.action-column) {
+th:not(.action-column),
+td:not(.action-column) {
     padding: 0.75em 1.5em;
 }
 th {
@@ -15,10 +16,11 @@ td:not(.action-column) {
     overflow-y: auto;
     overflow-x: hidden;
 }*/
-tbody>tr.normal-color:not([selected]){
+
+tbody>tr.normal-color:not([selected]) {
     background-color: white;
 }
-tbody>tr.alternate-color:not([selected]){
+tbody>tr.alternate-color:not([selected]) {
     background-color: #F5F5F5;
 }
 tbody>tr:hover:not([selected]) {
@@ -45,12 +47,12 @@ core-tooltip.delayed:focus::shadow .core-tooltip {
     transform: translate3d(0px, 0px, 0px);
 }
 th paper-checkbox::shadow #checkbox {
-  background-color: #0288D1;
-  border-color: white;
+    background-color: #0288D1;
+    border-color: white;
 }
 paper-checkbox::shadow #checkbox.checked {
-  background-color: #0288D1;
-  border-color: #0288D1;
+    background-color: #0288D1;
+    border-color: #0288D1;
 }
 tbody>tr.normal-color paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
     border-color: transparent;

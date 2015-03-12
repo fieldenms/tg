@@ -1,6 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/core-media-query/core-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="/resources/polymer/paper-ripple/paper-ripple.html">
+<link rel="import" href="/resources/polymer/paper-dropdown/paper-dropdown.html">
 <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/tg-web-app/tg-app-config.html">
@@ -53,7 +55,7 @@
                             </core-tooltip>
                         </th>
                     </template>
-                    <template if="{{secondaryActions.length >= 1 }}">
+                    <template if="{{secondaryActions.length > 0 }}">
                         <th></th>
                     </template>
                 </tr>
@@ -77,17 +79,18 @@
                         </template>
                         <template repeat="{{column in columns}}">
                             <td style="width: {{column.width}}">
+                                <!--<paper-ripple class="circle recenteringTouch" fit></paper-ripple>-->
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     {{getValue(entity, column)}}
                                     <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
                                 </core-tooltip>
                             </td>
                         </template>
-                        <template if="{{secondaryActions.length >= 1 }}">
+                        <template if="{{secondaryActions.length > 0 }}">
                             <td class="action-column">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                    <core-icon-button icon="today"></core-icon-button>
-                                    <span class="span-tooltip" tip>{{primaryAction.actionDesc}}</span>
+                                    <core-icon-button icon="today" on-tap="{{onSecondaryActionTap}}"></core-icon-button>
+                                    <span class="span-tooltip" tip>{{secondaryActions.length > 1 ? 'Click to see associated actions' : secondaryActions[0].actionDesc}}</span>
                                 </core-tooltip>
                             </td>
                         </template>
@@ -95,6 +98,14 @@
                 </template>
             </tbody>
         </table>
+        <paper-dropdown id="action_dropdown" layout vertical>
+            <template repeat="{{action in secondaryActions}}">
+                <core-tooltip position="bottom" class="delayed" style="width:100%">
+                    <core-icon-button icon="today"></core-icon-button>{{action.actionTitle}}
+                    <span class="span-tooltip" tip>action.actionDesc</span>
+                </core-tooltip>
+            </template>
+        </paper-dropdown>
         <!--</table>
 </div>-->
         <!--<table>
@@ -169,6 +180,17 @@
                         }
                     }
                     console.log(this.getSelectedRows(), this.getSelectedEntities(), this.selectionModel);
+                },
+                onSecondaryActionTap: function (e, detail, source) {
+                    console.log(source.style);
+                    if (this.secondaryActions.length > 1) {
+                        if (!this.$.action_dropdown.opened) {
+                            this.$.action_dropdown.sizingTarget = source;
+                            this.$.action_dropdown.opened = true;
+                        } else {
+                            this.$.action_dropdown.opened = false;
+                        }
+                    }
                 },
                 getSelectedEntities: function () {
                     return this.selectedEntities;
