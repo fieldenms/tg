@@ -22,8 +22,10 @@ public class RequiredValidatedPropValidator implements IBeforeChangeEventHandler
         if (newValue > 9999) {
             return Result.failure(newValue, "Over 9999.");
         } else if (newValue > 100) {
+            property.getEntity().getProperty("entityProp").setRequired(true);
             return Result.warning(newValue, "Over 100.");
         } else {
+            property.getEntity().getProperty("entityProp").setRequired(false);
             return Result.successful(newValue);
         }
     }

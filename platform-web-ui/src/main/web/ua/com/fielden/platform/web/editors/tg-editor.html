@@ -334,7 +334,7 @@
                         } else if (typeof entity["@" + property + "_warning"] !== 'undefined') {
                             this.bindWarning(entity["@" + property + "_warning"].message);
                         } else if (typeof entity["@" + property + "_required"] !== 'undefined') {
-                            this.bindRequired();
+                            this.bindRequired(entity["@" + property + "_required"]);
                         } else {
                             this.resetMessages();
                         }
@@ -385,9 +385,13 @@
                 this.$.decorator.error = "WARNING: " + msg;
             },
 
-            bindRequired: function () {
+            bindRequired: function (required) {
                 this.resetMessages();
-                this.$.decorator.classList.add("required");
+                if (required) {
+                    this.$.decorator.classList.add("required");
+                } else {
+                    this.$.decorator.classList.remove("required");
+                }
             },
 
             /**
