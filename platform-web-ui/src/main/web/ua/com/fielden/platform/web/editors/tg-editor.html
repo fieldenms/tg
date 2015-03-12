@@ -29,13 +29,44 @@
             :host::shadow #input.upper-case {
                 text-transform: uppercase;
             }
+            /* style requiredness */
             
-            :host::shadow paper-input-decorator.required /deep/ .label-text {
+            :host::shadow paper-input-decorator:not([disabled]).required /deep/ .label-text {
                 color: #4CAF50;
             }
             
             :host::shadow paper-input-decorator[focused].required /deep/ .label-text {
                 color: #4CAF50;
+            }
+            
+            :host::shadow paper-input-decorator.required /deep/ .focused-underline {
+                background-color: #4CAF50;
+            }
+            
+            :host::shadow paper-input-decorator.required /deep/ .unfocused-underline {
+                background-color: #4CAF50;
+            }
+            /* style warning */
+            
+            :host::shadow paper-input-decorator.warning /deep/ .error,
+            :host::shadow paper-input-decorator[focused].warning /deep/ .error {
+                color: #FFA000;
+            }
+            
+            :host::shadow paper-input-decorator.invalid[focused].warning /deep/ .floated-label .label-text {
+                color: #FFA000;
+            }
+            
+            :host::shadow paper-input-decorator.invalid.warning /deep/ .floated-label .label-text {
+                color: #FFA000;
+            }
+            
+            :host::shadow paper-input-decorator.invalid.warning /deep/ .focused-underline {
+                background-color: #FFA000;
+            }
+            
+            :host::shadow paper-input-decorator.invalid.warning /deep/ .unfocused-underline {
+                background-color: #FFA000;
             }
         </style>
         <tg-reflector id="reflector"></tg-reflector>
@@ -335,11 +366,13 @@
             resetMessages: function () {
                 this.$.decorator.isInvalid = false;
                 this.$.decorator.error = "";
+                this.$.decorator.classList.remove("warning");
             },
 
             bindError: function (msg) {
                 this.resetMessages();
                 this.$.decorator.classList.remove("required");
+                this.$.decorator.classList.remove("warning");
                 this.$.decorator.isInvalid = true;
                 this.$.decorator.error = msg;
             },
@@ -347,6 +380,7 @@
             bindWarning: function (msg) {
                 this.resetMessages();
                 this.$.decorator.classList.remove("required");
+                this.$.decorator.classList.add("warning");
                 this.$.decorator.isInvalid = true;
                 this.$.decorator.error = "WARNING: " + msg;
             },
