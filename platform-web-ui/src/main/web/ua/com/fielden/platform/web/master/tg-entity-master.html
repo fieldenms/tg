@@ -284,14 +284,6 @@
                 },
 
                 /**
-                 * Cancels any unfinished saving that was requested earlier (if any).
-                 */
-                _abortSavingIfAny: function () {
-                    this.$.ajaxSaver.abort();
-                    this.$.ajaxSaverNew.abort();
-                },
-
-                /**
                  * Default implementation for onSaved callback.
                  */
                 onSavedDefault: function (potentiallySavedEntity) {

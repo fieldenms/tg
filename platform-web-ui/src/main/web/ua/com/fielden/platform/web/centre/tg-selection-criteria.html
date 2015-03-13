@@ -17,11 +17,12 @@
 <link rel="import" href="/resources/centre/criterion/tg-range-criterion.html">
 <link rel="import" href="/resources/centre/criterion/tg-date-range-criterion.html">
 
-<polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype">
+<polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype onRun onRunComplete">
     <template>
         <shadow></shadow>
         <tg-criteria-validator id="validator" user="{{user}}" mitype="{{mitype}}" onvalidated="{{onValidatedDefault}}"></tg-criteria-validator>
         <core-ajax id="ajaxRetriever" url="/users/{{user}}/criteria/{{mitype}}" method="GET" handleas="json"></core-ajax>
+        <core-ajax id="ajaxRunner" url="/users/{{user}}/criteria/{{mitype}}" method="PUT" handleas="json"></core-ajax>
 
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
             <tg-criterion orNull="{{propertyModel[''].orNull}}" not="{{propertyModel[''].not}}">
@@ -66,6 +67,22 @@
         </tg-flex-layout>
     </template>
     <script>
+        var SimultaneousRunException = function () {
+            Object.call(this);
+
+            this.message = "Simultaneous run exception: the run process has been already started before and not ended. Please, block UI until the run action completes.";
+        };
+        SimultaneousRunException.prototype = Object.create(Object.prototype);
+        SimultaneousRunException.prototype.constructor = SimultaneousRunException;
+
+        /**
+         * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+         *
+         */
+        SimultaneousRunException.prototype.toString = function () {
+            return this.message;
+        }
+
         var mr = "margin-right: 40px";
         Polymer('tg-selection-criteria', {
             entitytype: null,
@@ -137,6 +154,33 @@
 
             currentState: "EDIT",
 
+ 
+            /**
+             * Initialisation block. It has all children web components already initialised.
+             */
+            ready: function () {
+                var self = this;
+                self.super();
+                console.log("child ready");
+
+                self.onRunDefault = self.onRunDefault.bind(self);
+
+                self.$.ajaxRunner.addEventListener('core-response', function (e) {
+                    if (e.detail.xhr.status === 200) {
+                        var critAndResult = self.$.serialiser.deserialise(e.detail.response).instance;
+                        var criteriaEntity = critAndResult[0];
+                        var resultEntities = critAndResult.slice(1);
+                        self.onRunDefault(criteriaEntity, resultEntities);
+                    }
+                });
+
+                self.$.ajaxRunner.addEventListener('core-complete', function (e) {
+                    if (e.detail.xhr.status === 200) {
+                        self.onRunComplete();
+                    }
+                });
+            },
+
             /**
              * The core-ajax component for entity retrieval. 
              */
@@ -173,6 +217,79 @@
                     }
                 }
                 return modPropHolder;
+            },
+
+            /////////////////////////////// RUN ACTION ///////////////////////////////
+            /**
+             * Default implementation for onRunComplete callback.
+             */
+            onRunComplete: function () {},
+
+            onRun: function(criteriaEntity, newBindingEntity, resultEntities) {
+                console.log("onRun", criteriaEntity, newBindingEntity, resultEntities);
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            run: function () {
+                var self = this;
+
+                this.openToast("Running...", true);
+
+                if (self._runningInProgress()) {
+                    var SimultaneousRunException = this._getSimultaneousRunExceptionType();
+                    throw new SimultaneousRunException();
+                }
+
+                self.startRefreshCycleModeForEditors();
+
+                var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                // cancel previous validation before starting saving process -- it includes validation process internally!
+                self.$.validator.abortValidationIfAny();
+
+                // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+                //            This check will be done on server -- and appropriate onRunDefault callback will be triggered.
+                self._runModifiedProperties(self._reset(holder));
+                // if (self._hasModified(holder)) {
+                //     self._saveModifiedProperties(self._reset(holder));
+                // } else {
+                //     self.$.validator.validate(self._reset(holder));
+                // }
+            },
+
+            _runningInProgress: function () {
+                return this.$.ajaxRunner.loading;
+            },
+
+            /**
+             * Starts the process of centre run.
+             *
+             * @param modifiedPropertiesHolder -- the entity with modified properties
+             */
+            _runModifiedProperties: function (modifiedPropertiesHolder) {
+                // console.log("save: modifiedPropertiesHolder", modifiedPropertiesHolder);
+                var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
+                // console.log("save: serialised modifiedPropertiesHolder", ser);
+                this.$.ajaxRunner.body = JSON.stringify(ser);
+                this.$.ajaxRunner.go();
+            },
+
+            //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
+            _getSimultaneousRunExceptionType: function () {
+                return SimultaneousRunException;
+            },
+
+            /**
+             * Default implementation for onRun callback.
+             */
+            onRunDefault: function (criteriaEntity, resultEntities) {
+                this.openToast(this.toastMsg("Running", criteriaEntity), true);
+
+                // this.startRefreshCycleModeForEditors();
+                var newBindingEntity = this.onEntityReceived(criteriaEntity);
+                // custom external action
+                this.onRun(criteriaEntity, newBindingEntity, resultEntities);
             }
         });
     </script>

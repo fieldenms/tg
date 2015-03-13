@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -10,6 +12,7 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
+import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -20,6 +23,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.swing.menu.MiType;
@@ -168,6 +172,28 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
         return restUtil.singleJSONRepresentation(applied);
+    }
+
+    /**
+     * Handles PUT request resulting from tg-selection-criteria <code>run()</code> method.
+     */
+    @Put
+    @Override
+    public Representation put(final Representation envelope) throws ResourceException {
+        final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+        final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
+
+        final List<AbstractEntity<?>> criteriaAndResultEntities = new ArrayList<>();
+        criteriaAndResultEntities.add(applied);
+        if (applied.isValid().isSuccessful()) {
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) applied;
+            resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
+            final IPage<AbstractEntity<?>> page = resultingCriteria.run(10); // TODO pageSize
+            final List<AbstractEntity<?>> resultEntities = page.data();
+            criteriaAndResultEntities.addAll(resultEntities);
+        }
+        return restUtil.listJSONRepresentation(criteriaAndResultEntities);
     }
 
     /**

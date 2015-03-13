@@ -54,7 +54,7 @@ public class CriteriaResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
-        if (Method.GET == request.getMethod() || Method.POST == request.getMethod()) {
+        if (Method.GET == request.getMethod() || Method.PUT == request.getMethod() || Method.POST == request.getMethod()) {
             final String username = (String) request.getAttributes().get("username");
             injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
 

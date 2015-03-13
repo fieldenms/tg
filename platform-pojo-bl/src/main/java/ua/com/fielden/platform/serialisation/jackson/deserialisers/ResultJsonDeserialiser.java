@@ -32,7 +32,8 @@ public class ResultJsonDeserialiser<T extends Result> extends StdDeserializer<T>
         if (node.get("instance") == null) {
             instance = null;
         } else {
-            final Class<?> instanceType = ClassesRetriever.findClass(node.get("@instanceType").asText());
+            final JsonNode typeNameObj = node.get("@instanceType");
+            final Class<?> instanceType = ClassesRetriever.findClass(typeNameObj.asText());
 
             instance = mapper.readValue(node.get("instance").traverse(mapper), instanceType);
         }

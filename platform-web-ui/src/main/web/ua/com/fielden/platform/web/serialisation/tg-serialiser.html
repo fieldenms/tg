@@ -90,12 +90,21 @@
                         },
                         copyProperties = function(deserialisedObject, obj) {
                             for (property in obj) {
-                                if (property !== "@id" && property[0] === "@" && property !== "@instanceType" && property !== "@resultType" && property !== "@id_ref") {
+                                if (property !== "@id" && property[0] === "@" && property !== "@instanceTypes" && property !== "@instanceType" && property !== "@resultType" && property !== "@id_ref") {
                                     deserialisedObject[property] = deserialiseMetaProperty(obj[property]);
+                                } else if (property === "@instanceTypes" && Array.isArray(obj[property])) {
+                                    console.log("!!!New Types!!!", obj[property]);
+                                    var types = obj[property];
+                                    // new types have appeared -- need to be registered inside serialiser!
+                                    for (var i = 0; i < types.length; i++) {
+                                        self.$.reflector.registerEntityType(types[i]);
+                                    }
+                                    // deserialisedObject["@instanceType"] = 'java.util.ArrayList';
                                 } else if (property === "@instanceType" && typeof obj[property] === 'object') {
-                                    // new type has appeared -- need to be registered inside serialiser!
+                                    console.log("!!!New Type!!!", obj[property]);
                                     self.$.reflector.registerEntityType(obj[property]);
-                                    deserialisedObject[property] = deserialise(obj[property].key);
+                                    // new type has appeared -- need to be registered inside serialiser!
+                                    deserialisedObject["@instanceType"] = deserialise(obj[property].key);
                                 } else if (property !== "@id") {
                                     deserialisedObject[property] = deserialise(obj[property]);
                                 }

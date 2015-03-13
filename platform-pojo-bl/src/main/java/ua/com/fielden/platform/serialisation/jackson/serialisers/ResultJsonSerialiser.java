@@ -1,11 +1,17 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -39,12 +45,35 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
 
         if (result.getInstance() != null) {
             generator.writeFieldName("@instanceType");
-            final Class<?> type = PropertyTypeDeterminator.stripIfNeeded(result.getInstance().getClass()); // .getName();
+            final Class<?> type = PropertyTypeDeterminator.stripIfNeeded(result.getInstance().getClass());
 
-            if (EntityUtils.isEntityType(type) && EntityQueryCriteria.class.isAssignableFrom(type)) {
-                // TODO potentially extend support for generated types
-                // TODO potentially extend support for generated types
-                // TODO potentially extend support for generated types
+            if (List.class.isAssignableFrom(type)) {
+                generator.writeObject(type.getName());
+
+                generator.writeFieldName("@instanceTypes");
+                final List<Object> list = (List<Object>) result.getInstance();
+                // TODO there could be the hierarchy of generatedTypes!
+                // TODO there could be the hierarchy of generatedTypes!
+                // TODO there could be the hierarchy of generatedTypes!
+                // TODO there could be the hierarchy of generatedTypes!
+                // TODO there could be the hierarchy of generatedTypes!
+                // TODO there could be the hierarchy of generatedTypes!
+                // TODO there could be the hierarchy of generatedTypes!
+                final Set<Class<?>> generatedTypes = new LinkedHashSet<Class<?>>();
+                list.forEach(item -> {
+                    if (item != null) {
+                        final Class<?> itemClass = PropertyTypeDeterminator.stripIfNeeded(item.getClass());
+                        if (DynamicEntityClassLoader.isEnhanced(itemClass)) {
+                            generatedTypes.add(itemClass);
+                        }
+                    }
+                });
+                final ArrayList<EntityType> genList = new ArrayList<EntityType>();
+                generatedTypes.forEach(t -> {
+                    genList.add(tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) t));
+                });
+                generator.writeObject(genList);
+            } else if (EntityUtils.isEntityType(type) && EntityQueryCriteria.class.isAssignableFrom(type)) {
                 final Class<AbstractEntity<?>> newType = (Class<AbstractEntity<?>>) type;
                 generator.writeObject(tgJackson.registerNewEntityType(newType));
             } else {
