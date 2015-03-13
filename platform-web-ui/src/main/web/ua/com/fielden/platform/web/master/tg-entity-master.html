@@ -295,7 +295,7 @@
                  * Default implementation for onSaved callback.
                  */
                 onSavedDefault: function (potentiallySavedEntity) {
-                    this.openToast(this.toastMsg("Saving", potentiallySavedEntity), false);
+                    this.openToast(this.toastMsg("Saving", potentiallySavedEntity), true);
 
                     // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(potentiallySavedEntity);

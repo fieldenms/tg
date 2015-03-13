@@ -32,10 +32,9 @@
         <core-style ref="progress-indicator"></core-style>
         <paper-toast id="toast" text="" opened="false" responsiveWidth="250px">
             <template if="{{showProgress}}">
-                <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="searching"></paper-spinner>
+                <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="loading"></paper-spinner>
             </template>
             <template if="{{showMore(showProgress, toastHasMoreInfo)}}">
-                <!--paper-button>MORE</paper-button-->
                 <div style="color: white;" on-tap="{{showMessageDlg}}">More</div>
             </template>
         </paper-toast>
@@ -75,7 +74,7 @@
 
                 ///////////// toast related //////////////////
                 lastToastMsg: "",
-                showProgress: false,
+                showProgress: true,
                 toastHasMoreInfo: false,
                 showMore: function (showProgress, toastHasMoreInfo) {
                     return !showProgress && toastHasMoreInfo;
