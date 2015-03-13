@@ -2,23 +2,26 @@
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
-<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
-core-style
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html"> core-style
 
 <core-style id="progress-indicator">
-    core-icon-button /deep/ core-icon[role="img"] { fill: {{g.paperInput.labelColor}}; }
+    paper-spinner { position: absolute; top: 9px; right: 9px; padding: 0px; margin: 0px;}
     <!-- -->
-    core-icon-button:hover /deep/ core-icon, #decorator[focused] /deep/ core-icon { fill: {{g.paperInput.focusedColor}}; }
-    <!-- -->
-    .invalid core-icon-button /deep/ core-icon { fill : {{g.paperInput.invalidColor}}; }
-    <!-- -->
-    paper-spinner { padding: 0px; margin: 0px; width: 18px; height: 18px; }
-    <!-- -->
-    paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
+    paper-spinner.blue::shadow .circle { border-color: #FFFFFF; }
 </core-style>
 
 <polymer-element name="tg-entity-binder" attributes="user onRetrieved onValidated onPreRetrieved currentState">
     <template>
+        <style>
+            /* style to trancase the toast text */
+            
+            :host::shadow * /deep/ .toast-text {
+                max-width: 250px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        </style>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <!-- tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator -->
@@ -88,16 +91,16 @@ core-style
                 /**
                  * Opens the toast with some message and with indication whether progress is started.
                  */
-                openToast: function(msg, showProgress) { /* TODO add msgType param and populate its meaning */
+                openToast: function (msg, showProgress) { /* TODO add msgType param and populate its meaning */
                     this.showProgress = showProgress;
                     this.$.toast.text = msg;
                     this.$.toast.opened = true;
                 },
 
-                toastMsg: function(actionName, entity) {
+                toastMsg: function (actionName, entity) {
                     return !entity.isValid() ? (actionName + " failure [" + entity.firstFailure().message + "]") : (
-                                entity.isValidWithWarning() ? (actionName + " success with warning [" + entity.firstWarning().message + "]") : actionName + " success"    
-                        );
+                        entity.isValidWithWarning() ? (actionName + " success with warning [" + entity.firstWarning().message + "]") : actionName + " success"
+                    );
                 },
 
                 /**
@@ -331,7 +334,7 @@ core-style
                     bindingView["version"] = entity["version"];
 
                     entity.traverseProperties(function (propertyName) {
-                        bindingView[propertyName] = self.$.reflector.convert(entity.getOriginal(propertyName)); 
+                        bindingView[propertyName] = self.$.reflector.convert(entity.getOriginal(propertyName));
                     });
 
                     // console.log("       entity + originalBindingView", entity, bindingView);
