@@ -1,6 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/tg-reflector">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html"> core-style
 
@@ -32,7 +34,17 @@
             <template if="{{showProgress}}">
                 <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="searching"></paper-spinner>
             </template>
+            <template if="{{showMore(showProgress, toastHasMoreInfo)}}">
+                <!--paper-button>MORE</paper-button-->
+                <div style="color: white;" on-tap="{{showMessageDlg}}">More</div>
+            </template>
         </paper-toast>
+
+        <paper-action-dialog id="msgDialog" heading="Message" backdrop autoCloseDisabled layered="false" class="scrolling">
+            <p>{{msgToShow}}</p>
+
+            <paper-button affirmative autofocus>Close</paper-button>
+        </paper-action-dialog>
     </template>
     <script>
         (function () {
@@ -60,7 +72,18 @@
                 currEntity: null, // represents the current entity
                 currBindingEntity: {}, // represents the view of current entity for binding
                 originalBindingEntity: null, // represents the view of original entity for binding.
-                showProgress: false, // toast related
+
+                ///////////// toast related //////////////////
+                msgToShow: "",
+                showProgress: false,
+                toastHasMoreInfo: false,
+                showMore: function (showProgress, toastHasMoreInfo) {
+                    return !showProgress && toastHasMoreInfo;
+                },
+                showMessageDlg: function () {
+                    this.$.msgDialog.toggle();
+                },
+                //////////////////////////////////////////////
 
                 /**
                  * Initialisation block. It has all children web components already initialised.
@@ -93,14 +116,19 @@
                  */
                 openToast: function (msg, showProgress) { /* TODO add msgType param and populate its meaning */
                     this.showProgress = showProgress;
+                    this.toastHasMoreInfo = true;
                     this.$.toast.text = msg;
                     this.$.toast.opened = true;
                 },
 
                 toastMsg: function (actionName, entity) {
-                    return !entity.isValid() ? (actionName + " failure [" + entity.firstFailure().message + "]") : (
-                        entity.isValidWithWarning() ? (actionName + " success with warning [" + entity.firstWarning().message + "]") : actionName + " success"
-                    );
+                    if (!entity.isValid()) {
+                        return entity.firstFailure().message;
+                    } else if (entity.isValidWithWarning()) {
+                        return "Warning: " + entity.firstWarning().message;
+                    } else {
+                        return "Completed successfully.";
+                    }
                 },
 
                 /**
