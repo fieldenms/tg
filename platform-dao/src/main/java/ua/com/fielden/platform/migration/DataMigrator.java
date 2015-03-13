@@ -89,7 +89,7 @@ public class DataMigrator {
         runSql(new ArrayList<String>() {
             {
                 add("UPDATE UNIQUE_ID SET NEXT_VALUE = " + finalId + " WHERE _ID = 1");
-                add("UPDATE NUMBERS SET WONOINC = COALESCE((SELECT CAST(MAX(KEY_) AS INTEGER) + 1 FROM WODET), 0) WHERE _ID = 0");
+                //add("UPDATE NUMBERS SET WONOINC = COALESCE((SELECT CAST(MAX(KEY_) AS INTEGER) + 1 FROM WODET), 0) WHERE _ID = 0");
             }
         });
 
@@ -176,6 +176,7 @@ public class DataMigrator {
         return result;
     }
 
+    
     private boolean checkEmptyStrings(final DomainMetadataAnalyser dma, final Connection conn) throws Exception {
         final Set<String> stmts = new RetrieverEmptyStringsChecker(dma).getSqls(retrievers);
         final Statement st = conn.createStatement();

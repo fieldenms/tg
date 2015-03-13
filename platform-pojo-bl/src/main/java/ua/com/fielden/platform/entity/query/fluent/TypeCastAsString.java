@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +34,7 @@ public class TypeCastAsString implements ITypeCast {
 
     @Override
     public String typecast(final String argument, final DbVersion dbVersion) {
-        if (DbVersion.H2.equals(dbVersion)) {
+        if (H2.equals(dbVersion) || POSTGRESQL.equals(dbVersion)  || MSSQL.equals(dbVersion)) {
             return "CAST(" + argument + " AS VARCHAR(" + length + "))";
         } else {
             return argument;

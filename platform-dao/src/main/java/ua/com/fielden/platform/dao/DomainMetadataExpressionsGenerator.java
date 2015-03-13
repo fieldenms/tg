@@ -97,15 +97,15 @@ public class DomainMetadataExpressionsGenerator {
                     return expr().caseWhen().expr(firstModel).isNotNull().and().prop(secondPropName).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
                     when().expr(firstModel).isNotNull().and().prop(secondPropName).isNull().then().expr(firstModel). //
                     when().prop(secondPropName).isNotNull().then().prop(secondPropName). //
-                    otherwise().val(null).end().model();
+                    otherwise().val(null).endAsStr(256).model();
                 } else {
                     return expr().caseWhen().expr(firstModel).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
-                    otherwise().prop(secondPropName).end().model();
+                    otherwise().prop(secondPropName).endAsStr(256).model();
                 }
             } else {
                 if (secondPropIsOptional) {
                     return expr().caseWhen().prop(secondPropName).isNotNull().then().expr(concatTwo(firstModel, secondPropName, separator)). //
-                    otherwise().expr(firstModel).end().model();
+                    otherwise().expr(firstModel).endAsStr(256).model();
                 } else {
                     return concatTwo(firstModel, secondPropName, separator);
                 }

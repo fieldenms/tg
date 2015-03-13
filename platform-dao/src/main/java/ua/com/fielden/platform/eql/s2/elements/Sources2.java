@@ -13,6 +13,12 @@ public class Sources2 implements IElement2 {
         this.compounds = compounds;
     }
 
+    public Sources2(final ISource2 main) {
+        super();
+        this.main = main;
+        this.compounds = new ArrayList<CompoundSource2>();
+    }
+
     @Override
     public boolean ignore() {
         return false;
@@ -60,30 +66,24 @@ public class Sources2 implements IElement2 {
             return true;
         }
         if (obj == null) {
-            System.out.println("sources 1");
             return false;
         }
         if (!(obj instanceof Sources2)) {
-            System.out.println("sources 2");
             return false;
         }
         final Sources2 other = (Sources2) obj;
         if (compounds == null) {
             if (other.compounds != null) {
-                System.out.println("sources 3");
                 return false;
             }
         } else if (!compounds.equals(other.compounds)) {
-            System.out.println("sources 4");
             return false;
         }
         if (main == null) {
             if (other.main != null) {
-                System.out.println("sources 5");
                 return false;
             }
         } else if (!main.equals(other.main)) {
-            System.out.println("sources 6");
             return false;
         }
         return true;

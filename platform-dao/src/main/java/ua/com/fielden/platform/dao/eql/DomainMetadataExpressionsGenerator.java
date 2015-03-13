@@ -60,7 +60,7 @@ public class DomainMetadataExpressionsGenerator {
         }
     }
 
-    ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
+    public ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
         final Calculated calcAnnotation = AnnotationReflector.getAnnotation(calculatedPropfield, Calculated.class);
         if (!"".equals(calcAnnotation.value())) {
             return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
