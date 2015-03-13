@@ -19,10 +19,16 @@
     <link rel="import" href="/resources/serialisation/tg-serialiser.html">
     <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
     <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
+    <link rel="import" href="/resources/polymer/core-icons/core-icons.html">
+    <link rel="import" href="/resources/polymer/core-icons/editor-icons.html">
+    <link rel="import" href="/resources/polymer/core-icons/hardware-icons.html">
 
     <style>
         body {
             font-family: "RobotoDraft";
+        }
+        core-icon-button.revers::shadow core-icon {
+            transform: scale(-1, 1);
         }
     </style>
 
@@ -30,7 +36,7 @@
 
 <body unresolved fullbleed layout vertical center style="background-color: #f5f5f5;">
 
-    <template id="egi_example" is="auto-binding" layout vertical center-justified center>
+    <template id="egi_example" is="auto-binding">
         <tg-serialiser id="serialiser"></tg-serialiser>
         <core-ajax id="data_retriever" url="/test/egi" handleas="json" on-core-response="{{onDataRetrieved}}" auto></core-ajax>
         <tg-entity-grid-inspector entityType="{{entityType}}" entities="{{entities}}">
@@ -39,42 +45,42 @@
             <tg-property-column property="stringProp" width="200px" type="String" columnTitle="String property" columnDesc="String property tooltip"></tg-property-column>
             <tg-property-column property="bigDecimalProp" width="150px" type="BigDecimal" columnTitle="Big decimal property" columnDesc="Big decimal property tooltip"></tg-property-column>
             <core-tooltip class="delayed entity-specific-action">
-                <core-icon-button icon="today"></core-icon-button>
+                <core-icon-button icon="add-circle-outline"></core-icon-button>
                 <span class="span-tooltip" tip>Create new entity</span>
             </core-tooltip>
             <core-tooltip class="delayed entity-specific-action">
-                <core-icon-button icon="today"></core-icon-button>
+                <core-icon-button icon="editor:mode-edit"></core-icon-button>
                 <span class="span-tooltip" tip>Edit selected entity</span>
             </core-tooltip>
             <core-tooltip class="delayed entity-specific-action">
-                <core-icon-button icon="today"></core-icon-button>
+                <core-icon-button icon="remove-circle-outline"></core-icon-button>
                 <span class="span-tooltip" tip>Delete selected entity</span>
             </core-tooltip>
             <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="today"></core-icon-button>
+                <core-icon-button icon="file-download"></core-icon-button>
                 <span class="span-tooltip" tip>Export to Excel</span>
             </core-tooltip>
             <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="today"></core-icon-button>
+                <core-icon-button class="revers" icon="hardware:keyboard-tab"></core-icon-button>
                 <span class="span-tooltip" tip>First page</span>
             </core-tooltip>
             <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="today"></core-icon-button>
+                <core-icon-button icon="hardware:keyboard-backspace"></core-icon-button>
                 <span class="span-tooltip" tip>Previous page</span>
             </core-tooltip>
             <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="today"></core-icon-button>
+                <core-icon-button class="revers" icon="hardware:keyboard-backspace"></core-icon-button>
                 <span class="span-tooltip" tip>Next page</span>
             </core-tooltip>
             <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="today"></core-icon-button>
+                <core-icon-button icon="hardware:keyboard-tab"></core-icon-button>
                 <span class="span-tooltip" tip>Last page</span>
             </core-tooltip>
             <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="today"></core-icon-button>
+                <core-icon-button icon="refresh"></core-icon-button>
                 <span class="span-tooltip" tip>Refresh</span>
             </core-tooltip>
-            <tg-primary-instance-action actionDesc="action description"></tg-primary-instance-action>
+            <tg-primary-instance-action actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>
             <tg-secondary-instance-action actionDesc="action description"></tg-secondary-instance-action>
             <!--<tg-secondary-instance-action actionDesc="action description 2"></tg-secondary-instance-action>-->
         </tg-entity-grid-inspector>

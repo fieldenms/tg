@@ -20,7 +20,7 @@
             font-family: "RobotoDraft";
         }
         core-toolbar {
-            background-color: #03a9f4;
+            background-color: #0288D1;
             color: #fff;
         }
     </style>
@@ -30,11 +30,9 @@
 <body unresolved fullbleed layout vertical>
 
     <template id="centre_example" is="auto-binding">
-        <core-header-panel mode="cover" flex>
+        <core-header-panel mode="seamed" flex>
             <core-toolbar>Entity centre</core-toolbar>
-            <div>
-                <tg-entity-centre id="centre"></tg-entity-centre>
-            </div>
+            <tg-entity-centre id="centre"></tg-entity-centre>
         </core-header-panel>
 
         <paper-button id="runner" raised roll="button" on-tap="{{run}}">Run</paper-button>
@@ -44,7 +42,7 @@
         (function () {
             var centre = document.querySelector('#centre_example');
             centre.centreName = "ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties";
-            centre.run = function() {
+            centre.run = function () {
                 centre.$.centre.$.selection_criteria.retrieve();
             };
         })();

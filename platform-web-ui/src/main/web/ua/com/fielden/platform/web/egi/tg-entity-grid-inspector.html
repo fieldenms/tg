@@ -72,7 +72,7 @@
                         <template if="{{primaryAction}}">
                             <td class="action-column">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                    <core-icon-button icon="today"></core-icon-button>
+                                    <core-icon-button icon="{{primaryAction.icon}}"></core-icon-button>
                                     <span class="span-tooltip" tip>{{primaryAction.actionDesc}}</span>
                                 </core-tooltip>
                             </td>
