@@ -17,9 +17,11 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
 import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.types.Money;
 
@@ -108,6 +110,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @MapTo
     @Required
     @BeforeChange(@Handler(RequiredValidatedPropValidator.class))
+    @AfterChange(RequirednessDefiner.class)
     @Title(value = "Required validated prop", desc = "Required validated prop desc")
     private Integer requiredValidatedProp;
 

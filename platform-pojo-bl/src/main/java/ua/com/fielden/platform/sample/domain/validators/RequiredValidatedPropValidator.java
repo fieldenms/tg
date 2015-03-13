@@ -18,14 +18,11 @@ public class RequiredValidatedPropValidator implements IBeforeChangeEventHandler
 
     @Override
     public Result handle(final MetaProperty<Integer> property, final Integer newValue, final Integer oldValue, final Set<Annotation> mutatorAnnotations) {
-        // final TgPersistentEntityWithProperties ent = (TgPersistentEntityWithProperties) property.getEntity();
         if (newValue > 9999) {
             return Result.failure(newValue, "Over 9999.");
         } else if (newValue > 100) {
-            property.getEntity().getProperty("entityProp").setRequired(true);
             return Result.warning(newValue, "Over 100.");
         } else {
-            property.getEntity().getProperty("entityProp").setRequired(false);
             return Result.successful(newValue);
         }
     }
