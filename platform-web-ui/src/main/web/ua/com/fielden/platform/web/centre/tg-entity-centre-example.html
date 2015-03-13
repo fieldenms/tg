@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Entity Centre Example</title>
+    <title>Centre</title>
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
@@ -40,11 +40,17 @@
 
     <script>
         (function () {
-            var centre = document.querySelector('#centre_example');
-            centre.centreName = "ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties";
-            centre.run = function () {
+            document.addEventListener('polymer-ready', function() {
+                var centre = document.querySelector('#centre_example');
+                centre.centreName = "ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties";
+
+                centre.run = function () {
+                    console.log("CENTRE RUN");
+                    // centre.$.centre.$.selection_criteria.retrieve();
+                };
+
                 centre.$.centre.$.selection_criteria.retrieve();
-            };
+            });
         })();
     </script>
 
