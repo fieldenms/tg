@@ -30,7 +30,7 @@
 
         <!-- core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax -->
         <core-style ref="progress-indicator"></core-style>
-        <paper-toast id="toast" text="" opened="false">
+        <paper-toast id="toast" text="" opened="false" responsiveWidth="250px">
             <template if="{{showProgress}}">
                 <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="searching"></paper-spinner>
             </template>
@@ -41,7 +41,7 @@
         </paper-toast>
 
         <paper-action-dialog id="msgDialog" heading="Message" backdrop autoCloseDisabled layered="false" class="scrolling">
-            <p>{{msgToShow}}</p>
+            <p>{{lastToastMsg}}</p>
 
             <paper-button affirmative autofocus>Close</paper-button>
         </paper-action-dialog>
@@ -74,7 +74,7 @@
                 originalBindingEntity: null, // represents the view of original entity for binding.
 
                 ///////////// toast related //////////////////
-                msgToShow: "",
+                lastToastMsg: "",
                 showProgress: false,
                 toastHasMoreInfo: false,
                 showMore: function (showProgress, toastHasMoreInfo) {
@@ -82,6 +82,26 @@
                 },
                 showMessageDlg: function () {
                     this.$.msgDialog.toggle();
+                },
+                /**
+                 * Opens the toast with some message and with indication whether progress is started.
+                 */
+                openToast: function (msg, showProgress) { /* TODO add msgType param and populate its meaning */
+                    this.lastToastMsg = msg;
+                    this.showProgress = showProgress;
+                    this.toastHasMoreInfo = true;
+                    this.$.toast.text = msg;
+                    this.$.toast.opened = true;
+                },
+
+                toastMsg: function (actionName, entity) {
+                    if (!entity.isValid()) {
+                        return entity.firstFailure().message;
+                    } else if (entity.isValidWithWarning()) {
+                        return "Warning: " + entity.firstWarning().message;
+                    } else {
+                        return "Completed successfully.";
+                    }
                 },
                 //////////////////////////////////////////////
 
@@ -109,26 +129,6 @@
                     self.ajaxRetriever().addEventListener('core-response', function (e) {
                         self.onRetrievedDefault(e);
                     });
-                },
-
-                /**
-                 * Opens the toast with some message and with indication whether progress is started.
-                 */
-                openToast: function (msg, showProgress) { /* TODO add msgType param and populate its meaning */
-                    this.showProgress = showProgress;
-                    this.toastHasMoreInfo = true;
-                    this.$.toast.text = msg;
-                    this.$.toast.opened = true;
-                },
-
-                toastMsg: function (actionName, entity) {
-                    if (!entity.isValid()) {
-                        return entity.firstFailure().message;
-                    } else if (entity.isValidWithWarning()) {
-                        return "Warning: " + entity.firstWarning().message;
-                    } else {
-                        return "Completed successfully.";
-                    }
                 },
 
                 /**
