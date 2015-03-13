@@ -13,6 +13,15 @@
         width: 1.0em;
         font: inherit;
     }
+    
+    .search-button-invisible {
+        padding: 0px;
+        margin: 0px;
+        height: 1.0em;
+        width: 1.0em;
+        font: inherit;
+        visibility: hidden;
+    }
     /*paper-spinner.blue::shadow .circle {
         border-color: black;
     }*/

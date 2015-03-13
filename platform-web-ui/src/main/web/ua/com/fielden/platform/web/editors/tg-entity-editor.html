@@ -30,11 +30,11 @@
     <!-- -->
     .invalid core-icon-button /deep/ core-icon { fill : {{g.paperInput.invalidColor}}; }
     <!-- -->
-    paper-spinner { padding: 0px; margin: 0px; width: 12px; height: 12px; }
+    paper-spinner { position: absolute; top: {{g.paperInput.top}}; padding: 2px; margin: 0px; width: 16px; height: 16px;}
     <!-- -->
     paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
     <!-- -->
-    .invalid paper-spinner { width: 12px; height: 12px; border-color : {{g.paperInput.invalidColor}}; }
+    .invalid paper-spinner { border-color: {{g.paperInput.invalidColor}}; position: absolute; top: {{g.paperInput.top}}; padding: 2px; margin: 0px; width: 16px; height: 16px; }
 </core-style>
 
 <polymer-element name="tg-entity-editor" attributes="composite user entityType createModifiedPropertiesHolder hightlightDesc" extends="tg-editor">
@@ -64,9 +64,8 @@
                         <template if="{{isSearching}}">
                             <paper-spinner id="spinner" active="{{isSearching}}" class="blue" alt="searching"></paper-spinner>
                         </template>
-                        <template if="{{!isSearching}}">
-                            <core-icon-button class="search-button" on-tap="{{onSearchButtonTap}}" icon="search" disabled?="{{_isDisabled(currentState)}}"></core-icon-buton>
-                        </template>
+
+                        <core-icon-button class="{{searchButtonClass(isSearching)}}" on-tap="{{onSearchButtonTap}}" icon="search" disabled?="{{_isDisabled(currentState)}}"></core-icon-buton>
                     </div>
                     <div id="action_icon" hidden?="{{!action}}">
                         <tg-property-action user="{{action.user}}" entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
@@ -629,6 +628,14 @@
                  */
                 propValueByName: function (entity, propName) {
                     return this.$.reflector.convert(entity.get(propName));
+                },
+
+                searchButtonClass: function (isSearching) {
+                    if (isSearching) {
+                        return "search-button-invisible";
+                    } else {
+                        return "search-button";
+                    }
                 },
 
                 /* TG Flex parameters for layouting autocompleted values -- not yet used. */
