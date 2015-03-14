@@ -114,16 +114,6 @@ public class WebApp extends AbstractWebApp {
         // Add entity masters.
         final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfig = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
-                .addProp("integerProp").asSpinner()
-                /*      */.withAction("#exportIntegerProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export integer prop")
-                //      */.longDesc("Export integer property") SHORT-CUT
-                .also()
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
                 /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 //      */.preAction SHORT-CUT
@@ -133,6 +123,16 @@ public class WebApp extends AbstractWebApp {
                 /*      */.icon("trending-up")
                 /*      */.shortDesc("Export entity prop")
                 /*      */.longDesc("Export entity property")
+                .also()
+                .addProp("integerProp").asSpinner()
+                /*      */.withAction("#exportIntegerProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export integer prop")
+                //      */.longDesc("Export integer property") SHORT-CUT
                 .also()
                 .addProp("critOnlyEntityProp").asAutocompleter().withMatcher(SearchAlsoByDescMatcher.class).byDesc()
                 /*      */.withAction("#exportCritOnlyEntityProp", TgExportFunctionalEntity.class)

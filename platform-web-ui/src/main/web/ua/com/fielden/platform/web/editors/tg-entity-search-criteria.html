@@ -447,8 +447,6 @@
                 onFound: function (entities) {
                     console.log("ENTITIES: ", entities);
                     console.log("# of found entities: ", entities.length);
-                    // TODO: Need to handle entities some how
-                    //       Potentially additional conversion is required
                     for (var index = 0; index < entities.length; index++) {
                         // Entity is converted to a string representation of its key.
                         // This includes correct conversion of simple and composite entities
@@ -464,7 +462,20 @@
                         if (!this.$.overlay.opened && this.matchedValues.length > 0) {
                             this.$.overlay.style.position = 'absolute';
                             this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
-                            //this.$.overlay.style['min-width'] = this.$.decorator.offsetWidth < 350 ? '350px' : this.$.decorator.offsetWidth + 'px';
+
+                            var rect = this.$.decorator.getBoundingClientRect();
+                            if (rect.left < this.$.decorator.offsetWidth) {
+                                this.$.overlay.style.right = null;
+                            } else {
+                                this.$.overlay.style.right = '0px';
+                            }
+
+                            if (this.$.decorator.offsetWidth > 250) {
+                                this.$.overlay.style['min-width'] = this.$.decorator.offsetWidth + 'px';
+                            } else {
+                                this.$.overlay.style['min-width'] = '250px';
+                            }
+
                             this.$.overlay.toggle();
                         } else if (this.$.overlay.opened && this.matchedValues.length == 0) {
                             this.$.overlay.toggle();
