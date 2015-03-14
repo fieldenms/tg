@@ -223,6 +223,8 @@
 
             /**
              * This method is called during editing.
+             *
+             * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
             editingValueChanged: function (oldValue, newValue) {
                 console.log("editingValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
@@ -236,6 +238,8 @@
 
             /**
              * This method is called once the entity was changed from the outside of the component.
+             *
+             * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
             entityChanged: function (oldValue, newValue) {
                 // console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
@@ -270,6 +274,8 @@
 
             /**
              * This method is called once the the accepted value was changed after the editor has commited its value.
+             *
+             * IMPORTANT: please do not override this method. 
              */
             commValueChanged: function (oldValue, newValue) {
                 console.log("commValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
@@ -284,6 +290,9 @@
 
             /**
              * This method is called once the the accepted value was changed after the editor has commited its value.
+             *
+             * IMPORTANT: please do not override this method. This method have some additional customisation points:
+             * shouldInvokeValidation() and skipValidationAction().
              */
             acceptedValueChanged: function (oldValue, newValue) {
                 console.log("acceptedValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
@@ -293,8 +302,25 @@
                     console.log("acceptedValueChanged should become false. refreshCycleStarted ==", this.refreshCycleStarted);
                 } else {
                     this.entity.set(this.propertyName, newValue);
-                    this.onAcceptedValueChanged();
+                    if (this.shouldInvokeValidation()) {
+                        this.onAcceptedValueChanged();
+                    } else {
+                        this.skipValidationAction();
+                    }                    
                 }
+            },
+
+            /**
+             * Please override this method in case when no validation should occur after acceptedValueChanged.
+             */   
+            shouldInvokeValidation: function() {
+                return true;
+            },
+
+            /**
+             * Please override this method in case when some custom action is needed when shouldInvokeValidation() returns 'false' after acceptedValueChanged.
+             */             
+            skipValidationAction: function() {
             },
 
             /**
