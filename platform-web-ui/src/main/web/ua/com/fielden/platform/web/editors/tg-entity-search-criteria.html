@@ -582,8 +582,8 @@
                  *
                  * Overridden to modify the logic for determining when the onAcceptedValueChanged handler should be called.
                  * The main purpose of this excercise is to prevent excessive and unnecessary property validation requests during the autocompleter
-                 */   
-                shouldInvokeValidation: function() {
+                 */
+                shouldInvokeValidation: function () {
                     return !this.$.overlay.opened;
                 },
 
@@ -592,8 +592,8 @@
                  *
                  * Overridden to modify the logic for determining when the onAcceptedValueChanged handler should be called.
                  * The main purpose of this excercise is to prevent excessive and unnecessary property validation requests during the autocompleter
-                 */             
-                skipValidationAction: function() {
+                 */
+                skipValidationAction: function () {
                     this.enforceOnAcceptedValueChanged = true;
                 },
 

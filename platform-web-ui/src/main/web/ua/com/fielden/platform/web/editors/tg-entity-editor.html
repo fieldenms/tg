@@ -474,6 +474,7 @@
                         // if the overlay was not cancelled then enforce onAcceptedValueChange handler
                         if (this.overlayCancelled === false) {
                             this.enforceOnAcceptedValueChanged = false;
+                            // TODO: Potentially should only enforece validation
                             this.onAcceptedValueChanged();
                         } else {
                             // otherwise reset overlay cancellation flag in preparation for further processing
@@ -540,21 +541,24 @@
                     }
                 },
 
-                /*
+                /**
+                 * Overridden to invoke validation only when overlay is not opened.
+                 *
                  * Overridden to modify the logic for determining when the onAcceptedValueChanged handler should be called.
-                 * The main purpose of this excercise is to prevent excessive and unnecessary property validation requests during the autocompleter use.
+                 * The main purpose of this excercise is to prevent excessive and unnecessary property validation requests during the autocompleter
                  */
-                acceptedValueChanged: function (oldValue, newValue) {
-                    if (this.refreshCycleStarted) {
-                        this.refreshCycleStarted = false;
-                    } else {
-                        this.entity.set(this.propertyName, newValue);
-                        if (!this.$.overlay.opened) {
-                            this.onAcceptedValueChanged();
-                        } else {
-                            this.enforceOnAcceptedValueChanged = true;
-                        }
-                    }
+                shouldInvokeValidation: function () {
+                    return !this.$.overlay.opened;
+                },
+
+                /**
+                 * Overridden to mark that onAcceptedValueChanged is needed to be invoked later.
+                 *
+                 * Overridden to modify the logic for determining when the onAcceptedValueChanged handler should be called.
+                 * The main purpose of this excercise is to prevent excessive and unnecessary property validation requests during the autocompleter
+                 */
+                skipValidationAction: function () {
+                    this.enforceOnAcceptedValueChanged = true;
                 },
 
                 /*
