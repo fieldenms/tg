@@ -143,18 +143,18 @@
                 }
             },
 
-            whenDesktop: ['vertical',               ['horizontal', 'justified', [mr], [mr]], 
-                                                   ['horizontal', 'justified', [mr], [mr]], 
-                                                   ['horizontal', 'justified', [mr], [mr]], 
-                                                   ['horizontal', 'justified', [mr], [mr]], 
-                                                   ['horizontal', 'justified', [mr]] 
+            whenDesktop: ['vertical', ['horizontal', 'justified', [mr], [mr]],
+                                                   ['horizontal', 'justified', [mr], [mr]],
+                                                   ['horizontal', 'justified', [mr], [mr]],
+                                                   ['horizontal', 'justified', [mr], [mr]],
+                                                   ['horizontal', 'justified', [mr]]
                                                    ],
             whenTablet: this.whenDesktop,
             whenMobile: this.whenDesktop,
 
             currentState: "EDIT",
 
- 
+
             /**
              * Initialisation block. It has all children web components already initialised.
              */
@@ -182,25 +182,25 @@
             },
 
             /**
-             * The core-ajax component for entity retrieval. 
+             * The core-ajax component for entity retrieval.
              */
-            ajaxRetriever: function() {
+            ajaxRetriever: function () {
                 return this.$.ajaxRetriever;
             },
 
             /**
-             * The tg-entity-validator component for entity validation. 
+             * The tg-entity-validator component for entity validation.
              */
-            validator: function() {
+            validator: function () {
                 return this.$.validator;
             },
 
-            onRetrieved: function(entity, bindingEntity) {
+            onRetrieved: function (entity, bindingEntity) {
                 this.entitytype = entity.type().fullClassName();
                 console.log("onRetrieved");
             },
 
-            onValidated: function(validatedEntity, bindingEntity) {
+            onValidated: function (validatedEntity, bindingEntity) {
                 console.log("onValidated");
             },
 
@@ -225,7 +225,7 @@
              */
             onRunComplete: function () {},
 
-            onRun: function(criteriaEntity, newBindingEntity, resultEntities) {
+            onRun: function (criteriaEntity, newBindingEntity, resultEntities) {
                 console.log("onRun", criteriaEntity, newBindingEntity, resultEntities);
             },
 
@@ -234,8 +234,6 @@
              */
             run: function () {
                 var self = this;
-
-                this.openToast("Running...", true);
 
                 if (self._runningInProgress()) {
                     var SimultaneousRunException = this._getSimultaneousRunExceptionType();
@@ -284,7 +282,8 @@
              * Default implementation for onRun callback.
              */
             onRunDefault: function (criteriaEntity, resultEntities) {
-                this.openToast(this.toastMsg("Running", criteriaEntity), true);
+                var msg = this.toastMsg("Running", criteriaEntity);
+                this.openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg);
 
                 // this.startRefreshCycleModeForEditors();
                 var newBindingEntity = this.onEntityReceived(criteriaEntity);

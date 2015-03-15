@@ -15,24 +15,7 @@
 
         <!-- core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax -->
 
-        <tg-toast id="toastGreeting" text="" opened="false" showProgress="{{showProgress}}" hasMore="{{toastHasMoreInfo}}" msgHeading="Message" msgText="{{lastToastMsg}}"></tg-toast>
-
-        <!--
-        <paper-toast id="toast" text="" opened="false" responsiveWidth="250px">
-            <template if="{{showProgress}}">
-                <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="loading"></paper-spinner>
-            </template>
-            <template if="{{showMore(showProgress, toastHasMoreInfo)}}">
-                <div style="color: white;" on-tap="{{showMessageDlg}}">More</div>
-            </template>
-        </paper-toast>
-
-        <paper-action-dialog id="msgDialog" heading="Message" backdrop autoCloseDisabled layered="false" class="scrolling">
-            <p>{{lastToastMsg}}</p>
-
-            <paper-button affirmative autofocus>Close</paper-button>
-        </paper-action-dialog>
-        -->
+        <tg-toast id="toastGreeting"></tg-toast>
     </template>
     <script>
         (function () {
@@ -62,17 +45,22 @@
                 originalBindingEntity: null, // represents the view of original entity for binding.
 
                 ///////////// toast related //////////////////
-                lastToastMsg: "",
-                showProgress: true,
-                toastHasMoreInfo: false,
                 /**
                  * Opens the toast with some message and with indication whether progress is started.
                  */
-                openToast: function (msg, showProgress) { /* TODO add msgType param and populate its meaning */
-                    this.lastToastMsg = msg;
-                    this.showProgress = showProgress;
-                    this.toastHasMoreInfo = true;
-                    this.$.toastGreeting.text = msg;
+                openToast: function (entity, toastMsg, hasMoreInfo, moreInfo) {
+                    this.$.toastGreeting.text = toastMsg;
+                    this.$.toastGreeting.hasMore = hasMoreInfo;
+                    this.$.toastGreeting.msgText = moreInfo;
+                    if (hasMoreInfo) {
+                        if (!entity.isValid()) {
+                            this.$.toastGreeting.msgHeading = "Error";
+                        } else if (entity.isValidWithWarning()) {
+                            this.$.toastGreeting.msgHeading = "Warning";
+                        } else {
+                            this.$.toastGreeting.msgHeading = "Info";
+                        }
+                    }
                     this.$.toastGreeting.opened = true;
                 },
 
@@ -80,9 +68,9 @@
                     if (!entity.isValid()) {
                         return entity.firstFailure().message;
                     } else if (entity.isValidWithWarning()) {
-                        return "Warning: " + entity.firstWarning().message;
+                        return entity.firstWarning().message;
                     } else {
-                        return "Completed successfully.";
+                        return actionName + " completed successfully.";
                     }
                 },
                 //////////////////////////////////////////////
@@ -132,8 +120,6 @@
                  * Starts the process of entity retrieval (based on current entityid).
                  */
                 retrieve: function () {
-                    this.openToast("Refresh...", true);
-
                     this.ajaxRetriever().go();
                     this.startRefreshCycleModeForEditors();
                 },
@@ -150,7 +136,6 @@
                  */
                 onRetrievedDefault: function (e) {
                     var entity = this.onPreRetrieved(this.$.serialiser.deserialise(e.detail.response).instance);
-                    this.openToast("Refreshed", false);
 
                     // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(entity);
@@ -165,8 +150,6 @@
                 validate: function () {
                     console.log("validate");
                     var self = this;
-
-                    this.openToast("Validating...", true);
 
                     var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
                     // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
@@ -188,7 +171,8 @@
                  * Default implementation for onValidated callback.
                  */
                 onValidatedDefault: function (validatedEntity) {
-                    this.openToast(this.toastMsg("Validation", validatedEntity), false);
+                    var msg = this.toastMsg("Validation", validatedEntity);
+                    this.openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg);
 
                     var newBindingEntity = this.onEntityReceived(validatedEntity);
                     // custom external action

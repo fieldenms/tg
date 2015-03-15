@@ -227,8 +227,6 @@
                 save: function () {
                     var self = this;
 
-                    this.openToast("Saving...", true);
-
                     if (self._savingInProgress()) {
                         var SimultaneousSaveException = this._getSimultaneousSaveExceptionType();
                         throw new SimultaneousSaveException();
@@ -287,7 +285,8 @@
                  * Default implementation for onSaved callback.
                  */
                 onSavedDefault: function (potentiallySavedEntity) {
-                    this.openToast(this.toastMsg("Saving", potentiallySavedEntity), true);
+                    var msg = this.toastMsg("Saving", potentiallySavedEntity);
+                    this.openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg);
 
                     // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(potentiallySavedEntity);
