@@ -1,0 +1,58 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
+<link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+
+<core-style id="toast-progress-indicator">
+    paper-spinner { position: absolute; top: 9px; right: 9px; padding: 0px; margin: 0px;}
+    <!-- -->
+    paper-spinner.blue::shadow .circle { border-color: #FFFFFF; }
+</core-style>
+
+<!-- A toas component that may have  -->
+<polymer-element name="tg-toast" attributes="text opened showProgress hasMore msgHeading msgText">
+    <template>
+        <style>
+            /* style to truncate the toast text */
+            
+            :host::shadow * /deep/ .toast-text {
+                max-width: 250px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        </style>
+        <core-style ref="toast-progress-indicator"></core-style>
+
+        <paper-toast id="toast" text="{{text}}" opened="{{opened}}" responsiveWidth="250px">
+            <template if="{{shouldShowProgress(showProgress, hasMore)}}">
+                <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="loading"></paper-spinner>
+            </template>
+            <template if="{{shouldShowMore(showProgress, hasMore)}}">
+                <div style="color: white;" on-tap="{{showMessageDlg}}">More</div>
+            </template>
+        </paper-toast>
+
+        <paper-action-dialog id="msgDialog" heading="{{msgHeading}}" backdrop autoCloseDisabled layered="false" class="scrolling">
+            <p>{{msgText}}</p>
+
+            <paper-button affirmative autofocus>Close</paper-button>
+        </paper-action-dialog>
+    </template>
+    <script>
+        (function () {
+            Polymer("tg-toast", {
+                showMessageDlg: function () {
+                    this.$.msgDialog.toggle();
+                },
+
+                shouldShowProgress: function (progress, more) {
+                    return progress && !more;
+                },
+
+                shouldShowMore: function (progress, more) {
+                    return !progress && more;
+                }
+            })
+        })();
