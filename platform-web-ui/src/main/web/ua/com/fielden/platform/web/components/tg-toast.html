@@ -43,6 +43,13 @@
     <script>
         (function () {
             Polymer("tg-toast", {
+
+                opened: false,
+
+                showProgress: false,
+
+                hasMore: false,
+
                 showMessageDlg: function () {
                     this.$.msgDialog.toggle();
                 },
@@ -56,3 +63,4 @@
                 }
             })
         })();
+    </script>

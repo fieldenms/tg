@@ -4,32 +4,20 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
-<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html"> core-style
-
-<core-style id="progress-indicator">
-    paper-spinner { position: absolute; top: 9px; right: 9px; padding: 0px; margin: 0px;}
-    <!-- -->
-    paper-spinner.blue::shadow .circle { border-color: #FFFFFF; }
-</core-style>
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/components/tg-toast.html">
 
 <polymer-element name="tg-entity-binder" attributes="user onRetrieved onValidated onPreRetrieved currentState">
     <template>
-        <style>
-            /* style to truncate the toast text */
-            
-            :host::shadow * /deep/ .toast-text {
-                max-width: 250px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-        </style>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <!-- tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator -->
 
         <!-- core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax -->
-        <core-style ref="progress-indicator"></core-style>
+
+        <tg-toast id="toastGreeting" text="" opened="false" showProgress="{{showProgress}}" hasMore="{{toastHasMoreInfo}}" msgHeading="Message" msgText="{{lastToastMsg}}"></tg-toast>
+
+        <!--
         <paper-toast id="toast" text="" opened="false" responsiveWidth="250px">
             <template if="{{showProgress}}">
                 <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="loading"></paper-spinner>
@@ -44,6 +32,7 @@
 
             <paper-button affirmative autofocus>Close</paper-button>
         </paper-action-dialog>
+        -->
     </template>
     <script>
         (function () {
@@ -76,12 +65,6 @@
                 lastToastMsg: "",
                 showProgress: true,
                 toastHasMoreInfo: false,
-                showMore: function (showProgress, toastHasMoreInfo) {
-                    return !showProgress && toastHasMoreInfo;
-                },
-                showMessageDlg: function () {
-                    this.$.msgDialog.toggle();
-                },
                 /**
                  * Opens the toast with some message and with indication whether progress is started.
                  */
@@ -89,8 +72,8 @@
                     this.lastToastMsg = msg;
                     this.showProgress = showProgress;
                     this.toastHasMoreInfo = true;
-                    this.$.toast.text = msg;
-                    this.$.toast.opened = true;
+                    this.$.toastGreeting.text = msg;
+                    this.$.toastGreeting.opened = true;
                 },
 
                 toastMsg: function (actionName, entity) {
