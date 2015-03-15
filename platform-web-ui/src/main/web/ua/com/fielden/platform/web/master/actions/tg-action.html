@@ -1,14 +1,27 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-
 <link rel="import" href="/resources/master/actions/tg-abstract-action.html">
+<!--link rel="import" href="/resources/components/paper-button-with-progress.html"-->
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
+
+
+<core-style id="paper-button-progress">
+    paper-spinner { position: absolute; top: 0px; padding: 2px; margin: 0px; width: 24px; height: 24px;}
+    <!-- -->
+    paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
+</core-style>
+
 
 <polymer-element name="tg-action" attributes="action onAction" extends="tg-abstract-action">
     <template>
         <shadow></shadow>
+        <core-style ref="paper-button-progress"></core-style>
+
         <core-tooltip position="bottom" class="delayed" style="width:100%" disabled="{{!longDesc}}">
-            <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">{{shortDesc}}</paper-button>
+            <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">
+                <paper-spinner id="spinner" active="{{isWorking}}" class="blue" alt="in progress"></paper-spinner>
+                {{shortDesc}}
+            </paper-button>
             <span class="span-tooltip" tip>
                 {{longDesc}}
             </span>
@@ -29,6 +42,9 @@
 
             onActionUpgraded: false,
 
+            /* Indicates wheather the action is in progress. */
+            isWorking: false,
+
             /**
              * Initialisation block.
              */
@@ -42,6 +58,13 @@
              */
             run: function () {
                 this.super();
+                // Position, make visible and enable the spinner
+                this.$.spinner.style.left = (this.$.actionButton.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
+                this.$.spinner.style.top = (this.$.actionButton.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
+                this.$.spinner.style.visibility = 'visible';
+                this.isWorking = true;
+
+                // start the action
                 this.action();
             },
 
@@ -55,6 +78,14 @@
                     };
                     self.onActionUpgraded = true;
                 }
+            },
+
+            afterExecution: function () {
+                this.super();
+
+                // Disable spinner and make it invisible
+                this.isWorking = false;
+                this.$.spinner.style.visibility = 'hidden';
             }
         });
     </script>
