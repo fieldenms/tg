@@ -1,6 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/master/actions/tg-abstract-action.html">
-<!--link rel="import" href="/resources/components/paper-button-with-progress.html"-->
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 
@@ -19,7 +18,7 @@
 
         <core-tooltip position="bottom" class="delayed" style="width:100%" disabled="{{!longDesc}}">
             <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">
-                <paper-spinner id="spinner" active="{{isWorking}}" class="blue" alt="in progress"></paper-spinner>
+                <paper-spinner id="spinner" active="{{isWorking}}" class="blue" style="visibility: hidden;" alt="in progress"></paper-spinner>
                 {{shortDesc}}
             </paper-button>
             <span class="span-tooltip" tip>
@@ -53,18 +52,29 @@
                 self.super();
             },
 
+            /* Timer to prevent spinner from activating for quick actions. */
+            startSpinnerTimer: null,
+
+            /* Timer callback that performs spinner activation. */
+            startSpinnerCallback: function () {
+                // Position and make spinner visible
+                this.$.spinner.style.left = (this.$.actionButton.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
+                this.$.spinner.style.top = (this.$.actionButton.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
+                this.$.spinner.style.visibility = 'visible';
+            },
             /**
              * Executes the action.
              */
             run: function () {
                 this.super();
-                // Position, make visible and enable the spinner
-                this.$.spinner.style.left = (this.$.actionButton.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
-                this.$.spinner.style.top = (this.$.actionButton.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
-                this.$.spinner.style.visibility = 'visible';
-                this.isWorking = true;
+
+                if (this.startSpinnerTimer) {
+                    clearTimeout(this.startSpinnerTimer);
+                }
+                this.startSpinnerTimer = setTimeout(this.startSpinnerCallback.bind(this), 700);
 
                 // start the action
+                this.isWorking = true;
                 this.action();
             },
 
@@ -81,10 +91,16 @@
             },
 
             afterExecution: function () {
+                this.isWorking = false;
+                // prevent not yet activated spinner from activating if any
+                if (this.startSpinnerTimer) {
+                    clearTimeout(this.startSpinnerTimer);
+                }
+
+                // do the super suff
                 this.super();
 
-                // Disable spinner and make it invisible
-                this.isWorking = false;
+                // Make spinner invisible
                 this.$.spinner.style.visibility = 'hidden';
             }
         });
