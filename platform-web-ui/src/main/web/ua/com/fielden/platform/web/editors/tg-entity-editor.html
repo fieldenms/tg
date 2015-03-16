@@ -587,28 +587,29 @@
                  * Handles overlay's button Ok click, which confirms selection and assigns it to the input field.
                  */
                 onOkClick: function () {
-                    this.okHasBeenPressed = true;
-                    // clear tooltip text
-                    if (this.selectedItem) {
+                    if (this.selectedItem) { // disregard any action if selected item is empty
+                        this.okHasBeenPressed = true;
+                        
+                        // clear tooltip text
                         this.valueDesc = this.selectedItem.get("desc");
+
+                        var selectedItemToStr = this.selectedItem.key;
+
+                        this.selectedItem = null;
+
+                        if (selectedItemToStr) {
+                            this.isAcceptingValueFromSuggestions = true;
+                            this.editingValue = selectedItemToStr;
+                            //this.$.input.value = selectedItemToStr;
+                            //this.editingValue = selectedItemToStr;
+                        }
+
+                        this.$.overlay.close();
+                        this.$.input.focus();
+                        // let's highlight the inseted values
+                        this.$.input.selectionStart = this.replaceFromIndex;
+                        this.$.input.selectionEnd = this.$.input.selectionStart + selectedItemToStr.length;
                     }
-
-                    var selectedItemToStr = this.selectedItem.key;
-
-                    this.selectedItem = null;
-
-                    if (selectedItemToStr) {
-                        this.isAcceptingValueFromSuggestions = true;
-                        this.editingValue = selectedItemToStr;
-                        //this.$.input.value = selectedItemToStr;
-                        //this.editingValue = selectedItemToStr;
-                    }
-
-                    this.$.overlay.close();
-                    this.$.input.focus();
-                    // let's highlight the inseted values
-                    this.$.input.selectionStart = this.replaceFromIndex;
-                    this.$.input.selectionEnd = this.$.input.selectionStart + selectedItemToStr.length;
                 },
 
                 /* 

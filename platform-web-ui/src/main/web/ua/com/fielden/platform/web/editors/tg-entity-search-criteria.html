@@ -622,27 +622,30 @@
                  * Handles overlay's button Ok click, which confirms selection and assigns it to the input field.
                  */
                 onOkClick: function () {
-                    this.okHasBeenPressed = true;
-                    var selectedItemsToStr = _.map(this.selectedItems, function (obj) {
-                        return obj.key
-                    }).toString();
+                    if (Object.keys(this.selectedItems).length !== 0) { // disregard any action if selected items are empty
+                        this.okHasBeenPressed = true;
 
-                    this.selectedItems = {};
+                        var selectedItemsToStr = _.map(this.selectedItems, function (obj) {
+                            return obj.key
+                        }).toString();
 
-                    if (selectedItemsToStr) {
-                        this.isAcceptingValueFromSuggestions = true;
+                        this.selectedItems = {};
 
-                        var before = this.$.input.value.substring(0, this.replaceFromIndex + 1);
-                        var after = this.$.input.value.substr(this.replaceToIndex);
-                        this.editingValue = before + selectedItemsToStr + after;
+                        if (selectedItemsToStr) {
+                            this.isAcceptingValueFromSuggestions = true;
+
+                            var before = this.$.input.value.substring(0, this.replaceFromIndex + 1);
+                            var after = this.$.input.value.substr(this.replaceToIndex);
+                            this.editingValue = before + selectedItemsToStr + after;
+                        }
+
+
+                        this.$.overlay.close();
+                        this.$.input.focus();
+                        // let's highlight the inseted values
+                        this.$.input.selectionStart = this.replaceFromIndex;
+                        this.$.input.selectionEnd = this.$.input.selectionStart + selectedItemsToStr.length;
                     }
-
-
-                    this.$.overlay.close();
-                    this.$.input.focus();
-                    // let's highlight the inseted values
-                    this.$.input.selectionStart = this.replaceFromIndex;
-                    this.$.input.selectionEnd = this.$.input.selectionStart + selectedItemsToStr.length;
                 },
 
                 /* 
