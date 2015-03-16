@@ -87,7 +87,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the centre domain tree manager.
-     * 
+     *
      * @return
      */
     public C getCentreDomainTreeMangerAndEnhancer() {
@@ -96,7 +96,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the copy of centre domain tree manager
-     * 
+     *
      * @return
      */
     //TODO remove this later after details will be implemented using
@@ -106,7 +106,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the root for which this criteria was generated.
-     * 
+     *
      * @return
      */
     public Class<T> getEntityClass() {
@@ -115,7 +115,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the enhanced type for entity class. The entity class is retrieved with {@link #getEntityClass()} method.
-     * 
+     *
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -139,14 +139,37 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     @SuppressWarnings("unchecked")
     public IValueMatcher<?> getValueMatcher(final String propertyName) {
         if (valueMatchers.get(propertyName) == null) {
-            valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends AbstractEntity<?>>) getType(), propertyName));
+            valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher(getType(), propertyName));
         }
         return valueMatchers.get(propertyName);
     }
 
     /**
+     * This is temporary solution needed for pagination support on web ui
+     */
+    public IPage<T> getPage(final int pageNumber, final int pageCount, final int pageCapacity) {
+        final Class<?> root = getEntityClass();
+        final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+        final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
+        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
+        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
+        final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
+        .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
+        .with(DynamicFetchBuilder.createFetchOnlyModel(getManagedType(), separatedFetch.getKey()))//
+        .with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
+        if (getManagedType().equals(getEntityClass())) {
+            return dao.getPage(resultQuery, pageNumber, pageCount, pageCapacity);
+        } else {
+            generatedEntityController.setEntityType(getManagedType());
+            return generatedEntityController.getPage(resultQuery, pageNumber, pageCount, pageCapacity, getByteArrayForManagedType());
+        }
+    }
+
+    /**
      * Run the configured entity query.
-     * 
+     *
      * @param pageSize
      * @return
      */
@@ -174,7 +197,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Runs the specified query and returns result.
-     * 
+     *
      * @param queryModel
      * @param pageSize
      * @return
@@ -185,7 +208,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Runs the specified query model and returns the result list.
-     * 
+     *
      * @param queryModel
      * @return
      */
@@ -195,7 +218,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Runs the specified query model with managed type and its byte representation. Returns the result page of specified size.
-     * 
+     *
      * @param queryModel
      * @param managedType
      * @param managedTypeArray
@@ -211,7 +234,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Runs the specified query model with managed type and its byte representation.
-     * 
+     *
      * @param queryModel
      * @param managedType
      * @param managedTypeArray
@@ -231,7 +254,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * Returns the {@link LifecycleModel} instance that corresponds to the given query model, lifecycle property and the interval. If the associated controller isn't lifecycle then
      * it will return null.
-     * 
+     *
      * @param model
      * @param propertyName
      * @param from
@@ -249,7 +272,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the value that indicates whether companion object associated with this criteria is lifecycle or not.
-     * 
+     *
      * @return
      */
     public boolean isLifecycleController() {
@@ -258,7 +281,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Exports data in to the specified external file.
-     * 
+     *
      * @param fileName
      * @param propertyNames
      * @param propertyTitles
@@ -280,7 +303,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Exports data, those were retrieved with query, in to the file specified with appropriate filename.
-     * 
+     *
      * @param fileName
      * @param query
      * @param propertyNames
@@ -304,7 +327,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the entity for specified id
-     * 
+     *
      * @param entity
      * @return
      */
@@ -324,7 +347,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Removes the passed entity. If the entity is not of the entity type or managed type of this criteria.
-     * 
+     *
      * @param entity
      */
     public void delete(final T entity) {
@@ -337,7 +360,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns refetched with fetchModel entity for specified one.
-     * 
+     *
      * @param entity
      * @param fetchModel
      * @return
@@ -356,7 +379,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * Converts existing properties model (which has separate properties for from/to, is/isNot and so on) into new properties model (which has single abstraction for one
      * criterion).
-     * 
+     *
      * @param properties
      * @return
      */
@@ -372,7 +395,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the first result page for query model. The page size is specified with the second parameter.
-     * 
+     *
      * @param queryModel
      *            - query model for which the first result page must be returned.
      * @param pageSize
@@ -390,7 +413,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns all entities those satisfies conditions of the specified {@link QueryExecutionModel}.
-     * 
+     *
      * @param queryModel
      *            - query model for which the first result page must be returned.
      * @return
@@ -406,7 +429,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns first entities those satisfies conditions of the specified {@link QueryExecutionModel}.
-     * 
+     *
      * @param queryModel
      *            - query model for which the first result page must be returned.
      * @return
@@ -422,7 +445,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the first result page for query model with summary. The page size is specified with the third parameter.
-     * 
+     *
      * @param queryModel
      *            - query model for which the first result page must be returned.
      * @param pageSize
@@ -441,7 +464,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * Converts existing properties model (which has separate properties for from/to, is/isNot and so on) into new properties model (which has single abstraction for one
      * criterion).
-     * 
+     *
      * @param properties
      * @return
      */
@@ -471,7 +494,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the byte array for the managed type.
-     * 
+     *
      * @return
      */
     private List<byte[]> getByteArrayForManagedType() {
@@ -480,7 +503,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the list of byte arrays for the list of {@link ByteArray} instances.
-     * 
+     *
      * @param list
      * @return
      */

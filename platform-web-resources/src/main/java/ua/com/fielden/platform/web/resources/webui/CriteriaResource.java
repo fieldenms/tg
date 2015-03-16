@@ -189,7 +189,12 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         if (applied.isValid().isSuccessful()) {
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) applied;
             resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
-            final IPage<AbstractEntity<?>> page = resultingCriteria.run(/* (Integer) modifiedPropertiesHolder.get("@pageCapacity") */5);
+            final IPage<AbstractEntity<?>> page;
+            if (modifiedPropertiesHolder.get("@pageNumber") == null) {
+                page = resultingCriteria.run((Integer) modifiedPropertiesHolder.get("@pageCapacity"));
+            } else {
+                page = resultingCriteria.getPage((Integer) modifiedPropertiesHolder.get("@pageNumber"), (Integer) modifiedPropertiesHolder.get("@pageNumber"), (Integer) modifiedPropertiesHolder.get("@pageCapacity"));
+            }
             final List<AbstractEntity<?>> resultEntities = page.data();
             criteriaAndResultEntities.addAll(resultEntities);
             criteriaAndResultEntities.add(page.numberOfPages());
