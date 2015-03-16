@@ -235,7 +235,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         //final boolean isEntityItself = "".equals(propertyName);
         final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
         final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
-        final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? Boolean.class : propertyType;
+        final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType;
         //final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
 
         final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //

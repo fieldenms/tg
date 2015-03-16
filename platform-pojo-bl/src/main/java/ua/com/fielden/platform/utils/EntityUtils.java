@@ -575,7 +575,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isBoolean(final Class<?> type) {
-        return boolean.class.isAssignableFrom(type) || Boolean.class.isAssignableFrom(type);
+        return boolean.class.isAssignableFrom(type);
     }
 
     /**

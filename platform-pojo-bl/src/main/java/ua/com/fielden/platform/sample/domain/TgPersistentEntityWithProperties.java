@@ -63,7 +63,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Boolean prop", desc = "Boolean prop desc")
-    private Boolean booleanProp;
+    private boolean booleanProp;
 
     @IsProperty
     @MapTo
@@ -202,12 +202,12 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     }
 
     @Observable
-    public TgPersistentEntityWithProperties setBooleanProp(final Boolean booleanProp) {
+    public TgPersistentEntityWithProperties setBooleanProp(final boolean booleanProp) {
         this.booleanProp = booleanProp;
         return this;
     }
 
-    public Boolean getBooleanProp() {
+    public boolean getBooleanProp() {
         return booleanProp;
     }
 
