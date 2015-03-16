@@ -505,8 +505,13 @@
                         // if the overlay was not cancelled then enforce onAcceptedValueChange handler
                         if (this.overlayCancelled === false) {
                             this.enforceOnAcceptedValueChanged = false;
-                            // PLEASE, CONSIDER REMOVING THIS 
-                            // this.onAcceptedValueChanged();
+                            if (this.okHasBeenPressed === true) { // the situation when the overlay has been closed due to Ok button pressing
+                                // in this case validation (with newer value) will occur, but in other place: editingValueChanged + commit() call
+                                this.okHasBeenPressed = false;
+                            } else { // the situation when the overlay has been closed due to pressing any place outside the overlay
+                                // in this case validation should occur
+                                this.onAcceptedValueChanged();    
+                            }
                         } else {
                             // otherwise reset overlay cancellation flag in preparation for further processing
                             // overlay is already closed and tg-entity-editor is focused
@@ -525,7 +530,6 @@
                     this.hasFocus = false;
                     if (this.$.overlay.opened === false && this.enforceOnAcceptedValueChanged === true) {
                         this.enforceOnAcceptedValueChanged = false;
-                        // PLEASE, CONSIDER REEVALUATING IF THIS IS NEEDED AT ALL
                         this.onAcceptedValueChanged();
                     }
                 },
@@ -609,10 +613,16 @@
                     }
                 },
 
+                /**
+                 * Indicates that the Ok button has been pressed. It can be used until onOpenChanged will be invoked.
+                 */
+                okHasBeenPressed: false,
+
                 /* 
                  * Handles overlay's button Ok click, which confirms selection and assigns it to the input field.
                  */
                 onOkClick: function () {
+                    this.okHasBeenPressed = true;
                     var selectedItemsToStr = _.map(this.selectedItems, function (obj) {
                         return obj.key
                     }).toString();
