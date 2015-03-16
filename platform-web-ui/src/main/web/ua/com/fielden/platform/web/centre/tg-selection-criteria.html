@@ -169,8 +169,9 @@
                     if (e.detail.xhr.status === 200) {
                         var critAndResult = self.$.serialiser.deserialise(e.detail.response).instance;
                         var criteriaEntity = critAndResult[0];
-                        var resultEntities = critAndResult.slice(1);
-                        self.onRunDefault(criteriaEntity, resultEntities);
+                        var resultEntities = critAndResult.slice(1, critAndResult.length - 1);
+                        var pageCount = critAndResult[critAndResult.length - 1];
+                        self.onRunDefault(criteriaEntity, resultEntities, pageCount);
                     }
                 });
 
@@ -277,14 +278,14 @@
             /**
              * Default implementation for onRun callback.
              */
-            onRunDefault: function (criteriaEntity, resultEntities) {
+            onRunDefault: function (criteriaEntity, resultEntities, pageCount) {
                 var msg = this.toastMsg("Running", criteriaEntity);
                 this.openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg);
 
                 // this.startRefreshCycleModeForEditors();
                 var newBindingEntity = this.onEntityReceived(criteriaEntity);
                 // custom external action
-                this.onRun(criteriaEntity, newBindingEntity, resultEntities);
+                this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount);
             }
         });
     </script>

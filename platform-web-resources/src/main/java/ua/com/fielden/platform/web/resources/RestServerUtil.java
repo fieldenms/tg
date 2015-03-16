@@ -238,6 +238,28 @@ public class RestServerUtil {
     }
 
     /**
+     * Composes representation of a list of entities.
+     *
+     * @return
+     */
+    public Representation rawListJSONRepresentation(final List<Object> list) {
+        logger.debug("Start building JSON list representation.");
+        try {
+            if (list == null) {
+                throw new IllegalArgumentException("The provided list is null.");
+            }
+            // create a Result enclosing entity list
+            final Result result = new Result(new ArrayList<>(list), "All is cool");
+            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+            logger.debug("SIZE: " + bytes.length);
+            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+        } catch (final Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+        }
+    }
+
+    /**
      * Composes representation of a map.
      *
      * @return

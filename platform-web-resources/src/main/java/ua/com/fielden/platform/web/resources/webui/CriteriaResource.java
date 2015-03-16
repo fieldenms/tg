@@ -184,16 +184,17 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        final List<AbstractEntity<?>> criteriaAndResultEntities = new ArrayList<>();
+        final List<Object> criteriaAndResultEntities = new ArrayList<>();
         criteriaAndResultEntities.add(applied);
         if (applied.isValid().isSuccessful()) {
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) applied;
             resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
-            final IPage<AbstractEntity<?>> page = resultingCriteria.run(10); // TODO pageSize
+            final IPage<AbstractEntity<?>> page = resultingCriteria.run(/* (Integer) modifiedPropertiesHolder.get("@pageCapacity") */5);
             final List<AbstractEntity<?>> resultEntities = page.data();
             criteriaAndResultEntities.addAll(resultEntities);
+            criteriaAndResultEntities.add(page.numberOfPages());
         }
-        return restUtil.listJSONRepresentation(criteriaAndResultEntities);
+        return restUtil.rawListJSONRepresentation(criteriaAndResultEntities);
     }
 
     /**

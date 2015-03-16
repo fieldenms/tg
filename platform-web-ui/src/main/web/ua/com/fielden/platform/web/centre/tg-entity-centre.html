@@ -150,8 +150,8 @@
                     this.$.selection_criteria.run();
                 },
 
-                onRun: function (criteriaEntity, newBindingEntity, resultEntities) {
-                    console.log("onRun", criteriaEntity, newBindingEntity, resultEntities);
+                onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount) {
+                    console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount);
                     this.$.egi.entities = resultEntities;
                 }
             });
