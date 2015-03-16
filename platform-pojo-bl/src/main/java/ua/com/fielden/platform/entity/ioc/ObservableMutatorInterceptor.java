@@ -375,11 +375,11 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
      *
      * @param metaProperty
      */
-    private void handleDependentProperties(final MetaProperty metaProperty) {
+    private void handleDependentProperties(final MetaProperty<?> metaProperty) {
         if (metaProperty.hasDependentProperties()) {
             final AbstractEntity<?> entity = metaProperty.getEntity();
             for (final String dependentPropertyName : metaProperty.getDependentPropertyNames()) {
-                final MetaProperty dependentMetaProperty = entity.getProperty(dependentPropertyName);
+                final MetaProperty<?> dependentMetaProperty = entity.getProperty(dependentPropertyName);
 
                 if (!dependentMetaProperty.onDependencyPath(metaProperty) && !metaProperty.onDependencyPath(dependentMetaProperty)) {
                     dependentMetaProperty.addToDependencyPath(metaProperty);

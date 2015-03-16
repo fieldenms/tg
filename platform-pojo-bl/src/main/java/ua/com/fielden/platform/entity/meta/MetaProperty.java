@@ -141,6 +141,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     private final Logger logger = Logger.getLogger(this.getClass());
 
+    /** Enforced mutation happens as part of the error recovery to indicate processing of dependent properties. */
     private boolean enforceMutator = false;
 
     /**
@@ -179,12 +180,12 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.type = type;
         this.isEntity = AbstractEntity.class.isAssignableFrom(type);
         this.retrievable = entity.isPersistent() &&
-                           (
-                           field.isAnnotationPresent(Calculated.class) ||
-                           (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
-                           (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
-                           (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
-                           );
+                (
+                field.isAnnotationPresent(Calculated.class) ||
+                        (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                        (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
+                );
         // let's identify whether property represents an activatable entity in the current context
         final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
         boolean skipActiveOnly;
@@ -531,7 +532,6 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                 if (!getValidators().containsKey(ValidationAnnotation.REQUIRED)) {
                     throw new IllegalArgumentException("There are no REQUIRED validation annotation pair for required property!");
                 }
-
 
                 final Result result1 = mkRequiredError();
 
@@ -961,20 +961,17 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         // if requirement changed from true to false, then update REQUIRED validation result to be successful
         if (!required && oldRequired) {
             if (containsRequiredValidator()) {
-                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
-
-                // TODO consider replacing of setValidationResultNoSynch() call to the call of appropriate error recovery logic as it is defined in
-                // TODO ObservableMutatorInterceptor in line 387
-                //                if (!isValid()) { // is this an error recovery situation?
-                //                    setEnforceMutator(true);
-                //                    try {
-                //                        setValue(getLastAttemptedValue());
-                //                    } finally {
-                //                        setEnforceMutator(false);
-                //                    }
-                //                } else if (revalidate(true).isSuccessful()) { // otherwise simply re-validate
-                //                    // handleDependentProperties(this);
-                //                }
+                final Result result = getValidationResult(ValidationAnnotation.REQUIRED);
+                if (result != null && !result.isSuccessful()) {
+                    setEnforceMutator(true);
+                    try {
+                        setValue(getLastAttemptedValue());
+                    } finally {
+                        setEnforceMutator(false);
+                    }
+                } else { // associated a successful result with requiredness validator
+                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+                }
             } else {
                 throw new IllegalStateException("The metaProperty was required but RequiredValidator didn't exist.");
             }
