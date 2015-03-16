@@ -290,10 +290,19 @@
 
                     entity.traverseProperties(function (propertyName) {
                         if (self.$.reflector.isError(entity.prop(propertyName).validationResult())) {
-                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                            if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
+                                // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
+                                //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
+                                //   invalid 'attempted value' -- but originalVal exists for this case!
+                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
+                            } else {
+                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                            }
+                            
                             bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                         } else {
-                            bindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
+                            var converted = self.$.reflector.convert(entity.get(propertyName));
+                            bindingView[propertyName] = converted;
 
                             var value = entity.get(propertyName);
                             if (self._isEntity(value)) {
@@ -311,6 +320,10 @@
                             if (entity.type().prop(propertyName).isUpperCase()) {
                                 bindingView["@" + propertyName + "_uppercase"] = true;
                             }
+                        }
+
+                        if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
+                            throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
                         }
                     });
 
