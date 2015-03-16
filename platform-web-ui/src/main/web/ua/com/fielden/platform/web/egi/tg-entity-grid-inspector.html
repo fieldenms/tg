@@ -148,14 +148,14 @@
                 },
                 getTooltip: function (entity, column) {
                     if (this.$.reflector.findTypeByName(column.type)) {
-                        return entity.get(column.property ? "desc" : (column.property + ".desc"));
+                        return entity.get(!column.property ? "desc" : (column.property + ".desc"));
                     } else {
                         return entity.get(column.property);
                     }
                 },
                 getValue: function (entity, column) {
                     if (this.$.reflector.findTypeByName(column.type)) {
-                        return entity.get(column.property ? "key" : (column.property + ".key"));
+                        return entity.get(!column.property ? "key" : (column.property + ".key"));
                     } else {
                         return entity.get(column.property);
                     }

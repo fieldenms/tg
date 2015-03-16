@@ -54,7 +54,7 @@
         <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right">
             <div>
                 <div layout vertical>
-                    <tg-selection-criteria id="selection_criteria" user="SU" mitype="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties"></tg-selection-criteria>
+                    <tg-selection-criteria id="selection_criteria" user="SU" mitype="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties" onRun="{{onRun}}"></tg-selection-criteria>
                     <div layout horizontal justified>
                         <div layout horizontal>
                             <paper-button id="configurator" raised roll="button" on-tap="{{configure}}">Configure</paper-button>
@@ -66,11 +66,17 @@
             </div>
             <div>
                 <div layout vertical center>
-                    <tg-entity-grid-inspector entityType="{{entityType}}" entities="{{entities}}">
+                    <tg-entity-grid-inspector id="egi" entityType="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+                        <tg-property-column property="" width="400px" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" columnTitle="Key" columnDesc="Key tooltip"></tg-property-column>
                         <tg-property-column property="desc" width="400px" type="String" columnTitle="Description" columnDesc="Description tooltip"></tg-property-column>
                         <tg-property-column property="integerProp" width="150px" type="Integer" columnTitle="Integer property" columnDesc="Integer property tooltip"></tg-property-column>
-                        <tg-property-column property="stringProp" width="200px" type="String" columnTitle="String property" columnDesc="String property tooltip"></tg-property-column>
                         <tg-property-column property="bigDecimalProp" width="150px" type="BigDecimal" columnTitle="Big decimal property" columnDesc="Big decimal property tooltip"></tg-property-column>
+                        <!-- <tg-property-column property="entityProp" width="400px" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" columnTitle="Entity prop" columnDesc="Entity prop tooltip"></tg-property-column> -->
+                        <tg-property-column property="booleanProp" width="400px" type="Boolean" columnTitle="Boolean prop" columnDesc="Boolean prop tooltip"></tg-property-column>
+                        <tg-property-column property="dateProp" width="400px" type="Date" columnTitle="Date prop" columnDesc="Date prop tooltip"></tg-property-column>
+                        <!-- <tg-property-column property="compositeProp" width="400px" type="ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity" columnTitle="Composite prop" columnDesc="Composite prop tooltip"></tg-property-column> -->
+                        <tg-property-column property="stringProp" width="200px" type="String" columnTitle="String property" columnDesc="String property tooltip"></tg-property-column>
+
                         <core-tooltip class="delayed entity-specific-action">
                             <core-icon-button icon="add-circle-outline"></core-icon-button>
                             <span class="span-tooltip" tip>Create new entity</span>
@@ -121,6 +127,16 @@
                 selectedView: 0,
 
                 /**
+                 * Initialisation block. It has all children web components already initialised.
+                 */
+                ready: function () {
+                    var self = this;
+                    self.super();
+
+                    self.onRun = self.onRun.bind(self);
+                },
+
+                /**
                  * Starts the process of criteria entity retrieval.
                  */
                 retrieve: function () {
@@ -132,6 +148,11 @@
                  */
                 run: function () {
                     this.$.selection_criteria.run();
+                },
+
+                onRun: function (criteriaEntity, newBindingEntity, resultEntities) {
+                    console.log("onRun", criteriaEntity, newBindingEntity, resultEntities);
+                    this.$.egi.entities = resultEntities;
                 }
             });
         })();

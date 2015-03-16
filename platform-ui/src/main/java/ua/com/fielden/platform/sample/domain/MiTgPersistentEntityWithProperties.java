@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import java.math.BigDecimal;
-
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -50,24 +48,33 @@ public class MiTgPersistentEntityWithProperties extends MiWithConfigurationSuppo
                 addCriteria(cdtme, "critOnlyEntityProp");
                 logger.debug("\tAdded criteria.");
 
-                cdtme.getFirstTick().setValue(root(), "", entityVal("KE*", "AB*"));
-                cdtme.getFirstTick().setValue(root(), "desc", "de*");
-
-                // cdtme.getFirstTick().setValue(root(), "integerProp", 3);
-                cdtme.getFirstTick().setValue2(root(), "integerProp", 9);
-                cdtme.getFirstTick().setValue(root(), "bigDecimalProp", BigDecimal.TEN);
-                // cdtme.getFirstTick().setValue2(root(), "bigDecimalProp", BigDecimal.ONE);
-                cdtme.getFirstTick().setValue(root(), "entityProp", entityVal("KE*", "AB*"));
-                cdtme.getFirstTick().setValue(root(), "booleanProp", false);
-                // cdtme.getFirstTick().setValue2(root(), "booleanProp", false);
-                cdtme.getFirstTick().setValue(root(), "dateProp", dateVal("2014-12-12 00:00:00"));
-                // cdtme.getFirstTick().setValue2(root(), "dateProp", dateVal("2014-12-12 00:00:00"));
-                cdtme.getFirstTick().setValue(root(), "compositeProp", entityVal("DEFAULT_KE*"));
-
-                cdtme.getFirstTick().setValue(root(), "critOnlyEntityProp", null);
+                //                cdtme.getFirstTick().setValue(root(), "", entityVal("KE*", "AB*"));
+                //                cdtme.getFirstTick().setValue(root(), "desc", "de*");
+                //
+                //                // cdtme.getFirstTick().setValue(root(), "integerProp", 3);
+                //                cdtme.getFirstTick().setValue2(root(), "integerProp", 9);
+                //                cdtme.getFirstTick().setValue(root(), "bigDecimalProp", BigDecimal.TEN);
+                //                // cdtme.getFirstTick().setValue2(root(), "bigDecimalProp", BigDecimal.ONE);
+                //                cdtme.getFirstTick().setValue(root(), "entityProp", entityVal("KE*", "AB*"));
+                //                cdtme.getFirstTick().setValue(root(), "booleanProp", false);
+                //                // cdtme.getFirstTick().setValue2(root(), "booleanProp", false);
+                //                cdtme.getFirstTick().setValue(root(), "dateProp", dateVal("2014-12-12 00:00:00"));
+                //                // cdtme.getFirstTick().setValue2(root(), "dateProp", dateVal("2014-12-12 00:00:00"));
+                //                cdtme.getFirstTick().setValue(root(), "compositeProp", entityVal("DEFAULT_KE*"));
+                //
+                //                cdtme.getFirstTick().setValue(root(), "critOnlyEntityProp", null);
 
                 // Main result
-                addColumn(cdtme, ""); // .addColumn(cdtme, "desc").addColumn(cdtme, "username").addColumn(cdtme, "contractor").addColumn(cdtme, "manager");
+                addColumn(cdtme, ""); // empty means entity itself, which gets represented by key
+                addColumn(cdtme, "desc");
+
+                addColumn(cdtme, "integerProp");
+                addColumn(cdtme, "bigDecimalProp");
+                addColumn(cdtme, "entityProp");
+                addColumn(cdtme, "booleanProp");
+                addColumn(cdtme, "dateProp");
+                addColumn(cdtme, "compositeProp");
+
                 logger.debug("\tAdded result columns.");
 
                 // addTotal(cdtme, "Person Count", "Person Count.", "COUNT(SELF)", "SELF");
