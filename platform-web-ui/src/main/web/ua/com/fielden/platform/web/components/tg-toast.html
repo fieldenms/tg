@@ -7,7 +7,7 @@
 <core-style id="toast-progress-indicator">
     paper-spinner { position: absolute; top: 9px; right: 9px; padding: 0px; margin: 0px;}
     <!-- -->
-    paper-spinner.blue::shadow .circle { border-color: #FFFFFF; }
+    paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
 </core-style>
 
 <!-- A toas component that may have  -->
@@ -30,7 +30,7 @@
                 <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="loading"></paper-spinner>
             </template>
             <template if="{{shouldShowMore(showProgress, hasMore)}}">
-                <div style="color: white;" on-tap="{{showMessageDlg}}">More</div>
+                <div style="color: #03A9F4;" on-tap="{{showMessageDlg}}">More</div>
             </template>
         </paper-toast>
 
