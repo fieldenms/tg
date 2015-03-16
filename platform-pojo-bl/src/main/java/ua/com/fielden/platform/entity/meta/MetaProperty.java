@@ -962,6 +962,19 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         if (!required && oldRequired) {
             if (containsRequiredValidator()) {
                 setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+
+                // TODO consider replacing of setValidationResultNoSynch() call to the call of appropriate error recovery logic as it is defined in
+                // TODO ObservableMutatorInterceptor in line 387
+                //                if (!isValid()) { // is this an error recovery situation?
+                //                    setEnforceMutator(true);
+                //                    try {
+                //                        setValue(getLastAttemptedValue());
+                //                    } finally {
+                //                        setEnforceMutator(false);
+                //                    }
+                //                } else if (revalidate(true).isSuccessful()) { // otherwise simply re-validate
+                //                    // handleDependentProperties(this);
+                //                }
             } else {
                 throw new IllegalStateException("The metaProperty was required but RequiredValidator didn't exist.");
             }
