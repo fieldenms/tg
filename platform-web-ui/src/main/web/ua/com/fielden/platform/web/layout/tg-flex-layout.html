@@ -111,7 +111,7 @@
                         reflect: true
                     }
                 },
-                ready: function () {
+                domReady: function () {
                     this.componentsToLayout = [];
                     Array.prototype.forEach.call(this.$.elements.getDistributedNodes(), function (item) {
                         this.componentsToLayout.push(item);
