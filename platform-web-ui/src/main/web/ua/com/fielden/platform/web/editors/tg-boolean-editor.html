@@ -23,6 +23,15 @@
             :host::shadow paper-input-decorator /deep/ #focusedUnderline {
                 visibility: hidden !important;
             }
+
+            paper-checkbox::shadow #ink[checked] {
+                color: #4289f4;
+            }
+
+            paper-checkbox::shadow #checkbox.checked {
+                background-color: #4289f4;
+                border-color: #4289f4;
+            }
         </style>
         <paper-input-decorator id="decorator" label=" " floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
             <div layout horizontal>
