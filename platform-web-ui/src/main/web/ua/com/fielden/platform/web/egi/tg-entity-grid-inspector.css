@@ -1,14 +1,22 @@
 table {
     border-collapse: collapse;
 }
-th:not(.action-column),
-td:not(.action-column) {
+th.selection-column, td.selection-column {
+    padding: 10px;
+}
+th.data-column, td.data-column {
     padding: 0.75em 1.5em;
+}
+th:nth-of-type(3), td.data-column:nth-of-type(3) {
+    padding-left: 10px;
+}
+th:nth-last-of-type(2), td:nth-last-of-type(2) {
+    padding-right: 10px;
 }
 th {
     cursor: default;
 }
-td:not(.action-column) {
+td.data-column {
     color: #607D8B;
     cursor: pointer;
 }

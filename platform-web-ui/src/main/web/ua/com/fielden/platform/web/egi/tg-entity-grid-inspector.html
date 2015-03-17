@@ -44,17 +44,17 @@
         <table>
             <thead>
                 <tr class="header-color">
-                    <th>
+                    <th class="selection-column">
                         <core-tooltip position="bottom" class="delayed" style="width:100%">
                             <paper-checkbox checked="{{selectAll}}" on-core-change="{{onAllSelectionChanged}}"></paper-checkbox>
                             <span class="span-tooltip" tip>{{selectAll ? 'Unselect': 'Select'}} All entities</span>
                         </core-tooltip>
                     </th>
                     <template if="{{primaryAction}}">
-                        <th></th>
+                        <th class="action-column"></th>
                     </template>
                     <template repeat="{{column in columns}}">
-                        <th style="width: {{column.width}}" align="left">
+                        <th class="data-column" style="width: {{column.width}}" align="left">
                             <core-tooltip position="bottom" class="delayed" style="width:100%">
                                 {{column.columnTitle}}
                                 <span class="span-tooltip" tip>{{column.columnDesc}}</span>
@@ -62,14 +62,14 @@
                         </th>
                     </template>
                     <template if="{{secondaryActions.length > 0 }}">
-                        <th></th>
+                        <th class="action-column"></th>
                     </template>
                 </tr>
             </thead>
             <tbody>
                 <template repeat="{{entity, entityIndex in entities}}">
                     <tr class="{{entityIndex % 2 === 0 ? 'normal-color' : 'alternate-color'}}" selected?="{{selectionModel[entityIndex]}}">
-                        <td>
+                        <td class="selection-column">
                             <core-tooltip position="bottom" class="delayed" style="width:100%">
                                 <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
                                 <span class="span-tooltip" tip>{{selectionModel[entityIndex] ? 'Unselect': 'Select'}} this entity</span>
@@ -84,7 +84,7 @@
                             </td>
                         </template>
                         <template repeat="{{column in columns}}">
-                            <td style="position: relative; width: {{column.width}}" on-tap="{{rippleAction}}">
+                            <td class="data-column" style="position: relative; width: {{column.width}}" on-tap="{{rippleAction}}">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     <template if="{{column.type === 'Boolean' && get(entity, column) !== null}}">
                                         <core-icon icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
