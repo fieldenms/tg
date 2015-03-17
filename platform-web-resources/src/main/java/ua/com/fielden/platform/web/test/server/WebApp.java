@@ -235,14 +235,14 @@ public class WebApp extends AbstractWebApp {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, null, "['vertical', 'justified', 'margin:20px', "
+                .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
                         + "[[mr], [mr], [mr], [mr], [mr]], "
-                        + "[[mr], [mr], [mr], [mr], [mr]]]".replaceAll("mr", mr))
+                        + "[[mr], [mr], [mr], [mr], [mr]]]").replaceAll("mr", mr))
                 .setLayoutFor(Device.TABLET, null, "['vertical', 'margin:20px',"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
-                        + "['horizontal', 'justified', [mr]]"
+                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px']]"
                         + "]".replaceAll("mr", mr))
                 .setLayoutFor(Device.MOBILE, null, "['margin:20px',"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
