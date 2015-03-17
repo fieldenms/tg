@@ -94,19 +94,20 @@
                             <span class="span-tooltip" tip>Export to Excel</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button class="revers" icon="hardware:keyboard-tab" on-tap="{{firstPage}}"></core-icon-button>
+                            <core-icon-button class="revers" icon="hardware:keyboard-tab" on-tap="{{firstPage}}" disabled?="{{canNotFirst($.selection_criteria.pageNumber)}}"></core-icon-button>
                             <span class="span-tooltip" tip>First page</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button icon="hardware:keyboard-backspace" on-tap="{{prevPage}}"></core-icon-button>
+                            <core-icon-button icon="hardware:keyboard-backspace" on-tap="{{prevPage}}" disabled?="{{canNotPrev($.selection_criteria.pageNumber)}}"></core-icon-button>
                             <span class="span-tooltip" tip>Previous page</span>
                         </core-tooltip>
+                        <span class="standart-action">page {{$.selection_criteria.pageNumber !== null ? ($.selection_criteria.pageNumber + 1) : 0}} of {{$.selection_criteria.pageCount !== null ? $.selection_criteria.pageCount : 0}}</span>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button class="revers" icon="hardware:keyboard-backspace" on-tap="{{nextPage}}"></core-icon-button>
+                            <core-icon-button class="revers" icon="hardware:keyboard-backspace" on-tap="{{nextPage}}" disabled?="{{canNotNext($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
                             <span class="span-tooltip" tip>Next page</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button icon="hardware:keyboard-tab" on-tap="{{lastPage}}"></core-icon-button>
+                            <core-icon-button icon="hardware:keyboard-tab" on-tap="{{lastPage}}" disabled?="{{canNotLast($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
                             <span class="span-tooltip" tip>Last page</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
@@ -177,6 +178,19 @@
                  */
                 prevPage: function () {
                     this.$.selection_criteria.prevPage();
+                },
+
+                canNotPrev: function (pageNumber) {
+                    return typeof this.$ === 'undefined' ? true : !this.$.selection_criteria.canPrev(pageNumber);
+                },
+                canNotNext: function (pageNumber, pageCount) {
+                    return typeof this.$ === 'undefined' ? true : !this.$.selection_criteria.canNext(pageNumber, pageCount);
+                },
+                canNotFirst: function (pageNumber) {
+                    return typeof this.$ === 'undefined' ? true : !this.$.selection_criteria.canFirst(pageNumber);
+                },
+                canNotLast: function (pageNumber, pageCount) {
+                    return typeof this.$ === 'undefined' ? true : !this.$.selection_criteria.canLast(pageNumber, pageCount);
                 },
 
                 onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount) {

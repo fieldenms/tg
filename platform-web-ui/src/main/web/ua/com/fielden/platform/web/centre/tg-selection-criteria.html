@@ -234,7 +234,7 @@
                 var modPropHolder = this.super([bindingEntity, originalBindingEntity]);
                 if (this._isEntity(bindingEntity)) {
                     modPropHolder["@@criteriaType"] = bindingEntity.type().fullClassName();
-                    if (this.pageNumber !== null) {
+                    if (this.pageCount !== null) {
                         modPropHolder["@@pageNumber"] = this.pageNumber;
                         modPropHolder["@@pageCount"] = this.pageCount;
                     }
@@ -267,7 +267,7 @@
              */
             nextPage: function () {
                 this.validatePageCount();
-                if (this.pageNumber + 1 > this.pageCount - 1) {
+                if (!this.canNext()) {
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
                 }
                 this.pageNumber = this.pageNumber + 1;
@@ -279,7 +279,7 @@
              */
             prevPage: function () {
                 this.validatePageCount();
-                if (this.pageNumber - 1 < 0) {
+                if (!this.canPrev()) {
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
                 }
                 this.pageNumber = this.pageNumber - 1;
@@ -291,7 +291,7 @@
              */
             firstPage: function () {
                 this.validatePageCount();
-                if (0 > this.pageCount - 1) {
+                if (!this.canFirst()) {
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = 0;
@@ -303,18 +303,31 @@
              */
             lastPage: function () {
                 this.validatePageCount();
-                if (this.pageCount - 1 < 0) {
+                if (!this.canLast()) {
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = this.pageCount - 1;
                 this._execute();
             },
 
+            canPrev: function (pageNumber) {
+                return !(pageNumber - 1 < 0);
+            },
+            canNext: function (pageNumber, pageCount) {
+                return !(pageNumber + 1 > pageCount - 1);
+            },
+            canFirst: function (pageNumber) {
+                return !(pageNumber === 0);
+            },
+            canLast: function (pageNumber, pageCount) {
+                return !(pageNumber + 1 >= pageCount);
+            },
+
             /**
              * Starts the process of centre run.
              */
             run: function () {
-                this.pageNumber = null;
+                this.pageNumber = 0;
                 this.pageCount = null;
                 this._execute();
             },
