@@ -16,8 +16,15 @@
             #input::shadow #checkboxLabel{
                 white-space: nowrap;
             }
+            :host::shadow paper-input-decorator /deep/ #underline {
+                visibility: hidden !important;
+            }
+
+            :host::shadow paper-input-decorator /deep/ #focusedUnderline {
+                visibility: hidden !important;
+            }
         </style>
-        <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
+        <paper-input-decorator id="decorator" label=" " floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
             <div layout horizontal>
                 <div id="input-container" flex>
                     <core-tooltip position="bottom" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}">
