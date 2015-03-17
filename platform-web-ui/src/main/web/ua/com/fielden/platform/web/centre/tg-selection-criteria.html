@@ -84,7 +84,7 @@
             return this.message;
         }
 
-        var mr = "margin-right: 40px";
+        var mr = ["margin-right: 40px", "flex"];
         Polymer('tg-selection-criteria', {
             entitytype: null,
             /**
@@ -157,12 +157,11 @@
                 }
             },
 
-            whenDesktop: ['vertical', ['horizontal', 'justified', [mr], [mr]],
-                                                   ['horizontal', 'justified', [mr], [mr]],
-                                                   ['horizontal', 'justified', [mr], [mr]],
-                                                   ['horizontal', 'justified', [mr], [mr]],
-                                                   ['horizontal', 'justified', [mr]]
-                                                   ],
+            whenDesktop: [['center-justified', mr, mr],
+                                                   ['center-justified', mr, mr],
+                                                   ['center-justified', mr, mr],
+                                                   ['center-justified', mr, mr],
+                                                   ['center-justified', mr]],
             whenTablet: this.whenDesktop,
             whenMobile: this.whenDesktop,
 
