@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/core-style/core-style.html">
+<link rel="import" href="/resources/components/moment-component.html">
 
 <polymer-element hidden name="tg-app-config">
     <script>
@@ -9,6 +10,7 @@
                 locale = @locale;
             CoreStyle.g.minDesktopWidth = minDesktopWidth;
             CoreStyle.g.minTabletWidth = minTabletWidth;
+            moment.locale(locale);
             Polymer({
                 ready: function() {
                     this.minDesktopWidth = minDesktopWidth;
