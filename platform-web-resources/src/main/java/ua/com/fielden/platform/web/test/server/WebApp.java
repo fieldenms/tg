@@ -239,8 +239,15 @@ public class WebApp extends AbstractWebApp {
                 .setLayoutFor(Device.TABLET, null, "['vertical', 'margin:20px',"
                         + "['horizontal', 'justified', [mr], [mr], [mr]],"
                         + "['horizontal', 'justified', [mr], [mr], [mr]],"
-                        + "['horizontal', 'justified', [mr], [mr], [mr]]"
+                        + "['horizontal', 'justified', [mr], [mr], [mr]],"
+                        + "['horizontal', 'justified', [mr]]"
                         + "]".replaceAll("mr", mr))
+                .setLayoutFor(Device.MOBILE, null, "['margin:20px',"
+                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
+                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
+                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
+                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
+                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']]]")
                 .done();
 
         webApp.configApp().
