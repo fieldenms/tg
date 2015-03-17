@@ -14,6 +14,7 @@
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
 <link rel="import" href="/resources/centre/tg-criteria-validator.html">
 <link rel="import" href="/resources/centre/criterion/tg-criterion.html">
+<link rel="import" href="/resources/centre/criterion/tg-boolean-criterion.html">
 <link rel="import" href="/resources/centre/criterion/tg-range-criterion.html">
 <link rel="import" href="/resources/centre/criterion/tg-date-range-criterion.html">
 
@@ -47,10 +48,10 @@
                 <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_bigDecimalProp_to" onAcceptedValueChanged="{{validate}}" propTitle="BigDecimal prop TO" propDesc="BigDecimal prop TO criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
             </tg-range-criterion>
 
-            <tg-criterion orNull="{{propertyModel['booleanProp'].orNull}}" not="{{propertyModel['booleanProp'].not}}">
+            <tg-boolean-criterion orNull="{{propertyModel['booleanProp'].orNull}}" not="{{propertyModel['booleanProp'].not}}">
                 <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_booleanProp_is" onAcceptedValueChanged="{{validate}}" propTitle="Boolean prop IS" propDesc="Boolean prop IS criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-boolean-editor>
                 <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_booleanProp_not" onAcceptedValueChanged="{{validate}}" propTitle="Boolean prop NOT" propDesc="Boolean prop NOT criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-boolean-editor>
-            </tg-criterion>
+            </tg-boolean-criterion>
 
             <tg-date-range-criterion orNull="{{propertyModel['dateProp'].orNull}}" not="{{propertyModel['dateProp'].not}}" exclusive="{{propertyModel['dateProp'].exclusive}}" exclusive2="{{propertyModel['dateProp'].exclusive2}}" datePrefix="{{propertyModel['dateProp'].datePrefix}}" dateMnemonic="{{propertyModel['dateProp'].dateMnemonic}}" andBefore="{{propertyModel['dateProp'].andBefore}}">
                 <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_dateProp_from" onAcceptedValueChanged="{{validate}}" propTitle="Date prop FROM" propDesc="Date prop FROM criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>
