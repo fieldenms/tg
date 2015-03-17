@@ -10,7 +10,6 @@
         </content>	        
     </template>
     <script>
-        var mr = "margin-right: 20px";
         Polymer('tg-criterion', {
             publish: {
                 /**
@@ -36,7 +35,7 @@
                 this.appendChild(flexElement);
             },
 
-            whenDesktop: ['horizontal', 'justified', ['margin-right: 20px', 'flex']],
+            whenDesktop: ['horizontal', 'justified', ['flex']],
             whenTablet: this.whenDesktop,
             whenMobile: this.whenDesktop,
         });

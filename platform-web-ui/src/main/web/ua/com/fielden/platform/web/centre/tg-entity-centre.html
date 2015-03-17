@@ -53,14 +53,14 @@
         </div>
         <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right">
             <div>
-                <div layout vertical>
+                <div layout vertical style="margin: 40px;">
                     <tg-selection-criteria id="selection_criteria" user="SU" mitype="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties" onRun="{{onRun}}"></tg-selection-criteria>
-                    <div layout horizontal justified>
+                    <div layout horizontal justified style="margin-top:40px;">
                         <div layout horizontal>
-                            <paper-button id="configurator" raised roll="button" on-tap="{{configure}}">Configure</paper-button>
+                            <paper-button id="configurator" raised roll="button" on-tap="{{configure}}" style="margin-left: 0px;">Configure</paper-button>
                             <paper-button id="saver" raised roll="button" on-tap="{{save}}">Save</paper-button>
                         </div>
-                        <paper-button id="runner" raised roll="button" on-tap="{{run}}">Run</paper-button>
+                        <paper-button id="runner" raised roll="button" on-tap="{{run}}" style="margin-right: 0px;">Run</paper-button>
                     </div>
                 </div>
             </div>

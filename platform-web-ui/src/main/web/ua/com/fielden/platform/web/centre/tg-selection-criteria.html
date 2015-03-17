@@ -85,7 +85,8 @@
             return this.message;
         }
 
-        var mr = ["margin-right: 40px", "flex"];
+        var mr = ["margin-right: 40px", "flex"],
+            mrLast = ['flex'];
         Polymer('tg-selection-criteria', {
             entitytype: null,
             /**
@@ -158,23 +159,23 @@
                 }
             },
 
-            whenDesktop: [['center-justified', mr, mr, mr],
-                          ['center-justified', mr, mr, mr],
-                          ['center-justified', mr, mr, mr]],
-            whenTablet: [['center-justified', mr, mr],
-                          ['center-justified', mr, mr],
-                          ['center-justified', mr, mr],
-                          ['center-justified', mr, mr],
-                          ['center-justified', mr, mr]],
-            whenMobile: [['center-justified', mr],
-                          ['center-justified', mr],
-                          ['center-justified', mr],
-                          ['center-justified', mr],
-                          ['center-justified', mr],
-                          ['center-justified', mr],
-                          ['center-justified', mr],
-                          ['center-justified', mr],
-                          ['center-justified', mr]],
+            whenDesktop: [['center-justified', mr, mr, mrLast],
+                          ['center-justified', mr, mr, mrLast],
+                          ['center-justified', mr, mr, mrLast]],
+            whenTablet: [['center-justified', mr, mrLast],
+                          ['center-justified', mr, mrLast],
+                          ['center-justified', mr, mrLast],
+                          ['center-justified', mr, mrLast],
+                          ['center-justified', mr, mrLast]],
+            whenMobile: [['center-justified', mrLast],
+                          ['center-justified', mrLast],
+                          ['center-justified', mrLast],
+                          ['center-justified', mrLast],
+                          ['center-justified', mrLast],
+                          ['center-justified', mrLast],
+                          ['center-justified', mrLast],
+                          ['center-justified', mrLast],
+                          ['center-justified', mrLast]],
 
             currentState: "EDIT",
 
