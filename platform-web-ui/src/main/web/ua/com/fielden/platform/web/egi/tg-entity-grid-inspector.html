@@ -224,9 +224,10 @@
                     return selectedRows;
                 },
                 entitiesChanged: function (oldValue, newValue) {
+                    console.log("entities changed")
                     this.selectionModel = [];
                     newValue.forEach(function (entity) {
-                        this.selectionModel.push(hasEntity(entity, this.getSelectedEntities))
+                        this.selectionModel.push(hasEntity(entity, this.selectedEntities))
                     }.bind(this));
                 },
                 clearSelection: function () {

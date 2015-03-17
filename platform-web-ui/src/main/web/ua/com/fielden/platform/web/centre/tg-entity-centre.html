@@ -148,6 +148,7 @@
                  * Starts the process of centre run.
                  */
                 run: function () {
+                    this.$.egi.clearSelection();
                     this.$.selection_criteria.run();
                     this.selectedView = 1;
                 },
