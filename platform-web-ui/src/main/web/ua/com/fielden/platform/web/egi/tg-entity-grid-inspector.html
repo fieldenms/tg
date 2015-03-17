@@ -26,6 +26,9 @@
                 </template>
             </tr>
         </table>-->
+
+        <paper-ripple id="ripple" class="circle recenteringTouch" style="pointer-events: none;" fit></paper-ripple>
+
         <!--<div class="table-container">-->
         <div layout horizontal justified>
             <div layout horizaontal>
@@ -78,8 +81,7 @@
                             </td>
                         </template>
                         <template repeat="{{column in columns}}">
-                            <td style="width: {{column.width}}">
-                                <!--<paper-ripple class="circle recenteringTouch" fit></paper-ripple>-->
+                            <td style="position: relative; width: {{column.width}}" on-down="{{downAction}}" on-up="{{upAction}}">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     {{getValue(entity, column)}}
                                     <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
@@ -213,7 +215,29 @@
                 clearSelection: function () {
                     this.selectionModel = [];
                     this.selectedEntities = [];
+                },
+
+                downAction: function (e) {
+                    // find the TD on the clicked path
+                    var index = 0;
+                    var parent = null
+                    while (index < e.path.length && parent === null) {
+                        console.log(e.path[index].tagName);
+                        if (e.path[index].tagName === "TD") {
+                            parent = e.path[index];
+                        }
+                        index = index + 1;
+                    }
+
+                    // attach the ripple component to the found TD
+                    parent.appendChild(this.$.ripple);
+                    this.$.ripple.downAction(e);
+                },
+
+                upAction: function (e) {
+                    this.$.ripple.upAction();
                 }
+
             });
         })();
     </script>
