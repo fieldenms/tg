@@ -34,6 +34,7 @@ public class MiTgPersistentEntityWithProperties extends MiWithConfigurationSuppo
             public ICentreDomainTreeManagerAndEnhancer configCentre(final ICentreDomainTreeManagerAndEnhancer cdtme) {
                 logger.debug("Started creation of default TgPersistentEntityWithProperties config.");
                 // Selection criteria
+                cdtme.getFirstTick().setColumnsNumber(3);
 
                 addCriteria(cdtme, ""); // empty means entity itself, which gets represented by key
                 addCriteria(cdtme, "desc");
