@@ -86,6 +86,19 @@
         var mr = "margin-right: 40px";
         Polymer('tg-selection-criteria', {
             entitytype: null,
+            /**
+             * The current number of pages after the firstPage has been retrieved. To update this please invoke run() action one more time.
+             */
+            pageCount: null,
+
+            /**
+             * The current page number.
+             */
+            pageNumber: null,
+            /**
+             * Currently immutable capacity of the page.
+             */
+            pageCapacity: 5,
 
             propertyModel: {
                 "": {
@@ -208,7 +221,12 @@
             extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
                 var modPropHolder = this.super([bindingEntity, originalBindingEntity]);
                 if (this._isEntity(bindingEntity)) {
-                    modPropHolder["@criteriaType"] = bindingEntity.type().fullClassName();
+                    modPropHolder["@@criteriaType"] = bindingEntity.type().fullClassName();
+                    if (this.pageNumber !== null) {
+                        modPropHolder["@@pageNumber"] = this.pageNumber;
+                        modPropHolder["@@pageCount"] = this.pageCount;
+                    }
+                    modPropHolder["@@pageCapacity"] = this.pageCapacity;
 
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
@@ -226,10 +244,73 @@
              */
             onRunComplete: function () {},
 
+            validatePageCount: function() {
+                if (this.pageCount === null) {
+                    throw "Do not execute methods firstPage(), nextPage() etc. before the method run().";
+                }
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            nextPage: function () {
+                this.validatePageCount();
+                if (this.pageNumber + 1 > this.pageCount - 1) {
+                    throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
+                }
+                this.pageNumber = this.pageNumber + 1;
+                this._execute();
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            prevPage: function () {
+                this.validatePageCount();
+                if (this.pageNumber - 1 < 0) {
+                    throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
+                }
+                this.pageNumber = this.pageNumber - 1;
+                this._execute();
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            firstPage: function () {
+                this.validatePageCount();
+                if (0 > this.pageCount - 1) {
+                    throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
+                }
+                this.pageNumber = 0;
+                this._execute();
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            lastPage: function () {
+                this.validatePageCount();
+                if (this.pageCount - 1 < 0) {
+                    throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
+                }
+                this.pageNumber = this.pageCount - 1;
+                this._execute();
+            },
+
             /**
              * Starts the process of centre run.
              */
             run: function () {
+                this.pageNumber = null;
+                this.pageCount = null;
+                this._execute();
+            },
+
+            /**
+             * Starts the process of centre execution. It does not alter 
+             */
+            _execute: function() {
                 var self = this;
 
                 if (self._runningInProgress()) {
@@ -284,6 +365,8 @@
 
                 // this.startRefreshCycleModeForEditors();
                 var newBindingEntity = this.onEntityReceived(criteriaEntity);
+
+                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                 // custom external action
                 this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount);
             }

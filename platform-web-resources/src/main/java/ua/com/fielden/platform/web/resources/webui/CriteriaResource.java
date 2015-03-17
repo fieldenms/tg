@@ -190,14 +190,19 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) applied;
             resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
             final IPage<AbstractEntity<?>> page;
-            if (modifiedPropertiesHolder.get("@pageNumber") == null) {
-                page = resultingCriteria.run((Integer) modifiedPropertiesHolder.get("@pageCapacity"));
+            final Integer pageCapacity = (Integer) modifiedPropertiesHolder.get("@@pageCapacity");
+            modifiedPropertiesHolder.remove("@@pageCapacity");
+            if (modifiedPropertiesHolder.get("@@pageNumber") == null) {
+                page = resultingCriteria.run(pageCapacity);
             } else {
-                page = resultingCriteria.getPage((Integer) modifiedPropertiesHolder.get("@pageNumber"), (Integer) modifiedPropertiesHolder.get("@pageNumber"), (Integer) modifiedPropertiesHolder.get("@pageCapacity"));
+                page = resultingCriteria.getPage((Integer) modifiedPropertiesHolder.get("@@pageNumber"), (Integer) modifiedPropertiesHolder.get("@@pageCount"), pageCapacity);
+                modifiedPropertiesHolder.remove("@@pageNumber");
+                modifiedPropertiesHolder.remove("@@pageCount");
             }
             final List<AbstractEntity<?>> resultEntities = page.data();
             criteriaAndResultEntities.addAll(resultEntities);
-            criteriaAndResultEntities.add(page.numberOfPages());
+
+            criteriaAndResultEntities.add(page.numberOfPages()); // pageCount
         }
         return restUtil.rawListJSONRepresentation(criteriaAndResultEntities);
     }

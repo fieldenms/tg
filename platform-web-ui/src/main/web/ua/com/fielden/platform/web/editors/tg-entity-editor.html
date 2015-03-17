@@ -399,7 +399,7 @@
 
                         // prepare the AJAX request based on the raw search string
                         var paramsHolder = this.createModifiedPropertiesHolder();
-                        paramsHolder["@searchString"] = inputText;
+                        paramsHolder["@@searchString"] = inputText;
                         var serialisedSearchQuery = this.$.serialiser.serialise(paramsHolder);
 
                         this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);

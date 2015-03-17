@@ -94,23 +94,23 @@
                             <span class="span-tooltip" tip>Export to Excel</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button class="revers" icon="hardware:keyboard-tab"></core-icon-button>
+                            <core-icon-button class="revers" icon="hardware:keyboard-tab" on-tap="{{firstPage}}"></core-icon-button>
                             <span class="span-tooltip" tip>First page</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button icon="hardware:keyboard-backspace"></core-icon-button>
+                            <core-icon-button icon="hardware:keyboard-backspace" on-tap="{{prevPage}}"></core-icon-button>
                             <span class="span-tooltip" tip>Previous page</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button class="revers" icon="hardware:keyboard-backspace"></core-icon-button>
+                            <core-icon-button class="revers" icon="hardware:keyboard-backspace" on-tap="{{nextPage}}"></core-icon-button>
                             <span class="span-tooltip" tip>Next page</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button icon="hardware:keyboard-tab"></core-icon-button>
+                            <core-icon-button icon="hardware:keyboard-tab" on-tap="{{lastPage}}"></core-icon-button>
                             <span class="span-tooltip" tip>Last page</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button icon="refresh"></core-icon-button>
+                            <core-icon-button icon="refresh" on-tap="{{run}}"></core-icon-button>
                             <span class="span-tooltip" tip>Refresh</span>
                         </core-tooltip>
                         <tg-primary-instance-action actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>
@@ -148,6 +148,34 @@
                  */
                 run: function () {
                     this.$.selection_criteria.run();
+                },
+
+                /**
+                 * Starts the process of retrieving first page (only after run() has been already performed).
+                 */
+                firstPage: function () {
+                    this.$.selection_criteria.firstPage();
+                },
+
+                /**
+                 * Starts the process of retrieving last page (only after run() has been already performed).
+                 */
+                lastPage: function () {
+                    this.$.selection_criteria.lastPage();
+                },
+
+                /**
+                 * Starts the process of retrieving next page (only after run() has been already performed).
+                 */
+                nextPage: function () {
+                    this.$.selection_criteria.nextPage();
+                },
+
+                /**
+                 * Starts the process of retrieving prev page (only after run() has been already performed).
+                 */
+                prevPage: function () {
+                    this.$.selection_criteria.prevPage();
                 },
 
                 onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount) {

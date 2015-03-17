@@ -72,16 +72,17 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     public Representation post(final Representation envelope) throws ResourceException {
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
         final Pair<CONTEXT, Map<String, Object>> entityAndHolder;
-        if (modifiedPropertiesHolder.get("@criteriaType") == null) {
+        if (modifiedPropertiesHolder.get("@@criteriaType") == null) {
             entityAndHolder = utils.constructEntity(modifiedPropertiesHolder);
         } else {
             entityAndHolder = constructCriteriaEntity(modifiedPropertiesHolder);
+            modifiedPropertiesHolder.remove("@@criteriaType");
         }
         final CONTEXT context = entityAndHolder.getKey();
         logger.debug("context = " + context);
         final Map<String, Object> paramsHolder = entityAndHolder.getValue();
 
-        final String searchStringVal = (String) paramsHolder.get("@searchString"); // custom property inside paramsHolder
+        final String searchStringVal = (String) paramsHolder.get("@@searchString"); // custom property inside paramsHolder
         logger.debug(String.format("SEARCH STRING %s", searchStringVal));
 
         final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
@@ -96,7 +97,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     }
 
     private Pair<CONTEXT, Map<String, Object>> constructCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder) {
-        final Class<? extends AbstractEntity<?>> criteriaType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass((String) modifiedPropertiesHolder.get("@criteriaType"));
+        final Class<? extends AbstractEntity<?>> criteriaType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass((String) modifiedPropertiesHolder.get("@@criteriaType"));
         final CONTEXT valPrototype = (CONTEXT) CriteriaResource.createCriteriaValidationPrototype(CriteriaResource.getMiType(criteriaType), gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         return EntityResourceUtils.constructEntity(modifiedPropertiesHolder, valPrototype, coFinder);
     }
