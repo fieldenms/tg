@@ -372,10 +372,21 @@
              * IMPORTANT: do not use property field directly!
              */
             Entity.prototype.get = function (name) {
-                if (this._isObjectUndefined(name)) {
-                    throw new StrictProxyException(name, this.type()._simpleClassName());
+                if (name === '') { // empty property name means 'entity itself'
+                    return this;
                 }
-                return this[name];
+                var dotIndex = name.indexOf(".");
+                if (dotIndex > -1) {
+                    var first = name.slice(0, dotIndex);
+                    var rest = name.slice(dotIndex + 1);
+                    var firstVal = this.get(first);
+                    return firstVal === null ? null : firstVal.get(rest);
+                } else {
+                    if (this._isObjectUndefined(name)) {
+                        throw new StrictProxyException(name, this.type()._simpleClassName());
+                    }
+                    return this[name];
+                }
             }
 
             /**
