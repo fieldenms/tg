@@ -234,10 +234,14 @@
                     }
                 },
 
+                created: function() {
+                    this.selectedItems = {};
+                },
+
                 /* 
                  * The selected items in the list of found entities, presented in the overlay.
                  */
-                selectedItems: {},
+                selectedItems: null,
 
                 /*
                  * Handles selection/deselection
