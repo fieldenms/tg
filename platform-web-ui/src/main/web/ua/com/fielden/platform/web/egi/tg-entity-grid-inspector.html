@@ -158,7 +158,7 @@
                 },
                 getTooltip: function (entity, column) {
                     if (this.$.reflector.findTypeByName(column.type)) {
-                        return entity.get(!column.property ? "desc" : (column.property + ".desc"));
+                        return entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
                     } else {
                         return this.getValue(entity, column);
                     }
@@ -167,10 +167,10 @@
                     return entity.get(column.property);
                 },
                 getValue: function (entity, column) {
-                    if (this.$.reflector.findTypeByName(column.type)) {
-                        return entity.get(!column.property ? "key" : (column.property + ".key"));
-                    } else if (entity.get(column.property) === null){
+                    if (this.get(entity, column) === null) {
                         return "";
+                    } else if (this.$.reflector.findTypeByName(column.type)) {
+                        return this.$.reflector.convert(this.get(entity, column));
                     } else if (column.type === 'Date') {
                         return moment(entity.get(column.property)).format("L LT");
                     } else if (typeof entity.get(column.property) === 'number') {
