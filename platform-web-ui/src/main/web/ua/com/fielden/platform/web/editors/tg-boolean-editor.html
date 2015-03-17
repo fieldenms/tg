@@ -9,6 +9,14 @@
 
 <polymer-element name="tg-boolean-editor" extends="tg-editor">
     <template>
+        <style>
+            #input {
+                overflow: hidden;
+            }
+            #input::shadow #checkboxLabel{
+                white-space: nowrap;
+            }
+        </style>
         <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
             <div layout horizontal>
                 <div id="input-container" flex>
