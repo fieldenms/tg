@@ -5,13 +5,9 @@
 
 <polymer-element name="tg-range-criterion" extends="tg-criterion" attributes="exclusive exclusive2">
     <template>
-        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
-        	<p>exclusive: {{exclusive}}</p>
-	        <shadow>
-	        </shadow>	        
-	        <p>exclusive2: {{exclusive2}}</p>
-    	</tg-flex-layout>
-    </template>
+        <shadow>
+        </shadow>	        
+	</template>
     <script>
         Polymer('tg-range-criterion', {
             publish: {
@@ -26,7 +22,7 @@
                 exclusive2: false,
             },
 
-            whenDesktop: ['horizontal', 'justified', [mr], [mr], [mr]] // 1 component <shadow> and 2 components outside it for debugging
+            whenDesktop: ['horizontal', 'justified', ['margin-right: 20px'], ['margin-right: 20px']]
         });
     </script>
 </polymer-element>

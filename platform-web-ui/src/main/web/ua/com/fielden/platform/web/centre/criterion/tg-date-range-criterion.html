@@ -5,13 +5,8 @@
 
 <polymer-element name="tg-date-range-criterion" extends="tg-range-criterion" attributes="datePrefix dateMnemonic andBefore">
     <template>
-        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
-        	<p>datePrefix: {{datePrefix}}</p>
-	        <shadow>
-	        </shadow>	        
-	        <p>dateMnemonic: {{dateMnemonic}}</p>
-	        <p>andBefore: {{andBefore}}</p>
-    	</tg-flex-layout>
+        <shadow>
+        </shadow>	        
     </template>
     <script>
         Polymer('tg-date-range-criterion', {
@@ -30,9 +25,7 @@
                  * This published property specifies the 'and before' for this date criterion.
                  */
                 andBefore: null // values 'null', 'true', 'false'
-            },
-
-            whenDesktop: ['horizontal', 'justified', [mr], [mr], [mr], [mr]] // 1 component <shadow> and 3 components outside it for debugging
+            }
         });
     </script>
 </polymer-element>

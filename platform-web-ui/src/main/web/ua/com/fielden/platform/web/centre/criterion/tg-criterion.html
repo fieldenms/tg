@@ -6,12 +6,8 @@
 <polymer-element name="tg-criterion" attributes="orNull not">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
-        <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
-        	<p>orNull: {{orNull}}</p>
-	        <content>
-	        </content>	        
-	        <p>not: {{not}}</p>
-    	</tg-flex-layout>
+        <content select=":not(text)" id="components">
+        </content>	        
     </template>
     <script>
         var mr = "margin-right: 20px";
@@ -28,7 +24,19 @@
                 not: false
             },
 
-            whenDesktop: ['horizontal', 'justified', [mr], [mr], [mr]], // 1 component <content> and 2 components outside it for debugging
+            ready: function() {
+                var flexElement = document.createElement('tg-flex-layout');
+                flexElement.whenDesktop = this.whenDesktop;
+                flexElement.whenTablet = this.whenDesktop;
+                flexElement.whenMobile = this.whenDesktop;
+
+                Array.prototype.forEach.call(this.$.components.getDistributedNodes(), function (item) {
+                    flexElement.appendChild(item);
+                }.bind(this));
+                this.appendChild(flexElement);
+            },
+
+            whenDesktop: ['horizontal', 'justified', ['margin-right: 20px']],
             whenTablet: this.whenDesktop,
             whenMobile: this.whenDesktop,
         });
