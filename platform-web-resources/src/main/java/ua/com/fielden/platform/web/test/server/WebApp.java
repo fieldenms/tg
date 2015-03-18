@@ -239,7 +239,7 @@ public class WebApp extends AbstractWebApp {
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px']]"
+                        + "['horizontal', 'justified', ['flex']]"
                         + "]".replaceAll("mr", mr))
                 .setLayoutFor(Device.MOBILE, null, "['margin:20px',"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
