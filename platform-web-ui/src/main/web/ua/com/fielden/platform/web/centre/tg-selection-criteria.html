@@ -103,6 +103,11 @@
              */
             pageCapacity: 5,
 
+            /**
+             * The current modified properties holder to be used during pagination (it was "persisted" after run() action has been performed).
+             */
+            persistedModifiedPropertiesHolder: null,
+
             propertyModel: {
                 "": {
                     orNull: true,
@@ -234,10 +239,6 @@
                 var modPropHolder = this.super([bindingEntity, originalBindingEntity]);
                 if (this._isEntity(bindingEntity)) {
                     modPropHolder["@@criteriaType"] = bindingEntity.type().fullClassName();
-                    if (this.pageCount !== null) {
-                        modPropHolder["@@pageNumber"] = this.pageNumber;
-                        modPropHolder["@@pageCount"] = this.pageCount;
-                    }
                     modPropHolder["@@pageCapacity"] = this.pageCapacity;
 
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
@@ -271,7 +272,7 @@
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
                 }
                 this.pageNumber = this.pageNumber + 1;
-                this._execute();
+                this._execute(false);
             },
 
             /**
@@ -283,7 +284,7 @@
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
                 }
                 this.pageNumber = this.pageNumber - 1;
-                this._execute();
+                this._execute(false);
             },
 
             /**
@@ -295,7 +296,7 @@
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = 0;
-                this._execute();
+                this._execute(false);
             },
 
             /**
@@ -307,7 +308,7 @@
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = this.pageCount - 1;
-                this._execute();
+                this._execute(false);
             },
 
             canPrev: function (pageNumber) {
@@ -329,13 +330,13 @@
             run: function () {
                 this.pageNumber = 0;
                 this.pageCount = null;
-                this._execute();
+                this._execute(true);
             },
 
             /**
              * Starts the process of centre execution. It does not alter 
              */
-            _execute: function() {
+            _execute: function(isRunAction) {
                 var self = this;
 
                 if (self._runningInProgress()) {
@@ -345,7 +346,24 @@
 
                 self.startRefreshCycleModeForEditors();
 
-                var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                if (isRunAction) {
+                    self.persistedModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                }
+
+                if (this.pageCount !== null) {
+                    self.persistedModifiedPropertiesHolder["@@pageNumber"] = this.pageNumber;
+                    self.persistedModifiedPropertiesHolder["@@pageCount"] = this.pageCount;
+                } else {
+                    if (typeof self.persistedModifiedPropertiesHolder["@@pageNumber"] !== 'undefined') {
+                        delete (self.persistedModifiedPropertiesHolder)["@@pageNumber"];
+                    }
+                    if (typeof self.persistedModifiedPropertiesHolder["@@pageCount"] !== 'undefined') {
+                        delete (self.persistedModifiedPropertiesHolder)["@@pageCount"];
+                    }
+                }
+
+                var holder = self.persistedModifiedPropertiesHolder;
+                console.log("HOLDER:", holder);
                 // cancel previous validation before starting saving process -- it includes validation process internally!
                 self.$.validator.abortValidationIfAny();
 
