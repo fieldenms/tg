@@ -470,24 +470,30 @@
                  * during user's interaction with the autocompleter.
                  */
                 onOpenChanged: function (detail) {
-                    if (this.$.overlay.opened === false && this.enforceOnAcceptedValueChanged === true) {
-                        // if the overlay was not cancelled then enforce onAcceptedValueChange handler
-                        if (this.overlayCancelled === false) {
-                            this.enforceOnAcceptedValueChanged = false;
-                            if (this.okHasBeenPressed === true) { // the situation when the overlay has been closed due to Ok button pressing
-                                // in this case validation (with newer value) will occur, but in other place: editingValueChanged + commit() call
-                                this.okHasBeenPressed = false;
-                            } else { // the situation when the overlay has been closed due to pressing any place outside the overlay
-                                // in this case validation should occur
-                                this.onAcceptedValueChanged();    
+                    // console.log("onOpenChanged this.$.overlay.opened ", this.$.overlay.opened, " this.enforceOnAcceptedValueChanged ", this.enforceOnAcceptedValueChanged, " this.okHasBeenPressed ", this.okHasBeenPressed);
+                    if (this.$.overlay.opened === false) {
+                        var okHasBeenPressed = this.okHasBeenPressed;
+                        if (this.okHasBeenPressed) { // reset the okHasBeenPressed in all cases when the overlay has been closed
+                            this.okHasBeenPressed = false;
+                        }
+
+                        if (this.enforceOnAcceptedValueChanged === true) {
+                            // if the overlay was not cancelled then enforce onAcceptedValueChange handler
+                            if (this.overlayCancelled === false) {
+                                this.enforceOnAcceptedValueChanged = false;
+                                if (okHasBeenPressed === true) { // the situation when the overlay has been closed due to Ok button pressing
+                                    // in this case validation (with newer value) will occur, but in other place: editingValueChanged + commit() call
+                                } else { // the situation when the overlay has been closed due to pressing any place outside the overlay
+                                    // in this case validation should occur
+                                    this.onAcceptedValueChanged();    
+                                }
+                            } else {
+                                // otherwise reset overlay cancellation flag in preparation for further processing
+                                // overlay is already closed and tg-entity-editor is focused
+                                this.overlayCancelled = false;
                             }
-                        } else {
-                            // otherwise reset overlay cancellation flag in preparation for further processing
-                            // overlay is already closed and tg-entity-editor is focused
-                            this.overlayCancelled = false;
                         }
                     }
-
                 },
 
                 /*
