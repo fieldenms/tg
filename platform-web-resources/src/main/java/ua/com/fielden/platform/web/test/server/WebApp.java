@@ -116,9 +116,6 @@ public class WebApp extends AbstractWebApp {
                 // PROPERTY EDITORS
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
                 /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
-                //      */.preAction SHORT-CUT
-                //      */.postActionSuccess SHORT-CUT
-                //      */.postActionError SHORT-CUT
                 /*      */.enabledWhen(EnabledState.VIEW)
                 /*      */.icon("trending-up")
                 /*      */.shortDesc("Export entity prop")
