@@ -83,18 +83,39 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         this.critGenerator = critGenerator;
     }
 
-    /**
-     * Handles GET requests resulting from tg-selection-criteria <code>retrieve()</code> method (new entity).
-     */
-    @Get
-    @Override
-    public Representation get() throws ResourceException {
-        final List<Object> criteriaEntityAndMetaValues = new ArrayList<>();
-        criteriaEntityAndMetaValues.add(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L));
-        criteriaEntityAndMetaValues.add(createCriteriaMetaValues(miType, gdtm));
-        return restUtil.rawListJSONRepresentation(criteriaEntityAndMetaValues);
+    ///////////////////////////////// CUSTOM OBJECTS /////////////////////////////////
+    private static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues) {
+        final Map<String, Object> customObject = new LinkedHashMap<>();
+        customObject.put("metaValues", criteriaMetaValues);
+        return customObject;
     }
 
+    private static Map<String, Object> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied) {
+        final Map<String, Object> customObject = new LinkedHashMap<>();
+        customObject.put("metaValues", criteriaMetaValues);
+
+        if (applied.isValid().isSuccessful()) {
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) applied;
+            resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
+            final IPage<AbstractEntity<?>> page;
+            final Integer pageCapacity = (Integer) modifiedPropertiesHolder.get("@@pageCapacity");
+            modifiedPropertiesHolder.remove("@@pageCapacity");
+            if (modifiedPropertiesHolder.get("@@pageNumber") == null) {
+                page = resultingCriteria.run(pageCapacity);
+            } else {
+                page = resultingCriteria.getPage((Integer) modifiedPropertiesHolder.get("@@pageNumber"), (Integer) modifiedPropertiesHolder.get("@@pageCount"), pageCapacity);
+                modifiedPropertiesHolder.remove("@@pageNumber");
+                modifiedPropertiesHolder.remove("@@pageCount");
+            }
+            final List<AbstractEntity<?>> resultEntities = page.data();
+            customObject.put("resultEntities", resultEntities);
+
+            customObject.put("pageCount", page.numberOfPages());
+        }
+        return customObject;
+    }
+
+    ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
     /**
      * Determines the entity type for which criteria entity will be generated.
      *
@@ -174,6 +195,18 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     }
 
     /**
+     * Handles GET requests resulting from tg-selection-criteria <code>retrieve()</code> method (new entity).
+     */
+    @Get
+    @Override
+    public Representation get() throws ResourceException {
+        final List<Object> criteriaEntityAndCustomObject = new ArrayList<>();
+        criteriaEntityAndCustomObject.add(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L));
+        criteriaEntityAndCustomObject.add(createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm)));
+        return restUtil.rawListJSONRepresentation(criteriaEntityAndCustomObject);
+    }
+
+    /**
      * Handles POST request resulting resulting from tg-selection-criteria <code>validate()</code> method.
      */
     @Post
@@ -183,7 +216,10 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        return restUtil.singleJSONRepresentation(applied);
+        final List<Object> appliedEntityAndCustomObject = new ArrayList<>();
+        appliedEntityAndCustomObject.add(applied);
+        appliedEntityAndCustomObject.add(createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm)));
+        return restUtil.rawListJSONRepresentation(appliedEntityAndCustomObject);
     }
 
     /**
@@ -196,28 +232,10 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        final List<Object> criteriaAndResultEntities = new ArrayList<>();
-        criteriaAndResultEntities.add(applied);
-        criteriaAndResultEntities.add(createCriteriaMetaValues(miType, gdtm));
-        if (applied.isValid().isSuccessful()) {
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) applied;
-            resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
-            final IPage<AbstractEntity<?>> page;
-            final Integer pageCapacity = (Integer) modifiedPropertiesHolder.get("@@pageCapacity");
-            modifiedPropertiesHolder.remove("@@pageCapacity");
-            if (modifiedPropertiesHolder.get("@@pageNumber") == null) {
-                page = resultingCriteria.run(pageCapacity);
-            } else {
-                page = resultingCriteria.getPage((Integer) modifiedPropertiesHolder.get("@@pageNumber"), (Integer) modifiedPropertiesHolder.get("@@pageCount"), pageCapacity);
-                modifiedPropertiesHolder.remove("@@pageNumber");
-                modifiedPropertiesHolder.remove("@@pageCount");
-            }
-            final List<AbstractEntity<?>> resultEntities = page.data();
-            criteriaAndResultEntities.addAll(resultEntities);
-
-            criteriaAndResultEntities.add(page.numberOfPages()); // pageCount
-        }
-        return restUtil.rawListJSONRepresentation(criteriaAndResultEntities);
+        final List<Object> criteriaEntityAndCustomObject = new ArrayList<>();
+        criteriaEntityAndCustomObject.add(applied);
+        criteriaEntityAndCustomObject.add(createCriteriaMetaValuesCustomObjectWithResult(modifiedPropertiesHolder, createCriteriaMetaValues(miType, gdtm), applied));
+        return restUtil.rawListJSONRepresentation(criteriaEntityAndCustomObject);
     }
 
     /**
