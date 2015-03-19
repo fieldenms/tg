@@ -2,9 +2,11 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -20,19 +22,26 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.swing.menu.MiType;
 import ua.com.fielden.platform.swing.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.snappy.DateRangePrefixEnum;
+import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * The web resource for criteria serves as a back-end mechanism of criteria retrieval. It provides a base implementation for handling the following methods:
@@ -80,7 +89,10 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return restUtil.singleJSONRepresentation(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L) /*.resetMetaState() */);
+        final List<Object> criteriaEntityAndMetaValues = new ArrayList<>();
+        criteriaEntityAndMetaValues.add(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L));
+        criteriaEntityAndMetaValues.add(createCriteriaMetaValues(miType, gdtm));
+        return restUtil.rawListJSONRepresentation(criteriaEntityAndMetaValues);
     }
 
     /**
@@ -186,6 +198,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
 
         final List<Object> criteriaAndResultEntities = new ArrayList<>();
         criteriaAndResultEntities.add(applied);
+        criteriaAndResultEntities.add(createCriteriaMetaValues(miType, gdtm));
         if (applied.isValid().isSuccessful()) {
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) applied;
             resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
@@ -205,6 +218,86 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
             criteriaAndResultEntities.add(page.numberOfPages()); // pageCount
         }
         return restUtil.rawListJSONRepresentation(criteriaAndResultEntities);
+    }
+
+    /**
+     * Creates the holder of meta-values (missingValue, not, exclusive etc.) for criteria of concrete [miType].
+     * <p>
+     * The holder should contain only those meta-values, which are different from default values, that are defined in {@link DefaultValueContract}. Client-side logic should also be
+     * smart-enough to understand which values are currently relevant, even if they do not exist in transferred object.
+     *
+     * @param miType
+     * @param gdtm
+     * @return
+     */
+    public static Map<String, Map<String, Object>> createCriteriaMetaValues(
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final IGlobalDomainTreeManager gdtm) {
+
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = getCurrentCentreManager(gdtm, miType);
+        final Class<AbstractEntity<?>> entityType = getEntityType(miType);
+
+        final Map<String, Map<String, Object>> metaValues = new LinkedHashMap<>();
+        final DefaultValueContract dvc = new DefaultValueContract();
+        for (final String checkedProp : cdtmae.getFirstTick().checkedProperties(entityType)) {
+            metaValues.put(checkedProp, createMetaValuesFor(entityType, checkedProp, cdtmae, dvc));
+        }
+        return metaValues;
+    }
+
+    private static Class<?> managedType(final Class<AbstractEntity<?>> root, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+        return cdtmae.getEnhancer().getManagedType(root);
+    }
+
+    /**
+     * Creates the map of meta-values for the specified property based on cdtmae configuration.
+     *
+     * @param root
+     * @param prop
+     * @param cdtmae
+     * @param dvc
+     * @return
+     */
+    private static Map<String, Object> createMetaValuesFor(final Class<AbstractEntity<?>> root, final String prop, final ICentreDomainTreeManagerAndEnhancer cdtmae, final DefaultValueContract dvc) {
+        final IAddToCriteriaTickManager tickManager = cdtmae.getFirstTick();
+
+        final Map<String, Object> metaValues = new LinkedHashMap<>();
+
+        if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), prop)) {
+            final Boolean exclusive = tickManager.getExclusive(root, prop);
+            if (!dvc.isExclusiveDefault(exclusive)) {
+                metaValues.put("exclusive", exclusive);
+            }
+            final Boolean exclusive2 = tickManager.getExclusive2(root, prop);
+            if (!dvc.isExclusive2Default(exclusive2)) {
+                metaValues.put("exclusive2", exclusive2);
+            }
+        }
+        final Class<?> propertyType = StringUtils.isEmpty(prop) ? managedType(root, cdtmae) : PropertyTypeDeterminator.determinePropertyType(managedType(root, cdtmae), prop);
+        if (EntityUtils.isDate(propertyType)) {
+            final DateRangePrefixEnum datePrefix = tickManager.getDatePrefix(root, prop);
+            if (!dvc.isDatePrefixDefault(datePrefix)) {
+                metaValues.put("datePrefix", datePrefix);
+            }
+            final MnemonicEnum dateMnemonic = tickManager.getDateMnemonic(root, prop);
+            if (!dvc.isDateMnemonicDefault(dateMnemonic)) {
+                metaValues.put("dateMnemonic", dateMnemonic);
+            }
+            final Boolean andBefore = tickManager.getAndBefore(root, prop);
+            if (!dvc.isAndBeforeDefault(andBefore)) {
+                metaValues.put("andBefore", andBefore);
+            }
+        }
+        final Boolean orNull = tickManager.getOrNull(root, prop);
+        if (!dvc.isOrNullDefault(orNull)) {
+            metaValues.put("orNull", orNull);
+        }
+        final Boolean not = tickManager.getNot(root, prop);
+        if (!dvc.isNotDefault(not)) {
+            metaValues.put("not", not);
+        }
+
+        return metaValues;
     }
 
     /**

@@ -4,6 +4,8 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.snappy.DateRangePrefixEnum;
+import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * A set of utilities to determine if the value of some property or meta-info is default. It is used internally for Jackson entity serialiser to significantly reduce the amount of
@@ -298,5 +300,68 @@ public class DefaultValueContract {
      */
     public boolean isMaxDefault(final Integer max) {
         return EntityUtils.equalsEx(max, null);
+    }
+
+    /**
+     * Returns <code>true</code> if the criterion value of <code>exclusive</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isExclusiveDefault(final Boolean exclusive) {
+        return Boolean.FALSE.equals(exclusive);
+    }
+
+    /**
+     * Returns <code>true</code> if the criterion value of <code>exclusive2</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isExclusive2Default(final Boolean exclusive2) {
+        return Boolean.FALSE.equals(exclusive2);
+    }
+
+    /**
+     * Returns <code>true</code> if the criterion value of <code>orNull</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isOrNullDefault(final Boolean orNull) {
+        return Boolean.FALSE.equals(orNull);
+    }
+
+    /**
+     * Returns <code>true</code> if the criterion value of <code>not</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isNotDefault(final Boolean not) {
+        return Boolean.FALSE.equals(not);
+    }
+
+    /**
+     * Returns <code>true</code> if the criterion value of <code>datePrefix</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isDatePrefixDefault(final DateRangePrefixEnum datePrefix) {
+        return datePrefix == null;
+    }
+
+    /**
+     * Returns <code>true</code> if the criterion value of <code>dateMnemonic</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isDateMnemonicDefault(final MnemonicEnum dateMnemonic) {
+        return dateMnemonic == null;
+    }
+
+    /**
+     * Returns <code>true</code> if the criterion value of <code>andBefore</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public boolean isAndBeforeDefault(final Boolean andBefore) {
+        return andBefore == null; // three meaningful values: 'true', 'false' and null!
     }
 }
