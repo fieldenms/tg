@@ -19,7 +19,7 @@
             var master = document.querySelector('#master');
             var self = this;
 
-            master.onValidated = function(validatedEntity, bindingEntity) {                
+            master.onValidated = function(validatedEntity, bindingEntity, customObject) {                
                 // value ok?
                 assert.ok(validatedEntity.get("integerProp"), "Property value should be initialised.");                
                 assert.strictEqual(validatedEntity.get("integerProp"), 98, "Property value should be correct.");
@@ -37,7 +37,7 @@
                 done();
             };
 
-            master.onRetrieved = function(entity, bindingEntity) {
+            master.onRetrieved = function(entity, bindingEntity, customObject) {
                 // value ok?
                 assert.ok(entity.get("integerProp"), "Property value should be initialised.");                
                 assert.strictEqual(entity.get("integerProp"), 43, "Property value should be correct.");

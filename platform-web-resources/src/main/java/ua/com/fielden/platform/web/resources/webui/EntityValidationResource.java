@@ -43,6 +43,6 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     public Representation post(final Representation envelope) throws ResourceException {
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
         final T applied = utils.constructEntity(modifiedPropertiesHolder).getKey();
-        return restUtil.singleJSONRepresentation(applied);
+        return restUtil.rawListJSONRepresentation(applied);
     }
 }

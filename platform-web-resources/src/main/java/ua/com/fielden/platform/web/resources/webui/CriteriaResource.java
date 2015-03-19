@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.resources.webui;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -38,6 +37,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -90,7 +90,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         return customObject;
     }
 
-    private static Map<String, Object> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied) {
+    private static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
         customObject.put("metaValues", criteriaMetaValues);
 
@@ -107,12 +107,13 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
                 modifiedPropertiesHolder.remove("@@pageNumber");
                 modifiedPropertiesHolder.remove("@@pageCount");
             }
-            final List<AbstractEntity<?>> resultEntities = page.data();
-            customObject.put("resultEntities", resultEntities);
+            final ArrayList<Object> resultEntities = new ArrayList<Object>(page.data());
 
+            customObject.put("resultEntities", resultEntities);
             customObject.put("pageCount", page.numberOfPages());
+            return new Pair<>(customObject, resultEntities);
         }
-        return customObject;
+        return new Pair<>(customObject, null);
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
@@ -200,10 +201,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Get
     @Override
     public Representation get() throws ResourceException {
-        final List<Object> criteriaEntityAndCustomObject = new ArrayList<>();
-        criteriaEntityAndCustomObject.add(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L));
-        criteriaEntityAndCustomObject.add(createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm)));
-        return restUtil.rawListJSONRepresentation(criteriaEntityAndCustomObject);
+        return restUtil.rawListJSONRepresentation(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L), createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm)));
     }
 
     /**
@@ -216,10 +214,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        final List<Object> appliedEntityAndCustomObject = new ArrayList<>();
-        appliedEntityAndCustomObject.add(applied);
-        appliedEntityAndCustomObject.add(createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm)));
-        return restUtil.rawListJSONRepresentation(appliedEntityAndCustomObject);
+        return restUtil.rawListJSONRepresentation(applied, createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm)));
     }
 
     /**
@@ -232,10 +227,18 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        final List<Object> criteriaEntityAndCustomObject = new ArrayList<>();
-        criteriaEntityAndCustomObject.add(applied);
-        criteriaEntityAndCustomObject.add(createCriteriaMetaValuesCustomObjectWithResult(modifiedPropertiesHolder, createCriteriaMetaValues(miType, gdtm), applied));
-        return restUtil.rawListJSONRepresentation(criteriaEntityAndCustomObject);
+        final Pair<Map<String, Object>, ArrayList<?>> pair = createCriteriaMetaValuesCustomObjectWithResult(modifiedPropertiesHolder, createCriteriaMetaValues(miType, gdtm), applied);
+        if (pair.getValue() == null) {
+            return restUtil.rawListJSONRepresentation(applied, pair.getKey());
+        }
+
+        final ArrayList<Object> list = new ArrayList<Object>();
+        list.add(applied);
+        list.add(pair.getKey());
+
+        list.addAll(pair.getValue()); // TODO why is this needed for serialisation to perform without problems?!
+
+        return restUtil.rawListJSONRepresentation(list.toArray());
     }
 
     /**

@@ -21,11 +21,11 @@
             document.addEventListener('polymer-ready', function() {
                 var master = document.querySelector('#master'); 
 
-                master.onRetrieved = function(entity, bindingEntity) {
+                master.onRetrieved = function(entity, bindingEntity, customObject) {
                     console.log("onRetrieved");
                 };
 
-                master.onValidated = function(validatedEntity, bindingEntity) {
+                master.onValidated = function(validatedEntity, bindingEntity, customObject) {
                     console.log("onValidated");
                 };
 

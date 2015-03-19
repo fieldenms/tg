@@ -135,12 +135,15 @@
                  * Default implementation for onRetrieved callback.
                  */
                 onRetrievedDefault: function (e) {
-                    var entity = this.onPreRetrieved(this.$.serialiser.deserialise(e.detail.response).instance);
+                    var deserialised = this.$.serialiser.deserialise(e.detail.response);
+                    var entityAndCustomObject = deserialised.instance;
+                    var entity = this.onPreRetrieved(entityAndCustomObject[0]);
+                    var customObject = this.$.reflector.customObject(entityAndCustomObject);
 
                     // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(entity);
                     // custom external action
-                    this.onRetrieved(entity, newBindingEntity);
+                    this.onRetrieved(entity, newBindingEntity, customObject);
                 },
 
                 //////////////////////////////////////// VALIDATION ////////////////////////////////////////
@@ -170,13 +173,13 @@
                 /**
                  * Default implementation for onValidated callback.
                  */
-                onValidatedDefault: function (validatedEntity) {
+                onValidatedDefault: function (validatedEntity, customObject) {
                     var msg = this.toastMsg("Validation", validatedEntity);
                     this.openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg);
 
                     var newBindingEntity = this.onEntityReceived(validatedEntity);
                     // custom external action
-                    this.onValidated(validatedEntity, newBindingEntity);
+                    this.onValidated(validatedEntity, newBindingEntity, customObject);
                 },
 
                 _reset: function (modifiedPropertiesHolder) {

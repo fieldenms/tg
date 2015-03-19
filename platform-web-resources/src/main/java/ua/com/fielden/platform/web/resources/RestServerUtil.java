@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -242,14 +243,14 @@ public class RestServerUtil {
      *
      * @return
      */
-    public Representation rawListJSONRepresentation(final List<Object> list) {
+    public Representation rawListJSONRepresentation(final Object... objects) {
         logger.debug("Start building JSON list representation.");
         try {
-            if (list == null) {
-                throw new IllegalArgumentException("The provided list is null.");
+            if (objects.length <= 0) {
+                throw new IllegalArgumentException("Empty objects.");
             }
             // create a Result enclosing entity list
-            final Result result = new Result(new ArrayList<>(list), "All is cool");
+            final Result result = new Result(new ArrayList<>(Arrays.asList(objects)), "All is cool");
             final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
             logger.debug("SIZE: " + bytes.length);
             return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);

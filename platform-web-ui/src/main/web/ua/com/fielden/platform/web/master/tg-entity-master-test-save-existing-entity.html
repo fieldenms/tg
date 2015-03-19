@@ -70,7 +70,7 @@
                 }
             };
 
-            master.onRetrieved = function(entity, bindingEntity) {
+            master.onRetrieved = function(entity, bindingEntity, customObject) {
                 // ACTUAL PROPERTY CHANGE                
                 bindingEntity.set("stringProp", "ok");
                 bindingEntity.set("requiredValidatedProp", 30);

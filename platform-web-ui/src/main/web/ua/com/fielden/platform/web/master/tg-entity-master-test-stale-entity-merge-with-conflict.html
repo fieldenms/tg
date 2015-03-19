@@ -19,7 +19,7 @@
             var master = document.querySelector('#master');
             var self = this;
 
-            master.onValidated = function(validatedEntity, bindingEntity) {                
+            master.onValidated = function(validatedEntity, bindingEntity, customObject) {                
                 assert.strictEqual(validatedEntity.version, 1, "Entity version should be increased.");
 
                 ////////////////////////////////////////// CHECK CONFLICTING PROP //////////////////////////////////////////
@@ -48,7 +48,7 @@
                 return entity;
             };
 
-            master.onRetrieved = function(entity, bindingEntity) {
+            master.onRetrieved = function(entity, bindingEntity, customObject) {
                 assert.strictEqual(entity.version, 0, "Entity version should be original.");
 
                 ////////////////////////////////////////// CHECK CONFLICTING PROP //////////////////////////////////////////

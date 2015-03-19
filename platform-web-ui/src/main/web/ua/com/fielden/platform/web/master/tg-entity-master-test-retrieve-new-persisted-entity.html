@@ -18,7 +18,7 @@
         document.addEventListener('polymer-ready', function() {
             var master = document.querySelector('#master');
 
-            master.onRetrieved = function(entity, bindingEntity) {
+            master.onRetrieved = function(entity, bindingEntity, customObject) {
                 assert.strictEqual(entity.type().fullClassName(), "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "The type of entity response is not correct.");
                 assert.strictEqual(entity.id, 4, "The id of entity response is not correct.");
                 assert.strictEqual(entity.version, 0, "The version of entity response is not correct.");

@@ -108,61 +108,62 @@
              */
             persistedModifiedPropertiesHolder: null,
 
-            propertyModel: {
-                "": {
-                    orNull: true,
-                    not: false
-                },
+            propertyModel: null,
+            // {
+            //     "": {
+            //         orNull: true,
+            //         not: false
+            //     },
 
-                "desc": {
-                    orNull: true,
-                    not: false
-                },
+            //     "desc": {
+            //         orNull: true,
+            //         not: false
+            //     },
 
-                "integerProp": {
-                    orNull: true,
-                    not: false,
-                    exclusive: false,
-                    exclusive2: true
-                },
+            //     "integerProp": {
+            //         orNull: true,
+            //         not: false,
+            //         exclusive: false,
+            //         exclusive2: true
+            //     },
 
-                "entityProp": {
-                    orNull: true,
-                    not: false
-                },
+            //     "entityProp": {
+            //         orNull: true,
+            //         not: false
+            //     },
 
-                "bigDecimalProp": {
-                    orNull: true,
-                    not: false,
-                    exclusive: false,
-                    exclusive2: true
-                },
+            //     "bigDecimalProp": {
+            //         orNull: true,
+            //         not: false,
+            //         exclusive: false,
+            //         exclusive2: true
+            //     },
 
-                "booleanProp": {
-                    orNull: true,
-                    not: false
-                },
+            //     "booleanProp": {
+            //         orNull: true,
+            //         not: false
+            //     },
 
-                "dateProp": {
-                    orNull: true,
-                    not: false,
-                    exclusive: false,
-                    exclusive2: true,
-                    datePrefix: "PREV",
-                    dateMnemonic: "MONTH",
-                    andBefore: "true"
-                },
+            //     "dateProp": {
+            //         orNull: true,
+            //         not: false,
+            //         exclusive: false,
+            //         exclusive2: true,
+            //         datePrefix: "PREV",
+            //         dateMnemonic: "MONTH",
+            //         andBefore: "true"
+            //     },
 
-                "compositeProp": {
-                    orNull: true,
-                    not: false
-                },
+            //     "compositeProp": {
+            //         orNull: true,
+            //         not: false
+            //     },
 
-                "critOnlyEntityProp": {
-                    orNull: true,
-                    not: false
-                }
-            },
+            //     "critOnlyEntityProp": {
+            //         orNull: true,
+            //         not: false
+            //     }
+            // },
 
             whenDesktop: [['center-justified', mr, mr, mrLast],
                           ['center-justified', mr, mr, mrLast],
@@ -197,11 +198,14 @@
 
                 self.$.ajaxRunner.addEventListener('core-response', function (e) {
                     if (e.detail.xhr.status === 200) {
-                        var critAndResult = self.$.serialiser.deserialise(e.detail.response).instance;
-                        var criteriaEntity = critAndResult[0];
-                        var resultEntities = critAndResult.slice(1, critAndResult.length - 1);
-                        var pageCount = critAndResult[critAndResult.length - 1];
-                        self.onRunDefault(criteriaEntity, resultEntities, pageCount);
+                        var deserialised = self.$.serialiser.deserialise(e.detail.response);
+                        var entityAndCustomObject = deserialised.instance;
+                        var criteriaEntity = entityAndCustomObject[0];
+                        var customObject = self.$.reflector.customObject(entityAndCustomObject);
+                        var resultEntities = customObject.resultEntities; // entityAndCustomObject.slice(2);
+                        var pageCount = customObject.pageCount;
+                        var metaValues = customObject.metaValues;
+                        self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues);
                     }
                 });
 
@@ -226,13 +230,17 @@
                 return this.$.validator;
             },
 
-            onRetrieved: function (entity, bindingEntity) {
+            onRetrieved: function (entity, bindingEntity, customObject) {
                 this.entitytype = entity.type().fullClassName();
-                console.log("onRetrieved");
+                this.propertyModel = customObject.metaValues;
+
+                console.log("onRetrieved", customObject);
             },
 
-            onValidated: function (validatedEntity, bindingEntity) {
-                console.log("onValidated");
+            onValidated: function (validatedEntity, bindingEntity, customObject) {
+                this.propertyModel = customObject.metaValues;
+
+                console.log("onValidated", customObject);
             },
 
             extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
@@ -402,7 +410,9 @@
             /**
              * Default implementation for onRun callback.
              */
-            onRunDefault: function (criteriaEntity, resultEntities, pageCount) {
+            onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues) {
+                this.propertyModel = metaValues;
+                
                 var msg = this.toastMsg("Running", criteriaEntity);
                 this.openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg);
 

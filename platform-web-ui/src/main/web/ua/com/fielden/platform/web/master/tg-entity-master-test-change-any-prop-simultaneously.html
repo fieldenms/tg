@@ -20,7 +20,7 @@
             var self = this;
             self.onValidatedCount = 0;
 
-            master.onValidated = function(validatedEntity, bindingEntity) {
+            master.onValidated = function(validatedEntity, bindingEntity, customObject) {
                 self.onValidatedCount = self.onValidatedCount + 1;
                 if (self.onValidatedCount > 1) {
                     assert.fail("", "", "The validation should occur only once.")
@@ -43,7 +43,7 @@
                 done();
             };
 
-            master.onRetrieved = function(entity, bindingEntity) {
+            master.onRetrieved = function(entity, bindingEntity, customObject) {
                 // value ok?
                 assert.ok(entity.get("stringProp"), "Property value should be initialised.");                
                 assert.strictEqual(entity.get("stringProp"), "ok", "Property value should be correct.");

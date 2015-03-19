@@ -22,7 +22,7 @@
             var reflector = document.querySelector('#reflector');
             var self = this;
 
-            master.onValidated = function(validatedEntity, bindingEntity) {                
+            master.onValidated = function(validatedEntity, bindingEntity, customObject) {                
                 // value ok?
                 assert.ok(validatedEntity.get("entityProp"), "The property should be initialised.");                
                 assert.instanceOf(validatedEntity.get("entityProp"), reflector.getEntityType(), "The property should be of entity type.");
@@ -41,7 +41,7 @@
                 done();
             };
 
-            master.onRetrieved = function(entity, bindingEntity) {
+            master.onRetrieved = function(entity, bindingEntity, customObject) {
                 // value ok?
                 assert.ok(entity.get("entityProp"), "The property should be initialised.");                
                 assert.instanceOf(entity.get("entityProp"), reflector.getEntityType(), "The property should be of entity type.");
