@@ -33,14 +33,25 @@
 <body unresolved fullbleed>
 
     <template id="spike" is="auto-binding">
-        <paper-button id="messagePublisher" on-tap="{{onTap}}">Click me to public message.</paper-button>
+        <paper-button id="messagePublisher" on-tap="{{onTap}}">Click me to publish message</paper-button>
         <br>
-        <div id="msgReceiver">Message goes here...</div>
+        <span>Messages processed: {{messagCount}}</span>
+        <hr>
+        <br>
+        <div id="msgReceiver1">Subscriber 1:
+            <br>
+        </div>
+        <hr>
+        <br>
+        <div id="msgReceiver2">Subscriber 2:
+            <br>
+        </div>
     </template>
 
     <script>
         (function () {
             var spike = document.querySelector('#spike');
+            spike.messagCount = 0;
             spike.onTap = function () {
                 postal.publish({
                     channel: "orders",
@@ -55,7 +66,7 @@
             document.addEventListener('polymer-ready', function () {
                 //var centre = document.querySelector('#centre');
                 console.log("POLYMER READY");
-                var subscription = postal.subscribe({
+                var subscription1 = postal.subscribe({
                     channel: "orders",
                     topic: "item.add",
                     callback: function (data, envelope) {
@@ -64,8 +75,22 @@
                         // metadata about the message like the channel, topic, 
                         // timestamp and any other data which might have been 
                         // added by the sender. 
-                        console.log("EVENT RECEIVED", data);
-                        document.querySelector('#msgReceiver').innerHTML = document.querySelector('#msgReceiver').innerHTML + data + "<br>";
+                        document.querySelector('#msgReceiver1').innerHTML = document.querySelector('#msgReceiver1').innerHTML + data + "<br>";
+                        spike.messagCount = spike.messagCount + 1;
+                    }
+                });
+
+                var subscription2 = postal.subscribe({
+                    channel: "orders",
+                    topic: "item.add",
+                    callback: function (data, envelope) {
+                        // `data` is the data published by the publisher. 
+                        // `envelope` is a wrapper around the data & contains 
+                        // metadata about the message like the channel, topic, 
+                        // timestamp and any other data which might have been 
+                        // added by the sender. 
+                        document.querySelector('#msgReceiver2').innerHTML = document.querySelector('#msgReceiver2').innerHTML + data + "<br>";
+                        spike.messagCount = spike.messagCount + 1;
                     }
                 });
             });
