@@ -33,6 +33,9 @@
 <body unresolved fullbleed>
 
     <template id="spike" is="auto-binding">
+        <div>
+            This spike demonstrates the used of pub/sub pattern in postal.js implementation. Currently, there is one channel with a single topic that gets subscribed to by two subscribiers. Each subscriber increments a global variable to reflect the number of processed messages. Each dispatched messages, of course, is processed twise -- once by each subscriber.
+        </div>
         <paper-button id="messagePublisher" on-tap="{{onTap}}">Click me to publish message</paper-button>
         <br>
         <span>Messages processed: {{messagCount}}</span>
