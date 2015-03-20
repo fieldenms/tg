@@ -254,6 +254,40 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
+    @Ignore
+    public void list_of_entities_under_map_should_be_restored() throws Exception {
+        final EntityWithInteger entity0 = factory.getFactory().newEntity(EntityWithInteger.class, 0L, "key0", "description");
+        final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
+        final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
+        final List<EntityWithInteger> entities = new ArrayList<>(); // Arrays.asList(entity1, entity2);
+        entities.add(entity1);
+        entities.add(entity2);
+
+        final ArrayList<Object> outerList = new ArrayList<>();
+        outerList.add(entity0);
+
+        final LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+        map.put("entities", entities);
+
+        outerList.add(map);
+
+        final byte[] serialised = jacksonSerialiser.serialise(outerList);
+
+        // TODO please complete this example by adding here generated entities under map and wrap it in result
+
+        final ArrayList<Object> restoredOuterList = jacksonDeserialiser.deserialise(serialised, ArrayList.class);
+        final LinkedHashMap<String, Object> restoredMap = (LinkedHashMap<String, Object>) restoredOuterList.get(1);
+        final List<EntityWithInteger> restoredEntities = (List<EntityWithInteger>) restoredMap.get("entities");
+
+        assertNotNull("Entities have not been deserialised successfully.", restoredEntities);
+        assertEquals("Incorrect prop.", 2, restoredEntities.size());
+        assertFalse("Restored entity should not be the same entity.", entity1 == restoredEntities.get(0));
+        assertFalse("Restored entity should not be the same entity.", entity2 == restoredEntities.get(1));
+        assertEquals("Restored entity should be equal.", entity1, restoredEntities.get(0));
+        assertEquals("Restored entity should be equal.", entity2, restoredEntities.get(1));
+    }
+
+    @Test
     public void successfull_result_with_list_of_entities_should_be_restored() throws Exception {
         final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
         final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
