@@ -129,7 +129,7 @@
         <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right">
             <div>
                 <div layout vertical style="margin: 40px;">
-                    <tg-selection-criteria-for-TgPersistentEntityWithProperties id="selection_criteria" user="SU" mitype="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties" onRun="{{onRun}}"></tg-selection-criteria-for-TgPersistentEntityWithProperties>
+                    <tg-selection-criteria-for-TgPersistentEntityWithProperties id="selection_criteria" user="{{user}}" mitype="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties" onRun="{{onRun}}"></tg-selection-criteria-for-TgPersistentEntityWithProperties>
                     <div layout horizontal justified style="margin-top:40px;">
                         <div layout horizontal>
                             <paper-button id="configurator" raised roll="button" on-tap="{{configure}}" style="margin-left: 0px;">Configure</paper-button>
