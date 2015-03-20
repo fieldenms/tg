@@ -40,6 +40,9 @@ public class MiTgPersistentEntityWithProperties extends MiWithConfigurationSuppo
                 addCriteria(cdtme, "desc");
 
                 addCriteria(cdtme, "integerProp");
+                cdtme.getFirstTick().setOrNull(root(), "integerProp", true);
+                cdtme.getFirstTick().setValue2(root(), "integerProp", 7);
+                cdtme.getFirstTick().setExclusive2(root(), "integerProp", true);
                 addCriteria(cdtme, "bigDecimalProp");
                 addCriteria(cdtme, "entityProp");
                 addCriteria(cdtme, "booleanProp");

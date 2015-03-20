@@ -232,13 +232,13 @@
 
             onRetrieved: function (entity, bindingEntity, customObject) {
                 this.entitytype = entity.type().fullClassName();
-                this.propertyModel = customObject.metaValues;
+                this.propertyModel = this.createPropertyModel(customObject.metaValues);
 
                 console.log("onRetrieved", customObject);
             },
 
             onValidated: function (validatedEntity, bindingEntity, customObject) {
-                this.propertyModel = customObject.metaValues;
+                this.propertyModel = this.createPropertyModel(customObject.metaValues);
 
                 console.log("onValidated", customObject);
             },
@@ -249,14 +249,42 @@
                     modPropHolder["@@criteriaType"] = bindingEntity.type().fullClassName();
                     modPropHolder["@@pageCapacity"] = this.pageCapacity;
 
+                    modPropHolder["@@metaValues"] = {};
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
                         if (this.propertyModel.hasOwnProperty(property)) {
-                            modPropHolder["@" + property] = this.propertyModel[property];
+                            modPropHolder["@@metaValues"][property] = this.extractModifiedMetaValuesHolder(this.propertyModel[property]);
                         }
                     }
                 }
                 return modPropHolder;
+            },
+
+            extractModifiedMetaValuesHolder: function (propertyMetaValues) {
+                var modifiedMetaValues = {};
+
+                if (propertyMetaValues["orNull"] !== false) {
+                    modifiedMetaValues["orNull"] = propertyMetaValues["orNull"];
+                }
+                if (propertyMetaValues["not"] !== false) {
+                    modifiedMetaValues["not"] = propertyMetaValues["not"];
+                }
+                if (propertyMetaValues["exclusive"] !== false) {
+                    modifiedMetaValues["exclusive"] = propertyMetaValues["exclusive"];
+                }
+                if (propertyMetaValues["exclusive2"] !== false) {
+                    modifiedMetaValues["exclusive2"] = propertyMetaValues["exclusive2"];
+                }
+                if (propertyMetaValues["datePrefix"] !== null) {
+                    modifiedMetaValues["datePrefix"] = propertyMetaValues["datePrefix"];
+                }
+                if (propertyMetaValues["dateMnemonic"] !== null) {
+                    modifiedMetaValues["dateMnemonic"] = propertyMetaValues["dateMnemonic"];
+                }
+                if (propertyMetaValues["andBefore"] !== null) {
+                    modifiedMetaValues["andBefore"] = propertyMetaValues["andBefore"];
+                }
+                return modifiedMetaValues;
             },
 
             /////////////////////////////// RUN ACTION ///////////////////////////////
@@ -411,7 +439,7 @@
              * Default implementation for onRun callback.
              */
             onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues) {
-                this.propertyModel = metaValues;
+                this.propertyModel = this.createPropertyModel(metaValues);
                 
                 var msg = this.toastMsg("Running", criteriaEntity);
                 this.openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg);
@@ -422,6 +450,31 @@
                 this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                 // custom external action
                 this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount);
+            },
+
+            /**
+             * Creates full property model, which can be binded to metaValue editors, from metaValues that have been arrived from the server.
+             * The metaValues contain only those ones that are different from default (see DefaultValueContract).
+             */
+            createPropertyModel: function(metaValues) {
+                var propertyModel = {};
+
+                for (var property in metaValues) {
+                    if (metaValues.hasOwnProperty(property)) {
+                        var meta = metaValues[property];
+                        var model = {};
+                        model["orNull"] = typeof meta["orNull"] === 'undefined' ? false : meta["orNull"];
+                        model["not"] = typeof meta["not"] === 'undefined' ? false : meta["not"];
+                        model["exclusive"] = typeof meta["exclusive"] === 'undefined' ? false : meta["exclusive"];
+                        model["exclusive2"] = typeof meta["exclusive2"] === 'undefined' ? false : meta["exclusive2"];
+                        model["datePrefix"] = typeof meta["datePrefix"] === 'undefined' ? null : meta["datePrefix"];
+                        model["dateMnemonic"] = typeof meta["dateMnemonic"] === 'undefined' ? null : meta["dateMnemonic"];
+                        model["andBefore"] = typeof meta["andBefore"] === 'undefined' ? null : meta["andBefore"];
+                        propertyModel[property] = model;
+                    }
+                }
+                console.log("propertyModel", propertyModel);
+                return propertyModel;
             }
         });
     </script>

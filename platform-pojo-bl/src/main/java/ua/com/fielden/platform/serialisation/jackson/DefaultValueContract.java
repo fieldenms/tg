@@ -308,7 +308,7 @@ public class DefaultValueContract {
      * @return
      */
     public boolean isExclusiveDefault(final Boolean exclusive) {
-        return Boolean.FALSE.equals(exclusive);
+        return exclusive == null || Boolean.FALSE.equals(exclusive);
     }
 
     /**
@@ -317,7 +317,7 @@ public class DefaultValueContract {
      * @return
      */
     public boolean isExclusive2Default(final Boolean exclusive2) {
-        return Boolean.FALSE.equals(exclusive2);
+        return exclusive2 == null || Boolean.FALSE.equals(exclusive2);
     }
 
     /**
@@ -326,7 +326,7 @@ public class DefaultValueContract {
      * @return
      */
     public boolean isOrNullDefault(final Boolean orNull) {
-        return Boolean.FALSE.equals(orNull);
+        return orNull == null || Boolean.FALSE.equals(orNull);
     }
 
     /**
@@ -335,7 +335,7 @@ public class DefaultValueContract {
      * @return
      */
     public boolean isNotDefault(final Boolean not) {
-        return Boolean.FALSE.equals(not);
+        return not == null || Boolean.FALSE.equals(not);
     }
 
     /**

@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -211,6 +212,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        applyMetaValues(miType, gdtm, modifiedPropertiesHolder);
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
@@ -224,6 +226,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        applyMetaValues(miType, gdtm, modifiedPropertiesHolder);
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
@@ -319,6 +322,53 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         }
 
         return metaValues;
+    }
+
+    /**
+     * Applies all meta values, that are located in 'modifiedPropertiesHolder', to cdtmae (taken from 'miType' and 'gdtm').
+     *
+     * @param miType
+     * @param gdtm
+     * @param modifiedPropertiesHolder
+     */
+    private static void applyMetaValues(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final Map<String, Object> modifiedPropertiesHolder) {
+        final Map<String, Map<String, Object>> metaValues = (Map<String, Map<String, Object>>) modifiedPropertiesHolder.get("@@metaValues");
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = getCurrentCentreManager(gdtm, miType);
+        final Class<AbstractEntity<?>> root = getEntityType(miType);
+
+        for (final Entry<String, Map<String, Object>> propAndMetaValues : metaValues.entrySet()) {
+            final String prop = propAndMetaValues.getKey();
+            // cdtmae.getFirstTick().setOrNull(root, property, orNull)
+
+            final Map<String, Object> mValues = propAndMetaValues.getValue();
+            if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), prop)) {
+                if (mValues.get("exclusive") != null) {
+                    cdtmae.getFirstTick().setExclusive(root, prop, (Boolean) mValues.get("exclusive"));
+                }
+                if (mValues.get("exclusive2") != null) {
+                    cdtmae.getFirstTick().setExclusive2(root, prop, (Boolean) mValues.get("exclusive2"));
+                }
+            }
+            final Class<?> propertyType = StringUtils.isEmpty(prop) ? managedType(root, cdtmae) : PropertyTypeDeterminator.determinePropertyType(managedType(root, cdtmae), prop);
+            if (EntityUtils.isDate(propertyType)) {
+                if (mValues.get("datePrefix") != null) {
+                    cdtmae.getFirstTick().setDatePrefix(root, prop, DateRangePrefixEnum.valueOf(mValues.get("datePrefix").toString()));
+                }
+                if (mValues.get("dateMnemonic") != null) {
+                    cdtmae.getFirstTick().setDateMnemonic(root, prop, MnemonicEnum.valueOf(mValues.get("dateMnemonic").toString()));
+                }
+                if (mValues.get("andBefore") != null) {
+                    cdtmae.getFirstTick().setAndBefore(root, prop, (Boolean) mValues.get("andBefore"));
+                }
+            }
+
+            if (mValues.get("orNull") != null) {
+                cdtmae.getFirstTick().setOrNull(root, prop, (Boolean) mValues.get("orNull"));
+            }
+            if (mValues.get("not") != null) {
+                cdtmae.getFirstTick().setNot(root, prop, (Boolean) mValues.get("not"));
+            }
+        }
     }
 
     /**
