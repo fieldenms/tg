@@ -208,16 +208,10 @@
 
                 /**
                  * The bound to this editor property of the bound entity should be of String array type.
-                 * Therefore, it is expected that the passed in value is either a null or an array of Strings.
+                 * Therefore, it is expected that the passed in value is either an empty array [] or an array of Strings.
                  */
-                convertToString: function (value) {
-                    if (value === null) {
-                        return "";
-                    } else {
-                        var str = value.join(this.separator);
-                        console.log("Array to String: ", str);
-                        return str;
-                    }
+                convertToString: function (value) {                    
+                    return value.join(this.separator); // for empty array it will return "". 'value' should never be 'null'!
                 },
 
                 /**
@@ -226,10 +220,9 @@
                  */
                 convertFromString: function (strValue) {
                     if (strValue === '') {
-                        return null;
+                        return []; // missing value for multi autocompliter is empty array []!
                     } else {
                         var arr = strValue.split(this.separator);
-                        console.log("String to Array: ", arr);
                         return arr;
                     }
                 },
