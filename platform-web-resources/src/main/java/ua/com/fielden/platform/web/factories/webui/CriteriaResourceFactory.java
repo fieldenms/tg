@@ -7,6 +7,7 @@ import org.restlet.data.Method;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -62,7 +63,7 @@ public class CriteriaResourceFactory extends Restlet {
             final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) ClassesRetriever.findClass(mitypeString);
             final EntityCentre centre = this.webApp.getCentres().get(miType);
 
-            final IGlobalDomainTreeManager gdtm = injector.getInstance(IGlobalDomainTreeManager.class);
+            final IGlobalDomainTreeManager gdtm = injector.getInstance(IServerGlobalDomainTreeManager.class).get(username);
 
             final CriteriaResource<AbstractEntity<?>> resource = new CriteriaResource<>(restUtil, companionFinder, centre, gdtm, this.critGenerator, getContext(), request, response);
             resource.handle();

@@ -18,7 +18,9 @@ import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.functional.CritPropDao;
 import ua.com.fielden.platform.entity.functional.FetchPropDao;
 import ua.com.fielden.platform.entity.functional.QueryEntityDao;
@@ -145,7 +147,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
         bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
-        bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class).in(Scopes.SINGLETON);
+        bind(IGlobalDomainTreeManager.class).to(GlobalDomainTreeManager.class);
+        bind(IServerGlobalDomainTreeManager.class).to(ServerGlobalDomainTreeManager.class).in(Scopes.SINGLETON);
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
         bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class).in(Scopes.SINGLETON);
 
