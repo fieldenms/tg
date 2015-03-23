@@ -17,6 +17,13 @@
             <div layout vertical>
                 <paper-checkbox label="Missing value" checked="{{_orNull}}"></paper-checkbox>
                 <paper-checkbox label="Not" checked="{{_not}}"></paper-checkbox>
+                <template if="{{_range}}">
+                    <paper-checkbox label="Exclusive Left" checked="{{_exclusive}}"></paper-checkbox>
+                    <paper-checkbox label="Exclusive Right" checked="{{_exclusive2}}"></paper-checkbox>
+                </template>              
+                <template if="{{_dateRange}}">
+                    <p>date-specific items</p>
+                </template>   
             </div>
             <paper-button affirmative on-tap="{{cancelMetaValues}}">Cancel</paper-button>
             <paper-button affirmative autofocus on-tap="{{acceptMetaValues}}">Ok</paper-button>
@@ -43,6 +50,8 @@
 
             _orNull: false,
             _not: false,
+            _range: false,
+            _dateRange: false, 
 
             ready: function() {
                 var flexElement = document.createElement('tg-flex-layout');
