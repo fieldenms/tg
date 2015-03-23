@@ -116,8 +116,8 @@
                 canNotNext: function (pageNumber, pageCount) {
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canNext(pageNumber, pageCount);
                 },
-                canNotFirst: function (pageNumber) {
-                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canFirst(pageNumber);
+                canNotFirst: function (pageNumber, pageCount) {
+                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canFirst(pageNumber, pageCount);
                 },
                 canNotLast: function (pageNumber, pageCount) {
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canLast(pageNumber, pageCount);

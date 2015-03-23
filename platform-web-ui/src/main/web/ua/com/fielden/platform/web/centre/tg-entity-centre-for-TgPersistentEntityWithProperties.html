@@ -169,7 +169,7 @@
                             <span class="span-tooltip" tip>Export to Excel</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
-                            <core-icon-button class="revers" icon="hardware:keyboard-tab" on-tap="{{firstPage}}" disabled?="{{canNotFirst($.selection_criteria.pageNumber)}}"></core-icon-button> <!--  -->
+                            <core-icon-button class="revers" icon="hardware:keyboard-tab" on-tap="{{firstPage}}" disabled?="{{canNotFirst($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
                             <span class="span-tooltip" tip>First page</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action">
