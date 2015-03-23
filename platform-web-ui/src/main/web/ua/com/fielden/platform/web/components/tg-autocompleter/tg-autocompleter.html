@@ -40,7 +40,7 @@
                 <div id="input" layout horizontal>
                     <div id="input-container" flex>
                         <!-- if label is empty then the tooltip is not shown -->
-                        <core-tooltip id="core_tooltip" position="bottom" class="special" style="width: 100%" disabled="{{!tooltip}}">
+                        <core-tooltip id="core_tooltip" position="bottom" tabIndex="-1" class="special" style="width: 100%" disabled="{{!tooltip}}">
                             <input is="core-input" id="trigger" on-input="{{onInput}}" style="width:100%">
                             <span class="span-tooltip" tip>
                                 {{tooltip}}

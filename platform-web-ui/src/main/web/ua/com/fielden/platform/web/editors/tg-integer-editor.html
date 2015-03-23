@@ -22,7 +22,7 @@
         <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
             <div layout horizontal>
                 <div id="input-container" flex>
-                    <core-tooltip position="bottom" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}">
+                    <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}">
                         <input id="input" is="core-input" type="number" step="1" preventInvalidInput value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
                         <span class="span-tooltip" tip>
                             {{tooltip(propDesc)}}

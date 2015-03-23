@@ -152,40 +152,40 @@
                         <tg-property-column property="compositeProp" width="400px" type="ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity" columnTitle="Composite prop" columnDesc="Composite prop tooltip"></tg-property-column>
                         <tg-property-column property="stringProp" width="200px" type="String" columnTitle="String property" columnDesc="String property tooltip"></tg-property-column>
 
-                        <core-tooltip class="delayed entity-specific-action">
+                        <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
                             <core-icon-button icon="add-circle-outline"></core-icon-button>
                             <span class="span-tooltip" tip>Create new entity</span>
                         </core-tooltip>
-                        <core-tooltip class="delayed entity-specific-action">
+                        <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
                             <core-icon-button icon="editor:mode-edit"></core-icon-button>
                             <span class="span-tooltip" tip>Edit selected entity</span>
                         </core-tooltip>
-                        <core-tooltip class="delayed entity-specific-action">
+                        <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
                             <core-icon-button icon="remove-circle-outline"></core-icon-button>
                             <span class="span-tooltip" tip>Delete selected entity</span>
                         </core-tooltip>
-                        <core-tooltip class="delayed standart-action">
+                        <core-tooltip class="delayed standart-action" tabIndex="-1">
                             <core-icon-button icon="file-download"></core-icon-button>
                             <span class="span-tooltip" tip>Export to Excel</span>
                         </core-tooltip>
-                        <core-tooltip class="delayed standart-action">
+                        <core-tooltip class="delayed standart-action" tabIndex="-1">
                             <core-icon-button class="revers" icon="hardware:keyboard-tab" on-tap="{{firstPage}}" disabled?="{{canNotFirst($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
                             <span class="span-tooltip" tip>First page</span>
                         </core-tooltip>
-                        <core-tooltip class="delayed standart-action">
+                        <core-tooltip class="delayed standart-action" tabIndex="-1">
                             <core-icon-button icon="hardware:keyboard-backspace" on-tap="{{prevPage}}" disabled?="{{canNotPrev($.selection_criteria.pageNumber)}}"></core-icon-button>
                             <span class="span-tooltip" tip>Previous page</span>
                         </core-tooltip>
                         <span class="standart-action">page {{$.selection_criteria.pageNumber !== null ? ($.selection_criteria.pageNumber + 1) : 0}} of {{$.selection_criteria.pageCount !== null ? $.selection_criteria.pageCount : 0}}</span>
-                        <core-tooltip class="delayed standart-action">
+                        <core-tooltip class="delayed standart-action" tabIndex="-1">
                             <core-icon-button class="revers" icon="hardware:keyboard-backspace" on-tap="{{nextPage}}" disabled?="{{canNotNext($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
                             <span class="span-tooltip" tip>Next page</span>
                         </core-tooltip>
-                        <core-tooltip class="delayed standart-action">
+                        <core-tooltip class="delayed standart-action" tabIndex="-1">
                             <core-icon-button icon="hardware:keyboard-tab" on-tap="{{lastPage}}" disabled?="{{canNotLast($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
                             <span class="span-tooltip" tip>Last page</span>
                         </core-tooltip>
-                        <core-tooltip class="delayed standart-action">
+                        <core-tooltip class="delayed standart-action" tabIndex="-1">
                             <core-icon-button icon="refresh" on-tap="{{run}}"></core-icon-button>
                             <span class="span-tooltip" tip>Refresh</span>
                         </core-tooltip>
