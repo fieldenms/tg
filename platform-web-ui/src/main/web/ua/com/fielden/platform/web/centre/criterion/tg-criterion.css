@@ -1,0 +1,8 @@
+html /deep/ .meta-value-editor paper-checkbox::shadow #checkbox.checked {
+    background-color: #0288D1;
+    border-color: #0288D1;
+}
+
+html /deep/ .meta-value-editor paper-checkbox {
+	margin-bottom: 20px;
+}
