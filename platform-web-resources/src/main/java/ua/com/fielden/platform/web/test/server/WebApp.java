@@ -234,19 +234,24 @@ public class WebApp extends AbstractWebApp {
 
                 .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
                         + "[[mr], [mr], [mr], [mr], [mr]], "
-                        + "[[mr], [mr], [mr], [mr], [mr]]]").replaceAll("mr", mr))
-                .setLayoutFor(Device.TABLET, null, "['vertical', 'margin:20px',"
+                        + "[[mr], [mr], [mr], [mr], [mr]],"
+                        + "['margin-top:20px', 'wrap', ['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px']]"
+                        + "]").replaceAll("mr", mr))
+                .setLayoutFor(Device.TABLET, null, ("['vertical', 'margin:20px',"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
-                        + "['horizontal', 'justified', ['flex']]"
-                        + "]".replaceAll("mr", mr))
+                        + "['horizontal', 'justified', ['flex']],"
+                        + "['margin-top:20px', 'wrap', ['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px']]"
+                        + "]").replaceAll("mr", mr))
                 .setLayoutFor(Device.MOBILE, null, "['margin:20px',"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']]]")
+                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
+                        + "['margin-top:20px', 'wrap', ['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px']]"
+                        + "]")
                 .done();
 
         webApp.configApp().

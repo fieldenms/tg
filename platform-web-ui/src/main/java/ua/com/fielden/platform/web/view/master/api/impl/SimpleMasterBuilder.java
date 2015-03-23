@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
-import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -136,11 +135,10 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         });
 
         final StringBuilder entityActionsStr = new StringBuilder();
-        final DomContainer actionContainer = new DomContainer();
         entityActions.forEach(action -> {
             importPaths.add(action.action().importPath());
             if (action.action() instanceof IRenderable) {
-                actionContainer.add(((IRenderable) action.action()).render());
+                editorContainer.add(((IRenderable) action.action()).render());
             }
             if (action.action() instanceof IExecutable) {
                 entityActionsStr.append(((IExecutable) action.action()).code().toString());
@@ -150,8 +148,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html").
                 replace("<!--@imports-->", createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
-                replace("<!--@editors-->", editorContainer.toString()).
-                replace("<!--@actions-->", actionContainer.toString()).
+                replace("<!--@editors_and_actions-->", editorContainer.toString()).
                 replace("//@entityActions", entityActionsStr.toString()).
                 replace("//@propertyActions", propertyActionsStr.toString());
 
