@@ -7,7 +7,7 @@
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="stylesheet" href="/resources/centre/criterion/tg-criterion.css">
 
-<polymer-element name="tg-criterion" attributes="orNull not" layout horizontal end>
+<polymer-element name="tg-criterion" attributes="orNull not onAcceptedValueChanged" layout horizontal end>
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <content select=":not(text)" id="components">
@@ -33,7 +33,12 @@
                 /**
                  * This published property specifies whether the criterion should be negated.
                  */
-                not: false
+                not: false,
+
+                /**
+                 * This callback should be used for custom action after the 'acceptedValue' has been changed (for e.g. validation).
+                 */
+                onAcceptedValueChanged: null
             },
 
             _orNull: false,
@@ -61,6 +66,8 @@
             acceptMetaValues: function() {
                 this.orNull = this._orNull;
                 this.not = this._not;
+
+                this.onAcceptedValueChanged();
             },
             cancelMetaValues: function() {
                 this._orNull = this.orNull;

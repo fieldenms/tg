@@ -342,32 +342,18 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
 
             final Map<String, Object> mValues = propAndMetaValues.getValue();
             if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), prop)) {
-                if (mValues.get("exclusive") != null) {
-                    cdtmae.getFirstTick().setExclusive(root, prop, (Boolean) mValues.get("exclusive"));
-                }
-                if (mValues.get("exclusive2") != null) {
-                    cdtmae.getFirstTick().setExclusive2(root, prop, (Boolean) mValues.get("exclusive2"));
-                }
+                cdtmae.getFirstTick().setExclusive(root, prop, mValues.get("exclusive") != null ? (Boolean) mValues.get("exclusive") : null);
+                cdtmae.getFirstTick().setExclusive2(root, prop, mValues.get("exclusive2") != null ? (Boolean) mValues.get("exclusive2") : null);
             }
             final Class<?> propertyType = StringUtils.isEmpty(prop) ? managedType(root, cdtmae) : PropertyTypeDeterminator.determinePropertyType(managedType(root, cdtmae), prop);
             if (EntityUtils.isDate(propertyType)) {
-                if (mValues.get("datePrefix") != null) {
-                    cdtmae.getFirstTick().setDatePrefix(root, prop, DateRangePrefixEnum.valueOf(mValues.get("datePrefix").toString()));
-                }
-                if (mValues.get("dateMnemonic") != null) {
-                    cdtmae.getFirstTick().setDateMnemonic(root, prop, MnemonicEnum.valueOf(mValues.get("dateMnemonic").toString()));
-                }
-                if (mValues.get("andBefore") != null) {
-                    cdtmae.getFirstTick().setAndBefore(root, prop, (Boolean) mValues.get("andBefore"));
-                }
+                cdtmae.getFirstTick().setDatePrefix(root, prop, mValues.get("datePrefix") != null ? DateRangePrefixEnum.valueOf(mValues.get("datePrefix").toString()) : null);
+                cdtmae.getFirstTick().setDateMnemonic(root, prop, mValues.get("dateMnemonic") != null ? MnemonicEnum.valueOf(mValues.get("dateMnemonic").toString()) : null);
+                cdtmae.getFirstTick().setAndBefore(root, prop, mValues.get("andBefore") != null ? (Boolean) mValues.get("andBefore") : null);
             }
 
-            if (mValues.get("orNull") != null) {
-                cdtmae.getFirstTick().setOrNull(root, prop, (Boolean) mValues.get("orNull"));
-            }
-            if (mValues.get("not") != null) {
-                cdtmae.getFirstTick().setNot(root, prop, (Boolean) mValues.get("not"));
-            }
+            cdtmae.getFirstTick().setOrNull(root, prop, mValues.get("orNull") != null ? (Boolean) mValues.get("orNull") : null);
+            cdtmae.getFirstTick().setNot(root, prop, mValues.get("not") != null ? (Boolean) mValues.get("not") : null);
         }
     }
 
