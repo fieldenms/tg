@@ -111,6 +111,7 @@ public class WebApp extends AbstractWebApp {
         //        app.addCustomView(new CustomWebView(new CustomWebModel()));
 
         final String mr = "'margin-right: 20px', 'width:300px'";
+        final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         // Add entity masters.
         final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfig = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
@@ -235,23 +236,23 @@ public class WebApp extends AbstractWebApp {
                 .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
                         + "[[mr], [mr], [mr], [mr], [mr]], "
                         + "[[mr], [mr], [mr], [mr], [mr]],"
-                        + "['margin-top:20px', 'wrap', ['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px']]"
-                        + "]").replaceAll("mr", mr))
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
                 .setLayoutFor(Device.TABLET, null, ("['vertical', 'margin:20px',"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex']],"
-                        + "['margin-top:20px', 'wrap', ['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px']]"
-                        + "]").replaceAll("mr", mr))
-                .setLayoutFor(Device.MOBILE, null, "['margin:20px',"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
+                .setLayoutFor(Device.MOBILE, null, ("['margin:20px',"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['margin-top:20px', 'wrap', ['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px'],['margin-top:20px']]"
-                        + "]")
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("actionMr", actionMr))
                 .done();
 
         webApp.configApp().

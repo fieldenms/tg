@@ -8,7 +8,7 @@
     <template>
         <shadow></shadow>
         <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!longDesc}}">
-            <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">{{shortDesc}}</paper-button>
+            <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" style="width:100%" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">{{shortDesc}}</paper-button>
             <span class="span-tooltip" tip>
                 {{longDesc}}
             </span>

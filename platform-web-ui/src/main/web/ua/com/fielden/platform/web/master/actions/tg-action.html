@@ -17,7 +17,7 @@
         <core-style ref="paper-button-progress"></core-style>
 
         <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!longDesc}}">
-            <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">
+            <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" style="width:100%" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">
                 <paper-spinner id="spinner" active="{{isWorking}}" class="blue" style="visibility: hidden;" alt="in progress"></paper-spinner>
                 {{shortDesc}}
             </paper-button>
