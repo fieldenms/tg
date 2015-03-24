@@ -470,7 +470,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     + root.getSimpleName() + "].");
             AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not set an 'exclusive' flag for 'non-double editor' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            propertiesExclusive1.put(key(root, property), exclusive);
+            if (exclusive == null) {
+                propertiesExclusive1.remove(key(root, property));
+            } else {
+                propertiesExclusive1.put(key(root, property), exclusive);
+            }
             return this;
         }
 
@@ -489,7 +493,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     + root.getSimpleName() + "].");
             AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not set an 'exclusive 2' flag for 'non-double editor' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            propertiesExclusive2.put(key(root, property), exclusive2);
+            if (exclusive2 == null) {
+                propertiesExclusive2.remove(key(root, property));
+            } else {
+                propertiesExclusive2.put(key(root, property), exclusive2);
+            }
             return this;
         }
 
@@ -506,7 +514,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'date prefix' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             AbstractDomainTree.illegalType(root, property, "Could not set a 'date prefix' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
-            propertiesDatePrefixes.put(key(root, property), datePrefix);
+            if (datePrefix == null) {
+                propertiesDatePrefixes.remove(key(root, property));
+            } else {
+                propertiesDatePrefixes.put(key(root, property), datePrefix);
+            }
             return this;
         }
 
@@ -523,7 +535,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'date mnemonic' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             AbstractDomainTree.illegalType(root, property, "Could not set a 'date mnemonic' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
-            propertiesDateMnemonics.put(key(root, property), dateMnemonic);
+            if (dateMnemonic == null) {
+                propertiesDateMnemonics.remove(key(root, property));
+            } else {
+                propertiesDateMnemonics.put(key(root, property), dateMnemonic);
+            }
             return this;
         }
 
@@ -540,7 +556,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set an 'and before' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             AbstractDomainTree.illegalType(root, property, "Could not set an 'and before' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
-            propertiesAndBefore.put(key(root, property), andBefore);
+            if (andBefore == null) {
+                propertiesAndBefore.remove(key(root, property));
+            } else {
+                propertiesAndBefore.put(key(root, property), andBefore);
+            }
             return this;
         }
 
@@ -555,7 +575,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         public IAddToCriteriaTickManager setOrNull(final Class<?> root, final String property, final Boolean orNull) {
             AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set an 'or null' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            propertiesOrNulls.put(key(root, property), orNull);
+            if (orNull == null) {
+                propertiesOrNulls.remove(key(root, property));
+            } else {
+                propertiesOrNulls.put(key(root, property), orNull);
+            }
             return this;
         }
 
@@ -570,7 +594,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         public IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not) {
             AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'not' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            propertiesNots.put(key(root, property), not);
+            if (not == null) {
+                propertiesNots.remove(key(root, property));
+            } else {
+                propertiesNots.put(key(root, property), not);
+            }
             return this;
         }
 
