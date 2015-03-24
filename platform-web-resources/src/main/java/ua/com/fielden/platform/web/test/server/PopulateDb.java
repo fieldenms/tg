@@ -80,8 +80,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final User su = ((IUserDao) ao(User.class)).findByKey(User.system_users.SU.name());
         save(new_composite(UserAndRoleAssociation.class, su, admin));
-        final User demo = ((IUserDao) ao(User.class)).findByKey("DEMO");
-        save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
         // populate testing entities
         final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30)
@@ -135,6 +133,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         //
         //        final TgPersistentEntityWithProperties ent1WithCompositeProp = save(new_(TgPersistentEntityWithProperties.class, "KEY12").setCompositeProp(compositeEnt1));
         //        System.out.println("ent1WithCompositeProp.getId() == " + ent1WithCompositeProp.getId());
+
+        final User demo = ((IUserDao) ao(User.class)).findByKey("DEMO");
+        save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
