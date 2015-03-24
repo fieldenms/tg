@@ -53,9 +53,9 @@ import com.google.inject.Inject;
 
 /**
  * The global domain tree manager implementation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlobalDomainTreeManager {
     private final static Logger logger = Logger.getLogger(GlobalDomainTreeManager.class);
@@ -177,7 +177,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Validates the type of menu item (a part of centre key) to be actually "menu item type".
-     * 
+     *
      * @param menuItemType
      */
     protected void validateMenuItemType(final Class<?> menuItemType) {
@@ -205,7 +205,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Returns the key type of the entity if it is a association batch action entity.
-     * 
+     *
      * @param value
      * @return
      */
@@ -241,7 +241,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     /**
      * Gets a {@link EntityCentreConfig#getTitle()} component in {@link EntityCentreConfig}'s key from {@link IGlobalDomainTreeManager}'s contract for entity-centre naming -- 'menu
      * item type name' or 'name' (in case of 'saveAs' centre).
-     * 
+     *
      * @param menuItemType
      * @param name
      * @return
@@ -321,23 +321,23 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user with a <code>title</code> and <code>menuItemTypeName</code> specified.
-     * 
+     *
      * @param menuItemTypeName
      * @param title
      * @return
      */
     protected static EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsers(final String menuItemTypeName, final String title, final User currentUser) {
         final EntityResultQueryModel<EntityCentreConfig> model =
-        /*    */select(EntityCentreConfig.class).where().//
-        /*    */begin().prop("owner").eq().val(currentUser).or().prop("owner").eq().val(baseOfTheCurrentUser(currentUser)).end().and().// look for entity-centres for both users (current and its base)
-        /*    */prop("title").eq().val(title).and().//
-        /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
+                /*    */select(EntityCentreConfig.class).where().//
+                /*    */begin().prop("owner").eq().val(currentUser).or().prop("owner").eq().val(baseOfTheCurrentUser(currentUser)).end().and().// look for entity-centres for both users (current and its base)
+                /*    */prop("title").eq().val(title).and().//
+                /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
         return model;
     }
 
     /**
      * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user with a <code>title</code> and <code>menuItemTypeName</code> specified.
-     * 
+     *
      * @param menuItemTypeName
      * @param title
      * @return
@@ -349,111 +349,111 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     /**
      * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user and its base user with a <code>title</code> and <code>menuItemTypeName</code>
      * specified.
-     * 
+     *
      * @param menuItemTypeName
      * @param title
      * @return
      */
     private EntityResultQueryModel<EntityCentreConfig> modelForCurrentUser(final String menuItemTypeName, final String title) {
         final EntityResultQueryModel<EntityCentreConfig> model1 =
-        /*    */select(EntityCentreConfig.class).where().//
-        /*    */prop("owner").eq().val(currentUser()).and().// look for entity-centres for only current user
-        /*    */prop("title").eq().val(title).and().//
-        /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
+                /*    */select(EntityCentreConfig.class).where().//
+                /*    */prop("owner").eq().val(currentUser()).and().// look for entity-centres for only current user
+                /*    */prop("title").eq().val(title).and().//
+                /*    */prop("menuItem.key").eq().val(menuItemTypeName).model();
         return model1;
     }
 
     /**
      * Creates a model to retrieve {@link EntityCentreConfig} instances for the current user and its base user with a <code>title</code> and <code>menuItemTypeName</code>
      * specified.
-     * 
+     *
      * @param menuItemTypeName
      * @param title
      * @return
      */
     private EntityResultQueryModel<EntityCentreConfig> modelForCurrentAndBaseUsersNonPrincipal(final String menuItemTypeName) {
         final EntityResultQueryModel<EntityCentreConfig> model =
-        /*    */select(EntityCentreConfig.class).where().//
-        /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
-        /*    */prop("menuItem.key").eq().val(menuItemTypeName).and().
-        /*    */prop("principal").eq().val(false).model();
+                /*    */select(EntityCentreConfig.class).where().//
+                /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
+                /*    */prop("menuItem.key").eq().val(menuItemTypeName).and().
+                        /*    */prop("principal").eq().val(false).model();
         return model;
     }
 
     /**
      * Creates a model to retrieve all {@link EntityCentreConfig} instances for the current user and its base user.
-     * 
+     *
      * @param menuItemTypeName
      * @param title
      * @return
      */
     private EntityResultQueryModel<EntityCentreConfig> nonPrincipleECCmodel() {
         final EntityResultQueryModel<EntityCentreConfig> model =
-        /*    */select(EntityCentreConfig.class).where().//
-        /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
-        /*    */prop("principal").eq().val(false).model();
+                /*    */select(EntityCentreConfig.class).where().//
+                /*    */begin().prop("owner").eq().val(currentUser()).or().prop("owner").eq().val(baseOfTheCurrentUser()).end().and().// look for entity-centres for both users (current and its base)
+                /*    */prop("principal").eq().val(false).model();
         return model;
     }
 
     /**
      * Creates a model to retrieve all {@link EntityCentreAnalysisConfig} instances for the current user and its base user.
-     * 
+     *
      * @param menuItemTypeName
      * @param title
      * @return
      */
     private EntityResultQueryModel<EntityCentreAnalysisConfig> analysesForNonPrincipleECCmodel() {
         final EntityResultQueryModel<EntityCentreAnalysisConfig> model =
-        /*    */select(EntityCentreAnalysisConfig.class).where().//
-        /*    */prop("entityCentreConfig").in().model(nonPrincipleECCmodel()).model();
+                /*    */select(EntityCentreAnalysisConfig.class).where().//
+                /*    */prop("entityCentreConfig").in().model(nonPrincipleECCmodel()).model();
         return model;
     }
 
     /**
      * Creates a model to retrieve all {@link EntityCentreAnalysisConfig} instances for the current user and its base user.
-     * 
+     *
      * @param menuItemTypeName
      * @param title
      * @return
      */
     private EntityResultQueryModel<EntityCentreAnalysisConfig> analysesForConcreteECCmodel(final EntityCentreConfig ecc) {
         final EntityResultQueryModel<EntityCentreAnalysisConfig> model =
-        /*    */select(EntityCentreAnalysisConfig.class).where().//
-        /*    */prop("entityCentreConfig").eq().val(ecc).model();
+                /*    */select(EntityCentreAnalysisConfig.class).where().//
+                /*    */prop("entityCentreConfig").eq().val(ecc).model();
         return model;
     }
 
     /**
      * Creates a model to retrieve {@link EntityMasterConfig} instances for the current user with a <code>rootName</code> specified.
-     * 
+     *
      * @param rootName
      * @return
      */
     private EntityResultQueryModel<EntityMasterConfig> masterModelForCurrentUser(final String rootName) {
         final EntityResultQueryModel<EntityMasterConfig> model =
-        /*    */select(EntityMasterConfig.class).where().//
-        /*    */prop("owner").eq().val(currentUser()).and().// look for entity-masters for only current user
-        /*    */prop("masterType").eq().val(rootName).model();
+                /*    */select(EntityMasterConfig.class).where().//
+                /*    */prop("owner").eq().val(currentUser()).and().// look for entity-masters for only current user
+                /*    */prop("masterType").eq().val(rootName).model();
         return model;
     }
 
     /**
      * Creates a model to retrieve {@link EntityMasterConfig} instances for the base of the current user with a <code>rootName</code> specified.
-     * 
+     *
      * @param rootName
      * @return
      */
     private EntityResultQueryModel<EntityMasterConfig> masterModelForBaseUser(final String rootName) {
         final EntityResultQueryModel<EntityMasterConfig> model =
-        /*    */select(EntityMasterConfig.class).where().//
-        /*    */prop("owner").eq().val(baseOfTheCurrentUser()).and().// look for entity-masters for only base of the current user
-        /*    */prop("masterType").eq().val(rootName).model();
+                /*    */select(EntityMasterConfig.class).where().//
+                /*    */prop("owner").eq().val(baseOfTheCurrentUser()).and().// look for entity-masters for only base of the current user
+                /*    */prop("masterType").eq().val(rootName).model();
         return model;
     }
 
     /**
      * Logs and throws an {@link IllegalArgumentException} error with specified message.
-     * 
+     *
      * @param message
      */
     private static void error(final String message) {
@@ -463,7 +463,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Retrieves and initialises a instance of manager.
-     * 
+     *
      * @param menuItemType
      * @param name
      * @param model
@@ -506,7 +506,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Retrieves and initialises a instance of master manager.
-     * 
+     *
      * @param root
      * @param name
      * @param model
@@ -525,7 +525,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Makes a necessary references on "global stuff" (and perhaps other stuff) inside <code>mgr</code> instance.
-     * 
+     *
      * @param mgr
      * @return
      */
@@ -538,7 +538,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Makes a necessary references on "global stuff" (and perhaps other stuff) inside <code>mgr</code> instance.
-     * 
+     *
      * @param mgr
      * @return
      */
@@ -580,7 +580,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     /**
      * A copy method for entity centre that copies also "transient" stuff like currentAnalyses and freezedAnalyses. It has been done to take care about copying entity centre with
      * some changed / freezed analyses (all that changes will be promoted to copies).
-     * 
+     *
      * @param centre
      * @return
      */
@@ -600,7 +600,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Initiates an application instances with a new <code>mgr</code> instance.
-     * 
+     *
      * @param menuItemType
      * @param name
      * @param mgr
@@ -615,7 +615,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Initiates an application instances with a new <code>mgr</code> instance.
-     * 
+     *
      * @param root
      * @param name
      * @param mgr
@@ -660,7 +660,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Returns <code>true</code> if the centre instance is in 'freezed' state, <code>false</code> otherwise.
-     * 
+     *
      * @param menuItemType
      * @param name
      * @return
@@ -675,7 +675,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Unfreezes the centre instance that is currently freezed.
-     * 
+     *
      * @param menuItemType
      * @param name
      */
@@ -689,7 +689,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Throws an error when the instance is <code>null</code> (not initialised).
-     * 
+     *
      * @param mgr
      * @param menuItemType
      * @param name
@@ -703,7 +703,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Throws an error when the instance is <code>null</code> (not initialised).
-     * 
+     *
      * @param mgr
      * @param root
      * @param name
@@ -751,6 +751,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                         final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
                         ecc.setConfigBody(getSerialiser().serialise(centre));
                         saveCentre(centre, ecc);
+                        persistentCentres.put(key(menuItemType, null), copyCentre(currentMgr));
                     }
                 } else {
                     if (!isEntityCentreManagerOwner(menuItemType, null)) {
@@ -771,7 +772,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Checks if an instance of manager has been initialised and its inner parts (locators, analyses) have been fully accepted/discarded.
-     * 
+     *
      * @param currentMgr
      * @param menuItemType
      * @param name
@@ -794,7 +795,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     /**
      * Checks if an instance of manager has been initialised and its inner parts (locators, analyses) have been fully accepted/discarded.
-     * 
+     *
      * @param currentMgr
      * @param root
      * @param name
