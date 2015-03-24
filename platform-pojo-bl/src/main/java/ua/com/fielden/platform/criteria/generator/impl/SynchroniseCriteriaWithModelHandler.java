@@ -3,10 +3,13 @@ package ua.com.fielden.platform.criteria.generator.impl;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -30,14 +33,19 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         final boolean isSecond = CriteriaReflector.isSecondParam(entity.getType(), property.getName());
         final String propertyName = CriteriaReflector.getCriteriaProperty(entity.getType(), property.getName());
         final Object currValue = isSecond ? ftm.getValue2(root, propertyName) : ftm.getValue(root, propertyName);
-        final IAddToCriteriaTickRepresentation ftr = entity.getCentreDomainTreeMangerAndEnhancer().getRepresentation().getFirstTick();
-        if (!EntityUtils.equalsEx(currValue, newValue)) {
+
+        final boolean isEntityItself = "".equals(property.getName()); // empty property means "entity itself"
+        final Class<?> propertyType = isEntityItself ? entity.getType() : PropertyTypeDeterminator.determinePropertyType(entity.getType(), property.getName());
+        final CritOnly critAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, entity.getType(), property.getName());
+        final boolean single = critAnnotation != null && Type.SINGLE.equals(critAnnotation.value());
+
+        final Object newV = /* newValue == null ? DynamicQueryBuilder.getEmptyValue(propertyType, single) : */newValue;
+        if (!EntityUtils.equalsEx(currValue, newV)) {
             if (isSecond) {
-                ftm.setValue2(root, propertyName, newValue);
+                ftm.setValue2(root, propertyName, newV);
             } else {
-                ftm.setValue(root, propertyName, newValue);
+                ftm.setValue(root, propertyName, newV);
             }
         }
     }
-
 }

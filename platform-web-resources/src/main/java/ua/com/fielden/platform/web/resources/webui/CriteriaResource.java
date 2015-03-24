@@ -85,14 +85,16 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     }
 
     ///////////////////////////////// CUSTOM OBJECTS /////////////////////////////////
-    private static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues) {
+    private static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
+        customObject.put("isCentreChanged", isCentreChanged);
         customObject.put("metaValues", criteriaMetaValues);
         return customObject;
     }
 
-    private static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied) {
+    private static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied, final boolean isCentreChanged) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
+        customObject.put("isCentreChanged", isCentreChanged);
         customObject.put("metaValues", criteriaMetaValues);
 
         if (applied.isValid().isSuccessful()) {
@@ -192,6 +194,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final String centreName = null; // indicates that the entity centre is principle (TODO saveAsses are not supported yet)
         if (globalManager.getEntityCentreManager(miType, centreName) == null) {
             globalManager.initEntityCentreManager(miType, centreName);
+            globalManager.saveEntityCentreManager(miType, centreName);
         }
         return globalManager.getEntityCentreManager(miType, centreName);
     }
@@ -202,7 +205,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return restUtil.rawListJSONRepresentation(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L), createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm)));
+        return restUtil.rawListJSONRepresentation(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L), createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm), isCentreChanged(miType, gdtm)));
     }
 
     /**
@@ -216,7 +219,8 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        return restUtil.rawListJSONRepresentation(applied, createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm)));
+        isCentreChanged(miType, gdtm);
+        return restUtil.rawListJSONRepresentation(applied, createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm), isCentreChanged(miType, gdtm)));
     }
 
     /**
@@ -230,7 +234,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        final Pair<Map<String, Object>, ArrayList<?>> pair = createCriteriaMetaValuesCustomObjectWithResult(modifiedPropertiesHolder, createCriteriaMetaValues(miType, gdtm), applied);
+        final Pair<Map<String, Object>, ArrayList<?>> pair = createCriteriaMetaValuesCustomObjectWithResult(modifiedPropertiesHolder, createCriteriaMetaValues(miType, gdtm), applied, isCentreChanged(miType, gdtm));
         if (pair.getValue() == null) {
             return restUtil.rawListJSONRepresentation(applied, pair.getKey());
         }
@@ -242,6 +246,22 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         list.addAll(pair.getValue()); // TODO why is this needed for serialisation to perform without problems?!
 
         return restUtil.rawListJSONRepresentation(list.toArray());
+    }
+
+    /**
+     * Returns <code>true</code> if the centre is changed (and thus can be saved / discarded), <code>false</code> otherwise.
+     *
+     * @param miType
+     * @param gdtm
+     * @return
+     */
+    private static boolean isCentreChanged(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
+        getCurrentCentreManager(gdtm, miType);
+
+        final String centreName = null; // indicates that the entity centre is principle (TODO saveAsses are not supported yet)
+        final boolean isCentreChanged = gdtm.isChangedEntityCentreManager(miType, centreName);
+        logger.error("      isCentreChanged == " + isCentreChanged);
+        return gdtm.isChangedEntityCentreManager(miType, centreName);
     }
 
     /**

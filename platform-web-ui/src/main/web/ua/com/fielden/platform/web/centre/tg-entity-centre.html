@@ -126,6 +126,39 @@
                 onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount) {
                     console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount);
                     this.$.egi.entities = resultEntities;
+                },
+
+                /**
+                 * Starts the process of centre saving.
+                 */
+                save: function () {
+                    if (!this.canSave()) {
+                        throw "Cannot save the not modified centre.";
+                    }
+                    console.log("CENTRE SAVE");
+                    this.$.ajaxSaver.go();
+                },
+                canSave: function () {
+                    return this.canManageCentreConfig();
+                },
+
+                /**
+                 * Starts the process of centre discarding.
+                 */
+                discard: function () {
+                    if (!this.canDiscard()) {
+                        throw "Cannot discard the not modified centre.";
+                    }
+                    console.log("CENTRE DISCARD");
+                    this.$.ajaxDiscarder.go();
+                },
+                canDiscard: function () {
+                    return this.canManageCentreConfig();
+                },
+
+                canManageCentreConfig: function() {
+                    console.log("canManageCentreConfig: ", (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : this.$.selection_criteria._isCentreChanged === true);
+                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : this.$.selection_criteria._isCentreChanged === true;
                 }
             });
         })();

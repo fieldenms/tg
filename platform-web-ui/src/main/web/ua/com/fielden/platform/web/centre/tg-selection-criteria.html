@@ -54,6 +54,7 @@
 
             currentState: "EDIT",
 
+            _isCentreChanged: false,
 
             /**
              * Initialisation block. It has all children web components already initialised.
@@ -74,7 +75,8 @@
                         var resultEntities = customObject.resultEntities; // entityAndCustomObject.slice(2);
                         var pageCount = customObject.pageCount;
                         var metaValues = customObject.metaValues;
-                        self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues);
+                        var isCentreChanged = customObject.isCentreChanged;
+                        self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged);
                     }
                 });
 
@@ -102,12 +104,14 @@
             onRetrieved: function (entity, bindingEntity, customObject) {
                 this.entitytype = entity.type().fullClassName();
                 this.propertyModel = this.createPropertyModel(customObject.metaValues);
+                this._isCentreChanged = customObject.isCentreChanged;
 
                 console.log("onRetrieved", customObject);
             },
 
             onValidated: function (validatedEntity, bindingEntity, customObject) {
                 this.propertyModel = this.createPropertyModel(customObject.metaValues);
+                this._isCentreChanged = customObject.isCentreChanged;
 
                 console.log("onValidated", customObject);
             },
@@ -307,8 +311,9 @@
             /**
              * Default implementation for onRun callback.
              */
-            onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues) {
+            onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged) {
                 this.propertyModel = this.createPropertyModel(metaValues);
+                this._isCentreChanged = isCentreChanged;
                 
                 var msg = this.toastMsg("Running", criteriaEntity);
                 this.openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg);

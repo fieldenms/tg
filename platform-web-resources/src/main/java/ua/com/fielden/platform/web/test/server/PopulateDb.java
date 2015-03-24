@@ -28,6 +28,8 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.ui.config.MainMenu;
+import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -136,6 +138,10 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final User demo = ((IUserDao) ao(User.class)).findByKey("DEMO");
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
+
+        final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
+        mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
+        save(mainMenu);
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
