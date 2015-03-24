@@ -6,3 +6,23 @@ html /deep/ .meta-value-editor paper-checkbox::shadow #checkbox.checked {
 html /deep/ .meta-value-editor paper-checkbox {
 	margin-bottom: 20px;
 }
+
+html /deep/ .meta-value-editor tg-accordion {
+	margin-bottom: 20px;
+}
+
+html /deep/ .meta-value-editor paper-radio-button::shadow #onRadio {
+    background-color: #0288D1;
+}
+
+html /deep/ .meta-value-editor paper-radio-button[checked]::shadow #offRadio {
+    border-color: #0288D1;
+}
+
+html /deep/ .meta-value-editor paper-radio-button::shadow #ink[checked] {
+  color: #0288D1;
+}
+
+html /deep/ .meta-value-editor paper-radio-button {
+	margin: 10px;
+}

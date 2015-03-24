@@ -2,9 +2,11 @@
 
 <link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="import" href="/resources/components/tg-accordion.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="/resources/polymer/paper-radio-button/paper-radio-button.html">
 <link rel="stylesheet" href="/resources/centre/criterion/tg-criterion.css">
 
 <polymer-element name="tg-criterion" attributes="orNull not onAcceptedValueChanged" layout horizontal end>
@@ -22,7 +24,19 @@
                     <paper-checkbox label="Exclusive Right" checked="{{_exclusive2}}"></paper-checkbox>
                 </template>              
                 <template if="{{_dateRange}}">
-                    <p>date-specific items</p>
+                    <template repeat="{{prefix, pIndex in datePrefixes}}">
+                        <tg-accordion heading="{{prefixTitles[pIndex]}}">
+                            <div layout horizontal justified wrap>
+                                <template repeat="{{mnemonic, mIndex in dateMnemonics}}">
+                                    <div layout vertical>
+                                        <template repeat="{{before, aIndex in andBefores}}">
+                                            <paper-radio-button toggles label="{{mnemonicTitles[mIndex] + andBeforeTitles[aIndex]}}"></paper-radio-button> 
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </tg-accordion>
+                    </template>
                 </template>   
             </div>
             <paper-button affirmative on-tap="{{cancelMetaValues}}">Cancel</paper-button>

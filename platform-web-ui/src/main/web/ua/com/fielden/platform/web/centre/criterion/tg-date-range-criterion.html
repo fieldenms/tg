@@ -27,7 +27,16 @@
                 andBefore: null // values 'null', 'true', 'false'
             },
 
-            _dateRange: true
+            _dateRange: true,
+
+            created: function() {
+                this.datePrefixes = ["PREV", "CURR", "NEXT"];
+                this.dateMnemonics = ["DAY", "WEEK", "MONTH", "QRT1", "QRT2", "QRT3", "QRT4", "YEAR", "OZ_FIN_YEAR"];
+                this.andBefores = ["THIS", "BEFORE", "AFTER"];
+                this.prefixTitles = ["Previous", "Current", "Next"];
+                this.mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];
+                this.andBeforeTitles = ["", " and before", " and after"];
+            }
         });
     </script>
 </polymer-element>
