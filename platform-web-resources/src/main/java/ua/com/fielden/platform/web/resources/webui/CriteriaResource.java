@@ -26,6 +26,8 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -194,7 +196,32 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final String centreName = null; // indicates that the entity centre is principle (TODO saveAsses are not supported yet)
         if (globalManager.getEntityCentreManager(miType, centreName) == null) {
             globalManager.initEntityCentreManager(miType, centreName);
+
+            if (globalManager.isChangedEntityCentreManager(miType, centreName)) {
+                throw new IllegalStateException("Should be not changed (after init).");
+            }
+
+            final ICentreDomainTreeManagerAndEnhancer cdtmae = globalManager.getEntityCentreManager(miType, centreName);
+            final Class<AbstractEntity<?>> root = getEntityType(miType);
+            for (final String property : cdtmae.getFirstTick().checkedProperties(root)) {
+                final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+                final Class<?> propertyType = isEntityItself ? managedType(root, cdtmae) : PropertyTypeDeterminator.determinePropertyType(managedType(root, cdtmae), property);
+                final CritOnly critAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType(root, cdtmae), property);
+                final boolean single = critAnnotation != null && Type.SINGLE.equals(critAnnotation.value());
+
+                if (!EntityUtils.isBoolean(propertyType) && !(EntityUtils.isEntityType(propertyType) && !single)) {
+                    cdtmae.getFirstTick().setValue(root, property, null);
+                    if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), property)) {
+                        cdtmae.getFirstTick().setValue2(root, property, null);
+                    }
+                }
+            }
+
             globalManager.saveEntityCentreManager(miType, centreName);
+
+            if (globalManager.isChangedEntityCentreManager(miType, centreName)) {
+                throw new IllegalStateException("Should be not changed (after initial save).");
+            }
         }
         return globalManager.getEntityCentreManager(miType, centreName);
     }
@@ -219,7 +246,6 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        isCentreChanged(miType, gdtm);
         return restUtil.rawListJSONRepresentation(applied, createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm), isCentreChanged(miType, gdtm)));
     }
 
