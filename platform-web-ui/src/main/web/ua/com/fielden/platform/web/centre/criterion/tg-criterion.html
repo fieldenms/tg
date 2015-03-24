@@ -3,6 +3,7 @@
 <link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/components/tg-accordion.html">
+<link rel="import" href="/resources/components/tg-accordion-group.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
@@ -24,19 +25,21 @@
                     <paper-checkbox label="Exclusive Right" checked="{{_exclusive2}}"></paper-checkbox>
                 </template>              
                 <template if="{{_dateRange}}">
-                    <template repeat="{{prefix, pIndex in datePrefixes}}">
-                        <tg-accordion heading="{{prefixTitles[pIndex]}}">
-                            <div layout horizontal justified wrap>
-                                <template repeat="{{mnemonic, mIndex in dateMnemonics}}">
-                                    <div layout vertical>
-                                        <template repeat="{{before, aIndex in andBefores}}">
-                                            <paper-radio-button toggles label="{{mnemonicTitles[mIndex] + andBeforeTitles[aIndex]}}"></paper-radio-button> 
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                        </tg-accordion>
-                    </template>
+                    <tg-accordion-group singleOpen>
+                        <template repeat="{{prefix, pIndex in datePrefixes}}">
+                            <tg-accordion opened ?= "{{(_datePrefix === null && pIndex === 0) || _datePrefix === prefix}}" heading="{{prefixTitles[pIndex]}}"> <!-- TODO make it work (opening of accordion with selected item or, if no selected item exist -- opening of first item) -->
+                                <div layout horizontal>
+                                    <template repeat="{{mnemonic, mIndex in dateMnemonics}}">
+                                        <div layout vertical>
+                                            <template repeat="{{before, bIndex in andBefores}}">
+                                                <paper-radio-button prefix="{{prefix}}" mnemonic="{{mnemonic}}" andbefore="{{before}}" toggles label="{{mnemonicTitles[mIndex] + andBeforeTitles[bIndex]}}" on-change="{{dateMetaValueChanged}}" checked?="{{_datePrefix===prefix && _dateMnemonic===mnemonic && ((_andBefore===null && before==='THIS')||(_andBefore===true && before==='BEFORE')||(_andBefore===false && before==='AFTER'))}}"></paper-radio-button> 
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </tg-accordion>
+                        </template>
+                    </tg-accordion-group>
                 </template>   
             </div>
             <paper-button affirmative on-tap="{{cancelMetaValues}}">Cancel</paper-button>

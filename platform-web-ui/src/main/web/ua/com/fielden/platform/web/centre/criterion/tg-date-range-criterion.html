@@ -28,6 +28,9 @@
             },
 
             _dateRange: true,
+            _datePrefix: null,
+            _dateMnemonic: null,
+            _andBefore: null,
 
             created: function() {
                 this.datePrefixes = ["PREV", "CURR", "NEXT"];
@@ -36,6 +39,48 @@
                 this.prefixTitles = ["Previous", "Current", "Next"];
                 this.mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];
                 this.andBeforeTitles = ["", " and before", " and after"];
+            },
+            dateMetaValueChanged: function(e, detail, source) {
+                if (source.checked) {
+                    this._datePrefix = source.getAttribute("prefix");
+                    this._dateMnemonic = source.getAttribute("mnemonic");
+                    switch(source.getAttribute("andbefore")) {
+                        case "THIS": this._andBefore = null; break;
+                        case "BEFORE": this._andBefore = true; break;
+                        case "AFTER": this._andBefore = false; break;
+                    }
+                } else {
+                    this._datePrefix = null;
+                    this._dateMnemonic = null;
+                    this._andBefore = null;
+                }
+            },
+            acceptMetaValues: function() {
+                this.datePrefix = this._datePrefix;
+                this.dateMnemonic = this._dateMnemonic;
+                this.andBefore = this._andBefore;
+
+                this.super();
+            },
+
+            cancelMetaValues: function() {
+                this._datePrefix = this.datePrefix;
+                this._dateMnemonic = this.dateMnemonic;
+                this._andBefore = this.andBefore;
+
+                this.super();
+            },
+
+            datePrefixChanged: function(oldValue, newValue) {
+                this._datePrefix = newValue;   
+            }, 
+
+            dateMnemonicChanged: function(oldValue, newValue) {
+                this._dateMnemonic = newValue;   
+            },
+
+            andBeforeChanged: function(oldValue, newValue) {
+                this._andBefore = newValue;   
             }
         });
     </script>
