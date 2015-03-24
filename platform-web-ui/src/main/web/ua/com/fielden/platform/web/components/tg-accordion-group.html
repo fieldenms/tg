@@ -1,0 +1,36 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/tg-accordion.html">
+
+<polymer-element name="tg-accordion-group" attributes="singleOpen">
+    <template>
+    	<content id="accordions" select="tg-accordion"></content>
+    </template>
+    <script>
+        Polymer({
+        	publish: {
+        		singleOpen: {
+        			reflect: true,
+        			value: false
+        		} 
+        	},
+
+            ready: function () {
+            	this.accordions=[];
+                Array.prototype.forEach.call(this.$.accordions.getDistributedNodes(), function (item) {
+                	this.accordions.push(item);
+                    item.addEventListener("accordion-toggled", function(e) {
+                    	if (this.singleOpen) {
+                    		if (e.detail) {
+                    			this.accordions.forEach(function(accordion) {
+                    				if (accordion !== e.srcElement) {
+                    					accordion.opened = false;
+                    				}
+                    			});
+                    		}
+                    	}
+                    }.bind(this));
+                }.bind(this));
+            },
+        });
+    </script>
+</polymer-element>
