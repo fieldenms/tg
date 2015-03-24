@@ -133,8 +133,8 @@
                     <div layout horizontal justified style="margin-top:40px;">
                         <div layout horizontal>
                             <paper-button id="configurator" raised roll="button" on-tap="{{configure}}" style="margin-left: 0px;">Configure</paper-button>
-                            <paper-button id="saver" raised roll="button" on-tap="{{save}}">Save</paper-button>
-                            <paper-button id="discarder" raised roll="button" on-tap="{{discard}}">Discard</paper-button>
+                            <paper-button id="saver" raised roll="button" on-tap="{{save}}" disabled?="{{!canSave($.selection_criteria._isCentreChanged)}}">Save</paper-button>
+                            <paper-button id="discarder" raised roll="button" on-tap="{{discard}}" disabled?="{{!canDiscard($.selection_criteria._isCentreChanged)}}">Discard</paper-button>
                         </div>
                         <paper-button id="runner" raised roll="button" on-tap="{{run}}" style="margin-right: 0px;">Run</paper-button>
                     </div>
