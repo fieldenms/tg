@@ -40,7 +40,7 @@
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="ua.com.fielden.platform.serialisation.api.impl.TgJackson" additivity="false">
-		<level value="info" />
+		<level value="error" />
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator" additivity="false">
