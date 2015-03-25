@@ -20,13 +20,13 @@
                 background-color: #f5f5f5;
                 border-color: #ddd;
                 padding: 6px 15px;
+                cursor: pointer;
             }
             a {
                 margin-top: 0;
                 margin-bottom: 0;
                 font-size: 16px;
                 color: #333;
-                cursor: pointer;
             }
             a:hover {
                 text-decoration: underline;
@@ -40,9 +40,9 @@
         </style>
 
         <div class="panel" layout vertical>
-            <div class="heading" horizontal layout center justified>
-                <a on-click="{{toggle}}">{{heading}}</a>
-                <core-icon icon="icons:{{$.collapse.opened ? 'expand-less' : 'expand-more'}}" on-click="{{toggle}}"></core-icon>
+            <div class="heading" on-tap="{{toggle}}" horizontal layout center justified>
+                <a>{{heading}}</a>
+                <core-icon icon="icons:{{$.collapse.opened ? 'expand-less' : 'expand-more'}}"></core-icon>
             </div>
             <core-collapse opened="{{opened}}" id="collapse" on-core-collapse-open="{{collapseOpenChanged}}">
                 <content></content>
