@@ -27,7 +27,7 @@
                 <template if="{{_dateRange}}">
                     <tg-accordion-group singleOpen>
                         <template repeat="{{prefix, pIndex in datePrefixes}}">
-                            <tg-accordion opened ?= "{{(_datePrefix === null && pIndex === 0) || _datePrefix === prefix}}" heading="{{prefixTitles[pIndex]}}"> <!-- TODO make it work (opening of accordion with selected item or, if no selected item exist -- opening of first item) -->
+                            <tg-accordion opened?="{{(_datePrefix===null && pIndex===0) || _datePrefix===prefix}}" heading="{{prefixTitles[pIndex]}}"> <!-- TODO make it work (opening of accordion with selected item or, if no selected item exist -- opening of first item) -->
                                 <div layout horizontal>
                                     <template repeat="{{mnemonic, mIndex in dateMnemonics}}">
                                         <div layout vertical>
