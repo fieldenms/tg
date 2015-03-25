@@ -286,8 +286,8 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
 
         final String centreName = null; // indicates that the entity centre is principle (TODO saveAsses are not supported yet)
         final boolean isCentreChanged = gdtm.isChangedEntityCentreManager(miType, centreName);
-        logger.error("      isCentreChanged == " + isCentreChanged);
-        return gdtm.isChangedEntityCentreManager(miType, centreName);
+        logger.debug("isCentreChanged == " + isCentreChanged);
+        return isCentreChanged;
     }
 
     /**

@@ -125,7 +125,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
         try {
             final String contentString = IOUtils.toString(content, "UTF-8");
-            logger.info("JSON before deserialisation = |" + contentString + "|.");
+            logger.debug("JSON before deserialisation = |" + contentString + "|.");
             final Class<? extends T> concreteType;
             if (EntityUtils.isEntityType(type) && Modifier.isAbstract(type.getModifiers())) {
                 // when we are trying to deserialise an entity of unknown concrete type (e.g. passing AbstractEntity.class) -- there is a need to determine concrete type from @id property
@@ -163,7 +163,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
             EntitySerialiser.getContext().reset();
             final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
-            logger.info("Serialised JSON = |" + new String(bytes, Charsets.UTF_8) + "|.");
+            logger.debug("Serialised JSON = |" + new String(bytes, Charsets.UTF_8) + "|.");
 
             return bytes;
         } catch (final JsonProcessingException e) {
