@@ -107,7 +107,6 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
 private ${type} ${name};${cursor}
 
 @Observable
-@EntityExists(${type}.class)
 public ${enclosing_type} set${Name}(final ${type} ${name}) {
     this.${name} = ${name};
     return this;
@@ -121,7 +120,6 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
           ua.com.fielden.platform.entity.annotation.MapTo,
-          ua.com.fielden.platform.entity.validation.annotation.EntityExists,
   	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember)}
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a composite key member of an 'activatable' entity type - entity type with 'active' property" enabled="true" name="tgprop-composite-key-activatable-entity-member">@IsProperty
 @MapTo
@@ -131,7 +129,6 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
 private ${type} ${name};${cursor}
 
 @Observable
-@EntityExists(${type}.class)
 public ${enclosing_type} set${Name}(final ${type} ${name}) {
     this.${name} = ${name};
     return this;
@@ -145,7 +142,6 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
           ua.com.fielden.platform.entity.annotation.MapTo,
-          ua.com.fielden.platform.entity.validation.annotation.EntityExists,
   	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember,
           ua.com.fielden.platform.entity.annotation.mutator.BeforeChange,
           ua.com.fielden.platform.entity.annotation.mutator.Handler,
@@ -177,7 +173,6 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
 private ${type} ${name};${cursor}
 
 @Observable
-@EntityExists(${type}.class)
 public ${enclosing_type} set${Name}(final ${type} ${name}) {
     this.${name} = ${name};
     return this;
@@ -190,7 +185,6 @@ public ${type} get${Name}() {
 ${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
-  	  ua.com.fielden.platform.entity.validation.annotation.EntityExists,
           ua.com.fielden.platform.entity.annotation.MapTo)}
 </template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for an 'activatable' property - entity type with 'active' property" enabled="true" name="tgprop-activatable-entity">@IsProperty
 @MapTo
@@ -199,7 +193,6 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
 private ${type} ${name};${cursor}
 
 @Observable
-@EntityExists(${type}.class)
 public ${enclosing_type} set${Name}(final ${type} ${name}) {
     this.${name} = ${name};
     return this;
@@ -212,7 +205,6 @@ public ${type} get${Name}() {
 ${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
-  	  ua.com.fielden.platform.entity.validation.annotation.EntityExists,
           ua.com.fielden.platform.entity.annotation.MapTo,
           ua.com.fielden.platform.entity.annotation.mutator.BeforeChange,
           ua.com.fielden.platform.entity.annotation.mutator.Handler,
