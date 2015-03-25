@@ -29,9 +29,9 @@
                         <template repeat="{{prefix, pIndex in datePrefixes}}">
                             <tg-accordion opened?="{{(_datePrefix===null && pIndex===0) || _datePrefix===prefix}}" heading="{{prefixTitles[pIndex]}}">
                                 <div layout horizontal>
-                                    <template repeat="{{mnemonic, mIndex in dateMnemonics}}">
+                                    <template repeat="{{before, bIndex in andBefores}}">
                                         <div layout vertical>
-                                            <template repeat="{{before, bIndex in andBefores}}">
+                                            <template repeat="{{mnemonic, mIndex in dateMnemonics}}">
                                                 <paper-radio-button prefix="{{prefix}}" mnemonic="{{mnemonic}}" andbefore="{{before}}" toggles label="{{mnemonicTitles[mIndex] + andBeforeTitles[bIndex]}}" on-change="{{dateMetaValueChanged}}" checked?="{{_datePrefix===prefix && _dateMnemonic===mnemonic && ((_andBefore===null && before==='THIS')||(_andBefore===true && before==='BEFORE')||(_andBefore===false && before==='AFTER'))}}"></paper-radio-button> 
                                             </template>
                                         </div>
