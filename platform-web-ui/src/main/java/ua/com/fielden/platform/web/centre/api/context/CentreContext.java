@@ -28,6 +28,7 @@ public class CentreContext<T extends AbstractEntity<?>, M extends AbstractEntity
 
     /**
      * Represents selection criteria of an entity centre. Provides access to their values and meta-values.
+     * Also, it can be used for execution of the same query as if running from an entity centre at the client side.
      */
     private EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> selectionCrit;
 
