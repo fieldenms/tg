@@ -53,6 +53,10 @@
                         }
                         this.wasLoaded=true;
                     }
+                },
+                reload: function() {
+                    this.wasLoaded = false;
+                    this.load();
                 }
             });
         })();

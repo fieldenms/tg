@@ -28,6 +28,7 @@
 <link rel="import" href="/resources/centre/criterion/tg-range-criterion.html">
 <link rel="import" href="/resources/centre/criterion/tg-date-range-criterion.html">
 
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 
 <polymer-element name="tg-selection-criteria-for-TgPersistentEntityWithProperties" extends="tg-selection-criteria">
     <template>
@@ -158,9 +159,14 @@
                             <span class="span-tooltip" tip>Create new entity</span>
                         </core-tooltip>
                         <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
-                            <core-icon-button icon="editor:mode-edit"></core-icon-button>
+                            <tg-ui-action user="{{user}}" shortDesc="Edit" longDesc="Edit selected entity" icon="editor:mode-edit" componentUri="/users/{{user}}/master/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" elementName="tg-TgPersistentEntityWithProperties-master" attrs="{{ {user:user, entitytype:'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties', currentState:'VIEW'} }}" contextRetriever="{{getContext}}">
+                            </tg-ui-action>
                             <span class="span-tooltip" tip>Edit selected entity</span>
                         </core-tooltip>
+                        <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
+                            <core-icon-button icon="editor:mode-edit"></core-icon-button>
+                            <span class="span-tooltip" tip>Edit selected entity</span>
+                        </core-tooltip> -->
                         <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
                             <core-icon-button icon="remove-circle-outline"></core-icon-button>
                             <span class="span-tooltip" tip>Delete selected entity</span>
@@ -200,6 +206,17 @@
     <script>
     	(function() {
 	        Polymer({
+                ready: function() {
+                    this.super();
+                    this.getContext = this.getContext.bind(this);
+                },
+
+                getContext: function() {
+                    if (this.$.egi.getSelectedEntities().length > 0) {
+                        return this.$.egi.getSelectedEntities()[0];
+                    }
+                    return null;
+                }
 	        });
 		})();
     </script>
