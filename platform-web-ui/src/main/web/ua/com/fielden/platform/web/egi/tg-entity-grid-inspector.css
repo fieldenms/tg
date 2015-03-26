@@ -71,3 +71,8 @@ tbody>tr.alternate-color paper-checkbox::shadow #checkbox:not(.checked)>#checkma
 th paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
     border-color: transparent;
 }
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

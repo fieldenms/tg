@@ -89,7 +89,7 @@
                                         <core-icon icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
                                     </template>
                                     <template if="{{column.type !== 'Boolean'}}">
-                                        {{getValue(entity, column)}}
+                                        <div class="truncate" style="width: {{column.width}}">{{getValue(entity, column)}}</div>
                                     </template>
                                     <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
                                 </core-tooltip>
