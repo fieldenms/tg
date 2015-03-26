@@ -25,18 +25,23 @@ public class EntityActionBuilder<T extends AbstractEntity<T>> implements IEntity
     private IPreAction preAciton;
     private IPostAction successPostAction;
     private IPostAction errorPostAction;
+    private boolean returnNoAction;
 
     @Override
     public EntityActionConfig build() {
-        return new EntityActionConfig(
-                functionalEntity,
-                context,
-                icon,
-                shortDesc,
-                longDesc,
-                preAciton,
-                successPostAction,
-                errorPostAction);
+        if (returnNoAction) {
+            return EntityActionConfig.createNoActionConfig();
+        } else {
+            return EntityActionConfig.createActionConfig(
+                    functionalEntity,
+                    context,
+                    icon,
+                    shortDesc,
+                    longDesc,
+                    preAciton,
+                    successPostAction,
+                    errorPostAction);
+        }
     }
 
     @Override
@@ -84,6 +89,12 @@ public class EntityActionBuilder<T extends AbstractEntity<T>> implements IEntity
     @Override
     public IEntityActionBuilder7<T> longDesc(final String longDesc) {
         this.longDesc = longDesc;
+        return this;
+    }
+
+    @Override
+    public IEntityActionBuilder7<T> noAction() {
+        this.returnNoAction = true;
         return this;
     }
 

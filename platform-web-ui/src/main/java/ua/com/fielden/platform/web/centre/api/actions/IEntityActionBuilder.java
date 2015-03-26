@@ -17,4 +17,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public interface IEntityActionBuilder<T extends AbstractEntity<?>> {
     IEntityActionBuilder0<T> addAction(final Class<? extends AbstractEntity<?>> functionalEntity);
 
+    /**
+     * In case where no action should be associated with places that have default actions associated with them automatically.
+     * For example, all properties in a result set have a default action <code>open master</code>.
+     *
+     * @return
+     */
+    IEntityActionBuilder7<T> noAction();
+
 }
