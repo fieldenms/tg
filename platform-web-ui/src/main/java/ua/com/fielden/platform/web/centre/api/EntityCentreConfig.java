@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 
 /**
@@ -37,4 +40,10 @@ public class EntityCentreConfig {
      * It can be empty if no secondary action are necessary.
      */
     private List<EntityActionConfig> secondaryEntityActions = new ArrayList<>();
+
+    /**
+     * A map between selection criteria properties and their custom value matchers.
+     * If a matcher for a some criterion is not provided then a default instance of type {@link FallbackValueMatcherWithCentreContext} should be used.
+     */
+    private final Map<String, IValueMatcherWithCentreContext<? extends AbstractEntity<?>>> valueMatchers = new HashMap<>();
 }
