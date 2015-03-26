@@ -22,6 +22,7 @@ public class EntityCentreConfig {
      * which are represented in the result set.
      * This map can be empty is there is no need to provide custom actions specific for represented in the result set properties.
      * In this case, the default actions would still get associated with all not listed in this map, but added to the result set properties.
+     * In order to skip the creation even of default actions, <code>no action</code> configuration needs to be provided for a property.
      */
     private final Map<String, EntityActionConfig> resultSetPropActions = new HashMap<>();
 

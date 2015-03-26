@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * An interesting use case is where context is represented by a persistent entity and the matching logic depends on both the current (potentially not yet persisted) context and
  * on its persisted version. A concrete matcher implementation would be able to retrieve the persisted version by using an ID of the provided current context version.
  *
- * @author TG Entity
+ * @author TG Team
  *
  * @param <CONTEXT> -- the type of execution context
  * @param <T> -- the type of autocompleted values

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.centre.api.context;
+package ua.com.fielden.platform.web.centre;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,10 +14,10 @@ import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQuer
  *
  * @author TG Team
  *
- * @param <T>
- * @param <M>
+ * @param <T> -- a type of the entity represented at an entity centre
+ * @param <M> -- in case of an entity centre that is associated with an entity master, this is a type of the master entity
  */
-public class CentreContext<T extends AbstractEntity<?>, M extends AbstractEntity<?>> {
+public final class CentreContext<T extends AbstractEntity<?>, M extends AbstractEntity<?>> {
 
     /**
      * An action may be applicable to zero, one or more entities that are selected on an entity centre. If an action is applicable only to one entity it is associated with (i.e.
