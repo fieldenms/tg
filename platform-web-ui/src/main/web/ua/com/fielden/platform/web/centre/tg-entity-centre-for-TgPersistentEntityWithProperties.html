@@ -28,11 +28,11 @@
 <link rel="import" href="/resources/centre/criterion/tg-range-criterion.html">
 <link rel="import" href="/resources/centre/criterion/tg-date-range-criterion.html">
 
-<link rel="import" href="/resources/actions/tg-ui-action.html">
+<link rel="import" href="/resources/actions/tg-page-action.html">
 
 <polymer-element name="tg-selection-criteria-for-TgPersistentEntityWithProperties" extends="tg-selection-criteria">
     <template>
-    	<shadow></shadow>
+        <shadow></shadow>
         <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}">
             <tg-criterion orNull="{{propertyModel[''].orNull}}" not="{{propertyModel[''].not}}" onAcceptedValueChanged="{{validate}}">
                 <tg-entity-search-criteria entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_" onAcceptedValueChanged="{{validate}}" propTitle="Key prop MULTI" propDesc="Key prop MULTI criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-search-criteria>
@@ -77,48 +77,45 @@
         </tg-flex-layout>
     </template>
     <script>
-    	(function() {
-    		var mr = ["margin-right: 40px", "flex"],
-            mrLast = ['flex'];
-	        Polymer({
-	        	 whenDesktop: [['center-justified', mr, mr, mrLast],
-	                          ['center-justified', mr, mr, mrLast],
-	                          ['center-justified', mr, mr, mrLast]],
-	            whenTablet: [['center-justified', mr, mrLast],
-	                          ['center-justified', mr, mrLast],
-	                          ['center-justified', mr, mrLast],
-	                          ['center-justified', mr, mrLast],
-	                          ['center-justified', mr, mrLast]],
-	            whenMobile: [['center-justified', mrLast],
-	                          ['center-justified', mrLast],
-	                          ['center-justified', mrLast],
-	                          ['center-justified', mrLast],
-	                          ['center-justified', mrLast],
-	                          ['center-justified', mrLast],
-	                          ['center-justified', mrLast],
-	                          ['center-justified', mrLast],
-	                          ['center-justified', mrLast]],
-	        });
-		})();
+        (function () {
+            var mr = ["margin-right: 40px", "flex"],
+                mrLast = ['flex'];
+            Polymer({
+                whenDesktop: [['center-justified', mr, mr, mrLast],
+                           ['center-justified', mr, mr, mrLast],
+                           ['center-justified', mr, mr, mrLast]],
+                whenTablet: [['center-justified', mr, mrLast],
+                           ['center-justified', mr, mrLast],
+                           ['center-justified', mr, mrLast],
+                           ['center-justified', mr, mrLast],
+                           ['center-justified', mr, mrLast]],
+                whenMobile: [['center-justified', mrLast],
+                           ['center-justified', mrLast],
+                           ['center-justified', mrLast],
+                           ['center-justified', mrLast],
+                           ['center-justified', mrLast],
+                           ['center-justified', mrLast],
+                           ['center-justified', mrLast],
+                           ['center-justified', mrLast],
+                           ['center-justified', mrLast]],
+            });
+        })();
     </script>
 </polymer-element>
 
 <polymer-element name="tg-entity-centre-for-TgPersistentEntityWithProperties" extends="tg-entity-centre">
     <template>
-    	<shadow></shadow>
-    	<style>
-    		* /deep/ core-tooltip::shadow #tooltip {
+        <shadow></shadow>
+        <style>
+            * /deep/ core-tooltip::shadow #tooltip {
                 white-space: normal;
             }
-            
             * /deep/ core-tooltip .span-tooltip {
                 line-height: 15px;
             }
-            
             core-icon-button.revers::shadow core-icon {
                 transform: scale(-1, 1);
             }
-            
             core-tooltip.delayed:hover::shadow .core-tooltip,
             core-tooltip.delayed:focus::shadow .core-tooltip {
                 opacity: 1;
@@ -126,7 +123,7 @@
                 transition-delay: 1s;
                 transform: translate3d(0px, 0px, 0px);
             }
-    	</style>
+        </style>
         <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right">
             <div>
                 <div layout vertical style="margin: 40px;">
@@ -159,8 +156,10 @@
                             <span class="span-tooltip" tip>Create new entity</span>
                         </core-tooltip>
                         <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
-                            <tg-ui-action user="{{user}}" shortDesc="Edit" longDesc="Edit selected entity" icon="editor:mode-edit" componentUri="/users/{{user}}/master/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" elementName="tg-TgPersistentEntityWithProperties-master" attrs="{{ {user:user, entitytype:'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties', currentState:'VIEW'} }}" contextRetriever="{{getContext}}">
-                            </tg-ui-action>
+                            <!--<tg-ui-action user="{{user}}" shortDesc="Edit" longDesc="Edit selected entity" icon="editor:mode-edit" componentUri="/users/{{user}}/master/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" elementName="tg-TgPersistentEntityWithProperties-master" attrs="{{ {user:user, entitytype:'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties', currentState:'VIEW'} }}" contextRetriever="{{getContext}}">
+                            </tg-ui-action>-->
+                            <tg-page-action icon="editor:mode-edit" action="{{editAction}}">
+                            </tg-page-action>
                             <span class="span-tooltip" tip>Edit selected entity</span>
                         </core-tooltip>
                         <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
@@ -204,20 +203,30 @@
         </core-animated-pages>
     </template>
     <script>
-    	(function() {
-	        Polymer({
-                ready: function() {
+        (function () {
+            Polymer({
+                ready: function () {
                     this.super();
-                    this.getContext = this.getContext.bind(this);
+                    
+                    this.editAction = this.editAction.bind(this);
                 },
-
-                getContext: function() {
+                editAction: function () {
+                    var self = this;
+                    postal.publish({
+                        channel: "master",
+                        topic: "edit",
+                        data: {
+                            entity: self.getContext()
+                        }
+                    });
+                },
+                getContext: function () {
                     if (this.$.egi.getSelectedEntities().length > 0) {
                         return this.$.egi.getSelectedEntities()[0];
                     }
                     return null;
                 }
-	        });
-		})();
+            });
+        })();
     </script>
 </polymer-element>

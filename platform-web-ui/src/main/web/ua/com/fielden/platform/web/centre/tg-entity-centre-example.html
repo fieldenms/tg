@@ -20,6 +20,7 @@
     <link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
     <link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-from-right.html">
     <link rel="import" href="/resources/element_loader/load-element.html">
+    <link rel="import" href="/resources/components/postal-lib.html">
 
     <style>
         core-animated-pages {
@@ -61,7 +62,7 @@
 
             <core-animated-pages selected="{{route}}" valueattr="id" transitions="slide-from-right">
                 <tg-entity-centre-for-TgPersistentEntityWithProperties id="centre" user="SU"></tg-entity-centre-for-TgPersistentEntityWithProperties>
-                <load-element id="master" import="{{componentUri}}" elementName="{{elementName}}" attrs="{{attrs}}" on-after-load="{{onMasterLoaded}}" auto></load-element>
+                <load-element id="master" import="{{componentUri}}" elementName="{{elementName}}" attrs="{{attrs}}" on-after-load="{{onMasterLoaded}}"></load-element>
             </core-animated-pages>
 
         </core-scaffold>
@@ -80,32 +81,41 @@
             centreExample.elementName = "tg-TgPersistentEntityWithProperties-master";
             centreExample.attrs = {
                 user: 'SU',
-                entityid: 15,
                 entitytype: 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties',
                 currentState: 'VIEW'
             };
 
             centreExample.onMasterLoaded = function (e, detail, source) {
-                detail.onRetrieved = function(entity, bindingEntity, customObject) {
+                detail.onRetrieved = function (entity, bindingEntity, customObject) {
                     console.log("onRetrieved");
+                    centreExample.route = "master";
                 };
 
-                detail.onValidated = function(validatedEntity, bindingEntity, customObject) {
+                detail.onValidated = function (validatedEntity, bindingEntity, customObject) {
                     console.log("onValidated");
                 };
 
-                detail.onSaved = function(potentiallySavedEntity, newBindingEntity) {
+                detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
                     console.log("onSaved");
                 };
-                
+
                 detail.retrieve();
             };
 
             centreExample.addEventListener('template-bound', function (e) {
                 this.route = this.route || "centre";
-                
-                console.log("-----------------------ready--------------------------------", document.querySelector("#centre"));
                 document.querySelector("#centre").retrieve();
+                
+                var subscription1 = postal.subscribe({
+                    channel: "master",
+                    topic: "edit",
+                    callback: function (data, envelope) {
+                        var masterLoader = document.querySelector("#master");
+                        centreExample.attrs.entityid = data.entity.id;
+                        masterLoader.reload();
+                        console.log(data, centreExample.attrs);
+                    }
+                });
             });
         })();
     </script>
