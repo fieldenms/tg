@@ -106,14 +106,23 @@
                 this.route = this.route || "centre";
                 document.querySelector("#centre").retrieve();
                 
-                var subscription1 = postal.subscribe({
+                postal.subscribe({
                     channel: "master",
                     topic: "edit",
                     callback: function (data, envelope) {
                         var masterLoader = document.querySelector("#master");
                         centreExample.attrs.entityid = data.entity.id;
                         masterLoader.reload();
-                        console.log(data, centreExample.attrs);
+                    }
+                });
+                
+                postal.subscribe({
+                    channel: "master",
+                    topic: "new",
+                    callback: function (data, envelope) {
+                        var masterLoader = document.querySelector("#master");
+                        centreExample.attrs.entityid = "new";
+                        masterLoader.reload();
                     }
                 });
             });

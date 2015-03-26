@@ -152,14 +152,14 @@
                         <tg-property-column property="stringProp" width="50px" type="String" columnTitle="String property" columnDesc="String property tooltip"></tg-property-column>
 
                         <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
-                            <core-icon-button icon="add-circle-outline"></core-icon-button>
+                            <!--<core-icon-button icon="add-circle-outline"></core-icon-button>-->
+                            <tg-page-action icon="add-circle-outline" action="{{newAction}}"></tg-page-action>
                             <span class="span-tooltip" tip>Create new entity</span>
                         </core-tooltip>
                         <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
                             <!--<tg-ui-action user="{{user}}" shortDesc="Edit" longDesc="Edit selected entity" icon="editor:mode-edit" componentUri="/users/{{user}}/master/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" elementName="tg-TgPersistentEntityWithProperties-master" attrs="{{ {user:user, entitytype:'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties', currentState:'VIEW'} }}" contextRetriever="{{getContext}}">
                             </tg-ui-action>-->
-                            <tg-page-action icon="editor:mode-edit" action="{{editAction}}">
-                            </tg-page-action>
+                            <tg-page-action icon="editor:mode-edit" action="{{editAction}}"></tg-page-action>
                             <span class="span-tooltip" tip>Edit selected entity</span>
                         </core-tooltip>
                         <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
@@ -207,8 +207,15 @@
             Polymer({
                 ready: function () {
                     this.super();
-                    
+
                     this.editAction = this.editAction.bind(this);
+                },
+                newAction : function () {
+                    var self = this;
+                    postal.publish({
+                        channel: "master",
+                        topic: "new"
+                    });
                 },
                 editAction: function () {
                     var self = this;
