@@ -10,6 +10,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetConfig<T extends AbstractEntity<?>> {
+public interface IResultSetBuilder<T extends AbstractEntity<?>> {
 
 }

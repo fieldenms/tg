@@ -1,0 +1,15 @@
+package ua.com.fielden.platform.web.centre.api.crit;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.calc.IEnhanceEntityWithCalcProps;
+
+/**
+ * A contract to provide fluent joining of selection criteria definitions.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
+public interface IAlsoCrit<T extends AbstractEntity<?>> {
+    IEnhanceEntityWithCalcProps<T> also();
+}

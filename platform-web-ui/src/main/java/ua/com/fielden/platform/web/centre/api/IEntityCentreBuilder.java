@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre.api;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.calc.IEnhanceEntityWithCalcProps;
@@ -30,9 +33,24 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
      */
     public static void main(final String[] args) {
        final IEntityCentreBuilder<TgWorkOrder> ecb = null;
-
-       ecb.forEntity(TgWorkOrder.class);
+       ecb.forEntity(TgWorkOrder.class)
+       .addCrit("status").asMulti().autocompleter().withMatcher(MyClass.class)
+       .also()
+       .addCrit("intValue").asRange().integer()
+       .also()
+       .addCrit("intValueCritOnly").asSingle().integer()
+       .also()
+       .addCrit("statusCritOnly").asSingle().autocompleter();
     }
 
+    // TODO Serves for an API example purposes. Should be removed as soon as API gets implemented.
+    public static class MyClass extends FallbackValueMatcherWithCentreContext<TgWorkOrder> {
+
+        public MyClass(final IEntityDao<TgWorkOrder> dao) {
+            super(dao);
+            // TODO Auto-generated constructor stub
+        }
+
+    }
 
 }
