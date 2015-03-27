@@ -6,6 +6,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.calc.IEnhanceEntityWithCalcProps;
+import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 
 /**
  * This contract is an entry point for an Entity Centre aPI -- an embedded domain specific language for constructing entity centres.
@@ -31,8 +32,7 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
      *
      * @param args
      */
-    public static void main(final String[] args) {
-       final IEntityCentreBuilder<TgWorkOrder> ecb = null;
+    public static void build(final IEntityCentreBuilder<TgWorkOrder> ecb) {
        ecb.forEntity(TgWorkOrder.class)
        .addCrit("status").asMulti().autocompleter().withMatcher(MyClass.class)
        .also()
@@ -40,7 +40,16 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .also()
        .addCrit("intValueCritOnly").asSingle().integer()
        .also()
-       .addCrit("statusCritOnly").asSingle().autocompleter();
+       .addCrit("statusCritOnly").asSingle().autocompleter()
+       .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
+               + "[[mr], [mr], [mr], [mr], [mr]], "
+               + "[[mr], [mr], [mr], [mr], [mr]]]"))
+       .setLayoutFor(Device.TABLET, null, ("['vertical', 'justified', 'margin:20px', "
+               + "[[mr], [mr], [mr], [mr], [mr]], "
+               + "[[mr], [mr], [mr], [mr], [mr]]]"))
+       .setLayoutFor(Device.MOBILE, null, ("['vertical', 'justified', 'margin:20px', "
+               + "[[mr], [mr], [mr], [mr], [mr]], "
+               + "[[mr], [mr], [mr], [mr], [mr]]]"));
     }
 
     // TODO Serves for an API example purposes. Should be removed as soon as API gets implemented.

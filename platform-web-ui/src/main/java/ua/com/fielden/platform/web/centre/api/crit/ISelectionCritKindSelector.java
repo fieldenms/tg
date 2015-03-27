@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder;
 
 /**
  * A contract for selecting a multi-valued, single-valued or range kind of selection criteria.
@@ -10,7 +9,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder;
  *
  * @param <T>
  */
-public interface ISelectionCritKindSelector<T extends AbstractEntity<?>> extends IResultSetBuilder<T> {
+public interface ISelectionCritKindSelector<T extends AbstractEntity<?>> {
     IMultiValueCritSelector<T> asMulti();
     ISingleValueCritBuilder<T> asSingle();
     IRangeValueCritBuilder<T> asRange();

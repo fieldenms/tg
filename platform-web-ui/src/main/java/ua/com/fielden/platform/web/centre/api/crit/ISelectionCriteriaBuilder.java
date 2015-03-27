@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder;
 
 /**
@@ -13,6 +14,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder;
  *
  * @param <T>
  */
-public interface ISelectionCriteriaBuilder<T extends AbstractEntity<?>> extends IResultSetBuilder<T> {
+public interface ISelectionCriteriaBuilder<T extends AbstractEntity<?>> extends ILayoutConfig<T> {
     ISelectionCritKindSelector<T> addCrit(final String propName);
 }
