@@ -213,14 +213,14 @@
                 newAction : function () {
                     var self = this;
                     postal.publish({
-                        channel: "master",
+                        channel: "centre",
                         topic: "new"
                     });
                 },
                 editAction: function () {
                     var self = this;
                     postal.publish({
-                        channel: "master",
+                        channel: "centre",
                         topic: "edit",
                         data: {
                             entity: self.getContext()

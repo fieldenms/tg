@@ -23,11 +23,6 @@
     <link rel="import" href="/resources/components/postal-lib.html">
 
     <style>
-        core-animated-pages {
-            width: 100%;
-            height: 100%;
-            background-color: white;
-        }
         body {
             font-family: "RobotoDraft";
         }
@@ -38,6 +33,12 @@
         ::shadow core-toolbar {
             background-color: #0288D1;
             color: #fff;
+        }
+        core-scaffold::shadow [main] {
+            background-color: white;
+        }
+        core-scaffold::shadow [main]::shadow #mainContainer{
+            overflow-x: auto;
         }
     </style>
 
@@ -50,7 +51,7 @@
 
             <nav>
                 <core-toolbar>TG Example</core-toolbar>
-                <core-menu selected="{{route}}" valueattr="hash">
+                <core-menu selected="{{route}}" valueattr="hash" on-core-select="{{onMenuItemSelected}}">
                     <core-item hash="centre" label="Entity Centre"></core-item>
                     <core-item hash="master" label="Entity Master"></core-item>
                 </core-menu>
@@ -60,7 +61,7 @@
                 <div>{{route === 'centre' ? 'Entity Centre' : 'Entity Master'}}</div>
             </core-toolbar>
 
-            <core-animated-pages selected="{{route}}" valueattr="id" transitions="slide-from-right">
+            <core-animated-pages selected="{{route}}" valueattr="id" transitions="slide-from-right" fit>
                 <tg-entity-centre-for-TgPersistentEntityWithProperties id="centre" user="SU"></tg-entity-centre-for-TgPersistentEntityWithProperties>
                 <load-element id="master" import="{{componentUri}}" elementName="{{elementName}}" attrs="{{attrs}}" on-after-load="{{onMasterLoaded}}"></load-element>
             </core-animated-pages>
@@ -85,7 +86,14 @@
                 currentState: 'VIEW'
             };
 
+            centreExample.onMenuItemSelected = function (event, detail, source) {
+                if (detail.isSelected) {
+                    document.querySelector("#scaffold").closeDrawer();
+                }
+            }
+
             centreExample.onMasterLoaded = function (e, detail, source) {
+                console.log("----------onMasterLoaded", e, detail, source);
                 detail.onRetrieved = function (entity, bindingEntity, customObject) {
                     console.log("onRetrieved");
                     centreExample.route = "master";
@@ -96,7 +104,14 @@
                 };
 
                 detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
-                    console.log("onSaved");
+                    var self = this;
+                    postal.publish({
+                        channel: "master-" + self.uuid,
+                        topic: "save",
+                        data: {
+                            id: potentiallySavedEntity.id
+                        }
+                    });
                 };
 
                 detail.retrieve();
@@ -105,9 +120,10 @@
             centreExample.addEventListener('template-bound', function (e) {
                 this.route = this.route || "centre";
                 document.querySelector("#centre").retrieve();
-                
+                document.querySelector("#scaffold").$.drawerPanel.forceNarrow = true;
+
                 postal.subscribe({
-                    channel: "master",
+                    channel: "centre",
                     topic: "edit",
                     callback: function (data, envelope) {
                         var masterLoader = document.querySelector("#master");
@@ -115,9 +131,9 @@
                         masterLoader.reload();
                     }
                 });
-                
+
                 postal.subscribe({
-                    channel: "master",
+                    channel: "centre",
                     topic: "new",
                     callback: function (data, envelope) {
                         var masterLoader = document.querySelector("#master");

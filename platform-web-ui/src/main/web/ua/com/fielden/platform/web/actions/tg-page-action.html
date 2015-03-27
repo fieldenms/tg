@@ -73,50 +73,7 @@
                 // var ser = this.$.serialiser.serialise(context);
                 // this.$.actionExecutor.body = JSON.stringify(ser);
                 this.action();
-            },
-
-            /**
-             * The function that is invoked after the action has completed (error or success).
-             */
-            afterExecution: function () {
-                console.log(this.shortDesc + ": after execution");
-                // this.enabled = true;
-            },
-
-            /**
-             * Analyzes and processes the result of executor response.
-             */
-            _onExecuted: function(e, detail, source) {
-            	console.log("_onExecuted: e", e, "egi", e.srcElement);
-            	this.$.entityMaster.open();
-
-            	// detail.entityid = 15; // e.srcElement.$.egi.getSelectedEntities()[0].id;
-
-            	// getSelectedEntities
-
-            	detail.onRetrieved = function(entity, bindingEntity, customObject) {
-                    console.log("onRetrieved");
-                };
-
-                detail.onValidated = function(validatedEntity, bindingEntity, customObject) {
-                    console.log("onValidated");
-                };
-
-                detail.onSaved = function(potentiallySavedEntity, newBindingEntity) {
-                    console.log("onSaved");
-                };
-
-                detail.entityid = this.contextRetriever().id;
-            	detail.retrieve();
-            	console.log('_onExecuted: uiComponent', detail);
-            	// TODO insert into DOM uiComponent
-	           	// TODO insert into DOM uiComponent
-            	// TODO insert into DOM uiComponent
-       	        // TODO insert into DOM uiComponent
-
-                this.afterExecution();
-//                this.$.entityMaster.updateTargetDimensions();
-            },
+            }
         });
     </script>
 </polymer-element>
