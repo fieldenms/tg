@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector0;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector3;
+import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector5;
 
 /**
  * Default implementation for the entity centre context selector API.
@@ -28,8 +29,8 @@ public class EntityCentreContextSelector<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IEntityCentreContextSelector3<T> withMasterEntity() {
-        return new EntityCentreContextSelector3<T>(false, true);
+    public IEntityCentreContextSelector5<T> withMasterEntity() {
+        return new EntityCentreContextSelector5<T>(false, true);
     }
 
     @Override

@@ -27,8 +27,23 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     private IPostAction errorPostAction;
     private boolean returnNoAction;
 
+    /**
+     * A starting point to entity action configuration.
+     *
+     * @param functionalEntity
+     * @return
+     */
     public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> action(final Class<? extends AbstractEntity<?>> functionalEntity) {
         return new EntityActionBuilder<T>().addAction(functionalEntity);
+    }
+
+    /**
+     * Constructs entity action configuration that indicates the need to remove the default action if any.
+     *
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IEntityActionBuilder7<T> actionOff() {
+        return new EntityActionBuilder<T>().noAction();
     }
 
     private EntityActionBuilder() {}

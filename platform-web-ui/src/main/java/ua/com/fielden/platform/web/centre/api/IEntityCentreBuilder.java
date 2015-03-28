@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.centre.api;
 
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.*;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.*;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
@@ -58,7 +58,7 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .also()
        .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
        .also()
-       .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(null)
+       .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
        .also()
        .addProp(mkProp("IS", "In service", "IS")).withAction(null);
 
