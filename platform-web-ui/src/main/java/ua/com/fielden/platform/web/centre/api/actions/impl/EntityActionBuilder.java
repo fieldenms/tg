@@ -15,7 +15,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
-public class EntityActionBuilder<T extends AbstractEntity<T>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
+public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
 
     private Class<? extends AbstractEntity<?>> functionalEntity;
     private CentreContextConfig context;
@@ -26,6 +26,12 @@ public class EntityActionBuilder<T extends AbstractEntity<T>> implements IEntity
     private IPostAction successPostAction;
     private IPostAction errorPostAction;
     private boolean returnNoAction;
+
+    public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> action(final Class<? extends AbstractEntity<?>> functionalEntity) {
+        return new EntityActionBuilder<T>().addAction(functionalEntity);
+    }
+
+    private EntityActionBuilder() {}
 
     @Override
     public EntityActionConfig build() {
