@@ -12,4 +12,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public interface IResultSetBuilder<T extends AbstractEntity<?>> {
 
+    /**
+     * Adds property of ant level to the result set.
+     *
+     * @param propName
+     */
+    IResultSetBuilder0<T> addProp(final String propName);
+
+    IResultSetBuilder0<T> addProp(final PropDef<?> propDef);
+
 }
