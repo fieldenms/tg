@@ -56,6 +56,8 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
                + "[[mr], [mr], [mr], [mr], [mr]]]"))
        .addProp("status").withAction(null)
        .also()
+       .addProp("status").order(3).desc().withAction(null)
+       .also()
        .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
        .also()
        .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
@@ -68,6 +70,7 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .addSecondaryAction(null)
        .setCustomPropsValueAssignmentHandler(null)
        .setRenderingCustomiser(null);
+
 
     }
 

@@ -17,8 +17,8 @@ public interface IResultSetBuilder<T extends AbstractEntity<?>> {
      *
      * @param propName
      */
-    IResultSetBuilder0WithPropAction<T> addProp(final String propName);
+    IResultSetBuilder0Ordering<T> addProp(final String propName);
 
-    IResultSetBuilder0WithPropAction<T> addProp(final PropDef<?> propDef);
+    IResultSetBuilder2WithPropAction<T> addProp(final PropDef<?> propDef);
 
 }

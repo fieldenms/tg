@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder4RenderingCustomiser<T extends AbstractEntity<?>> {
+public interface IResultSetBuilder6RenderingCustomiser<T extends AbstractEntity<?>> {
 
 
     void setRenderingCustomiser(final IRenderingCustomiser<T, ?> customiser);

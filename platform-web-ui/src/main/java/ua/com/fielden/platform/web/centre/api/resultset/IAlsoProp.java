@@ -9,6 +9,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IAlsoProp<T extends AbstractEntity<?>> extends IResultSetBuilder1PrimaryAction<T> {
+public interface IAlsoProp<T extends AbstractEntity<?>> extends IResultSetBuilder3PrimaryAction<T> {
     IResultSetBuilder<T> also();
 }

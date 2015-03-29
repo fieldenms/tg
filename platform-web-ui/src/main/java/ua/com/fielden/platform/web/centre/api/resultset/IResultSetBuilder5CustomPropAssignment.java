@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder3CustomPropAssignment<T extends AbstractEntity<?>> extends IResultSetBuilder4RenderingCustomiser<T> {
+public interface IResultSetBuilder5CustomPropAssignment<T extends AbstractEntity<?>> extends IResultSetBuilder6RenderingCustomiser<T> {
 
-    IResultSetBuilder4RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<T>> handler);
+    IResultSetBuilder6RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<T>> handler);
 }
