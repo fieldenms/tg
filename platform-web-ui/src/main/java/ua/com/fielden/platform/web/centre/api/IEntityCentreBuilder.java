@@ -66,7 +66,7 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .addSecondaryAction(null)
        .also()
        .addSecondaryAction(null)
-       .setCustomPropsValueAssignmentHanler(null);
+       .setCustomPropsValueAssignmentHandler(null);
 
     }
 
