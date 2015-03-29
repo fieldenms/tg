@@ -60,7 +60,13 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .also()
        .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
        .also()
-       .addProp(mkProp("IS", "In service", "IS")).withAction(null);
+       .addProp(mkProp("IS", "In service", "IS")).withAction(null)
+       .addPrimaryAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).icon("name").longDesc("tooltip text").build())
+       .also()
+       .addSecondaryAction(null)
+       .also()
+       .addSecondaryAction(null)
+       .setCustomPropsValueAssignmentHanler(null);
 
     }
 
