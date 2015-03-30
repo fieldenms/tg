@@ -46,8 +46,6 @@ import com.google.inject.Injector;
 public abstract class AbstractWebApp extends Application {
 
     protected final Injector injector;
-    // TODO when authentication mechanism will be implemented then user name won't be needed any longer.
-    private final String username;
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
      * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
@@ -81,15 +79,13 @@ public abstract class AbstractWebApp extends Application {
             final String appName,
             final String desc,
             final String owner,
-            final String author,
-            final String username) {
+            final String author) {
         super(context);
         //        this.platformJsScriptsLocation = "../../tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
         //        this.platformVendorJsScriptsLocation = "../../tg/platform-web-ui/src/main/resources/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         //        this.platformGisJsScriptsLocation = platformJsScriptsLocation + "gis/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
-        this.username = username;
         this.injector = injector;
         this.resourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
         this.resourcePaths.addAll(Arrays.asList(resourcePaths));

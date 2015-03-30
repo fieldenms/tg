@@ -74,7 +74,7 @@ public class ApplicationConfiguration extends Component {
             new WebApp(//
             getContext().createChildContext(),//
             injector,//
-            "TG Web UI Testing Server", "The testing server for Trident Genesis platform Web UI module", "FMS", "FMS", "SU"));
+            "TG Web UI Testing Server", "The testing server for Trident Genesis platform Web UI module", "FMS", "FMS"));
         } catch (final Exception e) {
             e.printStackTrace();
             throw new IllegalStateException(e);

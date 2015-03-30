@@ -54,9 +54,8 @@ public class WebApp extends AbstractWebApp {
             final String name,
             final String desc,
             final String owner,
-            final String author,
-            final String username) {
-        super(context, injector, new String[0], name, desc, owner, author, username);
+            final String author) {
+        super(context, injector, new String[0], name, desc, owner, author);
     }
 
     private static class PreAction implements IPreAction {
