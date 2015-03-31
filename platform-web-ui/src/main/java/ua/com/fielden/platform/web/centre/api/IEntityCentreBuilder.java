@@ -48,13 +48,13 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
            .addTopAction(null)
            .addTopAction(null)
        .endTopActionsGroup()
-       .addCrit("status").asMulti().autocompleter().withMatcher(MyClass.class)
+       .addCrit("status").asMulti().autocompleter().withMatcher(MyClass.class, context().withCurrentEntity().withSelectionCrit().build())
        .also()
        .addCrit("intValue").asRange().integer()
        .also()
        .addCrit("intValueCritOnly").asSingle().integer()
        .also()
-       .addCrit("statusCritOnly").asSingle().autocompleter()
+       .addCrit("statusCritOnly").asSingle().autocompleter().withMatcher(null)
        .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
                + "[[mr], [mr], [mr], [mr], [mr]], "
                + "[[mr], [mr], [mr], [mr], [mr]]]"))
