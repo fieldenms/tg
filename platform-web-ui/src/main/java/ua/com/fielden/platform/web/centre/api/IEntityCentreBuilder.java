@@ -36,7 +36,8 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
      * @param args
      */
     public static void build(final IEntityCentreBuilder<TgWorkOrder> ecb) {
-       ecb.forEntity(TgWorkOrder.class)
+       final EntityCentreConfig ecc = ecb
+       .forEntity(TgWorkOrder.class)
        .addTopAction(null)
        .also()
        .beginTopActionsGroup("grop description")
@@ -80,7 +81,8 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .addSecondaryAction(null)
        .setCustomPropsValueAssignmentHandler(null)
        .setRenderingCustomiser(null)
-       .setQueryEnhancer(null, context().withMasterEntity().withSelectionCrit().build());
+       .setQueryEnhancer(null, context().withMasterEntity().withSelectionCrit().build())
+       .build();
 
 
     }

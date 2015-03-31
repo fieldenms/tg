@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.query_enhancer;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 
 /**
@@ -11,7 +12,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
  *
  * @param <T>
  */
-public interface IQueryEnhancerSetter<T extends AbstractEntity<?>> {
+public interface IQueryEnhancerSetter<T extends AbstractEntity<?>> extends IEcbCompletion<T> {
 
-    void setQueryEnhancer(final Class<? extends IQueryEnhancer<T>> type, final CentreContextConfig contextConfig);
+    IEcbCompletion<T> setQueryEnhancer(final Class<? extends IQueryEnhancer<T>> type, final CentreContextConfig contextConfig);
 }
