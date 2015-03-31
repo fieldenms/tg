@@ -796,6 +796,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             result = prime * result + ((propertiesDatePrefixes == null) ? 0 : propertiesDatePrefixes.hashCode());
             result = prime * result + ((propertiesExclusive1 == null) ? 0 : propertiesExclusive1.hashCode());
             result = prime * result + ((propertiesExclusive2 == null) ? 0 : propertiesExclusive2.hashCode());
+            result = prime * result + ((propertiesMetaValuePresences == null) ? 0 : propertiesMetaValuePresences.hashCode());
             result = prime * result + ((propertiesNots == null) ? 0 : propertiesNots.hashCode());
             result = prime * result + ((propertiesOrNulls == null) ? 0 : propertiesOrNulls.hashCode());
             result = prime * result + ((propertiesValues1 == null) ? 0 : propertiesValues1.hashCode());
@@ -862,6 +863,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     return false;
                 }
             } else if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
+                return false;
+            }
+            if (propertiesMetaValuePresences == null) {
+                if (other.propertiesMetaValuePresences != null) {
+                    return false;
+                }
+            } else if (!propertiesMetaValuePresences.equals(other.propertiesMetaValuePresences)) {
                 return false;
             }
             if (propertiesNots == null) {
