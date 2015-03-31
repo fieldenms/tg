@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 
 /**
  * This contract serves for specifying custom rendering logic.
@@ -10,8 +11,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder6RenderingCustomiser<T extends AbstractEntity<?>> {
+public interface IResultSetBuilder6RenderingCustomiser<T extends AbstractEntity<?>> extends IQueryEnhancerSetter<T> {
 
 
-    void setRenderingCustomiser(final IRenderingCustomiser<T, ?> customiser);
+    IQueryEnhancerSetter<T> setRenderingCustomiser(final Class<? extends IRenderingCustomiser<T, ?>> type);
 }

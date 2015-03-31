@@ -79,7 +79,8 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .also()
        .addSecondaryAction(null)
        .setCustomPropsValueAssignmentHandler(null)
-       .setRenderingCustomiser(null);
+       .setRenderingCustomiser(null)
+       .setQueryEnhancer(null, context().withMasterEntity().withSelectionCrit().build());
 
 
     }
