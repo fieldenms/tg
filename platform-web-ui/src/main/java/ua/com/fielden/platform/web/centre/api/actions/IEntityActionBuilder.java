@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 
 /**
  * A configuration of an entity related action, which is associated with every entity that is represented by an entity centre.
@@ -15,7 +16,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @param <T>
  */
 public interface IEntityActionBuilder<T extends AbstractEntity<?>> {
-    IEntityActionBuilder0<T> addAction(final Class<? extends AbstractEntity<?>> functionalEntity);
+    IEntityActionBuilder0<T> addAction(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity);
 
     /**
      * In case where no action should be associated with places that have default actions associated with them automatically.

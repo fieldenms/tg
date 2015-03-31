@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.actions.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder0;
@@ -17,7 +18,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
 
-    private Class<? extends AbstractEntity<?>> functionalEntity;
+    private Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity;
     private CentreContextConfig context;
     private String icon;
     private String shortDesc;
@@ -33,7 +34,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
      * @param functionalEntity
      * @return
      */
-    public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> action(final Class<? extends AbstractEntity<?>> functionalEntity) {
+    public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> action(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity) {
         return new EntityActionBuilder<T>().addAction(functionalEntity);
     }
 
@@ -42,7 +43,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
      *
      * @return
      */
-    public static <T extends AbstractEntity<?>> IEntityActionBuilder7<T> actionOff() {
+    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> IEntityActionBuilder7<T> actionOff() {
         return new EntityActionBuilder<T>().noAction();
     }
 
@@ -66,7 +67,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     }
 
     @Override
-    public IEntityActionBuilder0<T> addAction(final Class<? extends AbstractEntity<?>> functionalEntity) {
+    public IEntityActionBuilder0<T> addAction(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity) {
         this.functionalEntity = functionalEntity;
         return this;
     }

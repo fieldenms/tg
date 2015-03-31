@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
@@ -12,7 +13,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
  *
  */
 public class EntityActionConfig {
-    public final Class<? extends AbstractEntity<?>> functionalEntity;
+    public final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity;
     public final CentreContextConfig context;
     public final String icon;
     public final String shortDesc;
@@ -23,7 +24,7 @@ public class EntityActionConfig {
     private final boolean noAction;
 
     private EntityActionConfig(
-            final Class<? extends AbstractEntity<?>> functionalEntity,
+            final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final CentreContextConfig context,
             final String icon,
             final String shortDesc,
@@ -66,7 +67,7 @@ public class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createActionConfig(
-                    final Class<? extends AbstractEntity<?>> functionalEntity,
+                    final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
                     final CentreContextConfig context,
                     final String icon,
                     final String shortDesc,
