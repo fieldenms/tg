@@ -75,7 +75,7 @@
             <div layout horizontal fit>
                 <core-animated-pages selected="{{route}}" valueattr="hash" transitions="slide-from-right">
                     <div hash="centre">
-                        <tg-entity-centre-for-TgPersistentEntityWithProperties id="centre" user="SU"></tg-entity-centre-for-TgPersistentEntityWithProperties>
+                        <tg-entity-centre-for-TgPersistentEntityWithProperties id="centre" user="SU" entityType="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"></tg-entity-centre-for-TgPersistentEntityWithProperties>
                     </div>
                     <template repeat="{{master in masters}}">
                         <div hash="{{master.hash}}">
@@ -117,15 +117,26 @@
                 console.log("----------onMasterLoaded", e, detail, source);
 
                 detail.onRetrieved = function (entity, bindingEntity, customObject) {
-                    postal.publish({
-                        channel: "view",
-                        topic: "master.created",
-                        data: {
-                            entityid: entity.id,
-                            centreUuid: detail.centreUuid,
-                            masterUuid: detail.uuid
-                        }
-                    });
+                    if (entity.id === null) {
+                        postal.publish({
+                            channel: "view",
+                            topic: "master.new.created",
+                            data: {
+                                centreUuid: detail.centreUuid,
+                                masterUuid: detail.uuid
+                            }
+                        });
+                    } else {
+                        postal.publish({
+                            channel: "view",
+                            topic: "master.edit.created",
+                            data: {
+                                entityid: entity.id,
+                                centreUuid: detail.centreUuid,
+                                masterUuid: detail.uuid
+                            }
+                        });
+                    }
 
                     centreExample.route = source.getAttribute("id");
                 };
@@ -149,13 +160,15 @@
             };
 
             centreExample.addEventListener('template-bound', function (e) {
+                var masterNumber = 1;
+
                 centreExample.route = centreExample.route || "centre";
                 document.querySelector("#centre").retrieve();
                 document.querySelector("#scaffold").$.drawerPanel.forceNarrow = true;
-
+                //////////////////////////Edit actions//////////////////////////////////
                 postal.subscribe({
                     channel: "manager",
-                    topic: "master.create",
+                    topic: "master.edit.create",
                     callback: function (data, envelope) {
                         var uuid = document.querySelector("#reflector").generateUUID();
                         data.hash = "master_" + uuid;
@@ -164,20 +177,33 @@
                         centreExample.masters.push(data);
                     }
                 });
-                
-                 postal.subscribe({
+
+                postal.subscribe({
                     channel: "manager",
                     topic: "master.show",
                     callback: function (data, envelope) {
                         centreExample.route = "master_" + data.uuid;
                         postal.publish({
-                        channel: "view",
-                        topic: "master.shown",
-                        data: {
-                            centreUuid: detail.centreUuid,
-                            masterUuid: detail.uuid
-                        }
-                    });
+                            channel: "view",
+                            topic: "master.shown",
+                            data: {
+                                centreUuid: detail.centreUuid,
+                                masterUuid: detail.uuid
+                            }
+                        });
+                    }
+                });
+                /////////////////New Actions//////////////////////////////
+                postal.subscribe({
+                    channel: "manager",
+                    topic: "master.new.create",
+                    callback: function (data, envelope) {
+                        var uuid = document.querySelector("#reflector").generateUUID();
+                        data.hash = "master_" + uuid;
+                        data.label = "New Master #" + masterNumber;
+                        data.attrs.uuid = uuid;
+                        centreExample.masters.push(data);
+                        masterNumber += 1;
                     }
                 });
 

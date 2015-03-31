@@ -15,7 +15,7 @@
 <link rel="import" href="/resources/polymer/core-icons/hardware-icons.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
  -->
-<polymer-element name="tg-entity-centre" attributes="user">
+<polymer-element name="tg-entity-centre" attributes="user entityType">
     <template>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <style>
@@ -54,6 +54,13 @@
     <script>
         (function () {
             Polymer({
+                publish: {
+                    /**
+                     * The entity type for which this entity centre is created.
+                     */
+                    entityType: null
+                },
+
                 selectedView: 0,
 
                 /**
@@ -64,6 +71,14 @@
                     self.super();
 
                     self.onRun = self.onRun.bind(self);
+                },
+                
+                /**
+                 * Returns simple entity type name.
+                 */
+                simpleEntityType: function () {
+                    var ind = this.entityType.lastIndexOf(".") + 1;
+                    return this.entityType.substring(ind);
                 },
 
                 /**
@@ -156,7 +171,7 @@
                     return this.canManageCentreConfig(isCentreChanged);
                 },
 
-                canManageCentreConfig: function(isCentreChanged) {
+                canManageCentreConfig: function (isCentreChanged) {
                     console.log("canManageCentreConfig: ", (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true);
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true;
                 }

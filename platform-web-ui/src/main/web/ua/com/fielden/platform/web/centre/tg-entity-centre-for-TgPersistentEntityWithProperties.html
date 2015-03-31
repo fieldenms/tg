@@ -210,19 +210,28 @@
                     
                     self.super();
                     self.editAction = self.editAction.bind(self);
-                    
+                    self.newAction = self.newAction.bind(self);
+                    ///////////////////////Edit Listeners/////////////////////////////////////
                     postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "edit.finish.created",
                         callback: function(data, envelope) {
-                            console.log("-------- Masters UUID: " + data.uuid + " ------------");
+                            console.log("-------- Masters Edit Created UUID: " + data.uuid + " ------------");
                         }
                     });
                     postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "edit.finish.shown",
                         callback: function(data, envelope) {
-                            console.log("-------- Masters UUID: " + data.uuid + " ------------");
+                            console.log("-------- Masters Edit Shown UUID: " + data.uuid + " ------------");
+                        }
+                    });
+                    /////////////////////////New listener//////////////////////////////////////
+                    postal.subscribe({
+                        channel: "centre_" + self.$.selection_criteria.uuid,
+                        topic: "new.finish",
+                        callback: function(data, envelope) {
+                            console.log("-------- Masters New UUID: " + data.uuid + " ------------");
                         }
                     });
                     
@@ -231,7 +240,12 @@
                     var self = this;
                     postal.publish({
                         channel: "centre",
-                        topic: "new"
+                        topic: "new.start",
+                        data: {
+                            entityType: self.entityType,
+                            simpleEntityType: self.simpleEntityType(),
+                            uuid: self.$.selection_criteria.uuid
+                        }
                     });
                 },
                 editAction: function () {

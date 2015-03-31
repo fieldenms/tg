@@ -71,7 +71,7 @@
             <div layout horizontal fit>
                 <core-animated-pages id="pages" selected="{{route}}" valueattr="hash" transitions="slide-from-right">
                     <div hash="centre">
-                        <tg-entity-centre-for-TgPersistentEntityWithProperties id="centre" user="SU"></tg-entity-centre-for-TgPersistentEntityWithProperties>
+                        <tg-entity-centre-for-TgPersistentEntityWithProperties id="centre" user="SU" entityType="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"></tg-entity-centre-for-TgPersistentEntityWithProperties>
                     </div>
                     <div hash="master">
                         <load-element id="master" import="{{componentUri}}" elementName="{{elementName}}" attrs="{{attrs}}" on-after-load="{{onMasterLoaded}}">

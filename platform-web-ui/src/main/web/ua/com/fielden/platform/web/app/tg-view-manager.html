@@ -7,12 +7,11 @@
             var user,
                 mastersById = {},
                 //mastersByUuid = {},
+                ///////////////////////////////////////////////////Edit action listeners.///////////////////////////////////////////////////
                 editListener = postal.subscribe({
                     channel: "centre",
                     topic: "edit.start",
                     callback: function (data, envelope) {
-                        //TODO please make sure that master for the specified entity is created. If it is created, 
-                        //TODO then show it and send message back that master is already exist.
                         var fullTypeName = data.entity.type().notEnhancedFullClassName(),
                             simpleTypeName = data.entity.type()._notEnhancedSimpleClassName(),
                             master = {
@@ -37,7 +36,7 @@
                         } else {
                             postal.publish({
                                 channel: "manager",
-                                topic: "master.create",
+                                topic: "master.edit.create",
                                 data: master
                             });
                         }
@@ -45,7 +44,7 @@
                 }),
                 masterCreatedListener = postal.subscribe({
                     channel: "view",
-                    topic: "master.created",
+                    topic: "master.edit.created",
                     callback: function (data, envelope) {
                         mastersById["" + data.entityid] = data.masterUuid;
                         postal.publish({
@@ -60,7 +59,7 @@
                 masterShownListener = postal.subscribe({
                     channel: "view",
                     topic: "master.shown",
-                    callback: function(data, envelope) {
+                    callback: function (data, envelope) {
                         postal.publish({
                             channel: "centre_" + data.centreUuid,
                             topic: "edit.finish.shown",
@@ -69,8 +68,43 @@
                             }
                         });
                     }
+                }),
+                ///////////////////////////////////////////////////New action listeners.///////////////////////////////////////////////////
+                newListener = postal.subscribe({
+                    channel: "centre",
+                    topic: "new.start",
+                    callback: function (data, envelope) {
+                            master = {
+                                componentUri: "/users/" + user + "/master/" + data.entityType,
+                                elementName: "tg-" + data.simpleEntityType + "-master",
+                                attrs: {
+                                    user: user,
+                                    entityid: "new",
+                                    entitytype: data.entityType,
+                                    currentState: 'VIEW',
+                                    centreUuid: data.uuid
+                                }
+                            };
+                        postal.publish({
+                            channel: "manager",
+                            topic: "master.new.create",
+                            data: master
+                        });
+                    }
+                }),
+                masterNewListener = postal.subscribe({
+                    channel: "view",
+                    topic: "master.new.created",
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: "centre_" + data.centreUuid,
+                            topic: "new.finish",
+                            data: {
+                                uuid: data.masterUuid
+                            }
+                        });
+                    }
                 });
-
             Polymer({
                 userChanged: function (oldValue, newValue) {
                     user = newValue;
