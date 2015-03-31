@@ -1,15 +1,14 @@
 package ua.com.fielden.platform.web.centre.api;
 
-import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.*;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.*;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.actionOff;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-
+import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
-import ua.com.fielden.platform.web.centre.api.calc.IEnhanceEntityWithCalcProps;
-
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 
 /**
@@ -28,7 +27,7 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
      * @param type
      * @return
      */
-    IEnhanceEntityWithCalcProps<T> forEntity(Class<T> type);
+    ICentreTopLevelActions<T> forEntity(Class<T> type);
 
 
     /**
@@ -38,6 +37,17 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
      */
     public static void build(final IEntityCentreBuilder<TgWorkOrder> ecb) {
        ecb.forEntity(TgWorkOrder.class)
+       .addTopAction(null)
+       .also()
+       .beginTopActionsGroup("grop description")
+           .addTopAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
+           .addTopAction(action(null).withContext(context().withSelectionCrit().withSelectedEntities().build()).build())
+       .endTopActionsGroup()
+       .also()
+       .beginTopActionsGroup("group 2")
+           .addTopAction(null)
+           .addTopAction(null)
+       .endTopActionsGroup()
        .addCrit("status").asMulti().autocompleter().withMatcher(MyClass.class)
        .also()
        .addCrit("intValue").asRange().integer()
