@@ -63,6 +63,8 @@
                 var self = this;
                 self.super();
                 console.log("child ready");
+                
+                this.uuid = this.$.reflector.generateUUID();
 
                 self.onRunDefault = self.onRunDefault.bind(self);
 

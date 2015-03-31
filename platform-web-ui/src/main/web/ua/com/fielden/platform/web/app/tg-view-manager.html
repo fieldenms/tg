@@ -1,0 +1,58 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/postal-lib.html">
+
+<polymer-element name="tg-view-manager" attributes="user" hidden>
+    <script>
+        (function () {
+            var user,
+                mastersById = {},
+                //mastersByUuid = {},
+                editListener = postal.subscribe({
+                    channel: "centre",
+                    topic: "edit.start",
+                    callback: function (data, envelope) {
+                        //TODO please make sure that master for the specified entity is created. If it is created, 
+                        //TODO then show it and send message back that master is already exist.
+                        var fullTypeName = data.entity.type().notEnhancedFullClassName(),
+                            simpleTypeName = data.entity.type()._notEnhancedSimpleClassName(),
+                            master = {
+                                componentUri: "/users/" + user + "/master/" + fullTypeName,
+                                elementName: "tg-" + simpleTypeName + "-master",
+                                attrs: {
+                                    user: user,
+                                    entityid: data.entity.id,
+                                    entitytype: fullTypeName,
+                                    currentState: 'VIEW',
+                                    centreUuid: data.uuid
+                                }
+                            };
+                        postal.publish({
+                            channel: "manager",
+                            topic: "master.create",
+                            data : master
+                        });
+                    }
+                }),
+                masterCreatedListener = postal.subscribe({
+                    channel: "view",
+                    topic: "master.created",
+                    callback: function(data, envelope) {
+                        mastersById["" + data.entityid] = data.masterUuid;
+                        postal.publish({
+                            channel: "centre_" + data.centreUuid,
+                            topic: "edit.finish",
+                            data: {
+                                uuid: data.masterUuid
+                            }
+                        });
+                    }
+                });
+
+            Polymer({
+                userChanged: function (oldValue, newValue) {
+                    user = newValue;
+                }
+            });
+        })();
+    </script>
+</polymer-element>

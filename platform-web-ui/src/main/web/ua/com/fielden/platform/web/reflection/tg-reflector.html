@@ -58,12 +58,37 @@
             }
 
             /**
-             * Returns full Java class name for the entity type.
+             * Returns full not enhanced Java class name for the entity type.
+             */
+            EntityType.prototype.notEnhancedFullClassName = function () {
+                var enhancedIndex = this.key.indexOf("$$TgEntity");
+                if (enhancedIndex >= 0) {
+                    return this.key.substring(0, enhancedIndex);
+                }
+                return this.key;
+            }
+
+            /**
+             * Returns simple Java class name for the entity type.
              *
              */
             EntityType.prototype._simpleClassName = function () {
                 var ind = this.fullClassName().lastIndexOf(".") + 1;
                 return this.fullClassName().substring(ind);
+            }
+
+            /**
+             * Returns not enhanced simple Java class name for the entity type.
+             *
+             */
+            EntityType.prototype._notEnhancedSimpleClassName = function () {
+                var ind = this.fullClassName().lastIndexOf(".") + 1,
+                    simpleClassName = this.fullClassName().substring(ind),
+                    enhancedIndex = simpleClassName.indexOf("$$TgEntity");
+                if (enhancedIndex >= 0) {
+                    return simpleClassName.substring(0, enhancedIndex);
+                }
+                return simpleClassName;
             }
 
             /**
@@ -404,7 +429,7 @@
                         return instanceMetaProperty._originalVal;
                     } else {
                         return value;
-                    } 
+                    }
                 } else {
                     return null;
                 }
@@ -543,9 +568,23 @@
                 },
                 typeTable = providePrototypes(@typeTable);
 
-            // console.log("typeTable = ", typeTable);
+            console.log("typeTable = ", typeTable);
 
             Polymer({
+
+                /**
+                 * Generates the unique identifier.
+                 */
+                generateUUID: function () {
+                    var d = new Date().getTime();
+                    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                        var r = (d + Math.random() * 16) % 16 | 0;
+                        d = Math.floor(d / 16);
+                        return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+                    });
+                    return uuid;
+                },
+
                 getType: function (number) {
                     return typeTable[number];
                 },
@@ -683,7 +722,7 @@
                     return str;
                 },
 
-                customObject: function(array) {
+                customObject: function (array) {
                     if (array.length >= 2) {
                         return array[1];
                     } else {

@@ -206,9 +206,19 @@
         (function () {
             Polymer({
                 ready: function () {
-                    this.super();
-
-                    this.editAction = this.editAction.bind(this);
+                    var self = this;
+                    
+                    self.super();
+                    self.editAction = self.editAction.bind(self);
+                    
+                    postal.subscribe({
+                        channel: "centre_" + self.$.selection_criteria.uuid,
+                        topic: "edit.finish",
+                        callback: function(data, envelope) {
+                            console.log("-------- Masters UUID: " + data.uuid + " ------------");
+                        }
+                    });
+                    
                 },
                 newAction : function () {
                     var self = this;
@@ -221,9 +231,10 @@
                     var self = this;
                     postal.publish({
                         channel: "centre",
-                        topic: "edit",
+                        topic: "edit.start",
                         data: {
-                            entity: self.getContext()
+                            entity: self.getContext(),
+                            uuid: self.$.selection_criteria.uuid
                         }
                     });
                 },
