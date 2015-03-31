@@ -164,6 +164,22 @@
                         centreExample.masters.push(data);
                     }
                 });
+                
+                 postal.subscribe({
+                    channel: "manager",
+                    topic: "master.show",
+                    callback: function (data, envelope) {
+                        centreExample.route = "master_" + data.uuid;
+                        postal.publish({
+                        channel: "view",
+                        topic: "master.shown",
+                        data: {
+                            centreUuid: detail.centreUuid,
+                            masterUuid: detail.uuid
+                        }
+                    });
+                    }
+                });
 
                 //                postal.subscribe({
                 //                    channel: "centre",

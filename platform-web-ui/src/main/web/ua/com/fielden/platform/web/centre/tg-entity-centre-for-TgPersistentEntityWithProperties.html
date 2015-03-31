@@ -213,7 +213,14 @@
                     
                     postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
-                        topic: "edit.finish",
+                        topic: "edit.finish.created",
+                        callback: function(data, envelope) {
+                            console.log("-------- Masters UUID: " + data.uuid + " ------------");
+                        }
+                    });
+                    postal.subscribe({
+                        channel: "centre_" + self.$.selection_criteria.uuid,
+                        topic: "edit.finish.shown",
                         callback: function(data, envelope) {
                             console.log("-------- Masters UUID: " + data.uuid + " ------------");
                         }

@@ -26,21 +26,44 @@
                                     centreUuid: data.uuid
                                 }
                             };
-                        postal.publish({
-                            channel: "manager",
-                            topic: "master.create",
-                            data : master
-                        });
+                        if (mastersById["" + data.entity.id]) {
+                            postal.publish({
+                                channel: "manager",
+                                topic: "master.show",
+                                data: {
+                                    uuid: mastersById["" + data.entity.id]
+                                }
+                            });
+                        } else {
+                            postal.publish({
+                                channel: "manager",
+                                topic: "master.create",
+                                data: master
+                            });
+                        }
                     }
                 }),
                 masterCreatedListener = postal.subscribe({
                     channel: "view",
                     topic: "master.created",
-                    callback: function(data, envelope) {
+                    callback: function (data, envelope) {
                         mastersById["" + data.entityid] = data.masterUuid;
                         postal.publish({
                             channel: "centre_" + data.centreUuid,
-                            topic: "edit.finish",
+                            topic: "edit.finish.created",
+                            data: {
+                                uuid: data.masterUuid
+                            }
+                        });
+                    }
+                }),
+                masterShownListener = postal.subscribe({
+                    channel: "view",
+                    topic: "master.shown",
+                    callback: function(data, envelope) {
+                        postal.publish({
+                            channel: "centre_" + data.centreUuid,
+                            topic: "edit.finish.shown",
                             data: {
                                 uuid: data.masterUuid
                             }
