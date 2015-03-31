@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -98,7 +99,8 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
 
     private Pair<CONTEXT, Map<String, Object>> constructCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder) {
         final Class<? extends AbstractEntity<?>> criteriaType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass((String) modifiedPropertiesHolder.get("@@criteriaType"));
-        final CONTEXT valPrototype = (CONTEXT) CriteriaResource.createCriteriaValidationPrototype(CriteriaResource.getMiType(criteriaType), gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+        final Class<? extends MiWithConfigurationSupport<?>> miType = CriteriaResource.getMiType(criteriaType);
+        final CONTEXT valPrototype = (CONTEXT) CriteriaResource.createCriteriaValidationPrototype(miType, CriteriaResource.getCurrentCentreManager(gdtm, miType), critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         return EntityResourceUtils.constructEntity(modifiedPropertiesHolder, valPrototype, coFinder);
     }
 }

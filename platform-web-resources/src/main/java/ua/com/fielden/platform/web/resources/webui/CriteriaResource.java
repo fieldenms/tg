@@ -23,8 +23,10 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -56,6 +58,8 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends ServerResource {
+    public static final String DIFFERENCIES_CENTRE_NAME = "__________DIFFERENCIES_CENTRE_NAME";
+    public static final String FRESH_CENTRE_NAME = "__________FRESH_CENTRE_NAME";
     private final static Logger logger = Logger.getLogger(CriteriaResource.class);
 
     private final RestServerUtil restUtil;
@@ -128,7 +132,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
      * @param miType
      * @return
      */
-    private static Class<AbstractEntity<?>> getEntityType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+    public static Class<AbstractEntity<?>> getEntityType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final EntityType entityTypeAnnotation = miType.getAnnotation(EntityType.class);
         if (entityTypeAnnotation == null) {
             throw new IllegalStateException(String.format("The menu item type [%s] must be annotated with EntityType annotation", miType.getName()));
@@ -185,6 +189,19 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         return CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
     }
 
+    public static ICentreDomainTreeManagerAndEnhancer getCurrentPrincipleCentreManager(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        if (globalManager.getEntityCentreManager(miType, null) == null) {
+            globalManager.initEntityCentreManager(miType, null);
+        }
+
+        if (globalManager.isChangedEntityCentreManager(miType, null)) {
+            throw new IllegalStateException("Should be not changed (after init).");
+        }
+
+        final ICentreDomainTreeManagerAndEnhancer principleCentre = globalManager.getEntityCentreManager(miType, null);
+        return principleCentre;
+    }
+
     /**
      * Returns the current version of principle centre manager (initialises it in case if it is not created yet).
      *
@@ -192,38 +209,138 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
      * @param miType
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer getCurrentCentreManager(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        final String centreName = null; // indicates that the entity centre is principle (TODO saveAsses are not supported yet)
-        if (globalManager.getEntityCentreManager(miType, centreName) == null) {
-            globalManager.initEntityCentreManager(miType, centreName);
+    public static ICentreDomainTreeManagerAndEnhancer getCurrentCentreManager(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        if (globalManager.getEntityCentreManager(miType, FRESH_CENTRE_NAME) == null) {
+            final ICentreDomainTreeManagerAndEnhancer principleCentre = getCurrentPrincipleCentreManager(globalManager, miType);
+            final ICentreDomainTreeManagerAndEnhancer differenciesCentre = getCurrentDifferenciesCentreManager(globalManager, miType);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = applyDifferencies(((GlobalDomainTreeManager) globalManager).copyCentre(principleCentre), differenciesCentre, getEntityType(miType));
 
-            if (globalManager.isChangedEntityCentreManager(miType, centreName)) {
-                throw new IllegalStateException("Should be not changed (after init).");
+            ((GlobalDomainTreeManager) globalManager).init(miType, FRESH_CENTRE_NAME, freshCentre, true);
+        }
+        return globalManager.getEntityCentreManager(miType, FRESH_CENTRE_NAME);
+
+        //        if (globalManager.getEntityCentreManager(miType, null) == null) {
+        //            globalManager.initEntityCentreManager(miType, null);
+        //
+        //            if (globalManager.isChangedEntityCentreManager(miType, null)) {
+        //                throw new IllegalStateException("Should be not changed (after init).");
+        //            }
+        //
+        //            final ICentreDomainTreeManagerAndEnhancer cdtmae = globalManager.getEntityCentreManager(miType, null);
+        //            final Class<AbstractEntity<?>> root = getEntityType(miType);
+        //            for (final String property : cdtmae.getFirstTick().checkedProperties(root)) {
+        //                final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        //                final Class<?> propertyType = isEntityItself ? managedType(root, cdtmae) : PropertyTypeDeterminator.determinePropertyType(managedType(root, cdtmae), property);
+        //                final CritOnly critAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType(root, cdtmae), property);
+        //                final boolean single = critAnnotation != null && Type.SINGLE.equals(critAnnotation.value());
+        //
+        //                if (!EntityUtils.isBoolean(propertyType) && !(EntityUtils.isEntityType(propertyType) && !single)) {
+        //                    cdtmae.getFirstTick().setValue(root, property, null);
+        //                    if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), property)) {
+        //                        cdtmae.getFirstTick().setValue2(root, property, null);
+        //                    }
+        //                }
+        //            }
+        //
+        //            globalManager.saveEntityCentreManager(miType, null);
+        //
+        //            if (globalManager.isChangedEntityCentreManager(miType, null)) {
+        //                throw new IllegalStateException("Should be not changed (after initial save).");
+        //            }
+        //        }
+        //        return globalManager.getEntityCentreManager(miType, null);
+    }
+
+    private static ICentreDomainTreeManagerAndEnhancer applyDifferencies(final ICentreDomainTreeManagerAndEnhancer targetCentre, final ICentreDomainTreeManagerAndEnhancer differenciesCentre, final Class<AbstractEntity<?>> root) {
+        for (final String property : differenciesCentre.getFirstTick().checkedProperties(root)) {
+            if (AbstractDomainTree.isDoubleCriterion(managedType(root, differenciesCentre), property)) {
+                if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.EXCLUSIVE, root, property)) {
+                    targetCentre.getFirstTick().setExclusive(root, property, differenciesCentre.getFirstTick().getExclusive(root, property));
+                }
+                if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.EXCLUSIVE2, root, property)) {
+                    targetCentre.getFirstTick().setExclusive2(root, property, differenciesCentre.getFirstTick().getExclusive2(root, property));
+                }
             }
-
-            final ICentreDomainTreeManagerAndEnhancer cdtmae = globalManager.getEntityCentreManager(miType, centreName);
-            final Class<AbstractEntity<?>> root = getEntityType(miType);
-            for (final String property : cdtmae.getFirstTick().checkedProperties(root)) {
-                final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-                final Class<?> propertyType = isEntityItself ? managedType(root, cdtmae) : PropertyTypeDeterminator.determinePropertyType(managedType(root, cdtmae), property);
-                final CritOnly critAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType(root, cdtmae), property);
-                final boolean single = critAnnotation != null && Type.SINGLE.equals(critAnnotation.value());
-
-                if (!EntityUtils.isBoolean(propertyType) && !(EntityUtils.isEntityType(propertyType) && !single)) {
-                    cdtmae.getFirstTick().setValue(root, property, null);
-                    if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), property)) {
-                        cdtmae.getFirstTick().setValue2(root, property, null);
-                    }
+            final Class<?> propertyType = StringUtils.isEmpty(property) ? managedType(root, differenciesCentre) : PropertyTypeDeterminator.determinePropertyType(managedType(root, differenciesCentre), property);
+            if (EntityUtils.isDate(propertyType)) {
+                if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.DATE_PREFIX, root, property)) {
+                    targetCentre.getFirstTick().setDatePrefix(root, property, differenciesCentre.getFirstTick().getDatePrefix(root, property));
+                }
+                if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.DATE_MNEMONIC, root, property)) {
+                    targetCentre.getFirstTick().setDateMnemonic(root, property, differenciesCentre.getFirstTick().getDateMnemonic(root, property));
+                }
+                if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.AND_BEFORE, root, property)) {
+                    targetCentre.getFirstTick().setAndBefore(root, property, differenciesCentre.getFirstTick().getAndBefore(root, property));
                 }
             }
 
-            globalManager.saveEntityCentreManager(miType, centreName);
+            if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.OR_NULL, root, property)) {
+                targetCentre.getFirstTick().setOrNull(root, property, differenciesCentre.getFirstTick().getOrNull(root, property));
+            }
+            if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.NOT, root, property)) {
+                targetCentre.getFirstTick().setNot(root, property, differenciesCentre.getFirstTick().getNot(root, property));
+            }
 
-            if (globalManager.isChangedEntityCentreManager(miType, centreName)) {
-                throw new IllegalStateException("Should be not changed (after initial save).");
+            if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE, root, property)) {
+                targetCentre.getFirstTick().setValue(root, property, differenciesCentre.getFirstTick().getValue(root, property));
+            }
+            if (AbstractDomainTree.isDoubleCriterion(managedType(root, differenciesCentre), property)) {
+                if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE2, root, property)) {
+                    targetCentre.getFirstTick().setValue2(root, property, differenciesCentre.getFirstTick().getValue2(root, property));
+                }
             }
         }
-        return globalManager.getEntityCentreManager(miType, centreName);
+        return targetCentre;
+    }
+
+    private static ICentreDomainTreeManagerAndEnhancer getCurrentDifferenciesCentreManager(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        if (globalManager.getEntityCentreManager(miType, DIFFERENCIES_CENTRE_NAME) == null) {
+            try {
+                globalManager.initEntityCentreManager(miType, DIFFERENCIES_CENTRE_NAME);
+            } catch (final IllegalArgumentException e) {
+                if (e.getMessage().startsWith("Unable to initialise a non-existent entity-centre instance for type")) {
+                    getCurrentPrincipleCentreManager(globalManager, miType);
+
+                    globalManager.saveAsEntityCentreManager(miType, null, DIFFERENCIES_CENTRE_NAME);
+
+                    if (globalManager.isChangedEntityCentreManager(miType, DIFFERENCIES_CENTRE_NAME)) {
+                        throw new IllegalStateException("Should be not changed.");
+                    }
+
+                    applyDefaultValues(globalManager.getEntityCentreManager(miType, DIFFERENCIES_CENTRE_NAME), getEntityType(miType));
+
+                    globalManager.saveEntityCentreManager(miType, DIFFERENCIES_CENTRE_NAME);
+
+                    if (globalManager.isChangedEntityCentreManager(miType, DIFFERENCIES_CENTRE_NAME)) {
+                        throw new IllegalStateException("Should be not changed.");
+                    }
+                } else {
+                    throw e;
+                }
+            }
+
+            if (globalManager.isChangedEntityCentreManager(miType, DIFFERENCIES_CENTRE_NAME)) {
+                throw new IllegalStateException("Should be not changed.");
+            }
+        }
+        final ICentreDomainTreeManagerAndEnhancer differenciesCentre = globalManager.getEntityCentreManager(miType, DIFFERENCIES_CENTRE_NAME);
+        return differenciesCentre;
+    }
+
+    private static void applyDefaultValues(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<AbstractEntity<?>> root) {
+        for (final String property : cdtmae.getFirstTick().checkedProperties(root)) {
+            final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+            final Class<?> propertyType = isEntityItself ? managedType(root, cdtmae) : PropertyTypeDeterminator.determinePropertyType(managedType(root, cdtmae), property);
+            final CritOnly critAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType(root, cdtmae), property);
+            final boolean single = critAnnotation != null && Type.SINGLE.equals(critAnnotation.value());
+
+            if (!EntityUtils.isBoolean(propertyType) && !(EntityUtils.isEntityType(propertyType) && !single)) {
+                cdtmae.getFirstTick().setValue(root, property, null);
+                if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), property)) {
+                    cdtmae.getFirstTick().setValue2(root, property, null);
+                }
+            }
+        }
     }
 
     /**
@@ -232,7 +349,8 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return restUtil.rawListJSONRepresentation(createCriteriaValidationPrototype(miType, gdtm, critGenerator, -1L), createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm), isCentreChanged(miType, gdtm)));
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = getCurrentCentreManager(gdtm, miType);
+        return restUtil.rawListJSONRepresentation(createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, -1L), createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(originalCdtmae, getEntityType(miType)), isCentreChanged(miType, gdtm)));
     }
 
     /**
@@ -241,13 +359,18 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = getCurrentCentreManager(gdtm, miType);
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-        applyMetaValues(miType, gdtm, modifiedPropertiesHolder);
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+        applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        return restUtil.rawListJSONRepresentation(applied, createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(miType, gdtm), isCentreChanged(miType, gdtm)));
+        return restUtil.rawListJSONRepresentation(applied, createCriteriaMetaValuesCustomObject(createCriteriaMetaValues(originalCdtmae, getEntityType(miType)), isCentreChanged(miType, gdtm)));
     }
+
+    //    private boolean isChanged(final ICentreDomainTreeManagerAndEnhancer originalCdtmae, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+    //        return !EntityUtils.equalsEx(originalCdtmae, cdtmae);
+    //    }
 
     /**
      * Handles PUT request resulting from tg-selection-criteria <code>run()</code> method.
@@ -255,12 +378,13 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Put
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = getCurrentCentreManager(gdtm, miType);
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-        applyMetaValues(miType, gdtm, modifiedPropertiesHolder);
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, gdtm, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+        applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
-        final Pair<Map<String, Object>, ArrayList<?>> pair = createCriteriaMetaValuesCustomObjectWithResult(modifiedPropertiesHolder, createCriteriaMetaValues(miType, gdtm), applied, isCentreChanged(miType, gdtm));
+        final Pair<Map<String, Object>, ArrayList<?>> pair = createCriteriaMetaValuesCustomObjectWithResult(modifiedPropertiesHolder, createCriteriaMetaValues(originalCdtmae, getEntityType(miType)), applied, isCentreChanged(miType, gdtm));
         if (pair.getValue() == null) {
             return restUtil.rawListJSONRepresentation(applied, pair.getKey());
         }
@@ -282,10 +406,9 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
      * @return
      */
     private static boolean isCentreChanged(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
-        getCurrentCentreManager(gdtm, miType);
+        // getCurrentCentreManager(gdtm, miType);
 
-        final String centreName = null; // indicates that the entity centre is principle (TODO saveAsses are not supported yet)
-        final boolean isCentreChanged = gdtm.isChangedEntityCentreManager(miType, centreName);
+        final boolean isCentreChanged = gdtm.isChangedEntityCentreManager(miType, FRESH_CENTRE_NAME);
         logger.debug("isCentreChanged == " + isCentreChanged);
         return isCentreChanged;
     }
@@ -300,22 +423,16 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
      * @param gdtm
      * @return
      */
-    public static Map<String, Map<String, Object>> createCriteriaMetaValues(
-            final Class<? extends MiWithConfigurationSupport<?>> miType,
-            final IGlobalDomainTreeManager gdtm) {
-
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = getCurrentCentreManager(gdtm, miType);
-        final Class<AbstractEntity<?>> entityType = getEntityType(miType);
-
+    public static Map<String, Map<String, Object>> createCriteriaMetaValues(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<AbstractEntity<?>> root) {
         final Map<String, Map<String, Object>> metaValues = new LinkedHashMap<>();
         final DefaultValueContract dvc = new DefaultValueContract();
-        for (final String checkedProp : cdtmae.getFirstTick().checkedProperties(entityType)) {
-            metaValues.put(checkedProp, createMetaValuesFor(entityType, checkedProp, cdtmae, dvc));
+        for (final String checkedProp : cdtmae.getFirstTick().checkedProperties(root)) {
+            metaValues.put(checkedProp, createMetaValuesFor(root, checkedProp, cdtmae, dvc));
         }
         return metaValues;
     }
 
-    private static Class<?> managedType(final Class<AbstractEntity<?>> root, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+    public static Class<?> managedType(final Class<AbstractEntity<?>> root, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
         return cdtmae.getEnhancer().getManagedType(root);
     }
 
@@ -377,10 +494,8 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
      * @param gdtm
      * @param modifiedPropertiesHolder
      */
-    private static void applyMetaValues(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final Map<String, Object> modifiedPropertiesHolder) {
+    private static void applyMetaValues(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<AbstractEntity<?>> root, final Map<String, Object> modifiedPropertiesHolder) {
         final Map<String, Map<String, Object>> metaValues = (Map<String, Map<String, Object>>) modifiedPropertiesHolder.get("@@metaValues");
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = getCurrentCentreManager(gdtm, miType);
-        final Class<AbstractEntity<?>> root = getEntityType(miType);
 
         for (final Entry<String, Map<String, Object>> propAndMetaValues : metaValues.entrySet()) {
             final String prop = propAndMetaValues.getKey();
@@ -415,10 +530,9 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
      */
     public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> createCriteriaValidationPrototype(
             final Class<? extends MiWithConfigurationSupport<?>> miType,
-            final IGlobalDomainTreeManager gdtm,
+            final ICentreDomainTreeManagerAndEnhancer cdtmae,
             final ICriteriaGenerator critGenerator,
             final Long previousVersion) {
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = getCurrentCentreManager(gdtm, miType);
         final Class<AbstractEntity<?>> entityType = getEntityType(miType);
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = critGenerator.generateCentreQueryCriteria(entityType, cdtmae, createMiTypeAnnotation(miType));
 
