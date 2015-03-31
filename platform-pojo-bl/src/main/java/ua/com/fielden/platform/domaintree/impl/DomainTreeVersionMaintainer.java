@@ -39,9 +39,9 @@ import ua.com.fielden.platform.utils.Pair;
  * 2. Version of Original types<br>
  * a) TODO property adding<br>
  * b) TODO property removal<br>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DomainTreeVersionMaintainer extends AbstractDomainTree {
     private final static Logger logger = Logger.getLogger(DomainTreeVersionMaintainer.class);
@@ -110,7 +110,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
         return //
         new LocatorDomainTreeManagerAndEnhancer(//
         serialiser, //
-        new LocatorDomainTreeManager(serialiser, (LocatorDomainTreeRepresentation) ldtmae0.base().getRepresentation(), new AddToCriteriaTickManagerForLocator(atctmfl0.checkedProperties(), serialiser, atctmfl0.propertiesValues1(), atctmfl0.propertiesValues2(), atctmfl0.propertiesExclusive1(), atctmfl0.propertiesExclusive2(), atctmfl0.propertiesDatePrefixes(), atctmfl0.propertiesDateMnemonics(), atctmfl0.propertiesAndBefore(), atctmfl0.propertiesOrNulls(), atctmfl0.propertiesNots(), atctmfl0.columnsNumber(), new LocatorManager(serialiser, ldtmae0.base().getRepresentation().rootTypes(), convert(atctmfl0.locatorManager().persistentLocators(), serialiser))), (AddToResultTickManager) ldtmae0.base().getSecondTick(), ldtmae0.base().isRunAutomatically(), ldtmae0.base().isUseForAutocompletion(), ldtmae0.base().getSearchBy()), new DomainTreeEnhancer(serialiser, ldtmae0.getEnhancer().originalAndEnhancedRootTypesAndArrays(), ldtmae0.getEnhancer().calculatedProperties()), ldtmae0.persistentAnalyses(), ldtmae0.currentAnalyses(), ldtmae0.freezedAnalyses());
+        new LocatorDomainTreeManager(serialiser, (LocatorDomainTreeRepresentation) ldtmae0.base().getRepresentation(), new AddToCriteriaTickManagerForLocator(atctmfl0.checkedProperties(), serialiser, atctmfl0.propertiesValues1(), atctmfl0.propertiesValues2(), atctmfl0.propertiesExclusive1(), atctmfl0.propertiesExclusive2(), atctmfl0.propertiesDatePrefixes(), atctmfl0.propertiesDateMnemonics(), atctmfl0.propertiesAndBefore(), atctmfl0.propertiesOrNulls(), atctmfl0.propertiesNots(), atctmfl0.columnsNumber(), new LocatorManager(serialiser, ldtmae0.base().getRepresentation().rootTypes(), convert(atctmfl0.locatorManager().persistentLocators(), serialiser)), atctmfl0.propertiesMetaValuePresences()), (AddToResultTickManager) ldtmae0.base().getSecondTick(), ldtmae0.base().isRunAutomatically(), ldtmae0.base().isUseForAutocompletion(), ldtmae0.base().getSearchBy()), new DomainTreeEnhancer(serialiser, ldtmae0.getEnhancer().originalAndEnhancedRootTypesAndArrays(), ldtmae0.getEnhancer().calculatedProperties()), ldtmae0.persistentAnalyses(), ldtmae0.currentAnalyses(), ldtmae0.freezedAnalyses());
     }
 
     public static Pair<CentreDomainTreeManagerAndEnhancer, Boolean> retrieveCentre(final String eccKey, final byte[] array, final ISerialiser serialiser, final ISerialiser0 serialiser0)
@@ -159,7 +159,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
         return //
         new CentreDomainTreeManagerAndEnhancer(//
         serialiser, //
-        new CentreDomainTreeManager(serialiser, (CentreDomainTreeRepresentation) cdtmae0.base().getRepresentation(), new AddToCriteriaTickManager(atctm0.checkedProperties(), serialiser, atctm0.propertiesValues1(), atctm0.propertiesValues2(), atctm0.propertiesExclusive1(), atctm0.propertiesExclusive2(), atctm0.propertiesDatePrefixes(), atctm0.propertiesDateMnemonics(), atctm0.propertiesAndBefore(), atctm0.propertiesOrNulls(), atctm0.propertiesNots(), atctm0.columnsNumber(), new LocatorManager(serialiser, cdtmae0.base().getRepresentation().rootTypes(), convert(atctm0.locatorManager().persistentLocators(), serialiser))), (AddToResultTickManager) cdtmae0.base().getSecondTick(), cdtmae0.base().isRunAutomatically()), new DomainTreeEnhancer(serialiser, cdtmae0.getEnhancer().originalAndEnhancedRootTypesAndArrays(), cdtmae0.getEnhancer().calculatedProperties()), cdtmae0.persistentAnalyses(), cdtmae0.currentAnalyses(), cdtmae0.freezedAnalyses());
+        new CentreDomainTreeManager(serialiser, (CentreDomainTreeRepresentation) cdtmae0.base().getRepresentation(), new AddToCriteriaTickManager(atctm0.checkedProperties(), serialiser, atctm0.propertiesValues1(), atctm0.propertiesValues2(), atctm0.propertiesExclusive1(), atctm0.propertiesExclusive2(), atctm0.propertiesDatePrefixes(), atctm0.propertiesDateMnemonics(), atctm0.propertiesAndBefore(), atctm0.propertiesOrNulls(), atctm0.propertiesNots(), atctm0.columnsNumber(), new LocatorManager(serialiser, cdtmae0.base().getRepresentation().rootTypes(), convert(atctm0.locatorManager().persistentLocators(), serialiser)), atctm0.propertiesMetaValuePresences()), (AddToResultTickManager) cdtmae0.base().getSecondTick(), cdtmae0.base().isRunAutomatically()), new DomainTreeEnhancer(serialiser, cdtmae0.getEnhancer().originalAndEnhancedRootTypesAndArrays(), cdtmae0.getEnhancer().calculatedProperties()), cdtmae0.persistentAnalyses(), cdtmae0.currentAnalyses(), cdtmae0.freezedAnalyses());
     }
 
     public static Pair<MasterDomainTreeManager, Boolean> retrieveMaster(final String emcKey, final byte[] array, final ISerialiser serialiser, final ISerialiser0 serialiser0)

@@ -525,6 +525,19 @@ public class CentreDomainTreeManagerAndEnhancer0 extends AbstractDomainTreeManag
         }
 
         @Override
+        public boolean isMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().isMetaValuePresent(metaValueType, enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToCriteriaTickManager markMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            base().markMetaValuePresent(metaValueType, enhancer().getManagedType(root), property);
+            return this;
+        }
+
+        @Override
         public IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2) {
             super.swap(root, property1, property2);
             return this;
