@@ -29,7 +29,7 @@
             </tr>
         </table>-->
 
-        <paper-ripple id="ripple" class="circle recenteringTouch" style="pointer-events: none;" fit></paper-ripple>
+        <paper-ripple id="ripple" class="circle recenteringTouch" style="pointer-events: none;" on-core-transitionend="{{onRippleFinished}}" fit></paper-ripple>
 
         <!--<div class="table-container">-->
         <div layout horizontal justified style="flex-shrink:0;">
@@ -82,8 +82,8 @@
                                 </core-tooltip>
                             </td>
                         </template>
-                        <template repeat="{{column in columns}}">
-                            <td class="data-column" style="position: relative; width: {{column.width}}" on-tap="{{rippleAction}}">
+                        <template repeat="{{column, columnIndex in columns}}">
+                            <td class="data-column" style="position: relative; width: {{column.width}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     <template if="{{column.type === 'Boolean' && get(entity, column) !== null}}">
                                         <core-icon icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
@@ -242,15 +242,41 @@
                     this.selectionModel = [];
                     this.selectedEntities = [];
                 },
-
-                rippleAction: function (e) {
+                tapAction: function (e, detail, source) {
                     var parent = findTdTag(e.path);
                     // attach the ripple component to the found TD
+                    this.$.ripple.setAttribute("entityInd", source.getAttribute("entityInd"));
+                    this.$.ripple.setAttribute("columnInd", source.getAttribute("columnInd"));
                     parent.appendChild(this.$.ripple);
 
                     // initiate riple with an immediate upAction to make sure the ripple completes
                     this.$.ripple.downAction(e);
                     this.$.ripple.upAction();
+                },
+                
+                onRippleFinished: function(e, detail, source) {
+                    var columnIndex = +source.getAttribute("columnInd"),
+                        entity = this.entities[+source.getAttribute("entityInd")],
+                        dotNotatedName = this.columns[columnIndex].property;
+                    this.tap(entity, dotNotatedName, this.columns[columnIndex]);
+                },
+                
+                /**
+                 * Determines whether the specified object represents the entity.
+                 */
+                _isEntity: function (obj) {
+                    return obj !== null && (obj instanceof this.$.reflector.getEntityType());
+                },
+                
+                tap: function(entity, property, column) {
+                    var value = entity.get(property);
+                    if (this._isEntity(value)) {
+                        column.action(value);
+                    } else if (property.indexOf(".") > -1) {
+                        this.tap(entity, property.substring(0, property.lastIndexOf(".")));
+                    } else {
+                        column.action(entity);
+                    }
                 }
             });
         })();

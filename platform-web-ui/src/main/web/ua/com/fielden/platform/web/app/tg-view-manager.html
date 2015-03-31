@@ -30,7 +30,8 @@
                                 channel: "manager",
                                 topic: "master.show",
                                 data: {
-                                    uuid: mastersById["" + data.entity.id]
+                                    uuid: mastersById["" + data.entity.id],
+                                    centreUuid: data.uuid
                                 }
                             });
                         } else {
