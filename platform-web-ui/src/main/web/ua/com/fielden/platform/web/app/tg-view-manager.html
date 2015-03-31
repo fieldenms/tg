@@ -7,7 +7,7 @@
             var user,
                 mastersById = {},
                 //mastersByUuid = {},
-                ///////////////////////////////////////////////////Edit action listeners.///////////////////////////////////////////////////
+                /////////////////////////////////////////////////// Centre Edit action listeners.///////////////////////////////////////////////////
                 editListener = postal.subscribe({
                     channel: "centre",
                     topic: "edit.start",
@@ -70,7 +70,7 @@
                         });
                     }
                 }),
-                ///////////////////////////////////////////////////New action listeners.///////////////////////////////////////////////////
+                /////////////////////////////////////////////////// Centre New action listeners.///////////////////////////////////////////////////
                 newListener = postal.subscribe({
                     channel: "centre",
                     topic: "new.start",
@@ -103,6 +103,29 @@
                             data: {
                                 uuid: data.masterUuid
                             }
+                        });
+                    }
+                }),
+                /////////////////////////////////////////////////Master Save Action.//////////////////////////////////////////////////////////
+                saveListener = postal.subscribe({
+                    channel: "master",
+                    topic: "save.start",
+                    callback: function(data, envelope) {
+                        postal.publish({
+                            channel: "manager",
+                            topic: "master.saved",
+                            data: data
+                        });
+                    }
+                }),
+                masterClosedListener = postal.subscribe({
+                    channel: "view",
+                    topic: "master.closed",
+                    callback: function(data, envelope) {
+                        delete mastersById["" + data.id];
+                        postal.publish({
+                            channel: "master_"  + data.masterUuid,
+                            topic: "save.finish"
                         });
                     }
                 });
