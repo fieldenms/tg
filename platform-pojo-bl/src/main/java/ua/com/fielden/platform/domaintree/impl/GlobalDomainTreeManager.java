@@ -584,7 +584,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param centre
      * @return
      */
-    private ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre) {
+    public ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre) {
         logger.debug("Copying centre...");
         // final TgKryo kryo = (TgKryo) getSerialiser();
         // TODO kryo.register(CentreDomainTreeManager.class, new CentreDomainTreeManagerSerialiserWithTransientAnalyses(kryo));
@@ -606,11 +606,15 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param mgr
      * @param owning
      */
-    private void init(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr, final boolean owning) {
+    public void init(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr, final boolean owning) {
         final ICentreDomainTreeManagerAndEnhancer fullyDefinedMgr = initCentreManagerCrossReferences(mgr);
         currentCentres.put(key(menuItemType, name), fullyDefinedMgr);
         persistentCentres.put(key(menuItemType, name), copyCentre(fullyDefinedMgr));
         centresOwning.put(key(menuItemType, name), owning);
+    }
+
+    public void overrideCentre(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr) {
+        currentCentres.put(key(menuItemType, name), initCentreManagerCrossReferences(mgr));
     }
 
     /**
@@ -882,9 +886,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             error("Unable to remove the entity-centre instance, that current user does not own. The type [" + menuItemType.getSimpleName() + "] with title ["
                     + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
         } else {
-            currentCentres.remove(key(menuItemType, name));
-            persistentCentres.remove(key(menuItemType, name));
-            centresOwning.remove(key(menuItemType, name));
+            removeCentre(menuItemType, name);
 
             final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title(menuItemType, name));
             final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
@@ -896,6 +898,12 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             entityCentreConfigController.delete(ecc);
         }
         return this;
+    }
+
+    public void removeCentre(final Class<?> menuItemType, final String name) {
+        currentCentres.remove(key(menuItemType, name));
+        persistentCentres.remove(key(menuItemType, name));
+        centresOwning.remove(key(menuItemType, name));
     }
 
     @Override
