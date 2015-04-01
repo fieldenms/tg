@@ -11,6 +11,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public interface ISelectionCritKindSelector<T extends AbstractEntity<?>> {
     IMultiValueCritSelector<T> asMulti();
-    ISingleValueCritBuilder<T> asSingle();
-    IRangeValueCritBuilder<T> asRange();
+    ISingleValueCritSelector<T> asSingle();
+    IRangeValueCritSelector<T> asRange();
 }

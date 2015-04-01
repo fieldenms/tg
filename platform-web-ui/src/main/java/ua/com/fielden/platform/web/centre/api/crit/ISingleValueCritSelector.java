@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
  *
  * @param <T>
  */
-public interface ISingleValueCritBuilder<T extends AbstractEntity<?>> {
+public interface ISingleValueCritSelector<T extends AbstractEntity<?>> {
     /**
      * Specifies the need to add a single-valued autocompleter as a selection criterion that corresponds to a {@link CritOnly}
      * definition with parameter {@link CritOnly.Type#SINGLE}.

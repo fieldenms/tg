@@ -13,7 +13,7 @@ import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IRangeIntege
  *
  * @param <T>
  */
-public interface IRangeValueCritBuilder<T extends AbstractEntity<?>> {
+public interface IRangeValueCritSelector<T extends AbstractEntity<?>> {
     /**
      * Specifies the need to add a range selection criterion as integer.
      *
