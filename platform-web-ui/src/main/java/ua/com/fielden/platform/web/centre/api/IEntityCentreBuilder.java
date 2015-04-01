@@ -62,9 +62,11 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .also()
        .addCrit("date").asRange().date().setFromDefaultValue(new Date())
        .also()
-       .addCrit("intValueCritOnly").asSingle().integer()
+       .addCrit("intValueCritOnly").asSingle().integer().setDefaultValue(0)
        .also()
-       .addCrit("statusCritOnly").asSingle().autocompleter().withMatcher(null)
+       .addCrit("entityCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null).setDefaultValue(new TgWorkOrder())
+       .also()
+       .addCrit("statusCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null)
        .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
                + "[[mr], [mr], [mr], [mr], [mr]], "
                + "[[mr], [mr], [mr], [mr], [mr]]]"))

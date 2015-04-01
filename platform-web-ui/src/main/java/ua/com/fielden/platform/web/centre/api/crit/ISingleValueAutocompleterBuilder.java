@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre.api.crit;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.crit.default_assigner.ISingleEntityDefaultValueAssigner;
 
 
 /**
@@ -13,7 +14,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
  *
  * @param <T>
  */
-public interface ISingleValueAutocompleterBuilder<T extends AbstractEntity<?>> extends IAlsoCrit<T> {
-    IAlsoCrit<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType);
-    IAlsoCrit<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType, final CentreContextConfig context);
+public interface ISingleValueAutocompleterBuilder<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends ISingleEntityDefaultValueAssigner<T, V> {
+    ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType);
+    ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType, final CentreContextConfig context);
 }

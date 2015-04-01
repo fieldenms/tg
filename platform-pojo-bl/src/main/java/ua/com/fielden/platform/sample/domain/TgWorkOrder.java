@@ -87,12 +87,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
         this.importantProperty = importantProperty;
     }
 
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgWorkOrder() {
-    }
-
     public TgVehicle getVehicle() {
         return vehicle;
     }
