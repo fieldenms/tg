@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IMultiBooleanDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IMultiStringDefaultValueAssigner;
 
 /**
  * A contract for selecting multi-valued criteria.
@@ -24,7 +26,7 @@ public interface IMultiValueCritSelector<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    IAlsoCrit<T> text();
+    IMultiStringDefaultValueAssigner<T> text();
 
     /**
      * Specifies the need to add a multi-valued boolean selection criterion.
@@ -32,5 +34,5 @@ public interface IMultiValueCritSelector<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    IAlsoCrit<T> bool();
+    IMultiBooleanDefaultValueAssigner<T> bool();
 }

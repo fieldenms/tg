@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre.api.crit;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IMultiStringDefaultValueAssigner;
 
 
 /**
@@ -13,7 +14,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
  *
  * @param <T>
  */
-public interface IMutliValueAutocompleterBuilder<T extends AbstractEntity<?>> extends IAlsoCrit<T> {
-    IAlsoCrit<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType);
-    IAlsoCrit<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType, final CentreContextConfig context);
+public interface IMutliValueAutocompleterBuilder<T extends AbstractEntity<?>> extends IMultiStringDefaultValueAssigner<T> {
+    IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType);
+    IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType, final CentreContextConfig context);
 }
