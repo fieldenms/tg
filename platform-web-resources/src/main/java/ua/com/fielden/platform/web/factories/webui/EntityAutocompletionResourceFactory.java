@@ -21,7 +21,7 @@ import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.CriteriaResource;
+import ua.com.fielden.platform.web.resources.webui.CentreResourceUtils;
 import ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -81,8 +81,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                 entityProducer = master.createEntityProducer();
             } else { // in case of generated entities like EntityQueryCriteria -- there is no corresponding master registered. So -- use default producer and value matcher
                 if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
-                    final Class<? extends AbstractEntity<?>> originalType = CriteriaResource.getMasterType(entityType);
-                    final String originalPropertyName = CriteriaResource.getOriginalPropertyName(entityType, propertyName);
+                    final Class<? extends AbstractEntity<?>> originalType = CentreResourceUtils.getOriginalType(entityType);
+                    final String originalPropertyName = CentreResourceUtils.getOriginalPropertyName(entityType, propertyName);
                     // final DynamicPropertyAnalyser dpa = new DynamicPropertyAnalyser(originalType, originalPropertyName);
                     // logger.error("entityType = " + entityType + " propertyName = " + propertyName + " originalType = " + originalType + " originalPropertyName = " + originalPropertyName + " dpa.getCriteriaFullName() = " + dpa.getCriteriaFullName());
                     valueMatcher = EntityMaster.createDefaultValueMatcher(originalPropertyName, originalType, coFinder);

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -12,15 +11,10 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -64,15 +58,17 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final ICentreDomainTreeManagerAndEnhancer freshCentre = gdtm.getEntityCentreManager(miType, CriteriaResource.FRESH_CENTRE_NAME);
-        ((GlobalDomainTreeManager) gdtm).removeCentre(miType, CriteriaResource.FRESH_CENTRE_NAME);
+        // gets the fresh centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'fresh centre')
+        final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreResourceUtils.freshCentre(gdtm, miType);
+        // removes the fresh centre -- to be later re-populated
+        CentreResourceUtils.removeFreshCentre(gdtm, miType);
 
-        final ICentreDomainTreeManagerAndEnhancer principleCentre = CriteriaResource.getCurrentPrincipleCentreManager(gdtm, miType);
+        final ICentreDomainTreeManagerAndEnhancer defaultCentre = CentreResourceUtils.getDefaultCentre(gdtm, miType);
+        // creates differences centre from the differences between 'default centre' and 'fresh centre'
+        final ICentreDomainTreeManagerAndEnhancer differencesCentre = CentreResourceUtils.createDifferencesCentre(freshCentre, defaultCentre, CentreResourceUtils.getEntityType(miType), gdtm);
 
-        final ICentreDomainTreeManagerAndEnhancer differenciesCentre = createDiff(freshCentre, principleCentre, CriteriaResource.getEntityType(miType));
-
-        ((GlobalDomainTreeManager) gdtm).overrideCentre(miType, CriteriaResource.DIFFERENCIES_CENTRE_NAME, differenciesCentre);
-        gdtm.saveEntityCentreManager(miType, CriteriaResource.DIFFERENCIES_CENTRE_NAME);
+        // override old 'diff centre' with recently created one and save it
+        CentreResourceUtils.overrideAndSaveDifferencesCentre(gdtm, miType, differencesCentre);
 
         return restUtil.rawListJSONRepresentation("OK");
     }
@@ -83,58 +79,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
     @Delete
     @Override
     public Representation delete() {
-        if (gdtm.isChangedEntityCentreManager(miType, CriteriaResource.FRESH_CENTRE_NAME)) {
-            gdtm.discardEntityCentreManager(miType, CriteriaResource.FRESH_CENTRE_NAME);
-        } else {
-            final String message = "Can not discard the centre that was not changed.";
-            logger.error(message);
-            throw new IllegalArgumentException(message);
-        }
+        // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
+        CentreResourceUtils.discardFreshCentre(gdtm, miType);
         return restUtil.resultJSONRepresentation(Result.successful(null));
-    }
-
-    private ICentreDomainTreeManagerAndEnhancer createDiff(final ICentreDomainTreeManagerAndEnhancer freshCentre, final ICentreDomainTreeManagerAndEnhancer principleCentre, final Class<AbstractEntity<?>> root) {
-        final ICentreDomainTreeManagerAndEnhancer differenciesCentre = ((GlobalDomainTreeManager) gdtm).copyCentre(freshCentre);
-
-        for (final String property : differenciesCentre.getFirstTick().checkedProperties(root)) {
-            if (AbstractDomainTree.isDoubleCriterion(CriteriaResource.managedType(root, differenciesCentre), property)) {
-                if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getExclusive(root, property), principleCentre.getFirstTick().getExclusive(root, property))) {
-                    differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.EXCLUSIVE, root, property);
-                }
-                if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getExclusive2(root, property), principleCentre.getFirstTick().getExclusive2(root, property))) {
-                    differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.EXCLUSIVE2, root, property);
-                }
-            }
-            final Class<?> propertyType = StringUtils.isEmpty(property) ? CriteriaResource.managedType(root, differenciesCentre) : PropertyTypeDeterminator.determinePropertyType(CriteriaResource.managedType(root, differenciesCentre), property);
-            if (EntityUtils.isDate(propertyType)) {
-                if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getDatePrefix(root, property), principleCentre.getFirstTick().getDatePrefix(root, property))) {
-                    differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.DATE_PREFIX, root, property);
-                }
-                if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getDateMnemonic(root, property), principleCentre.getFirstTick().getDateMnemonic(root, property))) {
-                    differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.DATE_MNEMONIC, root, property);
-                }
-                if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getAndBefore(root, property), principleCentre.getFirstTick().getAndBefore(root, property))) {
-                    differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.AND_BEFORE, root, property);
-                }
-            }
-
-            if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getOrNull(root, property), principleCentre.getFirstTick().getOrNull(root, property))) {
-                differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.OR_NULL, root, property);
-            }
-            if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getNot(root, property), principleCentre.getFirstTick().getNot(root, property))) {
-                differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.NOT, root, property);
-            }
-
-            if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getValue(root, property), principleCentre.getFirstTick().getValue(root, property))) {
-                differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.VALUE, root, property);
-            }
-            if (AbstractDomainTree.isDoubleCriterionOrBoolean(CriteriaResource.managedType(root, differenciesCentre), property)) {
-                if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getValue2(root, property), principleCentre.getFirstTick().getValue2(root, property))) {
-                    differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.VALUE2, root, property);
-                }
-            }
-        }
-
-        return differenciesCentre;
     }
 }

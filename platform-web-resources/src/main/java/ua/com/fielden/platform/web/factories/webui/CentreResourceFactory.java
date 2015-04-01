@@ -33,7 +33,7 @@ public class CentreResourceFactory extends Restlet {
     private final WebApp webApp;
 
     /**
-     * Instantiates a factory for entity resources.
+     * Instantiates a factory for centre resources.
      *
      */
     public CentreResourceFactory(final WebApp webApp, final Injector injector) {

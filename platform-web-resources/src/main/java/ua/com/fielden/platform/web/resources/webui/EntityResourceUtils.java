@@ -79,11 +79,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
-            final Class<? extends AbstractEntity<?>> masterType = CriteriaResource.getMasterType(entityType);
-            final String originalPropertyName = CriteriaResource.getOriginalPropertyName(entityType, propertyName);
+            final Class<? extends AbstractEntity<?>> originalType = CentreResourceUtils.getOriginalType(entityType);
+            final String originalPropertyName = CentreResourceUtils.getOriginalPropertyName(entityType, propertyName);
 
             final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
-            return isEntityItself ? (IFetchProvider<V>) coFinder.find(masterType).getFetchProvider() : coFinder.find(masterType).getFetchProvider().fetchFor(originalPropertyName);
+            return isEntityItself ? (IFetchProvider<V>) coFinder.find(originalType).getFetchProvider() : coFinder.find(originalType).getFetchProvider().fetchFor(originalPropertyName);
         } else {
             return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
         }
