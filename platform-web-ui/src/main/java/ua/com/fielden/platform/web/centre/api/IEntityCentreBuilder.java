@@ -4,6 +4,9 @@ import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBu
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.actionOff;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
+
+import java.util.Date;
+
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -51,7 +54,9 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .endTopActionsGroup()
        .addCrit("status").asMulti().autocompleter().withMatcher(MyClass.class, context().withCurrentEntity().withSelectionCrit().build())
        .also()
-       .addCrit("intValue").asRange().integer()
+       .addCrit("intValue").asRange().integer().withDefaultValueAssigner(null)
+       .also()
+       .addCrit("date").asRange().date().setFromDefaultValue(new Date())
        .also()
        .addCrit("intValueCritOnly").asSingle().integer()
        .also()

@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IRangeDateDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IRangeDecimalDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IRangeIntegerDefaultValueAssigner;
 
 /**
  * A contract for specifying selection criteria as ranges.
@@ -16,33 +19,33 @@ public interface IRangeValueCritBuilder<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    IAlsoCrit<T> integer();
+    IRangeIntegerDefaultValueAssigner<T> integer();
 
     /**
      * Specifies the need to add a range selection criterion as decimal, which includes monetary type.
      *
      * @return
      */
-    IAlsoCrit<T> decimal();
+    IRangeDecimalDefaultValueAssigner<T> decimal();
 
     /**
      * Specifies the need to add a range selection criterion as date without a time portion.
      *
      * @return
      */
-    IAlsoCrit<T> date();
+    IRangeDateDefaultValueAssigner<T> date();
 
     /**
      * Specifies the need to add a range selection criterion as date with time portion (this is the most common case).
      *
      * @return
      */
-    IAlsoCrit<T> dateTime();
+    IRangeDateDefaultValueAssigner<T> dateTime();
 
     /**
      * Specifies the need to add a range selection criterion as time (no date portion).
      *
      * @return
      */
-    IAlsoCrit<T> time();
+    IRangeDateDefaultValueAssigner<T> time();
 }
