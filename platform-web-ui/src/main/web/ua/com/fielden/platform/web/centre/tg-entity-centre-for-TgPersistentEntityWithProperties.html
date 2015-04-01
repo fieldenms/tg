@@ -127,7 +127,7 @@
         <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right">
             <div>
                 <div layout vertical style="margin: 40px;">
-                    <tg-selection-criteria-for-TgPersistentEntityWithProperties id="selection_criteria" user="{{user}}" mitype="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties" onRun="{{onRun}}"></tg-selection-criteria-for-TgPersistentEntityWithProperties>
+                    <tg-selection-criteria-for-TgPersistentEntityWithProperties id="selection_criteria" uuid="{{uuid}}" user="{{user}}" mitype="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties" onRun="{{onRun}}"></tg-selection-criteria-for-TgPersistentEntityWithProperties>
                     <div layout horizontal justified style="margin-top:40px;">
                         <div layout horizontal>
                             <paper-button id="configurator" raised roll="button" on-tap="{{configure}}" style="margin-left: 0px;">Configure</paper-button>
@@ -207,37 +207,47 @@
             Polymer({
                 ready: function () {
                     var self = this;
-                    
+
                     self.super();
                     self.editAction = self.editAction.bind(self);
                     self.newAction = self.newAction.bind(self);
                     self.showMaster = self.showMaster.bind(self);
+                },
+
+                attached: function () {
+                    var self = this;
                     ///////////////////////Edit Listeners/////////////////////////////////////
-                    postal.subscribe({
+                     this.masterCreatedListener = postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "edit.finish.created",
-                        callback: function(data, envelope) {
+                        callback: function (data, envelope) {
                             console.log("-------- Masters Edit Created UUID: " + data.uuid + " ------------");
                         }
                     });
-                    postal.subscribe({
+                    this.masterShowListener = postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "edit.finish.shown",
-                        callback: function(data, envelope) {
+                        callback: function (data, envelope) {
                             console.log("-------- Masters Edit Shown UUID: " + data.uuid + " ------------");
                         }
                     });
                     /////////////////////////New listener//////////////////////////////////////
-                    postal.subscribe({
+                    this.masterNewListener = postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "new.finish",
-                        callback: function(data, envelope) {
+                        callback: function (data, envelope) {
                             console.log("-------- Masters New UUID: " + data.uuid + " ------------");
                         }
                     });
-                    
                 },
-                showMaster: function(entity) {
+                
+                detached: function() {
+                    this.masterCreatedListener.unsubscribe();
+                    this.masterShowListener.unsubscribe();
+                    this.masterNewListener.unsubscribe();
+                },
+
+                showMaster: function (entity) {
                     var self = this;
                     postal.publish({
                         channel: "centre",
@@ -248,7 +258,7 @@
                         }
                     });
                 },
-                newAction : function () {
+                newAction: function () {
                     var self = this;
                     postal.publish({
                         channel: "centre",

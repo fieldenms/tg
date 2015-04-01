@@ -12,7 +12,7 @@
     <link rel="import" href="/resources/polymer/core-toolbar/core-toolbar.html">
     <link rel="import" href="/resources/polymer/core-menu/core-menu.html">
     <link rel="import" href="/resources/polymer/core-scaffold/core-scaffold.html">
-    <link rel="import" href="/resources/polymer/core-item/core-item.html">
+    <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
     <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
     <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
     <link rel="import" href="/resources/centre/tg-entity-centre-for-TgPersistentEntityWithProperties.html">
@@ -45,6 +45,21 @@
             background-color: #0288D1;
             color: #fff;
         }
+        core-menu {
+            color: #01579b;
+            margin: 10px 0 0 0;
+        }
+        core-menu > paper-item {
+            transition: all 300ms ease-in-out;
+        }
+        paper-item a {
+            text-decoration: none;
+            color: currentcolor;
+            margin-left: 5px;
+        }
+        core-menu > paper-item.core-selected {
+            background: #e1f5fe;
+        }
     </style>
 
 </head>
@@ -60,26 +75,37 @@
                 <core-toolbar>
                     <span>TG Example</span>
                 </core-toolbar>
-                <core-menu selected="{{route}}" valueattr="hash" on-core-select="{{onMenuItemSelected}}">
-                    <core-item hash="centre" label="Entity Centre"></core-item>
-                    <template repeat="{{master in masters}}">
-                        <core-item hash="{{master.hash}}" label="{{master.label}}"></core-item>
+                <core-menu selected="{{route}}" valueattr="hash" on-core-select="{{onMenuItemSelected}}" selectedModel="{{selectedItem}}">
+                    <template repeat="{{item in centres}}">
+                        <paper-item hash="{{'centre_' + item.attrs.uuid}}" noink>
+                            <core-icon icon="label{{route != ('centre_' + item.attrs.uuid) ? '-outline' : ''}}"></core-icon>
+                            <a href="#{{'centre_' + item.attrs.uuid}}">{{item.label}}</a>
+                        </paper-item>
+                    </template>
+                    <template repeat="{{item in masters}}">
+                        <paper-item hash="{{'master_' + item.attrs.uuid}}" noink>
+                            <core-icon icon="label{{route != ('master_' + item.attrs.uuid) ? '-outline' : ''}}"></core-icon>
+                            <a href="#{{'master_' + item.attrs.uuid}}">{{item.label}}</a>
+                        </paper-item>
+
                     </template>
                 </core-menu>
             </nav>
 
             <core-toolbar style="font-size: 20px;" tool>
-                <div>{{route === 'centre' ? 'Entity Centre' : 'Entity master'}}</div>
+                <div>{{selectedItem.item.label}}</div>
             </core-toolbar>
 
             <div layout horizontal fit>
-                <core-animated-pages selected="{{route}}" valueattr="hash" transitions="slide-from-right">
-                    <div hash="centre">
-                        <tg-entity-centre-for-TgPersistentEntityWithProperties id="centre" user="SU" entityType="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" mitype="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties"></tg-entity-centre-for-TgPersistentEntityWithProperties>
-                    </div>
+                <core-animated-pages id="content" selected="{{route}}" valueattr="hash" transitions="slide-from-right">
+                    <template repeat="{{centre in centres}}">
+                        <div hash="{{'centre_' + centre.attrs.uuid}}">
+                            <load-element id="{{'centre_' + centre.attrs.uuid}}" import="{{centre.componentUri}}" elementName="{{centre.elementName}}" attrs="{{centre.attrs}}" on-after-load="{{onCentreLoaded}}" auto></load-element>
+                        </div>
+                    </template>
                     <template repeat="{{master in masters}}">
-                        <div hash="{{master.hash}}">
-                            <load-element id="{{master.hash}}" import="{{master.componentUri}}" elementName="{{master.elementName}}" attrs="{{master.attrs}}" on-after-load="{{onMasterLoaded}}" auto></load-element>
+                        <div hash="{{'master_' + master.attrs.uuid}}">
+                            <load-element id="{{'master_' + master.attrs.uuid}}" import="{{master.componentUri}}" elementName="{{master.elementName}}" attrs="{{master.attrs}}" on-after-load="{{onMasterLoaded}}" auto></load-element>
                         </div>
                     </template>
                 </core-animated-pages>
@@ -96,15 +122,7 @@
             var centreExample = document.querySelector("#centre_example");
 
             centreExample.masters = [];
-
-
-            //            centreExample.componentUri = "/users/{{user}}/master/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties";
-            //            centreExample.elementName = "tg-TgPersistentEntityWithProperties-master";
-            //            centreExample.attrs = {
-            //                user: 'SU',
-            //                entitytype: 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties',
-            //                currentState: 'VIEW'
-            //            };
+            centreExample.centres = [];
 
             centreExample.onMenuItemSelected = function (event, detail, source) {
                 if (detail.isSelected) {
@@ -112,9 +130,11 @@
                 }
             }
 
-            centreExample.onMasterLoaded = function (e, detail, source) {
+            centreExample.onCentreLoaded = function (e, detail, source) {
+                detail.retrieve();
+            }
 
-                console.log("----------onMasterLoaded", e, detail, source);
+            centreExample.onMasterLoaded = function (e, detail, source) {
 
                 detail.onRetrieved = function (entity, bindingEntity, customObject) {
                     if (entity.id === null) {
@@ -137,7 +157,6 @@
                             }
                         });
                     }
-
                     centreExample.route = source.getAttribute("id");
                 };
 
@@ -146,34 +165,37 @@
                 };
 
                 detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
-                    //                    var self = this;
-                    //                    postal.publish({
-                    //                        channel: "master-" + self.uuid,
-                    //                        topic: "save",
-                    //                        data: {
-                    //                            id: potentiallySavedEntity.id
-                    //                        }
-                    //                    });
+
                 };
 
                 detail.retrieve();
             };
 
             centreExample.addEventListener('template-bound', function (e) {
-                var masterNumber = 1;
+                var masterNumber = 1,
+                    reflector = document.querySelector("#reflector");
 
-                centreExample.route = centreExample.route || "centre";
-                document.querySelector("#centre").retrieve();
                 document.querySelector("#scaffold").$.drawerPanel.forceNarrow = true;
+
+                //////////////////////Initialising centres and route///////////////////////////////
+                centreExample.centres.push({
+                    componentUri: "/resources/centre/tg-entity-centre-for-TgPersistentEntityWithProperties.html",
+                    elementName: "tg-entity-centre-for-TgPersistentEntityWithProperties",
+                    label: "Entity Centre",
+                    attrs: {
+                        user: "SU",
+                        uuid: reflector.generateUUID(),
+                        entityType: "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"
+                    }
+                });
+                centreExample.route = centreExample.route || "centre_" + centreExample.centres[0].attrs.uuid;
+
                 //////////////////////////Edit actions//////////////////////////////////
                 postal.subscribe({
                     channel: "manager",
                     topic: "master.edit.create",
                     callback: function (data, envelope) {
-                        var uuid = document.querySelector("#reflector").generateUUID();
-                        data.hash = "master_" + uuid;
-                        data.label = "Master for " + data.attrs.entityid;
-                        data.attrs.uuid = uuid;
+                        data.attrs.uuid = reflector.generateUUID();
                         centreExample.masters.push(data);
                     }
                 });
@@ -198,7 +220,7 @@
                     channel: "manager",
                     topic: "master.new.create",
                     callback: function (data, envelope) {
-                        var uuid = document.querySelector("#reflector").generateUUID();
+                        var uuid = reflector.generateUUID();
                         data.hash = "master_" + uuid;
                         data.label = "New Master #" + masterNumber;
                         data.attrs.uuid = uuid;
@@ -206,16 +228,43 @@
                         masterNumber += 1;
                     }
                 });
+                //////////////Master save acation////////////////////////////
+                postal.subscribe({
+                    channel: "manager",
+                    topic: "master.saved",
+                    callback: function (data, envelope) {
+                        var centre = document.querySelector("#centre_" + data.centreUuid),
+                            content = document.querySelector("#content"),
+                            findMaster = function (uuid) {
+                                var masterInd = 0;
+                                for (masterInd = 0; masterInd < centreExample.masters.length; masterInd++) {
+                                    if (centreExample.masters[masterInd].attrs.uuid === uuid) {
+                                        return masterInd;
+                                    }
+                                }
+                                return -1;
+                            },
+                            masterInd = findMaster(data.masterUuid),
+                            animationFinished = function (e) {
+                                centre.firstChild.run();
+                                if (masterInd >= 0) {
+                                    centreExample.masters.splice(masterInd, 1);
+                                }
+                                postal.publish({
+                                    channel: "view",
+                                    topic: "master.closed",
+                                    data: data
+                                });
+                                content.removeEventListener("core-animated-pages-transition-end", animationFinished);
 
-                //                postal.subscribe({
-                //                    channel: "centre",
-                //                    topic: "new",
-                //                    callback: function (data, envelope) {
-                //                        var masterLoader = document.querySelector("#master");
-                //                        centreExample.attrs.entityid = "new";
-                //                        masterLoader.reload();
-                //                    }
-                //                });
+                            };
+                        if (centre !== null && centre.firstChild) {
+                            content.addEventListener("core-animated-pages-transition-end", animationFinished);
+                            centreExample.route = "centre_" + data.centreUuid;
+                        }
+                    }
+                });
+
             });
         })();
     </script>

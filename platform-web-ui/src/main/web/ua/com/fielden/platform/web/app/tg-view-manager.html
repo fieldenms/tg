@@ -17,6 +17,7 @@
                             master = {
                                 componentUri: "/users/" + user + "/master/" + fullTypeName,
                                 elementName: "tg-" + simpleTypeName + "-master",
+                                label: "Master for " + data.entity.key,
                                 attrs: {
                                     user: user,
                                     entityid: data.entity.id,
@@ -122,7 +123,7 @@
                     channel: "view",
                     topic: "master.closed",
                     callback: function(data, envelope) {
-                        delete mastersById["" + data.id];
+                        delete mastersById["" + data.entityid];
                         postal.publish({
                             channel: "master_"  + data.masterUuid,
                             topic: "save.finish"
@@ -130,8 +131,12 @@
                     }
                 });
             Polymer({
-                userChanged: function (oldValue, newValue) {
-                    user = newValue;
+                ready: function() {
+                    if (!user) {
+                        user = this.user;   
+                    } else if (user !== this.user){
+                        throw "The defined user is different then " + this.user + " but was: " + user;
+                    }
                 }
             });
         })();
