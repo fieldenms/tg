@@ -284,7 +284,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
             if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE, root, property)) {
                 targetCentre.getFirstTick().setValue(root, property, differenciesCentre.getFirstTick().getValue(root, property));
             }
-            if (AbstractDomainTree.isDoubleCriterion(managedType(root, differenciesCentre), property)) {
+            if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType(root, differenciesCentre), property)) {
                 if (differenciesCentre.getFirstTick().isMetaValuePresent(MetaValueType.VALUE2, root, property)) {
                     targetCentre.getFirstTick().setValue2(root, property, differenciesCentre.getFirstTick().getValue2(root, property));
                 }

@@ -128,7 +128,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getValue(root, property), principleCentre.getFirstTick().getValue(root, property))) {
                 differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.VALUE, root, property);
             }
-            if (AbstractDomainTree.isDoubleCriterion(CriteriaResource.managedType(root, differenciesCentre), property)) {
+            if (AbstractDomainTree.isDoubleCriterionOrBoolean(CriteriaResource.managedType(root, differenciesCentre), property)) {
                 if (!EntityUtils.equalsEx(differenciesCentre.getFirstTick().getValue2(root, property), principleCentre.getFirstTick().getValue2(root, property))) {
                     differenciesCentre.getFirstTick().markMetaValuePresent(MetaValueType.VALUE2, root, property);
                 }
