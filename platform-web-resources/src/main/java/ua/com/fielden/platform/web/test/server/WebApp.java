@@ -104,7 +104,7 @@ public class WebApp extends AbstractWebApp {
     @Override
     protected void initWebApplication(final IWebApp webApp) {
         // Add entity centres.
-        final EntityCentreConfig ecc = null;
+        final EntityCentreConfig ecc = new EntityCentreConfig();
         //                new EntityCentreBuilder<TgPersistentEntityWithProperties>()
         //                .forEntity(TgPersistentEntityWithProperties.class)
         //                .addCrit("woType").asMulti().autocompleter().setDefaultValue(multi().string().not().setValues("AG*", "*RTU*D").value())

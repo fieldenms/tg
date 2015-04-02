@@ -5,7 +5,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -23,7 +22,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.property.impl.Propert
  *
  */
 public abstract class AbstractWidget implements IRenderable, IImportable {
-    private final Class<? extends AbstractEntity<?>> entityType;
     private final String propertyName;
     private final String title;
     private final String desc;
@@ -39,13 +37,11 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
      * @param entityType
      * @param propertyName
      */
-    public AbstractWidget(final String widgetPath, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+    public AbstractWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName) {
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
-        this.entityType = entityType;
         this.propertyName = propertyName;
 
-        final Pair<String, String> titleDesc = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
         this.title = titleDesc.getKey();
         this.desc = titleDesc.getValue();
     }
@@ -53,15 +49,6 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     public PropertyAction initAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
         this.action = new PropertyAction(name, functionalEntity);
         return this.action;
-    }
-
-    /**
-     * The type of the entity to which this editor will be bound.
-     *
-     * @return
-     */
-    protected Class<? extends AbstractEntity<?>> entityType() {
-        return entityType;
     }
 
     /**

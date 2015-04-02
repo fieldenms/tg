@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.helpers.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.widgets.IAutocompleterConfig;
@@ -58,22 +59,21 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
         this(simpleMaster, propertyName, null);
     }
 
-
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
-        widget = new EntityAutocompletionWidget(smBuilder.entityType, propertyName);
+        widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName);
         return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
     }
 
     @Override
     public ISinglelineTextConfig<T> asSinglelineText() {
-        widget = new SinglelineTextWidget(smBuilder.entityType, propertyName);
+        widget = new SinglelineTextWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName);
         return new SinglelineTextConfig<>((SinglelineTextWidget) widget, smBuilder);
     }
 
     @Override
     public IMultilineTextConfig<T> asMultilineText() {
-        widget = new MultilineTextWidget(smBuilder.entityType, propertyName);
+        widget = new MultilineTextWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName);
         return new MultilineTextConfig<>((MultilineTextWidget) widget, smBuilder);
     }
 
@@ -89,7 +89,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDateTimePickerConfig<T> asDateTimePicker() {
-        widget = new DateTimePickerWidget(smBuilder.entityType, propertyName);
+        widget = new DateTimePickerWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName);
         return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
     }
 
@@ -105,13 +105,13 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDecimalConfig<T> asDecimal() {
-        widget = new DecimalWidget(smBuilder.entityType, propertyName);
+        widget = new DecimalWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName);
         return new DecimalConfig<>((DecimalWidget) widget, smBuilder);
     }
 
     @Override
     public ISpinnerConfig<T> asSpinner() {
-        widget = new SpinnerWidget(smBuilder.entityType, propertyName);
+        widget = new SpinnerWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName);
         return new SpinnerConfig<>((SpinnerWidget) widget, smBuilder);
     }
 
@@ -122,7 +122,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public ICheckboxConfig<T> asCheckbox() {
-        widget = new CheckboxWidget(smBuilder.entityType, propertyName);
+        widget = new CheckboxWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName);
         return new CheckboxConfig<>((CheckboxWidget) widget, smBuilder);
     }
 

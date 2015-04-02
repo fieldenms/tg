@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
@@ -21,8 +21,8 @@ public class EntityAutocompletionWidget extends AbstractWidget {
     private boolean shouldSearchByDesc = false;
     private boolean shouldSearchByDescOnly = false;
 
-    public EntityAutocompletionWidget(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
-        super("editors/tg-entity-editor", entityType, propertyName);
+    public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName) {
+        super("editors/tg-entity-editor", titleDesc, propertyName);
     }
 
     @Override

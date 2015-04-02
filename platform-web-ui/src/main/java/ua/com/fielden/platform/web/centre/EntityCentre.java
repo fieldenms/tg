@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -13,7 +15,12 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.ICentre;
+import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.CriterionWidget;
+import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 import com.google.inject.Injector;
 
@@ -46,6 +53,37 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.menuItemType = miType;
         this.name = name;
         this.dslDefaultConfig = dslDefaultConfig;
+
+        // TODO remove this later, when layout will be correctly initialised in dslDefaultConfig!
+        final String mr = "['margin-right: 40px', 'flex']";
+        final String mrLast = "['flex']";
+        this.dslDefaultConfig.getSelectionCriteriaLayout().whenMedia(Device.DESKTOP, null).set(
+                ("[['center-justified', mr, mr, mrLast]," +
+                        "['center-justified', mr, mr, mrLast]," +
+                        "['center-justified', mr, mr, mrLast]]")
+                        .replaceAll("mrLast", mrLast).replaceAll("mr", mr)
+                );
+        this.dslDefaultConfig.getSelectionCriteriaLayout().whenMedia(Device.TABLET, null).set(
+                ("[['center-justified', mr, mrLast]," +
+                        "['center-justified', mr, mrLast]," +
+                        "['center-justified', mr, mrLast]," +
+                        "['center-justified', mr, mrLast]," +
+                        "['center-justified', mr, mrLast]]")
+                        .replaceAll("mrLast", mrLast).replaceAll("mr", mr)
+                );
+        this.dslDefaultConfig.getSelectionCriteriaLayout().whenMedia(Device.MOBILE, null).set(
+                ("[['center-justified', mrLast]," +
+                        "['center-justified', mrLast]," +
+                        "['center-justified', mrLast]," +
+                        "['center-justified', mrLast]," +
+                        "['center-justified', mrLast]," +
+                        "['center-justified', mrLast]," +
+                        "['center-justified', mrLast]," +
+                        "['center-justified', mrLast]," +
+                        "['center-justified', mrLast]]")
+                        .replaceAll("mrLast", mrLast).replaceAll("mr", mr)
+                );
+
         this.injector = injector;
         this.miType = miType;
         this.entityType = (Class<T>) CentreUtils.getEntityType(miType);
@@ -91,23 +129,30 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         importPaths.add("polymer/polymer/polymer");
         importPaths.add("master/tg-entity-master");
 
-        //        final DomElement editorContainer = layout.render();
-        //
-        //        importPaths.add(layout.importPath());
-        //        widgets.forEach(widget -> {
-        //            importPaths.add(widget.widget().importPath());
-        //            editorContainer.add(widget.widget().render());
-        //            if (widget.widget().action() != null) {
-        //                propertyActionsStr.append(widget.widget().action().code().toString());
-        //            }
-        //        });
+        final FlexLayout layout = this.dslDefaultConfig.getSelectionCriteriaLayout();
+
+        final DomElement editorContainer = layout.render();
+
+        importPaths.add(layout.importPath());
+
+        final Class<?> root = this.entityType;
+
+        final List<AbstractCriterionWidget> criteriaWidgets = new ArrayList<>();
+        for (final String critProp : centre.getFirstTick().checkedProperties(root)) {
+            criteriaWidgets.add(new CriterionWidget(root, centre.getEnhancer().getManagedType(root), critProp));
+        }
+        criteriaWidgets.forEach(widget -> {
+            importPaths.add(widget.importPath());
+            importPaths.addAll(widget.editorsImportPaths());
+            editorContainer.add(widget.render());
+        });
 
         final String entityCentreStr = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html").
-                // replace("<!--@imports-->", createImports(importPaths)).
+                replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
                 replace("@full_entity_type", entityType.getName()).
-                replace("@mi_type", miType.getName());
-        // replace("<!--@criteria_editors-->", editorContainer.toString());
+                replace("@mi_type", miType.getName()).
+                replace("<!--@criteria_editors-->", editorContainer.toString());
 
         final IRenderable representation = new IRenderable() {
             @Override

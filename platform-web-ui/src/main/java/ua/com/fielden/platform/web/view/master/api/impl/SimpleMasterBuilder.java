@@ -168,7 +168,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
      * @param importPaths
      * @return
      */
-    private String createImports(final LinkedHashSet<String> importPaths) {
+    public static String createImports(final LinkedHashSet<String> importPaths) {
         final StringBuilder sb = new StringBuilder();
         importPaths.forEach(path -> {
             sb.append("<link rel='import' href='/resources/" + path + ".html'>\n");
