@@ -57,7 +57,7 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .also()
        .addCrit("woType").asMulti().autocompleter().setDefaultValue(multi().string().not().setValues("AG*", "*RTU*D").value())
        .also()
-       .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsNotValue(true).canHaveNoValue().value())
+       .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsValue(true).setIsNotValue(true).canHaveNoValue().value())
        .also()
        .addCrit("intValue").asRange().integer().withDefaultValueAssigner(null)
        .also()

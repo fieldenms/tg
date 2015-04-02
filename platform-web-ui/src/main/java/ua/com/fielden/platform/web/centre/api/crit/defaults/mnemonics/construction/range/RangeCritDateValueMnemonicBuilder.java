@@ -33,7 +33,7 @@ implements  IRangeCritDateValueMnemonic,
     ///////////////////////////////////////////////////////////
 
     @Override
-    public IRangeCritDateValueMnemonic0ValueOrPeriodSelector not() {
+    public IRangeCritDateValueMnemonic0FromValueOrPeriodSelector not() {
         this.negateCondition = true;
         return this;
     }

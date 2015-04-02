@@ -2,10 +2,11 @@ package ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construct
 
 import java.util.Date;
 
-public interface IRangeCritDateValueMnemonic0ValueOrPeriodSelector extends IRangeCritDateValueMnemonic5MissingValue {
+public interface IRangeCritDateValueMnemonic0FromValueOrPeriodSelector {
     IRangeCritDateValueMnemonic1ToValue setFromValue(final Date from);
     IRangeCritDateValueMnemonic1ToValue setFromValueExclusive(final Date from);
     IRangeCritDateValueMnemonic2PeriodMenmonics prev();
     IRangeCritDateValueMnemonic2PeriodMenmonics curr();
     IRangeCritDateValueMnemonic2PeriodMenmonics next();
+    IRangeCritDateValueMnemonic6Value canHaveNoValue();
 }

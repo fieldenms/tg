@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
 
-public class MultiCritBooleanValueMnemonicBuilder implements IMultiCritBooleanValueMnemonic {
+public class MultiCritBooleanValueMnemonicBuilder implements IMultiCritBooleanValueMnemonic, IMultiCritBooleanValueMnemonic1IsNotValue, IMultiCritBooleanValueMnemonic2MissingValue {
     private Optional<Boolean> isValue = Optional.empty();
     private Optional<Boolean> isNotValue = Optional.empty();
 
@@ -19,28 +19,28 @@ public class MultiCritBooleanValueMnemonicBuilder implements IMultiCritBooleanVa
 
 
     @Override
-    public IMultiCritBooleanValueMnemonic1 setIsValue(final boolean value) {
+    public IMultiCritBooleanValueMnemonic1IsNotValue setIsValue(final boolean value) {
         isValue = Optional.of(value);
         return this;
     }
 
 
     @Override
-    public IMultiCritBooleanValueMnemonic2 setIsNotValue(final boolean value) {
+    public IMultiCritBooleanValueMnemonic2MissingValue setIsNotValue(final boolean value) {
         isNotValue = Optional.of(value);
         return this;
     }
 
 
     @Override
-    public IMultiCritBooleanValueMnemonic3 canHaveNoValue() {
+    public IMultiCritBooleanValueMnemonic3Value canHaveNoValue() {
         checkForMissingValue = true;
         return this;
     }
 
 
     @Override
-    public IMultiCritBooleanValueMnemonic0 not() {
+    public IMultiCritBooleanValueMnemonic0IsValue not() {
         negateCondition = true;
         return this;
     }
