@@ -4,7 +4,7 @@ import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBu
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.actionOff;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
-import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.multi.options.DefaultValueOptions.*;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.*;
 
 import java.util.Date;
 
@@ -61,7 +61,7 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .also()
        .addCrit("intValue").asRange().integer().withDefaultValueAssigner(null)
        .also()
-       .addCrit("date").asRange().date().setDefaultValue(null) // TODO add default value example
+       .addCrit("date").asRange().date().setDefaultValue(range().date().prev().monthAndAfter().exclusiveFrom().canHaveNoValue().value())
        .also()
        .addCrit("intValueCritOnly").asSingle().integer().setDefaultValue(null) // TODO add default value example
        .also()

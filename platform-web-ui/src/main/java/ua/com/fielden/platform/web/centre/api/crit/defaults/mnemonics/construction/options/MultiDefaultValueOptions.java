@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.multi.options;
+package ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options;
 
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.multi.IMultiCritBooleanValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.multi.IMultiCritStringValueMnemonic;
