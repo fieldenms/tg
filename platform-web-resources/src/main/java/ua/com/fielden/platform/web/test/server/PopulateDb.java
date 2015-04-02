@@ -129,7 +129,10 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentCompositeEntity compositeEnt1 = save(ce);
         System.out.println("compositeEnt1.getId() == " + compositeEnt1.getId());
 
-        final TgPersistentEntityWithProperties exampleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23.0)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compositeEnt1).setDesc("Description for entity with key 11.").setRequiredValidatedProp(30));
+        final TgPersistentEntityWithProperties exampleEntToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compositeEnt1).setDesc("Description for entity with key 11.").setRequiredValidatedProp(30);
+        System.out.println("exampleEntToBeSaved.getBigDecimalProp().scale() == " + exampleEntToBeSaved.getBigDecimalProp().scale());
+        final TgPersistentEntityWithProperties exampleEnt1 = save(exampleEntToBeSaved);
+        System.out.println("exampleEnt1.getBigDecimalProp().scale() == " + exampleEnt1.getBigDecimalProp().scale());
         System.out.println("exampleEnt1.getId() == " + exampleEnt1.getId());
 
         //

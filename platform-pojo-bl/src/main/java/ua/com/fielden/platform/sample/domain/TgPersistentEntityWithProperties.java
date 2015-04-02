@@ -50,7 +50,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     private TgPersistentEntityWithProperties entityProp;
 
     @IsProperty
-    @MapTo
+    @MapTo(precision = 18, scale = 5)
     @Title(value = "BigDecimal prop", desc = "BigDecimal prop desc")
     private BigDecimal bigDecimalProp;
 

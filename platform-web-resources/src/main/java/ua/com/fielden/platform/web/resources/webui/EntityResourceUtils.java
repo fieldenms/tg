@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
@@ -16,11 +17,13 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Money;
@@ -230,7 +233,20 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         } else if (EntityUtils.isDate(propertyType)) {
             return reflectedValue == null ? null : (reflectedValue instanceof Integer ? new Date(((Integer) reflectedValue).longValue()) : new Date((Long) reflectedValue));
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            return reflectedValue == null ? null : (reflectedValue instanceof Integer ? new BigDecimal((Integer) reflectedValue) : new BigDecimal((Double) reflectedValue));
+            if (reflectedValue == null) {
+                return null;
+            } else {
+                final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, propertyName);
+                final Integer propertyScale = mapTo != null && mapTo.scale() >= 0 ? ((int) mapTo.scale()) : 2 /* default value from Hibernate */;
+
+                if (reflectedValue instanceof Integer) {
+                    return new BigDecimal(((Integer) reflectedValue).doubleValue()).setScale(propertyScale, RoundingMode.HALF_UP);
+                } else if (reflectedValue instanceof Double) {
+                    return new BigDecimal(((Double) reflectedValue).doubleValue()).setScale(propertyScale, RoundingMode.HALF_UP);
+                } else {
+                    throw new IllegalStateException("Unknown number type for 'reflectedValue'.");
+                }
+            }
         } else if (Money.class.isAssignableFrom(propertyType)) {
             if (reflectedValue == null) {
                 return null;
