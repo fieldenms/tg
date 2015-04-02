@@ -79,16 +79,6 @@
                             console.log("CENTRE SAVED", e);
                             
                             self.retrieve();
-
-                            // var deserialised = self.$.serialiser.deserialise(e.detail.response);
-                            // var entityAndCustomObject = deserialised.instance;
-                            // var criteriaEntity = entityAndCustomObject[0];
-                            // var customObject = self.$.reflector.customObject(entityAndCustomObject);
-                            // var resultEntities = customObject.resultEntities; // entityAndCustomObject.slice(2);
-                            // var pageCount = customObject.pageCount;
-                            // var metaValues = customObject.metaValues;
-                            // var isCentreChanged = customObject.isCentreChanged;
-                            // self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged);
                         }
                     });
                     self.$.ajaxDiscarder.addEventListener('core-response', function (e) {
@@ -96,19 +86,87 @@
                             console.log("CENTRE DISCARDED", e);
                             
                             self.retrieve();
-
-                            // var deserialised = self.$.serialiser.deserialise(e.detail.response);
-                            // var entityAndCustomObject = deserialised.instance;
-                            // var criteriaEntity = entityAndCustomObject[0];
-                            // var customObject = self.$.reflector.customObject(entityAndCustomObject);
-                            // var resultEntities = customObject.resultEntities; // entityAndCustomObject.slice(2);
-                            // var pageCount = customObject.pageCount;
-                            // var metaValues = customObject.metaValues;
-                            // var isCentreChanged = customObject.isCentreChanged;
-                            // self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged);
+                        }
+                    });
+                    
+                    self.editAction = self.editAction.bind(self);
+                    self.newAction = self.newAction.bind(self);
+                    self.showMaster = self.showMaster.bind(self);
+                },
+                
+                attached: function () {
+                    var self = this;
+                    ///////////////////////Edit Listeners/////////////////////////////////////
+                     this.masterCreatedListener = postal.subscribe({
+                        channel: "centre_" + self.$.selection_criteria.uuid,
+                        topic: "edit.finish.created",
+                        callback: function (data, envelope) {
+                            console.log("-------- Masters Edit Created UUID: " + data.uuid + " ------------");
+                        }
+                    });
+                    this.masterShowListener = postal.subscribe({
+                        channel: "centre_" + self.$.selection_criteria.uuid,
+                        topic: "edit.finish.shown",
+                        callback: function (data, envelope) {
+                            console.log("-------- Masters Edit Shown UUID: " + data.uuid + " ------------");
+                        }
+                    });
+                    /////////////////////////New listener//////////////////////////////////////
+                    this.masterNewListener = postal.subscribe({
+                        channel: "centre_" + self.$.selection_criteria.uuid,
+                        topic: "new.finish",
+                        callback: function (data, envelope) {
+                            console.log("-------- Masters New UUID: " + data.uuid + " ------------");
                         }
                     });
                 },
+                
+                detached: function() {
+                    this.masterCreatedListener.unsubscribe();
+                    this.masterShowListener.unsubscribe();
+                    this.masterNewListener.unsubscribe();
+                },
+
+                showMaster: function (entity) {
+                    var self = this;
+                    postal.publish({
+                        channel: "centre",
+                        topic: "edit.start",
+                        data: {
+                            entity: entity,
+                            uuid: self.$.selection_criteria.uuid
+                        }
+                    });
+                },
+                newAction: function () {
+                    var self = this;
+                    postal.publish({
+                        channel: "centre",
+                        topic: "new.start",
+                        data: {
+                            entityType: self.entityType,
+                            simpleEntityType: self.simpleEntityType(),
+                            uuid: self.$.selection_criteria.uuid
+                        }
+                    });
+                },
+                editAction: function () {
+                    var self = this;
+                    postal.publish({
+                        channel: "centre",
+                        topic: "edit.start",
+                        data: {
+                            entity: self.getContext(),
+                            uuid: self.$.selection_criteria.uuid
+                        }
+                    });
+                },
+                getContext: function () {
+                    if (this.$.egi.getSelectedEntities().length > 0) {
+                        return this.$.egi.getSelectedEntities()[0];
+                    }
+                    return null;
+                }, 
                 
                 /**
                  * Returns simple entity type name.

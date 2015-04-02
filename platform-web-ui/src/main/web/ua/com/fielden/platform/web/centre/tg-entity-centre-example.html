@@ -189,6 +189,17 @@
                         mitype: "ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties"
                     }
                 });
+                centreExample.centres.push({
+                    componentUri: "/resources/centre/tg-entity-centre-for-TgPersistentEntityWithProperties.html",
+                    elementName: "tg-entity-centre-for-TgPersistentEntityWithProperties",
+                    label: "Entity Centre (Generated)",
+                    attrs: {
+                        user: "SU",
+                        uuid: reflector.generateUUID(),
+                        entityType: "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties",
+                        mitype: "ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties"
+                    }
+                });
                 centreExample.route = centreExample.route || "centre_" + centreExample.centres[0].attrs.uuid;
 
                 //////////////////////////Edit actions//////////////////////////////////
