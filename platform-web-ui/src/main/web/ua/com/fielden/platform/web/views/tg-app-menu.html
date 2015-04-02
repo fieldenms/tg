@@ -1,0 +1,41 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-toolbar/core-toolbar.html">
+<link rel="import" href="/resources/polymer/layout/tg-tile-layout.html">
+
+<polymer-element name="tg-app-menu" attributes="user items whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
+    <template>
+        <core-toolbar class="category-toolbar" slide-down>
+            <div flex class="user-name">{{user.name}}</div>
+            <div>{{user.login}}</div>
+        </core-toolbar>
+
+        <tg-tile-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellHeight="{{minCellHeight}}" minCellWidth="{{minCellWidth}}">
+            <template repeat="{{item in items}}">
+                <div class="tile" vertical layout>
+                    <div class="tile" fit hero-id="{{category.name === cat.name ? 'punch' : ''}}" hero?="{{category.name === cat.name}}"></div>
+                    <div class="tile" flex auto vertical layout>
+                        <div flex auto relative>
+                            <!-- sizing wrapper -->
+                            <div fit layout vertical center center-justified>
+                                <div class="category-bg-wrapper" relative>
+                                    <core-icon class="category-tile-bg {{ {'theme-icon': scores.length === cat.quizzes.length} | tokenList }}" icon="{{scores.length === cat.quizzes.length ? 'check' : 'category-icons:' + cat.id}}" cross-fade-delayed?="{{category.name === cat.name && parentElement.lastSelected === 'category'}}" fit></core-icon>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cat-name theme-bg" horizontal center layout hero-id="{{category.name === cat.name ? 'punch-bottom' : ''}}" hero?="{{category.name === cat.name}}">
+                            <div flex>
+                                <span cross-fade-delayed?="{{category.name === cat.name && parentElement.lastSelected === 'category'}}">{{cat.name}}</span>
+                            </div>
+                            <core-icon class="category-icon theme-bg" icon="av:play-arrow" hidden?="{{scores.length === cat.quizzes.length}}" cross-fade-delayed?="{{category.name === cat.name && parentElement.lastSelected === 'category'}}"></core-icon>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </tg-tile-layout>
+    </template>
+    <script>
+        (function () {
+            Polymer({});
+        })();
+    </script>
+</polymer-element>

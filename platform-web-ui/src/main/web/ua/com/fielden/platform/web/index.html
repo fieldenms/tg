@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Tg Application</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/app/tg-app.html">
+    <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+
+    <style>
+        body {
+            font-family: "RobotoDraft";
+            font-size: 10pt;
+        }
+    </style>
+
+</head>
+
+<body unresolved fullbleed>
+    <template is="auto-binding" id="app">
+        <tg-app user="{{user}}" fit></tg-app>
+    </template>
+    <script>
+        (function () {
+            var app = document.querySelector('#app');
+            app.user="SU";
+        })();
+    </script>
+</body>
+
+</html>

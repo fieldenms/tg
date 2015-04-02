@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Tg Application</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
+    <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+    <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+
+    <style>
+        body {
+            font-family: "RobotoDraft";
+            font-size: 10pt;
+        }
+        div {
+            border: 1px solid black;
+        }
+    </style>
+
+</head>
+
+<body unresolved fullbleed>
+    <template is="auto-binding" id="app">
+        <core-animated-pages selected="{{selected}}" transition="hero-transition">
+            <section layout horizontal>
+                <div id="div1" flex></div>
+                <div id="div2" flex hero-id="shared" hero>Test</div>
+            </section>
+            <section>
+                <section layout horizontal>
+                    <div id="div3" fit hero-id="shared" hero>Test 2</div>
+                    <div id="div4" fit></div>
+                </section>
+            </section>
+        </core-animated-pages>
+        <paper-button raised style="position:absolute; bottom:0; right:0;" on-tap="{{cycle}}">Test</paper-button>
+    </template>
+    <script>
+        (function () {
+            CoreStyle.g.transitions.duration = '1000ms';
+            var app = document.querySelector('#app');
+            app.user = "SU";
+            app.selected = 0;
+            app.cycle = function () {
+                app.selected ^= 1;
+            }
+        })();
+    </script>
+</body>
+
+</html>

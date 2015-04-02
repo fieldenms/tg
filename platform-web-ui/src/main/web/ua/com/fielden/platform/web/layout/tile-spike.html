@@ -4,7 +4,7 @@
 <head>
     <title>Tile spike</title>
     <script src="/resources/polymer/platform/platform.js"></script>
-    <link rel="import" href="tile-layout.html">
+    <link rel="import" href="tg-tile-layout.html">
     <style>
         body {
             background-color: black;
@@ -38,7 +38,7 @@
 
 <body unresolved fullbleed>
     <template id="app" is="auto-binding">
-        <tile-layout fit whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}" mincellheight="50px" mincellwidth="250px">
+        <tile-layout fit whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}">
             <div class="tile">
                 <div class="category light-gray" fit>First</div>
             </div>
