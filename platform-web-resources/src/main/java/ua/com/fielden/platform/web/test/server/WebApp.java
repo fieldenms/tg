@@ -14,6 +14,7 @@ import ua.com.fielden.platform.web.WebAppConfig;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.application.AbstractWebApp;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -103,7 +104,43 @@ public class WebApp extends AbstractWebApp {
     @Override
     protected void initWebApplication(final IWebApp webApp) {
         // Add entity centres.
-        webApp.configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties"));
+        final EntityCentreConfig ecc = null;
+        //                new EntityCentreBuilder<TgPersistentEntityWithProperties>()
+        //                .forEntity(TgPersistentEntityWithProperties.class)
+        //                .addCrit("woType").asMulti().autocompleter().setDefaultValue(multi().string().not().setValues("AG*", "*RTU*D").value())
+        //                .also()
+        //                .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsNotValue(true).canHaveNoValue().value())
+        //                .also()
+        //                .addCrit("intValue").asRange().integer().withDefaultValueAssigner(null)
+        //                .also()
+        //                .addCrit("date").asRange().date().setDefaultValue(range().date().prev().monthAndAfter().exclusiveFrom().canHaveNoValue().value())
+        //                .also()
+        //                .addCrit("intValueCritOnly").asSingle().integer().setDefaultValue(null) // TODO add default value example
+        //                .also()
+        //                .addCrit("entityCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null).setDefaultValue(null) // TODO add default value example
+        //                .also()
+        //                .addCrit("statusCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null)
+        //                .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
+        //                        + "[[mr], [mr], [mr], [mr], [mr]], "
+        //                        + "[[mr], [mr], [mr], [mr], [mr]]]"))
+        //                .setLayoutFor(Device.TABLET, null, ("['vertical', 'justified', 'margin:20px', "
+        //                        + "[[mr], [mr], [mr], [mr], [mr]], "
+        //                        + "[[mr], [mr], [mr], [mr], [mr]]]"))
+        //                .setLayoutFor(Device.MOBILE, null, ("['vertical', 'justified', 'margin:20px', "
+        //                        + "[[mr], [mr], [mr], [mr], [mr]], "
+        //                        + "[[mr], [mr], [mr], [mr], [mr]]]"))
+        //                .addProp("status").withAction(null)
+        //                .also()
+        //                .addProp("status").order(3).desc().withAction(null)
+        //                .also()
+        //                .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
+        //                .also()
+        //                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
+        //                .also()
+        //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
+        //                .build();
+
+        webApp.configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc));
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);

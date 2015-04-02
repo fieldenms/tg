@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 
 /**
  * Represents the entity centre.
@@ -12,6 +13,7 @@ public class EntityCentre {
 
     private final Class<? extends MiWithConfigurationSupport<?>> menuItemType;
     private final String name;
+    private final EntityCentreConfig dslDefaultConfig;
 
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
@@ -20,10 +22,13 @@ public class EntityCentre {
      *            - the menu item type for which this entity centre is to be created.
      * @param name
      *            - the name for this entity centre.
+     * @param dslDefaultConfig
+     *            -- default configuration taken from Centre DSL
      */
-    public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemType, final String name) {
+    public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemType, final String name, final EntityCentreConfig dslDefaultConfig) {
         this.menuItemType = menuItemType;
         this.name = name;
+        this.dslDefaultConfig = dslDefaultConfig;
     }
 
     /**
@@ -42,5 +47,14 @@ public class EntityCentre {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Default configuration taken from Centre DSL.
+     *
+     * @return
+     */
+    public EntityCentreConfig getDslDefaultConfig() {
+        return dslDefaultConfig;
     }
 }
