@@ -54,17 +54,17 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .endTopActionsGroup()
        .addCrit("status").asMulti().autocompleter().withMatcher(MyClass.class, context().withCurrentEntity().withSelectionCrit().build()).withDefaultValueAssigner(null)
        .also()
-       .addCrit("woType").asMulti().autocompleter().setDefaultValues("AG*", "*RTU*D")
+       .addCrit("woType").asMulti().autocompleter().setDefaultValues() // TODO add default value example "AG*", "*RTU*D"
        .also()
-       .addCrit("falg").asMulti().bool().setDefaultValues(true, false)
+       .addCrit("falg").asMulti().bool().setDefaultValues(null) // TODO add default value example
        .also()
        .addCrit("intValue").asRange().integer().withDefaultValueAssigner(null)
        .also()
-       .addCrit("date").asRange().date().setFromDefaultValue(new Date())
+       .addCrit("date").asRange().date().setDefaultValue(null) // TODO add default value example
        .also()
-       .addCrit("intValueCritOnly").asSingle().integer().setDefaultValue(0)
+       .addCrit("intValueCritOnly").asSingle().integer().setDefaultValue(null) // TODO add default value example
        .also()
-       .addCrit("entityCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null).setDefaultValue(new TgWorkOrder())
+       .addCrit("entityCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null).setDefaultValue(null) // TODO add default value example
        .also()
        .addCrit("statusCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null)
        .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "

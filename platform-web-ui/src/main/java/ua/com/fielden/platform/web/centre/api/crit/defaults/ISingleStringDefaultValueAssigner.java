@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre.api.crit.defaults;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.ISingleValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 
 /**
  * A contract to provide a default value assigner or specific default values for a single-valued kind selection criteria of the string type.
@@ -13,6 +14,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.ISingleVal
  * @param <T>
  */
 public interface ISingleStringDefaultValueAssigner<T extends AbstractEntity<?>> extends IAlsoCrit<T> {
-    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends ISingleValueAssigner<String, T>> assigner);
-    IAlsoCrit<T> setDefaultValue(final String value);
+    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<String>, T>> assigner);
+    IAlsoCrit<T> setDefaultValue(final SingleCritOtherValueMnemonic<String> value);
 }
