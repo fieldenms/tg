@@ -29,5 +29,9 @@ public class SingleCritOtherValueMnemonic<V> {
             throw new IllegalArgumentException("Either criteria value or a check of missing values is required.");
         }
 
+        if (value.isPresent() && value.get() instanceof Date) {
+            throw new IllegalArgumentException(String.format("Date selection criteria should use %s as a data structure for specifying the conditions.", SingleCritDateValueMnemonic.class.getSimpleName()));
+        }
+
     }
 }
