@@ -22,6 +22,7 @@ import ua.com.fielden.platform.web.app.WebApp;
 import ua.com.fielden.platform.web.factories.MainMenuResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.factories.WebAppConfigResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
@@ -176,6 +177,7 @@ public abstract class AbstractWebApp extends Application {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/users/{username}/criteria/{mitype}", new CriteriaResourceFactory(webApp, injector));
         router.attach("/users/{username}/centre/{mitype}", new CentreResourceFactory(webApp, injector));
+        router.attach("/users/{username}/centre_ui/{mitype}", new CentreComponentResourceFactory(webApp, injector));
     }
 
     /**

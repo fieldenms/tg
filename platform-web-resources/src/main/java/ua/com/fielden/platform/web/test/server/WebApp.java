@@ -140,7 +140,7 @@ public class WebApp extends AbstractWebApp {
         //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
         //                .build();
 
-        webApp.configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc));
+        webApp.configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre<TgPersistentEntityWithProperties>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector));
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);

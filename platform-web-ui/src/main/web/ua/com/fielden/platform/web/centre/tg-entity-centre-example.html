@@ -176,6 +176,8 @@
                     reflector = document.querySelector("#reflector");
 
                 document.querySelector("#scaffold").$.drawerPanel.forceNarrow = true;
+                
+                var userName = "SU";
 
                 //////////////////////Initialising centres and route///////////////////////////////
                 centreExample.centres.push({
@@ -183,16 +185,16 @@
                     elementName: "tg-entity-centre-for-TgPersistentEntityWithProperties",
                     label: "Entity Centre",
                     attrs: {
-                        user: "SU",
+                        user: userName,
                         uuid: reflector.generateUUID()
                     }
                 });
                 centreExample.centres.push({
-                    componentUri: "/resources/centre/tg-entity-centre-for-TgPersistentEntityWithProperties.html",
-                    elementName: "tg-entity-centre-for-TgPersistentEntityWithProperties",
+                    componentUri: "/users/" + userName + "/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties",
+                    elementName: "tg-TgPersistentEntityWithProperties-centre",
                     label: "Entity Centre (Generated)",
                     attrs: {
-                        user: "SU",
+                        user: userName,
                         uuid: reflector.generateUUID()
                     }
                 });
