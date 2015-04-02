@@ -184,9 +184,7 @@
                     label: "Entity Centre",
                     attrs: {
                         user: "SU",
-                        uuid: reflector.generateUUID(),
-                        entityType: "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties",
-                        mitype: "ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties"
+                        uuid: reflector.generateUUID()
                     }
                 });
                 centreExample.centres.push({
@@ -195,9 +193,7 @@
                     label: "Entity Centre (Generated)",
                     attrs: {
                         user: "SU",
-                        uuid: reflector.generateUUID(),
-                        entityType: "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties",
-                        mitype: "ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties"
+                        uuid: reflector.generateUUID()
                     }
                 });
                 centreExample.route = centreExample.route || "centre_" + centreExample.centres[0].attrs.uuid;
