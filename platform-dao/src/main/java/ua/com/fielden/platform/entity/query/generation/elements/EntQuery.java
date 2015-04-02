@@ -250,9 +250,11 @@ public class EntQuery implements ISingleOperand {
             // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
             
             for (final Yield yield : yields.getYields()) {
-                if ((fetchModel.containsProp(yield.getAlias()) || (yieldIsOfEntityType(yield) && !allFetchedPropsAreAggregatedExpressions)) 
-                		&& 
-                		!(yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias()) && allFetchedPropsAreAggregatedExpressions)) {
+            	boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
+            	boolean isOfEntityType = yieldIsOfEntityType(yield);
+            	boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
+            	
+                if ((presentInFetchModel || (isOfEntityType && !allFetchedPropsAreAggregatedExpressions)) && !(isHeaderOfMoneyType && allFetchedPropsAreAggregatedExpressions)) {
                     logger.debug("adjustYieldsModelAccordingToFetchModel: retaining property [" + yield.getAlias() + "]");
                 } else {
                     logger.debug("adjustYieldsModelAccordingToFetchModel: removing property [" + yield.getAlias() + "]");
