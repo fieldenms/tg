@@ -33,4 +33,5 @@ public class MultiCritBooleanValueMnemonic {
             throw new IllegalArgumentException("Either boolean criteria is/isNot values or a check for missing values is required.");
         }
     }
+
 }

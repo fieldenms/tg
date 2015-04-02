@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBu
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.actionOff;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.multi.options.DefaultValueOptions.*;
 
 import java.util.Date;
 
@@ -54,9 +55,9 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .endTopActionsGroup()
        .addCrit("status").asMulti().autocompleter().withMatcher(MyClass.class, context().withCurrentEntity().withSelectionCrit().build()).withDefaultValueAssigner(null)
        .also()
-       .addCrit("woType").asMulti().autocompleter().setDefaultValues() // TODO add default value example "AG*", "*RTU*D"
+       .addCrit("woType").asMulti().autocompleter().setDefaultValue(multi().string().not().setValues("AG*", "*RTU*D").value())
        .also()
-       .addCrit("falg").asMulti().bool().setDefaultValues(null) // TODO add default value example
+       .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsNotValue(true).canHaveNoValue().value())
        .also()
        .addCrit("intValue").asRange().integer().withDefaultValueAssigner(null)
        .also()

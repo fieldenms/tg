@@ -15,5 +15,5 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritB
  */
 public interface IMultiBooleanDefaultValueAssigner<T extends AbstractEntity<?>> extends IAlsoCrit<T> {
     IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IMultiValueAssigner<MultiCritBooleanValueMnemonic, T>> assigner);
-    IAlsoCrit<T> setDefaultValues(final MultiCritBooleanValueMnemonic value);
+    IAlsoCrit<T> setDefaultValue(final MultiCritBooleanValueMnemonic value);
 }
