@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IRangeDateDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IRangeDecimalDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IRangeIntegerDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.IRangeDateDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.IRangeDecimalDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.IRangeIntegerDefaultValueAssigner;
 
 /**
  * A contract for specifying selection criteria as ranges.

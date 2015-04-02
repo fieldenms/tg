@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IMultiBooleanDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.IMultiStringDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiBooleanDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultValueAssigner;
 
 /**
  * A contract for selecting multi-valued criteria.

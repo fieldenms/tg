@@ -1,15 +1,16 @@
-package ua.com.fielden.platform.web.centre.api.default_value;
+package ua.com.fielden.platform.web.centre.api.crit.defaults.assigners;
 
+import java.util.List;
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
- * A contract for providing default values for selection criteria of the range kind and type <code>V</code> as their value type.
+ * A contract for providing default values for selection criteria of the multi-valued kind and type <code>V</code> as their value type.
  * There could be a single implementation of this contract for a specific centre, covering all necessary selection criteria.
  * <p>
- * Methods <code>getFromValue</code> and <code>getToValue</code> may return an empty value, which should be recognised as no value needs to be assigned.
+ * Method <code>getValues</code> may return an empty value, which should be recognised as no value needs to be assigned.
  * <p>
  * The centre context most likely would be useful only in case of context dependent entity centre, where it forms part of some compound master.
  * In such cases, the centre context would only contain an instance of the master entity that could potentially be used by custom logic of defining the default
@@ -24,25 +25,19 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @param <V>
  * @param <T>
  */
-public interface IRangeValueAssigner<V, T extends AbstractEntity<?>> {
+public interface IMultiValueAssigner<V, T extends AbstractEntity<?>> {
 
     /**
      * Accepts an entity centre context and a property name that was used for defining a corresponding selection criterion.
      * <p>
-     * May return either a value that needs to be assigned or an empty optional value, which indicates that no value needs to be assigned.
+     * May return either a list of values that need to be assigned or an empty optional value, which indicates that no values need to be assigned.
+     * <p>
+     * In case of boolean type, it should return a list of at most two {@link Boolean} values, where the first value represents to <code>IS</code> and the
+     * second value the <code>IS NOT</code> parts of a multi-valued boolean selection criterion.
      *
      * @param entity
      * @param name
      * @return
      */
-    Optional<V> getFromValue(final CentreContext<T, ?> entity, final String name);
-
-
-    /**
-     * Similar as for {@link #getFromValue(CentreContext, String)}, but for the right value of the range.
-     * @param entity
-     * @param name
-     * @return
-     */
-    Optional<V> getToValue(final CentreContext<T, ?> entity, final String name);
+    Optional<List<V>> getValues(final CentreContext<T, ?> entity, final String name);
 }

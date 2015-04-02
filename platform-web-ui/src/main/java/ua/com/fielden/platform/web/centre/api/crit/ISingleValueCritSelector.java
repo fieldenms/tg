@@ -2,11 +2,11 @@ package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.ISingleBooleanDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.ISingleDateDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.ISingleDecimalDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.ISingleIntegerDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.default_assigner.ISingleStringDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.ISingleBooleanDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.ISingleDateDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.ISingleDecimalDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.ISingleIntegerDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.ISingleStringDefaultValueAssigner;
 
 /**
  * A contract for selecting single-valued selection criteria.

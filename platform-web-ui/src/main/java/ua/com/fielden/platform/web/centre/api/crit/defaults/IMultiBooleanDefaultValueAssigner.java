@@ -1,8 +1,8 @@
-package ua.com.fielden.platform.web.centre.api.crit.default_assigner;
+package ua.com.fielden.platform.web.centre.api.crit.defaults;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
-import ua.com.fielden.platform.web.centre.api.default_value.IMultiValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IMultiValueAssigner;
 
 /**
  * A contract to provide a default value assigner or specific default values for a multi-valued kind selection criteria of either string type or an entity type.
