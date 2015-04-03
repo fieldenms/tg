@@ -48,6 +48,7 @@ public class MiTgPersistentEntityWithProperties extends MiWithConfigurationSuppo
                 addCriteria(cdtme, "booleanProp");
                 addCriteria(cdtme, "dateProp");
                 addCriteria(cdtme, "compositeProp");
+                addCriteria(cdtme, "critOnlyDate");
 
                 addCriteria(cdtme, "critOnlyEntityProp");
                 logger.debug("\tAdded criteria.");

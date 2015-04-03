@@ -114,6 +114,22 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Required validated prop", desc = "Required validated prop desc")
     private Integer requiredValidatedProp;
 
+    @IsProperty
+    @MapTo
+    @CritOnly(Type.SINGLE)
+    @Title(value = "Crit-only single date", desc = "Desc")
+    private Date critOnlyDate;
+
+    @Observable
+    public TgPersistentEntityWithProperties setCritOnlyDate(final Date critOnlyDate) {
+        this.critOnlyDate = critOnlyDate;
+        return this;
+    }
+
+    public Date getCritOnlyDate() {
+        return critOnlyDate;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setRequiredValidatedProp(final Integer requiredValidatedProp) {
         this.requiredValidatedProp = requiredValidatedProp;
