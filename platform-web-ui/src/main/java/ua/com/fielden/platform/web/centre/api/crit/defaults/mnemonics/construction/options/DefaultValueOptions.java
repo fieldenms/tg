@@ -11,7 +11,9 @@ public class DefaultValueOptions {
         return new MultiDefaultValueOptions();
     }
 
-    //public static SingleDefaultValueOptions single();
+    public static SingleDefaultValueOptions single() {
+        return new SingleDefaultValueOptions();
+    }
 
     public static RangeDefaultValueOptions range() {
         return new RangeDefaultValueOptions();
