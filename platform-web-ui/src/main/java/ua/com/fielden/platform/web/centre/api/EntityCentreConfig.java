@@ -72,6 +72,24 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, Class<? extends ISingleValueAssigner<SingleCritDateValueMnemonic, T>>> defaultSingleValueAssignersForDateSelectionCriteria = new HashMap<>();
 
     /**
+     * Default values. At the DSL level default values and assigners are mutually exclusive.
+     */
+    private final Map<String, MultiCritStringValueMnemonic> defaultMultiValuesForEntityAndStringSelectionCriteria = new HashMap<>();
+    private final Map<String, MultiCritBooleanValueMnemonic> defaultMultiValuesForBooleanSelectionCriteria = new HashMap<>();
+
+    private final Map<String, RangeCritDateValueMnemonic> defaultRangeValuesForDateSelectionCriteria = new HashMap<>();
+    private final Map<String, RangeCritOtherValueMnemonic<Integer>> defaultRangeValuesForIntegerSelectionCriteria = new HashMap<>();
+    private final Map<String, RangeCritOtherValueMnemonic<BigDecimal>> defaultRangeValuesForBigDecimalAndMoneySelectionCriteria = new HashMap<>();
+
+    private final Map<String, SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>> defaultSingleValuesForEntitySelectionCriteria = new HashMap<>();
+    private final Map<String, SingleCritOtherValueMnemonic<String>> defaultSingleValuesForStringSelectionCriteria = new HashMap<>();
+    private final Map<String, SingleCritOtherValueMnemonic<Boolean>> defaultSingleValuesForBooleanSelectionCriteria = new HashMap<>();
+    private final Map<String, SingleCritOtherValueMnemonic<Integer>> defaultSingleValuesForIntegerSelectionCriteria = new HashMap<>();
+    private final Map<String, SingleCritOtherValueMnemonic<BigDecimal>> defaultSingleValuesForBigDecimalAndMoneySelectionCriteria = new HashMap<>();
+    private final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria = new HashMap<>();
+
+
+    /**
      * A map between selection criteria properties and their custom value matchers.
      * If a matcher for some criterion is not provided then a default instance of type
      * {@link FallbackValueMatcherWithCentreContext} should be used.
@@ -249,5 +267,82 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return Optional.empty();
         }
         return Optional.of(defaultMultiValueAssignersForBooleanSelectionCriteria);
+    }
+
+    public Optional<Map<String, MultiCritStringValueMnemonic>> getDefaultMultiValuesForEntityAndStringSelectionCriteria() {
+        if (defaultMultiValuesForEntityAndStringSelectionCriteria == null || defaultMultiValuesForEntityAndStringSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultMultiValuesForEntityAndStringSelectionCriteria);
+    }
+
+    public Optional<Map<String, MultiCritBooleanValueMnemonic>> getDefaultMultiValuesForBooleanSelectionCriteria() {
+        if (defaultMultiValuesForBooleanSelectionCriteria == null || defaultMultiValuesForBooleanSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultMultiValuesForBooleanSelectionCriteria);
+    }
+
+    public Optional<Map<String, RangeCritDateValueMnemonic>> getDefaultRangeValuesForDateSelectionCriteria() {
+        if (defaultRangeValuesForDateSelectionCriteria == null || defaultRangeValuesForDateSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultRangeValuesForDateSelectionCriteria);
+    }
+
+    public Optional<Map<String, RangeCritOtherValueMnemonic<Integer>>> getDefaultRangeValuesForIntegerSelectionCriteria() {
+        if (defaultRangeValuesForIntegerSelectionCriteria == null || defaultRangeValuesForIntegerSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultRangeValuesForIntegerSelectionCriteria);
+    }
+
+    public Optional<Map<String, RangeCritOtherValueMnemonic<BigDecimal>>> getDefaultRangeValuesForBigDecimalAndMoneySelectionCriteria() {
+        if (defaultRangeValuesForBigDecimalAndMoneySelectionCriteria == null || defaultRangeValuesForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultRangeValuesForBigDecimalAndMoneySelectionCriteria);
+    }
+
+    public Optional<Map<String, SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>>> getDefaultSingleValuesForEntitySelectionCriteria() {
+        if (defaultSingleValuesForEntitySelectionCriteria == null || defaultSingleValuesForEntitySelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValuesForEntitySelectionCriteria);
+    }
+
+    public Optional<Map<String, SingleCritOtherValueMnemonic<String>>> getDefaultSingleValuesForStringSelectionCriteria() {
+        if (defaultSingleValuesForStringSelectionCriteria == null || defaultSingleValuesForStringSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValuesForStringSelectionCriteria);
+    }
+
+    public Optional<Map<String, SingleCritOtherValueMnemonic<Boolean>>> getDefaultSingleValuesForBooleanSelectionCriteria() {
+        if (defaultSingleValuesForBooleanSelectionCriteria == null || defaultSingleValuesForBooleanSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValuesForBooleanSelectionCriteria);
+    }
+
+    public Optional<Map<String, SingleCritOtherValueMnemonic<Integer>>> getDefaultSingleValuesForIntegerSelectionCriteria() {
+        if (defaultSingleValuesForIntegerSelectionCriteria == null || defaultSingleValuesForIntegerSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValuesForIntegerSelectionCriteria);
+    }
+
+    public Optional<Map<String, SingleCritOtherValueMnemonic<BigDecimal>>> getDefaultSingleValuesForBigDecimalAndMoneySelectionCriteria() {
+        if (defaultSingleValuesForBigDecimalAndMoneySelectionCriteria == null || defaultSingleValuesForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValuesForBigDecimalAndMoneySelectionCriteria);
+    }
+
+    public Optional<Map<String, SingleCritDateValueMnemonic>> getDefaultSingleValuesForDateSelectionCriteria() {
+        if (defaultSingleValuesForDateSelectionCriteria == null || defaultSingleValuesForDateSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValuesForDateSelectionCriteria);
     }
 }
