@@ -1,41 +1,101 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/core-toolbar/core-toolbar.html">
-<link rel="import" href="/resources/polymer/layout/tg-tile-layout.html">
+<link rel="import" href="/resources/layout/tg-tile-layout.html">
+<link rel="import" href="/resources/polymer/core-icon/core-icon.html">
+<link rel="import" href="/resources/polymer/core-icons/av-icons.html">
 
-<polymer-element name="tg-app-menu" attributes="user items whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
+<polymer-element name="tg-app-menu" attributes="user items selectedItem whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
     <template>
-        <core-toolbar class="category-toolbar" slide-down>
-            <div flex class="user-name">{{user.name}}</div>
+        <style>
+            core-toolbar {
+                height: 100px;
+                background-color: #0288D1;
+                color: #fff;
+                font-size: 24px;
+            }
+            core-toolbar::shadow #topBar {
+                height: 100px;
+            }
+            .item-name {
+                height: 48px;
+                min-height: 48px;
+                padding: 0 16px;
+                font-size: 12px;
+            }
+            .item-icon-bg {
+                width: 80%;
+                height: 80%;
+            }
+            .item-icon-bg core-icon {
+                width: 100%;
+                height: 100%;
+            }
+            core-icon>div {
+                background-repeat: no-repeat;
+            }
+            .item {
+                margin: 4px;
+            }
+            .items {
+                position: absolute;
+                top: 100px;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                margin: 4px -4px;
+                overflow: auto;
+            }
+            :host {
+                overflow: hidden;
+            }
+        </style>
+
+        <core-toolbar slide-down>
+            <div flex>{{user.name}}</div>
             <div>{{user.login}}</div>
         </core-toolbar>
 
-        <tg-tile-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellHeight="{{minCellHeight}}" minCellWidth="{{minCellWidth}}">
-            <template repeat="{{item in items}}">
-                <div class="tile" vertical layout>
-                    <div class="tile" fit hero-id="{{category.name === cat.name ? 'punch' : ''}}" hero?="{{category.name === cat.name}}"></div>
-                    <div class="tile" flex auto vertical layout>
-                        <div flex auto relative>
-                            <!-- sizing wrapper -->
-                            <div fit layout vertical center center-justified>
-                                <div class="category-bg-wrapper" relative>
-                                    <core-icon class="category-tile-bg {{ {'theme-icon': scores.length === cat.quizzes.length} | tokenList }}" icon="{{scores.length === cat.quizzes.length ? 'check' : 'category-icons:' + cat.id}}" cross-fade-delayed?="{{category.name === cat.name && parentElement.lastSelected === 'category'}}" fit></core-icon>
+        <div class="items">
+            <tg-tile-layout fit whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellHeight="{{minCellHeight}}" minCellWidth="{{minCellWidth}}">
+                <template repeat="{{item in items}}">
+                    <div class="tile" vertical layout>
+                        <div class="item" style="background-color: {{item.theme}}" fit hero-id="{{'hero_' + item.name}}" hero?="{{selectedItem.name === item.name}}"></div>
+                        <div class="item" name="{{item.name}}" flex auto vertical layout relative on-tap="{{onSelectItem}}">
+                            <div flex auto relative>
+                                <div fit layout vertical center center-justified>
+                                    <div class="item-icon-bg" style="background-color: {{item.theme}}" relative>
+                                        <core-icon style="color: {{item.theme}}" src="{{item.icon}}" fit></core-icon>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="cat-name theme-bg" horizontal center layout hero-id="{{category.name === cat.name ? 'punch-bottom' : ''}}" hero?="{{category.name === cat.name}}">
-                            <div flex>
-                                <span cross-fade-delayed?="{{category.name === cat.name && parentElement.lastSelected === 'category'}}">{{cat.name}}</span>
+                            <div class="item-name" style="background-color: {{item.nameTheme}}; color: {{item.textTheme}}" horizontal center layout hero-id="{{'hero_name_' + item.name}}" hero?="{{selectedItem.name === cat.name}}">
+                                <div flex>
+                                    <span>{{item.name}}</span>
+                                </div>
+                                <core-icon icon="av:play-arrow"></core-icon>
                             </div>
-                            <core-icon class="category-icon theme-bg" icon="av:play-arrow" hidden?="{{scores.length === cat.quizzes.length}}" cross-fade-delayed?="{{category.name === cat.name && parentElement.lastSelected === 'category'}}"></core-icon>
                         </div>
                     </div>
-                </div>
-            </template>
-        </tg-tile-layout>
+                </template>
+            </tg-tile-layout>
+        </div>
     </template>
     <script>
         (function () {
-            Polymer({});
+            var findItemModel = function(item, models) {
+                var ind = 0;
+                for(; ind < models.length; ind += 1) {
+                    if (models[ind].name === item) {
+                        return models[ind];
+                    }
+                }
+                return null;
+            }
+            Polymer({
+                onSelectItem: function(e, detail, source) {
+                    this.selectedItem = findItemModel(source.getAttribute("name"), this.items);
+                }
+            });
         })();
     </script>
 </polymer-element>

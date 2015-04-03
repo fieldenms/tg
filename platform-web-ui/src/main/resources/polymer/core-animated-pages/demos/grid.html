@@ -66,7 +66,7 @@
 
       <section vertical layout>
 
-        <div id="noscroll" fit hero-p>
+        <div id="noscroll" fit>
           <div id="container" flex horizontal wrap around-justified layout cross-fade>
             <template repeat="{{item in items}}">
               <div class="card" vertical center center-justified layout hero-id="item-{{item}}" hero?="{{$.pages.selected === item + 1 || lastSelected === item + 1}}" on-tap="{{selectView}}"><span cross-fade>{{item}}</span></div>

@@ -4,68 +4,139 @@
 <link rel="import" href="/resources/polymer/core-animated-pages/transitions/scale-up.html">
 <link rel="import" href="/resources/polymer/core-animated-pages/transitions/tile-cascade.html">
 <link rel="import" href="/resources/views/tg-app-menu.html">
-<link rel="import" href="/resources/views/tg-my-profile.html">
 <link rel="import" href="/resources/views/tg-view.html">
 
-
-<polymer-element name="tg-app" layout vertical>
+<polymer-element name="tg-app" attributes="user" layout vertical>
     <template>
-        <core-animated-pages selected="{{selected}}" valueattr="name" transitions="cross-fade cross-fade-delayed scale-up slide-up slide-up-offscreen slide-down tile-cascade hero-transition" flex>
 
-            <tg-my-profile name="profile"></tg-my-profile>
+        <core-animated-pages selected="{{selected}}" transitions="cross-fade cross-fade-delayed scale-up slide-up slide-up-offscreen slide-down tile-cascade hero-transition" flex>
 
-            <tg-app-menu id="menu" name="menu"></tg-app-menu>
+            <tg-app-menu id="menu" name="menu" user="{{user}}" items="{{views.items}}" selectedItem="{{selectedItem}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit></tg-app-menu>
 
-            <template repeat="{{view in views}}">
-                <tg-view name="{{view.name}}"></tg-view>
+            <template repeat="{{view in views.items}}">
+                <tg-view name="{{view.name}}" hero-id="{{'hero_' + view.name}}" hero?="{{selectedItem.name === view.name}}" fit></tg-view>
             </template>
-            
+
         </core-animated-pages>
     </template>
     <script>
         (function () {
+           
             Polymer({
                 eventDelegates: {
                     'main-menu': 'showMainMenu'
                 },
-                ready: function () {
-                    this.selected = "profile";
-                    this.views = [
-                        {
-                            name: "view 1"
-                        },
-                        {
-                            name: "view 2"
-                        },
-                        {
-                            name: "view 3"
-                        },
-                        {
-                            name: "view 4"
-                        },
-                        {
-                            name: "view 5"
-                        },
-                        {
-                            name: "view 6"
-                        },
-                        {
-                            name: "view 7"
-                        },
-                        {
-                            name: "view 8"
-                        },
-                        {
-                            name: "view 9"
-                        },
-                        {
-                            name: "view 10"
-                        },
-                        {
-                            name: "view 11"
-                        }
-                    ];
+
+                selectedItemChanged: function (oldaValue, newValue) {
+                    this.selected = this.selectedItem.name;
                 },
+                ready: function () {
+                    this.selected = "menu";
+                    this.views = {
+                        whenDesktop: [
+                            [[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],
+                            [[{rowspan: 2,colspan: 2}], [], []],
+                            [[], [], [], []]
+                        ],
+                        whenTablet: [
+                            [[{rowspan: 2,colspan: 2}], [], []],
+                            [[{rowspan: 2,colspan: 2}]],
+                            [[], []],
+                            [[{rowspan: 2,colspan: 2}], [], []],
+                            [[], []],
+                        ],
+                        whenMobile: [
+                            [[], []],
+                            [[], []],
+                            [[], []],
+                            [[], []],
+                            [[], []],
+                            [[]],
+                        ],
+                        minCellHeight: "100px",
+                        minCellWidth: "100px",
+                        items: [
+                            {
+                                name: "view 1",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 2",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 3",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 4",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 5",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 6",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 7",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 8",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 9",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 10",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            },
+                            {
+                                name: "view 11",
+                                icon: "/resources/images/test.svg",
+                                theme: "#f4f4f4",
+                                nameTheme: "#999999",
+                                textTheme: "white"
+                            }
+                        ]
+                    };
+                },
+
                 showMainMenu: function (e) {
                     this.selected = "menu";
                 }
