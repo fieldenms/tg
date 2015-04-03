@@ -16,9 +16,14 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class SingleCritDateValueMnemonic {
     public final Optional<Date> value;
+
     public final Optional<DateRangePrefixEnum> prefix;
     public final Optional<MnemonicEnum> period;
     public final Optional<DateRangeConditionEnum> beforeOrAfter;
+
+    public final Optional<Boolean> excludeFrom;
+    public final Optional<Boolean> excludeTo;
+
     public final boolean checkForMissingValue;
     public final boolean negateCondition;
 
@@ -27,6 +32,8 @@ public class SingleCritDateValueMnemonic {
             final Optional<DateRangePrefixEnum> prefix,
             final Optional<MnemonicEnum> period,
             final Optional<DateRangeConditionEnum> beforeOrAfter,
+            final Optional<Boolean> excludeFrom,
+            final Optional<Boolean> excludeTo,
             final boolean checkForMissingValue,
             final boolean negateCondition
             ) {
@@ -34,6 +41,8 @@ public class SingleCritDateValueMnemonic {
         this.prefix = prefix;
         this.period = period;
         this.beforeOrAfter = beforeOrAfter;
+        this.excludeFrom = excludeFrom;
+        this.excludeTo = excludeTo;
         this.checkForMissingValue = checkForMissingValue;
         this.negateCondition = negateCondition;
 
@@ -53,5 +62,10 @@ public class SingleCritDateValueMnemonic {
         if (!period.isPresent() && beforeOrAfter.isPresent()) {
             throw new IllegalArgumentException(String.format("Conditional mnemonic %s is only relevant in the context of a period.", beforeOrAfter.get()));
         }
+
+        if (!period.isPresent() && (excludeFrom.isPresent() || excludeTo.isPresent())) {
+            throw new IllegalArgumentException("Exclusion is applicable only of a period mnemonic is used.");
+        }
+
     }
 }
