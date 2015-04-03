@@ -3,10 +3,11 @@ package ua.com.fielden.platform.web.centre.api;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.actionOff;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.range;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
-import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.*;
 
-import java.util.Date;
+import java.math.BigDecimal;
 
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -60,6 +61,10 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsValue(true).setIsNotValue(true).canHaveNoValue().value())
        .also()
        .addCrit("intValue").asRange().integer().withDefaultValueAssigner(null)
+       .also()
+       .addCrit("bigDeciamlValue").asRange().decimal().setDefaultValue(range().decimal().setFromValueExclusive(new BigDecimal("0.00")).canHaveNoValue().value())
+       .also()
+       .addCrit("anotherIntValue").asRange().integer().setDefaultValue(range().integer().not().setToValueExclusive(42).value())
        .also()
        .addCrit("date").asRange().date().setDefaultValue(range().date().prev().monthAndAfter().exclusiveFrom().canHaveNoValue().value())
        .also()
