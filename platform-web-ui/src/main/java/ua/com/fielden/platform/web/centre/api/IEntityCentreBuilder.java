@@ -42,8 +42,8 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
      *
      * @param args
      */
-    public static void build(final IEntityCentreBuilder<TgWorkOrder> ecb) {
-       final EntityCentreConfig ecc = ecb
+    public static EntityCentreConfig<TgWorkOrder> build(final IEntityCentreBuilder<TgWorkOrder> ecb) {
+       return ecb
        .forEntity(TgWorkOrder.class)
        .addTopAction(null)
        .also()

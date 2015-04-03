@@ -10,5 +10,5 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @param <T>
  */
 public interface IEcbCompletion<T extends AbstractEntity<?>> {
-    EntityCentreConfig build();
+    EntityCentreConfig<T> build();
 }
