@@ -70,11 +70,18 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .also()
        .addCrit("date").asRange().date().setDefaultValue(range().date().prev().monthAndAfter().exclusiveFrom().canHaveNoValue().value())
        .also()
-       .addCrit("intValueCritOnly").asSingle().integer().setDefaultValue(null) // TODO add default value example
+       .addCrit("intValueCritOnly").asSingle().integer().setDefaultValue(single().integer().not().setValue(34).value())
+       .also()
+       .addCrit("moneyValueCritOnly").asSingle().decimal().setDefaultValue(single().decimal().setValue(new BigDecimal("34.05")).canHaveNoValue().value())
        .also()
        .addCrit("dateCritOnly").asSingle().date().setDefaultValue(single().date().setValue(new Date()).canHaveNoValue().value())
        .also()
-       .addCrit("entityCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null).setDefaultValue(null) // TODO add default value example
+       .addCrit("entityCritOnly").asSingle()
+           .autocompleter(TgWorkOrder.class)
+           .withMatcher(null)
+           .setDefaultValue(single().entity(TgWorkOrder.class).setValue(null).value())
+       .also()
+       .addCrit("stringCritOnly").asSingle().text().setDefaultValue(single().text().setValue("*la-la*").canHaveNoValue().value())
        .also()
        .addCrit("statusCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null)
        .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
