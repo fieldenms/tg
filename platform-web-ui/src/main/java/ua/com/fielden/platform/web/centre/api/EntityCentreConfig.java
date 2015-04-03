@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,15 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IMultiValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IRangeValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.ISingleValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritDateValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -34,11 +44,36 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ////////////// SELECTION CRIT ///////////////
     /////////////////////////////////////////////
 
-    // TODO need to add structure suitable for capturing selection criteria configurations.
-    //      Could incorporate the valueMatchers map below
+    /**
+     * A list of properties that have been added to selection criteria in the added sequential order.
+     * <p>
+     * It is not important whether a property was added as multi-valued, single-valued or range criterion simply because
+     * an appropriate selection criteria kind gets determined automatically from property declaration at the entity type level.
+     * <p>
+     * The part of Entity Centre DSL that provides developer with ability to pick the kind (i.e. <code>multi()</code>, <code>single()</code> or <code>range()</code>)is there only to facilitate definition fluency and readability.
+     */
+    private final List<String> selectionCriteria = new ArrayList<>();
 
     /**
-     * A map between selection criteria properties and their custom value matchers. If a matcher for a some criterion is not provided then a default instance of type
+     * Default value assigner for various kind and types of selection criteria.
+     */
+    private final Map<String, Class<? extends IMultiValueAssigner<MultiCritStringValueMnemonic, T>>> defaultMultiValueAssignersForEntityAndStringSelectionCriteria = new HashMap<>();
+    private final Map<String, Class<? extends IMultiValueAssigner<MultiCritBooleanValueMnemonic, T>>> defaultMultiValueAssignersForBooleanSelectionCriteria = new HashMap<>();
+
+    private final Map<String, Class<? extends IRangeValueAssigner<RangeCritDateValueMnemonic, T>>> defaultRangeValueAssignersForDateSelectionCriteria = new HashMap<>();
+    private final Map<String, Class<? extends IRangeValueAssigner<RangeCritOtherValueMnemonic<Integer>, T>>> defaultRangeValueAssignersForIntegerSelectionCriteria = new HashMap<>();
+    private final Map<String, Class<? extends IRangeValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, T>>> defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria = new HashMap<>();
+
+    private final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>>> defaultSingleValueAssignersForEntitySelectionCriteria = new HashMap<>();
+    private final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<String>, T>>> defaultSingleValueAssignersForStringSelectionCriteria = new HashMap<>();
+    private final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<Boolean>, T>>> defaultSingleValueAssignersForBooleanSelectionCriteria = new HashMap<>();
+    private final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<Integer>, T>>> defaultSingleValueAssignersForIntegerSelectionCriteria = new HashMap<>();
+    private final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<BigDecimal>, T>>> defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria = new HashMap<>();
+    private final Map<String, Class<? extends ISingleValueAssigner<SingleCritDateValueMnemonic, T>>> defaultSingleValueAssignersForDateSelectionCriteria = new HashMap<>();
+
+    /**
+     * A map between selection criteria properties and their custom value matchers.
+     * If a matcher for some criterion is not provided then a default instance of type
      * {@link FallbackValueMatcherWithCentreContext} should be used.
      */
     private final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
@@ -100,24 +135,15 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     public Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {
-        if (queryEnhancerConfig == null) {
-            Optional.empty();
-        }
-        return Optional.of(queryEnhancerConfig);
+        return Optional.ofNullable(queryEnhancerConfig);
     }
 
     public Optional<IFetchProvider<T>> getFetchProvider() {
-        if (fetchProvider == null) {
-            return Optional.empty();
-        }
-        return Optional.of(fetchProvider);
+        return Optional.ofNullable(fetchProvider);
     }
 
     public Optional<EntityActionConfig> getPrimaryEntityAction() {
-        if (primaryEntityAction == null) {
-            return Optional.empty();
-        }
-        return Optional.of(primaryEntityAction);
+        return Optional.ofNullable(primaryEntityAction);
     }
 
     public Optional<List<EntityActionConfig>> getSecondaryEntityActions() {
@@ -139,5 +165,89 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return Optional.empty();
         }
         return Optional.of(valueMatchersForSelectionCriteria);
+    }
+
+    public Optional<List<String>> getSelectionCriteria() {
+        if (selectionCriteria == null || selectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(selectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends IMultiValueAssigner<MultiCritStringValueMnemonic, T>>>> getDefaultMultiValueAssignersForEntityAndStringSelectionCriteria() {
+        if (defaultMultiValueAssignersForEntityAndStringSelectionCriteria == null || defaultMultiValueAssignersForEntityAndStringSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(defaultMultiValueAssignersForEntityAndStringSelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends IRangeValueAssigner<RangeCritDateValueMnemonic, T>>>> getDefaultRangeValueAssignersForDateSelectionCriteria() {
+        if (defaultRangeValueAssignersForDateSelectionCriteria == null || defaultRangeValueAssignersForDateSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultRangeValueAssignersForDateSelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends IRangeValueAssigner<RangeCritOtherValueMnemonic<Integer>, T>>>> getDefaultRangeValueAssignersForIntegerSelectionCriteria() {
+        if (defaultRangeValueAssignersForIntegerSelectionCriteria == null || defaultRangeValueAssignersForIntegerSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultRangeValueAssignersForIntegerSelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends IRangeValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, T>>>> getDefaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria() {
+        if (defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria == null || defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>>>> getDefaultSingleValueAssignersForEntitySelectionCriteria() {
+        if (defaultSingleValueAssignersForEntitySelectionCriteria == null || defaultSingleValueAssignersForEntitySelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValueAssignersForEntitySelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<String>, T>>>> getDefaultSingleValueAssignersForStringSelectionCriteria() {
+        if (defaultSingleValueAssignersForStringSelectionCriteria == null || defaultSingleValueAssignersForStringSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValueAssignersForStringSelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<Boolean>, T>>>> getDefaultSingleValueAssignersForBooleanSelectionCriteria() {
+        if (defaultSingleValueAssignersForBooleanSelectionCriteria == null || defaultSingleValueAssignersForBooleanSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValueAssignersForBooleanSelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<Integer>, T>>>> getDefaultSingleValueAssignersForIntegerSelectionCriteria() {
+        if (defaultSingleValueAssignersForIntegerSelectionCriteria == null || defaultSingleValueAssignersForIntegerSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValueAssignersForIntegerSelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<BigDecimal>, T>>>> getDefaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria() {
+        if (defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria == null || defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends ISingleValueAssigner<SingleCritDateValueMnemonic, T>>>> getDefaultSingleValueAssignersForDateSelectionCriteria() {
+        if (defaultSingleValueAssignersForDateSelectionCriteria == null || defaultSingleValueAssignersForDateSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultSingleValueAssignersForDateSelectionCriteria);
+    }
+
+    public Optional<Map<String, Class<? extends IMultiValueAssigner<MultiCritBooleanValueMnemonic, T>>>> getDefaultMultiValueAssignersForBooleanSelectionCriteria() {
+        if (defaultMultiValueAssignersForBooleanSelectionCriteria == null || defaultMultiValueAssignersForBooleanSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(defaultMultiValueAssignersForBooleanSelectionCriteria);
     }
 }
