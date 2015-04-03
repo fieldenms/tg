@@ -4,11 +4,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
@@ -19,21 +24,15 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
  * @author TG Team
  *
  */
-public class EntityCentreConfig {
-    /**
-     * Represents the layout of selection criteria.
-     * <p>
-     * TODO Please fill in this object using the following syntax:
-     * <p>
-     * TODO layout.whenMedia(device, orientation).set(flexString);
-     */
-    private final FlexLayout selectionCriteriaLayout = new FlexLayout();
+public class EntityCentreConfig<T extends AbstractEntity<?>> {
+    /////////////////////////////////////////////
+    ///////////// TOP LEVEL ACTIONS /////////////
+    /////////////////////////////////////////////
 
-    // TODO the actual structure still needs to be determined
 
-    //////////////////////////////////////////
-    ///////////// SELECTION CRIT /////////////
-    //////////////////////////////////////////
+    /////////////////////////////////////////////
+    ////////////// SELECTION CRIT ///////////////
+    /////////////////////////////////////////////
 
     // TODO need to add structure suitable for capturing selection criteria configurations.
     //      Could incorporate the valueMatchers map below
@@ -42,11 +41,21 @@ public class EntityCentreConfig {
      * A map between selection criteria properties and their custom value matchers. If a matcher for a some criterion is not provided then a default instance of type
      * {@link FallbackValueMatcherWithCentreContext} should be used.
      */
-    private final Map<String, IValueMatcherWithCentreContext<? extends AbstractEntity<?>>> valueMatchers = new HashMap<>();
+    private final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
 
-    //////////////////////////////////////////
-    //////////////// RESULT SET //////////////
-    //////////////////////////////////////////
+    /**
+     * Represents the layout settings for selection criteria.
+     * <p>
+     * TODO Please fill in this object using the following syntax:
+     * <p>
+     * TODO layout.whenMedia(device, orientation).set(flexString);
+     */
+    private final FlexLayout selectionCriteriaLayout = new FlexLayout();
+
+
+    /////////////////////////////////////////////
+    ////////////////// RESULT SET ///////////////
+    /////////////////////////////////////////////
 
     /**
      * Contains action configurations for actions that are associated with individual properties of retrieved entities, which are represented in the result set. This map can be
@@ -63,7 +72,7 @@ public class EntityCentreConfig {
      * A primary entity action configuration that is associated with every retrieved and present in the result set entity. It can be <code>null</code> if no primary entity action
      * is needed.
      */
-    private EntityActionConfig primaryEntityAction;
+    private final EntityActionConfig primaryEntityAction = null;
 
     /**
      * A list of secondary action configurations that are associated with every retrieved and present in the result set entity. It can be empty if no secondary action are
@@ -71,7 +80,64 @@ public class EntityCentreConfig {
      */
     private final List<EntityActionConfig> secondaryEntityActions = new ArrayList<>();
 
+
+    ////////////////////////////////////////////////
+    ///////// QUERY ENHANCER AND FETCH /////////////
+    ////////////////////////////////////////////////
+
+    private final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig = null;
+    private final IFetchProvider<T> fetchProvider = null;
+
+    ///////////////////////////////////////////
+    /////////////// GETTERS ///////////////////
+    ///////////////////////////////////////////
+    /**
+     * Provides access to the layout settings of selection criteria.
+     * @return
+     */
     public FlexLayout getSelectionCriteriaLayout() {
         return selectionCriteriaLayout;
+    }
+
+    public Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {
+        if (queryEnhancerConfig == null) {
+            Optional.empty();
+        }
+        return Optional.of(queryEnhancerConfig);
+    }
+
+    public Optional<IFetchProvider<T>> getFetchProvider() {
+        if (fetchProvider == null) {
+            return Optional.empty();
+        }
+        return Optional.of(fetchProvider);
+    }
+
+    public Optional<EntityActionConfig> getPrimaryEntityAction() {
+        if (primaryEntityAction == null) {
+            return Optional.empty();
+        }
+        return Optional.of(primaryEntityAction);
+    }
+
+    public Optional<List<EntityActionConfig>> getSecondaryEntityActions() {
+        if (secondaryEntityActions == null || secondaryEntityActions.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(secondaryEntityActions);
+    }
+
+    public Optional<Map<String, EntityActionConfig>> getResultSetPropActions() {
+        if (resultSetPropActions == null || resultSetPropActions.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(resultSetPropActions);
+    }
+
+    public Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> getValueMatchersForSelectionCriteria() {
+        if (valueMatchersForSelectionCriteria == null || valueMatchersForSelectionCriteria.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(valueMatchersForSelectionCriteria);
     }
 }
