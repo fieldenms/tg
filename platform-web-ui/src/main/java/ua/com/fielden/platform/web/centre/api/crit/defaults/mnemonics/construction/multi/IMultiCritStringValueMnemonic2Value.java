@@ -2,6 +2,6 @@ package ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construct
 
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
 
-public interface IMultiCritStringValueMnemonic2 {
+public interface IMultiCritStringValueMnemonic2Value {
     MultiCritStringValueMnemonic value();
 }

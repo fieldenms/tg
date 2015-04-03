@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
 
-public class MultiCritStringValueMnemonicBuilder implements IMultiCritStringValueMnemonic {
+public class MultiCritStringValueMnemonicBuilder implements IMultiCritStringValueMnemonic, IMultiCritStringValueMnemonic1MissingValue {
     private Optional<List<String>> values = Optional.empty();
 
     private boolean checkForMissingValue = false;
@@ -18,7 +18,7 @@ public class MultiCritStringValueMnemonicBuilder implements IMultiCritStringValu
     }
 
     @Override
-    public IMultiCritStringValueMnemonic1 setValues(final String... values) {
+    public IMultiCritStringValueMnemonic1MissingValue setValues(final String... values) {
         if (values == null || values.length == 0) {
             throw new IllegalArgumentException("At least one values is expected.");
         }
@@ -29,13 +29,13 @@ public class MultiCritStringValueMnemonicBuilder implements IMultiCritStringValu
     }
 
     @Override
-    public IMultiCritStringValueMnemonic2 canHaveNoValue() {
+    public IMultiCritStringValueMnemonic2Value canHaveNoValue() {
         this.checkForMissingValue = true;
         return this;
     }
 
     @Override
-    public IMultiCritStringValueMnemonic0 not() {
+    public IMultiCritStringValueMnemonic0Values not() {
         this.negateCondition = true;
         return this;
     }
