@@ -3,9 +3,12 @@ package ua.com.fielden.platform.web.centre.api;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
@@ -24,6 +27,8 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritO
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
@@ -111,28 +116,91 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /////////////////////////////////////////////
 
     /**
-     * Contains action configurations for actions that are associated with individual properties of retrieved entities, which are represented in the result set. This map can be
-     * empty if there is no need to provide custom actions specific for represented in the result set properties. In this case, the default actions would still get associated with
-     * all not listed in this map, but added to the result set properties. In order to skip the creation even of default actions, <code>no action</code> configuration needs to be
-     * provided for a property.
-     * <p>
-     * Custom properties that are added as instances of {@link PropDef} are represented in this map by their titles. This means that titles should be unique, which is only a
-     * natural requirement and is not a restrictive constraint.
+     * A list of result set property definitions, presented in the same order a specified using Entity Centre DSL.
+     * Natural (persistent or calculated) properties are intertwined with custom properties.
      */
-    private final Map<String, EntityActionConfig> resultSetPropActions = new HashMap<>();
+    private final List<ResultSetProp> resultSetProperties = new ArrayList<>();
+
+
+    /**
+     * A convenient structure to capture result set property definition.
+     * It includes either a property name that represents a natural (persistent or calculated) property, or a custom property definition.
+     * The structure guarantees that natural and custom properties are mutually exclusive.
+     * <p>
+     * In any of those cases, a custom action can be provided.
+     * The custom action value is optional and can be empty if there is no need to provide custom actions specific for represented in the result set properties.
+     * However, the default actions would still get associated with all properties without a custom action.
+     * In order to skip even the default action, a <code>no action</code> configuration needs to set as custom property action.
+     */
+    public static class ResultSetProp {
+        public final Optional<String> propName;
+        public final Optional<PropDef<?>> propDef;
+        public final Optional<EntityActionConfig> propAction;
+
+        public static ResultSetProp propByName(final String propName, final EntityActionConfig propAction) {
+            return new ResultSetProp(propName, null, propAction);
+        }
+
+        public static ResultSetProp propByDef(final PropDef<?> propDef, final EntityActionConfig propAction) {
+            return new ResultSetProp(null, propDef, propAction);
+        }
+
+        private ResultSetProp (
+                final String propName,
+                final PropDef<?> propDef,
+                final EntityActionConfig propAction
+                ) {
+
+            if (propName != null && propDef != null) {
+                throw new IllegalArgumentException("Only one of property name or property definition should be provided.");
+            }
+
+            if (StringUtils.isEmpty(propName) && propDef == null) {
+                throw new IllegalArgumentException("Either property name or property definition should be provided.");
+            }
+
+            this.propName = Optional.ofNullable(propName);
+            this.propDef = Optional.ofNullable(propDef);
+            this.propAction = Optional.ofNullable(propAction);
+        }
+
+    }
+
+    /**
+     * A map between properties to order by and the ordering direction.
+     * The order of elements in this map corresponds to the ordering sequence.
+     * That is, the first listed property should be the first in the resultant order statement, the second -- second, and so on.
+     */
+    private final LinkedHashMap<String, OrderDirection> resultSetOrdering = new LinkedHashMap<>();
+
+    /**
+     * This is just a helper enumeration to express result set ordering.
+     */
+    public static enum OrderDirection {
+        DESC, ASC;
+    }
 
     /**
      * A primary entity action configuration that is associated with every retrieved and present in the result set entity. It can be <code>null</code> if no primary entity action
      * is needed.
      */
-    private final EntityActionConfig primaryEntityAction = null;
+    private final EntityActionConfig resultSetPrimaryEntityAction = null;
 
     /**
      * A list of secondary action configurations that are associated with every retrieved and present in the result set entity. It can be empty if no secondary action are
      * necessary.
      */
-    private final List<EntityActionConfig> secondaryEntityActions = new ArrayList<>();
+    private final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
 
+    /**
+     * Represents a type of a contract that is responsible for customisation of rendering for entities and their properties.
+     */
+    private final Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType = null;
+
+    /**
+     * Represents a type of a contract that is responsible for assigning values to custom properties as part of the data retrieval process.
+     */
+    private final Class<? extends ICustomPropsAssignmentHandler<T>> resultSetCustomPropAssignmentHandlerType = null;
 
     ////////////////////////////////////////////////
     ///////// QUERY ENHANCER AND FETCH /////////////
@@ -160,22 +228,22 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.ofNullable(fetchProvider);
     }
 
-    public Optional<EntityActionConfig> getPrimaryEntityAction() {
-        return Optional.ofNullable(primaryEntityAction);
+    public Optional<EntityActionConfig> getResultSetPrimaryEntityAction() {
+        return Optional.ofNullable(resultSetPrimaryEntityAction);
     }
 
-    public Optional<List<EntityActionConfig>> getSecondaryEntityActions() {
-        if (secondaryEntityActions == null || secondaryEntityActions.isEmpty()) {
+    public Optional<List<EntityActionConfig>> getResultSetSecondaryEntityActions() {
+        if (resultSetSecondaryEntityActions == null || resultSetSecondaryEntityActions.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(secondaryEntityActions);
+        return Optional.of(resultSetSecondaryEntityActions);
     }
 
-    public Optional<Map<String, EntityActionConfig>> getResultSetPropActions() {
-        if (resultSetPropActions == null || resultSetPropActions.isEmpty()) {
+    public Optional<List<ResultSetProp>> getResultSetProperties() {
+        if (resultSetProperties == null || resultSetProperties.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(resultSetPropActions);
+        return Optional.of(resultSetProperties);
     }
 
     public Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> getValueMatchersForSelectionCriteria() {
@@ -344,5 +412,20 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return Optional.empty();
         }
         return Optional.of(defaultSingleValuesForDateSelectionCriteria);
+    }
+
+    public Optional<Class<? extends IRenderingCustomiser<T, ?>>> getResultSetRenderingCustomiserType() {
+        return Optional.ofNullable(resultSetRenderingCustomiserType);
+    }
+
+    public Optional<LinkedHashMap<String, OrderDirection>> getResultSetOrdering() {
+        if (resultSetOrdering == null || resultSetOrdering.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(resultSetOrdering);
+    }
+
+    public Optional<Class<? extends ICustomPropsAssignmentHandler<T>>> getResultSetCustomPropAssignmentHandlerType() {
+        return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
     }
 }

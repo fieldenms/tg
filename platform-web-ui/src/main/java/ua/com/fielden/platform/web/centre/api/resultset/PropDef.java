@@ -5,16 +5,14 @@ import org.apache.commons.lang.StringUtils;
 /**
  * A structure for defining custom properties for entities to be presented on an entity centre.
  * <p>
- * Properties that are defined thus and added to an entity centre result set should have a custom value calculator that is
- * associated with that entity centre, which is responsible for calculating and assigning property values.
+ * Properties that are defined thus and added to an entity centre result set should have a custom value calculator that is associated with that entity centre, which is responsible
+ * for calculating and assigning property values.
  * <p>
- * It should be noted that custom calculators should not have any heavy computations such as query execution.
- * If this is required, EQL model based calculated properties should be used, or a synthesised entity could be considered.
- * The whole idea of custom properties defined via this structure is to simply carry either an assigned at the time of definition value,
- * or have values assigned dynamically as part of entity centre run process based on lightweight computations.
+ * It should be noted that custom calculators should not have any heavy computations such as query execution. If this is required, EQL model based calculated properties should be
+ * used, or a synthesised entity could be considered. The whole idea of custom properties defined via this structure is to simply carry either an assigned at the time of definition
+ * value, or have values assigned dynamically as part of entity centre run process based on lightweight computations.
  * <p>
- * The preferred approach is to have values specified as part of property definition.
- * These values would then be proliferated for each entity instance.
+ * The preferred approach is to have values specified as part of property definition. These values would then be proliferated for each entity instance.
  *
  *
  * @author TG Team
@@ -64,12 +62,11 @@ public final class PropDef<T> {
         return mkProp(title, title, value);
     }
 
-
     /**
      * Defines property by title, description and type.
      * <p>
-     * No value is assigned, which means the should be a custom logic provided as part of
-     * entity centre definition for assigning values for thus defined property for each entity instance to be retrieved.
+     * No value is assigned, which means the should be a custom logic provided as part of entity centre definition for assigning values for thus defined property for each entity
+     * instance to be retrieved.
      *
      * @param title
      * @param desc
@@ -89,8 +86,8 @@ public final class PropDef<T> {
     /**
      * Defines property by title and type. Property description is assigned to the value of title.
      * <p>
-     * No value is assigned, which means the should be a custom logic provided as part of
-     * entity centre definition for assigning values for thus defined property for each entity instance to be retrieved.
+     * No value is assigned, which means the should be a custom logic provided as part of entity centre definition for assigning values for thus defined property for each entity
+     * instance to be retrieved.
      *
      * @param title
      * @param desc
@@ -99,5 +96,58 @@ public final class PropDef<T> {
      */
     public static <T> PropDef<T> mkProp(final String title, final Class<T> type) {
         return mkProp(title, title, type);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((desc == null) ? 0 : desc.hashCode());
+        result = prime * result + ((title == null) ? 0 : title.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof PropDef)) {
+            return false;
+        }
+
+        final PropDef<?> other = (PropDef<?>) obj;
+
+        if (desc == null) {
+            if (other.desc != null) {
+                return false;
+            }
+        } else if (!desc.equals(other.desc)) {
+            return false;
+        }
+
+        if (title == null) {
+            if (other.title != null) {
+                return false;
+            }
+        } else if (!title.equals(other.title)) {
+            return false;
+        }
+
+        if (type != other.type) { // classes can be compared by reference
+            return false;
+        }
+
+        if (value == null) {
+            if (other.value != null) {
+                return false;
+            }
+        } else if (!value.equals(other.value)) {
+            return false;
+        }
+
+        return true;
     }
 }
