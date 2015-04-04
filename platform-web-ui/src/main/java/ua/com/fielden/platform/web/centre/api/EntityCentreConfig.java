@@ -44,6 +44,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////////// TOP LEVEL ACTIONS /////////////
     /////////////////////////////////////////////
 
+    /**
+     * A list of top level actions represented as pairs of action configurations as keys and optional group names as values.
+     * <p>
+     * If an action belongs to a group then a corresponding value in the pair contains the name of that group.
+     * Otherwise, the pair value is empty.
+     * The order of actions in the list is important and should be honoured when building their UI representation.
+     */
+    private final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = null;
 
     /////////////////////////////////////////////
     ////////////// SELECTION CRIT ///////////////
@@ -427,5 +435,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler<T>>> getResultSetCustomPropAssignmentHandlerType() {
         return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
+    }
+
+    public Optional<List<Pair<EntityActionConfig, Optional<String>>>> getTopLevelActions() {
+        if (topLevelActions == null || topLevelActions.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(topLevelActions);
     }
 }

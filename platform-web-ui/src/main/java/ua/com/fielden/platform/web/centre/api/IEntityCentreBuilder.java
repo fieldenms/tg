@@ -112,8 +112,6 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .setQueryEnhancer(null, context().withMasterEntity().withSelectionCrit().build())
        .setFetchProvider(null)
        .build();
-
-
     }
 
     // TODO Serves for an API example purposes. Should be removed as soon as API gets implemented.
