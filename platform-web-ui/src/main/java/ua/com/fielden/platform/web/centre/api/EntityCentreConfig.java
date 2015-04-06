@@ -111,10 +111,6 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     /**
      * Represents the layout settings for selection criteria.
-     * <p>
-     * TODO Please fill in this object using the following syntax:
-     * <p>
-     * TODO layout.whenMedia(device, orientation).set(flexString);
      */
     private final FlexLayout selectionCriteriaLayout = new FlexLayout();
 

@@ -11,5 +11,5 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
  * @param <T>
  */
 public interface ICentreTopLevelActionsInGroup<T extends AbstractEntity<?>> {
-    ICentreTopLevelActionsInGroup0<T> addTopAction(final EntityActionConfig actionConfig);
+    ICentreTopLevelActionsInGroup0<T> addGroupAction(final EntityActionConfig actionConfig);
 }

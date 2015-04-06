@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.calc.IEnhanceEntityWithCalcProps;
 import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfig;
 
 /**
@@ -12,5 +11,5 @@ import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfig;
  * @param <T>
  */
 public interface IAlsoCrit<T extends AbstractEntity<?>> extends ILayoutConfig<T> {
-    IEnhanceEntityWithCalcProps<T> also();
+    ISelectionCriteriaBuilder<T> also();
 }
