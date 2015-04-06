@@ -1,0 +1,57 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
+<link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-up.html">
+<link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-down.html">
+<link rel="import" href="/resources/polymer/core-animated-pages/transitions/scale-up.html">
+<link rel="import" href="/resources/polymer/core-icon/core-icon.html">
+<link rel="import" href="/resources/views/tg-view.html">
+<link rel="import" href="/resources/views/tg-view-with-menu.html">
+
+<polymer-element name="tg-app-view" attributes="item" vertical layout>
+    <template>
+        <style>
+            .item-bg {
+                width: 512px;
+                height: 512px;
+            }
+            .item-bg > core-icon {
+                position: absolute;
+                height: 100%;
+                width: 100%;
+            }
+        </style>
+        <div style="background-color: {{item.theme}}" fit layout vertical center center-justified>
+            <div class="item-bg" relative>
+                <core-icon style="color: {{item.theme}}" src="{{item.icon}}" fit></core-icon>
+            </div>
+        </div>
+        <div flex vertical layout>
+            <core-animated-pages selected="{{selected}}" flex transitions="cross-fade slide-down slide-up scale-up">
+
+                <section name="empty"></section>
+
+                <section name="view" cross-fade>
+                    <template if="{{!item.menu}}">
+                        <tg-view item="{{item}}" fit></tg-view>
+                    </template>
+                    <template if="{{item.menu}}">
+                        <tg-view-with-menu item="{{item}}" fit></tg-view-with-menu>
+                    </template>
+                </section>
+
+            </core-animated-pages>
+        </div>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                ready: function () {
+                    this.selected = "empty";
+                },
+                play: function() {
+                    this.selected = "view";
+                }
+            });
+        })();
+    </script>
+</polymer-element>

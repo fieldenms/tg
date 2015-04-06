@@ -18,6 +18,7 @@
     <link href="/resources/polymer/core-icon-button/core-icon-button.html" rel="import">
     <link href="/resources/polymer/core-toolbar/core-toolbar.html" rel="import">
     <link href="/resources/polymer/core-animated-pages/core-animated-pages.html" rel="import">
+    <link href="/resources/layout/tg-tile-layout.html" rel="import">
 
     <style>
         body {
@@ -34,9 +35,6 @@
             overflow-y: auto;
         }
         .card {
-            position: relative;
-            height: 150px;
-            width: 150px;
             font-size: 50px;
             margin: 8px;
             background-color: tomato;
@@ -64,10 +62,15 @@
 
                 <div id="noscroll" fit>
                     <div id="container" flex horizontal wrap around-justified layout>
-                        <template repeat="{{item in items}}">
-                            <div class="card" vertical center center-justified layout hero-id="item-{{item}} l" hero?="{{$.pages.selected === item + 1 || lastSelected === item + 1}}" on-tap="{{selectView}}"><span>{{item}}</span>
-                            </div>
-                        </template>
+                        <tg-tile-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellWidth="100px" minCellHeight="100px">
+                            <template repeat="{{item in items}}">
+                                <div class="tile" vertical center center-justified layout hero-id="item-{{item}}" hero?="{{$.pages.selected === item + 1 || lastSelected === item + 1}}" on-tap="{{selectView}}">
+                                    <div class="card" fit layout vertical center-center>
+                                        <span>{{item}}</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </tg-tile-layout>
                     </div>
                 </div>
 
@@ -75,7 +78,7 @@
 
             <template repeat="{{item in items}}">
                 <section fit>
-                    <div class="view" fit hero-id="item-{{item}} l" hero?="{{$.pages.selected === item + 1 || $.pages.selected === 0}}"><span>{{item}}</span>
+                    <div class="view" fit layout vertical center-center hero-id="item-{{item}}" hero?="{{$.pages.selected === item + 1 || $.pages.selected === 0}}"><span>{{item}}</span>
                     </div>
                 </section>
             </template>
@@ -87,12 +90,24 @@
         addEventListener('template-bound', function (e) {
             var scope = e.target;
             var items = [],
-                count = 50;
+                count = 8;
             for (var i = 0; i < count; i++) {
                 items.push(i);
             }
 
             scope.items = items;
+            scope.whenDesktop=[
+                [[],[],[],[]],
+                [[],[],[],[]]
+            ];
+            scope.whenTablet=[
+                [[],[],[],[]],
+                [[],[],[],[]]
+            ]
+            scope.whenMobile=[
+                [[],[],[],[]],
+                [[],[],[],[]]
+            ]
 
             scope.selectView = function (e) {
                 var i = e.target.templateInstance.model.item;

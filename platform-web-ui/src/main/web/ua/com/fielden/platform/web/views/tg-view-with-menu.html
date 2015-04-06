@@ -1,0 +1,86 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
+<link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-from-right.html">
+<link rel="import" href="/resources/polymer/core-toolbar/core-toolbar.html">
+<link rel="import" href="/resources/polymer/core-menu/core-menu.html">
+<link rel="import" href="/resources/polymer/core-menu/core-submenu.html">
+<link rel="import" href="/resources/polymer/core-icons/core-icons.html">
+<link rel="import" href="/resources/polymer/core-item/core-item.html">
+<link rel="import" href="/resources/polymer/core-scaffold/core-scaffold.html">
+<link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
+
+<polymer-element name="tg-view-with-menu" attributes="item" layout vertical>
+    <template>
+        <style>
+            core-toolbar {
+                height: 100px;
+                background-color: #0288D1;
+                color: white;
+                font-size: 24px;
+            }
+            core-toolbar::shadow #topBar {
+                height: 100px;
+            }
+            paper-fab {
+                position: absolute;
+                z-index: 1;
+                bottom: -28px;
+                right: 20px;
+                background-color: #fcfcfc;
+                color: #666464;
+            }
+            core-menu > * {
+                padding-left: 22px;
+                font-size: 13px;
+            }
+        </style>
+        <core-scaffold id="scaffold">
+
+            <nav>
+                <core-toolbar>Menu</core-toolbar>
+                <core-menu selected="{{selected}}">
+                    <template repeat="{{menu in item.menu}}">
+                        <template if="{{menu.submenu}}">
+                            <core-submenu selected="{{subSelected}}" name="{{menu.name}}" label="{{menu.name}}" icon="icons:expand-more">
+                                <template repeat="{{subMenu in menu.submenu}}">
+                                    <core-item name="{{subMenu.name}}" label="{{subMenu.name}}"></core-item>
+                                </template>
+                            </core-submenu>
+                        </template>
+                        <template if="{{!menu.submenu}}">
+                            <core-item hash="{{menu.name}}" label="{{menu.name}}"></core-item>
+                        </template>
+                    </template>
+                </core-menu>
+            </nav>
+
+            <core-toolbar style="font-size: 20px;" tool flex>
+                <div>{{selectedPageName}}</div>
+                <paper-fab icon="apps" on-tap="{{onShowMenuTap}}"></paper-fab>
+            </core-toolbar>
+
+            <div layout horizontal center-center center-justified fit>
+                <core-animated-pages selected="{{activeSubPage||activePage}}" valueattr="hash" transitions="slide-from-right">
+                    <template repeat="{{page in pages}}">
+                        <paper-shadow z="1" hash="{{page.hash}}" fit>
+                            <load-element import="{{page.url}}" attrs="{{page.attributes}}" auto>Loading {{page.name}}...</load-element>
+                        </paper-shadow>
+                        <template if="{{page.submenu}}">
+                            <template repeat="{{sub in page.submenu}}">
+                                <paper-shadow z="1" hash="{{sub.hash}}" fit>
+                                    <load-element import="{{sub.url}}" attrs="{{sub.attributes}}" auto>Loading {{sub.name}}...</load-element>
+                                </paper-shadow>
+                            </template>
+                        </template>
+                    </template>
+                </core-animated-pages>
+            </div>
+
+        </core-scaffold>
+    </template>
+    <script>
+        (function () {
+            Polymer({});
+        })();
+    </script>
+</polymer-element>

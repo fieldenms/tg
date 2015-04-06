@@ -4,7 +4,7 @@
 <link rel="import" href="/resources/polymer/core-icon/core-icon.html">
 <link rel="import" href="/resources/polymer/core-icons/av-icons.html">
 
-<polymer-element name="tg-app-menu" attributes="user items selectedItem whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
+<polymer-element name="tg-app-menu" attributes="user items whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
     <template>
         <style>
             core-toolbar {
@@ -59,7 +59,7 @@
             <tg-tile-layout fit whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellHeight="{{minCellHeight}}" minCellWidth="{{minCellWidth}}">
                 <template repeat="{{item in items}}">
                     <div class="tile" vertical layout>
-                        <div class="item" style="background-color: {{item.theme}}" fit hero-id="{{'hero_' + item.name}}" hero?="{{selectedItem.name === item.name}}"></div>
+                        <div class="item" style="background-color: {{item.theme}}" fit hero-id="{{'hero_' + item.name}}" hero?="{{selectedMenuItem === item.name}}"></div>
                         <div class="item" name="{{item.name}}" flex auto vertical layout relative on-tap="{{onSelectItem}}">
                             <div flex auto relative>
                                 <div fit layout vertical center center-justified>
@@ -68,7 +68,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="item-name" style="background-color: {{item.nameTheme}}; color: {{item.textTheme}}" horizontal center layout hero-id="{{'hero_name_' + item.name}}" hero?="{{selectedItem.name === cat.name}}">
+                            <div class="item-name" style="background-color: {{item.nameTheme}}; color: {{item.textTheme}}" horizontal center layout>
                                 <div flex>
                                     <span>{{item.name}}</span>
                                 </div>
@@ -93,7 +93,8 @@
             }
             Polymer({
                 onSelectItem: function(e, detail, source) {
-                    this.selectedItem = findItemModel(source.getAttribute("name"), this.items);
+                    this.selectedMenuItem = source.getAttribute("name");
+                    this.fire("menu-item-selected", this.selectedMenuItem);
                 }
             });
         })();

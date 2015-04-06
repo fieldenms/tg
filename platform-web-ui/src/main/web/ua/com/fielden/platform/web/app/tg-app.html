@@ -4,45 +4,70 @@
 <link rel="import" href="/resources/polymer/core-animated-pages/transitions/scale-up.html">
 <link rel="import" href="/resources/polymer/core-animated-pages/transitions/tile-cascade.html">
 <link rel="import" href="/resources/views/tg-app-menu.html">
-<link rel="import" href="/resources/views/tg-view.html">
+<link rel="import" href="/resources/views/tg-app-view.html">
 
 <polymer-element name="tg-app" attributes="user" layout vertical>
     <template>
 
-        <core-animated-pages selected="{{selected}}" transitions="cross-fade cross-fade-delayed scale-up slide-up slide-up-offscreen slide-down tile-cascade hero-transition" flex>
+        <core-animated-pages id="pages" selected="{{selected}}" transitions="cross-fade cross-fade-delayed scale-up slide-up slide-up-offscreen slide-down tile-cascade hero-transition" flex on-core-animated-pages-transition-end="{{pageAnimated}}">
 
-            <tg-app-menu id="menu" name="menu" user="{{user}}" items="{{views.items}}" selectedItem="{{selectedItem}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit></tg-app-menu>
+            <tg-app-menu id="menu" name="menu" user="{{user}}" items="{{views.items}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit></tg-app-menu>
 
             <template repeat="{{view in views.items}}">
-                <tg-view name="{{view.name}}" hero-id="{{'hero_' + view.name}}" hero?="{{selectedItem.name === view.name}}" fit></tg-view>
+                <tg-app-view item="{{view}}" name="{{view.name}}" hero-id="{{'hero_' + view.name}}" hero?="{{selectedMenuItem.name === view.name}}" fit></tg-app-view>
             </template>
 
         </core-animated-pages>
     </template>
     <script>
         (function () {
-           
+
             Polymer({
                 eventDelegates: {
-                    'main-menu': 'showMainMenu'
+                    'main-menu': 'showMainMenu',
+                    'menu-item-selected': 'showView'
                 },
-
-                selectedItemChanged: function (oldaValue, newValue) {
-                    this.selected = this.selectedItem.name;
+                showMainMenu: function (e) {
+                    this.selected = "menu";
+                },
+                showView: function (e) {
+                    this.selected = e.detail;
+                },
+                pageAnimated: function (e, detail, source) {
+                    if (this.selected !== "menu") {
+                        this.$.pages.selectedItem.play();
+                    }
                 },
                 ready: function () {
                     this.selected = "menu";
                     this.views = {
                         whenDesktop: [
-                            [[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],
-                            [[{rowspan: 2,colspan: 2}], [], []],
+                            [[{
+                                rowspan: 2,
+                                colspan: 2
+                            }], [], [], [{
+                                colspan: 2
+                            }]],
+                            [[{
+                                rowspan: 2,
+                                colspan: 2
+                            }], [], []],
                             [[], [], [], []]
                         ],
                         whenTablet: [
-                            [[{rowspan: 2,colspan: 2}], [], []],
-                            [[{rowspan: 2,colspan: 2}]],
+                            [[{
+                                rowspan: 2,
+                                colspan: 2
+                            }], [], []],
+                            [[{
+                                rowspan: 2,
+                                colspan: 2
+                            }]],
                             [[], []],
-                            [[{rowspan: 2,colspan: 2}], [], []],
+                            [[{
+                                rowspan: 2,
+                                colspan: 2
+                            }], [], []],
                             [[], []],
                         ],
                         whenMobile: [
@@ -135,10 +160,6 @@
                             }
                         ]
                     };
-                },
-
-                showMainMenu: function (e) {
-                    this.selected = "menu";
                 }
             });
         })();
