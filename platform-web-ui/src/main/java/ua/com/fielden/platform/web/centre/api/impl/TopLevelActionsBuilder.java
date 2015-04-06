@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -21,13 +19,14 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
  *
  * @param <T>
  */
-class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements
+class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements
         ICentreTopLevelActions<T>, ICentreTopLevelActionsInGroup<T>, ICentreTopLevelActionsInGroup0<T>, IAsloCentreTopLevelActions<T> {
 
     private final EntityCentreBuilder<T> builder;
 
 
     public TopLevelActionsBuilder(final EntityCentreBuilder<T> builder) {
+        super(builder);
         this.builder = builder;
     }
 
