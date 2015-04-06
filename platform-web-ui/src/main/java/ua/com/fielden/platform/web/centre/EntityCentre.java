@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
+import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -31,6 +33,7 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCriterionWid
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
@@ -170,12 +173,27 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             editorContainer.add(widget.render());
         });
 
+        final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
+        for (final String resultProp : centre.getSecondTick().checkedProperties(root)) {
+            final boolean isEntityItself = "".equals(resultProp); // empty property means "entity itself"
+            final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultProp);
+
+            final PropertyColumnElement el = new PropertyColumnElement(resultProp, centre.getSecondTick().getWidth(root, resultProp), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultProp));
+            propertyColumns.add(el);
+        }
+        final DomContainer egiColumns = new DomContainer();
+        propertyColumns.forEach(column -> {
+            importPaths.add(column.importPath());
+            egiColumns.add(column.render());
+        });
+
         final String entityCentreStr = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html").
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getName()).
-                replace("<!--@criteria_editors-->", editorContainer.toString());
+                replace("<!--@criteria_editors-->", editorContainer.toString()).
+                replace("<!--@egi_columns-->", egiColumns.toString());
 
         final IRenderable representation = new IRenderable() {
             @Override

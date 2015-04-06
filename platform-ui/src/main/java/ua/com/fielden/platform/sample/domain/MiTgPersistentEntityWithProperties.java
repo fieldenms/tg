@@ -70,15 +70,16 @@ public class MiTgPersistentEntityWithProperties extends MiWithConfigurationSuppo
                 //                cdtme.getFirstTick().setValue(root(), "critOnlyEntityProp", null);
 
                 // Main result
-                addColumn(cdtme, ""); // empty means entity itself, which gets represented by key
-                addColumn(cdtme, "desc");
+                addColumn(cdtme, "", 80); // empty means entity itself, which gets represented by key
+                addColumn(cdtme, "desc", 200);
 
-                addColumn(cdtme, "integerProp");
-                addColumn(cdtme, "bigDecimalProp");
-                addColumn(cdtme, "entityProp");
-                addColumn(cdtme, "booleanProp");
-                addColumn(cdtme, "dateProp");
-                addColumn(cdtme, "compositeProp");
+                addColumn(cdtme, "integerProp", 60);
+                addColumn(cdtme, "bigDecimalProp", 60);
+                addColumn(cdtme, "entityProp", 100);
+                addColumn(cdtme, "booleanProp", 50);
+                addColumn(cdtme, "dateProp", 100);
+                addColumn(cdtme, "compositeProp", 100);
+                addColumn(cdtme, "stringProp", 50);
 
                 logger.debug("\tAdded result columns.");
 
