@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.dom;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * Represents html5 tag's attribute name and value.
  *
@@ -45,7 +43,7 @@ public class Attribute<T> {
 
     @Override
     public String toString() {
-        return (value == null || StringUtils.isEmpty(value.toString())) ? name : (name + nameValueSeparator + "\"" + value + "\"");
+        return value == null ? name : (name + nameValueSeparator + "\"" + value + "\"");
     }
 
     @Override
