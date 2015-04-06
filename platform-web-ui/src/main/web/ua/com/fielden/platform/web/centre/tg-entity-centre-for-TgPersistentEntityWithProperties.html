@@ -77,9 +77,14 @@
                 <tg-entity-search-criteria entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_compositeProp" onAcceptedValueChanged="{{validate}}" propTitle="Composite prop MULTI" propDesc="Composite prop MULTI criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-search-criteria>
             </tg-criterion>
 
+            <tg-criterion orNull="{{propertyModel['critOnlyDateProp'].orNull}}" not="{{propertyModel['critOnlyDateProp'].not}}" onAcceptedValueChanged="{{validate}}">
+                <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="tgPersistentEntityWithProperties_critOnlyDateProp" onAcceptedValueChanged="{{validate}}" propTitle="Crit-only date prop SINGLE" propDesc="Crit-only date prop SINGLE criteria editor" currentState="{{currentState}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>
+            </tg-criterion>
+
             <tg-criterion orNull="{{propertyModel['critOnlyEntityProp'].orNull}}" not="{{propertyModel['critOnlyEntityProp'].not}}" onAcceptedValueChanged="{{validate}}">
                 <tg-entity-editor entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_critOnlyEntityProp" onAcceptedValueChanged="{{validate}}" propTitle="Crit-only entity prop SINGLE" propDesc="Crit-only entity prop SINGLE criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-editor>
             </tg-criterion>
+            <div></div>
             <div></div>
         </tg-flex-layout>
     </template>
@@ -90,13 +95,16 @@
             Polymer({
                 whenDesktop: [['center-justified', mr, mr, mrLast],
                            ['center-justified', mr, mr, mrLast],
-                           ['center-justified', mr, mr, mrLast]],
+                           ['center-justified', mr, mr, mrLast],
+                           ['center-justified', mr, mr, mrLast]
+                           ],
                 whenTablet: [['center-justified', mr, mrLast],
                            ['center-justified', mr, mrLast],
                            ['center-justified', mr, mrLast],
                            ['center-justified', mr, mrLast],
                            ['center-justified', mr, mrLast]],
                 whenMobile: [['center-justified', mrLast],
+                           ['center-justified', mrLast],
                            ['center-justified', mrLast],
                            ['center-justified', mrLast],
                            ['center-justified', mrLast],

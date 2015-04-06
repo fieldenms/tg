@@ -133,19 +133,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.debug = debug;
     }
 
-    protected static Pair<String, String> generateNames(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public static Pair<String, String> generateNames(final Class<?> root, final Class<?> managedType, final String propertyName) {
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
-        //        final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
-        //        final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
-        //        final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
-        //
-        //        if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
-        //            generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc));
-        //        } else {
-        //            generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
-        //        }
-        //        return generatedProperties;
 
         final String firstPropertyName, secondPropertyName;
         if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
@@ -158,7 +148,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         return new Pair<>(firstPropertyName, secondPropertyName);
     }
 
-    protected static Pair<Pair<String, String>, Pair<String, String>> generateTitleDescs(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public static Pair<Pair<String, String>, Pair<String, String>> generateTitleDesc(final Class<?> root, final Class<?> managedType, final String propertyName) {
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
         //        final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, propertyName);
@@ -178,11 +168,11 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         return new Pair<>(firstTitleDesc, secondTitleDesc);
     }
 
-    protected static String generateSingleName(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public static String generateSingleName(final Class<?> root, final Class<?> managedType, final String propertyName) {
         return generateNames(root, managedType, propertyName).getKey();
     }
 
-    protected static Pair<String, String> generateSingleTitleDesc(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        return generateTitleDescs(root, managedType, propertyName).getKey();
+    public static Pair<String, String> generateSingleTitleDesc(final Class<?> root, final Class<?> managedType, final String propertyName) {
+        return generateTitleDesc(root, managedType, propertyName).getKey();
     }
 }

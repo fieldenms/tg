@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,14 +11,26 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.ICentre;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
-import ua.com.fielden.platform.web.centre.api.crit.impl.CriterionWidget;
-import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.centre.api.crit.impl.BooleanCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.BooleanSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.DateCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.DateSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.DecimalCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.DecimalSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.EntityCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
@@ -34,7 +47,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final Logger logger = Logger.getLogger(getClass());
     private final Class<? extends MiWithConfigurationSupport<?>> menuItemType;
     private final String name;
-    private final EntityCentreConfig dslDefaultConfig;
+    private final EntityCentreConfig<T> dslDefaultConfig;
     private final Injector injector;
     private final Class<T> entityType;
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
@@ -49,40 +62,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param dslDefaultConfig
      *            -- default configuration taken from Centre DSL
      */
-    public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig dslDefaultConfig, final Injector injector) {
+    public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector) {
         this.menuItemType = miType;
         this.name = name;
         this.dslDefaultConfig = dslDefaultConfig;
-
-        // TODO remove this later, when layout will be correctly initialised in dslDefaultConfig!
-        final String mr = "['margin-right: 40px', 'flex']";
-        final String mrLast = "['flex']";
-        this.dslDefaultConfig.getSelectionCriteriaLayout().whenMedia(Device.DESKTOP, null).set(
-                ("[['center-justified', mr, mr, mrLast]," +
-                        "['center-justified', mr, mr, mrLast]," +
-                        "['center-justified', mr, mr, mrLast]]")
-                        .replaceAll("mrLast", mrLast).replaceAll("mr", mr)
-                );
-        this.dslDefaultConfig.getSelectionCriteriaLayout().whenMedia(Device.TABLET, null).set(
-                ("[['center-justified', mr, mrLast]," +
-                        "['center-justified', mr, mrLast]," +
-                        "['center-justified', mr, mrLast]," +
-                        "['center-justified', mr, mrLast]," +
-                        "['center-justified', mr, mrLast]]")
-                        .replaceAll("mrLast", mrLast).replaceAll("mr", mr)
-                );
-        this.dslDefaultConfig.getSelectionCriteriaLayout().whenMedia(Device.MOBILE, null).set(
-                ("[['center-justified', mrLast]," +
-                        "['center-justified', mrLast]," +
-                        "['center-justified', mrLast]," +
-                        "['center-justified', mrLast]," +
-                        "['center-justified', mrLast]," +
-                        "['center-justified', mrLast]," +
-                        "['center-justified', mrLast]," +
-                        "['center-justified', mrLast]," +
-                        "['center-justified', mrLast]]")
-                        .replaceAll("mrLast", mrLast).replaceAll("mr", mr)
-                );
 
         this.injector = injector;
         this.miType = miType;
@@ -112,7 +95,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      *
      * @return
      */
-    public EntityCentreConfig getDslDefaultConfig() {
+    public EntityCentreConfig<T> getDslDefaultConfig() {
         return dslDefaultConfig;
     }
 
@@ -138,8 +121,48 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Class<?> root = this.entityType;
 
         final List<AbstractCriterionWidget> criteriaWidgets = new ArrayList<>();
+        final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         for (final String critProp : centre.getFirstTick().checkedProperties(root)) {
-            criteriaWidgets.add(new CriterionWidget(root, centre.getEnhancer().getManagedType(root), critProp));
+            if (!AbstractDomainTree.isPlaceholder(critProp)) {
+                final boolean isEntityItself = "".equals(critProp); // empty property means "entity itself"
+                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, critProp);
+
+                final AbstractCriterionWidget criterionWidget;
+                if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, critProp)) { // two editors are required
+                    if (EntityUtils.isBoolean(propertyType)) {
+                        criterionWidget = new BooleanCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isDate(propertyType)) {
+                        criterionWidget = new DateCriterionWidget(root, managedType, critProp);
+                    } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
+                        criterionWidget = new IntegerCriterionWidget(root, managedType, critProp);
+                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
+                        criterionWidget = new DecimalCriterionWidget(root, managedType, critProp);
+                    } else {
+                        throw new UnsupportedOperationException(String.format("The double-editor type [%s] is currently unsupported.", propertyType));
+                    }
+                } else {
+                    if (EntityUtils.isBoolean(propertyType)) {
+                        criterionWidget = new BooleanSingleCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isDate(propertyType)) {
+                        criterionWidget = new DateSingleCriterionWidget(root, managedType, critProp);
+                    } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
+                        criterionWidget = new IntegerSingleCriterionWidget(root, managedType, critProp);
+                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
+                        criterionWidget = new DecimalSingleCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isString(propertyType)) {
+                        criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isEntityType(propertyType)) {
+                        if (AbstractDomainTree.isCritOnlySingle(managedType, critProp)) {
+                            criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp);
+                        } else {
+                            criterionWidget = new EntityCriterionWidget(root, managedType, critProp);
+                        }
+                    } else {
+                        throw new UnsupportedOperationException(String.format("The single-editor type [%s] is currently unsupported.", propertyType));
+                    }
+                }
+                criteriaWidgets.add(criterionWidget);
+            }
         }
         criteriaWidgets.forEach(widget -> {
             importPaths.add(widget.importPath());

@@ -22,7 +22,11 @@ public class EntityAutocompletionWidget extends AbstractWidget {
     private boolean shouldSearchByDescOnly = false;
 
     public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        super("editors/tg-entity-editor", titleDesc, propertyName);
+        this(titleDesc, propertyName, true);
+    }
+
+    public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean single) {
+        super(single ? "editors/tg-entity-editor" : "editors/tg-entity-search-criteria", titleDesc, propertyName);
     }
 
     @Override

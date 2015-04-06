@@ -349,4 +349,19 @@ public abstract class AbstractDomainTree {
         final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, property);
         return EntityUtils.isRangeType(propertyType) && !(critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value()));
     }
+
+    /**
+     * Returns <code>true</code> when the property represents crit-only single criterion, <code>false</code> otherwise.
+     *
+     * @param root
+     *            -- a root type that contains property.
+     * @param property
+     *            -- a dot-notation expression that defines a property.
+     * @return
+     */
+    public static boolean isCritOnlySingle(final Class<?> root, final String property) {
+        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, property);
+        return critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
+    }
 }

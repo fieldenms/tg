@@ -117,17 +117,17 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @CritOnly(Type.SINGLE)
-    @Title(value = "Crit-only single date", desc = "Desc")
-    private Date critOnlyDate;
+    @Title(value = "Crit-only single date prop", desc = "Crit-only single date prop desc")
+    private Date critOnlyDateProp;
 
     @Observable
-    public TgPersistentEntityWithProperties setCritOnlyDate(final Date critOnlyDate) {
-        this.critOnlyDate = critOnlyDate;
+    public TgPersistentEntityWithProperties setCritOnlyDateProp(final Date critOnlyDateProp) {
+        this.critOnlyDateProp = critOnlyDateProp;
         return this;
     }
 
-    public Date getCritOnlyDate() {
-        return critOnlyDate;
+    public Date getCritOnlyDateProp() {
+        return critOnlyDateProp;
     }
 
     @Observable
