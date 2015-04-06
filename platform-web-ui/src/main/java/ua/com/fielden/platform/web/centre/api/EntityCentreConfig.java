@@ -51,7 +51,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * Otherwise, the pair value is empty.
      * The order of actions in the list is important and should be honoured when building their UI representation.
      */
-    private final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = null;
+    private final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
 
     /////////////////////////////////////////////
     ////////////// SELECTION CRIT ///////////////
@@ -112,7 +112,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * Represents the layout settings for selection criteria.
      */
-    private final FlexLayout selectionCriteriaLayout = new FlexLayout();
+    private final FlexLayout selectionCriteriaLayout;
 
 
     /////////////////////////////////////////////
@@ -188,7 +188,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * A primary entity action configuration that is associated with every retrieved and present in the result set entity. It can be <code>null</code> if no primary entity action
      * is needed.
      */
-    private final EntityActionConfig resultSetPrimaryEntityAction = null;
+    private final EntityActionConfig resultSetPrimaryEntityAction;
 
     /**
      * A list of secondary action configurations that are associated with every retrieved and present in the result set entity. It can be empty if no secondary action are
@@ -199,19 +199,107 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * Represents a type of a contract that is responsible for customisation of rendering for entities and their properties.
      */
-    private final Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType = null;
+    private final Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType;
 
     /**
      * Represents a type of a contract that is responsible for assigning values to custom properties as part of the data retrieval process.
      */
-    private final Class<? extends ICustomPropsAssignmentHandler<T>> resultSetCustomPropAssignmentHandlerType = null;
+    private final Class<? extends ICustomPropsAssignmentHandler<T>> resultSetCustomPropAssignmentHandlerType;
 
     ////////////////////////////////////////////////
     ///////// QUERY ENHANCER AND FETCH /////////////
     ////////////////////////////////////////////////
 
-    private final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig = null;
-    private final IFetchProvider<T> fetchProvider = null;
+    private final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig;
+    private final IFetchProvider<T> fetchProvider;
+
+    ///////////////////////////////////
+    ///////// CONSTRUCTOR /////////////
+    ///////////////////////////////////
+    public EntityCentreConfig(
+            final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
+            final List<String> selectionCriteria,
+            final Map<String, Class<? extends IMultiValueAssigner<MultiCritStringValueMnemonic, T>>> defaultMultiValueAssignersForEntityAndStringSelectionCriteria,
+            final Map<String, Class<? extends IMultiValueAssigner<MultiCritBooleanValueMnemonic, T>>> defaultMultiValueAssignersForBooleanSelectionCriteria,
+
+            final Map<String, Class<? extends IRangeValueAssigner<RangeCritDateValueMnemonic, T>>> defaultRangeValueAssignersForDateSelectionCriteria,
+            final Map<String, Class<? extends IRangeValueAssigner<RangeCritOtherValueMnemonic<Integer>, T>>> defaultRangeValueAssignersForIntegerSelectionCriteria,
+            final Map<String, Class<? extends IRangeValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, T>>> defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria,
+
+            final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>>> defaultSingleValueAssignersForEntitySelectionCriteria,
+            final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<String>, T>>> defaultSingleValueAssignersForStringSelectionCriteria,
+            final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<Boolean>, T>>> defaultSingleValueAssignersForBooleanSelectionCriteria,
+            final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<Integer>, T>>> defaultSingleValueAssignersForIntegerSelectionCriteria,
+            final Map<String, Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<BigDecimal>, T>>> defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria,
+            final Map<String, Class<? extends ISingleValueAssigner<SingleCritDateValueMnemonic, T>>> defaultSingleValueAssignersForDateSelectionCriteria,
+
+            final Map<String, MultiCritStringValueMnemonic> defaultMultiValuesForEntityAndStringSelectionCriteria,
+            final Map<String, MultiCritBooleanValueMnemonic> defaultMultiValuesForBooleanSelectionCriteria,
+
+            final Map<String, RangeCritDateValueMnemonic> defaultRangeValuesForDateSelectionCriteria,
+            final Map<String, RangeCritOtherValueMnemonic<Integer>> defaultRangeValuesForIntegerSelectionCriteria,
+            final Map<String, RangeCritOtherValueMnemonic<BigDecimal>> defaultRangeValuesForBigDecimalAndMoneySelectionCriteria,
+
+            final Map<String, SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>> defaultSingleValuesForEntitySelectionCriteria,
+            final Map<String, SingleCritOtherValueMnemonic<String>> defaultSingleValuesForStringSelectionCriteria,
+            final Map<String, SingleCritOtherValueMnemonic<Boolean>> defaultSingleValuesForBooleanSelectionCriteria,
+            final Map<String, SingleCritOtherValueMnemonic<Integer>> defaultSingleValuesForIntegerSelectionCriteria,
+            final Map<String, SingleCritOtherValueMnemonic<BigDecimal>> defaultSingleValuesForBigDecimalAndMoneySelectionCriteria,
+            final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria,
+
+            final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria,
+            final FlexLayout selectionCriteriaLayout,
+            final List<ResultSetProp> resultSetProperties,
+            final LinkedHashMap<String, OrderDirection> resultSetOrdering,
+            final EntityActionConfig resultSetPrimaryEntityAction,
+            final List<EntityActionConfig> resultSetSecondaryEntityActions,
+            final Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType,
+            final Class<? extends ICustomPropsAssignmentHandler<T>> resultSetCustomPropAssignmentHandlerType,
+            final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
+            final IFetchProvider<T> fetchProvider
+            ) {
+        this.topLevelActions.addAll(topLevelActions);
+        this.selectionCriteria.addAll(selectionCriteria);
+        this.defaultMultiValueAssignersForEntityAndStringSelectionCriteria.putAll(defaultMultiValueAssignersForEntityAndStringSelectionCriteria);
+        this.defaultMultiValueAssignersForBooleanSelectionCriteria.putAll(defaultMultiValueAssignersForBooleanSelectionCriteria);
+
+        this.defaultRangeValueAssignersForDateSelectionCriteria.putAll(defaultRangeValueAssignersForDateSelectionCriteria);
+        this.defaultRangeValueAssignersForIntegerSelectionCriteria.putAll(defaultRangeValueAssignersForIntegerSelectionCriteria);
+        this.defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria.putAll(defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria);
+
+        this.defaultSingleValueAssignersForEntitySelectionCriteria.putAll(defaultSingleValueAssignersForEntitySelectionCriteria);
+        this.defaultSingleValueAssignersForStringSelectionCriteria.putAll(defaultSingleValueAssignersForStringSelectionCriteria);
+        this.defaultSingleValueAssignersForBooleanSelectionCriteria.putAll(defaultSingleValueAssignersForBooleanSelectionCriteria);
+        this.defaultSingleValueAssignersForIntegerSelectionCriteria.putAll(defaultSingleValueAssignersForIntegerSelectionCriteria);
+        this.defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria.putAll(defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria);
+        this.defaultSingleValueAssignersForDateSelectionCriteria.putAll(defaultSingleValueAssignersForDateSelectionCriteria);
+
+        this.defaultMultiValuesForEntityAndStringSelectionCriteria.putAll(defaultMultiValuesForEntityAndStringSelectionCriteria);
+        this.defaultMultiValuesForBooleanSelectionCriteria.putAll(defaultMultiValuesForBooleanSelectionCriteria);
+
+        this.defaultRangeValuesForDateSelectionCriteria.putAll(defaultRangeValuesForDateSelectionCriteria);
+        this.defaultRangeValuesForIntegerSelectionCriteria.putAll(defaultRangeValuesForIntegerSelectionCriteria);
+        this.defaultRangeValuesForBigDecimalAndMoneySelectionCriteria.putAll(defaultRangeValuesForBigDecimalAndMoneySelectionCriteria);
+
+        this.defaultSingleValuesForEntitySelectionCriteria.putAll(defaultSingleValuesForEntitySelectionCriteria);
+        this.defaultSingleValuesForStringSelectionCriteria.putAll(defaultSingleValuesForStringSelectionCriteria);
+        this.defaultSingleValuesForBooleanSelectionCriteria.putAll(defaultSingleValuesForBooleanSelectionCriteria);
+        this.defaultSingleValuesForIntegerSelectionCriteria.putAll(defaultSingleValuesForIntegerSelectionCriteria);
+        this.defaultSingleValuesForBigDecimalAndMoneySelectionCriteria.putAll(defaultSingleValuesForBigDecimalAndMoneySelectionCriteria);
+        this.defaultSingleValuesForDateSelectionCriteria.putAll(defaultSingleValuesForDateSelectionCriteria);
+
+        this.valueMatchersForSelectionCriteria.putAll(valueMatchersForSelectionCriteria);
+        this.selectionCriteriaLayout = selectionCriteriaLayout;
+        this.resultSetProperties.addAll(resultSetProperties);
+        this.resultSetOrdering.putAll(resultSetOrdering);
+        this.resultSetPrimaryEntityAction = resultSetPrimaryEntityAction;
+        this.resultSetSecondaryEntityActions.addAll(resultSetSecondaryEntityActions);
+        this.resultSetRenderingCustomiserType = resultSetRenderingCustomiserType;
+        this.resultSetCustomPropAssignmentHandlerType = resultSetCustomPropAssignmentHandlerType;
+        this.queryEnhancerConfig = queryEnhancerConfig;
+        this.fetchProvider = fetchProvider;
+    }
+
 
     ///////////////////////////////////////////
     /////////////// GETTERS ///////////////////

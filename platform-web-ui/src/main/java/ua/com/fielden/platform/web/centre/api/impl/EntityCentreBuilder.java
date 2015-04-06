@@ -3,14 +3,19 @@ package ua.com.fielden.platform.web.centre.api.impl;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
-import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.IEntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -23,6 +28,9 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritD
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
@@ -40,6 +48,9 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected Optional<String> currGroup = Optional.empty();
     protected final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
 
+    ////////////////////////////////////////////////
+    //////////////// SELECTION CRITERIA ////////////
+    ////////////////////////////////////////////////
 
     protected Optional<String> currSelectionCrit = Optional.empty();
     protected final List<String> selectionCriteria = new ArrayList<>();
@@ -81,6 +92,19 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected final FlexLayout selectionCriteriaLayout = new FlexLayout();
 
+    /////////////////////////////////////////
+    ////////////// RESULT SET ///////////////
+    /////////////////////////////////////////
+
+    protected final List<ResultSetProp> resultSetProperties = new ArrayList<>();
+    protected final LinkedHashMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new LinkedHashMap<>();
+    protected EntityActionConfig resultSetPrimaryEntityAction;
+    protected final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
+    protected Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType = null;
+    protected Class<? extends ICustomPropsAssignmentHandler<T>> resultSetCustomPropAssignmentHandlerType = null;
+
+    protected Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig = null;
+    protected IFetchProvider<T> fetchProvider = null;
 
     private EntityCentreBuilder() {
     }
@@ -93,6 +117,49 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     public ICentreTopLevelActions<T> forEntity(final Class<T> type) {
         this.entityType = type;
         return new TopLevelActionsBuilder<T>(this);
+    }
+
+    public EntityCentreConfig<T> build() {
+        // compose a correct ordering structure before instantiating an EntityCentreConfig
+        final LinkedHashMap<String, OrderDirection> properResultSetOrdering = new LinkedHashMap<>();
+        resultSetOrdering.values().stream().forEach(p -> properResultSetOrdering.put(p.getKey(), p.getValue()));
+
+        return new EntityCentreConfig<T>(
+                topLevelActions,
+                selectionCriteria,
+                defaultMultiValueAssignersForEntityAndStringSelectionCriteria,
+                defaultMultiValueAssignersForBooleanSelectionCriteria,
+                defaultRangeValueAssignersForDateSelectionCriteria,
+                defaultRangeValueAssignersForIntegerSelectionCriteria,
+                defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria,
+                defaultSingleValueAssignersForEntitySelectionCriteria,
+                defaultSingleValueAssignersForStringSelectionCriteria,
+                defaultSingleValueAssignersForBooleanSelectionCriteria,
+                defaultSingleValueAssignersForIntegerSelectionCriteria,
+                defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria,
+                defaultSingleValueAssignersForDateSelectionCriteria,
+                defaultMultiValuesForEntityAndStringSelectionCriteria,
+                defaultMultiValuesForBooleanSelectionCriteria,
+                defaultRangeValuesForDateSelectionCriteria,
+                defaultRangeValuesForIntegerSelectionCriteria,
+                defaultRangeValuesForBigDecimalAndMoneySelectionCriteria,
+                defaultSingleValuesForEntitySelectionCriteria,
+                defaultSingleValuesForStringSelectionCriteria,
+                defaultSingleValuesForBooleanSelectionCriteria,
+                defaultSingleValuesForIntegerSelectionCriteria,
+                defaultSingleValuesForBigDecimalAndMoneySelectionCriteria,
+                defaultSingleValuesForDateSelectionCriteria,
+                valueMatchersForSelectionCriteria,
+                selectionCriteriaLayout,
+                resultSetProperties,
+                properResultSetOrdering,
+                resultSetPrimaryEntityAction,
+                resultSetSecondaryEntityActions,
+                resultSetRenderingCustomiserType,
+                resultSetCustomPropAssignmentHandlerType,
+                queryEnhancerConfig,
+                fetchProvider
+                );
     }
 
 }

@@ -16,7 +16,6 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 
 public class EntityCentreBuilderTest {
 
-    @Ignore
     @Test
     public void top_level_actions_should_be_present_in_configuration_with_appropriate_groups_and_order() {
         final EntityActionConfig topActionStub = action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build();
