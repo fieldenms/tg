@@ -33,10 +33,6 @@ public class EntityCentreBuilderTest {
                     .addGroupAction(topActionStub)
                     .addGroupAction(topActionStub)
                 .endTopActionsGroup()
-                .addCrit("key").asMulti().autocompleter()
-                .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
-                        + "[[mr], [mr], [mr], [mr], [mr]], "
-                        + "[[mr], [mr], [mr], [mr], [mr]]]"))
                 .addProp("desc").build();
 
         assertTrue(config.getTopLevelActions().isPresent());
