@@ -133,4 +133,88 @@ public class EntityCentreBuilderSelectionCritTest {
             assertEquals("intRange", config.getSelectionCriteria().get().get(0));
     }
 
+    @Test
+    public void selection_criteria_should_not_permit_multi_valued_crit_as_autocompleter_with_null_type() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("orgunitCritOnly").asMulti().autocompleter(null) // trying to trick the system
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals("Property type is a required argument and cannot be omitted.", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_multi_valued_crit_as_autocompleter_for_non_entity_type() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("key").asMulti().autocompleter(TgWorkOrder.class) // trying to trick the system
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", "key", TgWorkOrder.class.getSimpleName(), String.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_multi_valued_crit_as_autocompleter_with_non_matching_property_type() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("orgunitCritOnly").asMulti().autocompleter(TgWorkOrder.class)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s is has been specified instead.", "orgunitCritOnly", TgWorkOrder.class.getSimpleName(), TgOrgUnit1.class.getSimpleName(), TgWorkOrder.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_multi_valued_crit_as_text_for_non_string_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("vehicle").asMulti().text()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a text component as it is not of type String (%s).", "vehicle", TgWorkOrder.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_multi_valued_crit_as_bool_for_non_boolean_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("vehicle.key").asMulti().bool()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a boolean component as it is not of type boolean (%s).", "vehicle.key", TgWorkOrder.class.getSimpleName(), String.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_with_all_possible_multi_valued_criteria_should_be_constructed_successfully() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addCrit("vehicle.active").asMulti().bool()
+                .also()
+                .addCrit("vehicle.desc").asMulti().text()
+                .also()
+                .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+
+        assertTrue(config.getSelectionCriteria().isPresent());
+        assertEquals(3, config.getSelectionCriteria().get().size());
+        assertEquals("vehicle.active", config.getSelectionCriteria().get().get(0));
+        assertEquals("vehicle.desc", config.getSelectionCriteria().get().get(1));
+        assertEquals("vehicle", config.getSelectionCriteria().get().get(2));
+    }
+
+
 }
