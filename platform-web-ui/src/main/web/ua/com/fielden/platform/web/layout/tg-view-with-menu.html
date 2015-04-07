@@ -124,17 +124,11 @@
     <script>
         (function () {
             Polymer({
-                attached: function () {
-                    if (this.pages && this.pages.length) {
-                        this.activatePage(this.pages[0].hash);
-                    }
+                ready: function() {
+                    
                 },
                 onMenuItemSelected: function (event, detail, source) {
-                    if (detail.isSelected) {
-                        this.route = detail.item.getAttribute("hash");
-                        this.selectedPageName = detail.item.label;
-                        this.$.scaffold.closeDrawer();
-                    }
+                    console.log(e, detail, source)
                 },
                 onShowMenuTap: function (event, detail, source) {
                     this.fire("show-menu");
