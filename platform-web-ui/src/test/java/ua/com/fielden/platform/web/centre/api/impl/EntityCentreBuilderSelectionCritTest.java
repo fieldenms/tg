@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.range;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 
 import java.math.BigDecimal;
@@ -206,11 +208,11 @@ public class EntityCentreBuilderSelectionCritTest {
     @Test
     public void selection_criteria_with_all_possible_multi_valued_criteria_should_be_constructed_successfully() {
         final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
-                .addCrit("vehicle.active").asMulti().bool()
-                .also()
-                .addCrit("vehicle.desc").asMulti().text()
-                .also()
-                .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class)
+                    .addCrit("vehicle.active").asMulti().bool()
+                    .also()
+                    .addCrit("vehicle.desc").asMulti().text()
+                    .also()
+                    .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class)
                 .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
 
@@ -415,7 +417,6 @@ public class EntityCentreBuilderSelectionCritTest {
         }
     }
 
-    // TODO need to complete this test
     @Test
     public void should_capture_default_values_for_all_kinds_and_types_of_selection_criteria() {
         final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
@@ -432,11 +433,25 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(TgOrgUnit1.class).setDefaultValue(single().entity(TgOrgUnit1.class).setValue(new TgOrgUnit1().setKey("ABC")).value()) // there is a check not to permit nulls and non-matching property type values!
                 .also()
                 .addCrit("dateSingle").asSingle().date().setDefaultValue(single().date().setValue(new Date()).value())
+                .also()
+                .addCrit("yearlyCost").asRange().decimal().setDefaultValue(range().decimal().setFromValueExclusive(new BigDecimal("42.00")).value())
+                .also()
+                .addCrit("vehicle.lastMeterReading").asRange().decimal().setDefaultValue(range().decimal().canHaveNoValue().value())
+                .also()
+                .addCrit("vehicle.constValueProp").asRange().integer().setDefaultValue(range().integer().setToValue(235).value())
+                .also()
+                .addCrit("vehicle.initDate").asRange().date().setDefaultValue(range().date().not().next().finYear().value())
+                .also()
+                .addCrit("vehicle.active").asMulti().bool().setDefaultValue(multi().bool().setIsNotValue(true).canHaveNoValue().value())
+                .also()
+                .addCrit("vehicle.desc").asMulti().text().setDefaultValue(multi().string().not().setValues("des*", "*la-la*").value())
+                .also()
+                .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).setDefaultValue(multi().string().setValues("AB*", "*CD*GJH").canHaveNoValue().value())
                 .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
-        assertEquals(7, config.getSelectionCriteria().get().size());
+        assertEquals(14, config.getSelectionCriteria().get().size());
         assertEquals("boolSingle", config.getSelectionCriteria().get().get(0));
         assertEquals("stringSingle", config.getSelectionCriteria().get().get(1));
         assertEquals("intSingle", config.getSelectionCriteria().get().get(2));
@@ -444,6 +459,49 @@ public class EntityCentreBuilderSelectionCritTest {
         assertEquals("bigDecimalSingle", config.getSelectionCriteria().get().get(4));
         assertEquals("orgunitCritOnlySingle", config.getSelectionCriteria().get().get(5));
         assertEquals("dateSingle", config.getSelectionCriteria().get().get(6));
+        assertEquals("yearlyCost", config.getSelectionCriteria().get().get(7));
+        assertEquals("vehicle.lastMeterReading", config.getSelectionCriteria().get().get(8));
+        assertEquals("vehicle.constValueProp", config.getSelectionCriteria().get().get(9));
+        assertEquals("vehicle.initDate", config.getSelectionCriteria().get().get(10));
+        assertEquals("vehicle.active", config.getSelectionCriteria().get().get(11));
+        assertEquals("vehicle.desc", config.getSelectionCriteria().get().get(12));
+        assertEquals("vehicle", config.getSelectionCriteria().get().get(13));
+
+        assertFalse(config.getDefaultSingleValueAssignersForBooleanSelectionCriteria().isPresent());
+        assertTrue(config.getDefaultSingleValuesForBooleanSelectionCriteria().isPresent());
+        assertEquals(1, config.getDefaultSingleValuesForBooleanSelectionCriteria().get().size());
+        assertFalse(config.getDefaultSingleValueAssignersForStringSelectionCriteria().isPresent());
+        assertTrue(config.getDefaultSingleValuesForStringSelectionCriteria().isPresent());
+        assertEquals(1, config.getDefaultSingleValuesForStringSelectionCriteria().get().size());
+        assertFalse(config.getDefaultSingleValueAssignersForEntitySelectionCriteria().isPresent());
+        assertTrue(config.getDefaultSingleValuesForEntitySelectionCriteria().isPresent());
+        assertEquals(1, config.getDefaultSingleValuesForEntitySelectionCriteria().get().size());
+        assertFalse(config.getDefaultSingleValueAssignersForDateSelectionCriteria().isPresent());
+        assertTrue(config.getDefaultSingleValuesForDateSelectionCriteria().isPresent());
+        assertEquals(1, config.getDefaultSingleValuesForDateSelectionCriteria().get().size());
+        assertFalse(config.getDefaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria().isPresent());
+        assertTrue(config.getDefaultSingleValuesForBigDecimalAndMoneySelectionCriteria().isPresent());
+        assertEquals("Expectign one value for BigDecimal property and one for Money property.", 2, config.getDefaultSingleValuesForBigDecimalAndMoneySelectionCriteria().get().size());
+        assertFalse(config.getDefaultSingleValueAssignersForIntegerSelectionCriteria().isPresent());
+        assertTrue(config.getDefaultSingleValuesForIntegerSelectionCriteria().isPresent());
+        assertEquals(1, config.getDefaultSingleValuesForIntegerSelectionCriteria().get().size());
+
+        assertFalse(config.getDefaultMultiValueAssignersForBooleanSelectionCriteria().isPresent());
+        assertTrue(config.getDefaultMultiValuesForBooleanSelectionCriteria().isPresent());
+        assertEquals(1, config.getDefaultMultiValuesForBooleanSelectionCriteria().get().size());
+        assertFalse(config.getDefaultMultiValueAssignersForEntityAndStringSelectionCriteria().isPresent());
+        assertTrue(config.getDefaultMultiValuesForEntityAndStringSelectionCriteria().isPresent());
+        assertEquals("Expecting one value for entity property and one for string property", 2, config.getDefaultMultiValuesForEntityAndStringSelectionCriteria().get().size());
+
+        assertFalse(config.getDefaultRangeValueAssignersForDateSelectionCriteria().isPresent());
+        assertTrue(config.getDefaultRangeValuesForDateSelectionCriteria().isPresent());
+        assertEquals(1, config.getDefaultRangeValuesForDateSelectionCriteria().get().size());
+        assertFalse(config.getDefaultRangeValueAssignersForIntegerSelectionCriteria().isPresent());
+        assertTrue(config.getDefaultRangeValuesForIntegerSelectionCriteria().isPresent());
+        assertEquals(1, config.getDefaultRangeValuesForIntegerSelectionCriteria().get().size());
+        assertFalse(config.getDefaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria().isPresent());
+        assertTrue(config.getDefaultRangeValuesForBigDecimalAndMoneySelectionCriteria().isPresent());
+        assertEquals("Expecting one value for BigDecimal property and one for Money property", 2, config.getDefaultRangeValuesForBigDecimalAndMoneySelectionCriteria().get().size());
     }
 
 
