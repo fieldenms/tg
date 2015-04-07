@@ -59,6 +59,57 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @Title(value = "OrgUnit1", desc = "A range crit only property")
     private TgOrgUnit1 orgunitCritOnly;
 
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "OrgUnit1 Single", desc = "A single crit only property")
+    private TgOrgUnit1 orgunitCritOnlySingle;
+
+
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "Int Single", desc = "A single crit only property of type integer")
+    private Integer intSingle;
+
+    @IsProperty
+    @CritOnly(Type.RANGE)
+    @Title(value = "Int Range", desc = "A range crit only property of type integer")
+    private Integer intRange;
+
+    @Observable
+    public TgWorkOrder setIntRange(final Integer intRange) {
+        this.intRange = intRange;
+        return this;
+    }
+
+    public Integer getIntRange() {
+        return intRange;
+    }
+
+
+
+
+    @Observable
+    public TgWorkOrder setIntSingle(final Integer intSingle) {
+        this.intSingle = intSingle;
+        return this;
+    }
+
+    public Integer getIntSingle() {
+        return intSingle;
+    }
+
+
+
+
+    @Observable
+    public TgWorkOrder setOrgunitCritOnlySingle(final TgOrgUnit1 orgunitCritOnlySingle) {
+        this.orgunitCritOnlySingle = orgunitCritOnlySingle;
+        return this;
+    }
+
+    public TgOrgUnit1 getOrgunitCritOnlySingle() {
+        return orgunitCritOnlySingle;
+    }
 
     @Observable
     public TgWorkOrder setOrgunitCritOnly(final TgOrgUnit1 orgunitCritOnly) {

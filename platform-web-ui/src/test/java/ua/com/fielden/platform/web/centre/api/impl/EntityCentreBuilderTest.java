@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
@@ -103,13 +106,61 @@ public class EntityCentreBuilderTest {
     public void selection_criteria_should_not_permit_range_critonly_as_single_valued_criteria() {
         try {
             centreFor(TgWorkOrder.class)
-                .addCrit("orgunitCritOnly").asSingle().autocompleter(TgVehicle.class)
+                .addCrit("orgunitCritOnly").asSingle().autocompleter(TgOrgUnit1.class)
                 .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
                 .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
             assertEquals(String.format("Property '%s'@'%s' cannot be used as a single-valued criterion due to its definition as @CritOnly(RANGE).", "orgunitCritOnly", TgWorkOrder.class.getSimpleName()), ex.getMessage());
         }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_critonly_as_multi_valued_criteria() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("orgunitCritOnlySingle").asMulti().autocompleter(TgOrgUnit1.class)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used as a multi-valued criterion due to its definition as @CritOnly(SINGLE).", "orgunitCritOnlySingle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_critonly_as_range_valued_criteria() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("intSingle").asRange().integer()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used as a range-valued criterion due to its definition as @CritOnly(SINGLE).", "intSingle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_permit_single_critonly_as_single_valued_criteria() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addCrit("intSingle").asSingle().integer()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+
+            assertTrue(config.getSelectionCriteria().isPresent());
+            assertEquals("intSingle", config.getSelectionCriteria().get().get(0));
+    }
+
+    @Test
+    public void selection_criteria_should_permit_range_critonly_as_range_valued_criteria() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addCrit("intRange").asRange().integer()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+
+            assertTrue(config.getSelectionCriteria().isPresent());
+            assertEquals("intRange", config.getSelectionCriteria().get().get(0));
     }
 
 }
