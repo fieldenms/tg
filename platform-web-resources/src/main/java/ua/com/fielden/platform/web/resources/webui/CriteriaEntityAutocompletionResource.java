@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +22,6 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
@@ -73,19 +73,9 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        // TODO restore context (can be of different nature)
-        // TODO restore context (can be of different nature)
-        // TODO restore context (can be of different nature)
-        // TODO restore context (can be of different nature)
-        // TODO restore context (can be of different nature)
-        // TODO restore context (can be of different nature)
-        // TODO restore context (can be of different nature)
-        // TODO restore context (can be of different nature)
-        // TODO restore context (can be of different nature)
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
         final Pair<CRITERIA, Map<String, Object>> entityAndHolder;
         entityAndHolder = constructCriteriaEntity(modifiedPropertiesHolder);
-        modifiedPropertiesHolder.remove("@@criteriaType");
         final CRITERIA criteriaEntity = entityAndHolder.getKey();
         final Map<String, Object> paramsHolder = entityAndHolder.getValue();
 
@@ -98,6 +88,11 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
         final CentreContext<T, ?> context = new CentreContext<>();
         if (contextConfig.isPresent() && contextConfig.get().withSelectionCrit) {
             context.setSelectionCrit((EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>) criteriaEntity);
+        }
+        if (contextConfig.isPresent() && contextConfig.get().withAllSelectedEntities) {
+            context.setSelectedEntities((List<T>) paramsHolder.get("@@selectedEntities"));
+        } else if (contextConfig.isPresent() && contextConfig.get().withCurrentEtity) {
+            context.setSelectedEntities(Arrays.asList((T) paramsHolder.get("@@selectedEntity")));
         }
         // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
         // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
@@ -118,7 +113,6 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
     }
 
     private Pair<CRITERIA, Map<String, Object>> constructCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder) {
-        final Class<? extends AbstractEntity<?>> criteriaType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass((String) modifiedPropertiesHolder.get("@@criteriaType"));
         final Class<? extends MiWithConfigurationSupport<?>> miType = CentreUtils.getMiType(criteriaType);
         final CRITERIA valPrototype = (CRITERIA) CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreResourceUtils.getFreshCentre(gdtm, miType), critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         return EntityResourceUtils.constructEntity(modifiedPropertiesHolder, valPrototype, coFinder);
