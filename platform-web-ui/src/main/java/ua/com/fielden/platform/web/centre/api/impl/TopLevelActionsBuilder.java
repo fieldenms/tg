@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.centre.api.impl;
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
@@ -61,6 +63,10 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
 
     @Override
     public ISelectionCritKindSelector<T> addCrit(final String propName) {
+        if (!EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
+            throw new IllegalArgumentException(String.format("Provided value '%s' is not a valid property expression for entity '%s'", propName, builder.getEntityType().getSimpleName()));
+        }
+
         builder.currSelectionCrit = Optional.of(propName);
         builder.selectionCriteria.add(propName);
         return new SelectionCriteriaBuilder<T>(builder, this);

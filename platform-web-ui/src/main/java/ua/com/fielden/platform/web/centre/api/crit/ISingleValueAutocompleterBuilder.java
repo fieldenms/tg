@@ -15,6 +15,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.ISingleEntityDefault
  * @param <T>
  */
 public interface ISingleValueAutocompleterBuilder<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends ISingleEntityDefaultValueAssigner<T, V> {
-    ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType);
-    ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType, final CentreContextConfig context);
+    ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType);
+    ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context);
 }

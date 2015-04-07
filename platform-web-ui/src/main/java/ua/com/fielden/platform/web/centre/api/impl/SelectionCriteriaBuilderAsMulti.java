@@ -28,14 +28,15 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
 
 
     @Override
-    public IMutliValueAutocompleterBuilder<T> autocompleter() {
-        return new SelectionCriteriaBuilderAsMultiString<T>(builder, selectionCritBuilder);
+    public <V extends AbstractEntity<?>> IMutliValueAutocompleterBuilder<T, V> autocompleter(final Class<V> type) {
+        return new SelectionCriteriaBuilderAsMultiString<T, V>(builder, selectionCritBuilder);
     }
 
 
     @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public IMultiStringDefaultValueAssigner<T> text() {
-        return new SelectionCriteriaBuilderAsMultiString<T>(builder, selectionCritBuilder);
+        return new SelectionCriteriaBuilderAsMultiString(builder, selectionCritBuilder);
     }
 
 

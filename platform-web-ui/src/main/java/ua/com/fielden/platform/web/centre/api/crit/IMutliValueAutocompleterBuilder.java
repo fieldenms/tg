@@ -14,7 +14,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultV
  *
  * @param <T>
  */
-public interface IMutliValueAutocompleterBuilder<T extends AbstractEntity<?>> extends IMultiStringDefaultValueAssigner<T> {
-    IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType);
-    IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType, final CentreContextConfig context);
+public interface IMutliValueAutocompleterBuilder<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends IMultiStringDefaultValueAssigner<T> {
+    IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType);
+    IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context);
 }

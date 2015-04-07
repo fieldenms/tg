@@ -18,7 +18,7 @@ public interface IMultiValueCritSelector<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    IMutliValueAutocompleterBuilder<T> autocompleter();
+    <V extends AbstractEntity<?>> IMutliValueAutocompleterBuilder<T, V> autocompleter(final Class<V> type);
 
     /**
      * Specified the need to add a multi-valued text-based selection criterion, which support wild card values.

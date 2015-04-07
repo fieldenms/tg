@@ -162,4 +162,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 );
     }
 
+    public Class<T> getEntityType() {
+        return entityType;
+    }
+
 }

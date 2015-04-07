@@ -14,6 +14,8 @@ import java.util.Date;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -56,9 +58,9 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
            .addGroupAction(null)
            .addGroupAction(null)
        .endTopActionsGroup()
-       .addCrit("status").asMulti().autocompleter().withMatcher(MyClass.class, context().withCurrentEntity().withSelectionCrit().build()).withDefaultValueAssigner(null)
+       .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).withMatcher(MyClass.class, context().withCurrentEntity().withSelectionCrit().build()).withDefaultValueAssigner(null)
        .also()
-       .addCrit("woType").asMulti().autocompleter().setDefaultValue(multi().string().not().setValues("AG*", "*RTU*D").value())
+       .addCrit("orgUnit2").asMulti().autocompleter(TgOrgUnit2.class).setDefaultValue(multi().string().not().setValues("AG*", "*RTU*D").value())
        .also()
        .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsValue(true).setIsNotValue(true).canHaveNoValue().value())
        .also()
@@ -115,9 +117,9 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
     }
 
     // TODO Serves for an API example purposes. Should be removed as soon as API gets implemented.
-    public static class MyClass extends FallbackValueMatcherWithCentreContext<TgWorkOrder> {
+    public static class MyClass extends FallbackValueMatcherWithCentreContext<TgVehicle> {
 
-        public MyClass(final IEntityDao<TgWorkOrder> dao) {
+        public MyClass(final IEntityDao<TgVehicle> dao) {
             super(dao);
             // TODO Auto-generated constructor stub
         }

@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import java.util.LinkedHashMap;
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
@@ -51,6 +51,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder0Ordering<T> addProp(final String propName) {
+        if (!EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
+            throw new IllegalArgumentException(String.format("Provided value '%s' is not a valid property expression for entity '%s'", propName, builder.getEntityType().getSimpleName()));
+        }
+
         this.propName = Optional.of(propName);
         this.propDef = Optional.empty();
         this.orderSeq = null;

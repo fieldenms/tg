@@ -3,6 +3,8 @@ package ua.com.fielden.platform.sample.domain;
 import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -47,6 +49,37 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Important Property", desc = "Property that has a special meaning")
     private PropertyDescriptor<TgWorkOrder> importantProperty;
+
+    @IsProperty
+    @Title(value = "Org Unit", desc = "Desc")
+    private TgOrgUnit1 orgUnit1;
+
+    @IsProperty
+    @CritOnly(Type.RANGE)
+    @Title(value = "OrgUnit1", desc = "A range crit only property")
+    private TgOrgUnit1 orgunitCritOnly;
+
+
+    @Observable
+    public TgWorkOrder setOrgunitCritOnly(final TgOrgUnit1 orgunitCritOnly) {
+        this.orgunitCritOnly = orgunitCritOnly;
+        return this;
+    }
+
+    public TgOrgUnit1 getOrgunitCritOnly() {
+        return orgunitCritOnly;
+    }
+
+
+    @Observable
+    public TgWorkOrder setOrgUnit1(final TgOrgUnit1 orgUnit1) {
+        this.orgUnit1 = orgUnit1;
+        return this;
+    }
+
+    public TgOrgUnit1 getOrgUnit1() {
+        return orgUnit1;
+    }
 
     @Observable
     public TgWorkOrder setYearlyCost(final Money yearlyCost) {

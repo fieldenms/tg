@@ -24,7 +24,7 @@ public interface ISingleValueCritSelector<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    <V extends AbstractEntity<?>> ISingleValueAutocompleterBuilder<T, V> autocompleter(Class<V> propertyType);
+    <V extends AbstractEntity<?>> ISingleValueAutocompleterBuilder<T, V> autocompleter(final Class<V> propertyType);
 
     /**
      * Specifies the need to add a single-valued text-based selection criterion, which support wild card values.

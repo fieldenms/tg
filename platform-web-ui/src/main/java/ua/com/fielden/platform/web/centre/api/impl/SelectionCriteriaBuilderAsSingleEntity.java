@@ -52,7 +52,7 @@ class SelectionCriteriaBuilderAsSingleEntity<T extends AbstractEntity<?>, V exte
     }
 
     @Override
-    public ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType) {
+    public ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
@@ -63,7 +63,7 @@ class SelectionCriteriaBuilderAsSingleEntity<T extends AbstractEntity<?>, V exte
     }
 
     @Override
-    public ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType, final CentreContextConfig context) {
+    public ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }

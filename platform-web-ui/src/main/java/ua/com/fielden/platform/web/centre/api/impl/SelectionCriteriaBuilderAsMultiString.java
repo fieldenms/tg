@@ -20,7 +20,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritS
  *
  * @param <T>
  */
-class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>> extends SelectionCriteriaBuilderAlsoCrit<T> implements IMutliValueAutocompleterBuilder<T>, IMultiStringDefaultValueAssigner<T> {
+class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends SelectionCriteriaBuilderAlsoCrit<T> implements IMutliValueAutocompleterBuilder<T, V>, IMultiStringDefaultValueAssigner<T> {
 
     private final EntityCentreBuilder<T> builder;
 
@@ -52,7 +52,7 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>> extends
     }
 
     @Override
-    public IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType) {
+    public IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
@@ -63,7 +63,7 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>> extends
     }
 
     @Override
-    public IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<T>> matcherType, final CentreContextConfig context) {
+    public IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
