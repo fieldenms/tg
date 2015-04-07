@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.centre.api.impl;
+package ua.com.fielden.platform.web.centre.api.impl.helpers;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.dao.IEntityDao;
