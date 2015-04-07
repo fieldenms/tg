@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static org.junit.Assert.assertEquals;
+ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import org.junit.Test;
@@ -412,5 +414,37 @@ public class EntityCentreBuilderSelectionCritTest {
             assertEquals(String.format("Property '%s'@'%s' cannot be used for a decimal component as it is not of type BigDecimal or Money (%s).", "vehicle.initDate", TgWorkOrder.class.getSimpleName(), Date.class.getSimpleName()), ex.getMessage());
         }
     }
+
+    // TODO need to complete this test
+    @Test
+    public void should_capture_default_values_for_all_kinds_and_types_of_selection_criteria() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addCrit("boolSingle").asSingle().bool().setDefaultValue(single().bool().setValue(true).canHaveNoValue().value())
+                .also()
+                .addCrit("stringSingle").asSingle().text().setDefaultValue(single().text().setValue("LA*").value())
+                .also()
+                .addCrit("intSingle").asSingle().integer().setDefaultValue(single().integer().setValue(42).value())
+                .also()
+                .addCrit("moneySingle").asSingle().decimal().setDefaultValue(single().decimal().setValue(new BigDecimal("42.00")).value())
+                .also()
+                .addCrit("bigDecimalSingle").asSingle().decimal().setDefaultValue(single().decimal().setValue(new BigDecimal("42.00")).value())
+                .also()
+                .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(TgOrgUnit1.class).setDefaultValue(single().entity(TgOrgUnit1.class).setValue(new TgOrgUnit1().setKey("ABC")).value()) // there is a check not to permit nulls and non-matching property type values!
+                .also()
+                .addCrit("dateSingle").asSingle().date().setDefaultValue(single().date().setValue(new Date()).value())
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+
+        assertTrue(config.getSelectionCriteria().isPresent());
+        assertEquals(7, config.getSelectionCriteria().get().size());
+        assertEquals("boolSingle", config.getSelectionCriteria().get().get(0));
+        assertEquals("stringSingle", config.getSelectionCriteria().get().get(1));
+        assertEquals("intSingle", config.getSelectionCriteria().get().get(2));
+        assertEquals("moneySingle", config.getSelectionCriteria().get().get(3));
+        assertEquals("bigDecimalSingle", config.getSelectionCriteria().get().get(4));
+        assertEquals("orgunitCritOnlySingle", config.getSelectionCriteria().get().get(5));
+        assertEquals("dateSingle", config.getSelectionCriteria().get().get(6));
+    }
+
 
 }

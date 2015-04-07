@@ -14,6 +14,10 @@ public class SingleDefaultValueOptions {
         return new SingleCritOtherValueMnemonicBuilder<String>();
     }
 
+    public ISingleCritOtherValueMnemonic<Boolean> bool() {
+        return new SingleCritOtherValueMnemonicBuilder<Boolean>();
+    }
+
     public <V extends AbstractEntity<?>> ISingleCritOtherValueMnemonic<V> entity(final Class<V> type) {
         return new SingleCritOtherValueMnemonicBuilder<V>();
     }

@@ -4,6 +4,8 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
@@ -44,6 +46,14 @@ class SelectionCriteriaBuilderAsSingleEntity<T extends AbstractEntity<?>, V exte
     public IAlsoCrit<T> setDefaultValue(final SingleCritOtherValueMnemonic<V> value) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
+        }
+
+        if (value.value.isPresent()) {
+            final Class<?> actualDefautValueType = value.value.get().getType();
+            final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(builder.getEntityType(), builder.currSelectionCrit.get());
+            if (actualDefautValueType != propType) {
+                throw new IllegalArgumentException(String.format("The provided default value of type %s does not match the type of property '%s'@'%s' (%s).", actualDefautValueType.getSimpleName(), builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName()));
+            }
         }
 
         this.builder.defaultSingleValuesForEntitySelectionCriteria.put(builder.currSelectionCrit.get(), value);
