@@ -39,7 +39,7 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
         if (!EntityUtils.isEntityType(propType)) {
             throw new IllegalArgumentException(String.format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName()));
         } else if (type != propType) {
-            throw new IllegalArgumentException(String.format("Property '%s'@'%s' has type %s, but type %s is has been specified instead.", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));
+            throw new IllegalArgumentException(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));
         }
 
         return new SelectionCriteriaBuilderAsMultiString<T, V>(builder, selectionCritBuilder);
@@ -61,7 +61,7 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
 
     @Override
     public IMultiBooleanDefaultValueAssigner<T> bool() {
-        // check if the specified property type is applicable to a text component
+        // check if the specified property type is applicable to a boolean component
         final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(builder.getEntityType(), builder.currSelectionCrit.get());
         if (!EntityUtils.isBoolean(propType)) {
             throw new IllegalArgumentException(String.format("Property '%s'@'%s' cannot be used for a boolean component as it is not of type boolean (%s).", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName()));

@@ -616,6 +616,24 @@ public class EntityUtils {
         return AbstractEntity.class.isAssignableFrom(type);
     }
 
+    /**
+     * Indicates whether type represents {@link Integer}-typed values.
+     *
+     * @return
+     */
+    public static boolean isInteger(final Class<?> type) {
+        return Integer.class.isAssignableFrom(type);
+    }
+
+    /**
+     * Indicates whether type represents either {@link BigDecimal} or {@link Money}-typed values.
+     *
+     * @return
+     */
+    public static boolean isDecimal(final Class<?> type) {
+        return BigDecimal.class.isAssignableFrom(type) || Money.class.isAssignableFrom(type);
+    }
+
     public static boolean isDynamicEntityKey(final Class<?> type) {
         return DynamicEntityKey.class.isAssignableFrom(type);
     }

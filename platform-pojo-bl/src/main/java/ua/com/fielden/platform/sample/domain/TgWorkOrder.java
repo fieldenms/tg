@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.math.BigDecimal;
+import java.util.Date;
+
 import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -64,7 +67,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @Title(value = "OrgUnit1 Single", desc = "A single crit only property")
     private TgOrgUnit1 orgunitCritOnlySingle;
 
-
     @IsProperty
     @CritOnly(Type.SINGLE)
     @Title(value = "Int Single", desc = "A single crit only property of type integer")
@@ -74,6 +76,89 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @CritOnly(Type.RANGE)
     @Title(value = "Int Range", desc = "A range crit only property of type integer")
     private Integer intRange;
+
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "Boolean Single", desc = "A single crit only property of type boolean")
+    private boolean boolSingle;
+
+
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "String Single", desc = "A single crit only property of type String")
+    private String stringSingle;
+
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "Money Single", desc = "A single crit only property of type Money")
+    private Money moneySingle;
+
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "BigDecimal Single", desc = "A single crit only property of type BigDecimal")
+    private BigDecimal bigDecimalSingle;
+
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "Date Single", desc = "A single crit only property of type Date.")
+    private Date dateSingle;
+
+    @Observable
+    public TgWorkOrder setDateSingle(final Date dateSingle) {
+        this.dateSingle = dateSingle;
+        return this;
+    }
+
+    public Date getDateSingle() {
+        return dateSingle;
+    }
+
+    @Observable
+    public TgWorkOrder setBigDecimalSingle(final BigDecimal bigDecimalSingle) {
+        this.bigDecimalSingle = bigDecimalSingle;
+        return this;
+    }
+
+    public BigDecimal getBigDecimalSingle() {
+        return bigDecimalSingle;
+    }
+
+
+    @Observable
+    public TgWorkOrder setMoneySingle(final Money moneySingle) {
+        this.moneySingle = moneySingle;
+        return this;
+    }
+
+    public Money getMoneySingle() {
+        return moneySingle;
+    }
+
+
+
+
+    @Observable
+    public TgWorkOrder setStringSingle(final String stringSingle) {
+        this.stringSingle = stringSingle;
+        return this;
+    }
+
+    public String getStringSingle() {
+        return stringSingle;
+    }
+
+
+
+
+    @Observable
+    public TgWorkOrder setBoolSingle(final boolean boolSingle) {
+        this.boolSingle = boolSingle;
+        return this;
+    }
+
+    public boolean getBoolSingle() {
+        return boolSingle;
+    }
 
     @Observable
     public TgWorkOrder setIntRange(final Integer intRange) {

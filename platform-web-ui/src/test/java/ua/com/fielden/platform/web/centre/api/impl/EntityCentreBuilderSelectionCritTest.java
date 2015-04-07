@@ -168,7 +168,7 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s is has been specified instead.", "orgunitCritOnly", TgWorkOrder.class.getSimpleName(), TgOrgUnit1.class.getSimpleName(), TgWorkOrder.class.getSimpleName()), ex.getMessage());
+            assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "orgunitCritOnly", TgWorkOrder.class.getSimpleName(), TgOrgUnit1.class.getSimpleName(), TgWorkOrder.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -199,7 +199,7 @@ public class EntityCentreBuilderSelectionCritTest {
     }
 
     @Test
-    public void selection_criteria_should_with_all_possible_multi_valued_criteria_should_be_constructed_successfully() {
+    public void selection_criteria_with_all_possible_multi_valued_criteria_should_be_constructed_successfully() {
         final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
                 .addCrit("vehicle.active").asMulti().bool()
                 .also()
@@ -216,5 +216,138 @@ public class EntityCentreBuilderSelectionCritTest {
         assertEquals("vehicle", config.getSelectionCriteria().get().get(2));
     }
 
+    @Test
+    public void selection_criteria_with_all_possible_single_valued_criteria_should_be_constructed_successfully() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addCrit("boolSingle").asSingle().bool()
+                .also()
+                .addCrit("stringSingle").asSingle().text()
+                .also()
+                .addCrit("intSingle").asSingle().integer()
+                .also()
+                .addCrit("moneySingle").asSingle().decimal()
+                .also()
+                .addCrit("bigDecimalSingle").asSingle().decimal()
+                .also()
+                .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(TgOrgUnit1.class)
+                .also()
+                .addCrit("dateSingle").asSingle().date()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+
+        assertTrue(config.getSelectionCriteria().isPresent());
+        assertEquals(7, config.getSelectionCriteria().get().size());
+        assertEquals("boolSingle", config.getSelectionCriteria().get().get(0));
+        assertEquals("stringSingle", config.getSelectionCriteria().get().get(1));
+        assertEquals("intSingle", config.getSelectionCriteria().get().get(2));
+        assertEquals("moneySingle", config.getSelectionCriteria().get().get(3));
+        assertEquals("bigDecimalSingle", config.getSelectionCriteria().get().get(4));
+        assertEquals("orgunitCritOnlySingle", config.getSelectionCriteria().get().get(5));
+        assertEquals("dateSingle", config.getSelectionCriteria().get().get(6));
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_valued_crit_as_bool_for_non_boolean_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("intSingle").asSingle().bool()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a boolean component as it is not of type boolean (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_valued_crit_as_integer_for_non_integer_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("boolSingle").asSingle().integer()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for an integer component as it is not of type Integer (%s).", "boolSingle", TgWorkOrder.class.getSimpleName(), boolean.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_valued_crit_as_decimal_for_non_decimal_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("intSingle").asSingle().decimal()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a decimal component as it is not of type BigDecimal or Money (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_valued_crit_as_text_for_non_string_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("intSingle").asSingle().text()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a text component as it is not of type String (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_valued_crit_as_date_for_non_date_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("intSingle").asSingle().date()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a date component as it is not of type Date (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_valued_crit_as_autocompleter_with_null_entity_type() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals("Property type is a required argument and cannot be omitted.", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_valued_crit_as_autocompleter_with_non_matching_property_type() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(TgVehicle.class)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "orgunitCritOnlySingle", TgWorkOrder.class.getSimpleName(), TgOrgUnit1.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_single_valued_crit_as_autocompleter_for_non_entity_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("intSingle").asSingle().autocompleter(TgVehicle.class)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+        }
+    }
 
 }

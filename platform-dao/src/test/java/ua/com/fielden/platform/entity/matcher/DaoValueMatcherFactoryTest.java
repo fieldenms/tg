@@ -86,7 +86,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
         final IValueMatcherFactory vmFactory = new ValueMatcherFactory(coFinder, entityFactory);
         final IValueMatcher<PropertyDescriptor<TgWorkOrder>> matcher = (IValueMatcher<PropertyDescriptor<TgWorkOrder>>) vmFactory.getValueMatcher(TgWoStatusRequiredField.class, "requiredProperty");
         assertNotNull("Value matcher for property descriptor should have been created.", matcher);
-        assertEquals("Incorrect number of matches for '*'.", 12, matcher.findMatches("*").size());
+        assertEquals("Incorrect number of matches for '*'.", 17, matcher.findMatches("*").size());
         assertEquals("Incorrect number of matches containing 'Co'.", 3, matcher.findMatches("%Co%").size());
         assertEquals("Incorrect number of matches ending with 'Cost'.", 3, matcher.findMatches("%Cost").size());
 
