@@ -1,9 +1,15 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+
 import org.restlet.Context;
 import org.restlet.routing.Router;
 
+import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
@@ -13,6 +19,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.web.WebAppConfig;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.application.AbstractWebApp;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
@@ -28,6 +35,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 /**
@@ -110,6 +118,8 @@ public class WebApp extends AbstractWebApp {
         final String centreMrLast = "['flex']";
         final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
                 .addCrit("integerProp").asRange().integer().withDefaultValueAssigner(null)
+                .also()
+                .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities().build())
                 //                .also()
                 //                .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsNotValue(true).canHaveNoValue().value())
                 //                .also()
@@ -322,6 +332,19 @@ public class WebApp extends AbstractWebApp {
     @Override
     protected void attachFunctionalEntities(final Router router, final Injector injector) {
         // router.attach("/users/{username}/CustomFunction", new FunctionalEntityResourceFactory<CustomFunction, ICustomFunction>(ICustomFunction.class, injector));
+    }
+
+    public static class EntityPropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentEntityWithProperties> {
+        @Inject
+        public EntityPropValueMatcherForCentre(final ITgPersistentEntityWithProperties dao) {
+            super(dao);
+        }
+
+        @Override
+        protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
+            System.out.println("CONTEXT == " + getContext());
+            return incompleteEql.model();
+        }
     }
 
 }

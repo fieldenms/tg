@@ -33,7 +33,8 @@ public class EntityCritAutocompletionWidget extends AbstractWidget {
         attrs.put("user", "{{user}}");
         attrs.put("entitytype", "{{entitytype}}");
         attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
-
+        attrs.put("getSelectedEntities", "{{getSelectedEntities}}");
+        attrs.put("requireSelectedEntities", "ALL"); // TODO
         return attrs;
     };
 

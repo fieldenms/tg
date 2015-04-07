@@ -14,8 +14,10 @@ import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQuer
  *
  * @author TG Team
  *
- * @param <T> -- a type of the entity represented at an entity centre
- * @param <M> -- in case of an entity centre that is associated with an entity master, this is a type of the master entity
+ * @param <T>
+ *            -- a type of the entity represented at an entity centre
+ * @param <M>
+ *            -- in case of an entity centre that is associated with an entity master, this is a type of the master entity
  */
 public final class CentreContext<T extends AbstractEntity<?>, M extends AbstractEntity<?>> {
 
@@ -24,11 +26,11 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      * button in a row against an entity) then only this one entity should be present in the list of selected entities. The action configuration should drive the client side logic
      * what should be serialised and provided as its context at the server side.
      */
-    private List<T> selectedEntities = new ArrayList<>();
+    private final List<T> selectedEntities = new ArrayList<>();
 
     /**
-     * Represents selection criteria of an entity centre. Provides access to their values and meta-values.
-     * Also, it can be used for execution of the same query as if running from an entity centre at the client side.
+     * Represents selection criteria of an entity centre. Provides access to their values and meta-values. Also, it can be used for execution of the same query as if running from
+     * an entity centre at the client side.
      */
     private EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> selectionCrit;
 
@@ -71,4 +73,8 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         this.masterEntity = masterEntity;
     }
 
+    @Override
+    public String toString() {
+        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s\n]", selectionCrit, selectedEntities, masterEntity);
+    }
 }

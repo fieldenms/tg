@@ -30,6 +30,7 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -82,8 +83,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
-            final Class<? extends AbstractEntity<?>> originalType = CentreResourceUtils.getOriginalType(entityType);
-            final String originalPropertyName = CentreResourceUtils.getOriginalPropertyName(entityType, propertyName);
+            final Class<? extends AbstractEntity<?>> originalType = CentreUtils.getOriginalType(entityType);
+            final String originalPropertyName = CentreUtils.getOriginalPropertyName(entityType, propertyName);
 
             final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
             return isEntityItself ? (IFetchProvider<V>) coFinder.find(originalType).getFetchProvider() : coFinder.find(originalType).getFetchProvider().fetchFor(originalPropertyName);

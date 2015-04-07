@@ -73,6 +73,7 @@
                     self.super();
 
                     self.onRun = self.onRun.bind(self);
+                    self.getSelectedEntities = self.getSelectedEntities.bind(self);
 
                     self.$.ajaxSaver.addEventListener('core-response', function (e) {
                         if (e.detail.xhr.status === 200) {
@@ -166,6 +167,10 @@
                         return this.$.egi.getSelectedEntities()[0];
                     }
                     return null;
+                }, 
+                
+                getSelectedEntities: function () {
+                    return this.$.egi.getSelectedEntities();
                 }, 
                 
                 /**

@@ -121,6 +121,9 @@ public abstract class AbstractWebApp extends Application {
         // Registering entity masters.
         attachMasterResources(router, webApp.getMasters());
 
+        // Registering autocompletion masters.
+        attachAutocompletionResources(router, webApp);
+
         // Registering web models.
         //attachCustomWebViewResources(router, webApp);
 
@@ -163,7 +166,17 @@ public abstract class AbstractWebApp extends Application {
         router.attach("/users/{username}/entity/{entityType}/{entity-id}", new EntityResourceFactory(masters, injector));
         router.attach("/users/{username}/validation/{entityType}", new EntityValidationResourceFactory(masters, injector));
         router.attach("/users/{username}/master/{entityType}", new MasterComponentResourceFactory(masters));
-        router.attach("/users/{{username}}/autocompletion/{{entityType}}/{{property}}", new EntityAutocompletionResourceFactory(masters, injector));
+    }
+
+    /**
+     * Attaches all resources relevant to autocompletion.
+     *
+     * @param router
+     * @param webApp
+     */
+    private void attachAutocompletionResources(final Router router, final WebApp webApp) {
+        logger.info("\t\tAutocompletion resources attaching...");
+        router.attach("/users/{{username}}/autocompletion/{{entityType}}/{{property}}", new EntityAutocompletionResourceFactory(webApp, injector));
     }
 
     /**

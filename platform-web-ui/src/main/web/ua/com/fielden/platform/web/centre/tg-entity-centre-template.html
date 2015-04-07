@@ -58,7 +58,7 @@
         <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right">
             <div>
                 <div layout vertical style="margin: 40px;">
-                    <tg-@entity_type-selection-criteria id="selection_criteria" uuid="{{uuid}}" user="{{user}}" mitype="@mi_type" onRun="{{onRun}}"></tg-@entity_type-selection-criteria>
+                    <tg-@entity_type-selection-criteria id="selection_criteria" uuid="{{uuid}}" user="{{user}}" mitype="@mi_type" onRun="{{onRun}}" getSelectedEntities="{{getSelectedEntities}}"></tg-@entity_type-selection-criteria>
                     <div layout horizontal justified style="margin-top:40px;">
                         <div layout horizontal>
                             <paper-button id="configurator" raised roll="button" on-tap="{{configure}}" style="margin-left: 0px;">Configure</paper-button>

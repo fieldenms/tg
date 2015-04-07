@@ -4,10 +4,15 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -15,12 +20,15 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.ICentre;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.BooleanCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.BooleanSingleCriterionWidget;
@@ -54,6 +62,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final Injector injector;
     private final Class<T> entityType;
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
+    private final ICompanionObjectFinder coFinder;
 
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
@@ -73,6 +82,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.injector = injector;
         this.miType = miType;
         this.entityType = (Class<T>) CentreUtils.getEntityType(miType);
+        this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
+
     }
 
     /**
@@ -109,7 +120,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private IRenderable createRenderableRepresentation() {
         final ICentreDomainTreeManagerAndEnhancer centre = CentreUtils.getFreshCentre(getUserSpecificGdtm(), this.menuItemType);
-        logger.error("Building renderable for cdtmae:" + centre);
+        logger.debug("Building renderable for cdtmae:" + centre);
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
@@ -211,5 +222,42 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     private IGlobalDomainTreeManager getUserSpecificGdtm() {
         return injector.getInstance(IGlobalDomainTreeManager.class);
+    }
+
+    /**
+     * Creates value matcher instance.
+     *
+     * @param injector
+     * @return
+     */
+    public <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String propertyName) {
+        final Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> matchers = dslDefaultConfig.getValueMatchersForSelectionCriteria();
+
+        final String originalPropertyName = CentreUtils.getOriginalPropertyName(criteriaType, propertyName);
+        logger.error("createValueMatcherAndContextConfig: propertyName = " + propertyName + " originalPropertyName = " + originalPropertyName);
+        final Class<? extends IValueMatcherWithCentreContext<V>> matcherType = matchers.isPresent() && matchers.get().containsKey(originalPropertyName) ?
+                (Class<? extends IValueMatcherWithCentreContext<V>>) matchers.get().get(originalPropertyName).getKey() : null;
+        final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndContextConfig;
+        if (matcherType != null) {
+            matcherAndContextConfig = new Pair<>(injector.getInstance(matcherType), matchers.get().get(originalPropertyName).getValue());
+        } else {
+            matcherAndContextConfig = createDefaultValueMatcherAndContextConfig(CentreUtils.getOriginalType(criteriaType), originalPropertyName, coFinder);
+        }
+        return matcherAndContextConfig;
+    }
+
+    /**
+     * Creates default value matcher and context config for the specified entity property.
+     *
+     * @param propertyName
+     * @param criteriaType
+     * @param coFinder
+     * @return
+     */
+    private <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createDefaultValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> originalType, final String originalPropertyName, final ICompanionObjectFinder coFinder) {
+        final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
+        final Class<V> propertyType = (Class<V>) (isEntityItself ? originalType : PropertyTypeDeterminator.determinePropertyType(originalType, originalPropertyName));
+        final IEntityDao<V> co = coFinder.find(propertyType);
+        return new Pair<>(new FallbackValueMatcherWithCentreContext<V>(co), Optional.empty());
     }
 }

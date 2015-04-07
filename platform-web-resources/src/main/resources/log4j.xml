@@ -56,6 +56,14 @@
 		<level value="debug" />
 		<appender-ref ref="stdout" />
 	</logger>	
+	<logger name="ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource" additivity="false">
+		<level value="debug" />
+		<appender-ref ref="stdout" />
+	</logger>	
+	<logger name="ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource" additivity="false">
+		<level value="debug" />
+		<appender-ref ref="stdout" />
+	</logger>	
 	
 	<logger name="ua.com.fielden.platform.dao.QueryExecutionModel" additivity="false">
 		<level value="off" />
