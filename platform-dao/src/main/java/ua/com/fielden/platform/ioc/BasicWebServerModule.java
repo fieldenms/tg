@@ -25,6 +25,8 @@ import ua.com.fielden.platform.entity.functional.CritPropDao;
 import ua.com.fielden.platform.entity.functional.FetchPropDao;
 import ua.com.fielden.platform.entity.functional.QueryEntityDao;
 import ua.com.fielden.platform.entity.functional.QueryRunnerDao;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
+import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ICritProp;
 import ua.com.fielden.platform.entity.functional.centre.IFetchProp;
 import ua.com.fielden.platform.entity.functional.centre.IQueryEntity;
@@ -170,6 +172,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IQueryEntity.class).to(QueryEntityDao.class);
         bind(ICritProp.class).to(CritPropDao.class);
         bind(IFetchProp.class).to(FetchPropDao.class);
+        bind(ICentreContextHolder.class).to(CentreContextHolderDao.class);
 
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???

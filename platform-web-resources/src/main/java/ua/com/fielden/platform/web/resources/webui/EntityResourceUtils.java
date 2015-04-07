@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -275,6 +276,21 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
         } catch (final Exception ex) {
             logger.error("An undesirable error has occured during deserialisation of modified properties holder, which should be validated.", ex);
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    /**
+     * Restores the holder of context and criteria entity.
+     *
+     * @param envelope
+     * @return
+     */
+    public static CentreContextHolder restoreCentreContextHolder(final Representation envelope, final RestServerUtil restUtil) {
+        try {
+            return restUtil.restoreJSONEntity(envelope, CentreContextHolder.class);
+        } catch (final Exception ex) {
+            logger.error("An undesirable error has occured during deserialisation of centre context holder, which should be validated.", ex);
             throw new IllegalStateException(ex);
         }
     }

@@ -21,6 +21,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
@@ -73,7 +74,9 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        // final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+        final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
         final Pair<CRITERIA, Map<String, Object>> entityAndHolder;
         entityAndHolder = constructCriteriaEntity(modifiedPropertiesHolder);
         final CRITERIA criteriaEntity = entityAndHolder.getKey();

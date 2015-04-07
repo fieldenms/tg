@@ -6,6 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.CritProp;
 import ua.com.fielden.platform.entity.functional.centre.FetchProp;
 import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
@@ -54,5 +55,6 @@ public class PlatformDomainTypes {
         types.add(CritProp.class);
         types.add(FetchProp.class);
         types.add(Page.class);
+        types.add(CentreContextHolder.class);
     }
 }

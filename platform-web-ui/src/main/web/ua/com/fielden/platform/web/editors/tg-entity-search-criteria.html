@@ -426,11 +426,13 @@
                         this.isSearching = true;
 
                         // prepare the AJAX request based on the raw search string
+                        var centreContextHolder = this.$.reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
                         var paramsHolder = this.createModifiedPropertiesHolder();
                         paramsHolder["@@searchString"] = inputText;
-                        this.provideSelectedEntities(this.requireSelectedEntities, paramsHolder);
+                        centreContextHolder["modifHolder"] = paramsHolder;                      
+                        this.provideSelectedEntities(this.requireSelectedEntities, centreContextHolder);
                         
-                        var serialisedSearchQuery = this.$.serialiser.serialise(paramsHolder);
+                        var serialisedSearchQuery = this.$.serialiser.serialise(centreContextHolder);
 
                         this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
                         this.$.ajaxSearcher.go();
@@ -440,12 +442,13 @@
 
                 },
                 
-                provideSelectedEntities: function(requireSelectedEntities, paramsHolder) {
+                provideSelectedEntities: function(requireSelectedEntities, centreContextHolder) {
 					if (requireSelectedEntities === "ALL") {
-						paramsHolder["@@selectedEntities"] = this.getSelectedEntities();
+						centreContextHolder["selectedEntities"] = this.getSelectedEntities();
                     } else if (requireSelectedEntities === "ONE") {
-                    	paramsHolder["@@selectedEntity"] = this.getSelectedEntities().length > 0 ? this.getSelectedEntities()[0] : null;
+                    	paramsHolder["selectedEntities"] = this.getSelectedEntities().length > 0 ? [this.getSelectedEntities()[0]] : [];
                     } else if (requireSelectedEntities === "NONE") {
+                    	paramsHolder["selectedEntities"] = null;
                     	// do nothing
                     } else {
                     	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
