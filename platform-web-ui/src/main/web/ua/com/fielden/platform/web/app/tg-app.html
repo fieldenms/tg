@@ -28,9 +28,16 @@
                     'menu-item-selected': 'showView'
                 },
                 showMainMenu: function (e) {
+                    this.lastSelected = this.selected;
                     this.selected = "menu";
                 },
                 showView: function (e) {
+                    var state
+                    if (this.lastSelected && this.lastSelected !== e.detail) {
+                        state = [this.lastSelected];
+                        console.log('pushed state'  + state);
+                        history.pushState([this.lastSelected]);
+                    }
                     this.selected = e.detail;
                 },
                 pageAnimated: function (e, detail, source) {
@@ -39,7 +46,6 @@
                     }
                 },
                 ready: function () {
-                    this.selected = "menu";
                     this.views = {
                         whenDesktop: [
                             [[{
@@ -96,16 +102,16 @@
                                 textTheme: "white",
                                 menu: [
                                     {
-                                        name: "view 12"
+                                        name: "view 1"
                                     },
                                     {
-                                        name: "view 13",
+                                        name: "view 2",
                                         submenu: [
                                             {
-                                                name: "view 14"
+                                                name: "view 1"
                                             },
                                             {
-                                                name: "view 15"
+                                                name: "view 2"
                                             }
                                         ]
                                     }
@@ -176,6 +182,10 @@
                             }
                         ]
                     };
+                    this.selected = this.views.items[0].name;
+                    window.onpopstate = function(e) {
+                        console.log("poped state ", history.state);
+                    }.bind(this);
                 }
             });
         })();
