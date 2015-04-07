@@ -7,11 +7,14 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 
+import java.util.Date;
+
 import org.junit.Test;
 
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomOrgUnit1Matcher;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomVehicleMatcher;
@@ -347,6 +350,66 @@ public class EntityCentreBuilderSelectionCritTest {
             fail();
         } catch (final IllegalArgumentException ex) {
             assertEquals(String.format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_with_all_possible_range_valued_criteria_should_be_constructed_successfully() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addCrit("yearlyCost").asRange().decimal()
+                .also()
+                .addCrit("vehicle.lastMeterReading").asRange().decimal()
+                .also()
+                .addCrit("vehicle.constValueProp").asRange().integer()
+                .also()
+                .addCrit("vehicle.initDate").asRange().date()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+
+        assertTrue(config.getSelectionCriteria().isPresent());
+        assertEquals(4, config.getSelectionCriteria().get().size());
+        assertEquals("yearlyCost", config.getSelectionCriteria().get().get(0));
+        assertEquals("vehicle.lastMeterReading", config.getSelectionCriteria().get().get(1));
+        assertEquals("vehicle.constValueProp", config.getSelectionCriteria().get().get(2));
+        assertEquals("vehicle.initDate", config.getSelectionCriteria().get().get(3));
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_range_valued_crit_as_date_for_non_date_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("yearlyCost").asRange().date()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a date component as it is not of type Date (%s).", "yearlyCost", TgWorkOrder.class.getSimpleName(), Money.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_range_valued_crit_as_integer_for_non_integer_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("yearlyCost").asRange().integer()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for an integer component as it is not of type Integer (%s).", "yearlyCost", TgWorkOrder.class.getSimpleName(), Money.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void selection_criteria_should_not_permit_range_valued_crit_as_decimal_for_non_decimal_property() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("vehicle.initDate").asRange().decimal()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a decimal component as it is not of type BigDecimal or Money (%s).", "vehicle.initDate", TgWorkOrder.class.getSimpleName(), Date.class.getSimpleName()), ex.getMessage());
         }
     }
 
