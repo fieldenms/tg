@@ -148,11 +148,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
     @After
     public final void afterTest() throws Exception {
-        final Connection conn = createConnection();
-
-        System.out.println("TRUNCATE TABLES");
-        // TODO need to switch off referential integrity
-        exec(truncateScript, conn);
+        exec(truncateScript, createConnection());
     }
 
     private static Connection createConnection() {
