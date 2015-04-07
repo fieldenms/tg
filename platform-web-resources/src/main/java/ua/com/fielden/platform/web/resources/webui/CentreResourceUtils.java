@@ -10,7 +10,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
@@ -20,7 +19,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
@@ -163,40 +161,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     private static MiType createMiTypeAnnotation(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         return new MiTypeAnnotation().newInstance(miType);
-    }
-
-    /**
-     * Determines the miType for which criteria entity was generated.
-     *
-     * @param miType
-     * @return
-     */
-    static Class<? extends MiWithConfigurationSupport<?>> getMiType(final Class<? extends AbstractEntity<?>> criteriaType) {
-        final MiType annotation = AnnotationReflector.getAnnotation(criteriaType, MiType.class);
-        if (annotation == null) {
-            throw new IllegalStateException(String.format("The criteria type [%s] should be annotated with MiType annotation.", criteriaType.getName()));
-        }
-        return annotation.value();
-    }
-
-    /**
-     * Determines the master type for which criteria entity was generated.
-     *
-     * @param miType
-     * @return
-     */
-    public static Class<? extends AbstractEntity<?>> getOriginalType(final Class<? extends AbstractEntity<?>> criteriaType) {
-        return getEntityType(getMiType(criteriaType));
-    }
-
-    /**
-     * Determines the property name of the property from which the criteria property was generated. This is only applicable for entity typed properties.
-     *
-     * @param propertyName
-     * @return
-     */
-    public static String getOriginalPropertyName(final Class<?> criteriaClass, final String propertyName) {
-        return CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
     }
 
     /**
