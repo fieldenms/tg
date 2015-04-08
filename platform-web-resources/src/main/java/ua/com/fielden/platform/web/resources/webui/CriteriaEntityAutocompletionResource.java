@@ -88,7 +88,7 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
         final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
         logger.debug(String.format("SEARCH STRING %s", searchString));
 
-        final CentreContext<T, ?> context = new CentreContext<>();
+        final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         if (contextConfig.isPresent() && contextConfig.get().withSelectionCrit) {
             context.setSelectionCrit((EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>) criteriaEntity);
         }
@@ -97,14 +97,9 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
         } else if (contextConfig.isPresent() && contextConfig.get().withCurrentEtity) {
             context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
         }
-        // TODO provide 'withMasterEntity'
-        // TODO provide 'withMasterEntity'
-        // TODO provide 'withMasterEntity'
-        // TODO provide 'withMasterEntity'
-        // TODO provide 'withMasterEntity'
-        // TODO provide 'withMasterEntity'
-        // TODO provide 'withMasterEntity'
-        // TODO provide 'withMasterEntity'
+        if (contextConfig.isPresent() && contextConfig.get().withMasterEntity) {
+            context.setMasterEntity(centreContextHolder.getMasterEntity());
+        }
 
         logger.debug("context = " + context);
         valueMatcher.setContext(context);

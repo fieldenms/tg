@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -33,20 +34,20 @@ public class CentreContextHolder extends AbstractEntity<String> {
     @Title(value = "Selected entities", desc = "Selected entities")
     private final ArrayList<AbstractEntity<?>> selectedEntities = new ArrayList<AbstractEntity<?>>();
 
-    //    @IsProperty
-    //    @MapTo
-    //    @Title(value = "Master entity", desc = "Master entity")
-    //    private AbstractEntity<?> masterEntity;
-    //
-    //    @Observable
-    //    public CentreContextHolder setMasterEntity(final AbstractEntity<?> masterEntity) {
-    //        this.masterEntity = masterEntity;
-    //        return this;
-    //    }
-    //
-    //    public AbstractEntity<?> getMasterEntity() {
-    //        return masterEntity;
-    //    }
+    @IsProperty
+    @MapTo
+    @Title(value = "Master entity", desc = "Master entity")
+    private AbstractEntity<?> masterEntity;
+
+    @Observable
+    public CentreContextHolder setMasterEntity(final AbstractEntity<?> masterEntity) {
+        this.masterEntity = masterEntity;
+        return this;
+    }
+
+    public AbstractEntity<?> getMasterEntity() {
+        return masterEntity;
+    }
 
     @Observable
     protected CentreContextHolder setSelectedEntities(final ArrayList<AbstractEntity<?>> selectedEntities) {
