@@ -8,7 +8,7 @@
 <link rel="import" href="/resources/polymer/core-item/core-item.html">
 <link rel="import" href="/resources/polymer/core-drawer-panel/core-drawer-panel.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
-<link rel="import" href="/resources/views/tg-nested-view.html">
+<link rel="import" href="/resources/components/postal-lib.html">
 
 <polymer-element name="tg-view-with-menu" attributes="item selectedItem" layout vertical>
     <template>
@@ -62,7 +62,7 @@
             <div vertical layout drawer>
 
                 <core-toolbar>{{item.name}}</core-toolbar>
-                <core-menu selected="{{selected}}" on-core-select="{{onMenuItemSelected}}">
+                <core-menu selected="{{selected}}">
                     <template repeat="{{menu in item.menu}}">
                         <template if="{{menu.submenu}}">
                             <core-submenu selected="{{subSelected}}" name="{{menu.name}}" label="{{menu.name}}" icon="icons:expand-more">
@@ -87,7 +87,7 @@
                     <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
                 </core-toolbar>
 
-                <core-animated-pages selectedItem="{{selectedItem}}" transitions="slide-up" selected="{{selected + (subSelected ? ('/' + subSelected) : '') }}" flex>
+                <core-animated-pages selectedItem="{{selectedItem}}" transitions="slide-up" selected="{{selected + (subSelected ? ('/' + subSelected) : '') }}" on-core-select="{{onPageSelected}}" flex>
                     <template repeat="{{page in item.menu}}">
                         <div name="{{page.name}}">
                             <div class="item" slide-up>{{page.name}}</div>
@@ -112,7 +112,51 @@
         (function () {
             Polymer({
                 ready: function () {
-                    this.selected = this.item.menu[0].name;
+                    var self = this;
+                    self.startUp = true;
+                    self.selected = this.item.menu[0].name;
+                    postal.subscribe({
+                        channel: self.item.name,
+                        topic: "state.push",
+                        callback: function (data, envelope) {
+                            var newState = data.state;
+                            if (self.selected) {
+                                newState.push(self.selected);
+                            }
+                            if (self.subSelected) {
+                                newState.push(self.subSelected);
+                            }
+                            history.pushState(newState);
+                            postal.publish({
+                                channel: "app",
+                                topic: "state.pushed",
+                                data: {
+                                    state: newState
+                                }
+                            });
+                        }
+                    });
+                    postal.subscribe({
+                        channel: self.item.name,
+                        topic: "state.pop",
+                        callback: function (data, envelope) {
+                            if (data.state[1] === self.selected && ((data.state[2] && data.state[2] === self.subSelected) || (!data.state[2] && !self.subSelected))) {
+                                postal.publish({
+                                    channel: "app",
+                                    topic: "state.poped",
+                                    data: data
+                                });
+                            } else {
+                                self.restoringState = true;
+                                self.selected = data.state[1];
+                                if (data.state[2]) {
+                                    self.subSelected = data.state[2];
+                                } else {
+                                    self.subSelected = null;
+                                }
+                            }
+                        }
+                    });
                 },
                 togglePanel: function () {
                     this.$.drawerPanel.togglePanel();
@@ -120,19 +164,29 @@
                 onShowMenuTap: function () {
                     this.fire("main-menu");
                 },
-                onMenuItemSelected: function (e, detail, source) {
+                onPageSelected: function (e, detail, source) {
                     var state;
                     if (detail.isSelected) {
-                        if (this.lastSelected) {
-                            state = [this.item.name, this.lastSelected];
-                            if (this.lastSubSelected) {
-                                state.push(this.lastSubSelected);
-                            }
-                            history.pushState(state);
+                        state = [this.item.name, this.selected];
+                        if (this.subSelected) {
+                            state.push(this.subSelected);
                         }
-                        this.$.drawerPanel.closeDrawer();
-                        this.lastSelected = this.selected;
-                        this.lastSubSelected = this.subSelected;
+                        if (this.startUp) {
+                            this.startUp = false;
+                        } else if (this.restoringState) {
+                            this.restoringState = false;
+                            postal.publish({
+                                channel: "app",
+                                topic: "state.poped",
+                                data: {
+                                    state: state
+                                }
+                            });
+                        } else {
+                            console.log("state pushed: " + state);
+                            history.pushState(state);
+                            this.$.drawerPanel.closeDrawer();
+                        }
                     }
                 }
             });
