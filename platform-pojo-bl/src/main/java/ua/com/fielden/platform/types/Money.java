@@ -5,6 +5,7 @@ import static java.math.RoundingMode.HALF_UP;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Currency.getInstance;
 import static java.util.Locale.getDefault;
+import static java.lang.String.format;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -40,12 +41,9 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
  *  1. Currently all monetary arithmetic operations produce tax sensitive instances if the instance operated on is tax sensitive.<br/>
  *  2. Methods equals() and compareTo() use only properties <code>amount</code> and <code>currency</code>.<br/>
  *
- * @author Yura
- * @author 01es
+ * @author TG Team
  */
 public class Money implements Comparable<Money> {
-
-    private static final long serialVersionUID = 3047143730250375634L;
 
     private static final Random random = new Random();
 
@@ -344,7 +342,7 @@ public class Money implements Comparable<Money> {
      */
     private BigDecimal checkParameters(final BigDecimal amount, final int taxPercent, final Currency currency) {
         if (taxPercent < 1 || taxPercent > 100) {
-            throw new IllegalArgumentException("Tax percentage [" + taxPercent + "] should not be outside of period [1,100].");
+            throw new IllegalArgumentException(format("Tax percentage [%s] should not be outside of period [1,100].", taxPercent));
         }
         return checkParameters(amount, currency);
     }
