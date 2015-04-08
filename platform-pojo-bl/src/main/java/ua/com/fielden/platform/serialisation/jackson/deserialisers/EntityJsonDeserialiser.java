@@ -179,7 +179,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         if (propNode.isNull()) {
             value = null;
         } else {
-            value = mapper.readValue(propNode.traverse(mapper), concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> propNode.get("@id")));
+            value = mapper.readValue(propNode.traverse(mapper), concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> {
+                return propNode.get("@id") == null ? propNode.get("@id_ref") : propNode.get("@id");
+            }));
         }
         return value;
     }

@@ -134,7 +134,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             final JavaType concreteType = extractConcreteType(getTypeFactory().constructType(type), () -> {
                 try {
                     EntitySerialiser.getContext().reset();
-                    return readTree(contentString).get("@id");
+                    final JsonNode treeNode = readTree(contentString);
+                    return treeNode.get("@id") == null ? treeNode.get("@id_ref") : treeNode.get("@id");
                 } catch (final IOException e) {
                     logger.error(e.getMessage(), e);
                     throw new RuntimeException(e);
