@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
@@ -32,12 +33,17 @@ class SelectionCriteriaBuilderAsSingleEntity<T extends AbstractEntity<?>, V exte
     }
 
     @Override
-    public IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>> assigner) {
+    //@SuppressWarnings("unchecked")
+    public IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<V>, T>> assigner) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
 
-        this.builder.defaultSingleValueAssignersForEntitySelectionCriteria.put(builder.currSelectionCrit.get(), assigner);
+        if (assigner == null) {
+            throw new IllegalArgumentException("Assinger value must be provided.");
+        }
+
+        builder.defaultSingleValueAssignersForEntitySelectionCriteria.put(builder.currSelectionCrit.get(), assigner);
 
         return this;
     }
@@ -46,6 +52,10 @@ class SelectionCriteriaBuilderAsSingleEntity<T extends AbstractEntity<?>, V exte
     public IAlsoCrit<T> setDefaultValue(final SingleCritOtherValueMnemonic<V> value) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
+        }
+
+        if (value == null) {
+            throw new IllegalArgumentException("Default value must be provided.");
         }
 
         if (value.value.isPresent()) {

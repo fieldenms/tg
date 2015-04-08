@@ -13,6 +13,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
  * @param <T>
  */
 public interface ISingleEntityDefaultValueAssigner<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends IAlsoCrit<T> {
-    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>> assigner);
+    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<V>, T>> assigner);
     IAlsoCrit<T> setDefaultValue(final SingleCritOtherValueMnemonic<V> value);
 }

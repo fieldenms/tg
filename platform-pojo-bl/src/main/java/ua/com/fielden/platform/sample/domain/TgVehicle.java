@@ -153,7 +153,7 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Financial details", desc = "Fin Details")
     private TgVehicleFinDetails finDetails;
-    
+
     //   FIXME
     //    @IsProperty @Calculated @Title("Calc Make")
     //    private TgVehicleMake calcMake;
@@ -165,13 +165,7 @@ public class TgVehicle extends AbstractEntity<String> {
     //  public BigDecimal getAggregated() {
     //	return aggregated;
     //  }
-    
 
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgVehicle() {
-    }
 
     @Observable
     public TgVehicle setFinDetails(final TgVehicleFinDetails finDetails) {

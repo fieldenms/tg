@@ -29,6 +29,10 @@ class SelectionCriteriaBuilderAsRangeInteger<T extends AbstractEntity<?>> extend
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
 
+        if (assigner == null) {
+            throw new IllegalArgumentException("Assinger value must be provided.");
+        }
+
         this.builder.defaultRangeValueAssignersForIntegerSelectionCriteria.put(builder.currSelectionCrit.get(), assigner);
 
         return this;
@@ -39,6 +43,10 @@ class SelectionCriteriaBuilderAsRangeInteger<T extends AbstractEntity<?>> extend
     public IAlsoCrit<T> setDefaultValue(final RangeCritOtherValueMnemonic<Integer> value) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
+        }
+
+        if (value == null) {
+            throw new IllegalArgumentException("Default value must be provided.");
         }
 
         this.builder.defaultRangeValuesForIntegerSelectionCriteria.put(builder.currSelectionCrit.get(), value);

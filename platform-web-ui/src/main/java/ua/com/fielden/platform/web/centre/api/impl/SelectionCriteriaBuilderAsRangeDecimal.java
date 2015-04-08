@@ -31,6 +31,10 @@ class SelectionCriteriaBuilderAsRangeDecimal<T extends AbstractEntity<?>> extend
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
 
+        if (assigner == null) {
+            throw new IllegalArgumentException("Assinger value must be provided.");
+        }
+
         this.builder.defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria.put(builder.currSelectionCrit.get(), assigner);
 
         return this;
@@ -40,6 +44,10 @@ class SelectionCriteriaBuilderAsRangeDecimal<T extends AbstractEntity<?>> extend
     public IAlsoCrit<T> setDefaultValue(final RangeCritOtherValueMnemonic<BigDecimal> value) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
+        }
+
+        if (value == null) {
+            throw new IllegalArgumentException("Value value must be provided.");
         }
 
         this.builder.defaultRangeValuesForBigDecimalAndMoneySelectionCriteria.put(builder.currSelectionCrit.get(), value);

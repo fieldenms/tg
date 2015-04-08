@@ -35,6 +35,10 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
 
+        if (assigner == null) {
+            throw new IllegalArgumentException("Assinger value must be provided.");
+        }
+
         this.builder.defaultMultiValueAssignersForEntityAndStringSelectionCriteria.put(builder.currSelectionCrit.get(), assigner);
 
         return this;
@@ -44,6 +48,10 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
     public IAlsoCrit<T> setDefaultValue(final MultiCritStringValueMnemonic value) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
+        }
+
+        if (value == null) {
+            throw new IllegalArgumentException("Value must be provided.");
         }
 
         this.builder.defaultMultiValuesForEntityAndStringSelectionCriteria.put(builder.currSelectionCrit.get(), value);
@@ -57,6 +65,10 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
 
+        if (matcherType == null) {
+            throw new IllegalArgumentException("Matcher must be provided.");
+        }
+
         this.builder.valueMatchersForSelectionCriteria.put(builder.currSelectionCrit.get(), new Pair<>(matcherType, Optional.empty()));
 
         return this;
@@ -66,6 +78,10 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
     public IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
+        }
+
+        if (matcherType == null) {
+            throw new IllegalArgumentException("Matcher must be provided.");
         }
 
         this.builder.valueMatchersForSelectionCriteria.put(builder.currSelectionCrit.get(), new Pair<>(matcherType, Optional.of(context)));

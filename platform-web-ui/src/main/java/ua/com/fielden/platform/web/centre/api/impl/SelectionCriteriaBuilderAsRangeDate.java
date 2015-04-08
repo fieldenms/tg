@@ -29,6 +29,10 @@ class SelectionCriteriaBuilderAsRangeDate<T extends AbstractEntity<?>> extends S
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
 
+        if (assigner == null) {
+            throw new IllegalArgumentException("Assinger value must be provided.");
+        }
+
         this.builder.defaultRangeValueAssignersForDateSelectionCriteria.put(builder.currSelectionCrit.get(), assigner);
 
         return this;
@@ -38,6 +42,10 @@ class SelectionCriteriaBuilderAsRangeDate<T extends AbstractEntity<?>> extends S
     public IAlsoCrit<T> setDefaultValue(final RangeCritDateValueMnemonic value) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
+        }
+
+        if (value == null) {
+            throw new IllegalArgumentException("Default value must be provided.");
         }
 
         this.builder.defaultRangeValuesForDateSelectionCriteria.put(builder.currSelectionCrit.get(), value);
