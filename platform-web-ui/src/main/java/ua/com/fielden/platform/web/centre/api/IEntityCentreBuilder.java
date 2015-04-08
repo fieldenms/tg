@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 
@@ -112,7 +113,7 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
        .setCustomPropsValueAssignmentHandler(null)
        .setRenderingCustomiser(null)
        .setQueryEnhancer(null, context().withMasterEntity().withSelectionCrit().build())
-       .setFetchProvider(null)
+       .setFetchProvider(EntityUtils.fetch(TgWorkOrder.class).with("vehicle", "vehicle.lastFuelUsage"))
        .build();
     }
 

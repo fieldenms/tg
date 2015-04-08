@@ -5,6 +5,7 @@ import java.util.Optional;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.IAsloCentreTopLevelActions;
@@ -57,6 +58,13 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
 
     @Override
     public ICentreTopLevelActions<T> also() {
+        // this could be a genuine also call to add more top level actions
+        // or a polymorphic call inherited from ResultSetBuilder to add more properties into the result set
+        // they need to be differentiated
+        if (propName.isPresent() || propDef.isPresent()) {
+            super.also();
+        }
+
         return this;
     }
 

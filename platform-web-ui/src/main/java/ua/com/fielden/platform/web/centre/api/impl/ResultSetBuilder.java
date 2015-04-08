@@ -40,8 +40,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
 
-    private Optional<String> propName = Optional.empty();
-    private Optional<PropDef<?>> propDef = Optional.empty();
+    protected Optional<String> propName = Optional.empty();
+    protected Optional<PropDef<?>> propDef = Optional.empty();
     private EntityActionConfig entityActionConfig;
     private Integer orderSeq;
 
@@ -91,7 +91,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IAlsoProp<T> withAction(final EntityActionConfig actionConfig) {
-        this.entityActionConfig = Optional.of(actionConfig).get(); // this is just to check or nullness
+        if (actionConfig == null) {
+            throw new IllegalArgumentException("Property action configuration should not be null.");
+        }
+
+        this.entityActionConfig = actionConfig;
         completePropIfNeeded();
         return this;
     }
@@ -104,6 +108,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IAlsoSecondaryAction<T> addPrimaryAction(final EntityActionConfig actionConfig) {
+        if (actionConfig == null) {
+            throw new IllegalArgumentException("Primary action configuration should not be null.");
+        }
+
         completePropIfNeeded();
         this.builder.resultSetPrimaryEntityAction = actionConfig;
         return secondaryActionBuilder;
@@ -111,9 +119,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IAlsoSecondaryAction<T> addSecondaryAction(final EntityActionConfig actionConfig) {
-        if (actionConfig != null) {
-            this.builder.resultSetSecondaryEntityActions.add(actionConfig);
+        if (actionConfig == null) {
+            throw new IllegalArgumentException("Secondary action configuration should not be null.");
         }
+
+        this.builder.resultSetSecondaryEntityActions.add(actionConfig);
+
         return secondaryActionBuilder;
     }
 
@@ -133,6 +144,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IExtraFetchProviderSetter<T> setQueryEnhancer(final Class<? extends IQueryEnhancer<T>> type, final CentreContextConfig contextConfig) {
+        if (type == null) {
+            throw new IllegalArgumentException("Query enhancer should not be null.");
+        }
+
         completePropIfNeeded();
         this.builder.queryEnhancerConfig = new Pair<>(type, Optional.ofNullable(contextConfig));
         return this;
@@ -140,6 +155,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IEcbCompletion<T> setFetchProvider(final IFetchProvider<T> fetchProvider) {
+        if (fetchProvider == null) {
+            throw new IllegalArgumentException("Fetch provider should not be null.");
+        }
+
         completePropIfNeeded();
         this.builder.fetchProvider = fetchProvider;
         return this;
