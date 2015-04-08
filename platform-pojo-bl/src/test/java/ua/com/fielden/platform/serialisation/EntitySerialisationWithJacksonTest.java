@@ -45,6 +45,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEn
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMoney;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicAEProp;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicProp;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
@@ -96,7 +97,8 @@ public class EntitySerialisationWithJacksonTest {
                 SubBaseEntity1.class,
                 SubBaseEntity2.class,
                 EntityWithCompositeKey.class,
-                EntityWithMoney.class);
+                EntityWithMoney.class,
+                EntityWithPolymorphicAEProp.class);
     }
 
     @Test
@@ -707,6 +709,14 @@ public class EntitySerialisationWithJacksonTest {
         entity.setPolyProperty(factory.getFactory().newEntity(SubBaseEntity1.class, 1L, "key", "description"));
 
         jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithPolymorphicProp.class);
+    }
+
+    @Test
+    public void test_serialisation_of_entity_with_polymorphyc_property_defined_as_AbstractEntity() throws Exception {
+        final EntityWithPolymorphicAEProp entity = factory.getFactory().newEntity(EntityWithPolymorphicAEProp.class, 1L, "key", "description");
+        entity.setPolyProperty(factory.getFactory().newEntity(SubBaseEntity1.class, 1L, "key", "description"));
+
+        jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithPolymorphicAEProp.class);
     }
 
     @Test
