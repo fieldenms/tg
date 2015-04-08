@@ -601,4 +601,101 @@ public class EntityCentreBuilderSelectionCritTest {
         assertEquals("Expecting one value assigners for BigDecimal property and one for Money property", 2, config.getDefaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria().get().size());
         assertFalse(config.getDefaultRangeValuesForBigDecimalAndMoneySelectionCriteria().isPresent());
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_single_bool_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("boolSingle").asSingle().bool().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_single_string_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("stringSingle").asSingle().text().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_single_integer_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("intSingle").asSingle().integer().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_single_deciamal_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("moneySingle").asSingle().decimal().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_single_entity_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(TgOrgUnit1.class).setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_single_date_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("dateSingle").asSingle().date().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_range_decimal_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("yearlyCost").asRange().decimal().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_vaule_for_range_integer_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("vehicle.constValueProp").asRange().integer().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_range_date_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("vehicle.initDate").asRange().date().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_multi_bool_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("vehicle.active").asMulti().bool().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_multi_text_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("vehicle.desc").asMulti().text().setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_default_value_for_multi_entity_selection_crit_is_not_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).setDefaultValue(null)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .addProp("desc").build();
+    }
+
 }
