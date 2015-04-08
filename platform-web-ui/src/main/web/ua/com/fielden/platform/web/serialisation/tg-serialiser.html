@@ -47,7 +47,7 @@
                                     // Find the index of the obj in 'array of serialised objects'. If the index equals -1 -- the object was not serialised yet
                                     index = getId(obj);
                                     if (index >= 0) {
-                                        serialisedObj["@ref_id"] = obj.type().number() + "#" + index; // use the current number
+                                        serialisedObj["@id_ref"] = obj.type().number() + "#" + index; // use the current number
                                         return serialisedObj;
                                     } else {                                        
                                         // If obj wasn't found in object map then
@@ -121,10 +121,10 @@
                                     deserialisedObject.push(deserialise(elem));
                                 });
                             } else if (obj && typeof obj === 'object') {
-                                // If it is an object with "@ref_id" property then find it in object map and return.
+                                // If it is an object with "@id_ref" property then find it in object map and return.
                                 // Object map contains previously deserialised objects. This map provides the support for cross reference.
-                                if (obj.hasOwnProperty("@ref_id")) {
-                                    return objectMap[obj["@ref_id"]];
+                                if (obj.hasOwnProperty("@id_ref")) {
+                                    return objectMap[obj["@id_ref"]];
                                 } else if (obj.hasOwnProperty("@id")) {
                                     // If it is an object with "@id" property then create new object with "_id" and "_type" properties and add to the object map.
                                     var typeIndex = obj["@id"].split("#")[0];
