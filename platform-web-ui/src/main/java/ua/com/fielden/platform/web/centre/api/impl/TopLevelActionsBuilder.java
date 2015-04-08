@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.centre.api.impl;
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;

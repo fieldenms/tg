@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.component.AbstractWebComponent;
@@ -119,5 +121,20 @@ public class FlexLayout implements ILayout, IImportable {
     @Override
     public String importPath() {
         return flexLayoutPath;
+    }
+
+    /**
+     * Identifies whether there is already a layout associated with a device and the specified orientation.
+     *
+     * @param device
+     * @param orientation
+     * @return
+     */
+    public boolean hasLayoutFor(final Device device, final Orientation orientation) {
+        final LayoutWrapper wrapper = layouts.get(new Pair<>(device, orientation));
+        if (wrapper != null) {
+            return !StringUtils.isEmpty(wrapper.layout);
+        }
+        return false;
     }
 }

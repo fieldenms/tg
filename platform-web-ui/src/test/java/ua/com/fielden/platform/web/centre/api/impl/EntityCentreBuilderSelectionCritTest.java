@@ -1,9 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.range;
@@ -696,6 +693,17 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).setDefaultValue(null)
                 .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
+    }
+
+    @Test
+    public void completed_dsl_statement_should_selection_criteria_for_at_least_one_device() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addCrit("yearlyCost").asRange().decimal()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []]")
+                .addProp("desc").build();
+
+        assertNotNull(config.getSelectionCriteriaLayout());
+        assertTrue(config.getSelectionCriteriaLayout().hasLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE));
     }
 
 }
