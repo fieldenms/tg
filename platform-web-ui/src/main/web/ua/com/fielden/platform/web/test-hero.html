@@ -19,6 +19,7 @@
     <link href="/resources/polymer/core-toolbar/core-toolbar.html" rel="import">
     <link href="/resources/polymer/core-animated-pages/core-animated-pages.html" rel="import">
     <link href="/resources/layout/tg-tile-layout.html" rel="import">
+    <link rel="import" href="/resources/polymer/core-icons/av-icons.html">
 
     <style>
         body {
@@ -34,16 +35,25 @@
             overflow-x: hidden;
             overflow-y: auto;
         }
-        .card {
-            font-size: 50px;
-            margin: 8px;
-            background-color: tomato;
-            border-radius: 4px;
-            cursor: default;
+        .item-name {
+            height: 48px;
+            min-height: 48px;
+            padding: 0 16px;
+            font-size: 12px;
         }
-        .view {
-            font-size: 250px;
-            background-color: tomato;
+        .item-icon-bg {
+            width: 80%;
+            height: 80%;
+        }
+        .item-icon-bg core-icon {
+            width: 100%;
+            height: 100%;
+        }
+        core-icon>div {
+            background-repeat: no-repeat;
+        }
+        .item {
+            margin: 4px;
         }
     </style>
 
@@ -56,17 +66,17 @@
             <div flex>Stuff</div>
             <core-icon-button icon="more-vert"></core-icon-button>
         </core-toolbar>
-        <core-animated-pages id="pages" flex selected="0" on-core-animated-pages-transition-end="{{transitionend}}" transitions="hero-transition">
+        <core-animated-pages id="pages" flex selected="{{selected}}" on-core-animated-pages-transition-end="{{transitionend}}" transitions="hero-transition">
 
-            <section vertical layout>
+            <section vertical layout name="menu">
 
                 <div id="noscroll" fit>
                     <div id="container" flex horizontal wrap around-justified layout>
                         <tg-tile-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellWidth="100px" minCellHeight="100px">
                             <template repeat="{{item in items}}">
-                                <div class="tile" vertical center center-justified layout hero-id="item-{{item}}" hero?="{{$.pages.selected === item + 1 || lastSelected === item + 1}}" on-tap="{{selectView}}">
-                                    <div class="card" fit layout vertical center-center>
-                                        <span>{{item}}</span>
+                                <div class="tile" vertical layout>
+                                    <div class="item" style="background-color: {{item.theme}}" fit layout vertical center-center hero-id="{{'hero_' + item.name}}" hero?="{{$.pages.selected === item.name}}" on-tap="{{selectView}}">
+                                        <span>{{item.name}}</span>
                                     </div>
                                 </div>
                             </template>
@@ -77,8 +87,9 @@
             </section>
 
             <template repeat="{{item in items}}">
-                <section fit>
-                    <div class="view" fit layout vertical center-center hero-id="item-{{item}}" hero?="{{$.pages.selected === item + 1 || $.pages.selected === 0}}"><span>{{item}}</span>
+                <section fit name="{{item.name}}">
+                    <div class="view" style="background-color: {{item.theme}}" fit layout vertical center-center hero-id="{{'hero_' + item.name}}" hero?="{{$.pages.selected === item.name}}">
+                        <span>{{item.name}}</span>
                     </div>
                 </section>
             </template>
@@ -89,42 +100,87 @@
     <script>
         addEventListener('template-bound', function (e) {
             var scope = e.target;
-            var items = [],
-                count = 8;
-            for (var i = 0; i < count; i++) {
-                items.push(i);
-            }
+            var items = [{
+                name: "view 1",
+                icon: "/resources/images/test.svg",
+                theme: "tomato",
+                nameTheme: "#999999",
+                textTheme: "white"
+            }, {
+                name: "view 2",
+                icon: "/resources/images/test.svg",
+                theme: "tomato",
+                nameTheme: "#999999",
+                textTheme: "white"
+            }, {
+                name: "view 3",
+                icon: "/resources/images/test.svg",
+                theme: "tomato",
+                nameTheme: "#999999",
+                textTheme: "white"
+            }, {
+                name: "view 4",
+                icon: "/resources/images/test.svg",
+                theme: "tomato",
+                nameTheme: "#999999",
+                textTheme: "white"
+            }, {
+                name: "view 5",
+                icon: "/resources/images/test.svg",
+                theme: "tomato",
+                nameTheme: "#999999",
+                textTheme: "white"
+            }, {
+                name: "view 6",
+                icon: "/resources/images/test.svg",
+                theme: "tomato",
+                nameTheme: "#999999",
+                textTheme: "white"
+            }, {
+                name: "view 7",
+                icon: "/resources/images/test.svg",
+                theme: "tomato",
+                nameTheme: "#999999",
+                textTheme: "white"
+            }, {
+                name: "view 8",
+                icon: "/resources/images/test.svg",
+                theme: "tomato",
+                nameTheme: "#999999",
+                textTheme: "white"
+            }];
+
 
             scope.items = items;
-            scope.whenDesktop=[
-                [[],[],[],[]],
-                [[],[],[],[]]
+            scope.whenDesktop = [
+                [[], [], [], []],
+                [[], [], [], []]
             ];
-            scope.whenTablet=[
-                [[],[],[],[]],
-                [[],[],[],[]]
-            ]
-            scope.whenMobile=[
-                [[],[],[],[]],
-                [[],[],[],[]]
-            ]
-
-            scope.selectView = function (e) {
+            scope.whenTablet = [
+                [[], [], [], []],
+                [[], [], [], []]
+            ];
+            scope.whenMobile = [
+                [[], [], [], []],
+                [[], [], [], []]
+            ];
+            
+            scope.selectView = function(e) {
                 var i = e.target.templateInstance.model.item;
-                this.$.pages.selected = i + 1;
-            }
-
+                this.selected = i.name;
+            };
+            
             scope.back = function () {
                 this.lastSelected = this.$.pages.selected;
                 console.log(this.lastSelected);
-                this.$.pages.selected = 0;
-            }
+                this.selected = 'menu';
+            };
 
             scope.transitionend = function () {
                 if (this.lastSelected) {
                     this.lastSelected = null;
                 }
-            }
+            };
         })
     </script>
 
