@@ -73,7 +73,6 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        // final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
         final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
         final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();

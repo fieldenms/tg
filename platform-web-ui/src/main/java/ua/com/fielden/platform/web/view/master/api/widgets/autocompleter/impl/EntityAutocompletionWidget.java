@@ -1,11 +1,9 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 
 /**
  *
@@ -14,50 +12,23 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  * @author TG Team
  *
  */
-public class EntityAutocompletionWidget extends AbstractWidget {
-
-    @SuppressWarnings("rawtypes")
-    private Class<? extends IValueMatcher> matcherType;
-    private boolean shouldSearchByDesc = false;
+public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidget {
     private boolean shouldSearchByDescOnly = false;
 
     public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        this(titleDesc, propertyName, true);
+        this(titleDesc, propertyName, null);
     }
 
-    public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean single) {
-        super(single ? "editors/tg-entity-editor" : "editors/tg-entity-search-criteria", titleDesc, propertyName);
+    public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig) {
+        super("editors/tg-entity-editor", titleDesc, propertyName, centreContextConfig);
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
-        final Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("createModifiedPropertiesHolder", "{{createModifiedPropertiesHolder}}");
-        attrs.put("user", "{{user}}");
-        attrs.put("entitytype", "{{entitytype}}");
-        attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
-
+        final Map<String, Object> attrs = super.createCustomAttributes();
+        // attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
         return attrs;
     };
-
-    @SuppressWarnings("rawtypes")
-    public EntityAutocompletionWidget setMatcherType(final Class<? extends IValueMatcher> matcherType) {
-        this.matcherType = matcherType;
-        return this;
-    }
-
-    @SuppressWarnings("rawtypes")
-    public Class<? extends IValueMatcher> getMatcherType() {
-        return matcherType;
-    }
-
-    public boolean isShouldSearchByDesc() {
-        return shouldSearchByDesc;
-    }
-
-    public void setShouldSearchByDesc(final boolean shouldSearchByDesc) {
-        this.shouldSearchByDesc = shouldSearchByDesc;
-    }
 
     public boolean isShouldSearchByDescOnly() {
         return shouldSearchByDescOnly;

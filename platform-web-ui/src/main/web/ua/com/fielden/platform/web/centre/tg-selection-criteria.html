@@ -5,7 +5,7 @@
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
 <link rel="import" href="/resources/centre/tg-criteria-validator.html">
 
-<polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype onRun onRunComplete getSelectedEntities">
+<polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype onRun onRunComplete getSelectedEntities getMasterEntity">
     <template>
         <shadow></shadow>
         <tg-criteria-validator id="validator" user="{{user}}" mitype="{{mitype}}" onvalidated="{{onValidatedDefault}}"></tg-criteria-validator>

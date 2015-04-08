@@ -164,6 +164,22 @@
             }
 
             Polymer('tg-entity-search-criteria', {
+            	publish: {
+            		/**
+            		 * Determines whether the selected entities are required to be send inside the centre context. 
+            		 * 
+            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context. 
+            		 */
+            		requireSelectedEntities: null,
+            		/**
+            		 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context. 
+            		 * 
+            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context. 
+            		 */
+            		requireMasterEntity: null,
+            		getSelectedEntities: null,
+            		getMasterEntity: null
+            	},
 
                 /*
                  * Initialises ajaxSearcher.
@@ -425,15 +441,8 @@
                     if (this.searchQuery && this.hasFocus === true) {
                         this.isSearching = true;
 
-                        // prepare the AJAX request based on the raw search string
-                        var centreContextHolder = this.$.reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
-                        var paramsHolder = this.createModifiedPropertiesHolder();
-                        paramsHolder["@@searchString"] = inputText;
-                        centreContextHolder["modifHolder"] = paramsHolder;                      
-                        this.provideSelectedEntities(this.requireSelectedEntities, centreContextHolder);
-                        this.provideMasterEntity(this.requireMasterEntity, centreContextHolder);
-                        
-                        var serialisedSearchQuery = this.$.serialiser.serialise(centreContextHolder);
+                        // prepare the AJAX request based on the raw search string                        
+                        var serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
 
                         this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
                         this.$.ajaxSearcher.go();
@@ -441,42 +450,6 @@
                         this.$.overlay.toggle();
                     }
 
-                },
-                
-                provideMasterEntity: function(requireMasterEntity, centreContextHolder) {
-					if (requireMasterEntity === "true") {
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						// TODO this.getMasterEntity();
-						centreContextHolder["masterEntity"] = this.getSelectedEntities().length > 0 ? this.getSelectedEntities()[0] : null;
-                    } else {
-                    	paramsHolder["masterEntity"] = null;
-                    }
-                },
-                
-                provideSelectedEntities: function(requireSelectedEntities, centreContextHolder) {
-					if (requireSelectedEntities === "ALL") {
-						centreContextHolder["selectedEntities"] = this.getSelectedEntities();
-                    } else if (requireSelectedEntities === "ONE") {
-                    	paramsHolder["selectedEntities"] = this.getSelectedEntities().length > 0 ? [this.getSelectedEntities()[0]] : [];
-                    } else if (requireSelectedEntities === "NONE") {
-                    	paramsHolder["selectedEntities"] = null;
-                    	// do nothing
-                    } else {
-                    	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
-                    }
                 },
 
                 /*

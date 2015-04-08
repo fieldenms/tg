@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
 
 /**
@@ -16,11 +17,12 @@ public class EntitySingleCriterionWidget extends AbstractCriterionWidget {
      * @param criteriaType
      * @param propertyName
      */
-    public EntitySingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public EntitySingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName, final CentreContextConfig centreContextConfig) {
         super("centre/criterion/tg-criterion", propertyName,
                 new EntityAutocompletionWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
-                        AbstractCriterionWidget.generateSingleName(root, managedType, propertyName)
+                        AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),
+                        centreContextConfig
                 ));
     }
 }

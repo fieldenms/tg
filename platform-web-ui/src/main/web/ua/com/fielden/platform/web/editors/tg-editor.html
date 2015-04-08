@@ -436,6 +436,49 @@
              */
             tooltip: function (propDesc) {
                 return propDesc;
+            },
+            
+
+            /**
+             * Fills in the centre context holder with 'master entity' based on whether should 'requireMasterEntity'.
+             */
+            provideMasterEntity: function(requireMasterEntity, centreContextHolder) {
+				if (requireMasterEntity === "true") {
+					centreContextHolder["masterEntity"] = this.getMasterEntity(); // this.getSelectedEntities().length > 0 ? this.getSelectedEntities()[0] : null;
+                } else if (requireMasterEntity === "false") {
+                	centreContextHolder["masterEntity"] = null;
+                } else {
+                	throw "Unknown value for attribute 'requireMasterEntity': " + requireMasterEntity;
+                }
+            },
+            
+            /**
+             * Fills in the centre context holder with 'selected entities' based on whether should 'requireSelectedEntities' (ALL, ONE or NONE).
+             */
+            provideSelectedEntities: function(requireSelectedEntities, centreContextHolder) {
+				if (requireSelectedEntities === "ALL") {
+					centreContextHolder["selectedEntities"] = this.getSelectedEntities();
+                } else if (requireSelectedEntities === "ONE") {
+                	paramsHolder["selectedEntities"] = this.getSelectedEntities().length > 0 ? [this.getSelectedEntities()[0]] : [];
+                } else if (requireSelectedEntities === "NONE") {
+                	paramsHolder["selectedEntities"] = null;
+                } else {
+                	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
+                }
+            },
+            
+            createContextHolder: function(inputText) {
+                var centreContextHolder = this.$.reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
+                var paramsHolder = this.createModifiedPropertiesHolder();
+                paramsHolder["@@searchString"] = inputText;
+                centreContextHolder["modifHolder"] = paramsHolder;
+                if (this.requireSelectedEntities !== null) {
+                    this.provideSelectedEntities(this.requireSelectedEntities, centreContextHolder);
+                }
+                if (this.requireMasterEntity !== null) {
+                	this.provideMasterEntity(this.requireMasterEntity, centreContextHolder);
+                }
+                return centreContextHolder;
             }
         });
     </script>

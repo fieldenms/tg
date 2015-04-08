@@ -167,9 +167,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isEntityType(propertyType)) {
                         if (AbstractDomainTree.isCritOnlySingle(managedType, critProp)) {
-                            criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp);
+                            criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
                         } else {
-                            criterionWidget = new EntityCriterionWidget(root, managedType, critProp);
+                            criterionWidget = new EntityCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
                         }
                     } else {
                         throw new UnsupportedOperationException(String.format("The single-editor type [%s] is currently unsupported.", propertyType));
@@ -213,6 +213,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         };
         return representation;
+    }
+
+    private CentreContextConfig getCentreContextConfigFor(final String critProp) {
+        return dslDefaultConfig.getValueMatchersForSelectionCriteria().isPresent()
+                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(critProp) != null
+                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(critProp).getValue() != null
+                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(critProp).getValue().isPresent()
+                ? dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(critProp).getValue().get()
+                : new CentreContextConfig(false, false, false, false);
     }
 
     /**
