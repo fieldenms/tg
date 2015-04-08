@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -42,8 +43,11 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.ResolvedType;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Charsets;
 
 /**
@@ -126,26 +130,20 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         try {
             final String contentString = IOUtils.toString(content, "UTF-8");
             logger.debug("JSON before deserialisation = |" + contentString + "|.");
-            final Class<? extends T> concreteType;
-            if (EntityUtils.isEntityType(type) && Modifier.isAbstract(type.getModifiers())) {
-                // when we are trying to deserialise an entity of unknown concrete type (e.g. passing AbstractEntity.class) -- there is a need to determine concrete type from @id property
-                EntitySerialiser.getContext().reset();
-                final JsonNode idNode = readTree(contentString).get("@id");
-                if (idNode != null && !idNode.isNull()) {
-                    final String typeNumberStr = idNode.asText().split("#")[0];
-                    final Long typeNumber = Long.valueOf(typeNumberStr);
-                    final String concreteTypeName = entityTypeInfoGetter.get(typeNumber).getKey();
-                    concreteType = (Class<? extends T>) ClassesRetriever.findClass(concreteTypeName);
-                } else {
-                    concreteType = type;
+
+            final JavaType concreteType = extractConcreteType(getTypeFactory().constructType(type), () -> {
+                try {
+                    EntitySerialiser.getContext().reset();
+                    return readTree(contentString).get("@id");
+                } catch (final IOException e) {
+                    logger.error(e.getMessage(), e);
+                    throw new RuntimeException(e);
                 }
-            } else {
-                concreteType = type;
-            }
+            }, entityTypeInfoGetter, getTypeFactory());
 
             EntitySerialiser.getContext().reset();
             final T val = readValue(contentString, concreteType);
-            if (!DynamicEntityClassLoader.isEnhanced(concreteType)) {
+            if (!DynamicEntityClassLoader.isEnhanced(concreteType.getRawClass())) {
                 executeDefiners();
             }
             return val;
@@ -153,6 +151,35 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Extracts concrete type for 'type' in case whether the 'type' is entity and abstract.
+     *
+     * @param type
+     * @param idNodeSupplier
+     *            -- the supplier function to retrieve idNode
+     * @param entityTypeInfoGetter
+     * @param typeFactory
+     * @return
+     */
+    public static <T> JavaType extractConcreteType(final ResolvedType type, final Supplier<JsonNode> idNodeSupplier, final EntityTypeInfoGetter entityTypeInfoGetter, final TypeFactory typeFactory) {
+        final JavaType concreteType;
+        if (EntityUtils.isEntityType(type.getRawClass()) && Modifier.isAbstract(type.getRawClass().getModifiers())) {
+            // when we are trying to deserialise an entity of unknown concrete type (e.g. passing AbstractEntity.class) -- there is a need to determine concrete type from @id property
+            final JsonNode idNode = idNodeSupplier.get();
+            if (idNode != null && !idNode.isNull()) {
+                final String typeNumberStr = idNode.asText().split("#")[0];
+                final Long typeNumber = Long.valueOf(typeNumberStr);
+                final String concreteTypeName = entityTypeInfoGetter.get(typeNumber).getKey();
+                concreteType = typeFactory.constructType(ClassesRetriever.findClass(concreteTypeName));
+            } else {
+                concreteType = (JavaType) type;
+            }
+        } else {
+            concreteType = (JavaType) type;
+        }
+        return concreteType;
     }
 
     @Override

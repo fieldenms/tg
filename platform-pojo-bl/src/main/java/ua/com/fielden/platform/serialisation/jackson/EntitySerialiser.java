@@ -58,7 +58,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter);
 
         final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, defaultValueContract, excludeNulls);
-        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, defaultValueContract);
+        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, defaultValueContract, entityTypeInfoGetter);
 
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);

@@ -701,9 +701,7 @@ public class EntitySerialisationWithJacksonTest {
     public void entity_with_byte_array_prop_should_be_restored() throws Exception {
     }
 
-    // the next two cases are not supported at this stage
     @Test
-    @Ignore
     public void test_serialisation_of_entity_with_polymorphyc_property() throws Exception {
         final EntityWithPolymorphicProp entity = factory.getFactory().newEntity(EntityWithPolymorphicProp.class, 1L, "key", "description");
         entity.setPolyProperty(factory.getFactory().newEntity(SubBaseEntity1.class, 1L, "key", "description"));

@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 
@@ -17,10 +18,12 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 
@@ -29,6 +32,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,14 +48,16 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final List<CachedProperty> properties;
     private final EntityType entityType;
     private final DefaultValueContract defaultValueContract;
+    private final EntityTypeInfoGetter entityTypeInfoGetter;
 
-    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final DefaultValueContract defaultValueContract) {
+    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final DefaultValueContract defaultValueContract, final EntityTypeInfoGetter entityTypeInfoGetter) {
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
         this.properties = properties;
         this.entityType = entityType;
         this.defaultValueContract = defaultValueContract;
+        this.entityTypeInfoGetter = entityTypeInfoGetter;
 
         this.type = type;
         versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
@@ -173,28 +179,21 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         if (propNode.isNull()) {
             value = null;
         } else {
-            value = mapper.readValue(propNode.traverse(mapper), constructType(mapper.getTypeFactory(), propertyField));
+            value = mapper.readValue(propNode.traverse(mapper), concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> propNode.get("@id")));
         }
         return value;
     }
 
-    //    private Object extractValue(final JsonNode propNode) {
-    //        if (propNode.isTextual()) {
-    //            return propNode.asText();
-    //        } else if (propNode.isBoolean()) {
-    //            return propNode.asBoolean();
-    //        } else if (propNode.isNumber()) {
-    //            if (propNode.isIntegralNumber()) {
-    //                return propNode.asLong(9999L);
-    //            } else if (propNode.isFloatingPointNumber()) {
-    //                return propNode.asDouble(9999.0);
-    //            } else {
-    //                throw new UnsupportedOperationException(String.format("Unsupported reflected number type for node [%s].", propNode));
-    //            }
-    //        } else {
-    //            throw new UnsupportedOperationException(String.format("Unsupported reflected value type for node [%s].", propNode));
-    //        }
-    //    }
+    /**
+     * Extracts concrete type for property based on constructed type (perhaps abstract).
+     *
+     * @param constructedType
+     * @param idNodeSupplier
+     * @return
+     */
+    private JavaType concreteTypeOf(final ResolvedType constructedType, final Supplier<JsonNode> idNodeSupplier) {
+        return TgJackson.extractConcreteType(constructedType, idNodeSupplier, entityTypeInfoGetter, mapper.getTypeFactory());
+    }
 
     /**
      * Retrieves 'dirty' value from entity JSON tree.
