@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,9 +75,10 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
     public Representation post(final Representation envelope) throws ResourceException {
         // final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
         final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+
         final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
-        final Pair<CRITERIA, Map<String, Object>> entityAndHolder;
-        entityAndHolder = constructCriteriaEntity(modifiedPropertiesHolder);
+
+        final Pair<CRITERIA, Map<String, Object>> entityAndHolder = constructCriteriaEntity(modifiedPropertiesHolder);
         final CRITERIA criteriaEntity = entityAndHolder.getKey();
         final Map<String, Object> paramsHolder = entityAndHolder.getValue();
 
@@ -93,18 +93,18 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
             context.setSelectionCrit((EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>) criteriaEntity);
         }
         if (contextConfig.isPresent() && contextConfig.get().withAllSelectedEntities) {
-            context.setSelectedEntities((List<T>) paramsHolder.get("@@selectedEntities"));
+            context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
         } else if (contextConfig.isPresent() && contextConfig.get().withCurrentEtity) {
-            context.setSelectedEntities(Arrays.asList((T) paramsHolder.get("@@selectedEntity")));
+            context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
         }
-        // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
-        // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
-        // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
-        // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
-        // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
-        // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
-        // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
-        // TODO provide 'withMasterEntity', 'withCurrentEtity' XOR 'withAllSelectedEntities'
+        // TODO provide 'withMasterEntity'
+        // TODO provide 'withMasterEntity'
+        // TODO provide 'withMasterEntity'
+        // TODO provide 'withMasterEntity'
+        // TODO provide 'withMasterEntity'
+        // TODO provide 'withMasterEntity'
+        // TODO provide 'withMasterEntity'
+        // TODO provide 'withMasterEntity'
 
         logger.debug("context = " + context);
         valueMatcher.setContext(context);

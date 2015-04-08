@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.functional.centre;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -32,7 +31,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Selected entities", desc = "Selected entities")
-    private final List<AbstractEntity<?>> selectedEntities = new ArrayList<AbstractEntity<?>>();
+    private final ArrayList<AbstractEntity<?>> selectedEntities = new ArrayList<AbstractEntity<?>>();
 
     //    @IsProperty
     //    @MapTo
@@ -50,14 +49,14 @@ public class CentreContextHolder extends AbstractEntity<String> {
     //    }
 
     @Observable
-    protected CentreContextHolder setSelectedEntities(final List<AbstractEntity<?>> selectedEntities) {
+    protected CentreContextHolder setSelectedEntities(final ArrayList<AbstractEntity<?>> selectedEntities) {
         this.selectedEntities.clear();
         this.selectedEntities.addAll(selectedEntities);
         return this;
     }
 
-    public List<AbstractEntity<?>> getSelectedEntities() {
-        return Collections.unmodifiableList(selectedEntities);
+    public ArrayList<AbstractEntity<?>> getSelectedEntities() {
+        return /* Collections.unmodifiableList( */selectedEntities /* ) */;
     }
 
     @Observable

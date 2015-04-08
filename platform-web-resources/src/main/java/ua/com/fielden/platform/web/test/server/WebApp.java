@@ -117,7 +117,7 @@ public class WebApp extends AbstractWebApp {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
         final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
-                .addCrit("integerProp").asRange().integer().withDefaultValueAssigner(null)
+                .addCrit("integerProp").asRange().integer()
                 .also()
                 .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities().build())
                 //                .also()
