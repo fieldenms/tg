@@ -70,7 +70,9 @@ public class PropertyTypeDeterminator {
         if (isDotNotation(propertyOrFunction)) {
             throw new IllegalArgumentException("Dot-notation should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
         }
-        if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.isAssignableFrom(clazz)) {
+        if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.equals(clazz)) {
+            return Comparable.class;
+        } else if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.isAssignableFrom(clazz)) {
             ////////////////// Key property or getKey() method type determination //////////////////
             return AnnotationReflector.getKeyType(clazz);
         } else {
