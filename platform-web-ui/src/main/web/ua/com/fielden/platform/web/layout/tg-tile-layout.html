@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/core-media-query/core-media-query.html">
+<link rel="import" href="/tg-web-app/tg-app-config.html">
 
 <polymer-element name="tg-tile-layout" attributes="whenDesktop whenTablet whenMobile minCellHeight minCellWidth">
     <template>
@@ -8,9 +9,10 @@
                 position: absolute;
             }
         </style>
-        <core-media-query query="max-width: 767px" querymatches="{{mobileScreen}}" on-core-media-change="{{handleMobileScreen}}"></core-media-query>
-        <core-media-query query="(min-width: 768px) and (max-width: 979px)" querymatches="{{tabletScreen}}" on-core-media-change="{{handleTabletScreen}}"></core-media-query>
-        <core-media-query query="min-width: 980px" querymatches="{{desktopScreen}}" on-core-media-change="{{handleDesktopScreen}}"></core-media-query>
+        <tg-app-config id="appConfig"></tg-app-config>
+        <core-media-query query="max-width: {{$.appConfig.minTabletWidth - 1}}px" querymatches="{{mobileScreen}}" on-core-media-change="{{handleMobileScreen}}"></core-media-query>
+        <core-media-query query="(min-width: {{$.appConfig.minTabletWidth}}px) and (max-width: {{$.appConfig.minDesktopWidth - 1}}px)" querymatches="{{tabletScreen}}" on-core-media-change="{{handleTabletScreen}}"></core-media-query>
+        <core-media-query query="min-width: {{$.appConfig.minDesktopWidth}}px" querymatches="{{desktopScreen}}" on-core-media-change="{{handleDesktopScreen}}"></core-media-query>
         <content id="items" select=".tile"></content>
     </template>
     <script>

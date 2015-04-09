@@ -61,8 +61,8 @@
 
             <div vertical layout drawer>
 
-                <core-toolbar>{{item.name}}</core-toolbar>
-                <core-menu selected="{{selected}}">
+                <core-toolbar slide-down>{{item.name}}</core-toolbar>
+                <core-menu selected="{{selected}}" slide-up>
                     <template repeat="{{menu in item.menu}}">
                         <template if="{{menu.submenu}}">
                             <core-submenu selected="{{subSelected}}" name="{{menu.name}}" label="{{menu.name}}" icon="icons:expand-more">
@@ -183,7 +183,6 @@
                                 }
                             });
                         } else {
-                            console.log("state pushed: " + state);
                             history.pushState(state);
                             this.$.drawerPanel.closeDrawer();
                         }

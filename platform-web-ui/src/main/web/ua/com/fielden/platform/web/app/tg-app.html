@@ -225,7 +225,7 @@
                     self.setSelected(self.views.items[0].name);
                     history.pushState([self.selected]);
                     window.onpopstate = function (e) {
-                        console.log("poped state: " + e.state);
+                        console.log("poped state: ", e);
                         popState(e.state);
                     };
                 }
