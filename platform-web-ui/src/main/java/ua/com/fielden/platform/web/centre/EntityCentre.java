@@ -215,12 +215,23 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
+    /**
+     * Return DSL representation for property name.
+     *
+     * @param name
+     * @return
+     */
+    private static String dslName(final String name) {
+        return name.equals("") ? "this" : name;
+    }
+
     private CentreContextConfig getCentreContextConfigFor(final String critProp) {
+        final String dslProp = dslName(critProp);
         return dslDefaultConfig.getValueMatchersForSelectionCriteria().isPresent()
-                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(critProp) != null
-                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(critProp).getValue() != null
-                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(critProp).getValue().isPresent()
-                ? dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(critProp).getValue().get()
+                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp) != null
+                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue() != null
+                && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().isPresent()
+                ? dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().get()
                 : new CentreContextConfig(false, false, false, false);
     }
 
@@ -239,16 +250,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param injector
      * @return
      */
-    public <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String propertyName) {
+    public <V extends AbstractEntity<?>> Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> createValueMatcherAndContextConfig(final Class<? extends AbstractEntity<?>> criteriaType, final String criterionPropertyName) {
         final Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> matchers = dslDefaultConfig.getValueMatchersForSelectionCriteria();
 
-        final String originalPropertyName = CentreUtils.getOriginalPropertyName(criteriaType, propertyName);
-        logger.error("createValueMatcherAndContextConfig: propertyName = " + propertyName + " originalPropertyName = " + originalPropertyName);
-        final Class<? extends IValueMatcherWithCentreContext<V>> matcherType = matchers.isPresent() && matchers.get().containsKey(originalPropertyName) ?
-                (Class<? extends IValueMatcherWithCentreContext<V>>) matchers.get().get(originalPropertyName).getKey() : null;
+        final String originalPropertyName = CentreUtils.getOriginalPropertyName(criteriaType, criterionPropertyName);
+        final String dslProp = dslName(originalPropertyName);
+        logger.error("createValueMatcherAndContextConfig: propertyName = " + criterionPropertyName + " originalPropertyName = " + dslProp);
+        final Class<? extends IValueMatcherWithCentreContext<V>> matcherType = matchers.isPresent() && matchers.get().containsKey(dslProp) ?
+                (Class<? extends IValueMatcherWithCentreContext<V>>) matchers.get().get(dslProp).getKey() : null;
         final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndContextConfig;
         if (matcherType != null) {
-            matcherAndContextConfig = new Pair<>(injector.getInstance(matcherType), matchers.get().get(originalPropertyName).getValue());
+            matcherAndContextConfig = new Pair<>(injector.getInstance(matcherType), matchers.get().get(dslProp).getValue());
         } else {
             matcherAndContextConfig = createDefaultValueMatcherAndContextConfig(CentreUtils.getOriginalType(criteriaType), originalPropertyName, coFinder);
         }
