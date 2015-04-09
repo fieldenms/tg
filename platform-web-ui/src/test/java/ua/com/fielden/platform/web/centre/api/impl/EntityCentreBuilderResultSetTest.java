@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
@@ -10,6 +10,8 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.impl.helpers.FunctionalEntity;
+import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 
 /**
  * A test case for Entity Centre DSL produced result sets.
@@ -50,6 +52,37 @@ public class EntityCentreBuilderResultSetTest {
         assertTrue(config.getResultSetProperties().get().get(3).propName.isPresent());
         assertFalse(config.getResultSetProperties().get().get(3).propDef.isPresent());
         assertEquals("desc", config.getResultSetProperties().get().get(3).propName.get());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void adding_non_exitsting_properties_to_result_set_should_be_prevented() {
+        centreFor(TgWorkOrder.class).addProp("non.existing.prop").build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void adding_null_as_property_to_result_set_should_be_prevented() {
+        centreFor(TgWorkOrder.class).addProp((String) null).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void adding_null_as_custom_property_to_result_set_should_be_prevented() {
+        centreFor(TgWorkOrder.class).addProp((PropDef<?>) null).build();
+    }
+
+    @Test
+    public void properties_and_custom_properties_should_support_custom_actions() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key").withAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
+                .also()
+                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().withSelectionCrit().build()).longDesc("Changes vehicle status").build())
+                .build();
+
+        assertEquals(2, config.getResultSetProperties().get().size());
+        assertTrue(config.getResultSetProperties().get().get(0).propAction.isPresent());
+        assertFalse(config.getResultSetProperties().get().get(0).propAction.get().longDesc.isPresent());
+        assertTrue(config.getResultSetProperties().get().get(1).propAction.isPresent());
+        assertTrue(config.getResultSetProperties().get().get(1).propAction.get().longDesc.isPresent());
+        assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).propAction.get().longDesc.get());
     }
 
 }

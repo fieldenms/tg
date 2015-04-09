@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
+import java.util.Optional;
+
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
@@ -12,14 +16,14 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
  *
  */
 public final class EntityActionConfig {
-    public final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity;
-    public final CentreContextConfig context;
-    public final String icon;
-    public final String shortDesc;
-    public final String longDesc;
-    public final IPreAction preAciton;
-    public final IPostAction successPostAction;
-    public final IPostAction errorPostAction;
+    public final Optional<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> functionalEntity;
+    public final Optional<CentreContextConfig> context;
+    public final Optional<String> icon;
+    public final Optional<String> shortDesc;
+    public final Optional<String> longDesc;
+    public final Optional<IPreAction> preAciton;
+    public final Optional<IPostAction> successPostAction;
+    public final Optional<IPostAction> errorPostAction;
     private final boolean noAction;
 
     private EntityActionConfig(
@@ -33,14 +37,23 @@ public final class EntityActionConfig {
             final IPostAction errorPostAction,
             final boolean noAction
             ) {
-        this.functionalEntity = functionalEntity;
-        this.context = context;
-        this.icon = icon;
-        this.shortDesc = shortDesc;
-        this.longDesc = longDesc;
-        this.preAciton = preAction;
-        this.successPostAction = successPostAction;
-        this.errorPostAction = errorPostAction;
+
+        if (!noAction && functionalEntity == null) {
+            throw new IllegalArgumentException("A functional entity type should be provided.");
+        }
+
+        if (functionalEntity != null && context == null) {
+            throw new IllegalArgumentException("Any functional entity requires some exection context to be specified.");
+        }
+
+        this.functionalEntity = Optional.ofNullable(functionalEntity);
+        this.context = Optional.ofNullable(context);
+        this.icon = Optional.ofNullable(icon);
+        this.shortDesc = Optional.ofNullable(shortDesc);
+        this.longDesc = Optional.ofNullable(longDesc);
+        this.preAciton = Optional.ofNullable(preAction);
+        this.successPostAction = Optional.ofNullable(successPostAction);
+        this.errorPostAction = Optional.ofNullable(errorPostAction);
         this.noAction = noAction;
     }
 

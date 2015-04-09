@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.centre.api.impl;
 
 import java.util.Optional;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -51,6 +53,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder0Ordering<T> addProp(final String propName) {
+        if (StringUtils.isEmpty(propName)) {
+            throw new IllegalArgumentException("Property should not be null.");
+        }
+
         if (!EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
             throw new IllegalArgumentException(String.format("Provided value '%s' is not a valid property expression for entity '%s'", propName, builder.getEntityType().getSimpleName()));
         }
@@ -82,6 +88,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder2WithPropAction<T> addProp(final PropDef<?> propDef) {
+        if (propDef == null) {
+            throw new IllegalArgumentException("Custom property should not be null.");
+        }
+
         this.propName = Optional.empty();
         this.propDef = Optional.of(propDef);
         this.orderSeq = null;

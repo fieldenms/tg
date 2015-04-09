@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.actions.impl;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -68,48 +70,80 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 
     @Override
     public IEntityActionBuilder0<T> addAction(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity) {
+        if (functionalEntity == null) {
+            throw new IllegalArgumentException("Functional entity type should be provided.");
+        }
+
         this.functionalEntity = functionalEntity;
         return this;
     }
 
     @Override
     public IEntityActionBuilder3<T> postActionSuccess(final IPostAction postAction) {
+        if (postAction == null) {
+            throw new IllegalArgumentException("Post successful action should be provided.");
+        }
+
         this.successPostAction = postAction;
         return this;
     }
 
     @Override
     public IEntityActionBuilder4<T> postActionError(final IPostAction postAction) {
+        if (postAction == null) {
+            throw new IllegalArgumentException("Post error action should be provided.");
+        }
+
         this.errorPostAction = postAction;
         return this;
     }
 
     @Override
     public IEntityActionBuilder5<T> icon(final String iconName) {
+        if (StringUtils.isEmpty(iconName)) {
+            throw new IllegalArgumentException("Icon name should be provided.");
+        }
+
         this.icon = iconName;
         return this;
     }
 
     @Override
     public IEntityActionBuilder6<T> shortDesc(final String shortDesc) {
+        if (StringUtils.isEmpty(shortDesc)) {
+            throw new IllegalArgumentException("Short description should be provided.");
+        }
+
         this.shortDesc = shortDesc;
         return this;
     }
 
     @Override
     public IEntityActionBuilder2<T> preAction(final IPreAction preAction) {
+        if (preAction == null) {
+            throw new IllegalArgumentException("Pre action should be provided.");
+        }
+
         this.preAciton = preAction;
         return this;
     }
 
     @Override
     public IEntityActionBuilder1<T> withContext(final CentreContextConfig contextConfig) {
+        if (contextConfig == null) {
+            throw new IllegalArgumentException("Context configuration should be provided.");
+        }
+
         this.context = contextConfig;
         return this;
     }
 
     @Override
     public IEntityActionBuilder7<T> longDesc(final String longDesc) {
+        if (StringUtils.isEmpty(longDesc)) {
+            throw new IllegalArgumentException("Long description should be provided.");
+        }
+
         this.longDesc = longDesc;
         return this;
     }
