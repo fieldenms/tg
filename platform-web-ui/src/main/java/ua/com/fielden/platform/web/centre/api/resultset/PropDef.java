@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset;
 
+import java.util.Optional;
+
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -23,9 +25,9 @@ public final class PropDef<T> {
     public final String title;
     public final String desc;
     public final Class<T> type;
-    public final T value;
+    public final Optional<T> value;
 
-    private PropDef(final String title, final String desc, final Class<T> type, final T value) {
+    private PropDef(final String title, final String desc, final Class<T> type, final Optional<T> value) {
         this.title = title;
         this.desc = desc;
         this.type = type;
@@ -48,7 +50,7 @@ public final class PropDef<T> {
         if (value == null) {
             throw new IllegalArgumentException(String.format("Value for property '%s' should not be null.", title));
         }
-        return new PropDef<T>(title, desc, (Class<T>) value.getClass(), value);
+        return new PropDef<T>(title, desc, (Class<T>) value.getClass(), Optional.of(value));
     }
 
     /**
@@ -80,7 +82,7 @@ public final class PropDef<T> {
         if (type == null) {
             throw new IllegalArgumentException(String.format("Type for property '%s' should not be null.", title));
         }
-        return new PropDef<T>(title, desc, type, null);
+        return new PropDef<T>(title, desc, type, Optional.empty());
     }
 
     /**

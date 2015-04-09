@@ -121,6 +121,12 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     }
 
     public EntityCentreConfig<T> build() {
+        // check if there are custom props without default values and no custom values assignment handler
+        if (resultSetCustomPropAssignmentHandlerType == null &&
+            resultSetProperties.stream().filter(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent()).count() > 0) {
+            throw new IllegalStateException("There are custom properties without default values, but the custom assignment handler is also missing.");
+        }
+
         // compose a correct ordering structure before instantiating an EntityCentreConfig
         final LinkedHashMap<String, OrderDirection> properResultSetOrdering = new LinkedHashMap<>();
         resultSetOrdering.forEach((k, v) -> properResultSetOrdering.put(v.getKey(), v.getValue()));

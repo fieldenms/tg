@@ -146,7 +146,24 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder6RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<T>> handler) {
+        if (handler == null) {
+            throw new IllegalArgumentException("Assignment handler for custom properties should not be null.");
+        }
+
+        // complete property registration if there is an oustanding one
         completePropIfNeeded();
+
+        // check if there are any custom properties
+        // and indicate to the developer that assignment of an assigner handler
+        // is not appropriate in case of no custom properties
+        if (builder.resultSetProperties.stream().filter(v -> v.propDef.isPresent()).count() == 0) {
+            throw new IllegalArgumentException("Assignment handler for custom properties is meaningless as there are the result set configuration contains no definitions for custom properties.");
+        }
+        // then if there are custom properties, but all of them have default values already specified, there is no reason to have custom assignment logic
+        if (builder.resultSetProperties.stream().filter(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent()).count() == 0) {
+            throw new IllegalArgumentException("Assignment handler for custom properties is meaningless as all custom properties have been provided with default values.");
+        }
+
         this.builder.resultSetCustomPropAssignmentHandlerType = handler;
         return this;
     }

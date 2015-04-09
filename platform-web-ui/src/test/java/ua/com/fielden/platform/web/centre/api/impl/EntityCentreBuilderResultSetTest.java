@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
@@ -10,6 +12,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.FunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 
@@ -190,4 +193,46 @@ public class EntityCentreBuilderResultSetTest {
                 .addSecondaryAction(null)
                 .build();
     }
+
+    @Test
+    public void should_be_able_to_set_custom_prop_assignment_handler_for_result_set_with_custom_properties_without_default_vaues() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp(mkProp("OF", "Defect OFF road", "OF"))
+                .also()
+                .addProp(mkProp("ON", "Defect ON road", String.class))
+                .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
+                .build();
+
+        assertTrue(config.getResultSetCustomPropAssignmentHandlerType().isPresent());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void should_not_permit_setting_custom_value_assignment_handler_for_result_set_where_all_custom_props_hav_default_vaues() {
+        centreFor(TgWorkOrder.class)
+                .addProp(mkProp("OF", "Defect OFF road", "OF"))
+                .also()
+                .addProp(mkProp("ON", "Defect ON road", "ON"))
+                .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
+                .build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void should_not_permit_setting_null_custom_value_assignment_handler() {
+        centreFor(TgWorkOrder.class)
+                .addProp(mkProp("OF", "Defect OFF road", "OF"))
+                .also()
+                .addProp(mkProp("ON", "Defect ON road", String.class))
+                .setCustomPropsValueAssignmentHandler(null)
+                .build();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void should_require_custom_value_assignment_handler_for_result_set_with_custom_props_without_default_values() {
+        centreFor(TgWorkOrder.class)
+                .addProp(mkProp("OF", "Defect OFF road", "OF"))
+                .also()
+                .addProp(mkProp("ON", "Defect ON road", String.class))
+                .build();
+    }
+
 }
