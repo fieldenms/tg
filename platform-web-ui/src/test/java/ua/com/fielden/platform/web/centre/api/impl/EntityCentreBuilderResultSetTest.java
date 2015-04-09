@@ -254,4 +254,14 @@ public class EntityCentreBuilderResultSetTest {
                 .build();
     }
 
+    @Test
+    public void this_keyword_should_be_supported_as_a_result_set_property() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("this")
+                .build();
+
+        assertEquals(1, config.getResultSetProperties().get().size());
+        assertEquals("this", config.getResultSetProperties().get().get(0).propName.get());
+    }
+
 }

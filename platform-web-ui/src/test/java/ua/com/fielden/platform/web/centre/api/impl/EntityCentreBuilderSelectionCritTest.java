@@ -62,6 +62,78 @@ public class EntityCentreBuilderSelectionCritTest {
     }
 
     @Test
+    public void selection_criteria_should_not_be_permit_the_same_property_to_be_added_more_than_once() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
+                .also()
+                .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Provided value '%s' has been already added as a selection criterion for entity '%s'", "vehicle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void this_keyword_should_not_be_permitted_as_range_selection_criteria() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("this").asRange().date()
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals("Entity itself (this) cannot be used as a range-valued criterion.", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void this_keyword_should_not_be_permitted_as_single_valued_selection_criteria() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("this").asSingle().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals("Entity itself (this) cannot be used as a single-valued criterion.", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void this_keyword_should_not_be_permitted_as_multi_valued_selection_criteria_of_non_matching_autocompleter_type() {
+        try {
+            centreFor(TgWorkOrder.class)
+                .addCrit("this").asMulti().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                .addProp("desc").build();
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "this", TgWorkOrder.class.getSimpleName(), TgWorkOrder.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void this_keyword_should_be_permitted_as_multi_valued_selection_criteria() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addCrit("this").asMulti().autocompleter(TgWorkOrder.class)
+                .also()
+                .addCrit("orgUnit1").asMulti().autocompleter(TgOrgUnit1.class).withMatcher(CustomOrgUnit1Matcher.class, context().withCurrentEntity().withSelectionCrit().build())
+                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]")
+                .addProp("desc").build();
+
+        assertTrue(config.getSelectionCriteria().isPresent());
+        assertEquals("this", config.getSelectionCriteria().get().get(0));
+        assertEquals("orgUnit1", config.getSelectionCriteria().get().get(1));
+        assertTrue(config.getValueMatchersForSelectionCriteria().isPresent());
+        assertEquals(1, config.getValueMatchersForSelectionCriteria().get().size());
+        assertEquals(CustomOrgUnit1Matcher.class, config.getValueMatchersForSelectionCriteria().get().get("orgUnit1").getKey());
+        assertTrue(config.getValueMatchersForSelectionCriteria().get().get("orgUnit1").getValue().isPresent());
+    }
+
+    @Test
     public void selection_criteria_should_not_permit_invalid_property_expressions() {
         try {
             centreFor(TgWorkOrder.class)

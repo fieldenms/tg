@@ -56,10 +56,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder0Ordering<T> addProp(final String propName) {
         if (StringUtils.isEmpty(propName)) {
-            throw new IllegalArgumentException("Property should not be null.");
+            throw new IllegalArgumentException("Property name should not be null.");
         }
 
-        if (!EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
+        if (!"this".equals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
             throw new IllegalArgumentException(String.format("Provided value '%s' is not a valid property expression for entity '%s'", propName, builder.getEntityType().getSimpleName()));
         }
 
