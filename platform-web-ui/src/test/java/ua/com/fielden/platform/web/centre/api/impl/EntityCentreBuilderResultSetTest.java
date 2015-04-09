@@ -154,4 +154,40 @@ public class EntityCentreBuilderResultSetTest {
                 .build();
     }
 
+    @Test
+    public void specified_primary_and_secondary_actions_should_be_present_in_config() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key")
+                .addPrimaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
+                .also()
+                .addSecondaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
+                .also()
+                .addSecondaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
+                .build();
+        assertTrue(config.getResultSetPrimaryEntityAction().isPresent());
+        assertTrue(config.getResultSetSecondaryEntityActions().isPresent());
+        assertEquals(2, config.getResultSetSecondaryEntityActions().get().size());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_primary_action_should_be_prevented() {
+        centreFor(TgWorkOrder.class)
+                .addProp("key")
+                .addPrimaryAction(null)
+                .also()
+                .addSecondaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
+                .also()
+                .addSecondaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
+                .build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void null_secondary_action_should_be_prevented() {
+        centreFor(TgWorkOrder.class)
+                .addProp("key")
+                .addPrimaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
+                .also()
+                .addSecondaryAction(null)
+                .build();
+    }
 }
