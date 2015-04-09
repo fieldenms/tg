@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -96,7 +98,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     /////////////////////////////////////////
 
     protected final List<ResultSetProp> resultSetProperties = new ArrayList<>();
-    protected final LinkedHashMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new LinkedHashMap<>();
+    protected final SortedMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new TreeMap<>();
     protected EntityActionConfig resultSetPrimaryEntityAction;
     protected final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
     protected Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType = null;
@@ -121,7 +123,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     public EntityCentreConfig<T> build() {
         // compose a correct ordering structure before instantiating an EntityCentreConfig
         final LinkedHashMap<String, OrderDirection> properResultSetOrdering = new LinkedHashMap<>();
-        resultSetOrdering.values().stream().forEach(p -> properResultSetOrdering.put(p.getKey(), p.getValue()));
+        resultSetOrdering.forEach((k, v) -> properResultSetOrdering.put(v.getKey(), v.getValue()));
 
         return new EntityCentreConfig<T>(
                 topLevelActions,

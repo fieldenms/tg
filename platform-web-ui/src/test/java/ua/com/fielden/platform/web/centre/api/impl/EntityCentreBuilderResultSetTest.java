@@ -95,4 +95,50 @@ public class EntityCentreBuilderResultSetTest {
         centreFor(TgWorkOrder.class).addProp("key").withAction(null).build();
     }
 
+    @Test
+    public void ordering_through_dsl_should_produce_a_correct_sequential_list_of_properties_to_order_by() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key").order(3).asc()
+                .also()
+                .addProp("vehicle")
+                .also()
+                .addProp("desc").order(1).desc()
+                .also()
+                .addProp("vehicle.key").order(2).asc()
+                .build();
+
+        assertEquals(4, config.getResultSetProperties().get().size());
+        assertTrue(config.getResultSetOrdering().isPresent());
+        assertEquals(3, config.getResultSetOrdering().get().size());
+        assertEquals("desc", config.getResultSetOrdering().get().keySet().toArray()[0]);
+        assertEquals(EntityCentreConfig.OrderDirection.DESC, config.getResultSetOrdering().get().values().toArray()[0]);
+        assertEquals("vehicle.key", config.getResultSetOrdering().get().keySet().toArray()[1]);
+        assertEquals(EntityCentreConfig.OrderDirection.ASC, config.getResultSetOrdering().get().values().toArray()[1]);
+        assertEquals("key", config.getResultSetOrdering().get().keySet().toArray()[2]);
+        assertEquals(EntityCentreConfig.OrderDirection.ASC, config.getResultSetOrdering().get().values().toArray()[2]);
+    }
+
+    @Test
+    public void ordering_through_dsl_should_produce_a_correct_sequential_list_of_properties_to_order_by_even_if_sequential_numbers_have_gaps() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key").order(33).asc()
+                .also()
+                .addProp("vehicle")
+                .also()
+                .addProp("desc").order(-10).desc()
+                .also()
+                .addProp("vehicle.key").order(-2).asc()
+                .build();
+
+        assertEquals(4, config.getResultSetProperties().get().size());
+        assertTrue(config.getResultSetOrdering().isPresent());
+        assertEquals(3, config.getResultSetOrdering().get().size());
+        assertEquals("desc", config.getResultSetOrdering().get().keySet().toArray()[0]);
+        assertEquals(EntityCentreConfig.OrderDirection.DESC, config.getResultSetOrdering().get().values().toArray()[0]);
+        assertEquals("vehicle.key", config.getResultSetOrdering().get().keySet().toArray()[1]);
+        assertEquals(EntityCentreConfig.OrderDirection.ASC, config.getResultSetOrdering().get().values().toArray()[1]);
+        assertEquals("key", config.getResultSetOrdering().get().keySet().toArray()[2]);
+        assertEquals(EntityCentreConfig.OrderDirection.ASC, config.getResultSetOrdering().get().values().toArray()[2]);
+    }
+
 }
