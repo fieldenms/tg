@@ -141,4 +141,17 @@ public class EntityCentreBuilderResultSetTest {
         assertEquals(EntityCentreConfig.OrderDirection.ASC, config.getResultSetOrdering().get().values().toArray()[2]);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void attempt_to_order_by_the_same_sequence_should_be_prevented() {
+        centreFor(TgWorkOrder.class)
+                .addProp("key").order(1).asc()
+                .also()
+                .addProp("vehicle")
+                .also()
+                .addProp("desc").order(2).desc()
+                .also()
+                .addProp("vehicle.key").order(1).asc()
+                .build();
+    }
+
 }

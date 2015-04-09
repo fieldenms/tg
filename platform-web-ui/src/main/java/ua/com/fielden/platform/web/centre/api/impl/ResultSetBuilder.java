@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import static java.lang.String.format;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
@@ -70,6 +71,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder1OrderingDirection<T> order(final int orderSeq) {
+        if (builder.resultSetOrdering.containsKey(orderSeq)) {
+            final Pair<String, EntityCentreConfig.OrderDirection> pair = builder.resultSetOrdering.get(orderSeq);
+            throw new IllegalArgumentException(format("Ordering by property '%s' with sequence %s conflicts with ordering by property '%s'@'%s' (%s), which has the same sequence.",
+                    propName, orderSeq, pair.getKey(), builder.getEntityType().getSimpleName(), pair.getValue()));
+        }
         this.orderSeq = orderSeq;
         return this;
     }
