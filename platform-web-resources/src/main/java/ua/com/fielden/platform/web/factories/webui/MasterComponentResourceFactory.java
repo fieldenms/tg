@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.factories.webui;
 
-import java.util.Map;
-
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -9,6 +7,7 @@ import org.restlet.data.Method;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -19,15 +18,15 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class MasterComponentResourceFactory extends Restlet {
-    private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> masters;
+    private final IWebApp webApp;
 
     /**
      * Creates the {@link MasterComponentResourceFactory} instance with map of available entity masters.
      *
      * @param centres
      */
-    public MasterComponentResourceFactory(final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> masters) {
-        this.masters = masters;
+    public MasterComponentResourceFactory(final IWebApp webApp) {
+        this.webApp = webApp;
     }
 
     @Override
@@ -40,7 +39,7 @@ public class MasterComponentResourceFactory extends Restlet {
         if (Method.GET.equals(request.getMethod())) {
             final String entityTypeString = (String) request.getAttributes().get("entityType");
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
-            final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
+            final EntityMaster<? extends AbstractEntity<?>> master = this.webApp.getMasters().get(entityType);
             new MasterComponentResource(master, getContext(), request, response).handle();
         }
     }

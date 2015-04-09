@@ -9,7 +9,7 @@ import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.WebApp;
+import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.webui.CentreComponentResource;
 
@@ -22,7 +22,7 @@ import com.google.inject.Injector;
  *
  */
 public class CentreComponentResourceFactory extends Restlet {
-    private final WebApp webApp;
+    private final IWebApp webApp;
     private final Injector injector;
 
     /**
@@ -30,7 +30,7 @@ public class CentreComponentResourceFactory extends Restlet {
      *
      * @param centres
      */
-    public CentreComponentResourceFactory(final WebApp webApp, final Injector injector) {
+    public CentreComponentResourceFactory(final IWebApp webApp, final Injector injector) {
         this.webApp = webApp;
         this.injector = injector;
     }

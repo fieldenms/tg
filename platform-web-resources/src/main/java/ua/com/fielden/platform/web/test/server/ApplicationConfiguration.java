@@ -6,6 +6,7 @@ import org.restlet.Component;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.application.BasicServerApplication;
 import ua.com.fielden.platform.web.factories.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
@@ -69,12 +70,14 @@ public class ApplicationConfiguration extends Component {
                     props.getProperty("attachments.location"),//
                     BasicServerApplication.companionObjectTypes(applicationDomainProvider.domainTypes()))
                     );
-            // TODO this is first draft, (user name should be omitted etc).
-            getDefaultHost().attach(//
-            new WebApp(//
-            getContext().createChildContext(),//
-            injector,//
-            "TG Web UI Testing Server", "The testing server for Trident Genesis platform Web UI module", "FMS", "FMS"));
+
+            final IWebApp webApp = injector.getInstance(IWebApp.class);
+
+            getDefaultHost().attach(
+                    new WebApplication(
+                            getContext().createChildContext(), injector,
+                            "TG Web UI Testing Server", "The testing server for Trident Genesis platform Web UI module", "FMS", "FMS", webApp
+                    ));
         } catch (final Exception e) {
             e.printStackTrace();
             throw new IllegalStateException(e);

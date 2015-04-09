@@ -13,13 +13,13 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.web.app.WebApp;
+import ua.com.fielden.platform.web.app.IWebApp;
 
 public class MainMenuResource extends ServerResource {
 
-    private final WebApp app;
+    private final IWebApp app;
 
-    public MainMenuResource(final WebApp app, final Context context, final Request request, final Response response) {
+    public MainMenuResource(final IWebApp app, final Context context, final Request request, final Response response) {
         init(context, request, response);
         this.app = app;
     }

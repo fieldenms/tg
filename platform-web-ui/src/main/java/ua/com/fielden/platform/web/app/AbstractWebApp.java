@@ -18,13 +18,13 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  * @author TG Team
  *
  */
-public class WebApp implements IWebApp {
+public abstract class AbstractWebApp implements IWebApp {
 
     private final String title;
     private final WebAppConfig webAppConfig;
     private final MainMenuConfig mainMenuConfig;
 
-    public WebApp(final String title) {
+    public AbstractWebApp(final String title) {
         this.title = title;
         this.webAppConfig = new WebAppConfig(this);
         this.mainMenuConfig = new MainMenuConfig(this);
@@ -45,7 +45,8 @@ public class WebApp implements IWebApp {
      *
      * @return
      */
-    public String generateGlobalConfig() {
+    @Override
+    public final String generateGlobalConfig() {
         return webAppConfig.generateConfigComponent();
     }
 
@@ -54,7 +55,8 @@ public class WebApp implements IWebApp {
      *
      * @return
      */
-    public String generateMainMenu() {
+    @Override
+    public final String generateMainMenu() {
         return mainMenuConfig.generateMainMenu();
     }
 
@@ -63,7 +65,8 @@ public class WebApp implements IWebApp {
      *
      * @return
      */
-    public String generateWebApp() {
+    @Override
+    public final String generateWebApp() {
         return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-web-app.html").
                 replaceAll("@title", title).
                 replaceAll("@views", mainMenuConfig.generateMenuViews());
@@ -74,7 +77,8 @@ public class WebApp implements IWebApp {
      *
      * @return
      */
-    public Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> getMasters() {
+    @Override
+    public final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> getMasters() {
         return webAppConfig.getMasters();
     }
 
@@ -83,7 +87,8 @@ public class WebApp implements IWebApp {
      *
      * @return
      */
-    public Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> getCentres() {
+    @Override
+    public final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> getCentres() {
         return webAppConfig.getCentres();
     }
 }

@@ -13,7 +13,9 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.app.IWebApp;
 
+import com.google.inject.Injector;
 import com.google.inject.Scopes;
 
 /**
@@ -25,6 +27,7 @@ import com.google.inject.Scopes;
 public class ApplicationServerModule extends BasicWebServerModule {
     private final Class<? extends IUniversalConstants> universalConstantsType;
     private final List<Class<? extends AbstractEntity<?>>> domainTypes;
+    private final IWebApp webApp = new WebApp();
 
     /**
      * The constructor with the largest number of arguments.
@@ -74,7 +77,11 @@ public class ApplicationServerModule extends BasicWebServerModule {
     @Override
     protected void configure() {
         super.configure();
+
         /////////////////////////////// application specific ////////////////////////////
+        // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
+        bind(IWebApp.class).toInstance(webApp);
+
         // bind IUserProvider
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
 
@@ -86,6 +93,13 @@ public class ApplicationServerModule extends BasicWebServerModule {
         for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
             CompanionObjectAutobinder.bindDao(entityType, binder());
         }
+    }
 
+    @Override
+    public void setInjector(final Injector injector) {
+        super.setInjector(injector);
+
+        // initialises centres / masters and other app-specific configuration.
+        this.webApp.initConfiguration(injector);
     }
 }

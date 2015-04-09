@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.web.factories.webui;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -15,6 +12,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EntityResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -34,7 +32,7 @@ public class EntityResourceFactory extends Restlet {
     private final Injector injector;
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
-    private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> masters;
+    private final IWebApp webApp;
 
     /**
      * Instantiates a factory for entity resources.
@@ -43,9 +41,8 @@ public class EntityResourceFactory extends Restlet {
      *            -- a list of {@link EntityMaster}s from which fetch models and other information arrive
      * @param injector
      */
-    public EntityResourceFactory(final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> masters, final Injector injector) {
-        this.masters = new LinkedHashMap<>(masters.size());
-        this.masters.putAll(masters);
+    public EntityResourceFactory(final IWebApp webApp, final Injector injector) {
+        this.webApp = webApp;
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);
@@ -61,7 +58,7 @@ public class EntityResourceFactory extends Restlet {
 
             final String entityTypeString = (String) request.getAttributes().get("entityType");
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
-            final EntityMaster<? extends AbstractEntity<?>> master = this.masters.get(entityType);
+            final EntityMaster<? extends AbstractEntity<?>> master = this.webApp.getMasters().get(entityType);
 
             final EntityResource<AbstractEntity<?>> resource = new EntityResource<>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
             resource.handle();

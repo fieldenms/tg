@@ -1,10 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-
-import org.restlet.Context;
-import org.restlet.routing.Router;
-
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -17,9 +13,8 @@ import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
-import ua.com.fielden.platform.web.WebAppConfig;
+import ua.com.fielden.platform.web.app.AbstractWebApp;
 import ua.com.fielden.platform.web.app.IWebApp;
-import ua.com.fielden.platform.web.application.AbstractWebApp;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
@@ -40,79 +35,22 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 /**
- * Custom {@link AbstractWebApp} descendant for Web UI Testing Server. Provided in order to configure entity centres, masters and other client specific stuff.
+ * App-specific {@link IWebApp} implementation.
  *
  * @author TG Team
  *
  */
 public class WebApp extends AbstractWebApp {
 
-    /**
-     * Creates an instance of {@link WebApp} (for more information about the meaning of all this arguments see {@link AbstractWebApp#AbstractWebApp}
-     *
-     * @param context
-     * @param injector
-     * @param resourcePaths
-     * @param name
-     * @param desc
-     * @param owner
-     * @param author
-     * @param username
-     */
-    public WebApp(
-            final Context context,
-            final Injector injector,
-            final String name,
-            final String desc,
-            final String owner,
-            final String author) {
-        super(context, injector, new String[0], name, desc, owner, author);
-    }
-
-    private static class PreAction implements IPreAction {
-        private final String code;
-
-        public PreAction(final String code) {
-            this.code = code;
-        }
-
-        @Override
-        public JsCode build() {
-            return new JsCode(code);
-        }
-    }
-
-    private static class PostActionSuccess implements IPostAction {
-        private final String code;
-
-        public PostActionSuccess(final String code) {
-            this.code = code;
-        }
-
-        @Override
-        public JsCode build() {
-            return new JsCode(code);
-        }
-    }
-
-    private static class PostActionError implements IPostAction {
-        private final String code;
-
-        public PostActionError(final String code) {
-            this.code = code;
-        }
-
-        @Override
-        public JsCode build() {
-            return new JsCode(code);
-        }
+    public WebApp() {
+        super("TTGAMS");
     }
 
     /**
-     * Configures the {@link WebAppConfig} with custom entity centres.
+     * Configures the {@link WebApp} with custom centres and masters.
      */
     @Override
-    protected void initWebApplication(final IWebApp webApp) {
+    public void initConfiguration(final Injector injector) {
         // Add entity centres.
 
         final String centreMr = "['margin-right: 40px', 'flex']";
@@ -178,7 +116,7 @@ public class WebApp extends AbstractWebApp {
                 //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
                 .build();
 
-        webApp.configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre<TgPersistentEntityWithProperties>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector));
+        configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre<TgPersistentEntityWithProperties>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector));
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
@@ -329,16 +267,11 @@ public class WebApp extends AbstractWebApp {
                         + "]").replaceAll("actionMr", actionMr))
                 .done();
 
-        webApp.configApp().
+        configApp().
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector)). // efs(EntityWithInteger.class).with("prop")
                 addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterConfig, injector.getInstance(ICompanionObjectFinder.class), injector)).
                 addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class, null, injector)).
                 addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionalEntity.class, null, injector)).done();
-    }
-
-    @Override
-    protected void attachFunctionalEntities(final Router router, final Injector injector) {
-        // router.attach("/users/{username}/CustomFunction", new FunctionalEntityResourceFactory<CustomFunction, ICustomFunction>(ICustomFunction.class, injector));
     }
 
     public static class EntityPropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentEntityWithProperties> {
@@ -390,6 +323,45 @@ public class WebApp extends AbstractWebApp {
         protected EntityResultQueryModel<TgPersistentCompositeEntity> completeEqlBasedOnContext(final CentreContext<TgPersistentCompositeEntity, ?> context, final String searchString, final ICompoundCondition0<TgPersistentCompositeEntity> incompleteEql) {
             System.out.println("CompositePropValueMatcherForCentre: CONTEXT == " + getContext());
             return incompleteEql.model();
+        }
+    }
+
+    private static class PreAction implements IPreAction {
+        private final String code;
+
+        public PreAction(final String code) {
+            this.code = code;
+        }
+
+        @Override
+        public JsCode build() {
+            return new JsCode(code);
+        }
+    }
+
+    private static class PostActionSuccess implements IPostAction {
+        private final String code;
+
+        public PostActionSuccess(final String code) {
+            this.code = code;
+        }
+
+        @Override
+        public JsCode build() {
+            return new JsCode(code);
+        }
+    }
+
+    private static class PostActionError implements IPostAction {
+        private final String code;
+
+        public PostActionError(final String code) {
+            this.code = code;
+        }
+
+        @Override
+        public JsCode build() {
+            return new JsCode(code);
         }
     }
 }

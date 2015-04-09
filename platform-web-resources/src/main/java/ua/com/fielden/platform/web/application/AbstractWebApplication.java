@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.application;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -14,11 +13,9 @@ import org.restlet.Restlet;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.web.app.IWebApp;
-import ua.com.fielden.platform.web.app.WebApp;
 import ua.com.fielden.platform.web.factories.MainMenuResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.factories.WebAppConfigResourceFactory;
@@ -34,7 +31,6 @@ import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFacto
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
-import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import com.google.inject.Injector;
 
@@ -45,7 +41,7 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-public abstract class AbstractWebApp extends Application {
+public abstract class AbstractWebApplication extends Application {
 
     protected final Injector injector;
     /**
@@ -55,9 +51,10 @@ public abstract class AbstractWebApp extends Application {
     private final Set<String> resourcePaths = new LinkedHashSet<>();
 
     protected final Logger logger = Logger.getLogger(getClass());
+    private final IWebApp webApp;
 
     /**
-     * Creates an instance of {@link AbstractWebApp} with custom application name, description, author, owner and resource paths.
+     * Creates an instance of {@link AbstractWebApplication} with custom application name, description, author, owner and resource paths.
      *
      * @param context
      * @param injector
@@ -74,15 +71,17 @@ public abstract class AbstractWebApp extends Application {
      * @param username
      *            - TODO will be removed later after the authentication mechanism for web browser client will be implemented.
      */
-    public AbstractWebApp(
+    public AbstractWebApplication(
             final Context context,
             final Injector injector,
             final String[] resourcePaths,
             final String appName,
             final String desc,
             final String owner,
-            final String author) {
+            final String author,
+            final IWebApp webApp) {
         super(context);
+        this.webApp = webApp;
         //        this.platformJsScriptsLocation = "../../tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
         //        this.platformVendorJsScriptsLocation = "../../tg/platform-web-ui/src/main/resources/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
@@ -105,23 +104,19 @@ public abstract class AbstractWebApp extends Application {
     public final Restlet createInboundRoot() {
         // Create router and web application for registering resources.
         final Router router = new Router(getContext());
-        final WebApp webApp = new WebApp(getName());
-
-        // Initialise web application with entity centres, entity masters and other custom views.
-        initWebApplication(webApp);
 
         // Attach main application resource.
         router.attach("/", new MainWebApplicationResourceFactory(webApp));
         router.attach("/tg-web-app/tg-app-config.html", new WebAppConfigResourceFactory(webApp));
         router.attach("/tg-web-app/tg-main-menu.html", new MainMenuResourceFactory(webApp));
 
-        // Registering entity centres.
+        // Registering entity centres:
         attachCentreResources(router, webApp);
 
-        // Registering entity masters.
-        attachMasterResources(router, webApp.getMasters());
+        // Registering entity masters:
+        attachMasterResources(router, webApp);
 
-        // Registering autocompletion masters.
+        // Registering autocompletion resources:
         attachAutocompletionResources(router, webApp);
 
         // Registering web models.
@@ -161,11 +156,11 @@ public abstract class AbstractWebApp extends Application {
      * @param router
      * @param masters
      */
-    private void attachMasterResources(final Router router, final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> masters) {
+    private void attachMasterResources(final Router router, final IWebApp webApp) {
         logger.info("\t\tEntity master resources attaching...");
-        router.attach("/users/{username}/entity/{entityType}/{entity-id}", new EntityResourceFactory(masters, injector));
-        router.attach("/users/{username}/validation/{entityType}", new EntityValidationResourceFactory(masters, injector));
-        router.attach("/users/{username}/master/{entityType}", new MasterComponentResourceFactory(masters));
+        router.attach("/users/{username}/entity/{entityType}/{entity-id}", new EntityResourceFactory(webApp, injector));
+        router.attach("/users/{username}/validation/{entityType}", new EntityValidationResourceFactory(webApp, injector));
+        router.attach("/users/{username}/master/{entityType}", new MasterComponentResourceFactory(webApp));
     }
 
     /**
@@ -174,7 +169,7 @@ public abstract class AbstractWebApp extends Application {
      * @param router
      * @param webApp
      */
-    private void attachAutocompletionResources(final Router router, final WebApp webApp) {
+    private void attachAutocompletionResources(final Router router, final IWebApp webApp) {
         logger.info("\t\tAutocompletion resources attaching...");
         router.attach("/users/{{username}}/autocompletion/{{entityType}}/{{property}}", new EntityAutocompletionResourceFactory(webApp, injector));
     }
@@ -186,7 +181,7 @@ public abstract class AbstractWebApp extends Application {
      * @param webApp
      *            - holds the entity centre configurations.
      */
-    private void attachCentreResources(final Router router, final WebApp webApp) {
+    private void attachCentreResources(final Router router, final IWebApp webApp) {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/users/{username}/criteria/{mitype}", new CriteriaResourceFactory(webApp, injector));
         router.attach("/users/{username}/centre/{mitype}", new CentreResourceFactory(webApp, injector));
@@ -202,11 +197,4 @@ public abstract class AbstractWebApp extends Application {
         logger.info("\t\tResources attaching for:..." + "\n\t\t" + StringUtils.join(resourcePaths, "/\n\t\t") + "/");
         router.attach("/resources/", new FileResourceFactory(Collections.unmodifiableSet(resourcePaths)), Template.MODE_STARTS_WITH);
     }
-
-    /**
-     * Implement this in order to provide custom configurations for entity centre, master and other views.
-     *
-     * @param webApp
-     */
-    protected abstract void initWebApplication(IWebApp webApp);
 }
