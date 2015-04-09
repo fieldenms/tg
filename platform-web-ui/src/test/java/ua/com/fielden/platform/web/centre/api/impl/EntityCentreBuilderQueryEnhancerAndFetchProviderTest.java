@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.ce
 import org.junit.Test;
 
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.QueryEnhancer;
 
@@ -68,6 +69,24 @@ public class EntityCentreBuilderQueryEnhancerAndFetchProviderTest {
         centreFor(TgWorkOrder.class)
                 .addProp("key")
                 .setQueryEnhancer(null)
+                .build();
+    }
+
+    @Test
+    public void fetcher_provider_should_be_present() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key")
+                .setFetchProvider(EntityUtils.fetch(TgWorkOrder.class).with("vehicle"))
+                .build();
+
+        assertTrue(config.getFetchProvider().isPresent());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void setting_null_as_fetcher_provider_should_not_be_permitted() {
+        centreFor(TgWorkOrder.class)
+                .addProp("key")
+                .setFetchProvider(null)
                 .build();
     }
 
