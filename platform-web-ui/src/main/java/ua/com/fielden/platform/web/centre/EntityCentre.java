@@ -102,7 +102,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         // TODO implement generation from dslDefaultConfig
         // TODO implement generation from dslDefaultConfig
         // TODO implement generation from dslDefaultConfig
-        return postCentreCreated == null ? createdCentre : postCentreCreated.apply(createdCentre);
+        //return postCentreCreated == null ? createdCentre : postCentreCreated.apply(createdCentre);
+        return createdCentre;
     }
 
     /**
