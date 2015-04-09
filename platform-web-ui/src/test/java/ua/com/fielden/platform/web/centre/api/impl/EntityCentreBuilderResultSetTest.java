@@ -85,4 +85,14 @@ public class EntityCentreBuilderResultSetTest {
         assertEquals("Changes vehicle status", config.getResultSetProperties().get().get(1).propAction.get().longDesc.get());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void adding_null_as_custom_property_action_should_be_prevented() {
+        centreFor(TgWorkOrder.class).addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(null).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void adding_null_as_property_action_should_be_prevented() {
+        centreFor(TgWorkOrder.class).addProp("key").withAction(null).build();
+    }
+
 }
