@@ -4,7 +4,7 @@
 <link rel="import" href="/resources/polymer/core-icon/core-icon.html">
 <link rel="import" href="/resources/polymer/core-icons/av-icons.html">
 
-<polymer-element name="tg-app-menu" attributes="user items whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
+<polymer-element name="tg-app-menu" attributes="user items lastSelectedMenuItem selectedMenuItem whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
     <template>
         <style>
             core-toolbar {
@@ -50,7 +50,7 @@
             }
         </style>
 
-        <core-toolbar slide-down>
+        <core-toolbar>
             <div flex>{{user.name}}</div>
             <div>{{user.login}}</div>
         </core-toolbar>
@@ -59,7 +59,7 @@
             <tg-tile-layout fit whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellHeight="{{minCellHeight}}" minCellWidth="{{minCellWidth}}">
                 <template repeat="{{item in items}}">
                     <div class="tile" vertical layout>
-                        <div class="item" style="background-color: {{item.theme}}" fit hero-id="{{'hero_' + item.name}}" hero?="{{selectedMenuItem === item.name}}"></div>
+                        <div class="item" name="{{item.name}}" style="background-color: {{item.theme}}" fit hero-id="{{'hero_' + item.name}}" hero?="{{selectedMenuItem === item.name || lastSelectedMenuItem === item.name}}" on-tap="{{onSelectItem}}"></div>
                         <div class="item" name="{{item.name}}" flex auto vertical layout relative on-tap="{{onSelectItem}}">
                             <div flex auto relative>
                                 <div fit layout vertical center center-justified>
@@ -82,19 +82,9 @@
     </template>
     <script>
         (function () {
-            var findItemModel = function(item, models) {
-                var ind = 0;
-                for(; ind < models.length; ind += 1) {
-                    if (models[ind].name === item) {
-                        return models[ind];
-                    }
-                }
-                return null;
-            }
             Polymer({
                 onSelectItem: function(e, detail, source) {
-                    this.selectedMenuItem = source.getAttribute("name");
-                    this.fire("menu-item-selected", this.selectedMenuItem);
+                    this.fire("menu-item-selected", source.getAttribute("name"));
                 }
             });
         })();

@@ -18,7 +18,11 @@
     <link href="/resources/polymer/core-icon-button/core-icon-button.html" rel="import">
     <link href="/resources/polymer/core-toolbar/core-toolbar.html" rel="import">
     <link href="/resources/polymer/core-animated-pages/core-animated-pages.html" rel="import">
+    <link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-up.html">
+    <link rel="import" href="/resources/polymer/core-animated-pages/transitions/scale-up.html">
     <link href="/resources/layout/tg-tile-layout.html" rel="import">
+    <link href="/resources/views/tg-app-menu.html" rel="import">
+    <link href="/resources/views/tg-app-view.html" rel="import">
     <link rel="import" href="/resources/polymer/core-icons/av-icons.html">
 
     <style>
@@ -61,37 +65,26 @@
 
 <body unresolved fullbleed vertical layout>
     <template is="auto-binding">
-        <core-toolbar class="toolbar">
-            <core-icon-button icon="{{$.pages.selected != 0 ? 'arrow-back' : 'menu'}}" on-tap="{{back}}"></core-icon-button>
-            <div flex>Stuff</div>
-            <core-icon-button icon="more-vert"></core-icon-button>
-        </core-toolbar>
-        <core-animated-pages id="pages" flex selected="{{selected}}" on-core-animated-pages-transition-end="{{transitionend}}" transitions="hero-transition">
+        <core-animated-pages id="pages" flex selected="{{selected}}" on-core-animated-pages-transition-end="{{transitionend}}" transitions="hero-transition cross-fade scale-up slide-up slide-down">
 
-            <section vertical layout name="menu">
+            <tg-app-menu id="menu" name="menu" user="{{user}}" items="{{views.items}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit on-menu-item-selected="{{selectView}}"></tg-app-menu>
 
-                <div id="noscroll" fit>
-                    <div id="container" flex horizontal wrap around-justified layout>
-                        <tg-tile-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellWidth="100px" minCellHeight="100px">
-                            <template repeat="{{item in items}}">
-                                <div class="tile" vertical layout>
-                                    <div class="item" style="background-color: {{item.theme}}" fit layout vertical center-center hero-id="{{'hero_' + item.name}}" hero?="{{$.pages.selected === item.name}}" on-tap="{{selectView}}">
-                                        <span>{{item.name}}</span>
-                                    </div>
-                                </div>
-                            </template>
-                        </tg-tile-layout>
+            <template repeat="{{view in views.items}}">
+                <!--<div fit name="{{view.name}}">
+                    <tg-app-view item="{{view}}" hero-id="{{'hero_' + view.name}}" hero?="{{selected === view.name}}" fit></tg-app-view>
+                </div>-->
+
+                
+                <div fit name="{{view.name}}">
+                    <tg-app-view item="{{view}}" hero-id="{{'hero_' + view.name}}" hero?="{{selected === view.name}}" fit></tg-app-view>
+<!--
+                    <div class="view" style="background-color: {{view.theme}}" fit layout vertical center-center hero-id="{{'hero_' + view.name}}" hero?="{{selected === view.name || lastSelected === view.name}}">
+                        <span>{{view.name}}</span>
                     </div>
+-->
                 </div>
 
-            </section>
 
-            <template repeat="{{item in items}}">
-                <section fit name="{{item.name}}">
-                    <div class="view" style="background-color: {{item.theme}}" fit layout vertical center-center hero-id="{{'hero_' + item.name}}" hero?="{{$.pages.selected === item.name}}">
-                        <span>{{item.name}}</span>
-                    </div>
-                </section>
             </template>
 
         </core-animated-pages>
@@ -99,77 +92,155 @@
 
     <script>
         addEventListener('template-bound', function (e) {
-            var scope = e.target;
-            var items = [{
-                name: "view 1",
-                icon: "/resources/images/test.svg",
-                theme: "tomato",
-                nameTheme: "#999999",
-                textTheme: "white"
-            }, {
-                name: "view 2",
-                icon: "/resources/images/test.svg",
-                theme: "tomato",
-                nameTheme: "#999999",
-                textTheme: "white"
-            }, {
-                name: "view 3",
-                icon: "/resources/images/test.svg",
-                theme: "tomato",
-                nameTheme: "#999999",
-                textTheme: "white"
-            }, {
-                name: "view 4",
-                icon: "/resources/images/test.svg",
-                theme: "tomato",
-                nameTheme: "#999999",
-                textTheme: "white"
-            }, {
-                name: "view 5",
-                icon: "/resources/images/test.svg",
-                theme: "tomato",
-                nameTheme: "#999999",
-                textTheme: "white"
-            }, {
-                name: "view 6",
-                icon: "/resources/images/test.svg",
-                theme: "tomato",
-                nameTheme: "#999999",
-                textTheme: "white"
-            }, {
-                name: "view 7",
-                icon: "/resources/images/test.svg",
-                theme: "tomato",
-                nameTheme: "#999999",
-                textTheme: "white"
-            }, {
-                name: "view 8",
-                icon: "/resources/images/test.svg",
-                theme: "tomato",
-                nameTheme: "#999999",
-                textTheme: "white"
-            }];
+            var scope = e.target,
+                views = {
+                    whenDesktop: [
+                            [[{
+                            rowspan: 2,
+                            colspan: 2
+                            }], [], [], [{
+                            colspan: 2
+                            }]],
+                            [[{
+                            rowspan: 2,
+                            colspan: 2
+                            }], [], []],
+                            [[], [], [], []]
+                        ],
+                    whenTablet: [
+                            [[{
+                            rowspan: 2,
+                            colspan: 2
+                            }], [], []],
+                            [[{
+                            rowspan: 2,
+                            colspan: 2
+                            }]],
+                            [[], []],
+                            [[{
+                            rowspan: 2,
+                            colspan: 2
+                            }], [], []],
+                            [[], []],
+                        ],
+                    whenMobile: [
+                            [[], []],
+                            [[], []],
+                            [[], []],
+                            [[], []],
+                            [[], []],
+                            [[]],
+                        ],
+                    minCellHeight: "100px",
+                    minCellWidth: "100px",
+                    items: [
+                        {
+                            name: "view 1",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            },
+                        {
+                            name: "view 2",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white",
+                            menu: [
+                                {
+                                    name: "view 1"
+                                    },
+                                {
+                                    name: "view 2",
+                                    submenu: [
+                                        {
+                                            name: "view 1"
+                                            },
+                                        {
+                                            name: "view 2"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                        {
+                            name: "view 3",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            },
+                        {
+                            name: "view 4",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            },
+                        {
+                            name: "view 5",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            },
+                        {
+                            name: "view 6",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            },
+                        {
+                            name: "view 7",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            },
+                        {
+                            name: "view 8",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            },
+                        {
+                            name: "view 9",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            },
+                        {
+                            name: "view 10",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            },
+                        {
+                            name: "view 11",
+                            icon: "/resources/images/test.svg",
+                            theme: "#f4f4f4",
+                            nameTheme: "#999999",
+                            textTheme: "white"
+                            }
+                        ]
+                };
 
 
-            scope.items = items;
-            scope.whenDesktop = [
-                [[], [], [], []],
-                [[], [], [], []]
-            ];
-            scope.whenTablet = [
-                [[], [], [], []],
-                [[], [], [], []]
-            ];
-            scope.whenMobile = [
-                [[], [], [], []],
-                [[], [], [], []]
-            ];
-            
-            scope.selectView = function(e) {
-                var i = e.target.templateInstance.model.item;
-                this.selected = i.name;
+            scope.views = views;
+            scope.user = {
+                name: "Super user",
+                login: "SU"
             };
-            
+
+            scope.selectView = function (e, detail, source) {
+                this.selected = detail;
+            };
+
             scope.back = function () {
                 this.lastSelected = this.$.pages.selected;
                 console.log(this.lastSelected);
