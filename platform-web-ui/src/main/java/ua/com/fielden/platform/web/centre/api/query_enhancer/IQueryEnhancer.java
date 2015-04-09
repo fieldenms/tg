@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.query_enhancer;
 
+import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -20,5 +22,5 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  */
 public interface IQueryEnhancer<T extends AbstractEntity<?>> {
 
-    ICompleted<T> enhanceQuery(final IWhere0<T> where, final CentreContext<T, ?> context);
+    ICompleted<T> enhanceQuery(final IWhere0<T> where, final Optional<CentreContext<T, ?>> context);
 }

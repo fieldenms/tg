@@ -15,4 +15,5 @@ import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSet
 public interface IQueryEnhancerSetter<T extends AbstractEntity<?>> extends IExtraFetchProviderSetter<T> {
 
     IExtraFetchProviderSetter<T> setQueryEnhancer(final Class<? extends IQueryEnhancer<T>> type, final CentreContextConfig contextConfig);
+    IExtraFetchProviderSetter<T> setQueryEnhancer(final Class<? extends IQueryEnhancer<T>> type);
 }

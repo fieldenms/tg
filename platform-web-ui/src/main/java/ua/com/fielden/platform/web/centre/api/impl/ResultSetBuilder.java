@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
@@ -191,6 +192,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
+    public IExtraFetchProviderSetter<T> setQueryEnhancer(final Class<? extends IQueryEnhancer<T>> type) {
+        return setQueryEnhancer(type, null);
+    }
+
+    @Override
     public IEcbCompletion<T> setFetchProvider(final IFetchProvider<T> fetchProvider) {
         if (fetchProvider == null) {
             throw new IllegalArgumentException("Fetch provider should not be null.");
@@ -245,6 +251,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         @Override
         public IExtraFetchProviderSetter<T> setQueryEnhancer(final Class<? extends IQueryEnhancer<T>> type, final CentreContextConfig contextConfig) {
             return ResultSetBuilder.this.setQueryEnhancer(type, contextConfig);
+        }
+
+        @Override
+        public IExtraFetchProviderSetter<T> setQueryEnhancer(final Class<? extends IQueryEnhancer<T>> type) {
+            return ResultSetBuilder.this.setQueryEnhancer(type);
         }
 
         @Override
