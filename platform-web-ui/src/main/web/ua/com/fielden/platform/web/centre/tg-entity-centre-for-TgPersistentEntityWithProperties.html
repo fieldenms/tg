@@ -82,7 +82,7 @@
             </tg-criterion>
 
             <tg-criterion orNull="{{propertyModel['critOnlyEntityProp'].orNull}}" not="{{propertyModel['critOnlyEntityProp'].not}}" onAcceptedValueChanged="{{validate}}">
-                <tg-entity-editor entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_critOnlyEntityProp" onAcceptedValueChanged="{{validate}}" propTitle="Crit-only entity prop SINGLE" propDesc="Crit-only entity prop SINGLE criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}"></tg-entity-editor>
+                <tg-entity-editor entity="{{currBindingEntity}}" user="{{user}}" entityType="{{entitytype}}" propertyName="tgPersistentEntityWithProperties_critOnlyEntityProp" onAcceptedValueChanged="{{validate}}" propTitle="Crit-only entity prop SINGLE" propDesc="Crit-only entity prop SINGLE criteria editor" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}" getSelectedEntities="{{getSelectedEntities}}" requireSelectedEntities="ALL" getMasterEntity="{{getMasterEntity}}" requireMasterEntity="false"></tg-entity-editor>
             </tg-criterion>
             <div></div>
             <div></div>

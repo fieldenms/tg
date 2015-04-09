@@ -100,7 +100,7 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
             context.setMasterEntity(centreContextHolder.getMasterEntity());
         }
 
-        logger.debug("context = " + context);
+        logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
         valueMatcher.setContext(context);
         final fetch<T> fetch = EntityResourceUtils.<CRITERIA, T> fetchForProperty(coFinder, criteriaType, criterionPropertyName).fetchModel();
         valueMatcher.setFetch(fetch);

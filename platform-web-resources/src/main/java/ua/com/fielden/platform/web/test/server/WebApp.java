@@ -9,6 +9,7 @@ import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWith
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
@@ -120,6 +121,12 @@ public class WebApp extends AbstractWebApp {
                 .addCrit("integerProp").asRange().integer()
                 .also()
                 .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
+                //                .also()
+                //                .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
+                .also()
+                .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
+                .also()
+                .addCrit("compositeProp").asMulti().autocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositePropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
                 //                .also()
                 //                .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsNotValue(true).canHaveNoValue().value())
                 //                .also()
@@ -342,9 +349,47 @@ public class WebApp extends AbstractWebApp {
 
         @Override
         protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
-            System.out.println("CONTEXT == " + getContext());
+            System.out.println("EntityPropValueMatcherForCentre: CONTEXT == " + getContext());
             return incompleteEql.model();
         }
     }
 
+    public static class KeyPropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentEntityWithProperties> {
+        @Inject
+        public KeyPropValueMatcherForCentre(final ITgPersistentEntityWithProperties dao) {
+            super(dao);
+        }
+
+        @Override
+        protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
+            System.out.println("KeyPropValueMatcherForCentre: CONTEXT == " + getContext());
+            return incompleteEql.model();
+        }
+    }
+
+    public static class CritOnlySingleEntityPropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentEntityWithProperties> {
+        @Inject
+        public CritOnlySingleEntityPropValueMatcherForCentre(final ITgPersistentEntityWithProperties dao) {
+            super(dao);
+        }
+
+        @Override
+        protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
+            System.out.println("CritOnlySingleEntityPropValueMatcherForCentre: CONTEXT == " + getContext());
+            return incompleteEql.model();
+        }
+    }
+
+    public static class CompositePropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentCompositeEntity> {
+        @Inject
+        public CompositePropValueMatcherForCentre(final ITgPersistentCompositeEntity dao) {
+            super(dao);
+        }
+
+        @Override
+        protected EntityResultQueryModel<TgPersistentCompositeEntity> completeEqlBasedOnContext(final CentreContext<TgPersistentCompositeEntity, ?> context, final String searchString, final ICompoundCondition0<TgPersistentCompositeEntity> incompleteEql) {
+            System.out.println("CompositePropValueMatcherForCentre: CONTEXT == " + getContext());
+            return incompleteEql.model();
+        }
+    }
 }
