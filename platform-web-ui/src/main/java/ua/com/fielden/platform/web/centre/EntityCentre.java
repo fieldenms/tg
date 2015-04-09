@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import org.apache.log4j.Logger;
 
@@ -63,6 +64,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final Class<T> entityType;
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final ICompanionObjectFinder coFinder;
+    private final ICentreDomainTreeManagerAndEnhancer defaultCentre;
 
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
@@ -74,7 +76,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param dslDefaultConfig
      *            -- default configuration taken from Centre DSL
      */
-    public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector) {
+    public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
         this.menuItemType = miType;
         this.name = name;
         this.dslDefaultConfig = dslDefaultConfig;
@@ -83,7 +85,24 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.miType = miType;
         this.entityType = (Class<T>) CentreUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
+        defaultCentre = createDefaultCentre(dslDefaultConfig, postCentreCreated);
+    }
 
+    /**
+     * Generates default centre from DSL config and postCentreCreated callback.
+     *
+     * @param dslDefaultConfig
+     * @param postCentreCreated
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
+        final ICentreDomainTreeManagerAndEnhancer createdCentre = null;
+        // TODO implement generation from dslDefaultConfig
+        // TODO implement generation from dslDefaultConfig
+        // TODO implement generation from dslDefaultConfig
+        // TODO implement generation from dslDefaultConfig
+        // TODO implement generation from dslDefaultConfig
+        return postCentreCreated == null ? createdCentre : postCentreCreated.apply(createdCentre);
     }
 
     /**
@@ -104,18 +123,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return name;
     }
 
-    /**
-     * Default configuration taken from Centre DSL.
-     *
-     * @return
-     */
-    public EntityCentreConfig<T> getDslDefaultConfig() {
-        return dslDefaultConfig;
-    }
-
     @Override
     public IRenderable build() {
         return createRenderableRepresentation();
+    }
+
+    /**
+     * Returns default centre manager that was formed using DSL configuration and postCentreCreated hook.
+     *
+     * @return
+     */
+    public ICentreDomainTreeManagerAndEnhancer getDefaultCentre() {
+        return defaultCentre;
     }
 
     private IRenderable createRenderableRepresentation() {

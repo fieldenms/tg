@@ -78,6 +78,8 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     private Map<Class<?>, Map<String, List<String>>> initialCacheOfNonPrincipleItems = null;
 
+    // TODO add webApp here to be able to create default config based on Centre DSL -- private final IWebApp webApp;
+
     @Inject
     public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
         super(serialiser);

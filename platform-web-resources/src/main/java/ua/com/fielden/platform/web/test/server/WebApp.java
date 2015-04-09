@@ -116,7 +116,10 @@ public class WebApp extends AbstractWebApp {
                 //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
                 .build();
 
-        configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre<TgPersistentEntityWithProperties>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector));
+        configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre<TgPersistentEntityWithProperties>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector, (centre) -> {
+            centre.getFirstTick(); // ... please implement some additional hooks if necessary -- for e.g. add calculated properties through domain tree API, etc.
+            return centre;
+        }));
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
