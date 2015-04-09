@@ -459,9 +459,9 @@
 				if (requireSelectedEntities === "ALL") {
 					centreContextHolder["selectedEntities"] = this.getSelectedEntities();
                 } else if (requireSelectedEntities === "ONE") {
-                	paramsHolder["selectedEntities"] = this.getSelectedEntities().length > 0 ? [this.getSelectedEntities()[0]] : [];
+                	centreContextHolder["selectedEntities"] = this.getSelectedEntities().length > 0 ? [this.getSelectedEntities()[0]] : [];
                 } else if (requireSelectedEntities === "NONE") {
-                	paramsHolder["selectedEntities"] = null;
+                	centreContextHolder["selectedEntities"] = null;
                 } else {
                 	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
                 }
