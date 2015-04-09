@@ -14,6 +14,7 @@ import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.FunctionalEntity;
+import ua.com.fielden.platform.web.centre.api.impl.helpers.ResultSetRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 
 /**
@@ -232,6 +233,24 @@ public class EntityCentreBuilderResultSetTest {
                 .addProp(mkProp("OF", "Defect OFF road", "OF"))
                 .also()
                 .addProp(mkProp("ON", "Defect ON road", String.class))
+                .build();
+    }
+
+    @Test
+    public void specified_through_dsl_result_set_rendering_customiser_should_be_present() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key")
+                .setRenderingCustomiser(ResultSetRenderingCustomiser.class)
+                .build();
+
+        assertTrue(config.getResultSetRenderingCustomiserType().isPresent());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void result_set_rendering_customiser_should_not_be_null() {
+        centreFor(TgWorkOrder.class)
+                .addProp(mkProp("OF", "Defect OFF road", "OF"))
+                .setRenderingCustomiser(null)
                 .build();
     }
 

@@ -170,6 +170,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IQueryEnhancerSetter<T> setRenderingCustomiser(final Class<? extends IRenderingCustomiser<T, ?>> type) {
+        if (type == null) {
+            throw new IllegalArgumentException("Rendering customised type should not be null.");
+        }
+
         completePropIfNeeded();
         this.builder.resultSetRenderingCustomiserType = type;
         return this;
