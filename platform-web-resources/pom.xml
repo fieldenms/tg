@@ -81,27 +81,27 @@
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-server</artifactId>
-			<version>9.2.1.v20140609</version>
+			<version>9.2.10.v20150310</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-util</artifactId>
-			<version>9.2.1.v20140609</version>
+			<version>9.2.10.v20150310</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-http</artifactId>
-			<version>9.2.1.v20140609</version>
+			<version>9.2.10.v20150310</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-io</artifactId>
-			<version>9.2.1.v20140609</version>
+			<version>9.2.10.v20150310</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-servlet</artifactId>
-			<version>9.2.1.v20140609</version>
+			<version>9.2.10.v20150310</version>
 		</dependency>
 		<!-- end of RESTlet and Jetty libraries -->
 
