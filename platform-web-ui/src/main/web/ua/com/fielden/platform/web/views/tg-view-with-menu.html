@@ -49,7 +49,7 @@
             core-menu > core-submenu > core-item {
                 transition: all 300ms ease-in-out;
             }
-            #drawerPanel[narrow] [drawer]{
+            #drawerPanel[narrow][drawer] {
                 background-color: white
             }
             #drawerPanel:not([narrow]) #menuButton {
@@ -86,11 +86,15 @@
 
                 <core-toolbar slide-down>
                     <core-icon-button id="menuButton" icon="menu" on-tap="{{togglePanel}}"></core-icon-button>
-                    <div flex>{{item.name + '->' + selected + (subSelected ? ('->' + subSelected) : '')}}</div>
+                    <div flex>{{item.name + (selected === '__empty__' ? '' : ('->' + selected)) + (subSelected ? ('->' + subSelected) : '')}}</div>
                     <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
                 </core-toolbar>
 
                 <core-animated-pages selectedItem="{{selectedItem}}" transitions="slide-up" selected="{{selected + (subSelected ? ('/' + subSelected) : '') }}" on-core-select="{{onPageSelected}}" flex>
+                    <div name="__empty__">
+                        <div slide-up></div>
+                    </div>
+
                     <template repeat="{{page in item.menu}}">
                         <div name="{{page.name}}">
                             <div class="item" slide-up>{{page.name}}</div>
@@ -117,7 +121,7 @@
                 ready: function () {
                     var self = this;
                     self.startUp = true;
-                    self.selected = this.item.menu[0].name;
+                    self.selected = "__empty__";
                     postal.subscribe({
                         channel: self.item.name,
                         topic: "state.push",
