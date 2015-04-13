@@ -9,8 +9,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -32,36 +30,36 @@ public class MainMenuConfig implements IMainMenuConfig {
         this.webApplication = webApplication;
     }
 
-    @Override
-    public IMainMenuItemConfig addMasterMenuItem(final String title, final Class<? extends AbstractEntity<?>> entityType) {
-        return addMenuItem(title, entityType);
-    }
-
-    @Override
-    public IMainMenuItemConfig addCentreMenuItem(final String title, final Class<? extends MiWithConfigurationSupport<?>> menuItemType) {
-        return addMenuItem(title, menuItemType);
-    }
-
-    @Override
-    public IMainMenuItemConfig addReturn(final String title) {
-        final IMainMenuItemConfig menuItemConfig = addMenuItem(title, null);
-        this.returnMenuItem = title;
-        return menuItemConfig;
-    }
-
-    @Override
-    public IMainMenuItemConfig addLogout(final String title) {
-        final IMainMenuItemConfig menuItemConfig = addMenuItem(title, null);
-        this.loginMenuItem = title;
-        return menuItemConfig;
-    }
-
-    @Override
-    public IMainMenuItemConfig addLogin(final String title) {
-        final IMainMenuItemConfig menuItemConfig = addMenuItem(title, null);
-        this.logoutMenuItem = title;
-        return menuItemConfig;
-    }
+    //    @Override
+    //    public IMainMenuItemConfig addMasterMenuItem(final String title, final Class<? extends AbstractEntity<?>> entityType) {
+    //        return addMenuItem(title, entityType);
+    //    }
+    //
+    //    @Override
+    //    public IMainMenuItemConfig addCentreMenuItem(final String title, final Class<? extends MiWithConfigurationSupport<?>> menuItemType) {
+    //        return addMenuItem(title, menuItemType);
+    //    }
+    //
+    //    @Override
+    //    public IMainMenuItemConfig addReturn(final String title) {
+    //        final IMainMenuItemConfig menuItemConfig = addMenuItem(title, null);
+    //        this.returnMenuItem = title;
+    //        return menuItemConfig;
+    //    }
+    //
+    //    @Override
+    //    public IMainMenuItemConfig addLogout(final String title) {
+    //        final IMainMenuItemConfig menuItemConfig = addMenuItem(title, null);
+    //        this.loginMenuItem = title;
+    //        return menuItemConfig;
+    //    }
+    //
+    //    @Override
+    //    public IMainMenuItemConfig addLogin(final String title) {
+    //        final IMainMenuItemConfig menuItemConfig = addMenuItem(title, null);
+    //        this.logoutMenuItem = title;
+    //        return menuItemConfig;
+    //    }
 
     @Override
     public IMainMenuConfig setLayoutFor(final Device device, final Orientation orientation, final String layout) {
@@ -132,5 +130,11 @@ public class MainMenuConfig implements IMainMenuConfig {
         } else {
             throw new IllegalArgumentException("The menu item with " + title + " title already exists!");
         }
+    }
+
+    @Override
+    public IModuleConfig addModule(final String title) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
