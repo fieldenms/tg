@@ -10,7 +10,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  * @param <T>
  */
-public interface IMenuLayoutConfig<T> {
+public interface IMenuLayoutConfig {
 
     /**
      * Specify the layout for specified device and orientation.
@@ -20,5 +20,5 @@ public interface IMenuLayoutConfig<T> {
      * @param layout
      * @return
      */
-    T setLayoutFor(final Device device, final Orientation orientation, final String layout);
+    IMenuLayoutConfigWithDone setLayoutFor(final Device device, final Orientation orientation, final String layout);
 }
