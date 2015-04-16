@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.range;
@@ -65,11 +69,11 @@ public class EntityCentreBuilderSelectionCritTest {
     public void selection_criteria_should_not_be_permit_the_same_property_to_be_added_more_than_once() {
         try {
             centreFor(TgWorkOrder.class)
-                .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
-                .also()
-                .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
-                .addProp("desc").build();
+                    .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
+                    .also()
+                    .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class)
+                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                    .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
             assertEquals(String.format("Provided value '%s' has been already added as a selection criterion for entity '%s'", "vehicle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
@@ -80,9 +84,9 @@ public class EntityCentreBuilderSelectionCritTest {
     public void this_keyword_should_not_be_permitted_as_range_selection_criteria() {
         try {
             centreFor(TgWorkOrder.class)
-                .addCrit("this").asRange().date()
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
-                .addProp("desc").build();
+                    .addCrit("this").asRange().date()
+                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                    .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
             assertEquals("Entity itself (this) cannot be used as a range-valued criterion.", ex.getMessage());
@@ -93,9 +97,9 @@ public class EntityCentreBuilderSelectionCritTest {
     public void this_keyword_should_not_be_permitted_as_single_valued_selection_criteria() {
         try {
             centreFor(TgWorkOrder.class)
-                .addCrit("this").asSingle().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
-                .addProp("desc").build();
+                    .addCrit("this").asSingle().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
+                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                    .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
             assertEquals("Entity itself (this) cannot be used as a single-valued criterion.", ex.getMessage());
@@ -106,9 +110,9 @@ public class EntityCentreBuilderSelectionCritTest {
     public void this_keyword_should_not_be_permitted_as_multi_valued_selection_criteria_of_non_matching_autocompleter_type() {
         try {
             centreFor(TgWorkOrder.class)
-                .addCrit("this").asMulti().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
-                .addProp("desc").build();
+                    .addCrit("this").asMulti().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
+                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                    .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
             assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "this", TgWorkOrder.class.getSimpleName(), TgWorkOrder.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());

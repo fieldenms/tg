@@ -6,8 +6,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
 /**
- * A package private helper class to decompose the task of implementing the Entity Centre DSL.
- * It has direct access to protected fields in {@link EntityCentreBuilder}.
+ * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
  *
  * @author TG Team
  *
@@ -17,12 +16,10 @@ class SelectionCriteriaLayoutBuilder<T extends AbstractEntity<?>> extends Result
 
     private final EntityCentreBuilder<T> builder;
 
-
     public SelectionCriteriaLayoutBuilder(final EntityCentreBuilder<T> builder) {
         super(builder);
         this.builder = builder;
     }
-
 
     @Override
     public ILayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Orientation orientation, final String flexString) {

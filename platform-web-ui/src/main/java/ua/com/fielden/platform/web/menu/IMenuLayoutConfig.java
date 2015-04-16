@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.menu;
 
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+import ua.com.fielden.platform.web.menu.layout.IMenuLayoutConfig0;
 
 /**
  * The contract for anything that should be layout.
@@ -20,5 +21,5 @@ public interface IMenuLayoutConfig {
      * @param layout
      * @return
      */
-    IMenuLayoutConfigWithDone setLayoutFor(final Device device, final Orientation orientation, final String layout);
+    IMenuLayoutConfig0 setLayoutFor(final Device device, final Orientation orientation, final String layout);
 }

@@ -19,8 +19,8 @@
             <tg-app-menu id="menu" name="menu" user="{{user}}" items="{{views.items}}" lastSelectedMenuItem="{{lastSelected}}" selectedMenuItem="{{selected}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit></tg-app-menu>
 
             <template repeat="{{view in views.items}}">
-                <div fit name="{{view.name}}">
-                    <tg-app-view item="{{view}}" hero-id="{{'hero_' + view.name}}" hero?="{{selected === view.name || lastSelected === view.name}}" fit></tg-app-view>
+                <div fit name="{{view.title}}">
+                    <tg-app-view item="{{view}}" hero-id="{{'hero_' + view.title}}" hero?="{{selected === view.title || lastSelected === view.title}}" fit></tg-app-view>
                 </div>
             </template>
 
@@ -72,142 +72,7 @@
                 },
                 ready: function () {
                     var self = this;
-                    this.views = {
-                        whenDesktop: [
-                            [[{
-                                rowspan: 2,
-                                colspan: 2
-                            }], [], [], [{
-                                colspan: 2
-                            }]],
-                            [[{
-                                rowspan: 2,
-                                colspan: 2
-                            }], [], []],
-                            [[], [], [], []]
-                        ],
-                        whenTablet: [
-                            [[{
-                                rowspan: 2,
-                                colspan: 2
-                            }], [], []],
-                            [[{
-                                rowspan: 2,
-                                colspan: 2
-                            }]],
-                            [[], []],
-                            [[{
-                                rowspan: 2,
-                                colspan: 2
-                            }], [], []],
-                            [[], []],
-                        ],
-                        whenMobile: [
-                            [[], []],
-                            [[], []],
-                            [[], []],
-                            [[], []],
-                            [[], []],
-                            [[]],
-                        ],
-                        minCellHeight: "100px",
-                        minCellWidth: "100px",
-                        items: [
-                            {
-                                name: "view 1",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            },
-                            {
-                                name: "view 2",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white",
-                                menu: [
-                                    {
-                                        name: "view 1"
-                                    },
-                                    {
-                                        name: "view 2",
-                                        submenu: [
-                                            {
-                                                name: "view 1"
-                                            },
-                                            {
-                                                name: "view 2"
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
-                                name: "view 3",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            },
-                            {
-                                name: "view 4",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            },
-                            {
-                                name: "view 5",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            },
-                            {
-                                name: "view 6",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            },
-                            {
-                                name: "view 7",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            },
-                            {
-                                name: "view 8",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            },
-                            {
-                                name: "view 9",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            },
-                            {
-                                name: "view 10",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            },
-                            {
-                                name: "view 11",
-                                icon: "/resources/images/test.svg",
-                                theme: "#f4f4f4",
-                                nameTheme: "#999999",
-                                textTheme: "white"
-                            }
-                        ]
-                    };
+                    this.views = @menuConfig;
                     postal.subscribe({
                         channel: "app",
                         topic: "state.pushed",
@@ -222,7 +87,7 @@
                             self.setSelected(data.state[0]);
                         }
                     });
-                    self.setSelected(self.views.items[0].name);
+                    self.setSelected(self.views.items[0].title);
                     history.pushState([self.selected]);
                     window.onpopstate = function (e) {
                         console.log("poped state: ", e);

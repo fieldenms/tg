@@ -38,7 +38,6 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
             throw new IllegalArgumentException("Looks like out of sequence call as there are selection criteria to layout.");
         }
 
-
         return new SelectionCriteriaLayoutBuilder<T>(builder).setLayoutFor(device, orientation, flexString);
     }
 

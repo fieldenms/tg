@@ -21,6 +21,7 @@
                 min-height: 48px;
                 padding: 0 16px;
                 font-size: 12px;
+                color: white;
             }
             .item-icon-bg {
                 width: 80%;
@@ -59,18 +60,18 @@
             <tg-tile-layout fit whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellHeight="{{minCellHeight}}" minCellWidth="{{minCellWidth}}">
                 <template repeat="{{item in items}}">
                     <div class="tile" vertical layout>
-                        <div class="item" name="{{item.name}}" style="background-color: {{item.theme}}" fit hero-id="{{'hero_' + item.name}}" hero?="{{selectedMenuItem === item.name || lastSelectedMenuItem === item.name}}" on-tap="{{onSelectItem}}"></div>
-                        <div class="item" name="{{item.name}}" flex auto vertical layout relative on-tap="{{onSelectItem}}">
+                        <div class="item" name="{{item.title}}" style="background-color: {{item.bgColor}}" fit hero-id="{{'hero_' + item.title}}" hero?="{{selectedMenuItem === item.title || lastSelectedMenuItem === item.title}}" on-tap="{{onSelectItem}}"></div>
+                        <div class="item" name="{{item.title}}" flex auto vertical layout relative on-tap="{{onSelectItem}}">
                             <div flex auto relative>
                                 <div fit layout vertical center center-justified>
-                                    <div class="item-icon-bg" style="background-color: {{item.theme}}" relative>
-                                        <core-icon style="color: {{item.theme}}" src="{{item.icon}}" fit></core-icon>
+                                    <div class="item-icon-bg" style="background-color: {{item.bgColor}}" relative>
+                                        <core-icon style="color: {{item.bgColor}}" src="{{item.icon}}" fit></core-icon>
                                     </div>
                                 </div>
                             </div>
-                            <div class="item-name" style="background-color: {{item.nameTheme}}; color: {{item.textTheme}}" horizontal center layout>
+                            <div class="item-name" style="background-color: {{item.captionBgColor}}" horizontal center layout>
                                 <div flex>
-                                    <span>{{item.name}}</span>
+                                    <span>{{item.title}}</span>
                                 </div>
                                 <core-icon icon="av:play-arrow"></core-icon>
                             </div>

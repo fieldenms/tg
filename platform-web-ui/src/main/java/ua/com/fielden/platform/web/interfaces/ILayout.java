@@ -2,15 +2,24 @@ package ua.com.fielden.platform.web.interfaces;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.web.component.AbstractWebComponent;
+public interface ILayout<T extends ILayoutSetter<?>> {
 
-/**
- * The web layout manager contract.
- *
- * @author TG Team
- *
- */
-public interface ILayout extends IRenderable {
+    /**
+     * Specifies the device and orientation for which the specific layout must be set.
+     *
+     * @param device
+     * @param orientation
+     * @return
+     */
+    public T whenMedia(final Device device, final Orientation orientation);
+
+    /**
+     * Specifies the device for which the specific layout must be set.
+     *
+     * @param device
+     * @return
+     */
+    public T whenMedia(final Device device);
 
     /**
      * Represents the list of supported devices.
@@ -44,16 +53,4 @@ public interface ILayout extends IRenderable {
             return name().toLowerCase();
         };
     }
-
-    /**
-     * Adds the {@link AbstractWebComponent} to the layout manager.
-     *
-     * @param component
-     *            - a component to be added to layout manager.
-     * @param constraints
-     *            - additional layout configuration parameters for the component.
-     * @return
-     */
-    ILayout add(AbstractWebComponent component);
-
 }

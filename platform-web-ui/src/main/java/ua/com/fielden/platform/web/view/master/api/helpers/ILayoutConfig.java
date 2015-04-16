@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.helpers;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.interfaces.ILayout;
+import ua.com.fielden.platform.web.layout.AbstractLayout;
 
 /**
  * A contract for specifying layouting of UI widgets for different devices and orientations.
@@ -10,5 +10,5 @@ import ua.com.fielden.platform.web.interfaces.ILayout;
  *
  */
 public interface ILayoutConfig<T extends AbstractEntity<?>> {
-    ILayoutConfigWithDone<T> setLayoutFor(final ILayout.Device device, final ILayout.Orientation orientation, final String flexString);
+    ILayoutConfigWithDone<T> setLayoutFor(final AbstractLayout.Device device, final AbstractLayout.Orientation orientation, final String flexString);
 }

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.web.app.config.IWebAppConfig;
 import ua.com.fielden.platform.web.app.config.WebAppConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.menu.IMainMenuConfig;
-import ua.com.fielden.platform.web.menu.MainMenuConfig;
+import ua.com.fielden.platform.web.menu.impl.MainMenuConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -57,7 +57,8 @@ public abstract class AbstractWebApp implements IWebApp {
      */
     @Override
     public final String generateMainMenu() {
-        return mainMenuConfig.generateMainMenu();
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app.html").
+                replaceAll("@menuConfig", mainMenuConfig.code().toString());
     }
 
     /**
@@ -67,9 +68,8 @@ public abstract class AbstractWebApp implements IWebApp {
      */
     @Override
     public final String generateWebApp() {
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-web-app.html").
-                replaceAll("@title", title).
-                replaceAll("@views", mainMenuConfig.generateMenuViews());
+        return ResourceLoader.getText("ua/com/fielden/platform/web/index.html").
+                replaceAll("@title", title);
     }
 
     /**

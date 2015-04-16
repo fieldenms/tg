@@ -275,6 +275,88 @@ public class WebApp extends AbstractWebApp {
                 addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterConfig, injector.getInstance(ICompanionObjectFinder.class), injector)).
                 addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class, null, injector)).
                 addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionalEntity.class, null, injector)).done();
+        configMainMenu().
+                addModule("view 1").
+                description("view 1 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 2").
+                description("view 2 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 3").
+                description("view 3 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 4").
+                description("view 4 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 5").
+                description("view 5 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 6").
+                description("view 6 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 7").
+                description("view 7 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 8").
+                description("view 8 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 9").
+                description("view 9 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 10").
+                description("view 10 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                addModule("view 11").
+                description("view 11 description").
+                icon("/resources/images/test.svg").
+                detailIcon("/resources/images/test.svg").
+                bgColor("#f4f4f4").
+                captionBgColor("#999999").
+                view(null).done().
+                setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [], []]]").
+                setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[], []]]").
+                setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []],[[]]]").done();
+
     }
 
     public static class EntityPropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentEntityWithProperties> {

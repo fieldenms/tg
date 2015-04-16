@@ -31,12 +31,12 @@
 
 
         <core-toolbar  slide-down>
-            <div flex>{{item.name}}</div>
+            <div flex>{{item.title}}</div>
             <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
         </core-toolbar>
 
         <div class="view" slide-up>
-            {{item.name}}
+            {{item.title}}
         </div>
 
     </template>
@@ -45,7 +45,7 @@
             Polymer({
                 ready: function() {
                     postal.subscribe({
-                        channel: this.item.name,
+                        channel: this.item.title,
                         topic: "state.push",
                         callback: function(data, envelope) {
                             history.pushState(data.state);
@@ -57,7 +57,7 @@
                         }
                     });
                     postal.subscribe({
-                        channel: this.item.name,
+                        channel: this.item.title,
                         topic: "state.pop",
                         callback: function(data, envelope) {
                             postal.publish({

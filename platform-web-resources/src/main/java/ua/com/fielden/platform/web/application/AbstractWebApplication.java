@@ -108,7 +108,7 @@ public abstract class AbstractWebApplication extends Application {
         // Attach main application resource.
         router.attach("/", new MainWebApplicationResourceFactory(webApp));
         router.attach("/tg-web-app/tg-app-config.html", new WebAppConfigResourceFactory(webApp));
-        router.attach("/tg-web-app/tg-main-menu.html", new MainMenuResourceFactory(webApp));
+        router.attach("/app/tg-app.html", new MainMenuResourceFactory(webApp));
 
         // Registering entity centres:
         attachCentreResources(router, webApp);
