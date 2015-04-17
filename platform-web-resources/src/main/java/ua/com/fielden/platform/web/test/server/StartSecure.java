@@ -53,7 +53,7 @@ public class StartSecure {
 
         parameters.add("sslContextFactory", "org.restlet.engine.ssl.DefaultSslContextFactory");
         // I have created self signed certificate. reference is attached with parameter
-        parameters.add("keystorePath", ResourceLoader.getURL("tsl/localhost_keystore").getPath());
+        parameters.add("keystorePath", ResourceLoader.getURL("tsl/server-keystore").getPath()); //localhost_keystore
 
         parameters.add("keystorePassword", "changeit");
         parameters.add("keyPassword", "changeit");
