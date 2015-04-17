@@ -8,7 +8,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  * @author TG Team
  *
  */
-public class IntegerCriterionWidget extends AbstractCriterionWidget {
+public class IntegerCriterionWidget extends AbstractRangeCriterionWidget {
 
     /**
      * Creates an instance of {@link IntegerCriterionWidget} for specified entity type and property name.

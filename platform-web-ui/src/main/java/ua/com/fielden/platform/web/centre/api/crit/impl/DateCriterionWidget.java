@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 
 /**
@@ -8,7 +10,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.D
  * @author TG Team
  *
  */
-public class DateCriterionWidget extends AbstractCriterionWidget {
+public class DateCriterionWidget extends AbstractRangeCriterionWidget {
 
     /**
      * Creates an instance of {@link DateCriterionWidget} for specified entity type and property name.
@@ -26,5 +28,14 @@ public class DateCriterionWidget extends AbstractCriterionWidget {
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getValue(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getValue()
                 ));
+    }
+
+    @Override
+    protected Map<String, Object> createCustomAttributes() {
+        final Map<String, Object> attrs = super.createCustomAttributes();
+        attrs.put("datePrefix", "{{propertyModel['" + this.propertyName() + "'].datePrefix}}");
+        attrs.put("dateMnemonic", "{{propertyModel['" + this.propertyName() + "'].dateMnemonic}}");
+        attrs.put("andBefore", "{{propertyModel['" + this.propertyName() + "'].andBefore}}");
+        return attrs;
     }
 }

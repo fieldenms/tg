@@ -8,7 +8,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalW
  * @author TG Team
  *
  */
-public class DecimalCriterionWidget extends AbstractCriterionWidget {
+public class DecimalCriterionWidget extends AbstractRangeCriterionWidget {
 
     /**
      * Creates an instance of {@link DecimalCriterionWidget} for specified entity type and property name.
