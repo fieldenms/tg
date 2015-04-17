@@ -78,8 +78,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     private Map<Class<?>, Map<String, List<String>>> initialCacheOfNonPrincipleItems = null;
 
-    // TODO add webApp here to be able to create default config based on Centre DSL -- private final IWebApp webApp;
-
     @Inject
     public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
         super(serialiser);
@@ -297,7 +295,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 // Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
                 // But if base user haven't done that yet, it will be done by non-base user automatically.
                 final boolean owning = currentUser().isBase();
-                init(menuItemType, name, createDefaultCentre(centreConfigurator, root), owning);
+                init(menuItemType, name, createDefaultCentre(centreConfigurator, root, menuItemType), owning);
             } else {
                 error("Unable to initialise a non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
                         + currentUser() + "].");
@@ -477,7 +475,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             init(menuItemType, name, versionMaintainer.maintainCentreVersion(ecc), owning);
             return;
         } catch (final Exception e) {
-            init(menuItemType, name, createDefaultCentre(centreConfigurator, root), owning);
+            init(menuItemType, name, createDefaultCentre(centreConfigurator, root, menuItemType), owning);
             final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, name);
             ecc.setConfigBody(getSerialiser().serialise(centre));
             saveCentre(getEntityCentreManager(menuItemType, name), ecc);
@@ -488,11 +486,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         }
     }
 
-    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final CentreManagerConfigurator centreConfigurator, final Class<?> root) {
+    protected ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final CentreManagerConfigurator centreConfigurator, final Class<?> root, final Class<?> menuItemType) {
         return centreConfigurator.configCentre(createEmptyCentre(root));
     }
 
-    private ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root) {
+    protected ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root) {
         // TODO next line of code must take in to account that the menu item is for association centre.
         final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {
             {

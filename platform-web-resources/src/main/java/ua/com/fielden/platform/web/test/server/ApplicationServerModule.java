@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
@@ -81,6 +82,8 @@ public class ApplicationServerModule extends BasicWebServerModule {
         /////////////////////////////// application specific ////////////////////////////
         // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
         bind(IWebApp.class).toInstance(webApp);
+
+        bind(IGlobalDomainTreeManager.class).to(WebGlobalDomainTreeManager.class);
 
         // bind IUserProvider
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);

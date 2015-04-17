@@ -56,15 +56,25 @@ public class WebApp extends AbstractWebApp {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
         final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
+                .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
+                .also()
+                .addCrit("desc").asMulti().text()
+                .also()
                 .addCrit("integerProp").asRange().integer()
                 .also()
                 .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
                 .also()
-                .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
+                .addCrit("bigDecimalProp").asRange().decimal()
                 .also()
-                .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
+                .addCrit("booleanProp").asMulti().bool()
+                .also()
+                .addCrit("dateProp").asRange().date()
                 .also()
                 .addCrit("compositeProp").asMulti().autocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositePropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
+                .also()
+                .addCrit("critOnlyDateProp").asSingle().date()
+                .also()
+                .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
                 //                .also()
                 //                .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsNotValue(true).canHaveNoValue().value())
                 //                .also()
@@ -77,6 +87,7 @@ public class WebApp extends AbstractWebApp {
                 //                .addCrit("entityCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null).setDefaultValue(null) // TODO add default value example
                 //                .also()
                 //                .addCrit("statusCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null)
+
                 .setLayoutFor(Device.DESKTOP, null,
                         ("[['center-justified', mr, mr, mrLast]," +
                                 "['center-justified', mr, mr, mrLast]," +
@@ -105,7 +116,24 @@ public class WebApp extends AbstractWebApp {
                                 "['center-justified', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
+                .addProp("this")
+                .also()
+                .addProp("desc")
+                .also()
                 .addProp("integerProp")
+                .also()
+                .addProp("bigDecimalProp")
+                .also()
+                .addProp("entityProp")
+                .also()
+                .addProp("booleanProp")
+                .also()
+                .addProp("dateProp")
+                .also()
+                .addProp("compositeProp")
+                .also()
+                .addProp("stringProp")
+
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)
                 //                .also()
@@ -117,7 +145,17 @@ public class WebApp extends AbstractWebApp {
                 .build();
 
         configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre<TgPersistentEntityWithProperties>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector, (centre) -> {
-            centre.getFirstTick(); // ... please implement some additional hooks if necessary -- for e.g. add calculated properties through domain tree API, etc.
+            // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
+
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 80);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "desc", 200);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "integerProp", 60);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "bigDecimalProp", 60);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "entityProp", 100);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "booleanProp", 50);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 100);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 100);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
             return centre;
         }));
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
