@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @param <V>
  * @param <T>
  */
-public interface ISingleValueAssigner<V, T extends AbstractEntity<?>> {
+public interface IValueAssigner<V, T extends AbstractEntity<?>> {
 
     /**
      * Accepts an entity centre context and a property name that was used for defining a corresponding selection criterion.

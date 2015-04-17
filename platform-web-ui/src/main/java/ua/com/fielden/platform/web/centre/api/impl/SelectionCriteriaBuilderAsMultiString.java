@@ -10,7 +10,7 @@ import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.IMutliValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IMultiValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
 
 /**
@@ -30,7 +30,7 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
     }
 
     @Override
-    public IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IMultiValueAssigner<MultiCritStringValueMnemonic, T>> assigner) {
+    public IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>> assigner) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }

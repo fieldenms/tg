@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IRangeDecimalDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IRangeValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 
 /**
@@ -26,7 +26,7 @@ class SelectionCriteriaBuilderAsRangeDecimal<T extends AbstractEntity<?>> extend
     }
 
     @Override
-    public IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IRangeValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, T>> assigner) {
+    public IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, T>> assigner) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }

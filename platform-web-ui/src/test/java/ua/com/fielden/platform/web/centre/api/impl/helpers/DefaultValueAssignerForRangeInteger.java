@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IRangeValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 
 
@@ -14,15 +14,10 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritO
  * @author TG Team
  *
  */
-public class DefaultValueAssignerForRangeInteger implements IRangeValueAssigner<RangeCritOtherValueMnemonic<Integer>, TgWorkOrder> {
+public class DefaultValueAssignerForRangeInteger implements IValueAssigner<RangeCritOtherValueMnemonic<Integer>, TgWorkOrder> {
 
     @Override
-    public Optional<RangeCritOtherValueMnemonic<Integer>> getFromValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
-    }
-
-    @Override
-    public Optional<RangeCritOtherValueMnemonic<Integer>> getToValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
+    public Optional<RangeCritOtherValueMnemonic<Integer>> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
         return null;
     }
 

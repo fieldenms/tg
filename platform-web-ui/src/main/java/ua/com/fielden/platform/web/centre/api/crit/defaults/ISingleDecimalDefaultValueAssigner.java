@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.ISingleValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 
 /**
@@ -18,7 +18,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
  */
 public interface ISingleDecimalDefaultValueAssigner<T extends AbstractEntity<?>> extends IAlsoCrit<T> {
 
-    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends ISingleValueAssigner<SingleCritOtherValueMnemonic<BigDecimal>, T>> assigner);
+    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<BigDecimal>, T>> assigner);
 
     IAlsoCrit<T> setDefaultValue(final SingleCritOtherValueMnemonic<BigDecimal> value);
 }

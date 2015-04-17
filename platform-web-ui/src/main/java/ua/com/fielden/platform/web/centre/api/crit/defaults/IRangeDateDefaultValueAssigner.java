@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre.api.crit.defaults;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IRangeValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritDateValueMnemonic;
 
 /**
@@ -13,6 +13,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritD
  * @param <T>
  */
 public interface IRangeDateDefaultValueAssigner<T extends AbstractEntity<?>> extends IAlsoCrit<T> {
-    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IRangeValueAssigner<RangeCritDateValueMnemonic, T>> assigner);
+    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IValueAssigner<RangeCritDateValueMnemonic, T>> assigner);
     IAlsoCrit<T> setDefaultValue(final RangeCritDateValueMnemonic value);
 }

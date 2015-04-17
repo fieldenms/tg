@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IRangeValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 
 
@@ -15,15 +15,10 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritO
  * @author TG Team
  *
  */
-public class DefaultValueAssignerForRangeDecimal implements IRangeValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, TgWorkOrder> {
+public class DefaultValueAssignerForRangeDecimal implements IValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, TgWorkOrder> {
 
     @Override
-    public Optional<RangeCritOtherValueMnemonic<BigDecimal>> getFromValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
-    }
-
-    @Override
-    public Optional<RangeCritOtherValueMnemonic<BigDecimal>> getToValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
+    public Optional<RangeCritOtherValueMnemonic<BigDecimal>> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
         return null;
     }
 

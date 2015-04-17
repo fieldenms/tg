@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.impl.helpers;
 
-import java.util.List;
 import java.util.Optional;
 
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IMultiValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
 
 
@@ -15,10 +14,10 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritB
  * @author TG Team
  *
  */
-public class DefaultValueAssignerForMultiBoolean implements IMultiValueAssigner<MultiCritBooleanValueMnemonic, TgWorkOrder> {
+public class DefaultValueAssignerForMultiBoolean implements IValueAssigner<MultiCritBooleanValueMnemonic, TgWorkOrder> {
 
     @Override
-    public Optional<List<MultiCritBooleanValueMnemonic>> getValues(final CentreContext<TgWorkOrder, ?> entity, final String name) {
+    public Optional<MultiCritBooleanValueMnemonic> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
         return null;
     }
 

@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.ISingleDateDefaultValueAssigner;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.ISingleValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 
 /**
@@ -24,7 +24,7 @@ class SelectionCriteriaBuilderAsSingleDate<T extends AbstractEntity<?>> extends 
     }
 
     @Override
-    public IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends ISingleValueAssigner<SingleCritDateValueMnemonic, T>> assigner) {
+    public IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>> assigner) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }

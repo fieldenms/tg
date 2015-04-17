@@ -4,7 +4,7 @@ import java.util.Date;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.ISingleValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 
 /**
@@ -16,7 +16,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
  */
 public interface ISingleDateDefaultValueAssigner<T extends AbstractEntity<?>> extends IAlsoCrit<T> {
 
-    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends ISingleValueAssigner<SingleCritDateValueMnemonic, T>> assigner);
+    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>> assigner);
 
     IAlsoCrit<T> setDefaultValue(final SingleCritDateValueMnemonic value);
 }

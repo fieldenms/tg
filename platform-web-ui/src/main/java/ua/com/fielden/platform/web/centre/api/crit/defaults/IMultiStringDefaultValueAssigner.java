@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre.api.crit.defaults;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IMultiValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
 
 /**
@@ -14,6 +14,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritS
  * @param <T>
  */
 public interface IMultiStringDefaultValueAssigner<T extends AbstractEntity<?>> extends IAlsoCrit<T> {
-    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IMultiValueAssigner<MultiCritStringValueMnemonic, T>> assigner);
+    IAlsoCrit<T> withDefaultValueAssigner(final Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>> assigner);
     IAlsoCrit<T> setDefaultValue(final MultiCritStringValueMnemonic value);
 }
