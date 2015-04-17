@@ -43,9 +43,9 @@ public class WebMenuModule implements IExecutable {
         return this;
     }
 
-    public WebMenuModule menu(final WebMenu menu) {
-        this.menu = menu;
-        return this;
+    public WebMenu menu() {
+        this.menu = new WebMenu();
+        return this.menu;
     }
 
     public WebMenuModule view(final WebView view) {
@@ -60,9 +60,10 @@ public class WebMenuModule implements IExecutable {
                 "bgColor: \"" + this.bgColor + "\", " +
                 "captionBgColor: \"" + this.captionBgColor + "\", " +
                 "icon: \"" + this.icon + "\", " +
-                "detailIcon: \"" + this.detailIcon + "\"" + //", " +
-                /*(this.menu != null ? menu.code() : view.code())
-                +*/"}";
+                "detailIcon: \"" + this.detailIcon + "\"" +
+                (this.menu != null ? ", menu: " + menu.code() : "") +
+                (this.view != null ? ", view: " + view.code() : "") +
+                "}";
         return new JsCode(code);
     }
 

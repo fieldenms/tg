@@ -49,7 +49,7 @@
             core-menu > core-submenu > core-item {
                 transition: all 300ms ease-in-out;
             }
-            #drawerPanel[narrow][drawer] {
+            #drawerPanel[narrow] [drawer] {
                 background-color: white
             }
             #drawerPanel:not([narrow]) #menuButton {
@@ -64,18 +64,18 @@
 
             <div vertical layout drawer>
 
-                <core-toolbar slide-down>{{item.name}}</core-toolbar>
+                <core-toolbar slide-down>{{item.title}}</core-toolbar>
                 <core-menu selected="{{selected}}" slide-up>
                     <template repeat="{{menu in item.menu}}">
                         <template if="{{menu.submenu}}">
-                            <core-submenu selected="{{subSelected}}" name="{{menu.name}}" label="{{menu.name}}" icon="icons:expand-more">
+                            <core-submenu selected="{{subSelected}}" name="{{menu.title}}" label="{{menu.title}}" icon="icons:expand-more">
                                 <template repeat="{{subMenu in menu.submenu}}">
-                                    <core-item name="{{subMenu.name}}" label="{{subMenu.name}}"></core-item>
+                                    <core-item name="{{subMenu.title}}" label="{{subMenu.title}}"></core-item>
                                 </template>
                             </core-submenu>
                         </template>
                         <template if="{{!menu.submenu}}">
-                            <core-item name="{{menu.name}}" label="{{menu.name}}"></core-item>
+                            <core-item name="{{menu.title}}" label="{{menu.title}}"></core-item>
                         </template>
                     </template>
                 </core-menu>
@@ -86,7 +86,7 @@
 
                 <core-toolbar slide-down>
                     <core-icon-button id="menuButton" icon="menu" on-tap="{{togglePanel}}"></core-icon-button>
-                    <div flex>{{item.name + (selected === '__empty__' ? '' : ('->' + selected)) + (subSelected ? ('->' + subSelected) : '')}}</div>
+                    <div flex>{{item.title + (selected === '__empty__' ? '' : ('->' + selected)) + (subSelected ? ('->' + subSelected) : '')}}</div>
                     <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
                 </core-toolbar>
 
@@ -96,13 +96,13 @@
                     </div>
 
                     <template repeat="{{page in item.menu}}">
-                        <div name="{{page.name}}">
-                            <div class="item" slide-up>{{page.name}}</div>
+                        <div name="{{page.title}}">
+                            <div class="item" slide-up>{{page.title}}</div>
                         </div>
                         <template if="{{page.submenu}}">
                             <template repeat="{{subPage in page.submenu}}">
-                                <div name="{{page.name + '/' + subPage.name}}">
-                                    <div class="item" slide-up>{{subPage.name}}</div>
+                                <div name="{{page.title + '/' + subPage.title}}">
+                                    <div class="item" slide-up>{{subPage.title}}</div>
                                 </div>
                             </template>
                         </template>
@@ -123,7 +123,7 @@
                     self.startUp = true;
                     self.selected = "__empty__";
                     postal.subscribe({
-                        channel: self.item.name,
+                        channel: self.item.title,
                         topic: "state.push",
                         callback: function (data, envelope) {
                             var newState = data.state;
@@ -144,7 +144,7 @@
                         }
                     });
                     postal.subscribe({
-                        channel: self.item.name,
+                        channel: self.item.title,
                         topic: "state.pop",
                         callback: function (data, envelope) {
                             if (data.state[1] === self.selected && ((data.state[2] && data.state[2] === self.subSelected) || (!data.state[2] && !self.subSelected))) {
@@ -174,7 +174,7 @@
                 onPageSelected: function (e, detail, source) {
                     var state;
                     if (detail.isSelected) {
-                        state = [this.item.name, this.selected];
+                        state = [this.item.title, this.selected];
                         if (this.subSelected) {
                             state.push(this.subSelected);
                         }

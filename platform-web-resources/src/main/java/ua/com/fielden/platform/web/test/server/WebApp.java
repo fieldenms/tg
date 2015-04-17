@@ -282,14 +282,18 @@ public class WebApp extends AbstractWebApp {
                 detailIcon("/resources/images/test.svg").
                 bgColor("#f4f4f4").
                 captionBgColor("#999999").
-                view(null).done().
+                view(null).
+                done().
                 addModule("view 2").
                 description("view 2 description").
                 icon("/resources/images/test.svg").
                 detailIcon("/resources/images/test.svg").
                 bgColor("#f4f4f4").
                 captionBgColor("#999999").
-                view(null).done().
+                menu().addMenuItem("view 1").description("view 1 description").view(null).done().
+                addMenuItem("view 2").description("view 2 description").view(null).
+                addSubMenuItem("view 1").description("view 1 description").view(null).done().
+                addSubMenuItem("view 2").description("view 2 description").view(null).done().done().done().done().
                 addModule("view 3").
                 description("view 3 description").
                 icon("/resources/images/test.svg").

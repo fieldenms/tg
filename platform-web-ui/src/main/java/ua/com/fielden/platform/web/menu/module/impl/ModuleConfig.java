@@ -67,8 +67,7 @@ public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfi
 
     @Override
     public IModuleMenuConfig menu() {
-        // TODO Auto-generated method stub
-        return null;
+        return new ModuleMenuConfig(module.menu(), this);
     }
 
     @Override

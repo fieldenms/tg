@@ -6,5 +6,5 @@ public interface IModuleMenuConfig2 {
 
     IModuleMenuConfigWithDone done();
 
-    IModuleMenuConfig3 subMenuItem(String title);
+    IModuleMenuConfig3 addSubMenuItem(String title);
 }
