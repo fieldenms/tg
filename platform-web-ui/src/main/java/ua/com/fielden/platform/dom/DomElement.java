@@ -2,6 +2,7 @@ package ua.com.fielden.platform.dom;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public class DomElement {
     /**
      * The map of this {@link DomElement} attributes.
      */
-    protected final Map<String, Attribute<?>> attrs = new HashMap<>();
+    protected final Map<String, Attribute<?>> attrs = new LinkedHashMap<>();
     /**
      * Children of this {@link DomElement} instance.
      */
