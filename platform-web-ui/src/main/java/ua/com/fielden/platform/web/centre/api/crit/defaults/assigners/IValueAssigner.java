@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
- * A contract for providing default values for selection criteria of the single-valued kind and type <code>V</code> as their value type.
+ * A contract for providing default values for selection criteria of any kind (multi, single or range) and type <code>V</code> as their value type.
  * There could be a single implementation of this contract for a specific centre, covering all necessary selection criteria.
  * <p>
  * Method <code>getValue</code> may return an empty value, which should be recognised as no value needs to be assigned.
@@ -31,8 +31,6 @@ public interface IValueAssigner<V, T extends AbstractEntity<?>> {
      * <p>
      * May return either a not null value that needs to be assigned or an empty optional value, which indicates that no value needs to be assigned.
      * <p>
-     * In case of an entity type single-value criterion, the method should return an actual entity instance with at least the <code>key</code> (or composite key members) and
-     * <code>desc</code> properties fetched.
      *
      * @param entity
      * @param name
