@@ -139,17 +139,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 if (OrderDirection.ASC == propAndOrderDirection.getValue()) {
                     cdtmae.getSecondTick().toggleOrdering(entityType, treeName(propAndOrderDirection.getKey()));
                 } else { // OrderDirection.DESC
-                    cdtmae.getSecondTick().toggleOrdering(entityType, treeName(propAndOrderDirection.getKey()));
-                    cdtmae.getSecondTick().toggleOrdering(entityType, treeName(propAndOrderDirection.getKey()));
+                    cdtmae.getSecondTick().toggleOrdering(entityType, treeName(propAndOrderDirection.getKey())).toggleOrdering(entityType, treeName(propAndOrderDirection.getKey()));
                 }
             }
         }
 
-        // TODO implement generation from dslDefaultConfig
-        // TODO implement generation from dslDefaultConfig
-        // TODO implement generation from dslDefaultConfig
-        // TODO implement generation from dslDefaultConfig
-        // TODO implement generation from dslDefaultConfig
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
 

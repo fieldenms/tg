@@ -103,8 +103,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
 
     @IsProperty
     @CritOnly(Type.SINGLE)
-    @MapTo
-    @Title(value = "Crit-only entity prop", desc = "Crit-only entity prop desc")
+    @Title(value = "Crit-only single entity prop", desc = "Crit-only single entity prop desc")
     private TgPersistentEntityWithProperties critOnlyEntityProp;
 
     @IsProperty
@@ -116,15 +115,29 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     private Integer requiredValidatedProp;
 
     @IsProperty
-    @MapTo
     @CritOnly(Type.SINGLE)
     @Title(value = "Crit-only single date prop", desc = "Crit-only single date prop desc")
     private Date critOnlyDateProp;
 
     @IsProperty
     @CritOnly(Type.SINGLE)
-    @Title(value = "User Param", desc = "User Parameter")
+    @Title(value = "Crit-only single user prop", desc = "Crit-only single user prop desc")
     private User userParam;
+
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "Crit-only single integer prop", desc = "Crit-only single integer prop desc")
+    private Integer critOnlyIntegerProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setCritOnlyIntegerProp(final Integer critOnlyIntegerProp) {
+        this.critOnlyIntegerProp = critOnlyIntegerProp;
+        return this;
+    }
+
+    public Integer getCritOnlyIntegerProp() {
+        return critOnlyIntegerProp;
+    }
 
     @Observable
     public TgPersistentEntityWithProperties setUserParam(final User userParam) {

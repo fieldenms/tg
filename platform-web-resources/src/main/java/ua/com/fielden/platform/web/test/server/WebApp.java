@@ -88,7 +88,7 @@ public class WebApp extends AbstractWebApp {
                 /*    */.setDefaultValue(multi().bool().not().setIsValue(false).setIsNotValue(false).canHaveNoValue().value())
                 .also()
                 .addCrit("dateProp").asRange().date()
-                //    */.setDefaultValue(range().date().not().next().dayAndAfter().exclusiveFrom().exclusiveTo().canHaveNoValue().value())
+                //    */.setDefaultValue(range().date().not().next()./* TODO not applicable on query generation level dayAndAfter().exclusiveFrom().exclusiveTo().*/canHaveNoValue().value())
                 /*    */.setDefaultValue(range().date().not().setFromValueExclusive(new Date(1000000000L)).setToValueExclusive(new Date(2000000000L)).canHaveNoValue().value())
                 .also()
                 .addCrit("compositeProp").asMulti().autocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositePropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
@@ -102,12 +102,15 @@ public class WebApp extends AbstractWebApp {
                 .also()
                 .addCrit("userParam").asSingle().autocompleter(User.class)
                 /*    */.withDefaultValueAssigner(TgPersistentEntityWithProperties_UserParamAssigner.class)
+                .also()
+                .addCrit("critOnlyIntegerProp").asSingle().integer()
+                /*    */.setDefaultValue(single().integer()./* TODO not applicable on query generation level not(). */setValue(1)./* TODO not applicable on query generation level canHaveNoValue(). */value())
 
                 .setLayoutFor(Device.DESKTOP, null,
                         ("[['center-justified', mr, mr, mrLast]," +
                                 "['center-justified', mr, mr, mrLast]," +
                                 "['center-justified', mr, mr, mrLast]," +
-                                "['center-justified', mr, mrLast]]")
+                                "['center-justified', mr, mr, mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, null,
@@ -116,11 +119,12 @@ public class WebApp extends AbstractWebApp {
                                 "['center-justified', mr, mrLast]," +
                                 "['center-justified', mr, mrLast]," +
                                 "['center-justified', mr, mrLast]," +
-                                "['center-justified', mrLast]]")
+                                "['center-justified', mr, mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.MOBILE, null,
                         ("[['center-justified', mrLast]," +
+                                "['center-justified', mrLast]," +
                                 "['center-justified', mrLast]," +
                                 "['center-justified', mrLast]," +
                                 "['center-justified', mrLast]," +
@@ -431,7 +435,6 @@ public class WebApp extends AbstractWebApp {
             final SingleCritOtherValueMnemonic<User> mnemonic = single().entity(User.class)./* TODO not applicable on query generation level not().*/setValue(userProvider.getUser())./* TODO not applicable on query generation level canHaveNoValue(). */value();
             return Optional.of(mnemonic);
         }
-
     }
 
     public static class EntityPropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentEntityWithProperties> {
