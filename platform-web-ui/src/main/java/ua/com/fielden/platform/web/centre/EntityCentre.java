@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +20,8 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -112,7 +111,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(serialiser);
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = GlobalDomainTreeManager.createEmptyCentre(entityType, serialiser);
 
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
         if (selectionCriteria.isPresent()) {
@@ -454,26 +453,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (mnemonic.excludeTo.isPresent()) {
             cdtmae.getFirstTick().setExclusive2(entityType, property, mnemonic.excludeTo.get());
         }
-    }
-
-    /**
-     * TODO this method has derived from GDTM.
-     *
-     * @param serialiser
-     * @return
-     */
-    private ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final ISerialiser serialiser) {
-        // TODO next line of code must take in to account that the menu item is for association centre.
-        final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {
-            {
-                add(entityType);
-            }
-        });
-        // initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
-        c.getFirstTick().checkedProperties(entityType);
-        c.getSecondTick().checkedProperties(entityType);
-
-        return c;
     }
 
     /**

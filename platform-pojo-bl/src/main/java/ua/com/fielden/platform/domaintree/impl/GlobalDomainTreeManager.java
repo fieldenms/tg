@@ -487,12 +487,12 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
 
     protected ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final CentreManagerConfigurator centreConfigurator, final Class<?> root, final Class<?> menuItemType) {
-        return centreConfigurator.configCentre(createEmptyCentre(root));
+        return centreConfigurator.configCentre(createEmptyCentre(root, getSerialiser()));
     }
 
-    protected ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root) {
+    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser) {
         // TODO next line of code must take in to account that the menu item is for association centre.
-        final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {
+        final CentreDomainTreeManagerAndEnhancer c = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {
             {
                 add(root);
             }
