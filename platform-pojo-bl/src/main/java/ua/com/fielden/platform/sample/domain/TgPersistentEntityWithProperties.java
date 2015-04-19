@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
 import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -119,6 +120,21 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @CritOnly(Type.SINGLE)
     @Title(value = "Crit-only single date prop", desc = "Crit-only single date prop desc")
     private Date critOnlyDateProp;
+
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "User Param", desc = "User Parameter")
+    private User userParam;
+
+    @Observable
+    public TgPersistentEntityWithProperties setUserParam(final User userParam) {
+        this.userParam = userParam;
+        return this;
+    }
+
+    public User getUserParam() {
+        return userParam;
+    }
 
     @Observable
     public TgPersistentEntityWithProperties setCritOnlyDateProp(final Date critOnlyDateProp) {

@@ -80,9 +80,6 @@ public class ApplicationServerModule extends BasicWebServerModule {
         super.configure();
 
         /////////////////////////////// application specific ////////////////////////////
-        // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
-        bind(IWebApp.class).toInstance(webApp);
-
         bind(IGlobalDomainTreeManager.class).to(WebGlobalDomainTreeManager.class);
 
         // bind IUserProvider
@@ -96,6 +93,9 @@ public class ApplicationServerModule extends BasicWebServerModule {
         for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
             CompanionObjectAutobinder.bindDao(entityType, binder());
         }
+
+        // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
+        bind(IWebApp.class).toInstance(webApp);
     }
 
     @Override
@@ -103,6 +103,11 @@ public class ApplicationServerModule extends BasicWebServerModule {
         super.setInjector(injector);
 
         // initialises centres / masters and other app-specific configuration.
-        this.webApp.initConfiguration(injector);
+        ((WebApp) this.webApp).setInjector(injector);
+    }
+
+    public void initWebAppConfiguration() {
+        // initialises centres / masters and other app-specific configuration.
+        this.webApp.initConfiguration();
     }
 }

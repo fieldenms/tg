@@ -32,6 +32,7 @@ public class ApplicationConfiguration extends Component {
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
             final ApplicationServerModule module = new ApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
             final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+            module.initWebAppConfiguration();
 
             // create and configure REST server utility
             final RestServerUtil serverRestUtil = injector.getInstance(RestServerUtil.class);

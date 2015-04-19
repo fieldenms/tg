@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.con
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Optional;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -19,12 +20,16 @@ import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.web.app.AbstractWebApp;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -48,6 +53,7 @@ import com.google.inject.Injector;
  *
  */
 public class WebApp extends AbstractWebApp {
+    private Injector injector;
 
     public WebApp() {
         super("TTGAMS");
@@ -57,7 +63,7 @@ public class WebApp extends AbstractWebApp {
      * Configures the {@link WebApp} with custom centres and masters.
      */
     @Override
-    public void initConfiguration(final Injector injector) {
+    public void initConfiguration() {
         // Add entity centres.
 
         final String centreMr = "['margin-right: 40px', 'flex']";
@@ -93,12 +99,15 @@ public class WebApp extends AbstractWebApp {
                 .also()
                 .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
                 /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector.getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("userParam").asSingle().autocompleter(User.class)
+                /*    */.withDefaultValueAssigner(TgPersistentEntityWithProperties_UserParamAssigner.class)
 
                 .setLayoutFor(Device.DESKTOP, null,
                         ("[['center-justified', mr, mr, mrLast]," +
                                 "['center-justified', mr, mr, mrLast]," +
                                 "['center-justified', mr, mr, mrLast]," +
-                                "['center-justified', mrLast]]")
+                                "['center-justified', mr, mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, null,
@@ -106,11 +115,13 @@ public class WebApp extends AbstractWebApp {
                                 "['center-justified', mr, mrLast]," +
                                 "['center-justified', mr, mrLast]," +
                                 "['center-justified', mr, mrLast]," +
-                                "['center-justified', mr, mrLast]]")
+                                "['center-justified', mr, mrLast]," +
+                                "['center-justified', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.MOBILE, null,
                         ("[['center-justified', mrLast]," +
+                                "['center-justified', mrLast]," +
                                 "['center-justified', mrLast]," +
                                 "['center-justified', mrLast]," +
                                 "['center-justified', mrLast]," +
@@ -407,6 +418,22 @@ public class WebApp extends AbstractWebApp {
 
     }
 
+    public static class TgPersistentEntityWithProperties_UserParamAssigner implements IValueAssigner<SingleCritOtherValueMnemonic<User>, TgPersistentEntityWithProperties> {
+        private final IUserProvider userProvider;
+
+        @Inject
+        public TgPersistentEntityWithProperties_UserParamAssigner(final IUserProvider userProvider) {
+            this.userProvider = userProvider;
+        }
+
+        @Override
+        public Optional<SingleCritOtherValueMnemonic<User>> getValue(final CentreContext<TgPersistentEntityWithProperties, ?> entity, final String name) {
+            final SingleCritOtherValueMnemonic<User> mnemonic = single().entity(User.class)./* TODO not applicable on query generation level not().*/setValue(userProvider.getUser())./* TODO not applicable on query generation level canHaveNoValue(). */value();
+            return Optional.of(mnemonic);
+        }
+
+    }
+
     public static class EntityPropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentEntityWithProperties> {
         @Inject
         public EntityPropValueMatcherForCentre(final ITgPersistentEntityWithProperties dao) {
@@ -496,5 +523,9 @@ public class WebApp extends AbstractWebApp {
         public JsCode build() {
             return new JsCode(code);
         }
+    }
+
+    public void setInjector(final Injector injector) {
+        this.injector = injector;
     }
 }

@@ -73,4 +73,8 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     public DomainMetadata getDomainMetadata() {
         return module.getDomainMetadata();
     }
+
+    public void initWebAppConfiguration() {
+        module.initWebAppConfiguration();
+    }
 }

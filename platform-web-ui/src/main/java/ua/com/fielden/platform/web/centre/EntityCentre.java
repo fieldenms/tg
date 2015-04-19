@@ -78,7 +78,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final Class<T> entityType;
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final ICompanionObjectFinder coFinder;
-    private final ICentreDomainTreeManagerAndEnhancer defaultCentre;
+    private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
+    private ICentreDomainTreeManagerAndEnhancer defaultCentre;
 
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
@@ -99,7 +100,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.miType = miType;
         this.entityType = (Class<T>) CentreUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
-        defaultCentre = createDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
+        this.postCentreCreated = postCentreCreated;
     }
 
     /**
@@ -509,6 +510,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     public ICentreDomainTreeManagerAndEnhancer getDefaultCentre() {
+        if (defaultCentre == null) {
+            defaultCentre = createDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
+        }
         return defaultCentre;
     }
 

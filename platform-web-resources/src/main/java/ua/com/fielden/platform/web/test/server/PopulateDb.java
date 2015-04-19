@@ -68,7 +68,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final PopulateDb popDb = new PopulateDb(config);
         popDb.createAndPopulate();
-
+        ((DataPopulationConfig) config).initWebAppConfiguration();
     }
 
     @Override

@@ -9,8 +9,6 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.menu.IMainMenuConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
-import com.google.inject.Injector;
-
 /**
  * API for web application configuring.
  *
@@ -71,5 +69,5 @@ public interface IWebApp {
     /**
      * Implement this in order to provide custom configurations for entity centre, master and other views.
      */
-    void initConfiguration(final Injector injector);
+    void initConfiguration();
 }
