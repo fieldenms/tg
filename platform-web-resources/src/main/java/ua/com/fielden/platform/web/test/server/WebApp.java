@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.range;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -85,22 +86,13 @@ public class WebApp extends AbstractWebApp {
                 /*    */.setDefaultValue(range().date().not().setFromValueExclusive(new Date(1000000000L)).setToValueExclusive(new Date(2000000000L)).canHaveNoValue().value())
                 .also()
                 .addCrit("compositeProp").asMulti().autocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositePropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
+                /*    */.setDefaultValue(multi().string().not().setValues("DEFAULT_KEY 10").canHaveNoValue().value())
                 .also()
                 .addCrit("critOnlyDateProp").asSingle().date()
+                /*    */.setDefaultValue(single().date()./* TODO not applicable on query generation level not().*/setValue(new Date(1000000000L))./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
-                //                .also()
-                //                .addCrit("booleanFlag").asMulti().bool().setDefaultValue(multi().bool().setIsNotValue(true).canHaveNoValue().value())
-                //                .also()
-                //                .addCrit("intValue").asRange().integer().withDefaultValueAssigner(null)
-                //                .also()
-                //                .addCrit("date").asRange().date().setDefaultValue(range().date().prev().monthAndAfter().exclusiveFrom().canHaveNoValue().value())
-                //                .also()
-                //                .addCrit("intValueCritOnly").asSingle().integer().setDefaultValue(null) // TODO add default value example
-                //                .also()
-                //                .addCrit("entityCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null).setDefaultValue(null) // TODO add default value example
-                //                .also()
-                //                .addCrit("statusCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null)
+                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector.getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
 
                 .setLayoutFor(Device.DESKTOP, null,
                         ("[['center-justified', mr, mr, mrLast]," +
