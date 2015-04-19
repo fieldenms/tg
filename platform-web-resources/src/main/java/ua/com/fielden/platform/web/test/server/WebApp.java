@@ -44,7 +44,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 /**
  * App-specific {@link IWebApp} implementation.
@@ -53,10 +52,8 @@ import com.google.inject.Injector;
  *
  */
 public class WebApp extends AbstractWebApp {
-    private Injector injector;
-
     public WebApp() {
-        super("TTGAMS");
+        super("TG SERVER");
     }
 
     /**
@@ -98,7 +95,7 @@ public class WebApp extends AbstractWebApp {
                 /*    */.setDefaultValue(single().date()./* TODO not applicable on query generation level not().*/setValue(new Date(1000000000L))./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
-                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector.getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("userParam").asSingle().autocompleter(User.class)
                 /*    */.withDefaultValueAssigner(TgPersistentEntityWithProperties_UserParamAssigner.class)
@@ -180,7 +177,7 @@ public class WebApp extends AbstractWebApp {
                 //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
                 .build();
 
-        configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre<TgPersistentEntityWithProperties>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector, (centre) -> {
+        configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre<TgPersistentEntityWithProperties>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector(), (centre) -> {
             // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
 
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 80);
@@ -345,10 +342,10 @@ public class WebApp extends AbstractWebApp {
                 .done();
 
         configApp().
-                addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector)). // efs(EntityWithInteger.class).with("prop")
-                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterConfig, injector.getInstance(ICompanionObjectFinder.class), injector)).
-                addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class, null, injector)).
-                addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionalEntity.class, null, injector)).done();
+                addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
+                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterConfig, injector().getInstance(ICompanionObjectFinder.class), injector())).
+                addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class, null, injector())).
+                addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionalEntity.class, null, injector())).done();
         configMainMenu().
                 addModule("view 1").
                 description("view 1 description").
@@ -541,9 +538,5 @@ public class WebApp extends AbstractWebApp {
         public JsCode build() {
             return new JsCode(code);
         }
-    }
-
-    public void setInjector(final Injector injector) {
-        this.injector = injector;
     }
 }

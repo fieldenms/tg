@@ -12,6 +12,8 @@ import ua.com.fielden.platform.web.menu.IMainMenuConfig;
 import ua.com.fielden.platform.web.menu.impl.MainMenuConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
+import com.google.inject.Injector;
+
 /**
  * The implementation for web application.
  *
@@ -23,6 +25,7 @@ public abstract class AbstractWebApp implements IWebApp {
     private final String title;
     private final WebAppConfig webAppConfig;
     private final MainMenuConfig mainMenuConfig;
+    private Injector injector;
 
     public AbstractWebApp(final String title) {
         this.title = title;
@@ -90,5 +93,13 @@ public abstract class AbstractWebApp implements IWebApp {
     @Override
     public final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> getCentres() {
         return webAppConfig.getCentres();
+    }
+
+    public void setInjector(final Injector injector) {
+        this.injector = injector;
+    }
+
+    protected Injector injector() {
+        return injector;
     }
 }
