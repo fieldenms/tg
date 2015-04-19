@@ -81,6 +81,13 @@
 
             andBeforeChanged: function(oldValue, newValue) {
                 this._andBefore = newValue;   
+            },
+            
+            /**
+             * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
+             */
+            hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+            	return this.super([orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore]) && datePrefix === null && dateMnemonic === null && andBefore === null;
             }
         });
     </script>

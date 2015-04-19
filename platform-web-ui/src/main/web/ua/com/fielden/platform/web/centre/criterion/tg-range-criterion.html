@@ -48,6 +48,13 @@
 
             exclusive2Changed: function(oldValue, newValue) {
                 this._exclusive2 = newValue;   
+            },
+            
+            /**
+             * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
+             */
+            hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+            	return this.super([orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore]) && exclusive === false && exclusive2 === false;
             }
         });
     </script>
