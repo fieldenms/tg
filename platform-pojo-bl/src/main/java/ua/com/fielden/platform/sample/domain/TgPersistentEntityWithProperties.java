@@ -139,6 +139,21 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Crit-only single boolean prop", desc = "Crit-only single boolean prop desc")
     private boolean critOnlyBooleanProp;
 
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "Crit-only single string prop", desc = "Crit-only single string prop desc")
+    private String critOnlyStringProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setCritOnlyStringProp(final String critOnlyStringProp) {
+        this.critOnlyStringProp = critOnlyStringProp;
+        return this;
+    }
+
+    public String getCritOnlyStringProp() {
+        return critOnlyStringProp;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setCritOnlyBooleanProp(final boolean critOnlyBooleanProp) {
         this.critOnlyBooleanProp = critOnlyBooleanProp;
