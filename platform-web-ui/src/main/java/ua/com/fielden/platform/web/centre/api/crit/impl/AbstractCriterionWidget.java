@@ -84,8 +84,6 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
             attrs.put("debug", "true");
         }
         attrs.put("onAcceptedValueChanged", "{{validate}}");
-        attrs.put("orNull", "{{propertyModel['" + this.propertyName() + "'].orNull}}");
-        attrs.put("not", "{{propertyModel['" + this.propertyName() + "'].not}}");
         return attrs;
     }
 

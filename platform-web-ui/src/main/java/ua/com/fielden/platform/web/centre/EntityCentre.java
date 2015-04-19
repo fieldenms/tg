@@ -54,6 +54,7 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.EntityCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -554,7 +555,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     if (EntityUtils.isEntityType(propertyType)) {
                         criterionWidget = new EntityCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
                     } else if (EntityUtils.isString(propertyType)) {
-                        criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
+                        criterionWidget = new StringCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isBoolean(propertyType)) {
                         criterionWidget = new BooleanCriterionWidget(root, managedType, critProp);
                     } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.En
  * @author TG Team
  *
  */
-public class EntitySingleCriterionWidget extends AbstractCriterionWidget {
+public class EntitySingleCriterionWidget extends AbstractSingleCriterionWidget {
 
     /**
      * Creates an instance of {@link EntitySingleCriterionWidget} for specified entity type and property name.
@@ -18,7 +18,7 @@ public class EntitySingleCriterionWidget extends AbstractCriterionWidget {
      * @param propertyName
      */
     public EntitySingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName, final CentreContextConfig centreContextConfig) {
-        super("centre/criterion/tg-criterion", propertyName,
+        super(propertyName,
                 new EntityAutocompletionWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),

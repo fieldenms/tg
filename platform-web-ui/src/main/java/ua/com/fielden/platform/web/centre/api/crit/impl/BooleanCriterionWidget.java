@@ -8,7 +8,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.Checkbo
  * @author TG Team
  *
  */
-public class BooleanCriterionWidget extends AbstractCriterionWidget {
+public class BooleanCriterionWidget extends AbstractMultiCriterionWidget {
 
     /**
      * Creates an instance of {@link BooleanCriterionWidget} for specified entity type and property name.

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.web.centre.widgets.EntityCritAutocompletionWidget
  * @author TG Team
  *
  */
-public class EntityCriterionWidget extends AbstractCriterionWidget {
+public class EntityCriterionWidget extends AbstractMultiCriterionWidget {
 
     /**
      * Creates an instance of {@link EntityCriterionWidget} for specified entity type and property name.

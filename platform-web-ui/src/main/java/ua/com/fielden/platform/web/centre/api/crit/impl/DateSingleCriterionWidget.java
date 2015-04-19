@@ -8,7 +8,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.D
  * @author TG Team
  *
  */
-public class DateSingleCriterionWidget extends AbstractCriterionWidget {
+public class DateSingleCriterionWidget extends AbstractSingleCriterionWidget {
 
     /**
      * Creates an instance of {@link DateSingleCriterionWidget} for specified entity type and property name.
@@ -17,7 +17,7 @@ public class DateSingleCriterionWidget extends AbstractCriterionWidget {
      * @param propertyName
      */
     public DateSingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        super("centre/criterion/tg-criterion", propertyName,
+        super(propertyName,
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName)
