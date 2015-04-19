@@ -134,6 +134,21 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Crit-only single bigDecimal prop", desc = "Crit-only single bigDecimal prop desc")
     private BigDecimal critOnlyBigDecimalProp;
 
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "Crit-only single boolean prop", desc = "Crit-only single boolean prop desc")
+    private boolean critOnlyBooleanProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setCritOnlyBooleanProp(final boolean critOnlyBooleanProp) {
+        this.critOnlyBooleanProp = critOnlyBooleanProp;
+        return this;
+    }
+
+    public boolean getCritOnlyBooleanProp() {
+        return critOnlyBooleanProp;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setCritOnlyBigDecimalProp(final BigDecimal critOnlyBigDecimalProp) {
         this.critOnlyBigDecimalProp = critOnlyBigDecimalProp;

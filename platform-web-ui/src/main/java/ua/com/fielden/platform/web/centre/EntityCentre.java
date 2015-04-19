@@ -534,37 +534,37 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, critProp);
 
                 final AbstractCriterionWidget criterionWidget;
-                if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, critProp)) { // two editors are required
-                    if (EntityUtils.isBoolean(propertyType)) {
-                        criterionWidget = new BooleanCriterionWidget(root, managedType, critProp);
-                    } else if (EntityUtils.isDate(propertyType)) {
-                        criterionWidget = new DateCriterionWidget(root, managedType, critProp);
-                    } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
-                        criterionWidget = new IntegerCriterionWidget(root, managedType, critProp);
-                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
-                        criterionWidget = new DecimalCriterionWidget(root, managedType, critProp);
-                    } else {
-                        throw new UnsupportedOperationException(String.format("The double-editor type [%s] is currently unsupported.", propertyType));
-                    }
-                } else {
-                    if (EntityUtils.isBoolean(propertyType)) {
+                if (AbstractDomainTree.isCritOnlySingle(managedType, critProp)) {
+                    if (EntityUtils.isEntityType(propertyType)) {
+                        criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
+                    } else if (EntityUtils.isString(propertyType)) {
+                        criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isBoolean(propertyType)) {
                         criterionWidget = new BooleanSingleCriterionWidget(root, managedType, critProp);
-                    } else if (EntityUtils.isDate(propertyType)) {
-                        criterionWidget = new DateSingleCriterionWidget(root, managedType, critProp);
                     } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
                         criterionWidget = new IntegerSingleCriterionWidget(root, managedType, critProp);
                     } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
                         criterionWidget = new DecimalSingleCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isDate(propertyType)) {
+                        criterionWidget = new DateSingleCriterionWidget(root, managedType, critProp);
+                    } else {
+                        throw new UnsupportedOperationException(String.format("The crit-only single editor type [%s] is currently unsupported.", propertyType));
+                    }
+                } else {
+                    if (EntityUtils.isEntityType(propertyType)) {
+                        criterionWidget = new EntityCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
                     } else if (EntityUtils.isString(propertyType)) {
                         criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
-                    } else if (EntityUtils.isEntityType(propertyType)) {
-                        if (AbstractDomainTree.isCritOnlySingle(managedType, critProp)) {
-                            criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
-                        } else {
-                            criterionWidget = new EntityCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
-                        }
+                    } else if (EntityUtils.isBoolean(propertyType)) {
+                        criterionWidget = new BooleanCriterionWidget(root, managedType, critProp);
+                    } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
+                        criterionWidget = new IntegerCriterionWidget(root, managedType, critProp);
+                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
+                        criterionWidget = new DecimalCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isDate(propertyType)) {
+                        criterionWidget = new DateCriterionWidget(root, managedType, critProp);
                     } else {
-                        throw new UnsupportedOperationException(String.format("The single-editor type [%s] is currently unsupported.", propertyType));
+                        throw new UnsupportedOperationException(String.format("The multi / range editor type [%s] is currently unsupported.", propertyType));
                     }
                 }
                 criteriaWidgets.add(criterionWidget);
