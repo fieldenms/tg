@@ -5,7 +5,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,6 +21,10 @@ import org.joda.time.format.PeriodFormatterBuilder;
 /**
  *
  * A generator of cryptographically random series identifiers for user session, and 2-factor authentication pin codes.
+ * <p>
+ * It also provides functions for generating a secrete key to produce HMAC-SHA1 hash codes.
+ * This is should be unique for each specific application, and should be changed from time to time, which would lead to strogner security, but also the need to
+ * user to re-authenticate their sessions by logging in explicitly.
  *
  * @author TG Team
  *
@@ -41,8 +44,6 @@ public final class SessionIdentifierGenerator {
 
     /**
      * Generates cryptographically random pin codes.
-     * <p>
-     * For 1000 numbers produces on average 10 duplicates, with close to 0 average duplicates for 100 numbers, which is fully acceptable.
      *
      * @return
      */
@@ -51,7 +52,7 @@ public final class SessionIdentifierGenerator {
     }
 
     /**
-     * Generates a 2048 bit key using the HMAC-SHA1 algorithm.
+     * Generates a 4096 bit key using the HMAC-SHA1 algorithm.
      *
      * @return
      * @throws NoSuchAlgorithmException
@@ -59,7 +60,7 @@ public final class SessionIdentifierGenerator {
     public static String genHmacSha1Key() throws NoSuchAlgorithmException {
         // Generate a key for the HMAC-SHA1 keyed-hashing algorithm
         final KeyGenerator keyGen = KeyGenerator.getInstance(HMAC_SHA1_ALGORITHM);
-        keyGen.init(2048);
+        keyGen.init(4096);
         final SecretKey key = keyGen.generateKey();
         return HexString.bufferToHex(key.getEncoded());
     }
