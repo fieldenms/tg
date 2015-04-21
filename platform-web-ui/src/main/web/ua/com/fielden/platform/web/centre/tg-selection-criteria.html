@@ -100,15 +100,14 @@
             validator: function () {
                 return this.$.validator;
             },
-
-            onRetrieved: function (entity, bindingEntity, customObject) {
+            
+            onDescendantRetrieved: function (entity, bindingEntity, customObject) {
+    	  		this.super([entity, bindingEntity, customObject]);
                 this.entitytype = entity.type().fullClassName();
                 this.propertyModel = this.createPropertyModel(customObject.metaValues);
                 this._isCentreChanged = customObject.isCentreChanged;
-
-                console.log("onRetrieved", customObject);
             },
-
+ 
             onValidated: function (validatedEntity, bindingEntity, customObject) {
                 this.propertyModel = this.createPropertyModel(customObject.metaValues);
                 this._isCentreChanged = customObject.isCentreChanged;

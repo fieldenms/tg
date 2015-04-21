@@ -132,6 +132,9 @@
                 onPreRetrieved: function (entity) {
                     return entity;
                 },
+                
+                onDescendantRetrieved: function(entity, newBindingEntity, customObject) {                	
+                },
 
                 /**
                  * Default implementation for onRetrieved callback.
@@ -144,6 +147,8 @@
 
                     // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(entity);
+                    
+                    this.onDescendantRetrieved(entity, newBindingEntity, customObject);
                     // custom external action
                     this.onRetrieved(entity, newBindingEntity, customObject);
                 },
