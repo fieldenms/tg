@@ -52,6 +52,7 @@ import com.google.inject.Inject;
  *
  */
 public class WebApp extends AbstractWebApp {
+
     public WebApp() {
         super("TG SERVER");
     }
@@ -61,6 +62,7 @@ public class WebApp extends AbstractWebApp {
      */
     @Override
     public void initConfiguration() {
+
         // Add entity centres.
 
         final String centreMr = "['margin-right: 40px', 'flex']";
@@ -177,7 +179,7 @@ public class WebApp extends AbstractWebApp {
                 //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
                 .build();
 
-        configApp().addCentre(MiTgPersistentEntityWithProperties.class, new EntityCentre<TgPersistentEntityWithProperties>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector(), (centre) -> {
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = new EntityCentre<>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector(), (centre) -> {
             // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
 
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 80);
@@ -190,7 +192,9 @@ public class WebApp extends AbstractWebApp {
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 100);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
             return centre;
-        }));
+        });
+
+        configApp().addCentre(MiTgPersistentEntityWithProperties.class, entityCentre);
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
@@ -371,7 +375,7 @@ public class WebApp extends AbstractWebApp {
                 detailIcon("/resources/images/test.svg").
                 bgColor("#f4f4f4").
                 captionBgColor("#999999").
-                view(null).done().
+                centre(entityCentre).done().
                 addModule("view 4").
                 description("view 4 description").
                 icon("/resources/images/test.svg").

@@ -465,6 +465,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
+     * Returns the entity type for which this entity centre was created.
+     *
+     * @return
+     */
+    public Class<T> getEntityType() {
+        return entityType;
+    }
+
+    /**
      * Returns the entity centre name.
      *
      * @return

@@ -43,6 +43,7 @@
                         item.cols = layout[itemIndex].width;
                     });
                     setMinDimensions.bind(this)();
+                    this.fire('layout-finished', layoutSpec);
                 },
                 setMinDimensions = function () {
                     var self = this;

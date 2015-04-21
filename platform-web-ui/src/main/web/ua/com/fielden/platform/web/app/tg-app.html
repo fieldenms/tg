@@ -6,6 +6,7 @@
 <link rel="import" href="/resources/views/tg-app-menu.html">
 <link rel="import" href="/resources/views/tg-app-view.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/tg-reflector">
 
 <polymer-element name="tg-app" attributes="user" layout vertical>
     <template>
@@ -14,6 +15,7 @@
                 overflow: hidden;
             }
         </style>
+        <tg-reflector id="reflector"></tg-reflector>
         <core-animated-pages id="pages" selected="{{selected}}" on-core-animated-pages-transition-end="{{transitionend}}" transitions="hero-transition cross-fade scale-up slide-up slide-down" flex>
 
             <tg-app-menu id="menu" name="menu" user="{{user}}" items="{{views.items}}" lastSelectedMenuItem="{{lastSelected}}" selectedMenuItem="{{selected}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit></tg-app-menu>

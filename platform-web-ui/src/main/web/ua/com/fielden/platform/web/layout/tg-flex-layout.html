@@ -12,6 +12,7 @@
     </template>
     <script>
         (function () {
+            'use strict'
             var setLayout = function (layout) {
                     var contentIndex = 0;
                     if (!Array.isArray(layout)) {
@@ -32,6 +33,7 @@
                         layout.forEach((function (layoutElem) {
                             contentIndex = createFlexCell.bind(this)(this.container, layoutElem, contentIndex, true);
                         }).bind(this));
+                        this.fire('layout-finished', layout);
                     }
                 },
                 setDebugStyle = function(element) {

@@ -31,36 +31,48 @@
         </style>
 
 
-        <core-toolbar  slide-down>
+        <core-toolbar slide-down>
             <div flex>{{item.title}}</div>
             <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
         </core-toolbar>
 
-        <div class="view" slide-up>
-            {{item.title}}
-        </div>
-
+        <template if="{{item.view}}">
+            <load-element id="elementToLoad" slide-up import="{{item.view.import}}" elementName="{{item.view.elementName}}" attrs="{{item.view.attrs}}" on-after-load="{{onAfterLoad}}"></load-element>
+        </template>
+        <template if="{{!item.view}}">
+            <div class="view" slide-up>
+                Please specify view for {{item.title}}.
+            </div>
+        </template>
     </template>
     <script>
         (function () {
+            var statePushed = function (data) {
+                postal.publish({
+                    channel: "app",
+                    topic: "state.pushed",
+                    data: data
+                });
+            };
             Polymer({
-                ready: function() {
+                ready: function () {
+                    var self = this;
                     postal.subscribe({
                         channel: this.item.title,
                         topic: "state.push",
-                        callback: function(data, envelope) {
+                        callback: function (data, envelope) {
                             history.pushState(data.state);
-                            postal.publish({
-                                channel: "app",
-                                topic: "state.pushed",
-                                data: data
-                            });
+                            if (self.item.view) {
+                                self.$.elementToLoad.load();
+                            } else {
+                                statePushed(data);
+                            }
                         }
                     });
                     postal.subscribe({
                         channel: this.item.title,
                         topic: "state.pop",
-                        callback: function(data, envelope) {
+                        callback: function (data, envelope) {
                             postal.publish({
                                 channel: "app",
                                 topic: "state.poped",
@@ -69,7 +81,25 @@
                         }
                     });
                 },
-                onShowMenuTap: function() {
+                onAfterLoad: function (e, detail, source) {
+                    var self = this;
+                    if (this.item.view.type === 'centre') {
+                        detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                            statePushed({state: [self.item.title]});
+                        };
+                        detail.retrieve();
+                    } else if (this.item.view.type === 'master') {
+                        detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                            statePushed({state: [self.item.title]});
+                        };
+                        detail.onValidated = function (validatedEntity, bindingEntity, customObject) {};
+                        detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                        detail.retrieve({state: [self.item.title]});
+                    } else {
+                        statePushed();
+                    }
+                },
+                onShowMenuTap: function () {
                     this.fire("main-menu");
                 }
             });

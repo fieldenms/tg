@@ -7,6 +7,7 @@ import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig3;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig4;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig5;
 import ua.com.fielden.platform.web.menu.module.impl.WebSubMenuItem;
+import ua.com.fielden.platform.web.menu.module.impl.WebView;
 
 public class SubMenuItemConfig implements IModuleMenuConfig3, IModuleMenuConfig4, IModuleMenuConfig5 {
 
@@ -26,13 +27,13 @@ public class SubMenuItemConfig implements IModuleMenuConfig3, IModuleMenuConfig4
 
     @Override
     public IModuleMenuConfig5 centre(final EntityCentre<?> centre) {
-        // TODO Auto-generated method stub
-        return null;
+        subMenuItem.view(new WebView(centre));
+        return this;
     }
 
     @Override
     public IModuleMenuConfig5 view(final IRenderable view) {
-        // TODO Auto-generated method stub
+        subMenuItem.view(new WebView(view));
         return this;
     }
 

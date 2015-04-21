@@ -55,13 +55,13 @@ public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfi
 
     @Override
     public IModuleConfigDone centre(final EntityCentre<?> centre) {
-        // TODO Auto-generated method stub
+        module.view(new WebView(centre));
         return this;
     }
 
     @Override
     public IModuleConfigDone view(final IRenderable view) {
-        //TODO implement this
+        module.view(new WebView(view));
         return this;
     }
 
