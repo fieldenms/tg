@@ -227,7 +227,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             provideMnemonicDefaultsSingle(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property);
         } else {
             if (assignerSupplier.get().isPresent() && assignerSupplier.get().get().get(dslProperty) != null) {
-                provideAssignerDefaultsSingle(assignerSupplier.get().get().get(dslProperty), cdtmae, property);
+                provideAssignerDefaultsEntitySingle(assignerSupplier.get().get().get(dslProperty), cdtmae, property);
             } else {
             }
         }
@@ -316,6 +316,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private <M> void provideAssignerDefaultsSingle(final Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<M>, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
         /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
         final Optional<? extends SingleCritOtherValueMnemonic<M>> value = injector.getInstance(assignerType).getValue(null, dslName(property));
+        if (value.isPresent()) {
+            provideMnemonicDefaultsSingle(value.get(), cdtmae, property);
+        }
+    }
+
+    private void provideAssignerDefaultsEntitySingle(final Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+        /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
+        final Optional<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>> value = injector.getInstance(assignerType).getValue(null, dslName(property));
         if (value.isPresent()) {
             provideMnemonicDefaultsSingle(value.get(), cdtmae, property);
         }
