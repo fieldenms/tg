@@ -6,6 +6,8 @@ import java.util.Properties;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
@@ -85,6 +87,7 @@ public class BasicWebApplicationServerModule extends BasicWebServerModule {
         super.configure();
 
         /////////////////////////////// application specific ////////////////////////////
+        bind(IServerGlobalDomainTreeManager.class).to(ServerGlobalDomainTreeManager.class).in(Scopes.SINGLETON);
         bind(IGlobalDomainTreeManager.class).to(WebGlobalDomainTreeManager.class);
 
         // bind IUserProvider
