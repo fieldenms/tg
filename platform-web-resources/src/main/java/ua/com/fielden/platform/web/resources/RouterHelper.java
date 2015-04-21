@@ -29,9 +29,9 @@ import com.google.inject.Injector;
 
 /**
  * Provides convenient methods for routing standard entity resources.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class RouterHelper {
     private final Injector injector;
@@ -65,7 +65,7 @@ public final class RouterHelper {
 
     /**
      * Registers all the necessary resources for {@link Attachment} with the router.
-     * 
+     *
      * @param router
      * @param location
      */

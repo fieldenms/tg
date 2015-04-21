@@ -8,6 +8,7 @@ import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
+import org.restlet.security.ChallengeAuthenticator;
 
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -31,7 +32,7 @@ import com.google.inject.Injector;
  * Basic implementation of the server side application. Provides all the essential of a typical TG-based served application resources.
  * <p>
  * This class should be inherited in order to provide application specific web resource binding (see method {@link #registerApplicationResources(Router)}).
- * 
+ *
  * @author TG Team
  */
 public abstract class BasicServerApplication extends Application {
@@ -42,18 +43,39 @@ public abstract class BasicServerApplication extends Application {
     protected final String attachmentLocation;
     protected final RouterHelper helper;
     protected final Class<IEntityDao>[] controllerTypes;
+    protected final ChallengeAuthenticator authenticator;
 
     private transient final Logger logger;
 
-    public BasicServerApplication(final String securityRealm, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao>[] controllerTypes) {
+    private BasicServerApplication(
+            final String securityRealm,
+            final ChallengeAuthenticator authenticator,
+            final Context context,
+            final Injector injector,
+            final EntityFactory factory,
+            final RestServerUtil serverRestUtil,
+            final String attachmentLocation,
+            final Class<IEntityDao>[] controllerTypes) {
         super(context);
+        if (securityRealm != null && authenticator != null) {
+            throw new IllegalArgumentException("Either security realm or an authenticator should be provided, but not both");
+        }
         this.securityRealm = securityRealm;
+        this.authenticator = authenticator;
         this.injector = injector;
         helper = new RouterHelper(injector, factory);
         this.serverRestUtil = serverRestUtil;
         this.attachmentLocation = attachmentLocation;
         this.controllerTypes = controllerTypes;
         logger = Logger.getLogger(this.getClass());
+    }
+
+    public BasicServerApplication(final String securityRealm, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao>[] controllerTypes) {
+        this(securityRealm, null, context, injector, factory, serverRestUtil, attachmentLocation, controllerTypes);
+    }
+
+    public BasicServerApplication(final ChallengeAuthenticator authenticator, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao>[] controllerTypes) {
+        this(null, authenticator, context, injector, factory, serverRestUtil, attachmentLocation, controllerTypes);
     }
 
     @Override
@@ -99,7 +121,13 @@ public abstract class BasicServerApplication extends Application {
         /////////////////////////////////////////////////////////////
 
         // create resource guard and associate it with the resource router
-        final ResourceGuard guard = new ResourceGuard(getContext(), securityRealm, serverRestUtil, injector);
+        final ChallengeAuthenticator guard;
+
+        if (securityRealm != null) {
+            guard = new ResourceGuard(getContext(), securityRealm, serverRestUtil, injector);
+        } else {
+            guard = authenticator;
+        }
         guard.setNext(routerForResources);
 
         final Router mainRouter = new Router(getContext());
@@ -125,7 +153,7 @@ public abstract class BasicServerApplication extends Application {
 
     /**
      * Should be implemented for concrete application web resource management. The provided router should be used to bind application resources.
-     * 
+     *
      * @param routerForResources
      */
     protected abstract void registerApplicationResources(final Router routerForResources);
