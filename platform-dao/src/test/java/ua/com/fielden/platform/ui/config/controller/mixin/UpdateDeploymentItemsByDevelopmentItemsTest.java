@@ -11,7 +11,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
@@ -33,7 +33,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
  * 
  */
 public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainDrivenTestCase {
-    private final IUserDao userDao = getInstance(IUserDao.class);
+    private final IUser userDao = getInstance(IUser.class);
     private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenu.class), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
     private final EntityFactory factory = getInstance(EntityFactory.class);
 

@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.security.user.UserRole;
  * @author TG Team
  * 
  */
-public interface IUserController extends IUserDao {
+public interface IUserController extends IUser {
 
     /**
      * Returns all available user roles

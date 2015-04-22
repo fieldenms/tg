@@ -21,7 +21,7 @@ import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -79,7 +79,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies."));
 
-        final User su = ((IUserDao) ao(User.class)).findByKey(User.system_users.SU.name());
+        final User su = ((IUser) ao(User.class)).findByKey(User.system_users.SU.name());
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         // populate testing entities
@@ -138,7 +138,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         //        final TgPersistentEntityWithProperties ent1WithCompositeProp = save(new_(TgPersistentEntityWithProperties.class, "KEY12").setCompositeProp(compositeEnt1));
         //        System.out.println("ent1WithCompositeProp.getId() == " + ent1WithCompositeProp.getId());
 
-        final User demo = ((IUserDao) ao(User.class)).findByKey("DEMO");
+        final User demo = ((IUser) ao(User.class)).findByKey("DEMO");
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");

@@ -13,7 +13,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface IUserDao extends IEntityDao<User> {
+public interface IUser extends IEntityDao<User> {
 
     /**
      * Returns users with roles.

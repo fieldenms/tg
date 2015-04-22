@@ -20,7 +20,7 @@ import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -45,7 +45,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
     private final EntityFactory entityFactory = getInstance(EntityFactory.class);
     private final ISerialiser0 serialiser0 = new Serialiser0ForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
     private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
-    private final IUserDao userDao = getInstance(IUserDao.class);
+    private final IUser userDao = getInstance(IUser.class);
 
     protected GlobalDomainTreeManager createManagerForNonBaseUser2() {
         return createGlobalDomainTreeManager("USER3");

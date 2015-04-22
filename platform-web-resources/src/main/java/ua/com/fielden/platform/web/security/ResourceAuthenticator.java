@@ -26,7 +26,7 @@ import com.google.inject.Injector;
 public class ResourceAuthenticator extends ChallengeAuthenticator {
 
     private static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
-    private final RestServerUtil util;
+    private final String secreteKey;
     private final Injector injector;
 
     /**
@@ -38,10 +38,16 @@ public class ResourceAuthenticator extends ChallengeAuthenticator {
      *            -- required to match (and pass) user authentication requests.
      * @throws IllegalArgumentException
      */
-    public ResourceAuthenticator(final Context context, final String realm, final RestServerUtil util, final Injector injector) throws IllegalArgumentException {
-        super(context, ChallengeScheme.CUSTOM, realm);
-        this.util = util;
+    public ResourceAuthenticator(final Context context, final String realm, final String secreteKey, final Injector injector) throws IllegalArgumentException {
+        super(context, ChallengeScheme.CUSTOM, "realms are not used");
+        if (injector == null) {
+            throw new IllegalArgumentException("Injector is a required argument.");
+        }
+        if (StringUtils.isEmpty(secreteKey) || secreteKey.length() < 20) {
+            throw new IllegalArgumentException("The authenticator secrete key shoul be at least 20 characters long.");
+        }
         this.injector = injector;
+        this.secreteKey = secreteKey;
         setRechallenging(false);
     }
 
@@ -75,7 +81,7 @@ public class ResourceAuthenticator extends ChallengeAuthenticator {
             final String hashCode = parts[3];
 
             final String token = username + seriesId + expiryTimeStr;
-            final String computedHash = SessionIdentifierGenerator.calculateRFC2104HMAC(token, "this is my cool key for testing purposes");
+            final String computedHash = SessionIdentifierGenerator.calculateRFC2104HMAC(token, secreteKey);
 
             if (!computedHash.equals(hashCode)) {
                 forbid(response);

@@ -16,7 +16,7 @@ import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.web.factories.ResourceGuard;
@@ -85,7 +85,7 @@ public abstract class BasicServerApplication extends Application {
 
         // register "platform" type controllers
         helper.register(routerForResources, IUserRoleDao.class);
-        helper.register(routerForResources, IUserDao.class);
+        helper.register(routerForResources, IUser.class);
         helper.register(routerForResources, IEntityAttachmentAssociationController.class);
         helper.register(routerForResources, IEntityCentreAnalysisConfig.class);
         helper.register(routerForResources, IMainMenu.class);

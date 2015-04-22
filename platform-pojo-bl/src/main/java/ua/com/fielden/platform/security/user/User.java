@@ -32,7 +32,7 @@ import ua.com.fielden.platform.error.Result;
 @KeyTitle("Application User")
 @KeyType(String.class)
 @MapEntityTo(value = "CRAFT", keyColumn = "USER_NAME")
-@CompanionObject(IUserDao.class)
+@CompanionObject(IUser.class)
 public class User extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

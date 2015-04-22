@@ -23,7 +23,7 @@ import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionRao;
 import ua.com.fielden.platform.security.UserControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
 import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -110,7 +110,7 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
 
         final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
         helper.register(router, IUserRoleDao.class);
-        helper.register(router, IUserDao.class);
+        helper.register(router, IUser.class);
         helper.register(router, IUserAndRoleAssociationBatchAction.class);
 
         return router;
