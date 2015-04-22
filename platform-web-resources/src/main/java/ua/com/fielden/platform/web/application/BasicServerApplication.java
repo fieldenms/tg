@@ -8,7 +8,7 @@ import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
-import org.restlet.security.ChallengeAuthenticator;
+import org.restlet.security.Authenticator;
 
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -43,13 +43,13 @@ public abstract class BasicServerApplication extends Application {
     protected final String attachmentLocation;
     protected final RouterHelper helper;
     protected final Class<IEntityDao>[] controllerTypes;
-    protected final ChallengeAuthenticator authenticator;
+    protected final Authenticator authenticator;
 
     private transient final Logger logger;
 
     private BasicServerApplication(
             final String securityRealm,
-            final ChallengeAuthenticator authenticator,
+            final Authenticator authenticator,
             final Context context,
             final Injector injector,
             final EntityFactory factory,
@@ -74,7 +74,7 @@ public abstract class BasicServerApplication extends Application {
         this(securityRealm, null, context, injector, factory, serverRestUtil, attachmentLocation, controllerTypes);
     }
 
-    public BasicServerApplication(final ChallengeAuthenticator authenticator, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao>[] controllerTypes) {
+    public BasicServerApplication(final Authenticator authenticator, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao>[] controllerTypes) {
         this(null, authenticator, context, injector, factory, serverRestUtil, attachmentLocation, controllerTypes);
     }
 
@@ -121,7 +121,7 @@ public abstract class BasicServerApplication extends Application {
         /////////////////////////////////////////////////////////////
 
         // create resource guard and associate it with the resource router
-        final ChallengeAuthenticator guard;
+        final Authenticator guard;
 
         if (securityRealm != null) {
             guard = new ResourceGuard(getContext(), securityRealm, serverRestUtil, injector);

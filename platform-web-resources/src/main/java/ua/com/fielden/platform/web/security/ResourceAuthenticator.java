@@ -8,11 +8,10 @@ import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
-import org.restlet.security.ChallengeAuthenticator;
+import org.restlet.security.Authenticator;
 
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import com.google.inject.Injector;
 
@@ -23,7 +22,7 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-public class ResourceAuthenticator extends ChallengeAuthenticator {
+public class ResourceAuthenticator extends Authenticator {
 
     private static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
     private final String secreteKey;
@@ -38,8 +37,8 @@ public class ResourceAuthenticator extends ChallengeAuthenticator {
      *            -- required to match (and pass) user authentication requests.
      * @throws IllegalArgumentException
      */
-    public ResourceAuthenticator(final Context context, final String realm, final String secreteKey, final Injector injector) throws IllegalArgumentException {
-        super(context, ChallengeScheme.CUSTOM, "realms are not used");
+    public ResourceAuthenticator(final Context context, final String secreteKey, final Injector injector) throws IllegalArgumentException {
+        super(context);
         if (injector == null) {
             throw new IllegalArgumentException("Injector is a required argument.");
         }
@@ -48,7 +47,6 @@ public class ResourceAuthenticator extends ChallengeAuthenticator {
         }
         this.injector = injector;
         this.secreteKey = secreteKey;
-        setRechallenging(false);
     }
 
     @Override
@@ -56,20 +54,20 @@ public class ResourceAuthenticator extends ChallengeAuthenticator {
         try {
             final Cookie cookie = request.getCookies().getFirst(AUTHENTICATOR_COOKIE_NAME);
             if (cookie == null) {
-                forbid(response);
+                response.redirectSeeOther("loginscreen URI");
                 return false;
             }
 
             final String authenticator = cookie.getValue();
             if (StringUtils.isEmpty(authenticator)) {
-                forbid(response);
+                response.redirectSeeOther("loginscreen URI");
                 return false;
             }
 
             // separate username from the encoded part of the token
             final String[] parts = authenticator.split("::");
             if (parts.length != 4) {
-                forbid(response);
+                response.redirectSeeOther("loginscreen URI");
                 return false;
             }
             // use the username to lookup a corresponding public key to decode security token
@@ -84,7 +82,7 @@ public class ResourceAuthenticator extends ChallengeAuthenticator {
             final String computedHash = SessionIdentifierGenerator.calculateRFC2104HMAC(token, secreteKey);
 
             if (!computedHash.equals(hashCode)) {
-                forbid(response);
+                response.redirectSeeOther("loginscreen URI");
                 return false;
             }
 
@@ -97,7 +95,7 @@ public class ResourceAuthenticator extends ChallengeAuthenticator {
             response.getCookieSettings().add(newCookie);
 
         } catch (final Exception e) {
-            forbid(response);
+            response.redirectSeeOther("ERROR SCREEN URI");
             return false;
         }
 

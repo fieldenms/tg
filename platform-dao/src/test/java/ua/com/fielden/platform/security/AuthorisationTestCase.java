@@ -23,7 +23,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 
-public class AuthorisationTest extends AbstractDomainDrivenTestCase {
+public class AuthorisationTestCase extends AbstractDomainDrivenTestCase {
     private static final String fuelType = "U";
     private final String permissiveUsername = "TEST-USER";
     private final String restrictiveUsername = "TEST-USER-RESTRICTIVE";
