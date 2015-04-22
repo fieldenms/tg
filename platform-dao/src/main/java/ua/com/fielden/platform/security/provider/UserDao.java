@@ -34,7 +34,7 @@ import com.google.inject.Inject;
  * 
  */
 @EntityType(User.class)
-public class UserController extends CommonEntityDao<User> implements IUserController {
+public class UserDao extends CommonEntityDao<User> implements IUserController {
 
     private final IUserRoleDao userRoleDao;
     private final IUserAndRoleAssociationDao userAssociationDao;
@@ -42,7 +42,7 @@ public class UserController extends CommonEntityDao<User> implements IUserContro
     private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class));
 
     @Inject
-    public UserController(final IUserRoleDao userRoleDao, final IUserAndRoleAssociationDao userAssociationDao, final IFilter filter) {
+    public UserDao(final IUserRoleDao userRoleDao, final IUserAndRoleAssociationDao userAssociationDao, final IFilter filter) {
         super(filter);
         this.userRoleDao = userRoleDao;
         this.userAssociationDao = userAssociationDao;

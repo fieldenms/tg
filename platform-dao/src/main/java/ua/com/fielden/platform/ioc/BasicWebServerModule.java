@@ -43,7 +43,9 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
-import ua.com.fielden.platform.security.provider.UserController;
+import ua.com.fielden.platform.security.provider.UserDao;
+import ua.com.fielden.platform.security.session.IUserSession;
+import ua.com.fielden.platform.security.session.UserSessionDao;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -152,8 +154,9 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUserRoleDao.class).to(UserRoleDao.class);
         bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
-        bind(IUserController.class).to(UserController.class);
-        bind(IUser.class).to(UserController.class);
+        bind(IUserController.class).to(UserDao.class);
+        bind(IUser.class).to(UserDao.class);
+        bind(IUserSession.class).to(UserSessionDao.class);
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         if (tokenProvider != null) {
             bind(SecurityTokenProvider.class).toInstance(tokenProvider);
