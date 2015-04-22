@@ -16,6 +16,7 @@ import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
 import ua.com.fielden.platform.migration.MigrationRun;
+import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -36,6 +37,7 @@ public class PlatformDomainTypes {
         types.add(MainMenuItemInvisibility.class);
         types.add(MainMenu.class);
         types.add(User.class);
+        types.add(UserSession.class);
         types.add(UserRole.class);
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);
