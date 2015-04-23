@@ -16,7 +16,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
-public class UserSessionTestCase extends AbstractDaoTestCase {
+public class UserSessionValidationAndReestablishmentTestCase extends AbstractDaoTestCase {
 
     @Test
     public void should_be_able_to_find_person_USER2() {

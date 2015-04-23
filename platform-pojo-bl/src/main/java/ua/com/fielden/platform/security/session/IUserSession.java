@@ -28,10 +28,10 @@ public interface IUserSession extends IEntityDao<UserSession> {
      * @param key
      * @return
      */
-    Optional<UserSession> currentSession(final User user, final String authenticator, final String key);
+    Optional<UserSession> currentSession(final User user, final String authenticator);
 
     /**
-     * his method creates a new session for the provided users.
+     * This method creates a new session for the provided users.
      * It is assumed that the user has been explicitly authenticated by the system before making a call to this method.
      * <p>
      * It is considered that a new user session can always be created for the provided user.
@@ -46,7 +46,7 @@ public interface IUserSession extends IEntityDao<UserSession> {
      * @param key
      * @return
      */
-    UserSession newSession(final User user, final boolean isDeviceTrusted, final String key);
+    UserSession newSession(final User user, final boolean isDeviceTrusted);
 
     /**
      * Delete all sessions associated with the specified uses.

@@ -77,6 +77,10 @@ import ua.com.fielden.platform.sample.domain.TgWagonClassDao;
 import ua.com.fielden.platform.sample.domain.TgWagonDao;
 import ua.com.fielden.platform.sample.domain.TgWagonSlotDao;
 import ua.com.fielden.platform.sample.domain.TgWorkshopDao;
+import ua.com.fielden.platform.security.annotations.PasswordHashingKey;
+import ua.com.fielden.platform.security.annotations.SessionHashingKey;
+import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
+import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
@@ -114,6 +118,11 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     @Override
     protected void configure() {
         super.configure();
+
+        bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data in unit tests.");
+        bindConstant().annotatedWith(PasswordHashingKey.class).to("This is a hasing key, which is used to hash user passwords in unit tests.");
+        bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
+        bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
 

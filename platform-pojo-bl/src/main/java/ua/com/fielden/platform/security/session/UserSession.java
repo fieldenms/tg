@@ -59,15 +59,15 @@ public class UserSession extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @Title(value = "Authenticator", desc = "A dynamically computed authenticator for the session.")
-    private Optional<String> authenticator = Optional.empty();
+    private Optional<Authenticator> authenticator = Optional.empty();
 
     @Observable
-    public UserSession setAuthenticator(final String authenticator) {
+    public UserSession setAuthenticator(final Authenticator authenticator) {
         this.authenticator = Optional.of(authenticator);
         return this;
     }
 
-    public Optional<String> getAuthenticator() {
+    public Optional<Authenticator> getAuthenticator() {
         return authenticator;
     }
 

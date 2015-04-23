@@ -57,7 +57,7 @@ public final class SessionIdentifierGenerator {
      * @return
      * @throws NoSuchAlgorithmException
      */
-    public static String genHmacSha1Key() throws NoSuchAlgorithmException {
+    public String genHmacSha1Key() throws NoSuchAlgorithmException {
         // Generate a key for the HMAC-SHA1 keyed-hashing algorithm
         final KeyGenerator keyGen = KeyGenerator.getInstance(HMAC_SHA1_ALGORITHM);
         keyGen.init(4096);
@@ -73,7 +73,7 @@ public final class SessionIdentifierGenerator {
      * @return
      * @throws SignatureException
      */
-    public static String calculateRFC2104HMAC(final String data, final String key) throws SignatureException {
+    public String calculateRFC2104HMAC(final String data, final String key) throws SignatureException {
         final String result;
         try {
 
