@@ -172,7 +172,7 @@
 
                 var context = self.contextRetriever(self.requireSelectedEntities, self.requireMasterEntity);
                 detail.entityid = context.id === null ? "new" : (+(context.id));
-            	detail.retrieve();
+            	detail.retrieve(context);
             	console.log('_onExecuted: uiComponent', detail);
             	// TODO insert into DOM uiComponent
 	           	// TODO insert into DOM uiComponent

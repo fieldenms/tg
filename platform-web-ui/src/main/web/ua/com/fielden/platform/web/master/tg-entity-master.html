@@ -10,9 +10,8 @@
 
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator>
 
-        <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax>
+        <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax>
         <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax>
-        <core-ajax id="ajaxSaverNew" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax>
     </template>
     <script>
         (function () {
@@ -81,18 +80,7 @@
                             self.onSavedDefault(potentiallySavedEntity);
                         }
                     });
-                    self.$.ajaxSaverNew.addEventListener('core-response', function (e) {
-                        if (e.detail.xhr.status === 200) {
-                            var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
-                            self.onSavedDefault(potentiallySavedEntity);
-                        }
-                    });
                     self.$.ajaxSaver.addEventListener('core-complete', function (e) {
-                        if (e.detail.xhr.status === 200) {
-                            self.onSavedComplete();
-                        }
-                    });
-                    self.$.ajaxSaverNew.addEventListener('core-complete', function (e) {
                         if (e.detail.xhr.status === 200) {
                             self.onSavedComplete();
                         }
@@ -266,7 +254,7 @@
                 },
 
                 _savingInProgress: function () {
-                    return this.$.ajaxSaverNew.loading || this.$.ajaxSaver.loading;
+                    return this.$.ajaxSaver.loading;
                 },
 
                 /**
@@ -278,13 +266,8 @@
                     // console.log("save: modifiedPropertiesHolder", modifiedPropertiesHolder);
                     var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
                     // console.log("save: serialised modifiedPropertiesHolder", ser);
-                    if (this.entityid === "new") {
-                        this.$.ajaxSaverNew.body = JSON.stringify(ser);
-                        this.$.ajaxSaverNew.go();
-                    } else {
-                        this.$.ajaxSaver.body = JSON.stringify(ser);
-                        this.$.ajaxSaver.go();
-                    }
+                    this.$.ajaxSaver.body = JSON.stringify(ser);
+                    this.$.ajaxSaver.go();
                 },
 
                 /**

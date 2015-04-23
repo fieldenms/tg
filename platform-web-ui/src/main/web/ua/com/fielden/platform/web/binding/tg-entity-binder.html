@@ -121,7 +121,11 @@
                 /**
                  * Starts the process of entity retrieval (based on current entityid).
                  */
-                retrieve: function () {
+                retrieve: function (context) {
+                	if (context) {
+                        var ser = this.$.serialiser.serialise(context);
+                        this.ajaxRetriever().body = JSON.stringify(ser);
+                	}
                     this.ajaxRetriever().go();
                     this.startRefreshCycleModeForEditors();
                 },

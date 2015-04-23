@@ -8,7 +8,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
-import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
@@ -52,15 +51,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     }
 
     /**
-     * Handles GET requests resulting from tg-entity-master <code>retrieve()</code> method (new or persisted entity).
-     */
-    @Get
-    @Override
-    public Representation get() throws ResourceException {
-        return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
-    }
-
-    /**
      * Handles POST requests resulting from tg-entity-master <code>save()</code> method (persisted entity).
      */
     @Post
@@ -70,12 +60,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     }
 
     /**
-     * Handles PUT requests resulting from tg-entity-master <code>save()</code> method (new entity).
+     * Handles PUT requests resulting from tg-entity-master <code>retrieve(context)</code> method (new or persisted entity).
      */
     @Put
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
-        return tryToSave(envelope);
+        // final dfshjksdfjhkfdsjhk;
+
+        return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
     }
 
     @Delete
