@@ -17,6 +17,7 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -65,7 +66,16 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Put
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
-        // final dfshjksdfjhkfdsjhk;
+        if (envelope != null) {
+            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+            logger.error("centreContextHolder during entity retrieve == " + centreContextHolder);
+
+            //        final Pair<CONTEXT, Map<String, Object>> entityAndHolder = utils.constructEntity(centreContextHolder.getModifHolder());
+            //
+            //        final CONTEXT context = entityAndHolder.getKey();
+            //        logger.debug("context = " + context);
+            //        final Map<String, Object> paramsHolder = entityAndHolder.getValue();
+        }
 
         return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
     }

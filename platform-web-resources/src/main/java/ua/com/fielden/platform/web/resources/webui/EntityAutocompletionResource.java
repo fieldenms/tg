@@ -64,10 +64,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     public Representation post(final Representation envelope) throws ResourceException {
         final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
-        final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
-
-        final Pair<CONTEXT, Map<String, Object>> entityAndHolder;
-        entityAndHolder = utils.constructEntity(modifiedPropertiesHolder);
+        final Pair<CONTEXT, Map<String, Object>> entityAndHolder = utils.constructEntity(centreContextHolder.getModifHolder());
 
         final CONTEXT context = entityAndHolder.getKey();
         logger.debug("context = " + context);

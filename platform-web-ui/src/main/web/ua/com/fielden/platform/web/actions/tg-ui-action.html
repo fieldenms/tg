@@ -146,21 +146,13 @@
              */
             _onExecuted: function(e, detail, source) {
             	var self = this;
-            	console.log("_onExecuted: e", e, "egi", e.srcElement);
+            	// console.log("_onExecuted: e", e, "egi", e.srcElement);
+
             	this.$.entityMaster.open();
 
-            	// detail.entityid = 15; // e.srcElement.$.egi.getSelectedEntities()[0].id;
-
-            	// getSelectedEntities
-
             	detail.onRetrieved = function(entity, bindingEntity, customObject) {
-            		var context = self.contextRetriever(self.requireSelectedEntities, self.requireMasterEntity);
-
-            		bindingEntity.set("context", context);
-            		console.log("onRetrieved", entity, "context", context);
-            		
-            		detail.validate();
-                };
+            		console.log("onRetrieved");
+            	};
 
                 detail.onValidated = function(validatedEntity, bindingEntity, customObject) {
                     console.log("onValidated");
@@ -171,13 +163,10 @@
                 };
 
                 var context = self.contextRetriever(self.requireSelectedEntities, self.requireMasterEntity);
+
                 detail.entityid = context.id === null ? "new" : (+(context.id));
+                // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
             	detail.retrieve(context);
-            	console.log('_onExecuted: uiComponent', detail);
-            	// TODO insert into DOM uiComponent
-	           	// TODO insert into DOM uiComponent
-            	// TODO insert into DOM uiComponent
-       	        // TODO insert into DOM uiComponent
 
                 this.afterExecution();
 //                this.$.entityMaster.updateTargetDimensions();
