@@ -66,8 +66,8 @@ public class User extends AbstractEntity<String> {
 
     @IsProperty
     @Invisible
-    @MapTo("USER_PASSWORD")
-    // TODO most likely password should be @Required
+    @MapTo(value = "USER_PASSWORD", length = 255)
+    @Title(desc = "A hash code of the actual password that only the user should know")
     private String password;
 
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
