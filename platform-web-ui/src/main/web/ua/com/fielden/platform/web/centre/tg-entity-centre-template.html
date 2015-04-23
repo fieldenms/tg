@@ -55,10 +55,13 @@
                 transition-delay: 1s;
                 transform: translate3d(0px, 0px, 0px);
             }
+            .selection-criteria, .entity-grid-inspector {
+                background-color: white;
+            }
         </style>
         <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right">
             <div>
-                <div layout vertical style="margin: 40px;">
+                <div class="selection-criteria" layout vertical style="padding: 40px;">
                     <tg-@entity_type-selection-criteria id="selection_criteria" uuid="{{uuid}}" user="{{user}}" mitype="@mi_type" onRun="{{onRun}}" getSelectedEntities="{{getSelectedEntities}}" onRetrieved="{{onRetrieved}}"></tg-@entity_type-selection-criteria>
                     <div layout horizontal justified style="margin-top:40px;">
                         <div layout horizontal>
@@ -72,7 +75,7 @@
             </div>
             <div>
                 <div layout vertical center>
-	                <tg-entity-grid-inspector id="egi" entityType="@full_entity_type">
+	                <tg-entity-grid-inspector class="entity-grid-inspector" id="egi" entityType="@full_entity_type">
 	                	<!--EGI COLUMNS DOM (GENERATED) -->	                
 <!--@egi_columns-->
 

@@ -9,8 +9,9 @@
 <link rel="import" href="/resources/polymer/core-drawer-panel/core-drawer-panel.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/views/tg-menu-item-view.html">
 
-<polymer-element name="tg-view-with-menu" attributes="item selectedItem" layout vertical>
+<polymer-element name="tg-view-with-menu" attributes="item" layout vertical>
     <template>
         <style>
             core-toolbar {
@@ -49,7 +50,7 @@
             core-menu > core-submenu > core-item {
                 transition: all 300ms ease-in-out;
             }
-            #drawerPanel[narrow] [drawer] {
+            #drawerPanel [drawer] {
                 background-color: white
             }
             #drawerPanel:not([narrow]) #menuButton {
@@ -90,19 +91,19 @@
                     <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
                 </core-toolbar>
 
-                <core-animated-pages selectedItem="{{selectedItem}}" transitions="slide-up" selected="{{selected + (subSelected ? ('/' + subSelected) : '') }}" on-core-select="{{onPageSelected}}" flex>
+                <core-animated-pages id="pages" transitions="slide-up" selected="{{selected + (subSelected ? ('/' + subSelected) : '') }}" on-core-select="{{onPageSelected}}" on-core-animated-pages-transition-end="{{transitionend}}" flex>
                     <div name="__empty__">
                         <div slide-up></div>
                     </div>
 
                     <template repeat="{{page in item.menu}}">
                         <div name="{{page.title}}">
-                            <div class="item" slide-up>{{page.title}}</div>
+                            <tg-menu-item-view slide-up item="{{page}}"></tg-menu-item-view>
                         </div>
                         <template if="{{page.submenu}}">
                             <template repeat="{{subPage in page.submenu}}">
                                 <div name="{{page.title + '/' + subPage.title}}">
-                                    <div class="item" slide-up>{{subPage.title}}</div>
+                                    <tg-menu-item-view slide-up item="{{subPage}}"></tg-menu-item-view>
                                 </div>
                             </template>
                         </template>
@@ -173,10 +174,12 @@
                 },
                 onPageSelected: function (e, detail, source) {
                     var state;
-                    if (detail.isSelected) {
+                    if (detail.isSelected && e.target === this.$.pages) {
                         state = [this.item.title, this.selected];
+                        name = this.selected;
                         if (this.subSelected) {
                             state.push(this.subSelected);
+                            name += '/' + this.subSelected;
                         }
                         if (this.startUp) {
                             this.startUp = false;
@@ -192,6 +195,19 @@
                         } else {
                             history.pushState(state);
                             this.$.drawerPanel.closeDrawer();
+                        }
+                    }
+                },
+                transitionend: function (e, detail, source) {
+                    var name, viewToLoad;
+                    name = this.selected;
+                    if (this.subSelected) {
+                        name += '/' + this.subSelected;
+                    }
+                    if (this.selected != '__empty__') {
+                        viewToLoad = this.$.pages.querySelector('div[name="' + name + '"] tg-menu-item-view');
+                        if (viewToLoad && !viewToLoad.wasLoaded()) {
+                            viewToLoad.load();
                         }
                     }
                 }

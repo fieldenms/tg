@@ -1,0 +1,61 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/element_loader/load-element.html">
+
+<polymer-element name="tg-menu-item-view" attributes="item autoLoad" vertical layout>
+    <template>
+        <style>
+            .view {
+                background-color: white;
+            }
+        </style>
+        <template if="{{item.view}}">
+            <load-element id="elementToLoad" auto?="{{autoLoad}}" import="{{item.view.import}}" elementName="{{item.view.elementName}}" attrs="{{item.view.attrs}}" on-after-load="{{onAfterLoad}}"></load-element>
+        </template>
+        <template if="{{!item.view}}">
+            <div class="view">
+                Please specify view for {{item.title}}.
+            </div>
+        </template>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                publish: {
+                    autoLoad: {
+                        reflect: true,
+                        value: false
+                    }
+                },
+                onAfterLoad: function (e, detail, view) {
+                    var self = this;
+                    if (this.item.view.type === 'centre') {
+                        detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                            self.fire("menu-item-view-loaded", self.item);
+                        };
+                        detail.retrieve();
+                    } else if (this.item.view.type === 'master') {
+                        detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                            self.fire("menu-item-view-loaded", self.item);
+                        };
+                        detail.onValidated = function (validatedEntity, bindingEntity, customObject) {};
+                        detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                        detail.retrieve();
+                    } else {
+                        self.fire("menu-item-view-loaded", self.item);
+                    }
+                },
+                load: function () {
+                    if (this.$.elementToLoad && !this.$.elementToLoad.wasLoaded) {
+                        this.$.elementToLoad.load();
+                    }
+                },
+                wasLoaded: function () {
+                    if (this.$.elementToLoad) {
+                        return this.$.elementToLoad.wasLoaded;
+                    }
+                    return true;
+                }
+            });
+        })();
+    </script>
+</polymer-element>

@@ -3,9 +3,9 @@
 <link rel="import" href="/resources/polymer/core-icons/core-icons.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
 <link rel="import" href="/resources/components/postal-lib.html">
-<link rel="import" href="/resources/element_loader/load-element.html">
+<link rel="import" href="/resources/views/tg-menu-item-view.html">
 
-<polymer-element name="tg-view" attributes="item" vertical layout>
+<polymer-element name="tg-view" attributes="item autoLoad" vertical layout>
     <template>
         <style>
             core-toolbar {
@@ -36,14 +36,7 @@
             <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
         </core-toolbar>
 
-        <template if="{{item.view}}">
-            <load-element id="elementToLoad" slide-up import="{{item.view.import}}" elementName="{{item.view.elementName}}" attrs="{{item.view.attrs}}" on-after-load="{{onAfterLoad}}"></load-element>
-        </template>
-        <template if="{{!item.view}}">
-            <div class="view" slide-up>
-                Please specify view for {{item.title}}.
-            </div>
-        </template>
+        <tg-menu-item-view id="menuItemView" slide-up autoLoad?="{{autoLoad}}" item="{{item}}" on-menu-item-view-loaded="{{onMenuItemLoaded}}"></tg-menu-item-view>
     </template>
     <script>
         (function () {
@@ -55,6 +48,12 @@
                 });
             };
             Polymer({
+                publish: {
+                    autoLoad: {
+                        reflect: true,
+                        value: false
+                    }
+                },
                 ready: function () {
                     var self = this;
                     postal.subscribe({
@@ -62,8 +61,8 @@
                         topic: "state.push",
                         callback: function (data, envelope) {
                             history.pushState(data.state);
-                            if (self.item.view) {
-                                self.$.elementToLoad.load();
+                            if (!self.$.menuItemView.wasLoaded()) {
+                                self.$.menuItemView.load();
                             } else {
                                 statePushed(data);
                             }
@@ -81,23 +80,10 @@
                         }
                     });
                 },
-                onAfterLoad: function (e, detail, source) {
-                    var self = this;
-                    if (this.item.view.type === 'centre') {
-                        detail.onRetrieved = function (entity, bindingEntity, customObject) {
-                            statePushed({state: [self.item.title]});
-                        };
-                        detail.retrieve();
-                    } else if (this.item.view.type === 'master') {
-                        detail.onRetrieved = function (entity, bindingEntity, customObject) {
-                            statePushed({state: [self.item.title]});
-                        };
-                        detail.onValidated = function (validatedEntity, bindingEntity, customObject) {};
-                        detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {};
-                        detail.retrieve({state: [self.item.title]});
-                    } else {
-                        statePushed();
-                    }
+                onMenuItemLoaded: function (e, detail, source) {
+                    statePushed({
+                        state: [detail.title]
+                    });
                 },
                 onShowMenuTap: function () {
                     this.fire("main-menu");

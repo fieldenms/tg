@@ -20,9 +20,9 @@
 
             <tg-app-menu id="menu" name="menu" user="{{user}}" items="{{views.items}}" lastSelectedMenuItem="{{lastSelected}}" selectedMenuItem="{{selected}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit></tg-app-menu>
 
-            <template repeat="{{view in views.items}}">
+            <template repeat="{{view, viewIndex in views.items}}">
                 <div fit name="{{view.title}}">
-                    <tg-app-view item="{{view}}" hero-id="{{'hero_' + view.title}}" hero?="{{selected === view.title || lastSelected === view.title}}" fit></tg-app-view>
+                    <tg-app-view autoLoad?="{{viewIndex === 0}}" item="{{view}}" hero-id="{{'hero_' + view.title}}" hero?="{{selected === view.title || lastSelected === view.title}}" fit></tg-app-view>
                 </div>
             </template>
 
@@ -92,7 +92,7 @@
                     self.setSelected(self.views.items[0].title);
                     history.pushState([self.selected]);
                     window.onpopstate = function (e) {
-                        console.log("poped state: ", e);
+                        console.log(e.state);
                         popState(e.state);
                     };
                 }
