@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 import java.security.SignatureException;
 
@@ -11,6 +12,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
@@ -55,13 +60,11 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         final SessionParams params = getInstance(SessionParams.class);
 
         assertEquals(params.crypto.calculateRFC2104HMAC(session.getAuthenticator().get().token, params.hashingKey), session.getAuthenticator().get().hash);
-
-        System.out.println(session.getAuthenticator().get());
+        assertEquals(constants.now().plusMinutes(60 * 24 * 3).toDate(), session.getAuthenticator().get().getExpiryTime());
     }
 
     @Test
-    @Ignore
-    public void new_session_for_untrusted_device_should_be_created_succesfully() {
+    public void new_session_for_untrusted_device_should_be_created_succesfully() throws SignatureException {
         final User currUser = getInstance(IUserProvider.class).getUser();
         assertNotNull(currUser);
 
@@ -69,21 +72,34 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         assertNotNull("User session should have been created.", session);
 
         assertTrue(session.isPersisted());
-        assertEquals(constants.now(), session.getLastAccess());
+        assertEquals(constants.now().toDate(), session.getLastAccess());
         assertTrue(session.getAuthenticator().isPresent());
         assertNotNull(session.getUser());
         assertNotNull(session.getSeriesId());
         assertNotNull(session.getExpiryTime());
         assertFalse(session.isTrusted());
+
+        final SessionParams params = getInstance(SessionParams.class);
+
+        assertEquals(params.crypto.calculateRFC2104HMAC(session.getAuthenticator().get().token, params.hashingKey), session.getAuthenticator().get().hash);
+        assertEquals(constants.now().plusMinutes(5).toDate(), session.getAuthenticator().get().getExpiryTime());
+    }
+
+    @Test
+    public void a_sigle_user_can_have_multiple_sessions_from_trusted_and_untrusted_devices() throws SignatureException {
+        final User currUser = getInstance(IUserProvider.class).getUser();
+        assertNotNull(currUser);
+
+       coSession.newSession(currUser, false);
+       coSession.newSession(currUser, true);
+       coSession.newSession(currUser, false);
+       coSession.newSession(currUser, true);
+
+       assertEquals(4, coSession.count(select(UserSession.class).where().prop("user").eq().val(currUser). model()));
     }
 
     /**
      * Domain state population method.
-     * <p>
-     * <b>IMPORTANT:
-     * </p>
-     * this method executes only once for a Test Case. At the same time, new instances of a Test Case are create for each test method. Thus, this method should not be used for
-     * initialisation of the Test Case state other than the persisted domain state.
      */
     @Override
     protected void populateDomain() {
