@@ -6,12 +6,12 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
 /**
- * This is a convenient abstraction for representing session authenticator.
+ * This is a convenient abstraction for representing a user session authenticator.
  *
  * @author TG Team
  *
  */
-public class Authenticator {
+public final class Authenticator {
     public static final String AUTHENTICATOR_SEPARATOR = "::";
 
     public final String username;
@@ -46,6 +46,14 @@ public class Authenticator {
             .append(hash).toString();
     }
 
+    /**
+     * Constructs a token from the provided parts.
+     *
+     * @param username
+     * @param seriesId
+     * @param expiryTime
+     * @return
+     */
     public static String mkToken(
             final String username,
             final String seriesId,
@@ -63,9 +71,41 @@ public class Authenticator {
 
     }
 
+    /**
+     * Reconstructs an authenticator from its string representation.
+     *
+     * @param authenticator
+     * @return
+     */
+    public static Authenticator fromString(final String authenticator) {
+        if (StringUtils.isEmpty(authenticator)) {
+            throw new IllegalArgumentException("Cannot construct an authenticator from an empty string.");
+        }
 
-    public Date getExpiryTime() {
-        return new DateTime(expiryTime).toDate();
+        final String[] parts = authenticator.split(AUTHENTICATOR_SEPARATOR);
+        if (parts.length != 4) {
+            throw new IllegalArgumentException("The provided string does not represent a valid authenticator.");
+        }
+
+        final Date expiryDate;
+        try {
+            expiryDate = new DateTime(Long.parseLong(parts[2])).toDate();
+        } catch (final NumberFormatException e) {
+            throw new IllegalArgumentException("The provided string does not represent a valid authenticator");
+        }
+
+        final String token = mkToken(parts[0], parts[1], expiryDate);
+
+        return new Authenticator(token, parts[3]);
+    }
+
+    /**
+     * A convenient method for obtaining authenticator's expiry time as an instance of date rather than long.
+     *
+     * @return
+     */
+    public DateTime getExpiryTime() {
+        return new DateTime(expiryTime);
     }
 
     @Override

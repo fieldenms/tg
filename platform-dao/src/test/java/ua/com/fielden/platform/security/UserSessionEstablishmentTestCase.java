@@ -4,18 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.security.SignatureException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
@@ -60,7 +55,7 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         final SessionParams params = getInstance(SessionParams.class);
 
         assertEquals(params.crypto.calculateRFC2104HMAC(session.getAuthenticator().get().token, params.hashingKey), session.getAuthenticator().get().hash);
-        assertEquals(constants.now().plusMinutes(60 * 24 * 3).toDate(), session.getAuthenticator().get().getExpiryTime());
+        assertEquals(constants.now().plusMinutes(60 * 24 * 3), session.getAuthenticator().get().getExpiryTime());
     }
 
     @Test
@@ -82,7 +77,7 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         final SessionParams params = getInstance(SessionParams.class);
 
         assertEquals(params.crypto.calculateRFC2104HMAC(session.getAuthenticator().get().token, params.hashingKey), session.getAuthenticator().get().hash);
-        assertEquals(constants.now().plusMinutes(5).toDate(), session.getAuthenticator().get().getExpiryTime());
+        assertEquals(constants.now().plusMinutes(5), session.getAuthenticator().get().getExpiryTime());
     }
 
     @Test
@@ -130,7 +125,6 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
             this.untrustedDurationMins = untrustedDurationMins;
             this.crypto = crypto;
         }
-
 
     }
 
