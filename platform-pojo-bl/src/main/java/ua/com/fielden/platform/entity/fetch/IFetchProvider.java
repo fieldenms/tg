@@ -84,4 +84,15 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      */
     boolean shouldFetch(final String dotNotationProperty);
 
+    /**
+     * Excludes the property(-ies) from {@link IFetchProvider} (if they were included before that).
+     *
+     * @param dotNotationProperty
+     *            -- the name of the property ("dot-notation" syntax)
+     * @param otherDotNotationProperties
+     *            -- the name of other properties ("dot-notation" syntax)
+     *
+     * @return new immutable {@link IFetchProvider} without specified property(-ies)
+     */
+    IFetchProvider<T> without(final String dotNotationProperty, final String... otherDotNotationProperties);
 }

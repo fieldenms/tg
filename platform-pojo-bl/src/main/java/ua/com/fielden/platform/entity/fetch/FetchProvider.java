@@ -1,14 +1,19 @@
 package ua.com.fielden.platform.entity.fetch;
 
+import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -141,6 +146,16 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     }
 
     @Override
+    public IFetchProvider<T> without(final String dotNotationProperty, final String... otherDotNotationProperties) {
+        final FetchProvider<T> copy = this.copy();
+        copy.removeIfExists(dotNotationProperty);
+        for (final String prop : otherDotNotationProperties) {
+            copy.removeIfExists(prop);
+        }
+        return copy;
+    }
+
+    @Override
     public <M extends AbstractEntity<?>> IFetchProvider<T> with(final String dotNotationProperty, final IFetchProvider<M> propertyFetchProvider) {
         if (propertyFetchProvider == null) {
             throw new IllegalArgumentException(String.format("Please provide non-null property fetch provider for property [%s] for type [%s]. Or use method 'with(dotNotationProperty)' for default property provider.", dotNotationProperty, entityType.getSimpleName()));
@@ -184,6 +199,17 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private FetchProvider<T> enhanceWith(final String dotNotationProperty) {
         validate(dotNotationProperty);
         return enhanceWith0(dotNotationProperty, null);
+    }
+
+    /**
+     * Removes the dot-notation property (mutably) from this entity fetch provider, if it exists (validates before that).
+     *
+     * @param dotNotationProperty
+     * @return
+     */
+    private FetchProvider<T> removeIfExists(final String dotNotationProperty) {
+        validate(dotNotationProperty);
+        return removeIfExists0(dotNotationProperty);
     }
 
     /**
@@ -237,6 +263,30 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         return this;
     }
 
+    /**
+     * Removes the dot-notation property (mutably) from this entity fetch provider, if it exists. Does nothing if the property was not included.
+     *
+     * @param dotNotationProperty
+     * @return
+     */
+    private FetchProvider<T> removeIfExists0(final String dotNotationProperty) {
+        if (PropertyTypeDeterminator.isDotNotation(dotNotationProperty)) {
+            final Pair<String, String> firstAndRest = PropertyTypeDeterminator.firstAndRest(dotNotationProperty);
+            final String firstName = firstAndRest.getKey();
+            final String restDotNotation = firstAndRest.getValue();
+            final boolean exists = propertyProviders.containsKey(firstName);
+            if (exists) {
+                propertyProviders.get(firstName).removeIfExists0(restDotNotation);
+            }
+        } else {
+            final boolean exists = propertyProviders.containsKey(dotNotationProperty);
+            if (exists) {
+                propertyProviders.remove(dotNotationProperty);
+            }
+        }
+        return this;
+    }
+
     private LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyProviders() {
         return propertyProviders;
     }
@@ -259,8 +309,10 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private fetch<T> createFetchModel() {
-        fetch<T> fetchModel = EntityQueryUtils.fetchOnly(entityType);
-        for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : propertyProviders.entrySet()) {
+        // need to exclude all crit-only properties from fetch model!
+        final FetchProvider<T> providerWithoutCritOnlyProps = excludeCritOnlyProps(this);
+        fetch<T> fetchModel = EntityQueryUtils.fetchOnly(providerWithoutCritOnlyProps.entityType);
+        for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : providerWithoutCritOnlyProps.propertyProviders.entrySet()) {
             final FetchProvider<AbstractEntity<?>> propModel = entry.getValue();
             if (propModel == null) {
                 fetchModel = fetchModel.with(entry.getKey());
@@ -269,5 +321,17 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             }
         }
         return fetchModel;
+    }
+
+    /**
+     * Excludes all crit-only properties from fetch provider, if any. Returns new instance.
+     *
+     * @param fetchProvider
+     * @return
+     */
+    private FetchProvider<T> excludeCritOnlyProps(final FetchProvider<T> fetchProvider) {
+        final List<Field> critOnlyFields = Finder.findProperties(entityType, CritOnly.class);
+        final List<String> critOnlyProps = critOnlyFields.stream().map(field -> field.getName()).collect(Collectors.toList());
+        return critOnlyProps.size() > 0 ? (FetchProvider<T>) fetchProvider.without(critOnlyProps.get(0), critOnlyProps.subList(1, critOnlyProps.size()).toArray(new String[0])) : fetchProvider;
     }
 }
