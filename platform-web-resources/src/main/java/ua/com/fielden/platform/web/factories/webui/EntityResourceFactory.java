@@ -5,7 +5,10 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -33,6 +36,7 @@ public class EntityResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
     private final IWebApp webApp;
+    private final ICriteriaGenerator critGenerator;
 
     /**
      * Instantiates a factory for entity resources.
@@ -46,6 +50,7 @@ public class EntityResourceFactory extends Restlet {
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);
+        this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
     }
 
     @Override
@@ -60,7 +65,9 @@ public class EntityResourceFactory extends Restlet {
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
             final EntityMaster<? extends AbstractEntity<?>> master = this.webApp.getMasters().get(entityType);
 
-            final EntityResource<AbstractEntity<?>> resource = new EntityResource<>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), getContext(), request, response);
+            final IGlobalDomainTreeManager gdtm = injector.getInstance(IServerGlobalDomainTreeManager.class).get(username);
+
+            final EntityResource<AbstractEntity<?>> resource = new EntityResource<>((Class<AbstractEntity<?>>) entityType, (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(), factory, restUtil, injector.getInstance(ICompanionObjectFinder.class), gdtm, this.critGenerator, getContext(), request, response);
             resource.handle();
         }
     }

@@ -13,12 +13,18 @@ import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,10 +47,17 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     private final Long entityId;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public EntityResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
+    private final ICompanionObjectFinder companionFinder;
+    private final IGlobalDomainTreeManager gdtm;
+    private final ICriteriaGenerator critGenerator;
+
+    public EntityResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
-        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
+        this.companionFinder = companionFinder;
+        this.gdtm = gdtm;
+        this.critGenerator = critGenerator;
+        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, restUtil, this.companionFinder);
         this.restUtil = restUtil;
 
         final String entityIdString = request.getAttributes().get("entity-id").toString();
@@ -68,16 +81,29 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     public Representation put(final Representation envelope) throws ResourceException {
         if (envelope != null) {
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
-            logger.error("centreContextHolder during entity retrieve == " + centreContextHolder);
+            logger.error("centreContextHolder during entity retrieve == " + centreContextHolder + " modfiHolder! == " + centreContextHolder.getModifHolder() + " @@miType == " + centreContextHolder.getModifHolder().get("@@miType"));
 
-            //        final Pair<CONTEXT, Map<String, Object>> entityAndHolder = utils.constructEntity(centreContextHolder.getModifHolder());
-            //
-            //        final CONTEXT context = entityAndHolder.getKey();
-            //        logger.debug("context = " + context);
-            //        final Map<String, Object> paramsHolder = entityAndHolder.getValue();
+            Class<? extends MiWithConfigurationSupport<?>> miType;
+            try {
+                miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getModifHolder().get("@@miType"));
+            } catch (final ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
+            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+
+            final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
+
+            CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype =
+                    CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> selectionCrit = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
+
+            logger.error("selectionCrit == " + selectionCrit);
+
+            return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
+        } else {
+            return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
         }
-
-        return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
     }
 
     @Delete

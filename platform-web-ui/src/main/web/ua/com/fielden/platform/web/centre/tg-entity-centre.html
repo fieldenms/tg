@@ -176,6 +176,7 @@
                     var centreContextHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
                     centreContextHolder.id = null;
                     var paramsHolder = this.$.selection_criteria.createModifiedPropertiesHolder();
+                    paramsHolder["@@miType"] = this.mitype;
                     centreContextHolder["modifHolder"] = paramsHolder;
                     if (requireSelectedEntities !== null) {
                     	reflector.provideSelectedEntities(requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
