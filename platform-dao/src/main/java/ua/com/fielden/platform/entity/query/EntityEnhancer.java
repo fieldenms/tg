@@ -80,14 +80,14 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
     private Map<Long, List<EntityContainer<E>>> getEntityPropertyIds(final List<EntityContainer<E>> entities, final String propertyName) {
         final Map<Long, List<EntityContainer<E>>> propValuesMap = new HashMap<Long, List<EntityContainer<E>>>();
         for (final EntityContainer<E> entity : entities) {
-            if (entity == null) {
+            if (entity.isEmpty()) {
                 throw new IllegalStateException("Entity is null!");
             }
             if (entity.getEntities() == null) {
                 throw new IllegalStateException("Entity.getEntities() is null!");
             }
             final EntityContainer<? extends AbstractEntity<?>> propEntity = entity.getEntities().get(propertyName);
-            if (propEntity != null && propEntity.getId() != null) {
+            if (propEntity != null && !propEntity.isEmpty() && propEntity.getId() != null) {
                 if (!propValuesMap.containsKey(propEntity.getId())) {
                     propValuesMap.put(propEntity.getId(), new ArrayList<EntityContainer<E>>());
                 }
@@ -101,7 +101,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
         final List<EntityContainer<T>> propValues = new ArrayList<EntityContainer<T>>();
         for (final EntityContainer<E> entity : entities) {
             final EntityContainer<T> prop = (EntityContainer<T>) entity.getEntities().get(propName);
-            if (prop != null && !prop.notYetInitialised()) {
+            if (prop != null && !prop.isEmpty() && !prop.notYetInitialised()) {
                 propValues.add(prop);
             }
         }

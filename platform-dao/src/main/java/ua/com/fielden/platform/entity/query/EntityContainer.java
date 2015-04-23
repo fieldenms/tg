@@ -102,9 +102,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     }
 
     private Object determinePropValue(final R owningEntity, final String propName, final EntityContainer<? extends AbstractEntity<?>> entityContainer, final EntityFactory entFactory, final boolean userViewOnly,  final ProxyMode proxyMode) {
-        if (entityContainer == null) {
-            return null;
-        } else if (entityContainer.notYetInitialised()) {
+        if (entityContainer.isEmpty() || entityContainer.notYetInitialised()) {
             return instantiateProxy(entityContainer.resultType, owningEntity, entityContainer.getId(), propName, proxyMode);
         } else if (entityContainer.isInstantiated()) {
             return entityContainer.entity;
