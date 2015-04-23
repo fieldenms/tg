@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -312,6 +313,21 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
+     * Restores the holder of saving information (modified props + centre context, if any).
+     *
+     * @param envelope
+     * @return
+     */
+    public static SavingInfoHolder restoreSavingInfoHolder(final Representation envelope, final RestServerUtil restUtil) {
+        try {
+            return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
+        } catch (final Exception ex) {
+            logger.error("An undesirable error has occured during deserialisation of SavingInfoHolder, which should be validated.", ex);
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    /**
      * Just saves the entity.
      *
      * @param entity
@@ -344,6 +360,22 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final Long id) {
         return constructEntity(modifiedPropertiesHolder, createValidationPrototype(id), getCompanionFinder());
+    }
+
+    /**
+     * Constructs the entity from the client envelope.
+     * <p>
+     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
+     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
+     * <p>
+     * All normal properties will be applied in 'validationPrototype'.
+     *
+     * @param envelope
+     * @param restUtil
+     * @return applied validationPrototype and modifiedPropertiesHolder map
+     */
+    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext) {
+        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithCentreContext(centreContext), getCompanionFinder());
     }
 
     /**

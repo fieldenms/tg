@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -20,9 +19,11 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
@@ -82,45 +83,46 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
         if (envelope != null) {
-            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
-            logger.error("centreContextHolder during entity retrieve == " + centreContextHolder + " modfiHolder! == " + centreContextHolder.getModifHolder() + " @@miType == " + centreContextHolder.getModifHolder().get("@@miType"));
-
-            Class<? extends MiWithConfigurationSupport<?>> miType;
-            try {
-                miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getModifHolder().get("@@miType"));
-            } catch (final ClassNotFoundException e) {
-                throw new IllegalStateException(e);
-            }
-            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
-
-            final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
-
-            CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype =
-                    CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> selectionCrit = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
-
-            logger.error("selectionCrit == " + selectionCrit);
-
-            final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
-            // if (contextConfig.isPresent() && contextConfig.get().withSelectionCrit) {
-            context.setSelectionCrit((EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>) selectionCrit);
-            // }
-            //            if (contextConfig.isPresent() && contextConfig.get().withAllSelectedEntities) {
-            context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
-            //            } else if (contextConfig.isPresent() && contextConfig.get().withCurrentEtity) {
-            //                context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
-            //            }
-            //            if (contextConfig.isPresent() && contextConfig.get().withMasterEntity) {
-            context.setMasterEntity(centreContextHolder.getMasterEntity());
-            //            }
-
-            final T functionalEntity = utils.createValidationPrototypeWithCentreContext(context);
-            // functionalEntity.setContext(null);
-            return restUtil.rawListJSONRepresentation(functionalEntity);
+            final T entity = utils.createValidationPrototypeWithCentreContext(createCentreContext(EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil)));
+            ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null);
+            return restUtil.rawListJSONRepresentation(entity);
         } else {
             return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
         }
+    }
+
+    private CentreContext<T, AbstractEntity<?>> createCentreContext(final CentreContextHolder centreContextHolder) {
+        logger.error("centreContextHolder during entity retrieve == " + centreContextHolder + " modfiHolder! == " + centreContextHolder.getModifHolder() + " @@miType == " + centreContextHolder.getModifHolder().get("@@miType"));
+
+        Class<? extends MiWithConfigurationSupport<?>> miType;
+        try {
+            miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getModifHolder().get("@@miType"));
+        } catch (final ClassNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+
+        final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
+
+        CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype =
+                CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> selectionCrit = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
+
+        logger.error("selectionCrit == " + selectionCrit);
+
+        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
+        // if (contextConfig.isPresent() && contextConfig.get().withSelectionCrit) {
+        context.setSelectionCrit(selectionCrit);
+        // }
+        //            if (contextConfig.isPresent() && contextConfig.get().withAllSelectedEntities) {
+        context.setSelectedEntities(centreContextHolder.getSelectedEntities());
+        //            } else if (contextConfig.isPresent() && contextConfig.get().withCurrentEtity) {
+        //                context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
+        //            }
+        //            if (contextConfig.isPresent() && contextConfig.get().withMasterEntity) {
+        context.setMasterEntity(centreContextHolder.getMasterEntity());
+        return (CentreContext<T, AbstractEntity<?>>) context;
     }
 
     @Delete
@@ -142,9 +144,19 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return
      */
     private Representation tryToSave(final Representation envelope) {
-        final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-        final T applied = utils.constructEntity(modifiedPropertiesHolder, this.entityId).getKey();
+        final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+        final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
+        final T applied;
+        if (savingInfoHolder.getCentreContextHolder() == null) {
+            applied = utils.constructEntity(modifiedPropertiesHolder, this.entityId).getKey();
+        } else {
+            applied = utils.constructEntity(modifiedPropertiesHolder, createCentreContext(savingInfoHolder.getCentreContextHolder())).getKey();
+        }
+
         final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
+        if (savingInfoHolder.getCentreContextHolder() != null) {
+            ((AbstractFunctionalEntityWithCentreContext) potentiallySaved).setContext(null);
+        }
         return restUtil.singleJSONRepresentation(potentiallySaved);
     }
 

@@ -4,7 +4,7 @@
 <link rel="import" href="/resources/binding/tg-entity-binder.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-entity-master" extends="tg-entity-binder" attributes="entitytype entityid onSaved onSavedComplete currentState centreUuid">
+<polymer-element name="tg-entity-master" extends="tg-entity-binder" attributes="entitytype entityid onSaved onSavedComplete currentState centreUuid savingContext">
     <template>
         <shadow></shadow>
 
@@ -34,6 +34,11 @@
             Polymer("tg-entity-master", {
                 publish: {
                     // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
+                    
+                    /**
+                     * The context in which save() action should be performed ('null' in case when context is not needed).
+                     */
+                	savingContext: null
                 },
 
                 /**
@@ -263,10 +268,16 @@
                  * @param modifiedPropertiesHolder -- the entity with modified properties
                  */
                 _saveModifiedProperties: function (modifiedPropertiesHolder) {
-                    // console.log("save: modifiedPropertiesHolder", modifiedPropertiesHolder);
-                    var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
-                    // console.log("save: serialised modifiedPropertiesHolder", ser);
-                    this.$.ajaxSaver.body = JSON.stringify(ser);
+                	var reflector = this.$.reflector;
+                    var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
+                    savingInfoHolder.id = null;
+                    savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
+                	
+                	if (this.savingContext) {
+                        savingInfoHolder["centreContextHolder"] = this.savingContext;
+                	}
+                	
+                    this.$.ajaxSaver.body = JSON.stringify(this.$.serialiser.serialise(savingInfoHolder));
                     this.$.ajaxSaver.go();
                 },
 

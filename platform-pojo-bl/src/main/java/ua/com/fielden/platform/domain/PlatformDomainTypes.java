@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.functional.centre.CritProp;
 import ua.com.fielden.platform.entity.functional.centre.FetchProp;
 import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.paginator.Page;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.migration.MigrationError;
@@ -58,5 +59,6 @@ public class PlatformDomainTypes {
         types.add(FetchProp.class);
         types.add(Page.class);
         types.add(CentreContextHolder.class);
+        types.add(SavingInfoHolder.class);
     }
 }

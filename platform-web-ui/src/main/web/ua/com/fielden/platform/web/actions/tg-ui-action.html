@@ -163,6 +163,7 @@
                 };
 
                 var context = self.contextRetriever(self.requireSelectedEntities, self.requireMasterEntity);
+                detail.savingContext = context;
 
                 detail.entityid = context.id === null ? "new" : (+(context.id));
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
