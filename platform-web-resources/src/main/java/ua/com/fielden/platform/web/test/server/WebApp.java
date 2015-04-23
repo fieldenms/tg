@@ -17,6 +17,8 @@ import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
@@ -345,9 +347,40 @@ public class WebApp extends AbstractWebApp {
                         + "]").replaceAll("actionMr", actionMr))
                 .done();
 
+        final ISimpleMasterConfig<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntity(TgFunctionalEntityWithCentreContext.class)
+                .addProp("valueToInsert").asSinglelineText()
+                .also()
+                .addProp("withBrackets").asCheckbox()
+                .also()
+                .addAction(MasterActions.REFRESH)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("REFRESH2")
+                /*      */.longDesc("REFRESH2 action")
+
+                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.EDIT)
+                .addAction(MasterActions.VIEW)
+
+                .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
+                        + "[[mr], [mr]], "
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
+                .setLayoutFor(Device.TABLET, null, ("['vertical', 'margin:20px',"
+                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], [mr]],"
+                        + "],"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
+                .setLayoutFor(Device.MOBILE, null, ("['margin:20px',"
+                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("actionMr", actionMr))
+                .done();
+
         configApp().
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
                 addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterConfig, injector().getInstance(ICompanionObjectFinder.class), injector())).
+                addMaster(TgFunctionalEntityWithCentreContext.class, new EntityMaster<TgFunctionalEntityWithCentreContext>(TgFunctionalEntityWithCentreContext.class, TgFunctionalEntityWithCentreContextProducer.class, masterConfigForFunctionalEntity, injector().getInstance(ICompanionObjectFinder.class), injector())).
                 addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class, null, injector())).
                 addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionalEntity.class, null, injector())).done();
         configMainMenu().

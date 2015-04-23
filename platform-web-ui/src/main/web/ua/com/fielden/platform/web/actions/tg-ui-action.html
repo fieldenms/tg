@@ -7,7 +7,7 @@
 <link rel="import" href="/resources/element_loader/load-element.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever"> <!-- enabledStates currentState  -->
+<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity"> <!-- enabledStates currentState  -->
     <template>
         <style>
             :host::shadow * /deep/ core-tooltip::shadow #tooltip {
@@ -37,7 +37,20 @@
     <script>
         Polymer('tg-ui-action', {
             publish: {
-            	user: null,
+            		/**
+            		 * Determines whether the selected entities are required to be send inside the centre context. 
+            		 * 
+            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context. 
+            		 */
+           		requireSelectedEntities: null,
+            		/**
+            		 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context. 
+            		 * 
+            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context. 
+            		 */
+           		requireMasterEntity: null,
+
+          		user: null,
             	elementName: null,
             	attrs: null,
             	/**
@@ -132,6 +145,7 @@
              * Analyzes and processes the result of executor response.
              */
             _onExecuted: function(e, detail, source) {
+            	var self = this;
             	console.log("_onExecuted: e", e, "egi", e.srcElement);
             	this.$.entityMaster.open();
 
@@ -140,7 +154,12 @@
             	// getSelectedEntities
 
             	detail.onRetrieved = function(entity, bindingEntity, customObject) {
-                    console.log("onRetrieved");
+            		var context = self.contextRetriever(self.requireSelectedEntities, self.requireMasterEntity);
+
+            		bindingEntity.set("context", context);
+            		console.log("onRetrieved", entity, "context", context);
+            		
+            		detail.validate();
                 };
 
                 detail.onValidated = function(validatedEntity, bindingEntity, customObject) {
@@ -151,7 +170,8 @@
                     console.log("onSaved");
                 };
 
-                detail.entityid = this.contextRetriever().id;
+                var context = self.contextRetriever(self.requireSelectedEntities, self.requireMasterEntity);
+                detail.entityid = context.id === null ? "new" : (+(context.id));
             	detail.retrieve();
             	console.log('_onExecuted: uiComponent', detail);
             	// TODO insert into DOM uiComponent

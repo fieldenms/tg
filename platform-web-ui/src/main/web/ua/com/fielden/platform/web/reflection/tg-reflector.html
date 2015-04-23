@@ -728,8 +728,35 @@
                     } else {
                         return null;
                     }
+                },
+                
+                /**
+                 * Fills in the centre context holder with 'master entity' based on whether should 'requireMasterEntity'.
+                 */
+                provideMasterEntity: function(requireMasterEntity, centreContextHolder, getMasterEntity) {
+    				if (requireMasterEntity === "true") {
+    					centreContextHolder["masterEntity"] = getMasterEntity();
+                    } else if (requireMasterEntity === "false") {
+                    	centreContextHolder["masterEntity"] = null;
+                    } else {
+                    	throw "Unknown value for attribute 'requireMasterEntity': " + requireMasterEntity;
+                    }
+                },
+                
+                /**
+                 * Fills in the centre context holder with 'selected entities' based on whether should 'requireSelectedEntities' (ALL, ONE or NONE).
+                 */
+                provideSelectedEntities: function(requireSelectedEntities, centreContextHolder, getSelectedEntities) {
+    				if (requireSelectedEntities === "ALL") {
+    					centreContextHolder["selectedEntities"] = getSelectedEntities();
+                    } else if (requireSelectedEntities === "ONE") {
+                    	centreContextHolder["selectedEntities"] = getSelectedEntities().length > 0 ? [getSelectedEntities()[0]] : [];
+                    } else if (requireSelectedEntities === "NONE") {
+                    	centreContextHolder["selectedEntities"] = null;
+                    } else {
+                    	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
+                    }
                 }
-
             });
         })();
     </script>
