@@ -3,15 +3,11 @@ package ua.com.fielden.platform.sample.domain;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.sample.domain.definers.TgFunctionalEntityContextHandler;
-import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
  * An example functional entity to be assigned to centre actions.
@@ -33,24 +29,6 @@ public class TgFunctionalEntityWithCentreContext extends AbstractFunctionalEntit
     @IsProperty
     @Title(value = "With Brackets", desc = "Indicates whether the stringProp props should be wrapped by brackets after insertion")
     private boolean withBrackets;
-
-    @IsProperty
-    @Title(value = "Context", desc = "Context")
-    @Invisible
-    @AfterChange(TgFunctionalEntityContextHandler.class)
-    private CentreContext<?, ?> context;
-
-    @Override
-    @Observable
-    public TgFunctionalEntityWithCentreContext setContext(final CentreContext<?, ?> context) {
-        this.context = context;
-        return this;
-    }
-
-    @Override
-    public CentreContext<?, ?> getContext() {
-        return context;
-    }
 
     @Observable
     public TgFunctionalEntityWithCentreContext setWithBrackets(final boolean withBrackets) {

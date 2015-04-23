@@ -13,6 +13,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.restlet.representation.Representation;
 
+import ua.com.fielden.platform.dao.DefaultEntityProducer;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -31,6 +32,7 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -72,6 +74,20 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             entity = entityProducer.newEntity();
         }
         return entity;
+    }
+
+    /**
+     * Initialises the functional entity for centre-context-dependent retrieval.
+     *
+     * @param centreContext
+     *            the context for functional entity creation
+     *
+     * @return
+     */
+    public T createValidationPrototypeWithCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext) {
+        final DefaultEntityProducer<T> defProducer = (DefaultEntityProducer<T>) entityProducer;
+        defProducer.setCentreContext(centreContext);
+        return entityProducer.newEntity();
     }
 
     public Class<T> getEntityType() {
@@ -373,5 +389,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
 
         return constructEntity(modifiedPropertiesHolder, id);
+    }
+
+    public EntityFactory entityFactory() {
+        return entityFactory;
     }
 }

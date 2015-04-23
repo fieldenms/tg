@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
  * Provides default {@link EntityFactory} based implementation for creation of new entity instances.
@@ -17,6 +18,8 @@ public class DefaultEntityProducer<T extends AbstractEntity<?>> implements IEnti
     private final EntityFactory factory;
     private final Class<T> entityType;
     private final IEntityDao<T> companion;
+    // optional centre context for context-dependent entity producing logic
+    private CentreContext<T, AbstractEntity<?>> centreContext;
 
     public DefaultEntityProducer(final EntityFactory factory, final Class<T> entityType) {
         this(factory, entityType, null);
@@ -65,5 +68,18 @@ public class DefaultEntityProducer<T extends AbstractEntity<?>> implements IEnti
 
     protected IEntityDao<T> companion() {
         return companion;
+    }
+
+    /**
+     * Use this method in case when the centre context is required for entity instantiation.
+     *
+     * @return
+     */
+    protected CentreContext<T, AbstractEntity<?>> getCentreContext() {
+        return centreContext;
+    }
+
+    public void setCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext) {
+        this.centreContext = centreContext;
     }
 }

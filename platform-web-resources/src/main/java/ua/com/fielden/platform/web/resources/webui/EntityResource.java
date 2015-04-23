@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -100,7 +102,22 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
             logger.error("selectionCrit == " + selectionCrit);
 
-            return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
+            final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
+            // if (contextConfig.isPresent() && contextConfig.get().withSelectionCrit) {
+            context.setSelectionCrit((EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>) selectionCrit);
+            // }
+            //            if (contextConfig.isPresent() && contextConfig.get().withAllSelectedEntities) {
+            context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
+            //            } else if (contextConfig.isPresent() && contextConfig.get().withCurrentEtity) {
+            //                context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
+            //            }
+            //            if (contextConfig.isPresent() && contextConfig.get().withMasterEntity) {
+            context.setMasterEntity(centreContextHolder.getMasterEntity());
+            //            }
+
+            final T functionalEntity = utils.createValidationPrototypeWithCentreContext(context);
+            // functionalEntity.setContext(null);
+            return restUtil.rawListJSONRepresentation(functionalEntity);
         } else {
             return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
         }
