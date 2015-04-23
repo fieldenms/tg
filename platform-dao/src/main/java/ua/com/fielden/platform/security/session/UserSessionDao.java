@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.security.session;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+import java.util.Optional;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.User;
@@ -25,7 +29,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
     @Override
     public void clearAll(final User user) {
-        super.delete(select(UserSession.class).where().prop("user").eq().val(user).model());
+        super.defaultDelete(select(UserSession.class).where().prop("user").eq().val(user).model());
     }
 
     @Override
@@ -36,12 +40,12 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                     .prop("user").eq().val(user)
                     .and().prop("trusted").eq().val(false)
                 .model();
-        super.delete(query);
+        super.defaultDelete(query);
     }
 
     @Override
     public void clearAll() {
-        super.delete(select(UserSession.class).model());
+        super.defaultDelete(select(UserSession.class).model());
 
     }
 
@@ -52,7 +56,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                 .where()
                     .prop("trusted").eq().val(false)
                 .model();
-        super.delete(query);
+        super.defaultDelete(query);
     }
 
     @Override
@@ -63,7 +67,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                     .prop("user").eq().val(user)
                     .and().prop("expiryTime").lt().now()
                 .model();
-        super.delete(query);
+        super.defaultDelete(query);
    }
 
     @Override
@@ -73,6 +77,21 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                 .where()
                     .prop("expiryTime").lt().now()
                 .model();
-        super.delete(query);
+        super.defaultDelete(query);
     }
+
+    @Override
+    @SessionRequired
+    public Optional<UserSession> currentSession(final User user, final String authenticator, final String key) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    @SessionRequired
+    public UserSession newSession(final User user, final boolean isDeviceTrusted, final String key) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

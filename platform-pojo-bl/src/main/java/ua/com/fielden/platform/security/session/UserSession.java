@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.security.session;
 
 import java.util.Date;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -55,6 +56,20 @@ public class UserSession extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Last Access", desc = "The time when the session was last accessed.")
     private Date lastAccess;
+
+    @IsProperty
+    @Title(value = "Authenticator", desc = "A dynamically computed authenticator for the session.")
+    private Optional<String> authenticator = Optional.empty();
+
+    @Observable
+    public UserSession setAuthenticator(final String authenticator) {
+        this.authenticator = Optional.of(authenticator);
+        return this;
+    }
+
+    public Optional<String> getAuthenticator() {
+        return authenticator;
+    }
 
     @Observable
     public UserSession setLastAccess(final Date lastAccess) {
