@@ -1,17 +1,15 @@
 package ua.com.fielden.platform.security.authentication;
 
-import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.security.SignatureException;
 import java.util.Optional;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.session.Authenticator;
@@ -63,7 +61,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
         final Optional<UserSession> session = coSession.currentSession(currUser, fraudulentAuthenticator);
         assertFalse(session.isPresent());
 
-        // additionally, let's also check that all session for a compromised user have been removed, but not session for other users
+        // additionally, let's also check that all sessions for a compromised user have been removed, but not the sessions for other users
         final EntityResultQueryModel<UserSession> currUserSessions = select(UserSession.class).where().prop("user").eq().val(currUser).model();
         final EntityResultQueryModel<UserSession> otherSessions = select(UserSession.class).where().prop("user").ne().val(currUser).model();
 
@@ -98,7 +96,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
         final Optional<UserSession> session = coSession.currentSession(differentUser, authenticator);
         assertFalse(session.isPresent());
 
-        // additionally, let's also check that all session for a compromised user have been removed, but not session for other users
+        // additionally, let's also check that all sessions for a compromised user have been removed, but not the sessions for other users
         final EntityResultQueryModel<UserSession> currUserSessions = select(UserSession.class).where().prop("user").eq().val(currUser).model();
         final EntityResultQueryModel<UserSession> otherSessions = select(UserSession.class).where().prop("user").ne().val(currUser).model();
 

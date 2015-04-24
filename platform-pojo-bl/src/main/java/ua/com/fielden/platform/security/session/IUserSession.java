@@ -55,8 +55,9 @@ public interface IUserSession extends IEntityDao<UserSession> {
      * Therefore, this method should really be used by the system only in the event when a security threat is suspected or user account needs to be disabled.
      *
      * @param user
+     * @return the number of removed sessions
      */
-    void clearAll(final User user);
+    int clearAll(final User user);
 
     /**
      * Clears all sessions that are associated with untrusted devices for a given user.
