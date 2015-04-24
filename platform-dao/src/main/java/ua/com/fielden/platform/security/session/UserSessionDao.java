@@ -128,7 +128,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      * @throws SignatureException
      */
     private int removeSessionsForUsersBy(final String seriesId) {
-        final EntityResultQueryModel<UserSession> query = select(UserSession.class).where().prop("seriesId").eq().prop(seriesHash(seriesId)).model();
+        final EntityResultQueryModel<UserSession> query = select(UserSession.class).where().prop("seriesId").eq().val(seriesHash(seriesId)).model();
         final QueryExecutionModel<UserSession, EntityResultQueryModel<UserSession>> qem = from(query).with(fetchAll(UserSession.class)).model();
 
         // count the number of session to be removed...
