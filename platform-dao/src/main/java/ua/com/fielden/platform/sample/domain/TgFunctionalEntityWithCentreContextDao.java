@@ -41,17 +41,14 @@ public class TgFunctionalEntityWithCentreContextDao extends CommonEntityDao<TgFu
     @Override
     @SessionRequired
     public TgFunctionalEntityWithCentreContext save(final TgFunctionalEntityWithCentreContext entity) {
-        System.err.println("SAVING" + entity);
-
         for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
             final TgPersistentEntityWithProperties selected = dao.findById(selectedEntity.getId()); // (TgPersistentEntityWithProperties) selectedEntity;
-            selected.set("stringProp", selected.get("stringProp") + entity.getValueToInsert());
+            selected.set("desc", entity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_userParam.key") + ": " + entity.getValueToInsert() + ": " + selected.get("desc"));
             if (entity.getWithBrackets()) {
-                selected.set("stringProp", "[" + selected.get("stringProp") + "]");
+                selected.set("desc", "[" + selected.get("desc") + "]");
             }
             dao.save(selected);
         }
-
         return super.save(entity);
     }
 }
