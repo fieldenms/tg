@@ -21,6 +21,7 @@ public interface IUserSession extends IEntityDao<UserSession> {
      * <p>
      * An empty result is returned if the authenticator does not pass validation.
      * If a stale user session was discovered as part of the validation process, it gets deleted.
+     * All user sessions get cleared in case of suspected authenticator theft.
      * <p>
      * A non-empty result contains an updated user session with a new <code>authenticator</code>.
      *

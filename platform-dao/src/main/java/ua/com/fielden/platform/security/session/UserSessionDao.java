@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.security.session;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
 
@@ -12,17 +14,16 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
@@ -119,18 +120,26 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     }
 
     /**
-     * Removes all user session by series ID. There should at most be only one such session due to cryptographic randomness of series IDs.
+     * Removes all sessions that are associated with users that have been associated with the provided series ID. There should at most be only one such user (but potentially
+     * multiple sessions) due to cryptographic randomness of series IDs.
      *
      * @param seriesId
      * @return
      * @throws SignatureException
      */
-    private int removeSessionsBy(final String seriesId) {
-        final EntityResultQueryModel<UserSession> query = select(UserSession.class).where().prop("seriesId").eq().val(seriesHash(seriesId)).model();
+    private int removeSessionsForUsersBy(final String seriesId) {
+        final EntityResultQueryModel<UserSession> query = select(UserSession.class).where().prop("seriesId").eq().prop(seriesHash(seriesId)).model();
+        final QueryExecutionModel<UserSession, EntityResultQueryModel<UserSession>> qem = from(query).with(fetchAll(UserSession.class)).model();
 
+        // count the number of session to be removed...
         final int count = count(query);
+
         if (count > 0) {
-            super.defaultDelete(query);
+            // get all those sessions and using their users, clear all sessions (there could more than the ones retrieved) associated with those users
+            final List<UserSession> all = getAllEntities(qem);
+            final String users = all.stream().map(ss -> ss.getUser().getKey()).distinct().collect(Collectors.joining(", "));
+            logger.warn(format("Removing all sessions for user(s) %s due to a suspected stolen session authenticator.", users));
+            all.forEach(ss -> clearAll(ss.getUser()));
         }
 
         return count;
@@ -152,6 +161,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         return seriesIdHash;
     }
 
+    /**
+     * The main role of this method is to validate and refresh a user session. The validation part has a very strong purpose to detect fraudulent attempts to access the system or
+     * indications for already compromised users that had their authenticators stolen. Please note that due to the fact that the first argument is a {@link User} instance, this
+     * means that the username has already been verified and identified as belonging to an active user account.
+     */
     @Override
     @SessionRequired
     public Optional<UserSession> currentSession(final User user, final String authenticator) {
@@ -159,12 +173,17 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // in case of validation failure, no reason should be provided to the outside as this could reveal too much information to a potential adversary
         final Authenticator auth = fromString(authenticator);
 
-        // most importantly verify authenticator's authenticity using its hash
+        // verify authenticator's authenticity using its hash and the application hashing key
         try {
             if (!auth.hash.equals(crypto.calculateRFC2104HMAC(auth.token, hashingKey))) {
                 // authenticator has been tempered with
-                // remove sessions associated with the provided series id if any
-                final int count = removeSessionsBy(auth.seriesId);
+                logger.warn(format("The provided authenticator %s cannot be verified. A tempered authenticator is suspected.", auth));
+                // remove user sessions that are identified with the provided series ID
+                // series ID is the only possibly reliable peace of the authenticator at this stage as it is hard to forge algorithmically
+                // therefore, in the worst case scenario that an authenticator has been stolen and series ID is being reused, all sessions for users that are associated with that series ID should be removed
+                // because those users (should really be just one due to serial ID cryptographic randomness) have most likely been compromised
+                // in case series ID is also fraudulent and does not match any existing sessions, then no problems -- just deny the access
+                final int count = removeSessionsForUsersBy(auth.seriesId);
                 logger.debug(format("Removed %s session(s) for series ID %s", count, auth.seriesId));
                 return Optional.empty();
             }
@@ -172,43 +191,51 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             throw new IllegalStateException(ex);
         }
 
-        // make sure the provided authenticator is for the declared user
+        // the provided authenticator has been verified based on its content and hash
+        // this, however, does not guarantee that it has not been stolen and is not being used for illegal access to the system
+        // the next logical thing to check is whether the user making the request and the user specified in the authenticator match
         if (!user.getKey().equals(auth.username)) {
             // authenticator has been stolen
-            // remove sessions associated with the provided series id if any
-            final int count = removeSessionsBy(auth.seriesId);
+            logger.warn(format("The provided authenticator %s does not reference the current user %s. A stolen authenticator is suspected.", auth, user.getKey()));
+            // similarly as described previously, need to remove all sessions for user(s) that are associated with the series ID in the presented authenticator
+            final int count = removeSessionsForUsersBy(auth.seriesId);
             logger.debug(format("Removed %s session(s) for series ID %s", count, auth.seriesId));
             return Optional.empty();
         }
 
-        // has authenticator expired?
+        // so far so good, there is a hope that the current request is authentic, but there is still a chance that it is coming for an adversary...
+        // let's find a persisted session, and there should be one if request is authentic, associated with the specified user and series ID
+        final UserSession session = findByKeyAndFetch(fetchAll(UserSession.class), user, seriesHash(auth.seriesId));
+        // if persisted session does not exist for a seemingly valid authenticator then it is most likely due to an authenticator theft, and there is way
+        // an authenticator could have been stolen, and already successfully used the an adversary to access the system from a different device then the one authenticator was stolen from
+        // then, when a legitimate user is trying to access the system by presenting an authenticator, which was been stolen and already used (this leads to series ID regeneration), then there would be no session associated with it!!!
+        // this means all sessions for this particular user should be invalidated (removed) to stop an adversary from accessing the system
+        if (session == null) {
+            logger.warn(format("A seemingly correct authenticator %s did not have a corresponding sesssion record. An authenticator theft is suspected. An adversary might have had access to the system as user %s", auth, user.getKey()));
+            final int count = removeSessionsForUsersBy(auth.seriesId);
+            logger.debug(format("Removed %s session(s) for series ID %s", count, auth.seriesId));
+            return Optional.empty();
+        }
+
+        // only after we have a high probability for legitimate user request, the identified session needs to be check for expiry
+        // for this either the authenticator's time portion or the time from the retrieved session could be used
+        // but to provide one additional level of session verification, let's make sure that both times are identical
+        // if they are not.... then most likely the database was tempered with... just log the problem, but proceed with further session validation
+        // the thing is that the only way to reach this point of validation for an authenticator, the adversary would needed to either steal it and no legitimate use yet used it, or forge it, which would
+        // require an access to the server... which means there is no way to identify the actually stolen session at this stage...
+        if (auth.expiryTime != session.getExpiryTime().getTime()) {
+            final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
+            logger.warn(format("Session expiry time %s for authenticator %s differes to the persisted expiry time %s.", formatter.print(auth.expiryTime), auth, formatter.print(session.getExpiryTime().getTime())));
+        }
+        // now let's check if session has expired, if it did then use this opportunity to clear all expired session for this user and return an empty result to trigger re-authentication
         if (auth.getExpiryTime().isBefore(constants.now().getMillis())) {
             // clean up expired sessions
             clearExpired(user);
             return Optional.empty();
         }
 
-        // try to get the persisted session associated with the specified user and series ID
-        final UserSession session = findByKeyAndFetch(fetchAll(UserSession.class), user, seriesHash(auth.seriesId));
-        // this is an extremely unlikely scenario, but to be on a defensive side...
-        if (session == null) {
-            logger.warn(format("A seemingly correct authenticator for user %s and series ID %s did not have a corresponding sesssion record.", user.getKey(), auth.seriesId));
-
-            // try to identify users to whom series ID might belong, should really be at most one
-            final EntityResultQueryModel<UserSession> query = select(UserSession.class).where().prop("seriesId").eq().prop(auth.seriesId).model();
-            final QueryExecutionModel<UserSession, EntityResultQueryModel<UserSession>> qem = from(query).with(fetchAll(UserSession.class)).model();
-
-            final List<UserSession> all = getAllEntities(qem);
-            if (all.size() > 0) {
-                final String users = all.stream().map(ss -> ss.getUser().getKey()).distinct().collect(Collectors.joining(", "));
-                logger.warn(format("Removing all sessions for user(s) %s due to suspected stolen session authenticators.", users));
-                all.forEach(ss -> clearAll(ss.getUser()));
-            }
-            return Optional.empty();
-        }
-
-        // if this point is reached then the presented
-        // let's update the session with a new series ID and return it as a result
+        // if this point is reached then the identified session is considered valid
+        // it needs to be updated with a new series ID and a refreshed expiry time, and returned as the result
         final String seriesId = crypto.nextSessionId();
         session.setSeriesId(seriesHash(seriesId));
         session.setLastAccess(constants.now().toDate());
@@ -280,5 +307,4 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     private Date calcExpiryTime(final boolean isDeviceTrusted) {
         return (isDeviceTrusted ? constants.now().plusMinutes(trustedDurationMins) : constants.now().plusMinutes(untrustedDurationMins)).toDate();
     }
-
 }
