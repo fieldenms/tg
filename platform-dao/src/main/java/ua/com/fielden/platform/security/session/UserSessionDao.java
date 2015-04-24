@@ -162,8 +162,10 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     }
 
     /**
-     * The main role of this method is to validate and refresh a user session. The validation part has a very strong purpose to detect fraudulent attempts to access the system or
-     * indications for already compromised users that had their authenticators stolen. Please note that due to the fact that the first argument is a {@link User} instance, this
+     * The main goal of this method is to validate and refresh the user session, which happens for each request.
+     * The validation part has a very strong role for detecting fraudulent attempts to access the system or indications for already compromised users that had their authenticators stolen.
+     * <p>
+     * Please note that due to the fact that the first argument is a {@link User} instance, this
      * means that the username has already been verified and identified as belonging to an active user account.
      */
     @Override
@@ -179,10 +181,10 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                 // authenticator has been tempered with
                 logger.warn(format("The provided authenticator %s cannot be verified. A tempered authenticator is suspected.", auth));
                 // remove user sessions that are identified with the provided series ID
-                // series ID is the only possibly reliable peace of the authenticator at this stage as it is hard to forge algorithmically
+                // series ID is the only possibly reliable piece of the authenticator at this stage as it is hard to forge algorithmically
                 // therefore, in the worst case scenario that an authenticator has been stolen and series ID is being reused, all sessions for users that are associated with that series ID should be removed
                 // because those users (should really be just one due to serial ID cryptographic randomness) have most likely been compromised
-                // in case series ID is also fraudulent and does not match any existing sessions, then no problems -- just deny the access
+                // it is also possible that the provided series ID is also fraudulent and does not match any existing sessions, then no problems -- just deny the access and request explicit re-authentication
                 final int count = removeSessionsForUsersBy(auth.seriesId);
                 logger.debug(format("Removed %s session(s) for series ID %s", count, auth.seriesId));
                 return Optional.empty();
@@ -206,9 +208,9 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // so far so good, there is a hope that the current request is authentic, but there is still a chance that it is coming for an adversary...
         // let's find a persisted session, and there should be one if request is authentic, associated with the specified user and series ID
         final UserSession session = findByKeyAndFetch(fetchAll(UserSession.class), user, seriesHash(auth.seriesId));
-        // if persisted session does not exist for a seemingly valid authenticator then it is most likely due to an authenticator theft, and there is way
-        // an authenticator could have been stolen, and already successfully used the an adversary to access the system from a different device then the one authenticator was stolen from
-        // then, when a legitimate user is trying to access the system by presenting an authenticator, which was been stolen and already used (this leads to series ID regeneration), then there would be no session associated with it!!!
+        // if persisted session does not exist for a seemingly valid authenticator then it is most likely due to an authenticator theft, and here is why:
+        // an authenticator could have been stolen, and already successfully used by an adversary to access the system from a different device than the one authenticator was stolen from
+        // then, when a legitimate user is trying to access the system by presenting the stolen authenticator, which was already used be an adversary (this leads to series ID regeneration), then there would be no session associated with it!!!
         // this means all sessions for this particular user should be invalidated (removed) to stop an adversary from accessing the system
         if (session == null) {
             logger.warn(format("A seemingly correct authenticator %s did not have a corresponding sesssion record. An authenticator theft is suspected. An adversary might have had access to the system as user %s", auth, user.getKey()));
@@ -221,8 +223,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // for this either the authenticator's time portion or the time from the retrieved session could be used
         // but to provide one additional level of session verification, let's make sure that both times are identical
         // if they are not.... then most likely the database was tempered with... just log the problem, but proceed with further session validation
-        // the thing is that the only way to reach this point of validation for an authenticator, the adversary would needed to either steal it and no legitimate use yet used it, or forge it, which would
-        // require an access to the server... which means there is no way to identify the actually stolen session at this stage...
+        // the thing is that the only way to reach this point of validation for an authenticator, it would need to be either valid or an adversary would needed to either steal it and no legitimate user yet used it, or forge it, which would
+        // require an access to the server... in this unfortunate case there is no way to identify the actually stolen session...
         if (auth.expiryTime != session.getExpiryTime().getTime()) {
             final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
             logger.warn(format("Session expiry time %s for authenticator %s differes to the persisted expiry time %s.", formatter.print(auth.expiryTime), auth, formatter.print(session.getExpiryTime().getTime())));
