@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.security;
+package ua.com.fielden.platform.security.authorisation;
 
 import static org.junit.Assert.*;
 

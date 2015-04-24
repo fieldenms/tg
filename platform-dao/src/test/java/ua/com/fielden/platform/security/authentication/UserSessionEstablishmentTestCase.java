@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.security;
+package ua.com.fielden.platform.security.authentication;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -104,28 +104,5 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 13:00:00"));
     }
 
-    /**
-     * This is just a convenience class to capture session creation parameters for testing purposes.
-     *
-     */
-    public static class SessionParams {
-        final String hashingKey;
-        final int trustedDurationMins;
-        final int untrustedDurationMins;
-        final SessionIdentifierGenerator crypto;
-
-        @Inject
-        public SessionParams(
-                final @SessionHashingKey String hashingKey,
-                final @TrustedDeviceSessionDuration int trustedDurationMins,
-                final @UntrustedDeviceSessionDuration int untrustedDurationMins,
-                final SessionIdentifierGenerator crypto) {
-            this.hashingKey = hashingKey;
-            this.trustedDurationMins = trustedDurationMins;
-            this.untrustedDurationMins = untrustedDurationMins;
-            this.crypto = crypto;
-        }
-
-    }
 
 }
