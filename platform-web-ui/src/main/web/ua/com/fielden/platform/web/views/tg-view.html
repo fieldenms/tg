@@ -28,6 +28,14 @@
             .view {
                 background-color: white;
             }
+            .scroll-panel {
+                position: absolute;
+                top: 100px;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                overflow: auto;
+            }
         </style>
 
 
@@ -36,7 +44,9 @@
             <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
         </core-toolbar>
 
-        <tg-menu-item-view id="menuItemView" slide-up autoLoad?="{{autoLoad}}" item="{{item}}" on-menu-item-view-loaded="{{onMenuItemLoaded}}"></tg-menu-item-view>
+        <div class="scroll-panel">
+            <tg-menu-item-view id="menuItemView" slide-up autoLoad?="{{autoLoad}}" item="{{item}}" on-menu-item-view-loaded="{{onMenuItemLoaded}}"></tg-menu-item-view>
+        </div>
     </template>
     <script>
         (function () {
