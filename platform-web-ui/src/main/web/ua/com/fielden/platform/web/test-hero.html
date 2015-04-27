@@ -1,260 +1,106 @@
-<!--
-    @license
-    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-    Code distributed by Google as part of the polymer project is also
-    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 <!doctype html>
 <html>
 
 <head>
-
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
-
-    <link href="/resources/polymer/core-icons/core-icons.html" rel="import">
-    <link href="/resources/polymer/core-icon-button/core-icon-button.html" rel="import">
-    <link href="/resources/polymer/core-toolbar/core-toolbar.html" rel="import">
-    <link href="/resources/polymer/core-animated-pages/core-animated-pages.html" rel="import">
-    <link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-up.html">
-    <link rel="import" href="/resources/polymer/core-animated-pages/transitions/scale-up.html">
-    <link href="/resources/layout/tg-tile-layout.html" rel="import">
-    <link href="/resources/views/tg-app-menu.html" rel="import">
-    <link href="/resources/views/tg-app-view.html" rel="import">
-    <link rel="import" href="/resources/polymer/core-icons/av-icons.html">
+    <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
     <style>
-        body {
-            font-family: sans-serif;
+        table {
+            border-collapse: collapse;
+            border: 1px solid black;
+            margin: 0 auto;
         }
-        .toolbar {
-            background-color: steelblue;
+        th,
+        td {
+            white-space: nowrap;
         }
-        #container {
-            overflow: hidden;
-        }
-        #noscroll {
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-        .item-name {
-            height: 48px;
-            min-height: 48px;
-            padding: 0 16px;
-            font-size: 12px;
-        }
-        .item-icon-bg {
-            width: 80%;
-            height: 80%;
-        }
-        .item-icon-bg core-icon {
-            width: 100%;
-            height: 100%;
-        }
-        core-icon>div {
-            background-repeat: no-repeat;
-        }
-        .item {
-            margin: 4px;
+        .scroll-panel {
+            overflow: scroll;
         }
     </style>
 
 </head>
 
-<body unresolved fullbleed vertical layout>
-    <template is="auto-binding">
-        <core-animated-pages id="pages" flex selected="{{selected}}" on-core-animated-pages-transition-end="{{transitionend}}" transitions="hero-transition cross-fade scale-up slide-up slide-down">
-
-            <tg-app-menu id="menu" name="menu" user="{{user}}" items="{{views.items}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit on-menu-item-selected="{{selectView}}"></tg-app-menu>
-
-            <template repeat="{{view in views.items}}">
-                <!--<div fit name="{{view.name}}">
-                    <tg-app-view item="{{view}}" hero-id="{{'hero_' + view.name}}" hero?="{{selected === view.name}}" fit></tg-app-view>
-                </div>-->
-
-                
-                <div fit name="{{view.name}}">
-                    <tg-app-view item="{{view}}" hero-id="{{'hero_' + view.name}}" hero?="{{selected === view.name}}" fit></tg-app-view>
-<!--
-                    <div class="view" style="background-color: {{view.theme}}" fit layout vertical center-center hero-id="{{'hero_' + view.name}}" hero?="{{selected === view.name || lastSelected === view.name}}">
-                        <span>{{view.name}}</span>
-                    </div>
--->
-                </div>
-
-
-            </template>
-
-        </core-animated-pages>
-    </template>
-
-    <script>
-        addEventListener('template-bound', function (e) {
-            var scope = e.target,
-                views = {
-                    whenDesktop: [
-                            [[{
-                            rowspan: 2,
-                            colspan: 2
-                            }], [], [], [{
-                            colspan: 2
-                            }]],
-                            [[{
-                            rowspan: 2,
-                            colspan: 2
-                            }], [], []],
-                            [[], [], [], []]
-                        ],
-                    whenTablet: [
-                            [[{
-                            rowspan: 2,
-                            colspan: 2
-                            }], [], []],
-                            [[{
-                            rowspan: 2,
-                            colspan: 2
-                            }]],
-                            [[], []],
-                            [[{
-                            rowspan: 2,
-                            colspan: 2
-                            }], [], []],
-                            [[], []],
-                        ],
-                    whenMobile: [
-                            [[], []],
-                            [[], []],
-                            [[], []],
-                            [[], []],
-                            [[], []],
-                            [[]],
-                        ],
-                    minCellHeight: "100px",
-                    minCellWidth: "100px",
-                    items: [
-                        {
-                            name: "view 1",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            },
-                        {
-                            name: "view 2",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white",
-                            menu: [
-                                {
-                                    name: "view 1"
-                                    },
-                                {
-                                    name: "view 2",
-                                    submenu: [
-                                        {
-                                            name: "view 1"
-                                            },
-                                        {
-                                            name: "view 2"
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                        {
-                            name: "view 3",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            },
-                        {
-                            name: "view 4",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            },
-                        {
-                            name: "view 5",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            },
-                        {
-                            name: "view 6",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            },
-                        {
-                            name: "view 7",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            },
-                        {
-                            name: "view 8",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            },
-                        {
-                            name: "view 9",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            },
-                        {
-                            name: "view 10",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            },
-                        {
-                            name: "view 11",
-                            icon: "/resources/images/test.svg",
-                            theme: "#f4f4f4",
-                            nameTheme: "#999999",
-                            textTheme: "white"
-                            }
-                        ]
-                };
-
-
-            scope.views = views;
-            scope.user = {
-                name: "Super user",
-                login: "SU"
-            };
-
-            scope.selectView = function (e, detail, source) {
-                this.selected = detail;
-            };
-
-            scope.back = function () {
-                this.lastSelected = this.$.pages.selected;
-                console.log(this.lastSelected);
-                this.selected = 'menu';
-            };
-
-            scope.transitionend = function () {
-                if (this.lastSelected) {
-                    this.lastSelected = null;
-                }
-            };
-        })
-    </script>
-
+<body>
+    <div>
+        <table>
+            <tr>
+                <th>Testing grid scrolling</th>
+                <th>Testing grid scrolling</th>
+                <th>Testing grid scrolling</th>
+                <th>Testing grid scrolling</th>
+                <th>Testing grid scrolling</th>
+                <th>Testing grid scrolling</th>
+                <th>Testing grid scrolling</th>
+                <th>Testing grid scrolling</th>
+                <th>Testing grid scrolling</th>
+                <th>Testing grid scrolling</th>
+            </tr>
+            <tr>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+            </tr>
+            <tr>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+            </tr>
+            <tr>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+            </tr>
+            <tr>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+            </tr>
+            <tr>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+                <td>grid scrolling column</td>
+            </tr>
+        </table>
+    </div>
 </body>
 
 </html>
