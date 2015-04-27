@@ -94,7 +94,7 @@
                     self.newAction = self.newAction.bind(self);
                     self.showMaster = self.showMaster.bind(self);
                     self.getContext = self.getContext.bind(self);
-                    self.getContext2 = self.getContext2.bind(self);
+                    self.createCentreContextHolder = self.createCentreContextHolder.bind(self);
                 },
                 
                 attached: function () {
@@ -187,15 +187,9 @@
                     return centreContextHolder;
                 },
                 
-                getContext2: function(requireSelectedEntities, requireMasterEntity) {
+                createCentreContextHolder: function(requireSelectedEntities, requireMasterEntity) {
                 	var self = this;
                 	return self.createContextHolder(requireSelectedEntities, requireMasterEntity);
-                	/* { 
-                		id: 'new',
-                		selectionCrit: self.$.selection_criteria.currEntity,
-                		selectedEntities: self.$.egi.getSelectedEntities(),
-                		masterEntity: null
-                	}; */
                 },
                 
                 getSelectedEntities: function () {

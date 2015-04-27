@@ -13,7 +13,6 @@
 <link rel="import" href="/resources/egi/tg-secondary-instance-action.html">
 
 <link rel="import" href="/resources/actions/tg-page-action.html">
-<link rel="import" href="/resources/actions/tg-ui-action.html">
 
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
@@ -85,25 +84,21 @@
                             <span class="span-tooltip" tip>Create new entity</span>
                         </core-tooltip>
                         <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
-                            <!--<tg-ui-action user="{{user}}" shortDesc="Edit" longDesc="Edit selected entity" icon="editor:mode-edit" componentUri="/users/{{user}}/master/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" elementName="tg-TgPersistentEntityWithProperties-master" attrs="{{ {user:user, entitytype:'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties', currentState:'VIEW'} }}" contextRetriever="{{getContext}}">
-                            </tg-ui-action>-->
                             <tg-page-action icon="editor:mode-edit" action="{{editAction}}"></tg-page-action>
                             <span class="span-tooltip" tip>Edit selected entity</span>
                         </core-tooltip>
-                        
-                        <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
-                            <core-icon-button icon="editor:mode-edit"></core-icon-button>
-                            <span class="span-tooltip" tip>Edit selected entity</span>
-                        </core-tooltip> -->
                         <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
                             <core-icon-button icon="remove-circle-outline"></core-icon-button>
                             <span class="span-tooltip" tip>Delete selected entity</span>
                         </core-tooltip>
-                        <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
-	                        <tg-ui-action user="{{user}}" shortDesc="Function" longDesc="Functional context-dependent action" icon="editor:mode-edit" componentUri="/users/{{user}}/master/ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext" elementName="tg-TgFunctionalEntityWithCentreContext-master" attrs="{{ {user:user, entitytype:'ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext', currentState:'EDIT'} }}" contextRetriever="{{getContext2}}" requireSelectedEntities="ALL" requireMasterEntity="false">
+                        <!-- GENERATED FUNCTIONAL ACTIONS: -->
+<!--@functional_actions-->
+                        <!-- core-tooltip class="delayed entity-specific-action" tabIndex="-1">
+	                        <tg-ui-action user="{{user}}" shortDesc="Function" longDesc="Functional context-dependent action" icon="editor:mode-edit" componentUri="/users/{{user}}/master/ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext" elementName="tg-TgFunctionalEntityWithCentreContext-master" attrs="{{ {user:user, entitytype:'ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext', currentState:'EDIT'} }}" contextRetriever="{{createCentreContextHolder}}" requireSelectedEntities="ALL" requireMasterEntity="false">
     	                    </tg-ui-action>
     	                    <span class="span-tooltip" tip>Functional context-dependent action</span>
-                        </core-tooltip>
+                        </core-tooltip -->
+
                         <core-tooltip class="delayed standart-action" tabIndex="-1">
                             <core-icon-button icon="file-download"></core-icon-button>
                             <span class="span-tooltip" tip>Export to Excel</span>

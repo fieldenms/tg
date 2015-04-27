@@ -34,6 +34,7 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.ICentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
@@ -55,6 +56,7 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -587,13 +589,33 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             egiColumns.add(column.render());
         });
 
+        final List<FunctionalActionElement> functionalActions = new ArrayList<>();
+        final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
+
+        if (topLevelActions.isPresent()) {
+            for (final Pair<EntityActionConfig, Optional<String>> topLevelAction : topLevelActions.get()) {
+                // TODO do not forget to implement grouping for actions
+                // TODO do not forget to implement grouping for actions
+                // TODO do not forget to implement grouping for actions
+                final FunctionalActionElement el = new FunctionalActionElement(topLevelAction.getKey());
+                functionalActions.add(el);
+            }
+        }
+
+        final DomContainer functionalActionsDom = new DomContainer();
+        functionalActions.forEach(action -> {
+            importPaths.add(action.importPath());
+            functionalActionsDom.add(action.render());
+        });
+
         final String entityCentreStr = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html").
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getName()).
                 replace("<!--@criteria_editors-->", editorContainer.toString()).
-                replace("<!--@egi_columns-->", egiColumns.toString());
+                replace("<!--@egi_columns-->", egiColumns.toString()).
+                replace("<!--@functional_actions-->", functionalActionsDom.toString());
 
         final IRenderable representation = new IRenderable() {
             @Override
