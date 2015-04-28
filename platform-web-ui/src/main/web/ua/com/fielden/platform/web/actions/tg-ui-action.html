@@ -7,7 +7,7 @@
 <link rel="import" href="/resources/element_loader/load-element.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError"> <!-- enabledStates currentState  -->
+<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError onFunctionalEntitySaved"> <!-- enabledStates currentState  -->
     <template>
         <style>
             :host::shadow * /deep/ core-tooltip::shadow #tooltip {
@@ -49,6 +49,11 @@
             	 * Custom action to be invoked after 'tg-ui-action' has unsuccessfully retrieved its functional entity.
             	 */
             	postActionError: null,
+            	
+            	/**
+            	 * The function which is invoked after the functional entity has been saved (with success or without it).
+            	 */
+            	onFunctionalEntitySaved: null,
             	
             		/**
             		 * Determines whether the selected entities are required to be send inside the centre context. 
@@ -177,6 +182,7 @@
                 };
 
                 detail.onSaved = function(potentiallySavedEntity, newBindingEntity) {
+                	self.onFunctionalEntitySaved(potentiallySavedEntity);
                     console.log("onSaved");
                 };
 

@@ -57,6 +57,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("preAction", "{{topLevelActions[" + numberOfAction + "].preAction}}");
         attrs.put("postActionSuccess", "{{topLevelActions[" + numberOfAction + "].postActionSuccess}}");
         attrs.put("postActionError", "{{topLevelActions[" + numberOfAction + "].postActionError}}");
+        attrs.put("onFunctionalEntitySaved", "{{onFunctionalEntitySaved}}");
 
         if (conf().context.isPresent()) {
             if (conf().context.get().withSelectionCrit) {

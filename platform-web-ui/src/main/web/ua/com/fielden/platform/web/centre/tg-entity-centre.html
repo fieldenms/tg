@@ -95,6 +95,7 @@
                     self.showMaster = self.showMaster.bind(self);
                     self.getContext = self.getContext.bind(self);
                     self.createCentreContextHolder = self.createCentreContextHolder.bind(self);
+                    self.onFunctionalEntitySaved = self.onFunctionalEntitySaved.bind(self);
                 },
                 
                 attached: function () {
@@ -297,6 +298,12 @@
                 canManageCentreConfig: function (isCentreChanged) {
                     console.log("canManageCentreConfig: ", (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true);
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true;
+                },
+                
+                onFunctionalEntitySaved: function (potentiallySavedEntity) {
+                	if (potentiallySavedEntity.isValid()) {
+                		this.run();	
+                	}
                 }
             });
         })();
