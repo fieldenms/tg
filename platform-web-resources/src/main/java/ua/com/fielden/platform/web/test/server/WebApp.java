@@ -390,7 +390,6 @@ public class WebApp extends AbstractWebApp {
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
                 .setLayoutFor(Device.TABLET, null, ("['vertical', 'margin:20px',"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], [mr]],"
-                        + "],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
                 .setLayoutFor(Device.MOBILE, null, ("['margin:20px',"
