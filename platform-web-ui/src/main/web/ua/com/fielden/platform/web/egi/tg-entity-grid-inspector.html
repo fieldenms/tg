@@ -9,6 +9,7 @@
 <link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
+<link rel="import" href="/resources/actions/tg-page-action.html">
 
 <polymer-element name="tg-entity-grid-inspector" attributes="entityType entities">
     <template>
@@ -77,7 +78,7 @@
                         <template if="{{primaryAction}}">
                             <td class="action-column">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                    <core-icon-button icon="{{primaryAction.icon}}"></core-icon-button>
+                                	<tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}"></tg-page-action>
                                     <span class="span-tooltip" tip>{{primaryAction.actionDesc}}</span>
                                 </core-tooltip>
                             </td>

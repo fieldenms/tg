@@ -91,6 +91,7 @@
                     });
                     
                     self.editAction = self.editAction.bind(self);
+                    self.editSpecificEntity = self.editSpecificEntity.bind(self);
                     self.newAction = self.newAction.bind(self);
                     self.showMaster = self.showMaster.bind(self);
                     self.getContext = self.getContext.bind(self);
@@ -161,6 +162,17 @@
                         topic: "edit.start",
                         data: {
                             entity: self.getContext(),
+                            uuid: self.$.selection_criteria.uuid
+                        }
+                    });
+                },
+                editSpecificEntity: function (entity) {
+                	var self = this;
+                    postal.publish({
+                        channel: "centre",
+                        topic: "edit.start",
+                        data: {
+                            entity: entity,
                             uuid: self.$.selection_criteria.uuid
                         }
                     });
