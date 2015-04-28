@@ -203,7 +203,15 @@ public class WebApp extends AbstractWebApp {
                                 longDesc("Functional context-dependent action 3").
                                 build()
                 )
-
+                .also()
+                .addSecondaryAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                icon("attachment").
+                                shortDesc("Function 4").
+                                longDesc("Functional context-dependent action 4").
+                                build()
+                )
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)
                 //                .also()
