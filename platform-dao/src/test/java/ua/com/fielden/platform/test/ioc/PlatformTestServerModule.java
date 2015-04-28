@@ -90,6 +90,7 @@ import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
+import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Provider;
@@ -187,7 +188,17 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
     private static class SessionCacheBuilder implements Provider<Cache<String, UserSession>> {
 
-        private Cache<String, UserSession> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build();
+        private Cache<String, UserSession> cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(1, TimeUnit.NANOSECONDS)
+//                .ticker(new Ticker() {
+//
+//                    @Override
+//                    public long read() {
+//                        return 1000000000;
+//                    }
+//
+//                })
+                .build();
 
         @Override
         public Cache<String, UserSession> get() {

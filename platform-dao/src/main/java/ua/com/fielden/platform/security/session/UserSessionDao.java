@@ -176,16 +176,26 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      * The main goal of this method is to validate and refresh the user session, which happens for each request.
      * The validation part has a very strong role for detecting fraudulent attempts to access the system or indications for already compromised users that had their authenticators stolen.
      * <p>
+     * If the presented authenticator is present in the cache then it is considered to be valid.
+     * <p>
      * Please note that due to the fact that the first argument is a {@link User} instance, this
      * means that the username has already been verified and identified as belonging to an active user account.
      */
     @Override
     @SessionRequired
     public Optional<UserSession> currentSession(final User user, final String authenticator) {
-        // first reconstruct authenticator from string and then proceed with its validation
+        // reconstruct authenticator from string and then proceed with its validation
         // in case of validation failure, no reason should be provided to the outside as this could reveal too much information to a potential adversary
         final Authenticator auth = fromString(authenticator);
 
+        // check the cache first -- all authenicators in cache are considered valid
+        // but just in case make sure that current user matches the authenticator user name
+        final UserSession cachedSession = cache.getIfPresent(authenticator);
+        if (cachedSession != null && user.getKey().equals(auth.username)) {
+            return Optional.of(cachedSession);
+        }
+
+        // the authenticator is not in cache, a full authentication and series id regeneration process is in order
         // verify authenticator's authenticity using its hash and the application hashing key
         try {
             if (!auth.hash.equals(crypto.calculateRFC2104HMAC(auth.token, hashingKey))) {
@@ -260,6 +270,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         updated.beginInitialising();
         updated.setAuthenticator(mkAuthenticator(user, seriesId, expiryTime));
         updated.endInitialising();
+
+        // in order to support concurrent request from the same user it is necessary to
+        // associate the presented and verified authenticator as well as the new authenticator with an updated session in the session cache
+        cache.put(authenticator, updated);
+        cache.put(updated.getAuthenticator().toString(), updated);
 
         return Optional.of(updated);
     }
