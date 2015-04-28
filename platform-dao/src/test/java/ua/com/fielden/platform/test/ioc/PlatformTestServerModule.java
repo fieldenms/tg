@@ -2,6 +2,7 @@ package ua.com.fielden.platform.test.ioc;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
@@ -78,15 +79,20 @@ import ua.com.fielden.platform.sample.domain.TgWagonDao;
 import ua.com.fielden.platform.sample.domain.TgWagonSlotDao;
 import ua.com.fielden.platform.sample.domain.TgWorkshopDao;
 import ua.com.fielden.platform.security.annotations.PasswordHashingKey;
+import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
+import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.inject.Provider;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
@@ -123,6 +129,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bindConstant().annotatedWith(PasswordHashingKey.class).to("This is a hasing key, which is used to hash user passwords in unit tests.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
+        bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(SessionCacheBuilder.class).in(Scopes.SINGLETON);;
 
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
 
@@ -176,5 +183,16 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
         bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
         }).to(EntityWithMoneyDao.class);
+    }
+
+    private static class SessionCacheBuilder implements Provider<Cache<String, UserSession>> {
+
+        private Cache<String, UserSession> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build();
+
+        @Override
+        public Cache<String, UserSession> get() {
+            return cache;
+        }
+
     }
 }

@@ -23,6 +23,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
+import com.google.common.cache.Cache;
 import com.google.inject.Inject;
 
 /**
@@ -47,6 +49,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     private final int trustedDurationMins;
     private final int untrustedDurationMins;
     private final SessionIdentifierGenerator crypto;
+    private final Cache<String, UserSession> cache;
     private final IUniversalConstants constants;
 
     @Inject
@@ -54,6 +57,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             final @SessionHashingKey String hashingKey,
             final @TrustedDeviceSessionDuration int trustedDurationMins,
             final @UntrustedDeviceSessionDuration int untrustedDurationMins,
+            final @SessionCache Cache<String, UserSession> cache,
             final IUniversalConstants constants,
             final SessionIdentifierGenerator crypto,
             final IFilter filter) {
@@ -63,6 +67,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         this.trustedDurationMins = trustedDurationMins;
         this.untrustedDurationMins = untrustedDurationMins;
         this.crypto = crypto;
+
+        this.cache = cache;
     }
 
     @Override
