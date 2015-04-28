@@ -22,17 +22,19 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private boolean debug = false;
     private final EntityActionConfig entityActionConfig;
     private final int numberOfAction;
+    private final boolean topLevelAction;
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
      *
      * @param entityActionConfig
      */
-    public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction) {
+    public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final boolean topLevelAction) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("actions/tg-ui-action");
         this.widgetPath = "actions/tg-ui-action";
         this.entityActionConfig = entityActionConfig;
         this.numberOfAction = numberOfAction;
+        this.topLevelAction = topLevelAction;
     }
 
     /**
@@ -54,9 +56,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("elementName", "tg-" + conf().functionalEntity.get().getSimpleName() + "-master");
         attrs.put("attrs", "{{ {user:user, entitytype:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT'} }}");
         attrs.put("contextRetriever", "{{createCentreContextHolder}}");
-        attrs.put("preAction", "{{topLevelActions[" + numberOfAction + "].preAction}}");
-        attrs.put("postActionSuccess", "{{topLevelActions[" + numberOfAction + "].postActionSuccess}}");
-        attrs.put("postActionError", "{{topLevelActions[" + numberOfAction + "].postActionError}}");
+        attrs.put("preAction", "{{" + (topLevelAction ? "topLevelActions" : "secondaryActions") + "[" + numberOfAction + "].preAction}}");
+        attrs.put("postActionSuccess", "{{" + (topLevelAction ? "topLevelActions" : "secondaryActions") + "[" + numberOfAction + "].postActionSuccess}}");
+        attrs.put("postActionError", "{{" + (topLevelAction ? "topLevelActions" : "secondaryActions") + "[" + numberOfAction + "].postActionError}}");
         attrs.put("onFunctionalEntitySaved", "{{onFunctionalEntitySaved}}");
 
         if (conf().context.isPresent()) {
@@ -87,12 +89,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     @Override
     public final DomElement render() {
-
         final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
+        if (topLevelAction) {
 
-        final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get() : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
+            final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get() : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
 
-        return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
+            return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
+        } else {
+            return uiActionElement;
+        }
     }
 
     @Override

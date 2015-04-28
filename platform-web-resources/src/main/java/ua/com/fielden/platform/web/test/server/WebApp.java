@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.actionOff;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 
@@ -192,6 +193,16 @@ public class WebApp extends AbstractWebApp {
                 .addProp("compositeProp")
                 .also()
                 .addProp("stringProp")
+                .addPrimaryAction(actionOff().build())
+                .also()
+                .addSecondaryAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                icon("assignment-turned-in").
+                                shortDesc("Function 3").
+                                longDesc("Functional context-dependent action 3").
+                                build()
+                )
 
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)

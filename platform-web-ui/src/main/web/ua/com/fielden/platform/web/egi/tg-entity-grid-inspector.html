@@ -10,13 +10,14 @@
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 <link rel="import" href="/resources/actions/tg-page-action.html">
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 
 <polymer-element name="tg-entity-grid-inspector" attributes="entityType entities">
     <template>
         <link rel="stylesheet" href="/resources/egi/tg-entity-grid-inspector.css">
         <content id="column_selector" select="tg-property-column" hidden></content>
         <content id="primary_action_selector" select="tg-primary-instance-action" hidden></content>
-        <content id="secondary_action_selector" select="tg-secondary-instance-action" hidden></content>
+        <content id="secondary_action_selector" select=".secondary-action" hidden></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
         <core-media-query query="max-width: {{$.appConfig.minTabletWidth - 1}}px" querymatches="{{mobileScreen}}"></core-media-query>
@@ -100,8 +101,8 @@
                             <td class="action-column" style="position: relative">
                                 <template if="{{secondaryActions.length === 1}}">
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                        <core-icon-button icon="{{secondaryActions[0].icon}}"></core-icon-button>
-                                        <span class="span-tooltip" tip>secondaryActions[0].actionDesc</span>
+                                        <tg-ui-action user="{{secondaryActions[0].user}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" contextRetriever="{{secondaryActions[0].contextRetriever}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}" onFunctionalEntitySaved="{{secondaryActions[0].onFunctionalEntitySaved}}"></tg-ui-action>
+                                        <span class="span-tooltip" tip>{{secondaryActions[0].longDesc}}</span>
                                     </core-tooltip>
                                 </template>
                                 <template if="{{secondaryActions.length > 1}}">

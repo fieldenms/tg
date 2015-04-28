@@ -624,7 +624,25 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             functionalActionsDom.add(groupElement);
         }
 
+        final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
+        final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
+        if (resultSetSecondaryEntityActions.isPresent()) {
+            for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
+                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, false);
+                secondaryActionElements.add(el);
+            }
+        }
+
+        final DomContainer secondaryActionsDom = new DomContainer();
+        final StringBuilder secondaryActionsObjects = new StringBuilder();
+        for (final FunctionalActionElement el : secondaryActionElements) {
+            importPaths.add(el.importPath());
+            secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
+            secondaryActionsObjects.append(prefix + createActionObject(el));
+        }
+
         final String funcActionString = functionalActionsObjects.toString();
+        final String secondaryActionString = secondaryActionsObjects.toString();
         final int prefixLength = prefix.length();
         final String entityCentreStr = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html").
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
@@ -634,7 +652,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("<!--@criteria_editors-->", editorContainer.toString()).
                 replace("<!--@egi_columns-->", egiColumns.toString()).
                 replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
-                replace("<!--@functional_actions-->", functionalActionsDom.toString());
+                replace("//generatedSecondaryActions", secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
+                replace("<!--@functional_actions-->", functionalActionsDom.toString()).
+                replace("<!--@secondary_actions-->", secondaryActionsDom.toString());
 
         final IRenderable representation = new IRenderable() {
             @Override
@@ -649,7 +669,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (actionGroups.isEmpty()) {
             actionGroups.add(new ArrayList<>());
         }
-        final FunctionalActionElement el = new FunctionalActionElement(actionConfig, i);
+        final FunctionalActionElement el = new FunctionalActionElement(actionConfig, i, true);
         actionGroups.get(actionGroups.size() - 1).add(el);
     }
 
