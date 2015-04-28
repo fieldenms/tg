@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.centre;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -590,35 +589,43 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             egiColumns.add(column.render());
         });
 
-        final List<FunctionalActionElement> functionalActions = new ArrayList<>();
+        // final List<FunctionalActionElement> functionalActions = new ArrayList<>();
         final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
 
+        final List<List<FunctionalActionElement>> actionGroups = new ArrayList<>();
         if (topLevelActions.isPresent()) {
+
+            final String currentGroup = null;
             for (int i = 0; i < topLevelActions.get().size(); i++) {
                 final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
-                // TODO do not forget to implement grouping for actions
-                // TODO do not forget to implement grouping for actions
-                // TODO do not forget to implement grouping for actions
-                final FunctionalActionElement el = new FunctionalActionElement(topLevelAction.getKey(), i);
-                functionalActions.add(el);
+                final String cg = getGroup(topLevelAction.getValue());
+                if (!EntityUtils.equalsEx(cg, currentGroup)) {
+                    actionGroups.add(new ArrayList<>());
+                }
+                addToLastGroup(actionGroups, topLevelAction.getKey(), i);
+
+                // final FunctionalActionElement el = new FunctionalActionElement(topLevelAction.getKey(), i);
+                // functionalActions.add(el);
             }
         }
 
         final StringBuilder functionalActionsObjects = new StringBuilder();
-        final Iterator<FunctionalActionElement> iter = functionalActions.iterator();
-        if (iter.hasNext()) {
-            functionalActionsObjects.append(createActionObject(iter.next()));
-        }
-        while (iter.hasNext()) {
-            functionalActionsObjects.append(",\n" + createActionObject(iter.next()));
-        }
 
         final DomContainer functionalActionsDom = new DomContainer();
-        functionalActions.forEach(action -> {
-            importPaths.add(action.importPath());
-            functionalActionsDom.add(action.render());
-        });
 
+        final String prefix = ",\n";
+        for (final List<FunctionalActionElement> group : actionGroups) {
+            final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
+            for (final FunctionalActionElement el : group) {
+                importPaths.add(el.importPath());
+                groupElement.add(el.render());
+                functionalActionsObjects.append(prefix + createActionObject(el));
+            }
+            functionalActionsDom.add(groupElement);
+        }
+
+        final String funcActionString = functionalActionsObjects.toString();
+        final int prefixLength = prefix.length();
         final String entityCentreStr = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html").
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
@@ -626,7 +633,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@mi_type", miType.getName()).
                 replace("<!--@criteria_editors-->", editorContainer.toString()).
                 replace("<!--@egi_columns-->", egiColumns.toString()).
-                replace("//generatedActionObjects", functionalActionsObjects.toString()).
+                replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace("<!--@functional_actions-->", functionalActionsDom.toString());
 
         final IRenderable representation = new IRenderable() {
@@ -636,6 +643,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         };
         return representation;
+    }
+
+    private void addToLastGroup(final List<List<FunctionalActionElement>> actionGroups, final EntityActionConfig actionConfig, final int i) {
+        if (actionGroups.isEmpty()) {
+            actionGroups.add(new ArrayList<>());
+        }
+        final FunctionalActionElement el = new FunctionalActionElement(actionConfig, i);
+        actionGroups.get(actionGroups.size() - 1).add(el);
+    }
+
+    private String getGroup(final Optional<String> groupIfAny) {
+        return groupIfAny.isPresent() ? groupIfAny.get() : null;
     }
 
     private String createActionObject(final FunctionalActionElement element) {
