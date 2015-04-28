@@ -142,6 +142,19 @@
     <script>
         (function () {
             Polymer({
+                /**
+                 * Initialisation block. It has all children web components already initialised.
+                 */
+                ready: function () {
+                    this.super();
+                    var self = this;
+
+                    // TODO smth. like this should be generated here:
+                    self.topLevelActions = [
+						//generatedActionObjects                                            
+                    ];
+                },
+                
             	onRetrieved: function(entity, newBindingEntity, customObject) {
             		console.log("centre onRetrieved");
             	}

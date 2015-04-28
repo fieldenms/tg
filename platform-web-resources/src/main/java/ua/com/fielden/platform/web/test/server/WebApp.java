@@ -72,6 +72,12 @@ public class WebApp extends AbstractWebApp {
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                preAction(new IPreAction() {
+                                    @Override
+                                    public JsCode build() {
+                                        return new JsCode("    return confirm('Are you sure you want to proceed?');\n");
+                                    }
+                                }).
                                 icon("assignment-ind").
                                 shortDesc("Function 1").
                                 longDesc("Functional context-dependent action 1").

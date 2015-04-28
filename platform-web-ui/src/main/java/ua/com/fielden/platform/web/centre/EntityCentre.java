@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -593,13 +594,23 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
 
         if (topLevelActions.isPresent()) {
-            for (final Pair<EntityActionConfig, Optional<String>> topLevelAction : topLevelActions.get()) {
+            for (int i = 0; i < topLevelActions.get().size(); i++) {
+                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
                 // TODO do not forget to implement grouping for actions
                 // TODO do not forget to implement grouping for actions
                 // TODO do not forget to implement grouping for actions
-                final FunctionalActionElement el = new FunctionalActionElement(topLevelAction.getKey());
+                final FunctionalActionElement el = new FunctionalActionElement(topLevelAction.getKey(), i);
                 functionalActions.add(el);
             }
+        }
+
+        final StringBuilder functionalActionsObjects = new StringBuilder();
+        final Iterator<FunctionalActionElement> iter = functionalActions.iterator();
+        if (iter.hasNext()) {
+            functionalActionsObjects.append(createActionObject(iter.next()));
+        }
+        while (iter.hasNext()) {
+            functionalActionsObjects.append(",\n" + createActionObject(iter.next()));
         }
 
         final DomContainer functionalActionsDom = new DomContainer();
@@ -615,6 +626,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@mi_type", miType.getName()).
                 replace("<!--@criteria_editors-->", editorContainer.toString()).
                 replace("<!--@egi_columns-->", egiColumns.toString()).
+                replace("//generatedActionObjects", functionalActionsObjects.toString()).
                 replace("<!--@functional_actions-->", functionalActionsDom.toString());
 
         final IRenderable representation = new IRenderable() {
@@ -624,6 +636,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         };
         return representation;
+    }
+
+    private String createActionObject(final FunctionalActionElement element) {
+        return element.createActionObject();
     }
 
     /**

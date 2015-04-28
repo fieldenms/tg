@@ -21,16 +21,18 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final String widgetPath;
     private boolean debug = false;
     private final EntityActionConfig entityActionConfig;
+    private final int numberOfAction;
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
      *
      * @param entityActionConfig
      */
-    public FunctionalActionElement(final EntityActionConfig entityActionConfig) {
+    public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("actions/tg-ui-action");
         this.widgetPath = "actions/tg-ui-action";
         this.entityActionConfig = entityActionConfig;
+        this.numberOfAction = numberOfAction;
     }
 
     /**
@@ -52,6 +54,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("elementName", "tg-" + conf().functionalEntity.get().getSimpleName() + "-master");
         attrs.put("attrs", "{{ {user:user, entitytype:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT'} }}");
         attrs.put("contextRetriever", "{{createCentreContextHolder}}");
+        attrs.put("preAction", "{{topLevelActions[" + numberOfAction + "].preAction}}");
+        attrs.put("postActionSuccess", "{{topLevelActions[" + numberOfAction + "].postActionSuccess}}");
+        attrs.put("postActionError", "{{topLevelActions[" + numberOfAction + "].postActionError}}");
 
         if (conf().context.isPresent()) {
             if (conf().context.get().withSelectionCrit) {
@@ -100,5 +105,38 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     public void setDebug(final boolean debug) {
         this.debug = debug;
+    }
+
+    /**
+     * Creates a string representation for the object which holds pre- and post-actions.
+     *
+     * @return
+     */
+    public String createActionObject() {
+        final StringBuilder sb = new StringBuilder("{\n");
+
+        sb.append("preAction: function () {\n");
+        sb.append("    console.log('preAction: " + conf().shortDesc.get() + "');\n");
+        if (conf().preAction.isPresent()) {
+            sb.append(conf().preAction.get().build().toString());
+        } else {
+            sb.append("    return true;\n");
+        }
+        sb.append("},\n");
+
+        sb.append("postActionSuccess: function () {\n");
+        sb.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "');\n");
+        if (conf().successPostAction.isPresent()) {
+            sb.append(conf().successPostAction.get().build().toString());
+        }
+        sb.append("},\n");
+
+        sb.append("postActionError: function () {\n");
+        sb.append("    console.log('postActionError: " + conf().shortDesc.get() + "');\n");
+        if (conf().errorPostAction.isPresent()) {
+            sb.append(conf().errorPostAction.get().build().toString());
+        }
+        sb.append("}\n");
+        return sb.append("}\n").toString();
     }
 }

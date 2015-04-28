@@ -7,7 +7,7 @@
 <link rel="import" href="/resources/element_loader/load-element.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity"> <!-- enabledStates currentState  -->
+<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError"> <!-- enabledStates currentState  -->
     <template>
         <style>
             :host::shadow * /deep/ core-tooltip::shadow #tooltip {
@@ -37,6 +37,19 @@
     <script>
         Polymer('tg-ui-action', {
             publish: {
+            	/**
+            	 * Custom action to be invoked before 'tg-ui-action' will be run.
+            	 */
+            	preAction: null,
+            	/**
+            	 * Custom action to be invoked after 'tg-ui-action' has retrieved its functional entity and bound it to the UI (in case of successful retrieval).
+            	 */
+            	postActionSuccess: null,
+            	/**
+            	 * Custom action to be invoked after 'tg-ui-action' has unsuccessfully retrieved its functional entity.
+            	 */
+            	postActionError: null,
+            	
             		/**
             		 * Determines whether the selected entities are required to be send inside the centre context. 
             		 * 
@@ -125,12 +138,14 @@
             run: function () {
                 // this.enabled = false;
                 console.log(this.shortDesc + ": execute");
-
-                // TODO var context = ...;
-                // var ser = this.$.serialiser.serialise(context);
-                // this.$.actionExecutor.body = JSON.stringify(ser);
-
-                this.$.loadMaster.reload();
+                
+                if (this.preAction) {
+                	if (this.preAction()) { // returns 'true' in case whether the action should proceed
+	                    this.$.loadMaster.reload();
+                	}
+                } else {
+                	this.$.loadMaster.reload();
+                }
             },
 
             /**
@@ -152,6 +167,9 @@
 
             	detail.onRetrieved = function(entity, bindingEntity, customObject) {
             		console.log("onRetrieved");
+                    if (self.postActionSuccess) {
+                    	self.postActionSuccess();
+                    }
             	};
 
                 detail.onValidated = function(validatedEntity, bindingEntity, customObject) {

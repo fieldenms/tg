@@ -21,7 +21,7 @@ public final class EntityActionConfig {
     public final Optional<String> icon;
     public final Optional<String> shortDesc;
     public final Optional<String> longDesc;
-    public final Optional<IPreAction> preAciton;
+    public final Optional<IPreAction> preAction;
     public final Optional<IPostAction> successPostAction;
     public final Optional<IPostAction> errorPostAction;
     private final boolean noAction;
@@ -51,7 +51,7 @@ public final class EntityActionConfig {
         this.icon = Optional.ofNullable(icon);
         this.shortDesc = Optional.ofNullable(shortDesc);
         this.longDesc = Optional.ofNullable(longDesc);
-        this.preAciton = Optional.ofNullable(preAction);
+        this.preAction = Optional.ofNullable(preAction);
         this.successPostAction = Optional.ofNullable(successPostAction);
         this.errorPostAction = Optional.ofNullable(errorPostAction);
         this.noAction = noAction;
@@ -119,7 +119,7 @@ public final class EntityActionConfig {
         result = prime * result + ((icon == null) ? 0 : icon.hashCode());
         result = prime * result + ((longDesc == null) ? 0 : longDesc.hashCode());
         result = prime * result + (noAction ? 1231 : 1237);
-        result = prime * result + ((preAciton == null) ? 0 : preAciton.hashCode());
+        result = prime * result + ((preAction == null) ? 0 : preAction.hashCode());
         result = prime * result + ((shortDesc == null) ? 0 : shortDesc.hashCode());
         result = prime * result + ((successPostAction == null) ? 0 : successPostAction.hashCode());
         return result;
@@ -173,11 +173,11 @@ public final class EntityActionConfig {
         if (noAction != other.noAction) {
             return false;
         }
-        if (preAciton == null) {
-            if (other.preAciton != null) {
+        if (preAction == null) {
+            if (other.preAction != null) {
                 return false;
             }
-        } else if (!preAciton.equals(other.preAciton)) {
+        } else if (!preAction.equals(other.preAction)) {
             return false;
         }
         if (shortDesc == null) {
