@@ -1,20 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-tabs/paper-tabs.html">
 <link rel="import" href="/resources/polymer/paper-tabs/paper-tab.html">
-<!-- <link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
-<link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-from-right.html">
-<link rel="import" href="/resources/centre/tg-selection-criteria.html">
-<link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
-<link rel="import" href="/resources/egi/tg-property-column.html">
-<link rel="import" href="/resources/egi/tg-primary-instance-action.html">
-<link rel="import" href="/resources/egi/tg-secondary-instance-action.html">
-<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
-<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
-<link rel="import" href="/resources/polymer/core-icons/core-icons.html">
-<link rel="import" href="/resources/polymer/core-icons/editor-icons.html">
-<link rel="import" href="/resources/polymer/core-icons/hardware-icons.html">
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
- -->
+<link rel="import" href="/resources/components/postal-lib.html">
+
 <polymer-element name="tg-entity-centre" attributes="user entityType mitype uuid getMasterEntity onRetrieved">
     <template>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -91,10 +79,12 @@
                     });
                     
                     self.editAction = self.editAction.bind(self);
+                    self.editSpecificEntity = self.editSpecificEntity.bind(self);
                     self.newAction = self.newAction.bind(self);
                     self.showMaster = self.showMaster.bind(self);
                     self.getContext = self.getContext.bind(self);
                     self.createCentreContextHolder = self.createCentreContextHolder.bind(self);
+                    self.onFunctionalEntitySaved = self.onFunctionalEntitySaved.bind(self);
                 },
                 
                 attached: function () {
@@ -120,6 +110,15 @@
                         topic: "new.finish",
                         callback: function (data, envelope) {
                             console.log("-------- Masters New UUID: " + data.uuid + " ------------");
+                        }
+                    });
+                    
+                    ///////////////////////// Detail onSaved listener //////////////////////////////////////
+                    this.detailOnSavedListener = postal.subscribe({
+                        channel: self.$.selection_criteria.uuid,
+                        topic: "detail.saved",
+                        callback: function (data, envelope) {
+                        	self.onFunctionalEntitySaved(data.entity);
                         }
                     });
                 },
@@ -160,6 +159,17 @@
                         topic: "edit.start",
                         data: {
                             entity: self.getContext(),
+                            uuid: self.$.selection_criteria.uuid
+                        }
+                    });
+                },
+                editSpecificEntity: function (entity) {
+                	var self = this;
+                    postal.publish({
+                        channel: "centre",
+                        topic: "edit.start",
+                        data: {
+                            entity: entity,
                             uuid: self.$.selection_criteria.uuid
                         }
                     });
@@ -297,6 +307,12 @@
                 canManageCentreConfig: function (isCentreChanged) {
                     console.log("canManageCentreConfig: ", (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true);
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true;
+                },
+                
+                onFunctionalEntitySaved: function (potentiallySavedEntity) {
+                	if (potentiallySavedEntity.isValid()) {
+                		this.run();	
+                	}
                 }
             });
         })();

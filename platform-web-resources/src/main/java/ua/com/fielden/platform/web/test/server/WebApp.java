@@ -72,6 +72,12 @@ public class WebApp extends AbstractWebApp {
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                preAction(new IPreAction() {
+                                    @Override
+                                    public JsCode build() {
+                                        return new JsCode("    return confirm('Are you sure you want to proceed?');\n");
+                                    }
+                                }).
                                 icon("assignment-ind").
                                 shortDesc("Function 1").
                                 longDesc("Functional context-dependent action 1").
@@ -186,7 +192,33 @@ public class WebApp extends AbstractWebApp {
                 .addProp("compositeProp")
                 .also()
                 .addProp("stringProp")
+                .addPrimaryAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                icon("assignment-turned-in").
+                                shortDesc("Function 2.5").
+                                longDesc("Functional context-dependent action 2.5").
+                                build()
 
+                ) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
+                .also()
+                .addSecondaryAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                icon("assignment-turned-in").
+                                shortDesc("Function 3").
+                                longDesc("Functional context-dependent action 3").
+                                build()
+                )
+                .also()
+                .addSecondaryAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                icon("attachment").
+                                shortDesc("Function 4").
+                                longDesc("Functional context-dependent action 4").
+                                build()
+                )
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)
                 //                .also()
@@ -384,7 +416,6 @@ public class WebApp extends AbstractWebApp {
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
                 .setLayoutFor(Device.TABLET, null, ("['vertical', 'margin:20px',"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], [mr]],"
-                        + "],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
                 .setLayoutFor(Device.MOBILE, null, ("['margin:20px',"

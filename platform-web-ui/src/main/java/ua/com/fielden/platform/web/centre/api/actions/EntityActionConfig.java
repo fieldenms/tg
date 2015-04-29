@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
-
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
@@ -21,7 +22,7 @@ public final class EntityActionConfig {
     public final Optional<String> icon;
     public final Optional<String> shortDesc;
     public final Optional<String> longDesc;
-    public final Optional<IPreAction> preAciton;
+    public final Optional<IPreAction> preAction;
     public final Optional<IPostAction> successPostAction;
     public final Optional<IPostAction> errorPostAction;
     private final boolean noAction;
@@ -35,8 +36,7 @@ public final class EntityActionConfig {
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
-            final boolean noAction
-            ) {
+            final boolean noAction) {
 
         if (!noAction && functionalEntity == null) {
             throw new IllegalArgumentException("A functional entity type should be provided.");
@@ -51,7 +51,7 @@ public final class EntityActionConfig {
         this.icon = Optional.ofNullable(icon);
         this.shortDesc = Optional.ofNullable(shortDesc);
         this.longDesc = Optional.ofNullable(longDesc);
-        this.preAciton = Optional.ofNullable(preAction);
+        this.preAction = Optional.ofNullable(preAction);
         this.successPostAction = Optional.ofNullable(successPostAction);
         this.errorPostAction = Optional.ofNullable(errorPostAction);
         this.noAction = noAction;
@@ -59,10 +59,20 @@ public final class EntityActionConfig {
 
     /**
      * A factory method for creating a configuration that indicates a need to skip creation of any action.
+     *
      * @return
      */
     public static EntityActionConfig createNoActionConfig() {
         return new EntityActionConfig(null, null, null, null, null, null, null, null, true);
+    }
+
+    /**
+     * A factory method for creating a configuration that indicates a need to invoke corresponding master for row entity.
+     *
+     * @return
+     */
+    public static EntityActionConfig createMasterInvocationActionConfig() {
+        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, false);
     }
 
     /**
@@ -79,14 +89,14 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createActionConfig(
-                    final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
-                    final CentreContextConfig context,
-                    final String icon,
-                    final String shortDesc,
-                    final String longDesc,
-                    final IPreAction preAction,
-                    final IPostAction successPostAction,
-                    final IPostAction errorPostAction
+            final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
+            final CentreContextConfig context,
+            final String icon,
+            final String shortDesc,
+            final String longDesc,
+            final IPreAction preAction,
+            final IPostAction successPostAction,
+            final IPostAction errorPostAction
             ) {
         return new EntityActionConfig(
                 functionalEntity,
@@ -119,7 +129,7 @@ public final class EntityActionConfig {
         result = prime * result + ((icon == null) ? 0 : icon.hashCode());
         result = prime * result + ((longDesc == null) ? 0 : longDesc.hashCode());
         result = prime * result + (noAction ? 1231 : 1237);
-        result = prime * result + ((preAciton == null) ? 0 : preAciton.hashCode());
+        result = prime * result + ((preAction == null) ? 0 : preAction.hashCode());
         result = prime * result + ((shortDesc == null) ? 0 : shortDesc.hashCode());
         result = prime * result + ((successPostAction == null) ? 0 : successPostAction.hashCode());
         return result;
@@ -173,11 +183,11 @@ public final class EntityActionConfig {
         if (noAction != other.noAction) {
             return false;
         }
-        if (preAciton == null) {
-            if (other.preAciton != null) {
+        if (preAction == null) {
+            if (other.preAction != null) {
                 return false;
             }
-        } else if (!preAciton.equals(other.preAciton)) {
+        } else if (!preAction.equals(other.preAction)) {
             return false;
         }
         if (shortDesc == null) {

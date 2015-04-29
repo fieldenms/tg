@@ -5,6 +5,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
+import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
@@ -21,16 +22,22 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final String widgetPath;
     private boolean debug = false;
     private final EntityActionConfig entityActionConfig;
+    private final int numberOfAction;
+    private final FunctionalActionKind functionalActionKind;
+    private final boolean primaryMasterInvocationAction;
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
      *
      * @param entityActionConfig
      */
-    public FunctionalActionElement(final EntityActionConfig entityActionConfig) {
+    public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("actions/tg-ui-action");
         this.widgetPath = "actions/tg-ui-action";
         this.entityActionConfig = entityActionConfig;
+        this.numberOfAction = numberOfAction;
+        this.functionalActionKind = functionalActionKind;
+        this.primaryMasterInvocationAction = this.entityActionConfig.functionalEntity.isPresent() && this.entityActionConfig.functionalEntity.get().equals(MasterInvocationFunctionalEntity.class);
     }
 
     /**
@@ -50,8 +57,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
         attrs.put("componentUri", "/users/{{user}}/master/" + conf().functionalEntity.get().getName());
         attrs.put("elementName", "tg-" + conf().functionalEntity.get().getSimpleName() + "-master");
-        attrs.put("attrs", "{{ {user:user, entitytype:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT'} }}");
+        attrs.put("attrs", "{{ {user:user, entitytype:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid:uuid} }}");
         attrs.put("contextRetriever", "{{createCentreContextHolder}}");
+        final String actionsHolderName = functionalActionKind == FunctionalActionKind.TOP_LEVEL ? "topLevelActions" :
+                functionalActionKind == FunctionalActionKind.PRIMARY_RESULT_SET ? "primaryAction" :
+                        functionalActionKind == FunctionalActionKind.SECONDARY_RESULT_SET ? "secondaryActions" :
+                                "propActions";
+        attrs.put("preAction", "{{" + actionsHolderName + "[" + numberOfAction + "].preAction}}");
+        attrs.put("postActionSuccess", "{{" + actionsHolderName + "[" + numberOfAction + "].postActionSuccess}}");
+        attrs.put("postActionError", "{{" + actionsHolderName + "[" + numberOfAction + "].postActionError}}");
 
         if (conf().context.isPresent()) {
             if (conf().context.get().withSelectionCrit) {
@@ -81,17 +95,21 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     @Override
     public final DomElement render() {
-
         final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
+        if (primaryMasterInvocationAction) {
+            return new DomElement("tg-primary-instance-action").attr("action", "{{editSpecificEntity}}").attr("actionDesc", "action description").attr("icon", "editor:mode-edit");
+        } else if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
+            final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get() : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
 
-        final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get() : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
-
-        return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
+            return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
+        } else {
+            return uiActionElement;
+        }
     }
 
     @Override
     public String importPath() {
-        return widgetPath;
+        return primaryMasterInvocationAction ? "egi/tg-primary-instance-action" : widgetPath;
     }
 
     public boolean isDebug() {
@@ -100,5 +118,38 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     public void setDebug(final boolean debug) {
         this.debug = debug;
+    }
+
+    /**
+     * Creates a string representation for the object which holds pre- and post-actions.
+     *
+     * @return
+     */
+    public String createActionObject() {
+        final StringBuilder sb = new StringBuilder("{\n");
+
+        sb.append("preAction: function () {\n");
+        sb.append("    console.log('preAction: " + conf().shortDesc.get() + "');\n");
+        if (conf().preAction.isPresent()) {
+            sb.append(conf().preAction.get().build().toString());
+        } else {
+            sb.append("    return true;\n");
+        }
+        sb.append("},\n");
+
+        sb.append("postActionSuccess: function () {\n");
+        sb.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "');\n");
+        if (conf().successPostAction.isPresent()) {
+            sb.append(conf().successPostAction.get().build().toString());
+        }
+        sb.append("},\n");
+
+        sb.append("postActionError: function () {\n");
+        sb.append("    console.log('postActionError: " + conf().shortDesc.get() + "');\n");
+        if (conf().errorPostAction.isPresent()) {
+            sb.append(conf().errorPostAction.get().build().toString());
+        }
+        sb.append("}\n");
+        return sb.append("}\n").toString();
     }
 }

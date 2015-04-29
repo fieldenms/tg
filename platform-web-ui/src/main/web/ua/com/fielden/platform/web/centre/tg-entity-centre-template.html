@@ -9,8 +9,6 @@
 
 <!-- EGI imports -->
 <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
-<link rel="import" href="/resources/egi/tg-primary-instance-action.html">
-<link rel="import" href="/resources/egi/tg-secondary-instance-action.html">
 
 <link rel="import" href="/resources/actions/tg-page-action.html">
 
@@ -56,6 +54,9 @@
             }
             .selection-criteria, .entity-grid-inspector {
                 background-color: white;
+            }
+            .group {
+            	margin-left: 30px;
             }
             core-animated-pages {
                 overflow: auto;
@@ -132,8 +133,10 @@
                             <core-icon-button icon="refresh" on-tap="{{run}}"></core-icon-button>
                             <span class="span-tooltip" tip>Refresh</span>
                         </core-tooltip>
-                        <tg-primary-instance-action actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>
-                        <tg-secondary-instance-action actionDesc="action description"></tg-secondary-instance-action>
+<!--@primary_action-->
+                        <!-- tg-primary-instance-action action="{{editSpecificEntity}}" actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>  -->
+<!--@secondary_actions-->                        
+                        <!-- <tg-secondary-instance-action actionDesc="action description"></tg-secondary-instance-action> -->
                     </tg-entity-grid-inspector>             
                 </div>
             </div>
@@ -142,6 +145,25 @@
     <script>
         (function () {
             Polymer({
+                /**
+                 * Initialisation block. It has all children web components already initialised.
+                 */
+                ready: function () {
+                    this.super();
+                    var self = this;
+
+                    // TODO smth. like this should be generated here:
+                    self.topLevelActions = [
+						//generatedActionObjects                                            
+                    ];
+                    self.secondaryActions = [
+                    	//generatedSecondaryActions                                            
+                    ];
+                    self.primaryAction = [
+                    	//generatedPrimaryAction                                            
+                    ];
+                },
+                
             	onRetrieved: function(entity, newBindingEntity, customObject) {
             		console.log("centre onRetrieved");
             	}

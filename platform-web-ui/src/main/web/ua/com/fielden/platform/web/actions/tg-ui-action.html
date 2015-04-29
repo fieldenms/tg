@@ -6,8 +6,9 @@
 <link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="/resources/element_loader/load-element.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity"> <!-- enabledStates currentState  -->
+<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError"> <!-- enabledStates currentState  -->
     <template>
         <style>
             :host::shadow * /deep/ core-tooltip::shadow #tooltip {
@@ -37,17 +38,30 @@
     <script>
         Polymer('tg-ui-action', {
             publish: {
-            		/**
-            		 * Determines whether the selected entities are required to be send inside the centre context. 
-            		 * 
-            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context. 
-            		 */
+            	/**
+            	 * Custom action to be invoked before 'tg-ui-action' will be run.
+            	 */
+            	preAction: null,
+            	/**
+            	 * Custom action to be invoked after 'tg-ui-action' has retrieved its functional entity and bound it to the UI (in case of successful retrieval).
+            	 */
+            	postActionSuccess: null,
+            	/**
+            	 * Custom action to be invoked after 'tg-ui-action' has unsuccessfully retrieved its functional entity.
+            	 */
+            	postActionError: null,
+            	
+           		/**
+           		 * Determines whether the selected entities are required to be send inside the centre context. 
+           		 * 
+           		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context. 
+           		 */
            		requireSelectedEntities: null,
-            		/**
-            		 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context. 
-            		 * 
-            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context. 
-            		 */
+           		/**
+           		 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context. 
+           		 * 
+           		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context. 
+           		 */
            		requireMasterEntity: null,
 
           		user: null,
@@ -125,12 +139,14 @@
             run: function () {
                 // this.enabled = false;
                 console.log(this.shortDesc + ": execute");
-
-                // TODO var context = ...;
-                // var ser = this.$.serialiser.serialise(context);
-                // this.$.actionExecutor.body = JSON.stringify(ser);
-
-                this.$.loadMaster.reload();
+                
+                if (this.preAction) {
+                	if (this.preAction()) { // returns 'true' in case whether the action should proceed
+	                    this.$.loadMaster.reload();
+                	}
+                } else {
+                	this.$.loadMaster.reload();
+                }
             },
 
             /**
@@ -152,6 +168,9 @@
 
             	detail.onRetrieved = function(entity, bindingEntity, customObject) {
             		console.log("onRetrieved");
+                    if (self.postActionSuccess) {
+                    	self.postActionSuccess();
+                    }
             	};
 
                 detail.onValidated = function(validatedEntity, bindingEntity, customObject) {
@@ -159,6 +178,14 @@
                 };
 
                 detail.onSaved = function(potentiallySavedEntity, newBindingEntity) {
+                    postal.publish({
+                        channel: detail.centreUuid,
+                        topic: "detail.saved",
+                        data: {
+                            entity: potentiallySavedEntity
+                        }
+                    });
+                	
                     console.log("onSaved");
                 };
 
