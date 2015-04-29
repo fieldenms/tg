@@ -78,12 +78,8 @@
                         </td>
                         <template if="{{primaryAction}}">
                             <td class="action-column">
-                            	<template if="{{primaryAction.action}}">
-                                    <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}"></tg-page-action>
-                                </template>
-                            	<template if="{{!primaryAction.action}}">
-                                    <tg-ui-action user="{{primaryAction.user}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" contextRetriever="{{primaryAction.contextRetriever}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
-                                </template>
+                                <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}" hidden?="{{primaryAction.action !== null}}"></tg-page-action>
+                                <tg-ui-action hidden?="{{primaryAction.action === null}}" user="{{primaryAction.user}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" contextRetriever="{{primaryAction.contextRetriever}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
                             </td>
                         </template>
                         <template repeat="{{column, columnIndex in columns}}">
@@ -102,17 +98,17 @@
                         <template if="{{secondaryActions.length > 0}}">
                             <td class="action-column" style="position: relative">
                                 <template if="{{secondaryActions.length === 1}}">
-                                	<tg-ui-action user="{{secondaryActions[0].user}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" contextRetriever="{{secondaryActions[0].contextRetriever}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}"></tg-ui-action>
+                                    <tg-ui-action user="{{secondaryActions[0].user}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" contextRetriever="{{secondaryActions[0].contextRetriever}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}"></tg-ui-action>
                                 </template>
                                 <template if="{{secondaryActions.length > 1}}">
-                                	<tg-secondary-action-button actions="{{secondaryActions}}"></tg-secondary-action-button>
+                                    <tg-secondary-action-button actions="{{secondaryActions}}"></tg-secondary-action-button>
                                 </template>
                             </td>
                         </template>
                     </tr>
                 </template>
             </tbody>
-        </table>        
+        </table>
         <!--</table>
 </div>-->
         <!--<table>
@@ -243,22 +239,22 @@
                     this.$.ripple.downAction(e);
                     this.$.ripple.upAction();
                 },
-                
-                onRippleFinished: function(e, detail, source) {
+
+                onRippleFinished: function (e, detail, source) {
                     var columnIndex = +source.getAttribute("columnInd"),
                         entity = this.entities[+source.getAttribute("entityInd")],
                         dotNotatedName = this.columns[columnIndex].property;
                     this.tap(entity, dotNotatedName, this.columns[columnIndex]);
                 },
-                
+
                 /**
                  * Determines whether the specified object represents the entity.
                  */
                 _isEntity: function (obj) {
                     return obj !== null && (obj instanceof this.$.reflector.getEntityType());
                 },
-                
-                tap: function(entity, property, column) {
+
+                tap: function (entity, property, column) {
                     var value = entity.get(property);
                     if (this._isEntity(value)) {
                         column.action(value);

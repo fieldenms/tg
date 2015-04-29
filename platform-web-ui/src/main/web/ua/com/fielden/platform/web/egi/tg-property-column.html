@@ -8,6 +8,9 @@
     <script>
         (function () {
             Polymer({
+                publish: {
+                    action: null
+                },
                 ready: function () {
                     this.runAction = this.runAction.bind(this);
                     this.customAction = this.$.action_selector.getDistributedNodes().length > 0 ? this.$.action_selector.getDistributedNodes()[0] : null;
