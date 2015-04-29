@@ -273,8 +273,9 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
         // in order to support concurrent request from the same user it is necessary to
         // associate the presented and verified authenticator as well as the new authenticator with an updated session in the session cache
+        final String newAuthenticator = updated.getAuthenticator().get().toString();
         cache.put(authenticator, updated);
-        cache.put(updated.getAuthenticator().toString(), updated);
+        cache.put(newAuthenticator, updated);
 
         return Optional.of(updated);
     }
