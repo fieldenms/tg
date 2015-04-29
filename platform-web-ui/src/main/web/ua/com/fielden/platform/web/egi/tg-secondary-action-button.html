@@ -25,7 +25,7 @@
         <paper-dropdown id="dropdown" style="position:absolute" layout vertical>
             <template repeat="{{action in actions}}">
                 <core-tooltip position="bottom" class="delayed" style="width:100%">
-                	<tg-ui-action user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" contextRetriever="{{action.contextRetriever}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" onFunctionalEntitySaved="{{action.onFunctionalEntitySaved}}"></tg-ui-action>
+                	<tg-ui-action user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" contextRetriever="{{action.contextRetriever}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
                     <span class="span-tooltip" tip>{{action.actionDesc}}</span>
                 </core-tooltip>
             </template>

@@ -6,8 +6,9 @@
 <link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="/resources/element_loader/load-element.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError onFunctionalEntitySaved"> <!-- enabledStates currentState  -->
+<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError"> <!-- enabledStates currentState  -->
     <template>
         <style>
             :host::shadow * /deep/ core-tooltip::shadow #tooltip {
@@ -50,22 +51,17 @@
             	 */
             	postActionError: null,
             	
-            	/**
-            	 * The function which is invoked after the functional entity has been saved (with success or without it).
-            	 */
-            	onFunctionalEntitySaved: null,
-            	
-            		/**
-            		 * Determines whether the selected entities are required to be send inside the centre context. 
-            		 * 
-            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context. 
-            		 */
+           		/**
+           		 * Determines whether the selected entities are required to be send inside the centre context. 
+           		 * 
+           		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context. 
+           		 */
            		requireSelectedEntities: null,
-            		/**
-            		 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context. 
-            		 * 
-            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context. 
-            		 */
+           		/**
+           		 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context. 
+           		 * 
+           		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context. 
+           		 */
            		requireMasterEntity: null,
 
           		user: null,
@@ -182,7 +178,14 @@
                 };
 
                 detail.onSaved = function(potentiallySavedEntity, newBindingEntity) {
-                	self.onFunctionalEntitySaved(potentiallySavedEntity);
+                    postal.publish({
+                        channel: detail.centreUuid,
+                        topic: "detail.saved",
+                        data: {
+                            entity: potentiallySavedEntity
+                        }
+                    });
+                	
                     console.log("onSaved");
                 };
 

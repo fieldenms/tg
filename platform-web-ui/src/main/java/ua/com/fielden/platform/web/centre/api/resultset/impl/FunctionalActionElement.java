@@ -54,12 +54,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
         attrs.put("componentUri", "/users/{{user}}/master/" + conf().functionalEntity.get().getName());
         attrs.put("elementName", "tg-" + conf().functionalEntity.get().getSimpleName() + "-master");
-        attrs.put("attrs", "{{ {user:user, entitytype:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT'} }}");
+        attrs.put("attrs", "{{ {user:user, entitytype:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid:uuid} }}");
         attrs.put("contextRetriever", "{{createCentreContextHolder}}");
         attrs.put("preAction", "{{" + (topLevelAction ? "topLevelActions" : "secondaryActions") + "[" + numberOfAction + "].preAction}}");
         attrs.put("postActionSuccess", "{{" + (topLevelAction ? "topLevelActions" : "secondaryActions") + "[" + numberOfAction + "].postActionSuccess}}");
         attrs.put("postActionError", "{{" + (topLevelAction ? "topLevelActions" : "secondaryActions") + "[" + numberOfAction + "].postActionError}}");
-        attrs.put("onFunctionalEntitySaved", "{{onFunctionalEntitySaved}}");
 
         if (conf().context.isPresent()) {
             if (conf().context.get().withSelectionCrit) {
