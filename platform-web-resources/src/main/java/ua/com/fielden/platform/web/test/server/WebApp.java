@@ -133,40 +133,40 @@ public class WebApp extends AbstractWebApp {
                 /*    */.setDefaultValue(single().text()./* TODO not applicable on query generation level not(). */setValue("DE*")./* TODO not applicable on query generation level canHaveNoValue(). */value())
 
                 .setLayoutFor(Device.DESKTOP, null,
-                        ("[['center-justified', mr, mr, mrLast]," +
-                                "['center-justified', mr, mr, mrLast]," +
-                                "['center-justified', mr, mr, mrLast]," +
-                                "['center-justified', mr, mr, mrLast]," +
-                                "['center-justified', mr, mr, mrLast]]")
+                        ("[['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, null,
-                        ("[['center-justified', mr, mrLast]," +
-                                "['center-justified', mr, mrLast]," +
-                                "['center-justified', mr, mrLast]," +
-                                "['center-justified', mr, mrLast]," +
-                                "['center-justified', mr, mrLast]," +
-                                "['center-justified', mr, mrLast]," +
-                                "['center-justified', mr, mrLast]," +
-                                "['center-justified', mrLast]]")
+                        ("[['center-justified start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.MOBILE, null,
                         ("[['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]," +
-                                "['center-justified', mrLast]]")
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .addProp("this")
