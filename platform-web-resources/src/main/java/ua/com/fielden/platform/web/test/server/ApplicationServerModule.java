@@ -20,6 +20,7 @@ import ua.com.fielden.platform.web.ioc.BasicWebApplicationServerModule;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
@@ -48,13 +49,18 @@ public class ApplicationServerModule extends BasicWebApplicationServerModule {
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data for a test server.");
         bindConstant().annotatedWith(PasswordHashingKey.class).to("This is a hasing key, which is used to hash user passwords for a test server.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
-        bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
+        bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // five minutes
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(SessionCacheBuilder.class).in(Scopes.SINGLETON);;
     }
 
     private static class SessionCacheBuilder implements Provider<Cache<String, UserSession>> {
 
-        private Cache<String, UserSession> cache = CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build();
+        private final Cache<String, UserSession> cache;
+
+        @Inject
+        public SessionCacheBuilder(final @UntrustedDeviceSessionDuration int untrustedDeviceSessionDurationMins) {
+            cache = CacheBuilder.newBuilder().expireAfterWrite(untrustedDeviceSessionDurationMins / 2, TimeUnit.MINUTES).build();
+        }
 
         @Override
         public Cache<String, UserSession> get() {
