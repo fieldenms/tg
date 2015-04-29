@@ -301,6 +301,9 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             saved.setAuthenticator(mkAuthenticator(user, seriesId, expiryTime));
             saved.endInitialising();
 
+            // need to cache the established session in associated with the generated authenticator
+            cache.put(saved.getAuthenticator().get().toString(), saved);
+
             return saved;
 
         } catch (final SignatureException e) {
@@ -335,5 +338,9 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      */
     private Date calcExpiryTime(final boolean isDeviceTrusted) {
         return (isDeviceTrusted ? constants.now().plusMinutes(trustedDurationMins) : constants.now().plusMinutes(untrustedDurationMins)).toDate();
+    }
+
+    public Cache<String, UserSession> getCache() {
+        return cache;
     }
 }

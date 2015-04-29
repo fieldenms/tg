@@ -93,6 +93,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
@@ -130,9 +131,10 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bindConstant().annotatedWith(PasswordHashingKey.class).to("This is a hasing key, which is used to hash user passwords in unit tests.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
-        bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(SessionCacheBuilder.class).in(Scopes.SINGLETON);;
 
+        bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
+        bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(SessionCacheBuilder.class).in(Scopes.SINGLETON);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
         // bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
@@ -188,17 +190,19 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
     private static class SessionCacheBuilder implements Provider<Cache<String, UserSession>> {
 
-        private Cache<String, UserSession> cache = CacheBuilder.newBuilder()
-                .expireAfterWrite(1, TimeUnit.NANOSECONDS)
-//                .ticker(new Ticker() {
-//
-//                    @Override
-//                    public long read() {
-//                        return 1000000000;
-//                    }
-//
-//                })
-                .build();
+        private final Cache<String, UserSession> cache;
+
+        @Inject
+        public SessionCacheBuilder(final Ticker ticker) {
+            cache = CacheBuilder.newBuilder()
+                    // all authenticators should be evicted from the cache in 2 minutes time after that have been
+                    // put into the cache
+                    .expireAfterWrite(2, TimeUnit.MINUTES)
+                    // the ticker controls the eviction time
+                    // the injected instance is initialised with IUniversalConstants.now() as its start time
+                    .ticker(ticker)
+                    .build();
+        }
 
         @Override
         public Cache<String, UserSession> get() {
