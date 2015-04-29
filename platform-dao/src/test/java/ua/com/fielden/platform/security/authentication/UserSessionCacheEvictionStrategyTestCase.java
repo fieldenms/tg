@@ -28,8 +28,7 @@ import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 
 /**
- * A test case to cover very specific situation of a successfully stolen authenticator from a trusted device, which was reused by an adversary from a different than stolen device,
- * followed by an attempt to be used by a legitimate user.
+ * A test case to cover authenticator revalidation in case of evicted sessions and recognition of stolen authenticators that takes into account the eviction strategy.
  *
  * @author TG Team
  *
