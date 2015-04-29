@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
+import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -198,6 +199,8 @@ public class WebApp extends AbstractWebApp {
                 .addProp("compositeProp")
                 .also()
                 .addProp("stringProp")
+                // .also()
+                // .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
                 .addPrimaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build()).
@@ -225,6 +228,7 @@ public class WebApp extends AbstractWebApp {
                                 longDesc("Functional context-dependent action 4").
                                 build()
                 )
+                // .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)
                 //                .also()
@@ -247,6 +251,7 @@ public class WebApp extends AbstractWebApp {
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 100);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 100);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
+            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 300);
             return centre;
         });
 
@@ -627,6 +632,12 @@ public class WebApp extends AbstractWebApp {
         @Override
         public JsCode build() {
             return new JsCode(code);
+        }
+    }
+
+    private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<TgPersistentEntityWithProperties> {
+        @Override
+        public void assignValues(final TgPersistentEntityWithProperties entity) {
         }
     }
 }

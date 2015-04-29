@@ -21,6 +21,7 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -133,7 +134,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 if (property.propName.isPresent()) {
                     cdtmae.getSecondTick().check(entityType, treeName(property.propName.get()), true);
                 } else {
-                    // TODO handle 'custom property definitions' here (property.propDef)
+                    if (property.propDef.isPresent()) { // represents the 'custom' property
+                        final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
+                        enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
+
+                        cdtmae.getSecondTick().check(entityType, treeName(customPropName), true);
+                    } else {
+                        throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+                    }
                 }
             }
         }
@@ -542,15 +550,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (resultProps.isPresent()) {
             int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
-                if (!resultProp.propName.isPresent()) {
-                    throw new IllegalStateException("The result property must have a name");
-                }
+                //                if (!resultProp.propName.isPresent()) {
+                //                    throw new IllegalStateException("The result property must have a name");
+                //                }
 
-                if (resultProp.propDef.isPresent()) { // represents the 'custom' property
-                    enhanceCentreManagerWithCustomProperty(centre, root, resultProp.propName.get(), resultProp.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
-                }
+                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
 
-                final String resultPropName = resultProp.propName.get().equals("this") ? "" : resultProp.propName.get();
+                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? centre.getEnhancer().getManagedType(root) : PropertyTypeDeterminator.determinePropertyType(centre.getEnhancer().getManagedType(root), resultPropName);
 
