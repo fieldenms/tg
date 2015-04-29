@@ -5,6 +5,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
+import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
@@ -164,6 +165,8 @@ public interface IDomainTreeEnhancer extends IRootTyped {
     public int hashCode();
 
     Map<Class<?>, List<CalculatedProperty>> calculatedProperties();
+
+    Map<Class<?>, List<CustomProperty>> customProperties();
 
     Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays();
 

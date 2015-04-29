@@ -292,6 +292,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         @Override
+        public Map<Class<?>, List<CustomProperty>> customProperties() {
+            return baseEnhancer().customProperties();
+        }
+
+        @Override
         public Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays() {
             return baseEnhancer().originalAndEnhancedRootTypesAndArrays();
         }

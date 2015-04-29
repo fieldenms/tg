@@ -120,7 +120,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      *
      */
     public DomainTreeEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, rootTypes, createEmptyCalculatedPropsFromRootTypes(rootTypes));
+        this(serialiser, rootTypes, createEmptyCalculatedPropsFromRootTypes(rootTypes), createEmptyCustomPropsFromRootTypes(rootTypes));
     }
 
     /**
@@ -129,7 +129,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * discarded) before serialisation.
      *
      */
-    public DomainTreeEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo) {
+    public DomainTreeEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties) {
         super(serialiser);
 
         this.originalAndEnhancedRootTypesAndArrays = new LinkedHashMap<Class<?>, Pair<Class<?>, Map<String, ByteArray>>>();
@@ -137,11 +137,15 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         this.originalAndEnhancedRootTypesAndArrays.putAll(createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(rootTypes));
 
         this.customProperties = new LinkedHashMap<>();
+        this.customProperties.putAll(customProperties);
 
         this.calculatedProperties = new LinkedHashMap<Class<?>, List<CalculatedProperty>>();
         this.calculatedProperties.putAll(createCalculatedPropertiesFrom(this, calculatedPropertiesInfo));
 
         apply();
+
+        this.customProperties.clear();
+        this.customProperties.putAll(customProperties);
 
         this.calculatedProperties.clear();
         this.calculatedProperties.putAll(extractAll(this, true));
@@ -160,11 +164,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param originalAndEnhancedRootTypesAndArrays
      * @param calculatedProperties
      */
-    public DomainTreeEnhancer(final ISerialiser serialiser, final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties) {
+    public DomainTreeEnhancer(final ISerialiser serialiser, final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties) {
         super(serialiser);
         this.originalAndEnhancedRootTypesAndArrays = originalAndEnhancedRootTypesAndArrays;
         this.calculatedProperties = calculatedProperties;
-        this.customProperties = new LinkedHashMap<>();
+        this.customProperties = customProperties;
     }
 
     /**
@@ -177,6 +181,20 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         final Map<Class<?>, Set<CalculatedPropertyInfo>> map = new LinkedHashMap<Class<?>, Set<CalculatedPropertyInfo>>();
         for (final Class<?> rootType : rootTypes) {
             map.put(rootType, new HashSet<CalculatedPropertyInfo>());
+        }
+        return map;
+    }
+
+    /**
+     * Creates an empty map of custom props for <code>rootTypes</code>.
+     *
+     * @param rootTypes
+     * @return
+     */
+    private static final Map<Class<?>, List<CustomProperty>> createEmptyCustomPropsFromRootTypes(final Set<Class<?>> rootTypes) {
+        final Map<Class<?>, List<CustomProperty>> map = new LinkedHashMap<>();
+        for (final Class<?> rootType : rootTypes) {
+            map.put(rootType, new ArrayList<>());
         }
         return map;
     }
@@ -236,7 +254,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                     grouped.get(root).get(path).put(prop.name(), prop);
                 }
             } else {
-                grouped.put(root, null);
+                if (!grouped.containsKey(root)) {
+                    grouped.put(root, null);
+                }
             }
         }
         // add the types, not enhanced with any calc prop
@@ -716,7 +736,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             // So they should be used for serialisation, comparison and hashCode() implementation.
             final Set<Class<?>> rootTypes = readValue(buffer, LinkedHashSet.class);
             final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo = readValue(buffer, LinkedHashMap.class);
-            return new DomainTreeEnhancer(serialiser(), rootTypes, calculatedPropertiesInfo);
+            final Map<Class<?>, List<CustomProperty>> customProperties = readValue(buffer, LinkedHashMap.class);
+            return new DomainTreeEnhancer(serialiser(), rootTypes, calculatedPropertiesInfo, customProperties);
         }
 
         @Override
@@ -725,6 +746,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             // So they should be used for serialisation, comparison and hashCode() implementation.
             writeValue(buffer, domainTreeEnhancer.rootTypes());
             writeValue(buffer, domainTreeEnhancer.calculatedPropertiesInfo());
+            writeValue(buffer, domainTreeEnhancer.customProperties());
         }
     }
 
@@ -736,6 +758,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         // So they should be used for serialisation, comparison and hashCode() implementation.
         result = prime * result + rootTypes().hashCode();
         result = prime * result + calculatedPropertiesInfo().hashCode();
+        result = prime * result + customProperties().hashCode();
         return result;
     }
 
@@ -753,7 +776,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         final DomainTreeEnhancer other = (DomainTreeEnhancer) obj;
         // IMPORTANT : rootTypes() and calculatedPropertiesInfo() are the mirror for "calculatedProperties".
         // So they should be used for serialisation, comparison and hashCode() implementation.
-        return rootTypes().equals(other.rootTypes()) && calculatedPropertiesInfo().equals(other.calculatedPropertiesInfo());
+        return rootTypes().equals(other.rootTypes()) && calculatedPropertiesInfo().equals(other.calculatedPropertiesInfo()) && customProperties().equals(other.customProperties());
     }
 
     @Override
@@ -769,5 +792,10 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     @Override
     public EntityFactory getFactory() {
         return super.getFactory();
+    }
+
+    @Override
+    public Map<Class<?>, List<CustomProperty>> customProperties() {
+        return customProperties;
     }
 }

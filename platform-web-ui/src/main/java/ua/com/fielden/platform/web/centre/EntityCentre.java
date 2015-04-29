@@ -547,6 +547,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
         final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
+        final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
             int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
@@ -558,7 +559,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
                 final String resultPropName = propertyName.equals("this") ? "" : propertyName;
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
-                final Class<?> propertyType = isEntityItself ? centre.getEnhancer().getManagedType(root) : PropertyTypeDeterminator.determinePropertyType(centre.getEnhancer().getManagedType(root), resultPropName);
+                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
                 final Optional<FunctionalActionElement> action;
                 if (resultProp.propAction.isPresent()) {
@@ -568,7 +569,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(centre.getEnhancer().getManagedType(root), resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 propertyColumns.add(el);
             }
         }

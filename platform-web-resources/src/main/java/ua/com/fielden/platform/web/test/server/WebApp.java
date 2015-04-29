@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
+import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -199,8 +200,8 @@ public class WebApp extends AbstractWebApp {
                 .addProp("compositeProp")
                 .also()
                 .addProp("stringProp")
-                // .also()
-                // .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
+                .also()
+                .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
                 .addPrimaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build()).
@@ -228,7 +229,7 @@ public class WebApp extends AbstractWebApp {
                                 longDesc("Functional context-dependent action 4").
                                 build()
                 )
-                // .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
+                .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)
                 //                .also()
@@ -251,7 +252,7 @@ public class WebApp extends AbstractWebApp {
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 100);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 100);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
-            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 300);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
             return centre;
         });
 

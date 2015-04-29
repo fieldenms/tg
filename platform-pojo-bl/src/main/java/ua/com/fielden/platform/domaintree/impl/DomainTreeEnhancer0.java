@@ -613,4 +613,9 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type) {
         throw new UnsupportedOperationException("Need not to be supported in deprecated enhancer0.");
     }
+
+    @Override
+    public Map<Class<?>, List<CustomProperty>> customProperties() {
+        throw new UnsupportedOperationException("Need not to be supported in deprecated enhancer0.");
+    }
 }
