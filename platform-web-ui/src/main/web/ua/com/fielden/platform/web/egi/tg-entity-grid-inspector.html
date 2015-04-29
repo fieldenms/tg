@@ -78,9 +78,12 @@
                         </td>
                         <template if="{{primaryAction}}">
                             <td class="action-column">
-                            	<template if="{{primaryAction}}"></template>
-                            	<template if="{{primaryAction}}"></template>
-                                <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}"></tg-page-action>
+                            	<template if="{{primaryAction.action}}">
+                                    <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}"></tg-page-action>
+                                </template>
+                            	<template if="{{!primaryAction.action}}">
+                                    <tg-ui-action user="{{primaryAction.user}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" contextRetriever="{{primaryAction.contextRetriever}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
+                                </template>
                             </td>
                         </template>
                         <template repeat="{{column, columnIndex in columns}}">
