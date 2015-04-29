@@ -1,5 +1,4 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 <link rel="import" href="/resources/polymer/paper-dropdown/paper-dropdown.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
@@ -22,13 +21,12 @@
             }
         </style>
         <core-icon-button icon="more-vert" on-tap="{{showDropDown}}"></core-icon-button>
-        <paper-dropdown id="dropdown" style="position:absolute" layout vertical>
-            <template repeat="{{action in actions}}">
-                <core-tooltip position="bottom" class="delayed" style="width:100%">
-                	<tg-ui-action user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" contextRetriever="{{action.contextRetriever}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
-                    <span class="span-tooltip" tip>{{action.actionDesc}}</span>
-                </core-tooltip>
-            </template>
+        <paper-dropdown id="dropdown" style="position:absolute">
+        	<div layout vertical>
+            	<template repeat="{{action in actions}}">
+            		<tg-ui-action user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" contextRetriever="{{action.contextRetriever}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
+            	</template>
+            </div>
         </paper-dropdown>
     </template>
     <script>
