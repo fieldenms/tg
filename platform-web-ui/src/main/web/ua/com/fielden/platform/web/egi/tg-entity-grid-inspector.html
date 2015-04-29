@@ -265,7 +265,7 @@
                     } else if (property.indexOf(".") > -1) {
                         this.tap(entity, property.substring(0, property.lastIndexOf(".")));
                     } else {
-                        column.action(entity);
+                        column.runAction(entity);
                     }
                 }
             });

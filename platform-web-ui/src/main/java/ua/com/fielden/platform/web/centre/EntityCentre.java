@@ -576,17 +576,41 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             editorContainer.add(widget.render());
         });
 
-        final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
-        for (final String resultProp : centre.getSecondTick().checkedProperties(root)) {
-            final boolean isEntityItself = "".equals(resultProp); // empty property means "entity itself"
-            final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultProp);
+        final String prefix = ",\n";
 
-            final PropertyColumnElement el = new PropertyColumnElement(resultProp, centre.getSecondTick().getWidth(root, resultProp), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultProp));
-            propertyColumns.add(el);
+        final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
+        final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
+        if (resultProps.isPresent()) {
+            int actionIndex = 0;
+            for (final ResultSetProp resultProp : resultProps.get()) {
+                if (!resultProp.propName.isPresent()) {
+                    throw new IllegalStateException("The result property must have a name");
+                }
+                final String resultPropName = resultProp.propName.get().equals("this") ? "" : resultProp.propName.get();
+                final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
+                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
+
+                final Optional<FunctionalActionElement> action;
+                if (resultProp.propAction.isPresent()) {
+                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, FunctionalActionKind.PROP));
+                    actionIndex += 1;
+                } else {
+                    action = Optional.empty();
+                }
+
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                propertyColumns.add(el);
+            }
         }
+
         final DomContainer egiColumns = new DomContainer();
+        final StringBuilder propActionsObject = new StringBuilder();
         propertyColumns.forEach(column -> {
             importPaths.add(column.importPath());
+            if (column.getAction().isPresent()) {
+                importPaths.add(column.getAction().get().importPath());
+                propActionsObject.append(prefix + createActionObject(column.getAction().get()));
+            }
             egiColumns.add(column.render());
         });
 
@@ -614,7 +638,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final DomContainer functionalActionsDom = new DomContainer();
 
-        final String prefix = ",\n";
         for (final List<FunctionalActionElement> group : actionGroups) {
             final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
             for (final FunctionalActionElement el : group) {
@@ -660,6 +683,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String primaryActionObjectString = primaryActionObject.toString();
+        final String propActionsString = propActionsObject.toString();
         final int prefixLength = prefix.length();
         final String entityCentreStr = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html").
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
@@ -670,7 +694,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("<!--@egi_columns-->", egiColumns.toString()).
                 replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace("//generatedSecondaryActions", secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
-                replace("//generatedPrimaryAction", primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength) : primaryActionObjectString).
+                replace("//generatedPrimaryAction", primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength)
+                        : primaryActionObjectString).
+                replace("//generatedPropActions", propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
+                        : propActionsString).
                 replace("<!--@functional_actions-->", functionalActionsDom.toString()).
                 replace("<!--@primary_action-->", primaryActionDom.toString()).
                 replace("<!--@secondary_actions-->", secondaryActionsDom.toString());

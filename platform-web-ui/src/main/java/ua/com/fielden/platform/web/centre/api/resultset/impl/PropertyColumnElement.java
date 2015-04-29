@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -24,6 +25,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private final int width;
     private final Class<?> propertyType;
     private final Pair<String, String> titleDesc;
+    private final Optional<FunctionalActionElement> action;
     private boolean debug = false;
 
     /**
@@ -32,13 +34,14 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param criteriaType
      * @param propertyName
      */
-    public PropertyColumnElement(final String propertyName, final int width, final Class<?> propertyType, final Pair<String, String> titleDesc) {
+    public PropertyColumnElement(final String propertyName, final int width, final Class<?> propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
         this.width = width;
         this.propertyType = propertyType;
         this.titleDesc = titleDesc;
+        this.action = action;
     }
 
     /**
@@ -62,7 +65,9 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         }
         attrs.put("property", this.propertyName()); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
         attrs.put("width", width + "px");
-        attrs.put("action", "{{showMaster}}");
+        if (this.action.isPresent() && this.action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && this.action.get().isMasterInvocationAction()) {
+            attrs.put("action", "{{showMaster}}");
+        }
         attrs.put("type", egiRepresentationFor(DynamicEntityClassLoader.getOriginalType(this.propertyType)));
         attrs.put("columnTitle", this.titleDesc.getKey());
         attrs.put("columnDesc", this.titleDesc.getValue());
@@ -84,9 +89,17 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return new LinkedHashMap<>();
     };
 
+    public Optional<FunctionalActionElement> getAction() {
+        return action;
+    }
+
     @Override
     public final DomElement render() {
-        return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
+        final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
+        if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && !this.action.get().isMasterInvocationAction()) {
+            columnElement.add(action.get().render());
+        }
+        return columnElement;
     }
 
     @Override

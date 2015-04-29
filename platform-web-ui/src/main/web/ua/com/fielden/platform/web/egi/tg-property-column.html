@@ -1,4 +1,25 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 
-<polymer-element name="tg-property-column" attributes="property type width columnTitle columnDesc action" hidden noscript>
+<polymer-element name="tg-property-column" attributes="property type width columnTitle columnDesc action" hidden>
+    <template>
+        <content id="action_selector" select="tg-ui-action" hidden></content>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                ready: function () {
+                    this.runAction = this.runAction.bind(this);
+                    this.customAction = this.$.action_selector.getDistributedNodes().length > 0 ? this.$.action_selector.getDistributedNodes()[0] : null;
+                },
+                runAction: function(entity) {
+                    if (this.action) {
+                        this.action(entity);
+                    } else if (this.customAction) {
+                        this.customAction.run();
+                    }
+                }
+            });
+        })();
+    </script>
 </polymer-element>

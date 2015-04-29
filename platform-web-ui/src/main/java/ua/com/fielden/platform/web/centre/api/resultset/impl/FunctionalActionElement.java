@@ -24,7 +24,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final EntityActionConfig entityActionConfig;
     private final int numberOfAction;
     private final FunctionalActionKind functionalActionKind;
-    private final boolean primaryMasterInvocationAction;
+    private final boolean masterInvocationAction;
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
@@ -37,7 +37,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         this.entityActionConfig = entityActionConfig;
         this.numberOfAction = numberOfAction;
         this.functionalActionKind = functionalActionKind;
-        this.primaryMasterInvocationAction = this.entityActionConfig.functionalEntity.isPresent() && this.entityActionConfig.functionalEntity.get().equals(MasterInvocationFunctionalEntity.class);
+        this.masterInvocationAction = this.entityActionConfig.functionalEntity.isPresent()
+                && this.entityActionConfig.functionalEntity.get().equals(MasterInvocationFunctionalEntity.class);
     }
 
     /**
@@ -96,10 +97,12 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     @Override
     public final DomElement render() {
         final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
-        if (primaryMasterInvocationAction) {
-            return new DomElement("tg-primary-instance-action").attr("action", "{{editSpecificEntity}}").attr("actionDesc", "action description").attr("icon", "editor:mode-edit");
+        if (masterInvocationAction) {
+            return FunctionalActionKind.PROP != functionalActionKind ? new DomElement("tg-primary-instance-action").attr("action", "{{editSpecificEntity}}").attr("actionDesc", "action description").attr("icon", "editor:mode-edit")
+                    : null;
         } else if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
-            final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get() : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
+            final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()
+                    : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
 
             return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
         } else {
@@ -109,7 +112,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     @Override
     public String importPath() {
-        return primaryMasterInvocationAction ? "egi/tg-primary-instance-action" : widgetPath;
+        return masterInvocationAction ? "egi/tg-primary-instance-action" : widgetPath;
+    }
+
+    public FunctionalActionKind getFunctionalActionKind() {
+        return functionalActionKind;
+    }
+
+    public boolean isMasterInvocationAction() {
+        return masterInvocationAction;
     }
 
     public boolean isDebug() {

@@ -46,9 +46,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * A list of top level actions represented as pairs of action configurations as keys and optional group names as values.
      * <p>
-     * If an action belongs to a group then a corresponding value in the pair contains the name of that group.
-     * Otherwise, the pair value is empty.
-     * The order of actions in the list is important and should be honoured when building their UI representation.
+     * If an action belongs to a group then a corresponding value in the pair contains the name of that group. Otherwise, the pair value is empty. The order of actions in the list
+     * is important and should be honoured when building their UI representation.
      */
     private final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
 
@@ -59,10 +58,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * A list of properties that have been added to selection criteria in the added sequential order.
      * <p>
-     * It is not important whether a property was added as multi-valued, single-valued or range criterion simply because
-     * an appropriate selection criteria kind gets determined automatically from property declaration at the entity type level.
+     * It is not important whether a property was added as multi-valued, single-valued or range criterion simply because an appropriate selection criteria kind gets determined
+     * automatically from property declaration at the entity type level.
      * <p>
-     * The part of Entity Centre DSL that provides developer with ability to pick the kind (i.e. <code>multi()</code>, <code>single()</code> or <code>range()</code>)is there only to facilitate definition fluency and readability.
+     * The part of Entity Centre DSL that provides developer with ability to pick the kind (i.e. <code>multi()</code>, <code>single()</code> or <code>range()</code>)is there only
+     * to facilitate definition fluency and readability.
      */
     private final List<String> selectionCriteria = new ArrayList<>();
 
@@ -100,10 +100,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, SingleCritOtherValueMnemonic<BigDecimal>> defaultSingleValuesForBigDecimalAndMoneySelectionCriteria = new HashMap<>();
     private final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria = new HashMap<>();
 
-
     /**
-     * A map between selection criteria properties and their custom value matchers.
-     * If a matcher for some criterion is not provided then a default instance of type
+     * A map between selection criteria properties and their custom value matchers. If a matcher for some criterion is not provided then a default instance of type
      * {@link FallbackValueMatcherWithCentreContext} should be used.
      */
     private final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
@@ -113,27 +111,23 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     private final FlexLayout selectionCriteriaLayout;
 
-
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
     /////////////////////////////////////////////
 
     /**
-     * A list of result set property definitions, presented in the same order a specified using Entity Centre DSL.
-     * Natural (persistent or calculated) properties are intertwined with custom properties.
+     * A list of result set property definitions, presented in the same order a specified using Entity Centre DSL. Natural (persistent or calculated) properties are intertwined
+     * with custom properties.
      */
     private final List<ResultSetProp> resultSetProperties = new ArrayList<>();
 
-
     /**
-     * A convenient structure to capture result set property definition.
-     * It includes either a property name that represents a natural (persistent or calculated) property, or a custom property definition.
-     * The structure guarantees that natural and custom properties are mutually exclusive.
+     * A convenient structure to capture result set property definition. It includes either a property name that represents a natural (persistent or calculated) property, or a
+     * custom property definition. The structure guarantees that natural and custom properties are mutually exclusive.
      * <p>
-     * In any of those cases, a custom action can be provided.
-     * The custom action value is optional and can be empty if there is no need to provide custom actions specific for represented in the result set properties.
-     * However, the default actions would still get associated with all properties without a custom action.
-     * In order to skip even the default action, a <code>no action</code> configuration needs to set as custom property action.
+     * In any of those cases, a custom action can be provided. The custom action value is optional and can be empty if there is no need to provide custom actions specific for
+     * represented in the result set properties. However, the default actions would still get associated with all properties without a custom action. In order to skip even the
+     * default action, a <code>no action</code> configuration needs to set as custom property action.
      */
     public static class ResultSetProp {
         public final Optional<String> propName;
@@ -148,11 +142,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return new ResultSetProp(null, propDef, propAction);
         }
 
-        private ResultSetProp (
+        private ResultSetProp(
                 final String propName,
                 final PropDef<?> propDef,
-                final EntityActionConfig propAction
-                ) {
+                final EntityActionConfig propAction) {
 
             if (propName != null && propDef != null) {
                 throw new IllegalArgumentException("Only one of property name or property definition should be provided.");
@@ -170,9 +163,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     /**
-     * A map between properties to order by and the ordering direction.
-     * The order of elements in this map corresponds to the ordering sequence.
-     * That is, the first listed property should be the first in the resultant order statement, the second -- second, and so on.
+     * A map between properties to order by and the ordering direction. The order of elements in this map corresponds to the ordering sequence. That is, the first listed property
+     * should be the first in the resultant order statement, the second -- second, and so on.
      */
     private final LinkedHashMap<String, OrderDirection> resultSetOrdering = new LinkedHashMap<>();
 
@@ -255,8 +247,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType,
             final Class<? extends ICustomPropsAssignmentHandler<T>> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
-            final IFetchProvider<T> fetchProvider
-            ) {
+            final IFetchProvider<T> fetchProvider) {
         this.topLevelActions.addAll(topLevelActions);
         this.selectionCriteria.addAll(selectionCriteria);
         this.defaultMultiValueAssignersForEntityAndStringSelectionCriteria.putAll(defaultMultiValueAssignersForEntityAndStringSelectionCriteria);
@@ -299,12 +290,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.fetchProvider = fetchProvider;
     }
 
-
     ///////////////////////////////////////////
     /////////////// GETTERS ///////////////////
     ///////////////////////////////////////////
     /**
      * Provides access to the layout settings of selection criteria.
+     *
      * @return
      */
     public FlexLayout getSelectionCriteriaLayout() {

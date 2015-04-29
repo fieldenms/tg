@@ -29,6 +29,7 @@ import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
@@ -175,9 +176,14 @@ public class WebApp extends AbstractWebApp {
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
-                .addProp("this")
+                .addProp("this").withAction(EntityActionConfig.createMasterInvocationActionConfig())
                 .also()
-                .addProp("desc")
+                .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
+                        withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Function 5").
+                        longDesc("Functional context-dependent action 5").
+                        build())
                 .also()
                 .addProp("integerProp")
                 .also()
