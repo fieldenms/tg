@@ -8,17 +8,16 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError"> <!-- enabledStates currentState  -->
+<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError">
+    <!-- enabledStates currentState  -->
     <template>
         <style>
             :host::shadow * /deep/ core-tooltip::shadow #tooltip {
                 white-space: normal;
             }
-            
             :host::shadow * /deep/ core-tooltip .span-tooltip {
                 line-height: 15px;
             }
-            
             :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
             :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
                 opacity: 1;
@@ -29,7 +28,8 @@
         </style>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}"></core-icon-button> <!-- disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}" -->
+        <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}"></core-icon-button>
+        <!-- disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}" -->
         <paper-action-dialog id="entityMaster" backdrop autoCloseDisabled>
             <load-element id="loadMaster" import="{{componentUri}}" elementName="{{elementName}}" attrs="{{attrs}}" on-after-load="{{_onExecuted}}"></load-element>
             <paper-button affirmative autofocus>Ok</paper-button>
@@ -38,44 +38,44 @@
     <script>
         Polymer('tg-ui-action', {
             publish: {
-            	/**
-            	 * Custom action to be invoked before 'tg-ui-action' will be run.
-            	 */
-            	preAction: null,
-            	/**
-            	 * Custom action to be invoked after 'tg-ui-action' has retrieved its functional entity and bound it to the UI (in case of successful retrieval).
-            	 */
-            	postActionSuccess: null,
-            	/**
-            	 * Custom action to be invoked after 'tg-ui-action' has unsuccessfully retrieved its functional entity.
-            	 */
-            	postActionError: null,
-            	
-           		/**
-           		 * Determines whether the selected entities are required to be send inside the centre context. 
-           		 * 
-           		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context. 
-           		 */
-           		requireSelectedEntities: null,
-           		/**
-           		 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context. 
-           		 * 
-           		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context. 
-           		 */
-           		requireMasterEntity: null,
+                /**
+                 * Custom action to be invoked before 'tg-ui-action' will be run.
+                 */
+                preAction: null,
+                /**
+                 * Custom action to be invoked after 'tg-ui-action' has retrieved its functional entity and bound it to the UI (in case of successful retrieval).
+                 */
+                postActionSuccess: null,
+                /**
+                 * Custom action to be invoked after 'tg-ui-action' has unsuccessfully retrieved its functional entity.
+                 */
+                postActionError: null,
 
-          		user: null,
-            	elementName: null,
-            	attrs: null,
-            	/**
-            	 * The function that returns the context for this action (in case of dit action on EGI the context is a selected entity.)
-            	 */
-            	contextRetriever: undefined,
+                /**
+                 * Determines whether the selected entities are required to be send inside the centre context.
+                 *
+                 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
+                 */
+                requireSelectedEntities: null,
+                /**
+                 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context.
+                 *
+                 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
+                 */
+                requireMasterEntity: null,
 
-            	/**
-            	 * The URI of custom UI component to be loaded on run() action.
-            	 */
-            	componentUri: null,
+                user: null,
+                elementName: null,
+                attrs: null,
+                /**
+                 * The function that returns the context for this action (in case of dit action on EGI the context is a selected entity.)
+                 */
+                contextRetriever: undefined,
+
+                /**
+                 * The URI of custom UI component to be loaded on run() action.
+                 */
+                componentUri: null,
 
                 // /**
                 //  * A list of the states in which the action can be enabled.
@@ -101,6 +101,10 @@
                  * The icon specificator (string id).
                  */
                 icon: null
+            },
+            
+            eventDelegates: {
+                'layout-finished': 'showDialog'
             },
 
             /**
@@ -139,13 +143,15 @@
             run: function () {
                 // this.enabled = false;
                 console.log(this.shortDesc + ": execute");
-                
+
                 if (this.preAction) {
-                	if (this.preAction()) { // returns 'true' in case whether the action should proceed
-	                    this.$.loadMaster.reload();
-                	}
+                    if (this.preAction()) { // returns 'true' in case whether the action should proceed
+                        this.loading = true;
+                        this.$.loadMaster.reload();
+                    }
                 } else {
-                	this.$.loadMaster.reload();
+                    this.loading = true;
+                    this.$.loadMaster.reload();
                 }
             },
 
@@ -160,24 +166,24 @@
             /**
              * Analyzes and processes the result of executor response.
              */
-            _onExecuted: function(e, detail, source) {
-            	var self = this;
-            	// console.log("_onExecuted: e", e, "egi", e.srcElement);
+            _onExecuted: function (e, detail, source) {
+                var self = this;
+                // console.log("_onExecuted: e", e, "egi", e.srcElement);
 
-            	this.$.entityMaster.open();
+                //this.$.entityMaster.open();
 
-            	detail.onRetrieved = function(entity, bindingEntity, customObject) {
-            		console.log("onRetrieved");
+                detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                    console.log("onRetrieved");
                     if (self.postActionSuccess) {
-                    	self.postActionSuccess();
+                        self.postActionSuccess();
                     }
-            	};
+                };
 
-                detail.onValidated = function(validatedEntity, bindingEntity, customObject) {
+                detail.onValidated = function (validatedEntity, bindingEntity, customObject) {
                     console.log("onValidated");
                 };
 
-                detail.onSaved = function(potentiallySavedEntity, newBindingEntity) {
+                detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
                     postal.publish({
                         channel: detail.centreUuid,
                         topic: "detail.saved",
@@ -185,7 +191,7 @@
                             entity: potentiallySavedEntity
                         }
                     });
-                	
+
                     console.log("onSaved");
                 };
 
@@ -194,11 +200,18 @@
 
                 detail.entityid = context.id === null ? "new" : (+(context.id));
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
-            	detail.retrieve(context);
+                detail.retrieve(context);
 
                 this.afterExecution();
-//                this.$.entityMaster.updateTargetDimensions();
+                //                this.$.entityMaster.updateTargetDimensions();
             },
+            
+            showDialog: function(e, detail, source) {
+                if (this.loading) {
+                    this.$.entityMaster.open();
+                    this.loading = false;
+                }
+            }
         });
     </script>
 </polymer-element>
