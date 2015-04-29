@@ -56,6 +56,8 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
@@ -526,50 +528,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final Class<?> root = this.entityType;
 
-        final List<AbstractCriterionWidget> criteriaWidgets = new ArrayList<>();
-        final Class<?> managedType = centre.getEnhancer().getManagedType(root);
-        for (final String critProp : centre.getFirstTick().checkedProperties(root)) {
-            if (!AbstractDomainTree.isPlaceholder(critProp)) {
-                final boolean isEntityItself = "".equals(critProp); // empty property means "entity itself"
-                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, critProp);
-
-                final AbstractCriterionWidget criterionWidget;
-                if (AbstractDomainTree.isCritOnlySingle(managedType, critProp)) {
-                    if (EntityUtils.isEntityType(propertyType)) {
-                        criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
-                    } else if (EntityUtils.isString(propertyType)) {
-                        criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
-                    } else if (EntityUtils.isBoolean(propertyType)) {
-                        criterionWidget = new BooleanSingleCriterionWidget(root, managedType, critProp);
-                    } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
-                        criterionWidget = new IntegerSingleCriterionWidget(root, managedType, critProp);
-                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
-                        criterionWidget = new DecimalSingleCriterionWidget(root, managedType, critProp);
-                    } else if (EntityUtils.isDate(propertyType)) {
-                        criterionWidget = new DateSingleCriterionWidget(root, managedType, critProp);
-                    } else {
-                        throw new UnsupportedOperationException(String.format("The crit-only single editor type [%s] is currently unsupported.", propertyType));
-                    }
-                } else {
-                    if (EntityUtils.isEntityType(propertyType)) {
-                        criterionWidget = new EntityCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
-                    } else if (EntityUtils.isString(propertyType)) {
-                        criterionWidget = new StringCriterionWidget(root, managedType, critProp);
-                    } else if (EntityUtils.isBoolean(propertyType)) {
-                        criterionWidget = new BooleanCriterionWidget(root, managedType, critProp);
-                    } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
-                        criterionWidget = new IntegerCriterionWidget(root, managedType, critProp);
-                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
-                        criterionWidget = new DecimalCriterionWidget(root, managedType, critProp);
-                    } else if (EntityUtils.isDate(propertyType)) {
-                        criterionWidget = new DateCriterionWidget(root, managedType, critProp);
-                    } else {
-                        throw new UnsupportedOperationException(String.format("The multi / range editor type [%s] is currently unsupported.", propertyType));
-                    }
-                }
-                criteriaWidgets.add(criterionWidget);
-            }
-        }
+        final List<AbstractCriterionWidget> criteriaWidgets = createCriteriaWidgets(centre, root);
         criteriaWidgets.forEach(widget -> {
             importPaths.add(widget.importPath());
             importPaths.addAll(widget.editorsImportPaths());
@@ -586,9 +545,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 if (!resultProp.propName.isPresent()) {
                     throw new IllegalStateException("The result property must have a name");
                 }
+
+                if (resultProp.propDef.isPresent()) { // represents the 'custom' property
+                    enhanceCentreManagerWithCustomProperty(centre, root, resultProp.propName.get(), resultProp.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
+                }
+
                 final String resultPropName = resultProp.propName.get().equals("this") ? "" : resultProp.propName.get();
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
-                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
+                final Class<?> propertyType = isEntityItself ? centre.getEnhancer().getManagedType(root) : PropertyTypeDeterminator.determinePropertyType(centre.getEnhancer().getManagedType(root), resultPropName);
 
                 final Optional<FunctionalActionElement> action;
                 if (resultProp.propAction.isPresent()) {
@@ -598,7 +562,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(centre.getEnhancer().getManagedType(root), resultPropName), action);
                 propertyColumns.add(el);
             }
         }
@@ -709,6 +673,74 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         };
         return representation;
+    }
+
+    /**
+     * Enhances the type of centre entity with custom property definition.
+     *
+     * @param centre
+     * @param root
+     * @param propDef
+     * @param resultSetCustomPropAssignmentHandlerType
+     */
+    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler<T>>> resultSetCustomPropAssignmentHandlerType) {
+        centre.getEnhancer().addCustomProperty(root, "" /* this is the contextPath */, propName, propDef.title, propDef.desc, propDef.type);
+        centre.getEnhancer().apply();
+    }
+
+    /**
+     * Creates the widgets for criteria.
+     *
+     * @param centre
+     * @param root
+     * @return
+     */
+    private List<AbstractCriterionWidget> createCriteriaWidgets(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root) {
+        final Class<?> managedType = centre.getEnhancer().getManagedType(root);
+        final List<AbstractCriterionWidget> criteriaWidgets = new ArrayList<>();
+        for (final String critProp : centre.getFirstTick().checkedProperties(root)) {
+            if (!AbstractDomainTree.isPlaceholder(critProp)) {
+                final boolean isEntityItself = "".equals(critProp); // empty property means "entity itself"
+                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, critProp);
+
+                final AbstractCriterionWidget criterionWidget;
+                if (AbstractDomainTree.isCritOnlySingle(managedType, critProp)) {
+                    if (EntityUtils.isEntityType(propertyType)) {
+                        criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
+                    } else if (EntityUtils.isString(propertyType)) {
+                        criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isBoolean(propertyType)) {
+                        criterionWidget = new BooleanSingleCriterionWidget(root, managedType, critProp);
+                    } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
+                        criterionWidget = new IntegerSingleCriterionWidget(root, managedType, critProp);
+                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
+                        criterionWidget = new DecimalSingleCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isDate(propertyType)) {
+                        criterionWidget = new DateSingleCriterionWidget(root, managedType, critProp);
+                    } else {
+                        throw new UnsupportedOperationException(String.format("The crit-only single editor type [%s] is currently unsupported.", propertyType));
+                    }
+                } else {
+                    if (EntityUtils.isEntityType(propertyType)) {
+                        criterionWidget = new EntityCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
+                    } else if (EntityUtils.isString(propertyType)) {
+                        criterionWidget = new StringCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isBoolean(propertyType)) {
+                        criterionWidget = new BooleanCriterionWidget(root, managedType, critProp);
+                    } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
+                        criterionWidget = new IntegerCriterionWidget(root, managedType, critProp);
+                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
+                        criterionWidget = new DecimalCriterionWidget(root, managedType, critProp);
+                    } else if (EntityUtils.isDate(propertyType)) {
+                        criterionWidget = new DateCriterionWidget(root, managedType, critProp);
+                    } else {
+                        throw new UnsupportedOperationException(String.format("The multi / range editor type [%s] is currently unsupported.", propertyType));
+                    }
+                }
+                criteriaWidgets.add(criterionWidget);
+            }
+        }
+        return criteriaWidgets;
     }
 
     private void addToLastGroup(final List<List<FunctionalActionElement>> actionGroups, final EntityActionConfig actionConfig, final int i) {
