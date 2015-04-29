@@ -57,6 +57,7 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWi
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -624,11 +625,26 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             functionalActionsDom.add(groupElement);
         }
 
+        //////////////////// Primary result-set action ////////////////////
+        final Optional<EntityActionConfig> resultSetPrimaryEntityAction = this.dslDefaultConfig.getResultSetPrimaryEntityAction();
+        final DomContainer primaryActionDom = new DomContainer();
+        final StringBuilder primaryActionObject = new StringBuilder();
+
+        if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
+            final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
+
+            importPaths.add(el.importPath());
+            primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
+            primaryActionObject.append(prefix + createActionObject(el));
+        }
+
+        //////////////////// Primary result-set action [END] //////////////
+
         final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
         final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
         if (resultSetSecondaryEntityActions.isPresent()) {
             for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
-                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, false);
+                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
                 secondaryActionElements.add(el);
             }
         }
@@ -643,6 +659,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
+        final String primaryActionObjectString = primaryActionObject.toString();
         final int prefixLength = prefix.length();
         final String entityCentreStr = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html").
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
@@ -653,7 +670,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("<!--@egi_columns-->", egiColumns.toString()).
                 replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace("//generatedSecondaryActions", secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
+                replace("//generatedPrimaryAction", primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength) : primaryActionObjectString).
                 replace("<!--@functional_actions-->", functionalActionsDom.toString()).
+                replace("<!--@primary_action-->", primaryActionDom.toString()).
                 replace("<!--@secondary_actions-->", secondaryActionsDom.toString());
 
         final IRenderable representation = new IRenderable() {
@@ -669,7 +688,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (actionGroups.isEmpty()) {
             actionGroups.add(new ArrayList<>());
         }
-        final FunctionalActionElement el = new FunctionalActionElement(actionConfig, i, true);
+        final FunctionalActionElement el = new FunctionalActionElement(actionConfig, i, FunctionalActionKind.TOP_LEVEL);
         actionGroups.get(actionGroups.size() - 1).add(el);
     }
 

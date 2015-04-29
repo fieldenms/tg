@@ -16,7 +16,7 @@
     <template>
         <link rel="stylesheet" href="/resources/egi/tg-entity-grid-inspector.css">
         <content id="column_selector" select="tg-property-column" hidden></content>
-        <content id="primary_action_selector" select="tg-primary-instance-action" hidden></content>
+        <content id="primary_action_selector" select=".primary-action" hidden></content>
         <content id="secondary_action_selector" select=".secondary-action" hidden></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
@@ -78,6 +78,8 @@
                         </td>
                         <template if="{{primaryAction}}">
                             <td class="action-column">
+                            	<template if="{{primaryAction}}"></template>
+                            	<template if="{{primaryAction}}"></template>
                                 <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}"></tg-page-action>
                             </td>
                         </template>

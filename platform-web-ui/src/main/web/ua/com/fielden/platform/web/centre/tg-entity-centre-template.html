@@ -9,8 +9,6 @@
 
 <!-- EGI imports -->
 <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
-<link rel="import" href="/resources/egi/tg-primary-instance-action.html">
-<link rel="import" href="/resources/egi/tg-secondary-instance-action.html">
 
 <link rel="import" href="/resources/actions/tg-page-action.html">
 
@@ -135,7 +133,8 @@
                             <core-icon-button icon="refresh" on-tap="{{run}}"></core-icon-button>
                             <span class="span-tooltip" tip>Refresh</span>
                         </core-tooltip>
-                        <tg-primary-instance-action action="{{editSpecificEntity}}" actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>
+<!--@primary_action-->
+                        <!-- tg-primary-instance-action action="{{editSpecificEntity}}" actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>  -->
 <!--@secondary_actions-->                        
                         <!-- <tg-secondary-instance-action actionDesc="action description"></tg-secondary-instance-action> -->
                     </tg-entity-grid-inspector>             
@@ -159,6 +158,9 @@
                     ];
                     self.secondaryActions = [
                     	//generatedSecondaryActions                                            
+                    ];
+                    self.primaryAction = [
+                    	//generatedPrimaryAction                                            
                     ];
                 },
                 
