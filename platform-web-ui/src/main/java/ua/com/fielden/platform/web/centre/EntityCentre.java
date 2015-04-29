@@ -686,6 +686,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler<T>>> resultSetCustomPropAssignmentHandlerType) {
         centre.getEnhancer().addCustomProperty(root, "" /* this is the contextPath */, propName, propDef.title, propDef.desc, propDef.type);
         centre.getEnhancer().apply();
+
+        //        if (propDef.value.isPresent()) {
+        //
+        //        } else if (resultSetCustomPropAssignmentHandlerType.isPresent()) {
+        //
+        //        } else {
+        //            throw new IllegalStateException(String.format("The state of custom property [%s] definition is not correct, need to exist either a 'value' for the property or 'custom props value assigner'.", propName));
+        //        }
     }
 
     /**
