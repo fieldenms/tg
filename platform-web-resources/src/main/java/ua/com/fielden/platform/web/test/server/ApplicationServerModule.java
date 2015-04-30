@@ -29,7 +29,7 @@ import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
 /**
- * Guice injector module for Web UI Testing Server.
+ * Guice injector module for TG Testing Server.
  *
  * @author TG Team
  *

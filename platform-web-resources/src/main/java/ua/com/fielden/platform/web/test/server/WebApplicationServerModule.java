@@ -14,7 +14,7 @@ import com.google.inject.Injector;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
 /**
- * Guice injector module for Hibernate related injections, which are specific to FRS workshop module.
+ * Guice injector module for TG Testing Server (WebApp-enabled).
  *
  * @author TG Team
  *
