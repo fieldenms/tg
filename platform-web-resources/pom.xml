@@ -23,6 +23,13 @@
 		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
+			<artifactId>platform-dao</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+      		<scope>test</scope>	
+		</dependency>
+		<dependency>
+			<groupId>fielden</groupId>
 			<artifactId>platform-rao</artifactId>
 			<version>${project.version}</version>
 		</dependency>
