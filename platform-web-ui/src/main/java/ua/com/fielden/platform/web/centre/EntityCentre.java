@@ -58,6 +58,7 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWi
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -501,6 +502,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Returns the instance of rendering customiser for this entity centre.
+     *
+     * @return
+     */
+    public Optional<IRenderingCustomiser<T, ?>> getRenderingCustomiser() {
+        if (dslDefaultConfig.getResultSetRenderingCustomiserType().isPresent()) {
+            return Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override

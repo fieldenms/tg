@@ -12,7 +12,7 @@
 <link rel="import" href="/resources/actions/tg-page-action.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 
-<polymer-element name="tg-entity-grid-inspector" attributes="entityType entities">
+<polymer-element name="tg-entity-grid-inspector" attributes="entityType entities renderingHints">
     <template>
         <link rel="stylesheet" href="/resources/egi/tg-entity-grid-inspector.css">
         <content id="column_selector" select="tg-property-column" hidden></content>
@@ -83,7 +83,7 @@
                             </td>
                         </template>
                         <template repeat="{{column, columnIndex in columns}}">
-                            <td class="data-column" style="position: relative; width: {{column.width}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
+                            <td class="data-column" style="position: relative; width: {{column.width}}; {{renderingHints[column.property] | styleObject}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     <template if="{{column.type === 'Boolean' && get(entity, column) !== null}}">
                                         <core-icon icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>

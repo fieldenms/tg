@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -24,6 +26,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -41,7 +44,8 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
 
-    private final Class<? extends MiWithConfigurationSupport<?>> miType;
+    private final EntityCentre centre;
+
     private final IGlobalDomainTreeManager gdtm;
     private final ICriteriaGenerator critGenerator;
 
@@ -61,7 +65,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         this.restUtil = restUtil;
         this.companionFinder = companionFinder;
 
-        miType = centre.getMenuItemType();
+        this.centre = centre;
         this.gdtm = gdtm;
         this.critGenerator = critGenerator;
     }
@@ -72,6 +76,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Get
     @Override
     public Representation get() throws ResourceException {
+        final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
         return restUtil.rawListJSONRepresentation(
                 CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, -1L),
@@ -87,6 +92,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
+        final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
         CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
@@ -107,6 +113,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Put
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
+        final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
         CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
@@ -121,6 +128,18 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
                         CentreResourceUtils.isFreshCentreChanged(miType, gdtm));
         if (pair.getValue() == null) {
             return restUtil.rawListJSONRepresentation(applied, pair.getKey());
+        }
+
+        //Running the rendering customiser for result set of entities.
+        @SuppressWarnings("unchecked")
+        final Optional<IRenderingCustomiser<AbstractEntity<?>, ?>> renderingCustomiser = centre.getRenderingCustomiser();
+        if (renderingCustomiser.isPresent()) {
+            final IRenderingCustomiser<AbstractEntity<?>, ?> renderer = renderingCustomiser.get();
+            final List<Object> renderingHints = new ArrayList<Object>();
+            for (final Object entity : pair.getValue()) {
+                renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>) entity).get());
+            }
+            pair.getKey().put("renderingHints", renderingHints);
         }
 
         final ArrayList<Object> list = new ArrayList<Object>();

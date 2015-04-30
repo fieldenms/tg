@@ -230,6 +230,7 @@ public class WebApp extends AbstractWebApp {
                                 build()
                 )
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
+                //.setRenderingCustomiser(TestRenderingCustomiser.class)
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)
                 //                .also()
