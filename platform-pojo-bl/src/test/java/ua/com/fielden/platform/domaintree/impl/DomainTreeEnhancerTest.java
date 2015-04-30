@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,9 +34,9 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * A test for {@link DomainTreeEnhancer}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,8 +164,36 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
     }
 
     /**
+     * Ensures that specified 'custom' property field exists with specified parameters and that no field with specified "atomic" name exists on the hierarchy.
+     *
+     * @param type
+     * @param prop
+     * @param customPropType
+     * @param title
+     * @param desc
+     */
+    protected static void customFieldExistsInSinglePlaceAndItWORKS(final Class<?> type, final String prop, final Class<?> customPropType, final String title, final String desc) {
+        final Field field = Finder.findFieldByName(type, prop);
+
+        assertNotNull("The property [" + prop + "] should exist in type [" + type + "].", field);
+        // check type
+        assertEquals("Incorrect type.", customPropType, field.getType());
+        // check Title annotation
+        final Title titleAnno = AnnotationReflector.getAnnotation(field, Title.class);
+        assertNotNull("The annotation Title should exist.", titleAnno);
+        assertEquals("Incorrect title.", title, titleAnno.value());
+        assertEquals("Incorrect desc.", desc, titleAnno.desc());
+
+        fieldDoesNotExistInAnyPlaceExcept(type, prop);
+
+        field.getDeclaringClass();
+        field.getModifiers();
+        // TODO does the field work???
+    }
+
+    /**
      * Ensures that specified property field exists with specified "calculated" parameters and that no field with specified "atomic" name exists on the hierarchy.
-     * 
+     *
      * @param type
      * @param prop
      * @param category
@@ -202,7 +231,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 
     /**
      * Ensures that the specified property field does not exist.
-     * 
+     *
      * @param type
      * @param prop
      */
@@ -287,12 +316,14 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
 
     private static void checkFirstLevelEnhancements(final IDomainTreeEnhancer dm) {
         // modify domain
+        dm.addCustomProperty(EnhancingMasterEntity.class, "", "customProp", "Custom Prop", "Custom Prop Desc", Integer.class);
         dm.addCalculatedProperty(EnhancingMasterEntity.class, "", "1 * 1 * integerProp", "Title Bad", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
         dm.getCalculatedProperty(EnhancingMasterEntity.class, "titleBad").setTitle("Single").setContextualExpression("1 * integerProp");
         dm.getCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple").setDesc("New Desc").setContextualExpression("4 * 1 * integerProp");
         dm.apply();
 
         // check the snapshot of domain
+        customFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "customProp", Integer.class, "Custom Prop", "Custom Prop Desc");
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.masterEntityProp.oldSingle", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * integerProp", "Old single", "Desc");
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityProp.slaveEntityProp.oldDouble", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "2 * integerProp", "Old double", "Desc");
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.oldTriple", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "3 * integerProp", "Old triple", "Desc");
@@ -312,6 +343,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         dm.apply();
 
         // check the snapshot of domain
+        customFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "customProp", Integer.class, "Custom Prop", "Custom Prop Desc");
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.masterEntityProp.oldSingle", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * integerProp", "Old single", "Desc");
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityProp.slaveEntityProp.oldDouble", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "2 * integerProp", "Old double", "Desc");
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.oldTriple", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "3 * integerProp", "Old triple", "Desc");
@@ -331,12 +363,20 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         // modify domain
         dm.removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
 
+        dm.addCustomProperty(EnhancingMasterEntity.class, "masterEntityProp", "customProp2", "Custom Prop 2", "Custom Prop Desc 2", BigDecimal.class);
+        dm.addCustomProperty(EnhancingMasterEntity.class, "slaveEntityProp", "customProp3", "Custom Prop 3", "Custom Prop Desc 3", String.class);
+        dm.addCustomProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp", "customProp4", "Custom Prop 4", "Custom Prop Desc 4", EnhancingMasterEntity.class);
+
         dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp", "2 * integerProp", "Double", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
         dm.addCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp", "3 * integerProp", "Triple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
         dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp", "4 * integerProp", "Quadruple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
         dm.apply();
 
         // check the snapshot of domain
+        customFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.customProp2", BigDecimal.class, "Custom Prop 2", "Custom Prop Desc 2");
+        customFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.customProp3", String.class, "Custom Prop 3", "Custom Prop Desc 3");
+        customFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityProp.customProp4", EnhancingMasterEntity.class, "Custom Prop 4", "Custom Prop Desc 4");
+
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.masterEntityProp.oldSingle", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * integerProp", "Old single", "Desc");
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityProp.slaveEntityProp.oldDouble", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "2 * integerProp", "Old double", "Desc");
         fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.oldTriple");
@@ -374,6 +414,8 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         assertEquals("Incorrect count of enhanced types byte arrays.", 5, dm.getManagedTypeArrays(EnhancingMasterEntity.class).size());
 
         // modify domain
+        dm.addCustomProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "customProp5", "Custom Prop 5", "Custom Prop Desc 5", Date.class);
+
         dm.getCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.newTitle").setContextualExpression("2 * integerProp").setTitle("Old double").setDesc("Desc");
         dm.addCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp", "5 * integerProp", "Quintuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
         dm.addCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp", "6 * integerProp", "Sextuple", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
@@ -382,6 +424,8 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         dm.apply();
 
         // check the snapshot of domain
+        customFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityProp.slaveEntityProp.customProp5", Date.class, "Custom Prop 5", "Custom Prop Desc 5");
+
         fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "masterEntityProp.masterEntityProp.oldSingle");
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "evenSlaverEntityProp.slaveEntityProp.oldDouble", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "2 * integerProp", "Old double", "Desc");
         fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.oldTriple");
