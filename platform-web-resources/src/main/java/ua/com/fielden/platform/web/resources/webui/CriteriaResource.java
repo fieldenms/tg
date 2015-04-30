@@ -20,13 +20,17 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -44,10 +48,9 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
 
-    private final EntityCentre centre;
-
     private final IGlobalDomainTreeManager gdtm;
     private final ICriteriaGenerator critGenerator;
+    private final EntityCentre centre;
 
     public CriteriaResource(
             final RestServerUtil restUtil,
@@ -141,6 +144,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
             }
             pair.getKey().put("renderingHints", renderingHints);
         }
+        enhanceResultEntitiesWithCustomPropertyValues(centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
 
         final ArrayList<Object> list = new ArrayList<Object>();
         list.add(applied);
@@ -149,5 +153,42 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         list.addAll(pair.getValue()); // TODO why is this needed for serialisation to perform without problems?!
 
         return restUtil.rawListJSONRepresentation(list.toArray());
+    }
+
+    /**
+     * Assigns the values for custom properties.
+     *
+     * @param propertiesDefinitions
+     * @param customPropertiesAsignmentHandler
+     * @param entities
+     */
+    private void enhanceResultEntitiesWithCustomPropertyValues(final Optional<List<ResultSetProp>> propertiesDefinitions, final Optional<Class<? extends ICustomPropsAssignmentHandler<AbstractEntity<?>>>> customPropertiesAsignmentHandler, final List<AbstractEntity<?>> entities) {
+        if (customPropertiesAsignmentHandler.isPresent()) {
+            setCustomValues(entities, centre.createAssignmentHandlerInstance(customPropertiesAsignmentHandler.get()));
+        }
+
+        if (propertiesDefinitions.isPresent()) {
+            for (final ResultSetProp resultSetProp : propertiesDefinitions.get()) {
+                if (resultSetProp.propDef.isPresent()) {
+                    final PropDef<?> propDef = resultSetProp.propDef.get();
+                    final String propertyName = CalculatedProperty.generateNameFrom(propDef.title);
+                    if (propDef.value.isPresent()) {
+                        setCustomValue(entities, propertyName, propDef.value.get());
+                    }
+                }
+            }
+        }
+    }
+
+    private void setCustomValue(final List<AbstractEntity<?>> entities, final String propertyName, final Object value) {
+        for (final AbstractEntity<?> entity : entities) {
+            entity.set(propertyName, value);
+        }
+    }
+
+    private void setCustomValues(final List<AbstractEntity<?>> entities, final ICustomPropsAssignmentHandler<AbstractEntity<?>> assignmentHandler) {
+        for (final AbstractEntity<?> entity : entities) {
+            assignmentHandler.assignValues(entity);
+        }
     }
 }

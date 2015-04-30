@@ -704,17 +704,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param propDef
      * @param resultSetCustomPropAssignmentHandlerType
      */
-    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler<T>>> resultSetCustomPropAssignmentHandlerType) {
+    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> resultSetCustomPropAssignmentHandlerType) {
         centre.getEnhancer().addCustomProperty(root, "" /* this is the contextPath */, propName, propDef.title, propDef.desc, propDef.type);
         centre.getEnhancer().apply();
-
-        //        if (propDef.value.isPresent()) {
-        //
-        //        } else if (resultSetCustomPropAssignmentHandlerType.isPresent()) {
-        //
-        //        } else {
-        //            throw new IllegalStateException(String.format("The state of custom property [%s] definition is not correct, need to exist either a 'value' for the property or 'custom props value assigner'.", propName));
-        //        }
     }
 
     /**
@@ -863,5 +855,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Class<V> propertyType = (Class<V>) (isEntityItself ? originalType : PropertyTypeDeterminator.determinePropertyType(originalType, originalPropertyName));
         final IEntityDao<V> co = coFinder.find(propertyType);
         return new Pair<>(new FallbackValueMatcherWithCentreContext<V>(co), Optional.empty());
+    }
+
+    public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getCustomPropertiesAsignmentHandler() {
+        return dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType();
+    }
+
+    public Optional<List<ResultSetProp>> getCustomPropertiesDefinitions() {
+        return dslDefaultConfig.getResultSetProperties();
+    }
+
+    public ICustomPropsAssignmentHandler<AbstractEntity<?>> createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler<AbstractEntity<?>>> assignmentHandlerType) {
+        return injector.getInstance(assignmentHandlerType);
     }
 }

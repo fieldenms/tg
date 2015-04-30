@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -202,6 +203,8 @@ public class WebApp extends AbstractWebApp {
                 .addProp("stringProp")
                 .also()
                 .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
+                .also()
+                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
                 .addPrimaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build()).
@@ -254,6 +257,7 @@ public class WebApp extends AbstractWebApp {
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 100);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp2", 30);
             return centre;
         });
 
@@ -637,9 +641,10 @@ public class WebApp extends AbstractWebApp {
         }
     }
 
-    private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<TgPersistentEntityWithProperties> {
+    private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<AbstractEntity<?>> {
         @Override
-        public void assignValues(final TgPersistentEntityWithProperties entity) {
+        public void assignValues(final AbstractEntity<?> entity) {
+            entity.set("customProp", "OK");
         }
     }
 }
