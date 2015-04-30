@@ -65,7 +65,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final Map<String, Class<? extends IValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, T>>> defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria = new HashMap<>();
 
     protected final Map<String, Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>>> defaultSingleValueAssignersForEntitySelectionCriteria = new HashMap<>();
-    protected final Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<String>, T>>> defaultSingleValueAssignersForStringSelectionCriteria = new HashMap<>();protected final Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<Boolean>, T>>> defaultSingleValueAssignersForBooleanSelectionCriteria = new HashMap<>();
+    protected final Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<String>, T>>> defaultSingleValueAssignersForStringSelectionCriteria = new HashMap<>();
+    protected final Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<Boolean>, T>>> defaultSingleValueAssignersForBooleanSelectionCriteria = new HashMap<>();
     protected final Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<Integer>, T>>> defaultSingleValueAssignersForIntegerSelectionCriteria = new HashMap<>();
     protected final Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<BigDecimal>, T>>> defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria = new HashMap<>();
     protected final Map<String, Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>>> defaultSingleValueAssignersForDateSelectionCriteria = new HashMap<>();
@@ -100,7 +101,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected EntityActionConfig resultSetPrimaryEntityAction;
     protected final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
     protected Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType = null;
-    protected Class<? extends ICustomPropsAssignmentHandler<T>> resultSetCustomPropAssignmentHandlerType = null;
+    protected Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType = null;
 
     protected Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig = null;
     protected IFetchProvider<T> fetchProvider = null;
@@ -121,7 +122,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     public EntityCentreConfig<T> build() {
         // check if there are custom props without default values and no custom values assignment handler
         if (resultSetCustomPropAssignmentHandlerType == null &&
-            resultSetProperties.stream().filter(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent()).count() > 0) {
+                resultSetProperties.stream().filter(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent()).count() > 0) {
             throw new IllegalStateException("There are custom properties without default values, but the custom assignment handler is also missing.");
         }
 
@@ -163,8 +164,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 resultSetRenderingCustomiserType,
                 resultSetCustomPropAssignmentHandlerType,
                 queryEnhancerConfig,
-                fetchProvider
-                );
+                fetchProvider);
     }
 
     public Class<T> getEntityType() {

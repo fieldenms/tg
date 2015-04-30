@@ -195,7 +195,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * Represents a type of a contract that is responsible for assigning values to custom properties as part of the data retrieval process.
      */
-    private final Class<? extends ICustomPropsAssignmentHandler<T>> resultSetCustomPropAssignmentHandlerType;
+    private final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType;
 
     ////////////////////////////////////////////////
     ///////// QUERY ENHANCER AND FETCH /////////////
@@ -245,7 +245,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final EntityActionConfig resultSetPrimaryEntityAction,
             final List<EntityActionConfig> resultSetSecondaryEntityActions,
             final Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType,
-            final Class<? extends ICustomPropsAssignmentHandler<T>> resultSetCustomPropAssignmentHandlerType,
+            final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final IFetchProvider<T> fetchProvider) {
         this.topLevelActions.addAll(topLevelActions);
@@ -507,7 +507,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableMap(resultSetOrdering));
     }
 
-    public Optional<Class<? extends ICustomPropsAssignmentHandler<T>>> getResultSetCustomPropAssignmentHandlerType() {
+    public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getResultSetCustomPropAssignmentHandlerType() {
         return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
     }
 

@@ -32,13 +32,12 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder6Render
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 
 /**
-* A package private helper class to decompose the task of implementing the Entity Centre DSL.
-* It has direct access to protected fields in {@link EntityCentreBuilder}.
-*
-* @author TG Team
-*
-* @param <T>
-*/
+ * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
 class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder<T>, IResultSetBuilder0Ordering<T>, IResultSetBuilder1OrderingDirection<T>, IResultSetBuilder4SecondaryAction<T> {
 
     private final EntityCentreBuilder<T> builder;
@@ -146,7 +145,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder6RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<T>> handler) {
+    public IResultSetBuilder6RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> handler) {
         if (handler == null) {
             throw new IllegalArgumentException("Assignment handler for custom properties should not be null.");
         }
@@ -239,7 +238,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private class ResultSetSecondaryActionsBuilder implements IAlsoSecondaryAction<T> {
 
         @Override
-        public IResultSetBuilder6RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<T>> handler) {
+        public IResultSetBuilder6RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> handler) {
             return ResultSetBuilder.this.setCustomPropsValueAssignmentHandler(handler);
         }
 
