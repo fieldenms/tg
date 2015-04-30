@@ -66,6 +66,11 @@ public abstract class WebBasedTestCase extends Application {
 
     }
 
+    /**
+     * Removes web application with all its routes from the test web server.
+     *
+     * @param restlet
+     */
     public static void detachWebApplication(final Restlet restlet) {
         try {
             component.getDefaultHost().detach(restlet);
