@@ -64,7 +64,6 @@ public class WebResourceGuard extends ChallengeAuthenticator {
                 return false;
             }
 
-
             final Optional<UserSession> session = coUserSession.currentSession(coUserSession.getUser(), authenticator);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
