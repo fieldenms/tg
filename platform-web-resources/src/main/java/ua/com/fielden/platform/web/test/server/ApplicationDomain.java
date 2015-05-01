@@ -10,6 +10,7 @@ import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
@@ -41,6 +42,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgStatusActivationFunctionalEntity.class);
         add(TgISStatusActivationFunctionalEntity.class);
         add(TgIRStatusActivationFunctionalEntity.class);
+        add(TgONStatusActivationFunctionalEntity.class);
         add(TgPersistentStatus.class);
     }
 

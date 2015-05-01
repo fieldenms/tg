@@ -24,6 +24,8 @@ import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntityProducer;
+import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
@@ -222,7 +224,12 @@ public class WebApp extends AbstractWebApp {
                         longDesc("Change Status to IR").
                         build())
                 .also()
-                .addProp(mkProp("ON", "On Road Defect Station", String.class))
+                .addProp(mkProp("ON", "On Road Defect Station", String.class)).withAction(action(TgONStatusActivationFunctionalEntity.class).
+                        withContext(context().withSelectionCrit().withCurrentEntity().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Change Status to ON").
+                        longDesc("Change Status to ON").
+                        build())
                 .also()
                 .addProp(mkProp("SR", "Defect Smash Repair", String.class))
 
@@ -525,6 +532,11 @@ public class WebApp extends AbstractWebApp {
                 addMaster(TgIRStatusActivationFunctionalEntity.class, new EntityMaster<TgIRStatusActivationFunctionalEntity>(
                         TgIRStatusActivationFunctionalEntity.class,
                         TgIRStatusActivationFunctionalEntityProducer.class,
+                        null,
+                        injector())).
+                addMaster(TgONStatusActivationFunctionalEntity.class, new EntityMaster<TgONStatusActivationFunctionalEntity>(
+                        TgONStatusActivationFunctionalEntity.class,
+                        TgONStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 done();
