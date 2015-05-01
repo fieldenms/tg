@@ -119,77 +119,77 @@
 
     <script>
         (function () {
-            var centreExample = document.querySelector("#centre_example");
+                var centreExample = document.querySelector("#centre_example");
 
-            centreExample.masters = [];
-            centreExample.centres = [];
+                centreExample.masters = [];
+                centreExample.centres = [];
 
-            centreExample.onMenuItemSelected = function (event, detail, source) {
-                if (detail.isSelected) {
-                    document.querySelector("#scaffold").closeDrawer();
+                centreExample.onMenuItemSelected = function (event, detail, source) {
+                    if (detail.isSelected) {
+                        document.querySelector("#scaffold").closeDrawer();
+                    }
                 }
-            }
 
-            centreExample.onCentreLoaded = function (e, detail, source) {
-                detail.retrieve();
-            }
+                centreExample.onCentreLoaded = function (e, detail, source) {
+                    detail.retrieve();
+                }
 
-            centreExample.onMasterLoaded = function (e, detail, source) {
+                centreExample.onMasterLoaded = function (e, detail, source) {
 
-                detail.onRetrieved = function (entity, bindingEntity, customObject) {
-                    if (entity.id === null) {
-                        postal.publish({
-                            channel: "view",
-                            topic: "master.new.created",
-                            data: {
-                                centreUuid: detail.centreUuid,
-                                masterUuid: detail.uuid
+                    detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                        if (entity.id === null) {
+                            postal.publish({
+                                channel: "view",
+                                topic: "master.new.created",
+                                data: {
+                                    centreUuid: detail.centreUuid,
+                                    masterUuid: detail.uuid
+                                }
+                            });
+                        } else {
+                            postal.publish({
+                                channel: "view",
+                                topic: "master.edit.created",
+                                data: {
+                                    entityid: entity.id,
+                                    centreUuid: detail.centreUuid,
+                                    masterUuid: detail.uuid
+                                }
+                            });
+                        }
+                        centreExample.route = source.getAttribute("id");
+                    };
+
+                    detail.onValidated = function (validatedEntity, bindingEntity, customObject) {
+
+                    };
+
+                    detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
+
+                    };
+
+                    detail.retrieve();
+                };
+
+                centreExample.addEventListener('template-bound', function (e) {
+                        var masterNumber = 1,
+                            reflector = document.querySelector("#reflector");
+
+                        document.querySelector("#scaffold").$.drawerPanel.forceNarrow = true;
+
+                        var userName = "SU";
+
+                        //////////////////////Initialising centres and route///////////////////////////////
+                        centreExample.centres.push({
+                            componentUri: "/users/" + userName + "/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties",
+                            elementName: "tg-TgPersistentEntityWithProperties-centre",
+                            label: "Entity Centre (Generated)",
+                            attrs: {
+                                user: userName,
+                                uuid: reflector.generateUUID()
                             }
                         });
-                    } else {
-                        postal.publish({
-                            channel: "view",
-                            topic: "master.edit.created",
-                            data: {
-                                entityid: entity.id,
-                                centreUuid: detail.centreUuid,
-                                masterUuid: detail.uuid
-                            }
-                        });
-                    }
-                    centreExample.route = source.getAttribute("id");
-                };
-
-                detail.onValidated = function (validatedEntity, bindingEntity, customObject) {
-
-                };
-
-                detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
-
-                };
-
-                detail.retrieve();
-            };
-
-            centreExample.addEventListener('template-bound', function (e) {
-                var masterNumber = 1,
-                    reflector = document.querySelector("#reflector");
-
-                document.querySelector("#scaffold").$.drawerPanel.forceNarrow = true;
-                
-                var userName = "SU";
-
-                //////////////////////Initialising centres and route///////////////////////////////
-                centreExample.centres.push({
-                    componentUri: "/users/" + userName + "/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties",
-                    elementName: "tg-TgPersistentEntityWithProperties-centre",
-                    label: "Entity Centre (Generated)",
-                    attrs: {
-                        user: userName,
-                        uuid: reflector.generateUUID()
-                    }
-                });
-/* 	            centreExample.centres.push({
+                        /* 	            centreExample.centres.push({
                     componentUri: "/resources/centre/tg-entity-centre-for-TgPersistentEntityWithProperties.html",
                     elementName: "tg-entity-centre-for-TgPersistentEntityWithProperties",
                     label: "Entity Centre",
@@ -198,84 +198,62 @@
                         uuid: reflector.generateUUID()
                     }
                 }); */
-                centreExample.route = centreExample.route || "centre_" + centreExample.centres[0].attrs.uuid;
+                        centreExample.route = centreExample.route || "centre_" + centreExample.centres[0].attrs.uuid;
 
-                //////////////////////////Edit actions//////////////////////////////////
-                postal.subscribe({
-                    channel: "manager",
-                    topic: "master.edit.create",
-                    callback: function (data, envelope) {
-                        data.attrs.uuid = reflector.generateUUID();
-                        centreExample.masters.push(data);
-                    }
-                });
-
-                postal.subscribe({
-                    channel: "manager",
-                    topic: "master.show",
-                    callback: function (data, envelope) {
-                        centreExample.route = "master_" + data.uuid;
-                        postal.publish({
-                            channel: "view",
-                            topic: "master.shown",
-                            data: {
-                                centreUuid: data.centreUuid,
-                                masterUuid: data.uuid
+                        //////////////////////////Edit actions//////////////////////////////////
+                        postal.subscribe({
+                            channel: "manager",
+                            topic: "master.edit.create",
+                            callback: function (data, envelope) {
+                                data.attrs.uuid = reflector.generateUUID();
+                                centreExample.masters.push(data);
                             }
                         });
-                    }
-                });
-                /////////////////New Actions//////////////////////////////
-                postal.subscribe({
-                    channel: "manager",
-                    topic: "master.new.create",
-                    callback: function (data, envelope) {
-                        var uuid = reflector.generateUUID();
-                        data.hash = "master_" + uuid;
-                        data.label = "New Master #" + masterNumber;
-                        data.attrs.uuid = uuid;
-                        centreExample.masters.push(data);
-                        masterNumber += 1;
-                    }
-                });
-                //////////////Master save acation////////////////////////////
-                postal.subscribe({
-                    channel: "manager",
-                    topic: "master.saved",
-                    callback: function (data, envelope) {
-                        var centre = document.querySelector("#centre_" + data.centreUuid),
-                            content = document.querySelector("#content"),
-                            findMaster = function (uuid) {
-                                var masterInd = 0;
-                                for (masterInd = 0; masterInd < centreExample.masters.length; masterInd++) {
-                                    if (centreExample.masters[masterInd].attrs.uuid === uuid) {
-                                        return masterInd;
-                                    }
-                                }
-                                return -1;
-                            },
-                            masterInd = findMaster(data.masterUuid),
-                            animationFinished = function (e) {
-                                centre.firstChild.run();
-                                if (masterInd >= 0) {
-                                    centreExample.masters.splice(masterInd, 1);
-                                }
+
+                        postal.subscribe({
+                            channel: "manager",
+                            topic: "master.show",
+                            callback: function (data, envelope) {
+                                centreExample.route = "master_" + data.uuid;
                                 postal.publish({
                                     channel: "view",
-                                    topic: "master.closed",
-                                    data: data
+                                    topic: "master.shown",
+                                    data: {
+                                        centreUuid: data.centreUuid,
+                                        masterUuid: data.uuid
+                                    }
                                 });
-                                content.removeEventListener("core-animated-pages-transition-end", animationFinished);
+                            }
+                        });
+                        /////////////////New Actions//////////////////////////////
+                        postal.subscribe({
+                            channel: "manager",
+                            topic: "master.new.create",
+                            callback: function (data, envelope) {
+                                var uuid = reflector.generateUUID();
+                                data.hash = "master_" + uuid;
+                                data.label = "New Master #" + masterNumber;
+                                data.attrs.uuid = uuid;
+                                centreExample.masters.push(data);
+                                masterNumber += 1;
+                            }
+                        });
+                        //////////////Master save acation////////////////////////////
+                        postal.subscribe({
+                                channel: "manager",
+                                topic: "master.saved",
+                                callback: function (data, envelope) {
+                                    postal.publish({
+                                        channel: "view",
+                                        topic: "master.closed",
+                                        data: data
+                                    });
+                                };
+                                self.selected = "Entity Centre";
+                            }
+                        });
 
-                            };
-                        if (centre !== null && centre.firstChild) {
-                            content.addEventListener("core-animated-pages-transition-end", animationFinished);
-                            centreExample.route = "centre_" + data.centreUuid;
-                        }
-                    }
                 });
-
-            });
         })();
     </script>
 

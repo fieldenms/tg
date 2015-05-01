@@ -15,15 +15,19 @@
                         var fullTypeName = data.entity.type().notEnhancedFullClassName(),
                             simpleTypeName = data.entity.type()._notEnhancedSimpleClassName(),
                             master = {
-                                componentUri: "/users/" + user + "/master/" + fullTypeName,
-                                elementName: "tg-" + simpleTypeName + "-master",
-                                label: "Master for " + data.entity.key,
-                                attrs: {
-                                    user: user,
-                                    entityid: data.entity.id,
-                                    entitytype: fullTypeName,
-                                    currentState: 'VIEW',
-                                    centreUuid: data.uuid
+                                title: "Master for " + data.entity.key,
+                                description: "Master for " + data.entity.key,
+                                view: {
+                                    import: "/users/" + user.login + "/master/" + fullTypeName,
+                                    elementName: "tg-" + simpleTypeName + "-master",
+                                    type: "master",
+                                    attrs: {
+                                        user: user.login,
+                                        entityid: data.entity.id,
+                                        entitytype: fullTypeName,
+                                        currentState: 'EDIT',
+                                        centreUuid: data.uuid
+                                    }
                                 }
                             };
                         if (mastersById["" + data.entity.id]) {
@@ -31,7 +35,7 @@
                                 channel: "manager",
                                 topic: "master.show",
                                 data: {
-                                    uuid: mastersById["" + data.entity.id],
+                                    item: mastersById["" + data.entity.id],
                                     centreUuid: data.uuid
                                 }
                             });
@@ -48,12 +52,12 @@
                     channel: "view",
                     topic: "master.edit.created",
                     callback: function (data, envelope) {
-                        mastersById["" + data.entityid] = data.masterUuid;
+                        mastersById["" + data.entityid] = data.item;
                         postal.publish({
                             channel: "centre_" + data.centreUuid,
                             topic: "edit.finish.created",
                             data: {
-                                uuid: data.masterUuid
+                                item: data.item
                             }
                         });
                     }
@@ -66,7 +70,7 @@
                             channel: "centre_" + data.centreUuid,
                             topic: "edit.finish.shown",
                             data: {
-                                uuid: data.masterUuid
+                                item: data.item
                             }
                         });
                     }
@@ -76,17 +80,20 @@
                     channel: "centre",
                     topic: "new.start",
                     callback: function (data, envelope) {
-                            master = {
-                                componentUri: "/users/" + user + "/master/" + data.entityType,
+                        master = {
+                            view: {
+                                import: "/users/" + user.login + "/master/" + data.entityType,
                                 elementName: "tg-" + data.simpleEntityType + "-master",
+                                type: "master",
                                 attrs: {
-                                    user: user,
+                                    user: user.login,
                                     entityid: "new",
                                     entitytype: data.entityType,
-                                    currentState: 'VIEW',
+                                    currentState: 'EDIT',
                                     centreUuid: data.uuid
                                 }
-                            };
+                            }
+                        };
                         postal.publish({
                             channel: "manager",
                             topic: "master.new.create",
@@ -102,7 +109,7 @@
                             channel: "centre_" + data.centreUuid,
                             topic: "new.finish",
                             data: {
-                                uuid: data.masterUuid
+                                item: data.item
                             }
                         });
                     }
@@ -111,7 +118,7 @@
                 saveListener = postal.subscribe({
                     channel: "master",
                     topic: "save.start",
-                    callback: function(data, envelope) {
+                    callback: function (data, envelope) {
                         postal.publish({
                             channel: "manager",
                             topic: "master.saved",
@@ -121,21 +128,21 @@
                 }),
                 masterClosedListener = postal.subscribe({
                     channel: "view",
-                    topic: "master.closed",
-                    callback: function(data, envelope) {
-                        delete mastersById["" + data.entityid];
+                    topic: "master.saved",
+                    callback: function (data, envelope) {
                         postal.publish({
-                            channel: "master_"  + data.masterUuid,
-                            topic: "save.finish"
+                            channel: "master_" + data.masterUuid,
+                            topic: "save.finish",
+                            data: data
                         });
                     }
                 });
             Polymer({
-                ready: function() {
+                ready: function () {
                     if (!user) {
-                        user = this.user;   
-                    } else if (user !== this.user){
-                        throw "The defined user is different then " + this.user + " but was: " + user;
+                        user = this.user;
+                    } else if (user !== this.user) {
+                        throw "The defined user is different then " + this.user.login + " but was: " + user.login;
                     }
                 }
             });

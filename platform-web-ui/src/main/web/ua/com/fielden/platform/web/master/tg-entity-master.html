@@ -141,9 +141,14 @@
                 attached: function() {
                     var self = this;
                     self.saveListener = postal.subscribe({
-                        channel: "master_"  + this.uuid,
+                        channel: "master_"  + self.uuid,
                         topic: "save.finish",
                         callback: function(data, envelope) {
+                            postal.publish({
+                                channel: self.centreUuid,
+                                topic: "detail.saved",
+                                data: data
+                            });
                             console.log("--------------saved fifnished for: " + self.uuid + "------------");
                         }
                     });
@@ -302,19 +307,6 @@
 
                     // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(potentiallySavedEntity);
-
-                    //Send postal message that save was completed if it was succefull
-                    if (potentiallySavedEntity.isValid()) {
-                        postal.publish({
-                            channel: "master",
-                            topic: "save.start",
-                            data: {
-                                centreUuid: self.centreUuid,
-                                masterUuid: self.uuid,
-                                entityid: potentiallySavedEntity.id
-                            }
-                        });
-                    }
 
                     // custom external action
                     this.onSaved(potentiallySavedEntity, newBindingEntity);

@@ -94,14 +94,14 @@
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "edit.finish.created",
                         callback: function (data, envelope) {
-                            console.log("-------- Masters Edit Created UUID: " + data.uuid + " ------------");
+                            console.log("-------- Masters Edit Created UUID: " + data.item.view.attrs.uuid + " ------------");
                         }
                     });
                     this.masterShowListener = postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "edit.finish.shown",
                         callback: function (data, envelope) {
-                            console.log("-------- Masters Edit Shown UUID: " + data.uuid + " ------------");
+                            console.log("-------- Masters Edit Shown UUID: " + data.item.view.attrs.uuid + " ------------");
                         }
                     });
                     /////////////////////////New listener//////////////////////////////////////
@@ -109,7 +109,7 @@
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "new.finish",
                         callback: function (data, envelope) {
-                            console.log("-------- Masters New UUID: " + data.uuid + " ------------");
+                            console.log("-------- Masters New UUID: " + data.item.view.attrs.uuid + " ------------");
                         }
                     });
                     

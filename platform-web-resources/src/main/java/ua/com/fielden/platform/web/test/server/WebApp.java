@@ -390,19 +390,19 @@ public class WebApp extends AbstractWebApp {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
+                .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'padding:20px', "
                         + "[[mr], [mr], [mr], [mr], [mr]], "
                         + "[[mr], [mr], [mr], [mr], [mr]],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
-                .setLayoutFor(Device.TABLET, null, ("['vertical', 'margin:20px',"
+                .setLayoutFor(Device.TABLET, null, ("['vertical', 'padding:20px',"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
                         + "['horizontal', 'justified', ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
-                .setLayoutFor(Device.MOBILE, null, ("['margin:20px',"
+                .setLayoutFor(Device.MOBILE, null, ("['padding:20px',"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
@@ -462,17 +462,14 @@ public class WebApp extends AbstractWebApp {
                 detailIcon("/resources/images/test.svg").
                 bgColor("#f4f4f4").
                 captionBgColor("#999999").
-                menu().addMenuItem("view 1").description("view 1 description").view(null).done().
-                addMenuItem("view 2").description("view 2 description").view(null).
-                addSubMenuItem("view 1").description("view 1 description").view(null).done().
-                addSubMenuItem("view 2").description("view 2 description").centre(entityCentre).done().done().done().done().
+                view(null).done().
                 addModule("view 3").
                 description("view 3 description").
                 icon("/resources/images/test.svg").
                 detailIcon("/resources/images/test.svg").
                 bgColor("#f4f4f4").
                 captionBgColor("#999999").
-                centre(entityCentre).done().
+                menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done().done().
                 addModule("view 4").
                 description("view 4 description").
                 icon("/resources/images/test.svg").
