@@ -20,6 +20,8 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
+import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
@@ -204,7 +206,12 @@ public class WebApp extends AbstractWebApp {
                         longDesc("Change Status to DR").
                         build())
                 .also()
-                .addProp(mkProp("IS", "In Service", String.class))
+                .addProp(mkProp("IS", "In Service", String.class)).withAction(action(TgISStatusActivationFunctionalEntity.class).
+                        withContext(context().withSelectionCrit().withCurrentEntity().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Change Status to IS").
+                        longDesc("Change Status to IS").
+                        build())
                 .also()
                 .addProp(mkProp("IR", "In Repair", String.class))
                 .also()
@@ -502,7 +509,13 @@ public class WebApp extends AbstractWebApp {
                         TgStatusActivationFunctionalEntity.class,
                         TgStatusActivationFunctionalEntityProducer.class,
                         null,
-                        injector())).done();
+                        injector())).
+                addMaster(TgISStatusActivationFunctionalEntity.class, new EntityMaster<TgISStatusActivationFunctionalEntity>(
+                        TgISStatusActivationFunctionalEntity.class,
+                        TgISStatusActivationFunctionalEntityProducer.class,
+                        null,
+                        injector())).
+                done();
         configMainMenu().
                 addModule("view 1").
                 description("view 1 description").
