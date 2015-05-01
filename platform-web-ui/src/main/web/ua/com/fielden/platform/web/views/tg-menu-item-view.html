@@ -29,9 +29,18 @@
                 onAfterLoad: function (e, detail, view) {
                     var self = this;
                     if (this.item.view.type === 'centre') {
-                        detail.onRetrieved = function (entity, bindingEntity, customObject) {
-                            self.fire("menu-item-view-loaded", self.item);
-                        };
+                   		var oldOnRetrieved = detail.onRetrieved;
+                   		if (oldOnRetrieved) {
+                           	detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                           		oldOnRetrieved();
+                               	self.fire("menu-item-view-loaded", self.item);
+                           	};
+                   		} else {
+                           	detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                               	self.fire("menu-item-view-loaded", self.item);
+                           	};
+                   		}
+                       	
                         detail.retrieve();
                     } else if (this.item.view.type === 'master') {
                         detail.onRetrieved = function (entity, bindingEntity, customObject) {
