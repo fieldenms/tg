@@ -509,7 +509,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      *
      * @return
      */
-    public Optional<IRenderingCustomiser<T, ?>> getRenderingCustomiser() {
+    public Optional<IRenderingCustomiser<? extends AbstractEntity<?>, ?>> getRenderingCustomiser() {
         if (dslDefaultConfig.getResultSetRenderingCustomiserType().isPresent()) {
             return Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
         } else {

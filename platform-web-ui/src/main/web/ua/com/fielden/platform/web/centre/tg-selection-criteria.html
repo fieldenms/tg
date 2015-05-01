@@ -76,7 +76,8 @@
                         var pageCount = customObject.pageCount;
                         var metaValues = customObject.metaValues;
                         var isCentreChanged = customObject.isCentreChanged;
-                        self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged);
+                        var renderingHints = customObject.renderingHints;
+                        self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints);
                     }
                 });
 
@@ -309,7 +310,7 @@
             /**
              * Default implementation for onRun callback.
              */
-            onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged) {
+            onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints) {
                 this.propertyModel = this.createPropertyModel(metaValues);
                 this._isCentreChanged = isCentreChanged;
                 
@@ -321,7 +322,7 @@
 
                 this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                 // custom external action
-                this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount);
+                this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints);
             },
 
             /**

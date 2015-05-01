@@ -271,9 +271,10 @@
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canLast(pageNumber, pageCount);
                 },
 
-                onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount) {
+                onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints) {
                     console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount);
                     this.$.egi.entities = resultEntities;
+                    this.$.egi.renderingHints = renderingHints;
                 },
 
                 /**

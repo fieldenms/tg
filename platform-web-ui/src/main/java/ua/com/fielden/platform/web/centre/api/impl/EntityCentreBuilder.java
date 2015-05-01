@@ -100,7 +100,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final SortedMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new TreeMap<>();
     protected EntityActionConfig resultSetPrimaryEntityAction;
     protected final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
-    protected Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType = null;
+    protected Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType = null;
     protected Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType = null;
 
     protected Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig = null;

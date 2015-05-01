@@ -83,7 +83,7 @@
                             </td>
                         </template>
                         <template repeat="{{column, columnIndex in columns}}">
-                            <td class="data-column" style="position: relative; width: {{column.width}}; {{renderingHints[column.property] | styleObject}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
+                            <td class="data-column" style="position: relative; width: {{column.width}}; {{renderingHints[entityIndex][column.property] | styleObject}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     <template if="{{column.type === 'Boolean' && get(entity, column) !== null}}">
                                         <core-icon icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>

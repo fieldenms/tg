@@ -190,7 +190,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * Represents a type of a contract that is responsible for customisation of rendering for entities and their properties.
      */
-    private final Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType;
+    private final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType;
 
     /**
      * Represents a type of a contract that is responsible for assigning values to custom properties as part of the data retrieval process.
@@ -244,7 +244,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final LinkedHashMap<String, OrderDirection> resultSetOrdering,
             final EntityActionConfig resultSetPrimaryEntityAction,
             final List<EntityActionConfig> resultSetSecondaryEntityActions,
-            final Class<? extends IRenderingCustomiser<T, ?>> resultSetRenderingCustomiserType,
+            final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType,
             final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final IFetchProvider<T> fetchProvider) {
@@ -496,7 +496,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForDateSelectionCriteria));
     }
 
-    public Optional<Class<? extends IRenderingCustomiser<T, ?>>> getResultSetRenderingCustomiserType() {
+    public Optional<Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>>> getResultSetRenderingCustomiserType() {
         return Optional.ofNullable(resultSetRenderingCustomiserType);
     }
 
