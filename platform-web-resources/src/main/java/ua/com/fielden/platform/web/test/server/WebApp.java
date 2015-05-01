@@ -12,7 +12,6 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
@@ -25,6 +24,8 @@ import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
+import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -196,7 +197,12 @@ public class WebApp extends AbstractWebApp {
                         build())
 
                 .also()
-                .addProp(mkProp("DR", "Defect Radio", String.class))
+                .addProp(mkProp("DR", "Defect Radio", String.class)).withAction(action(TgStatusActivationFunctionalEntity.class).
+                        withContext(context().withSelectionCrit().withCurrentEntity().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Change Status to DR").
+                        longDesc("Change Status to DR").
+                        build())
                 .also()
                 .addProp(mkProp("IS", "In Service", String.class))
                 .also()
@@ -470,11 +476,33 @@ public class WebApp extends AbstractWebApp {
                 .done();
 
         configApp().
-                addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
-                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(TgPersistentEntityWithProperties.class, TgPersistentEntityWithPropertiesProducer.class, masterConfig, injector().getInstance(ICompanionObjectFinder.class), injector())).
-                addMaster(TgFunctionalEntityWithCentreContext.class, new EntityMaster<TgFunctionalEntityWithCentreContext>(TgFunctionalEntityWithCentreContext.class, TgFunctionalEntityWithCentreContextProducer.class, masterConfigForFunctionalEntity, injector().getInstance(ICompanionObjectFinder.class), injector())).
-                addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(TgPersistentCompositeEntity.class, null, injector())).
-                addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(TgExportFunctionalEntity.class, null, injector())).done();
+                addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
+                        EntityWithInteger.class,
+                        null,
+                        injector())). // efs(EntityWithInteger.class).with("prop")
+                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(
+                        TgPersistentEntityWithProperties.class,
+                        TgPersistentEntityWithPropertiesProducer.class,
+                        masterConfig,
+                        injector())).
+                addMaster(TgFunctionalEntityWithCentreContext.class, new EntityMaster<TgFunctionalEntityWithCentreContext>(
+                        TgFunctionalEntityWithCentreContext.class,
+                        TgFunctionalEntityWithCentreContextProducer.class,
+                        masterConfigForFunctionalEntity,
+                        injector())).
+                addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(
+                        TgPersistentCompositeEntity.class,
+                        null,
+                        injector())).
+                addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(
+                        TgExportFunctionalEntity.class,
+                        null,
+                        injector())).
+                addMaster(TgStatusActivationFunctionalEntity.class, new EntityMaster<TgStatusActivationFunctionalEntity>(
+                        TgStatusActivationFunctionalEntity.class,
+                        TgStatusActivationFunctionalEntityProducer.class,
+                        null,
+                        injector())).done();
         configMainMenu().
                 addModule("view 1").
                 description("view 1 description").
