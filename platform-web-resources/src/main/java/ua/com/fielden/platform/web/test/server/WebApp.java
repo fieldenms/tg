@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.test.server;
 
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
+import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -141,13 +143,17 @@ public class WebApp extends AbstractWebApp {
                 .also()
                 .addCrit("critOnlyStringProp").asSingle().text()
                 /*    */.setDefaultValue(single().text()./* TODO not applicable on query generation level not(). */setValue("DE*")./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
+                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
 
                 .setLayoutFor(Device.DESKTOP, null,
                         ("[['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]]")
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, null,
@@ -158,11 +164,12 @@ public class WebApp extends AbstractWebApp {
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mrLast]]")
+                                "['center-justified', 'start', mr, mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.MOBILE, null,
                         ("[['center-justified', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
@@ -187,6 +194,18 @@ public class WebApp extends AbstractWebApp {
                         shortDesc("Function 5").
                         longDesc("Functional context-dependent action 5").
                         build())
+
+                .also()
+                .addProp(mkProp("DR", "Defect Radio", String.class))
+                .also()
+                .addProp(mkProp("IS", "In Service", String.class))
+                .also()
+                .addProp(mkProp("IR", "In Repair", String.class))
+                .also()
+                .addProp(mkProp("ON", "On Road Defect Station", String.class))
+                .also()
+                .addProp(mkProp("SR", "Defect Smash Repair", String.class))
+
                 .also()
                 .addProp("integerProp")
                 .also()
@@ -202,9 +221,12 @@ public class WebApp extends AbstractWebApp {
                 .also()
                 .addProp("stringProp")
                 .also()
-                .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
-                .also()
-                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
+                .addProp("status")
+                //                .also()
+                //                .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
+                //                .also()
+                //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
+
                 .addPrimaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build()).
@@ -256,8 +278,14 @@ public class WebApp extends AbstractWebApp {
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 100);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 100);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp2", 30);
+            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
+            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp2", 30);
+            final int statusWidth = 0; // TODO does not matter below 18px -- still remain 18px, +20+20 as padding
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dR", statusWidth);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iS", statusWidth);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iR", statusWidth);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "oN", statusWidth);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "sR", statusWidth);
             return centre;
         });
 
@@ -641,7 +669,7 @@ public class WebApp extends AbstractWebApp {
     private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<AbstractEntity<?>> {
         @Override
         public void assignValues(final AbstractEntity<?> entity) {
-            entity.set("customProp", "OK");
+            // entity.set("customProp", "OK");
         }
     }
 }

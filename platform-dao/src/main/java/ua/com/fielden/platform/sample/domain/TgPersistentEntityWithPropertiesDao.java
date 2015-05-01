@@ -54,6 +54,9 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("entityProp",
                         "entityProp.desc",
                         "entityProp.key")
+                //                .with("status",
+                //                        "status.desc",
+                //                        "status.key")
                 .with("critOnlyEntityProp",
                         "critOnlyEntityProp.desc",
                         "critOnlyEntityProp.key")

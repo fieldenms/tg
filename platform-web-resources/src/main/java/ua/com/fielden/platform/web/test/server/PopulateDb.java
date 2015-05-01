@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
@@ -134,6 +135,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         System.out.println("exampleEnt1.getBigDecimalProp().scale() == " + exampleEnt1.getBigDecimalProp().scale());
         System.out.println("exampleEnt1.getId() == " + exampleEnt1.getId());
 
+        createDemoDomain(ent1, ent3, compositeEnt1);
         //
         //        final TgPersistentEntityWithProperties ent1WithCompositeProp = save(new_(TgPersistentEntityWithProperties.class, "KEY12").setCompositeProp(compositeEnt1));
         //        System.out.println("ent1WithCompositeProp.getId() == " + ent1WithCompositeProp.getId());
@@ -159,6 +161,39 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Creates 30-ty entities to be able to demonstrate (with populated statuses).
+     */
+    private void createDemoDomain(final TgPersistentEntityWithProperties ent1, final TgPersistentEntityWithProperties ent2, final TgPersistentCompositeEntity compEnt1) {
+        final TgPersistentStatus dr = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "DR").setDesc("Defect Radio"));
+        final TgPersistentStatus is = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "IS").setDesc("In Service"));
+        final TgPersistentStatus ir = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "IR").setDesc("In Repair"));
+        final TgPersistentStatus on = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "ON").setDesc("On Road Defect Station"));
+        final TgPersistentStatus sr = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "SR").setDesc("Defect Smash Repair"));
+
+        for (int i = 0; i < 30; i++) {
+            save(new_(TgPersistentEntityWithProperties.class, "DEMO" + convert(i))
+                    .setStringProp(random("poor", "average", "good", "great", "superb", "excelent", "classic"))
+                    .setIntegerProp(random(43, 67, 24, 35, 18, 99, 23))
+                    .setEntityProp(random(ent1, null, ent2))
+                    .setBigDecimalProp(random(new BigDecimal(23).setScale(5), new BigDecimal(4).setScale(5), new BigDecimal(99).setScale(5)))
+                    .setDateProp(new DateTime(random(1000000000000L, 1100000000000L)).toDate())
+                    .setBooleanProp(random(true, false))
+                    .setCompositeProp(random(compEnt1, null))
+                    .setDesc("Description for demo entity with key " + ("DEMO" + convert(i)) + ".")
+                    .setRequiredValidatedProp(random(30, 56, 82))
+                    .setStatus(random(dr, is, ir, on, sr)));
+        }
+    }
+
+    private <T> T random(final T... values) {
+        return values[(int) Math.round(Math.random() * (values.length - 1))];
+    }
+
+    private String convert(final int i) {
+        return i < 10 ? ("0" + i) : "" + i;
     }
 
     @Override

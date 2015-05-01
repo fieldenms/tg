@@ -10,6 +10,7 @@ import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 
 /**
@@ -34,6 +35,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgExportFunctionalEntity.class);
         add(TgPersistentCompositeEntity.class);
         add(TgFunctionalEntityWithCentreContext.class);
+        add(TgPersistentStatus.class);
     }
 
     @Override

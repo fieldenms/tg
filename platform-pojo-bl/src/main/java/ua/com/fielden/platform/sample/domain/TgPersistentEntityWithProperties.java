@@ -144,6 +144,21 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Crit-only single string prop", desc = "Crit-only single string prop desc")
     private String critOnlyStringProp;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Status", desc = "The current status of this entity")
+    private TgPersistentStatus status;
+
+    @Observable
+    public TgPersistentEntityWithProperties setStatus(final TgPersistentStatus status) {
+        this.status = status;
+        return this;
+    }
+
+    public TgPersistentStatus getStatus() {
+        return status;
+    }
+
     @Observable
     public TgPersistentEntityWithProperties setCritOnlyStringProp(final String critOnlyStringProp) {
         this.critOnlyStringProp = critOnlyStringProp;
