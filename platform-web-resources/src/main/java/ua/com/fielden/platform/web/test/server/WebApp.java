@@ -30,6 +30,8 @@ import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
+import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -231,7 +233,12 @@ public class WebApp extends AbstractWebApp {
                         longDesc("Change Status to ON").
                         build())
                 .also()
-                .addProp(mkProp("SR", "Defect Smash Repair", String.class))
+                .addProp(mkProp("SR", "Defect Smash Repair", String.class)).withAction(action(TgSRStatusActivationFunctionalEntity.class).
+                        withContext(context().withSelectionCrit().withCurrentEntity().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Change Status to SR").
+                        longDesc("Change Status to SR").
+                        build())
 
                 .also()
                 .addProp("integerProp")
@@ -537,6 +544,11 @@ public class WebApp extends AbstractWebApp {
                 addMaster(TgONStatusActivationFunctionalEntity.class, new EntityMaster<TgONStatusActivationFunctionalEntity>(
                         TgONStatusActivationFunctionalEntity.class,
                         TgONStatusActivationFunctionalEntityProducer.class,
+                        null,
+                        injector())).
+                addMaster(TgSRStatusActivationFunctionalEntity.class, new EntityMaster<TgSRStatusActivationFunctionalEntity>(
+                        TgSRStatusActivationFunctionalEntity.class,
+                        TgSRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 done();

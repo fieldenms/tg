@@ -15,6 +15,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
+import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 
 /**
@@ -43,6 +44,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgISStatusActivationFunctionalEntity.class);
         add(TgIRStatusActivationFunctionalEntity.class);
         add(TgONStatusActivationFunctionalEntity.class);
+        add(TgSRStatusActivationFunctionalEntity.class);
         add(TgPersistentStatus.class);
     }
 
