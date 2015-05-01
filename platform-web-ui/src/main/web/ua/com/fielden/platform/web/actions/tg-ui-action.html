@@ -103,6 +103,8 @@
                 icon: null
             },
             
+            masterComponent: null,
+            
             eventDelegates: {
                 'layout-finished': 'showDialog'
             },
@@ -169,13 +171,18 @@
             _onExecuted: function (e, detail, source) {
                 var self = this;
                 // console.log("_onExecuted: e", e, "egi", e.srcElement);
-
-                //this.$.entityMaster.open();
+                self.masterComponent = detail;
 
                 detail.onRetrieved = function (entity, bindingEntity, customObject) {
                     console.log("onRetrieved");
                     if (self.postActionSuccess) {
                         self.postActionSuccess();
+                    }
+                    
+                    console.log("onRetrieved: self.masterComponent.noUI ===", self.masterComponent.noUI);
+                    if (self.masterComponent.noUI === true) {
+                		// immediately save the functional entity in case when no UI exists
+	            		self.masterComponent.save();
                     }
                 };
 
@@ -207,10 +214,14 @@
             },
             
             showDialog: function(e, detail, source) {
-                if (this.loading) {
-                    this.$.entityMaster.open();
-                    this.loading = false;
-                }
+            	var self = this;
+            	console.log("showDialog: self.masterComponent.noUI ===", self.masterComponent.noUI);
+            	if (self.masterComponent.noUI === false) {
+                    if (this.loading) {
+                        this.$.entityMaster.open();
+                        this.loading = false;
+                    }
+             	}
             }
         });
     </script>
