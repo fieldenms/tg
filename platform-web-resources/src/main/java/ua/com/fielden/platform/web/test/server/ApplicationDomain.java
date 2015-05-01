@@ -12,6 +12,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
+import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -35,6 +36,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgExportFunctionalEntity.class);
         add(TgPersistentCompositeEntity.class);
         add(TgFunctionalEntityWithCentreContext.class);
+        add(TgStatusActivationFunctionalEntity.class);
         add(TgPersistentStatus.class);
     }
 
