@@ -238,21 +238,6 @@
                                 masterNumber += 1;
                             }
                         });
-                        //////////////Master save acation////////////////////////////
-                        postal.subscribe({
-                                channel: "manager",
-                                topic: "master.saved",
-                                callback: function (data, envelope) {
-                                    postal.publish({
-                                        channel: "view",
-                                        topic: "master.closed",
-                                        data: data
-                                    });
-                                };
-                                self.selected = "Entity Centre";
-                            }
-                        });
-
                 });
         })();
     </script>
