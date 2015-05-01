@@ -151,7 +151,7 @@ public class WebApp extends AbstractWebApp {
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, null,
-                        ("[['center-justified start', mr, mrLast]," +
+                        ("[['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
