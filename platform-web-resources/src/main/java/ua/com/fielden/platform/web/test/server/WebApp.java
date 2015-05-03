@@ -303,15 +303,16 @@ public class WebApp extends AbstractWebApp {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = new EntityCentre<>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector(), (centre) -> {
             // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
 
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 80);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 60);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "desc", 200);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "integerProp", 60);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "bigDecimalProp", 60);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "entityProp", 100);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "booleanProp", 50);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 100);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 100);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "integerProp", 30);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "bigDecimalProp", 30);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "entityProp", 40);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "booleanProp", 30);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 130);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 110);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "status", 30);
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp2", 30);
             final int statusWidth = 0; // TODO does not matter below 18px -- still remain 18px, +20+20 as padding
