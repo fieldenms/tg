@@ -195,17 +195,17 @@
                 onSelectionChanged: function (e, detail, source) {
                     var index = +source.getAttribute("index");
                     if (source.checked) {
-                        if (this.selectedEntities.indexOf(this.entities[index]) < 0) {
+                        if (!hasEntity(this.entities[index], this.selectedEntities) /* this.selectedEntities.indexOf(this.entities[index]) < 0 */) {
                             this.selectedEntities.push(this.entities[index]);
                             this.selectionModel[index] = true;
                         }
                     } else {
-                        if (this.selectedEntities.indexOf(this.entities[index]) >= 0) {
+                        if (hasEntity(this.entities[index], this.selectedEntities) /* this.selectedEntities.indexOf(this.entities[index]) >= 0 */) {
                             this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
                             this.selectionModel[index] = false;
                         }
                     }
-                    console.log(this.getSelectedRows(), this.getSelectedEntities(), this.selectionModel);
+                    console.log("onSelectionChanged: rows=", this.getSelectedRows(), "SelectedEntities=", this.getSelectedEntities(), "selectionModel=", this.selectionModel);
                 },
                 getSelectedEntities: function () {
                     return this.selectedEntities;
