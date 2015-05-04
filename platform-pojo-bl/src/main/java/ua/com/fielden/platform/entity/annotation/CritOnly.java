@@ -8,9 +8,9 @@ import java.lang.annotation.Target;
 /**
  * Indicates that an entity property should only be used as a criterion for dynamic entity reviews (i.e. it cannot be added to the result set). {@link #value()} indicates range or
  * single selection to be used for property. See {@link Type} for more details.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
@@ -18,11 +18,17 @@ public @interface CritOnly {
 
     Type value() default Type.RANGE; // represents a choice by which boundary (left or right) the property should be selected.
 
+    /** Only applicable to criteria only properties of BigDecimal type. */
+    long precision() default -1;
+
+    /** Only applicable to criteria only properties of BigDecimal type. */
+    long scale() default -1;
+
     /**
      * Enumeration to choose whether range property should be selected by single or double criterion. Single property will not be affected.
-     * 
+     *
      * @author jhou
-     * 
+     *
      */
     public enum Type {
         /**
