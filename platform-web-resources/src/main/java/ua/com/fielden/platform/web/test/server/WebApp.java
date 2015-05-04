@@ -459,9 +459,9 @@ public class WebApp extends AbstractWebApp {
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
                 .setLayoutFor(Device.TABLET, null, ("['vertical', 'padding:20px',"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], [mr]],"
+                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
+                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
+                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
                         + "['horizontal', 'justified', ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))

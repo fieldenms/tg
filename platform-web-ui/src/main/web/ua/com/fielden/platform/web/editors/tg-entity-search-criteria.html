@@ -164,22 +164,22 @@
             }
 
             Polymer('tg-entity-search-criteria', {
-            	publish: {
-            		/**
-            		 * Determines whether the selected entities are required to be send inside the centre context. 
-            		 * 
-            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context. 
-            		 */
-            		requireSelectedEntities: null,
-            		/**
-            		 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context. 
-            		 * 
-            		 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context. 
-            		 */
-            		requireMasterEntity: null,
-            		getSelectedEntities: null,
-            		getMasterEntity: null
-            	},
+                publish: {
+                    /**
+                     * Determines whether the selected entities are required to be send inside the centre context.
+                     *
+                     * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
+                     */
+                    requireSelectedEntities: null,
+                    /**
+                     * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context.
+                     *
+                     * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
+                     */
+                    requireMasterEntity: null,
+                    getSelectedEntities: null,
+                    getMasterEntity: null
+                },
 
                 /*
                  * Initialises ajaxSearcher.
@@ -226,7 +226,7 @@
                  * The bound to this editor property of the bound entity should be of String array type.
                  * Therefore, it is expected that the passed in value is either an empty array [] or an array of Strings.
                  */
-                convertToString: function (value) {                    
+                convertToString: function (value) {
                     return value.join(this.separator); // for empty array it will return "". 'value' should never be 'null'!
                 },
 
@@ -243,7 +243,7 @@
                     }
                 },
 
-                created: function() {
+                created: function () {
                     this.selectedItems = {};
                 },
 
@@ -474,11 +474,16 @@
                             this.$.overlay.style.position = 'absolute';
                             this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
 
+                            // if the editors right edge is close to the right side of the viewport then position the overlay
+                            // thus that its right side is aligned with editors right side
+                            // otherwise, the overlay's left side should be aligned with the editor's left sied
                             var rect = this.$.decorator.getBoundingClientRect();
-                            if (rect.left < this.$.decorator.offsetWidth) {
-                                this.$.overlay.style.right = null;
-                            } else {
+                            var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+
+                            if ((w - rect.right) < 100) {
                                 this.$.overlay.style.right = '0px';
+                            } else {
+                                this.$.overlay.style.right = null;
                             }
 
                             if (this.$.decorator.offsetWidth > 250) {
@@ -527,7 +532,7 @@
                                     // in this case validation (with newer value) will occur, but in other place: editingValueChanged + commit() call
                                 } else { // the situation when the overlay has been closed due to pressing any place outside the overlay
                                     // in this case validation should occur
-                                    this.onAcceptedValueChanged();    
+                                    this.onAcceptedValueChanged();
                                 }
                             } else {
                                 // otherwise reset overlay cancellation flag in preparation for further processing
