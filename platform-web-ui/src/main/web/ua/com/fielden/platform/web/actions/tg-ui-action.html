@@ -102,6 +102,11 @@
                  */
                 icon: null,
                 
+        		/**
+                 * The 'currentEntity' should contain the entity that was clicked (result-set actions)
+	             * or the entity on which primary / secondary action was chosen. In case when no of the above cases
+    	         * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
+				 */
                 currentEntity: null
             },
             
@@ -142,14 +147,9 @@
             /**
              * Executes the action in context of 'currentEntity'. 
              *
-             * The 'currentEntity' should contain the entity that was clicked (result-set actions)
-             * or the entity on which primary / secondary action was chosen. In case when no of the above cases
-             * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
-             *
              * Please override this method in descendands to implement specific execution logic.
              */
-            run: function (currentEntity) {
-            	this.currentEntity = currentEntity;
+            run: function () {
                 // this.enabled = false;
                 console.log(this.shortDesc + ": execute");
 

@@ -19,7 +19,8 @@
                     if (this.action) {
                         this.action(entity);
                     } else if (this.customAction) {
-                        this.customAction.run(entity);
+                    	this.customAction.currentEntity = entity;
+                        this.customAction.run();
                     }
                 }
             });

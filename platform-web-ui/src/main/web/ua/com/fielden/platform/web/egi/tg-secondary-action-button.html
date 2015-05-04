@@ -3,7 +3,7 @@
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 
-<polymer-element name="tg-secondary-action-button" attributes="actions">
+<polymer-element name="tg-secondary-action-button" attributes="actions currentEntity">
     <template>
         <style>
             * /deep/ core-tooltip::shadow #tooltip {
@@ -24,7 +24,7 @@
         <paper-dropdown id="dropdown" style="position:absolute" on-tap="{{closeDropDown}}">
         	<div layout vertical>
             	<template repeat="{{action in actions}}">
-            		<tg-ui-action user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" contextRetriever="{{action.contextRetriever}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
+            		<tg-ui-action currentEntity="{{currentEntity}}" user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" contextRetriever="{{action.contextRetriever}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
             	</template>
             </div>
         </paper-dropdown>
@@ -32,6 +32,15 @@
     <script>
         (function () {
             Polymer({
+            	publish: {
+            		/**
+                     * The 'currentEntity' should contain the entity that was clicked (result-set actions)
+    	             * or the entity on which primary / secondary action was chosen. In case when no of the above cases
+        	         * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
+    				 */
+                    currentEntity: null            		
+            	},
+            	
                 showDropDown: function() {
                     this.$.dropdown.toggle();
                 },
