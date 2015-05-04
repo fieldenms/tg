@@ -12,6 +12,7 @@
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
 <link rel="import" href="/tg-reflector">
+<link rel="import" href="/tg-web-app/tg-app-config.html">
 
 <polymer-element name="tg-view-with-menu" attributes="user item" layout vertical>
     <template>
@@ -39,7 +40,8 @@
             }
             core-menu {
                 color: #01579b;
-                margin: 10px 0 0 0;
+                padding: 10px 0 0 0;
+                margin: 0;
             }
             core-menu core-submenu::shadow core-item::shadow core-icon {
                 order: 2;
@@ -52,11 +54,17 @@
             core-menu > core-submenu > core-item {
                 transition: all 300ms ease-in-out;
             }
+            core-item, core-submenu {
+                cursor: pointer !important;
+            }
             #drawerPanel [drawer] {
-                background-color: white
+                background-color: white;
             }
             #drawerPanel:not([narrow]) #menuButton {
                 display: none;
+            }
+            #drawerPanel:not([narrow]) core-menu {
+                border-right: 1px solid #CBCDCE;
             }
             .item {
                 background-color: white;
@@ -68,12 +76,13 @@
         </style>
 
         <tg-reflector id="reflector"></tg-reflector>
-        <core-drawer-panel id="drawerPanel" disableSwipe>
+        <tg-app-config id="app_config"></tg-app-config>
+        <core-drawer-panel id="drawerPanel" disableSwipe responsiveWidth="{{$.app_config.minTabletWidth}}px">
 
             <div vertical layout drawer>
 
                 <core-toolbar slide-down>{{item.title}}</core-toolbar>
-                <core-menu selected="{{selected}}" slide-up>
+                <core-menu selected="{{selected}}" slide-up flex>
                     <template repeat="{{menu in item.menu}}">
                         <template if="{{menu.submenu}}">
                             <core-submenu selected="{{subSelected}}" name="{{menu.title}}" label="{{menu.title}}" icon="icons:expand-more">
