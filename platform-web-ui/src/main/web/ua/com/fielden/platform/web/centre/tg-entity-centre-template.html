@@ -126,7 +126,7 @@
                             <span class="span-tooltip" tip>Last page</span>
                         </core-tooltip>
                         <core-tooltip class="delayed standart-action" tabIndex="-1">
-                            <core-icon-button icon="refresh" on-tap="{{run}}"></core-icon-button>
+                            <core-icon-button icon="refresh" on-tap="{{currentPage}}" disabled?="{{canNotCurrent($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
                             <span class="span-tooltip" tip>Refresh</span>
                         </core-tooltip>
                         <!--@primary_action-->

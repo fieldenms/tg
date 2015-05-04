@@ -229,6 +229,13 @@
                     this.$.selection_criteria.run();
                     this.selectedView = 1;
                 },
+                
+                /**
+                 * Starts the process of refreshing the current page (only after run() has been already performed).
+                 */
+                currentPage: function () {
+                    this.$.selection_criteria.currentPage();
+                },
 
                 /**
                  * Starts the process of retrieving first page (only after run() has been already performed).
@@ -269,6 +276,9 @@
                 },
                 canNotLast: function (pageNumber, pageCount) {
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canLast(pageNumber, pageCount);
+                },
+                canNotCurrent: function (pageNumber, pageCount) {
+                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canCurrent(pageNumber, pageCount);
                 },
 
                 onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints) {
@@ -312,7 +322,7 @@
                 
                 onFunctionalEntitySaved: function (potentiallySavedEntity) {
                 	if (potentiallySavedEntity.isValid()) {
-                		this.run();	
+                		this.currentPage();	
                 	}
                 }
             });

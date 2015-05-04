@@ -170,6 +170,14 @@
                     throw "Do not execute methods firstPage(), nextPage() etc. before the method run().";
                 }
             },
+            
+            /**
+             * Starts the process of refreshing of the current page.
+             */
+            currentPage: function () {
+                this.validatePageCount();
+                this._execute(false);
+            },
 
             /**
              * Starts the process of centre run.
@@ -230,6 +238,9 @@
             },
             canLast: function (pageNumber, pageCount) {
                 return !(pageNumber + 1 >= pageCount);
+            },            
+            canCurrent: function (pageNumber, pageCount) {
+                return !(pageCount <= 0);
             },
 
             /**
