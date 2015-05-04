@@ -573,8 +573,8 @@ public class WebApp extends AbstractWebApp {
                 description("Division daily management").
                 icon("/resources/images/divisionalDailyManagment.svg").
                 detailIcon("/resources/images/detailed/divisionalDailyManagment.svg").
-                bgColor("#F6899A").
-                captionBgColor("#D35F5F").
+                bgColor("#CFD8DC").
+                captionBgColor("#78909C").
                 menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done().done().
                 addModule("Accidents").
                 description("Accidents").
