@@ -15,7 +15,7 @@
         <tg-reflector id="reflector"></tg-reflector>
         <content select=":not(text)" id="components">
         </content>
-        <core-icon-button on-click="{{showMetaValuesEditor}}" icon="{{hasNoMetaValues(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) ? 'cloud-queue' : 'more-vert'}}"></core-icon-buton>
+        <core-icon-button on-click="{{showMetaValuesEditor}}" style="visibility:{{_single ? 'hidden' : 'inherit'}}; color:{{hasNoMetaValues(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) ? '#757575' : '#0288D1'}}" icon="more-vert"></core-icon-buton>
         <paper-action-dialog class="meta-value-editor" id="metaValueEditor" backdrop autoCloseDisabled>
             <div layout vertical>
                 <template if="{{!_single}}">
