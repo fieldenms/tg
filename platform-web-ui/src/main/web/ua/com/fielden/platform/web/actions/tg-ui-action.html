@@ -100,7 +100,9 @@
                 /**
                  * The icon specificator (string id).
                  */
-                icon: null
+                icon: null,
+                
+                currentEntity: null
             },
             
             masterComponent: null,
@@ -138,11 +140,16 @@
             // },
 
             /**
-             * Executes the action.
+             * Executes the action in context of 'currentEntity'. 
+             *
+             * The 'currentEntity' should contain the entity that was clicked (result-set actions)
+             * or the entity on which primary / secondary action was chosen. In case when no of the above cases
+             * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
              *
              * Please override this method in descendands to implement specific execution logic.
              */
-            run: function () {
+            run: function (currentEntity) {
+            	this.currentEntity = currentEntity;
                 // this.enabled = false;
                 console.log(this.shortDesc + ": execute");
 
@@ -203,6 +210,11 @@
                 };
 
                 var context = self.contextRetriever(self.requireSelectedEntities, self.requireMasterEntity);
+                
+                if (self.currentEntity) {
+                	self.enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
+                }
+                
                 detail.savingContext = context;
 
                 detail.entityid = context.id === null ? "new" : (+(context.id));
@@ -211,6 +223,14 @@
 
                 this.afterExecution();
                 //                this.$.entityMaster.updateTargetDimensions();
+            },
+            
+            enhanceContextWithCurrentEntity: function(context, currentEntity, requireSelectedEntities) {
+                if (requireSelectedEntities !== null) {
+                	this.$.reflector.provideSelectedEntities(requireSelectedEntities, context, function() {
+                		return [ currentEntity ];
+                	});
+                }
             },
             
             showDialog: function(e, detail, source) {

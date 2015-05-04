@@ -231,10 +231,10 @@
                     this.selectedEntities = [];
                 },
                 tapAction: function (e, detail, source) {
-                    var i = 0;
-                    for (i = 0; i < this.selectionModel.length; i += 1) {
-                        this.selectionModel[i] = (source.getAttribute("entityInd") == i);
-                    }
+                    // var i = 0;
+                    // for (i = 0; i < this.selectionModel.length; i += 1) {
+                    //     this.selectionModel[i] = (source.getAttribute("entityInd") == i);
+                    // }
                 	
                     var parent = findTdTag(e.path);
                     // attach the ripple component to the found TD

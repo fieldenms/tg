@@ -19,7 +19,7 @@
                     if (this.action) {
                         this.action(entity);
                     } else if (this.customAction) {
-                        this.customAction.run();
+                        this.customAction.run(entity);
                     }
                 }
             });
