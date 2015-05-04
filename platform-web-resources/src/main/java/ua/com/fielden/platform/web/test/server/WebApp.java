@@ -554,87 +554,80 @@ public class WebApp extends AbstractWebApp {
                         injector())).
                 done();
         configMainMenu().
-                addModule("view 1").
-                description("view 1 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("Fleet").
+                description("Fleet").
+                icon("/resources/images/fleet.svg").
+                detailIcon("/resources/images/detailed/fleet.svg").
+                bgColor("#00D4AA").
+                captionBgColor("#00AA88").
                 view(null).
                 done().
-                addModule("view 2").
-                description("view 2 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("Import utilities").
+                description("Import utilities").
+                icon("/resources/images/importUtilities.svg").
+                detailIcon("/resources/images/detailed/importUtilities.svg").
+                bgColor("#5FBCD3").
+                captionBgColor("#2C89A0").
                 view(null).done().
-                addModule("view 3").
-                description("view 3 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("Division daily management").
+                description("Division daily management").
+                icon("/resources/images/divisionalDailyManagment.svg").
+                detailIcon("/resources/images/detailed/divisionalDailyManagment.svg").
+                bgColor("#F6899A").
+                captionBgColor("#D35F5F").
                 menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done().done().
-                addModule("view 4").
-                description("view 4 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("Accidents").
+                description("Accidents").
+                icon("/resources/images/accidents.svg").
+                detailIcon("/resources/images/detailed/accidents.svg").
+                bgColor("#FF9943").
+                captionBgColor("#C87137").
                 view(null).done().
-                addModule("view 5").
-                description("view 5 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("Maintenance").
+                description("Maintenance").
+                icon("/resources/images/maintanance.svg").
+                detailIcon("/resources/images/detailed/maintanance.svg").
+                bgColor("#00AAD4").
+                captionBgColor("#0088AA").
                 view(null).done().
-                addModule("view 6").
-                description("view 6 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("User").
+                description("User").
+                icon("/resources/images/user.svg").
+                detailIcon("/resources/images/detailed/user.svg").
+                bgColor("#FFE680").
+                captionBgColor("#FFD42A").
                 view(null).done().
-                addModule("view 7").
-                description("view 7 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("Online reports").
+                description("Online reports").
+                icon("/resources/images/onlineReports.svg").
+                detailIcon("/resources/images/detailed/onlineReports.svg").
+                bgColor("#00D4AA").
+                captionBgColor("#00AA88").
                 view(null).done().
-                addModule("view 8").
-                description("view 8 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("Fuel").
+                description("Fuel").
+                icon("/resources/images/fuel.svg").
+                detailIcon("/resources/images/detailed/fuel.svg").
+                bgColor("#FFE680").
+                captionBgColor("#FFD42A").
                 view(null).done().
-                addModule("view 9").
-                description("view 9 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("Organisational").
+                description("Organisational").
+                icon("/resources/images/organisational.svg").
+                detailIcon("/resources/images/detailed/organisational.svg").
+                bgColor("#2AD4F6").
+                captionBgColor("#00AAD4").
                 view(null).done().
-                addModule("view 10").
-                description("view 10 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
+                addModule("Preventive maintenance").
+                description("Preventive maintenance").
+                icon("/resources/images/preventiveMaintenence.svg").
+                detailIcon("/resources/images/detailed/preventiveMaintenence.svg").
+                bgColor("#F6899A").
+                captionBgColor("#D35F5F").
                 view(null).done().
-                addModule("view 11").
-                description("view 11 description").
-                icon("/resources/images/test.svg").
-                detailIcon("/resources/images/test.svg").
-                bgColor("#f4f4f4").
-                captionBgColor("#999999").
-                view(null).done().
-                setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [], []]]").
-                setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[], []]]").
-                setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []],[[]]]").done();
+                setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [{colspan: 2}]]]").
+                setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[{colspan: 2}]]]").
+                setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").done();
 
     }
 
