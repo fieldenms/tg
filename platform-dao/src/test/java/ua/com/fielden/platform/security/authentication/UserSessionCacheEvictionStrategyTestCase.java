@@ -2,6 +2,7 @@ package ua.com.fielden.platform.security.authentication;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
@@ -136,7 +137,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final Optional<UserSession> session = coSession.currentSession(currUser, authenticator);
         assertTrue(session.isPresent());
         final String newAuthenticator = session.get().getAuthenticator().get().toString();
-        assertNotSame("Authenticator should have been reset.", authenticator, newAuthenticator);
+        assertNotEquals("Authenticator should have been reset.", authenticator, newAuthenticator);
         assertEquals("Unexpected number of session in cache.", 2, coSession.getCache().size());
         assertNotNull("Original authenticator should be present in cache.", coSession.getCache().getIfPresent(authenticator));
         assertNotNull("New authenticator should be present in cache.", coSession.getCache().getIfPresent(newAuthenticator));

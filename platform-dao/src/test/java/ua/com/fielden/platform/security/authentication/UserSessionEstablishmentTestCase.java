@@ -10,10 +10,6 @@ import java.security.SignatureException;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
-import ua.com.fielden.platform.security.annotations.SessionHashingKey;
-import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
-import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -21,8 +17,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import com.google.inject.Inject;
 
 /**
  * A test case to cover user session creation.

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.security.authentication;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -60,7 +60,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
         assertTrue("Aversary should have successfully accessed the system", adversarySession.isPresent());
         // let's capture authenticator that will be used by the adversary during the next attempt to access the system
         final String adversaryAuthenticator = adversarySession.get().getAuthenticator().get().toString();
-        assertNotSame("Authenticators should have been different due to expected series id regenration", stolenAuthenticator, adversaryAuthenticator);
+        assertNotEquals("Authenticators should have been different due to expected series id regenration", stolenAuthenticator, adversaryAuthenticator);
 
         // the stolen authenticator would not get refreshed on the user's trusted device where it was originated...
         // therefore, when more time passes by, and our legitimate user tries to access the system from that trusted device for the first time since the the authenticator was stolen...
