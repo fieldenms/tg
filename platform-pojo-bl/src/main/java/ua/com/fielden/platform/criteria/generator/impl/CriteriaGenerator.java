@@ -8,9 +8,11 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 
 import org.apache.log4j.Logger;
@@ -31,6 +33,7 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
@@ -39,6 +42,7 @@ import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.MapToAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.RequiredAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
@@ -218,6 +222,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 
+        final Optional<MapToAnnotation> mapToAnnotation = generateMapToAnnotation(managedType, propertyType, propertyName);
+        if (mapToAnnotation.isPresent()) {
+            annotations.add(mapToAnnotation.get().newInstance());
+        }
+
         return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
     }
 
@@ -236,12 +245,18 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
         final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType;
+        final Optional<MapToAnnotation> mapToAnnotation = generateMapToAnnotation(managedType, propertyType, propertyName);
         //final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
 
-        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-        new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
-        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), //
-        new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(),
+                new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new FirstParamAnnotation(secondPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(),
+                new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+
+        if (mapToAnnotation.isPresent()) {
+            firstProperty.addAnnotation(mapToAnnotation.get().newInstance());
+            secondProperty.addAnnotation(mapToAnnotation.get().newInstance());
+        }
 
         return new ArrayList<NewProperty>() {
             {
@@ -249,6 +264,24 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                 add(secondProperty);
             }
         };
+    }
+
+    /**
+     * Generates {@link MapToAnnotation} instance for the specified property in the managed type.
+     *
+     * @param managedType
+     * @param propertyType
+     * @param propertyName
+     * @return
+     */
+    private static Optional<MapToAnnotation> generateMapToAnnotation(final Class<?> managedType, final Class<?> propertyType, final String propertyName) {
+        if (BigDecimal.class.isAssignableFrom(propertyType)) {
+            final MapTo mapToAnnot = AnnotationReflector.getPropertyAnnotation(MapTo.class, managedType, propertyName);
+            if (mapToAnnot != null && mapToAnnot.scale() >= 0) {
+                return Optional.of(new MapToAnnotation(mapToAnnot.scale(), mapToAnnot.precision()));
+            }
+        }
+        return Optional.empty();
     }
 
     /**
