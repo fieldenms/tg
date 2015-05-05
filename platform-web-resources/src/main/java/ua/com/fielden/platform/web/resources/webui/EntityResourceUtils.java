@@ -106,11 +106,26 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final String originalPropertyName = CentreUtils.getOriginalPropertyName(entityType, propertyName);
 
             final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
-            return isEntityItself ? (IFetchProvider<V>) coFinder.find(originalType).getFetchProvider()
-                    : coFinder.find(originalType).getFetchProvider().fetchFor(originalPropertyName);
+            return isEntityItself ? (IFetchProvider<V>) coFinder.find(originalType).getFetchProvider() : fetchForPropertyOrDefault(coFinder, originalType, originalPropertyName);
         } else {
             return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
         }
+    }
+
+    /**
+     * Returns fetch provider for property or, if the property should not be fetched according to default strategy, returns the 'default' property fetch provider with 'keys'
+     * (simple an composite) and 'desc' (if 'desc' exists in domain entity).
+     *
+     * @param coFinder
+     * @param entityType
+     * @param propertyName
+     * @return
+     */
+    private static <V extends AbstractEntity<?>> IFetchProvider<V> fetchForPropertyOrDefault(final ICompanionObjectFinder coFinder, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+        final IFetchProvider<? extends AbstractEntity<?>> fetchProvider = coFinder.find(entityType).getFetchProvider();
+        return fetchProvider.shouldFetch(propertyName)
+                ? fetchProvider.fetchFor(propertyName)
+                : fetchProvider.with(propertyName).fetchFor(propertyName);
     }
 
     /**
