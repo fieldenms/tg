@@ -63,14 +63,21 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
                 wrap1("    icon: '%s',", icon()) + //
                 wrap0("    enabledStates: [%s],", enabledStatesString()) + //
                 wrap0("    preAction: function() {") + //
+
                 wrap0("        var functionalEntity = {id:null, version:0};") + //
+
+                wrap0("        var reflector = self.$.reflector;") + //
+                wrap0("        var savingInfoHolder = reflector.newEntity('ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder');") + //
+                wrap0("        savingInfoHolder.id = null;") + //
+                wrap0("        savingInfoHolder['modifHolder'] = functionalEntity;") + //
+
                 wrap0("        var masterEntity = self.currEntity;") + //
                 wrap0("        functionalEntity.key = { val: 'NoMatter', origVal: null };") + //
                 wrap0("        // THE PLACE FOR CUSTOM LOGIC:") + //
                 wrap1("        %s", preAction, () -> preAction.build().toString()) + //
                 //             TODO provide convenient API for setting values during preAction building
                 //    "        functionalEntity.parentEntity = { val: self.currEntity.get('key'), origVal: null };") + //
-                wrap0("        return functionalEntity;") + //
+                wrap0("        return savingInfoHolder;") + //
                 wrap0("    },") + //
                 wrap0("    postActionSuccess: function(entity) {") + //
                 wrap0("        console.log('postActionSuccess entity', entity);") + //
