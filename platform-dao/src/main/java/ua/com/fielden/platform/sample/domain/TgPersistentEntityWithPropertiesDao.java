@@ -49,22 +49,12 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("integerProp", "moneyProp", "bigDecimalProp", "stringProp", "booleanProp", "dateProp", "requiredValidatedProp")
                 .with("domainInitProp", "nonConflictingProp", "conflictingProp")
                 // .with("entityProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key"))
-                .with("userParam",
-                        "userParam.key") // no 'desc' exists in User type
-                .with("entityProp",
-                        "entityProp.desc",
-                        "entityProp.key")
-                //                .with("status",
-                //                        "status.desc",
-                //                        "status.key")
-                .with("critOnlyEntityProp",
-                        "critOnlyEntityProp.desc",
-                        "critOnlyEntityProp.key")
-                .with("compositeProp",
-                        "compositeProp.desc",
-                        "compositeProp.key1", "compositeProp.key1.key",
-                        "compositeProp.key2")
+                .with("userParam")
+                .with("entityProp")
+                //                .with("status")
+                .with("critOnlyEntityProp")
+                .with("compositeProp")
                 // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
-                .with("producerInitProp.key"); //
+                .with("producerInitProp"); //
     }
 }

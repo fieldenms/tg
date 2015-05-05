@@ -292,7 +292,7 @@ public class WebApp extends AbstractWebApp {
                 )
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
-                .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status", "status.key"))
+                .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
 
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)

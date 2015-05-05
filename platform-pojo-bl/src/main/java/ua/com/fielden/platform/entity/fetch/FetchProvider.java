@@ -32,6 +32,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private final Class<T> entityType;
     private final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyProviders;
     private fetch<T> fetchModel;
+    private final boolean entityTypedPropertyProvider;
     private final Logger logger = Logger.getLogger(getClass());
 
     /**
@@ -39,13 +40,14 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      *
      * @param entityType
      */
-    FetchProvider(final Class<T> entityType) {
-        this(entityType, new LinkedHashMap<>());
+    FetchProvider(final Class<T> entityType, final boolean entityTypedPropertyProvider) {
+        this(entityType, new LinkedHashMap<>(), entityTypedPropertyProvider);
     }
 
-    private FetchProvider(final Class<T> entityType, final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyStrategies) {
+    private FetchProvider(final Class<T> entityType, final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyStrategies, final boolean entityTypedPropertyProvider) {
         this.entityType = entityType;
         this.propertyProviders = propertyStrategies;
+        this.entityTypedPropertyProvider = entityTypedPropertyProvider;
     }
 
     @Override
@@ -201,7 +203,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         for (final Entry<String, FetchProvider<AbstractEntity<?>>> entry : propertyProviders.entrySet()) {
             copiedPropertyProviders.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().copy());
         }
-        return new FetchProvider<T>(entityType, copiedPropertyProviders);
+        return new FetchProvider<T>(entityType, copiedPropertyProviders, entityTypedPropertyProvider);
     }
 
     /**
@@ -260,7 +262,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 propertyProviders.get(firstName).enhanceWith0(restDotNotation, propertyProvider);
             } else {
                 final Class<?> firstType = PropertyTypeDeterminator.determinePropertyType(entityType, firstName);
-                propertyProviders.put(firstName, FetchProviderFactory.createDefaultFetchProvider((Class<AbstractEntity<?>>) firstType).enhanceWith0(restDotNotation, propertyProvider));
+                propertyProviders.put(firstName, createDefaultFetchProviderForEntityTypedProperty((Class<AbstractEntity<?>>) firstType).enhanceWith0(restDotNotation, propertyProvider));
             }
         } else {
             final boolean exists = propertyProviders.containsKey(dotNotationProperty);
@@ -272,13 +274,17 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 } // else -- regular property or entity-typed
             } else {
                 if (EntityUtils.isEntityType(propertyType)) { // entity-typed
-                    propertyProviders.put(dotNotationProperty, propertyProvider == null ? FetchProviderFactory.createDefaultFetchProvider((Class<AbstractEntity<?>>) propertyType) : propertyProvider.copy());
+                    propertyProviders.put(dotNotationProperty, propertyProvider == null ? createDefaultFetchProviderForEntityTypedProperty((Class<AbstractEntity<?>>) propertyType) : propertyProvider.copy());
                 } else { // regular
                     propertyProviders.put(dotNotationProperty, null);
                 }
             }
         }
         return this;
+    }
+
+    private static FetchProvider<AbstractEntity<?>> createDefaultFetchProviderForEntityTypedProperty(final Class<AbstractEntity<?>> propertyType) {
+        return new FetchProvider<AbstractEntity<?>>(propertyType, true);
     }
 
     /**
@@ -329,7 +335,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private fetch<T> createFetchModel() {
         // need to exclude all crit-only properties from fetch model!
         final FetchProvider<T> providerWithoutCritOnlyProps = excludeCritOnlyProps(this);
-        fetch<T> fetchModel = EntityQueryUtils.fetchOnly(providerWithoutCritOnlyProps.entityType);
+        fetch<T> fetchModel = entityTypedPropertyProvider ? EntityQueryUtils.fetchKeyAndDescOnly(providerWithoutCritOnlyProps.entityType) : EntityQueryUtils.fetchOnly(providerWithoutCritOnlyProps.entityType);
         for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : providerWithoutCritOnlyProps.propertyProviders.entrySet()) {
             final FetchProvider<AbstractEntity<?>> propModel = entry.getValue();
             if (propModel == null) {

@@ -30,7 +30,7 @@ public class TgExportFunctionalEntityDao extends CommonEntityDao<TgExportFunctio
     public IFetchProvider<TgExportFunctionalEntity> createFetchProvider() {
         return super.createFetchProvider()
                 // .with("key") // this property is "required" (necessary during saving) -- should be declared as fetching property
-                .with("parentEntity", "parentEntity.key", "parentEntity.integerProp");
+                .with("parentEntity", "parentEntity.integerProp");
     }
 
 }

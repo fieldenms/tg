@@ -24,7 +24,7 @@ public class FetchProviderFactory {
      * @return
      */
     public static <T extends AbstractEntity<?>> FetchProvider<T> createDefaultFetchProvider(final Class<T> entityType) {
-        // TODO continue implementation -- version and id? fetchOnly analog
-        return new FetchProvider<T>(entityType);
+        // empty fetch provider -- version and id -- fetchOnly analog
+        return new FetchProvider<T>(entityType, false);
     }
 }
