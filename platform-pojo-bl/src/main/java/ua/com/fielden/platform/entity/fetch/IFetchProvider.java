@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.fetch;
 
+import java.util.Set;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 
@@ -21,6 +23,17 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
     fetch<T> fetchModel();
 
     ////////////////////////// CONSTRUCTION //////////////////////////
+
+    /**
+     * Includes the property(-ies) into {@link IFetchProvider} (if it was not included already). If the property is of entity type (or collection of entities) then it will use
+     * default {@link IFetchProvider} (with ID and version only).
+     *
+     * @param dotNotationProperties
+     *            -- the name of properties ("dot-notation" syntax)
+     *
+     * @return new immutable {@link IFetchProvider} with included property(-ies)
+     */
+    IFetchProvider<T> with(final Set<String> dotNotationProperties);
 
     /**
      * Includes the property(-ies) into {@link IFetchProvider} (if it was not included already). If the property is of entity type (or collection of entities) then it will use
@@ -83,6 +96,13 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      * @return
      */
     boolean shouldFetch(final String dotNotationProperty);
+
+    /**
+     * Returns a flat representation (in a form of set) of all properties, that should be fetched.
+     *
+     * @return
+     */
+    Set<String> allProperties();
 
     /**
      * Excludes the property(-ies) from {@link IFetchProvider} (if they were included before that).

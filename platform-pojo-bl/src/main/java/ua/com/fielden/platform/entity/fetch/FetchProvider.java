@@ -2,10 +2,14 @@ package ua.com.fielden.platform.entity.fetch;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -28,6 +32,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private final Class<T> entityType;
     private final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyProviders;
     private fetch<T> fetchModel;
+    private final Logger logger = Logger.getLogger(getClass());
 
     /**
      * Constructs empty {@link FetchProvider}.
@@ -146,6 +151,15 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     }
 
     @Override
+    public IFetchProvider<T> with(final Set<String> dotNotationProperties) {
+        final FetchProvider<T> copy = this.copy();
+        for (final String prop : dotNotationProperties) {
+            copy.enhanceWith(prop);
+        }
+        return copy;
+    }
+
+    @Override
     public IFetchProvider<T> without(final String dotNotationProperty, final String... otherDotNotationProperties) {
         final FetchProvider<T> copy = this.copy();
         copy.removeIfExists(dotNotationProperty);
@@ -197,8 +211,12 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private FetchProvider<T> enhanceWith(final String dotNotationProperty) {
-        validate(dotNotationProperty);
-        return enhanceWith0(dotNotationProperty, null);
+        if ("".equals(dotNotationProperty)) { // represents entity-itself (it is permitted to use such notation)
+            return this;
+        } else {
+            validate(dotNotationProperty);
+            return enhanceWith0(dotNotationProperty, null);
+        }
     }
 
     /**
@@ -333,5 +351,17 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         final List<Field> critOnlyFields = Finder.findProperties(entityType, CritOnly.class);
         final List<String> critOnlyProps = critOnlyFields.stream().map(field -> field.getName()).collect(Collectors.toList());
         return critOnlyProps.size() > 0 ? (FetchProvider<T>) fetchProvider.without(critOnlyProps.get(0), critOnlyProps.subList(1, critOnlyProps.size()).toArray(new String[0])) : fetchProvider;
+    }
+
+    @Override
+    public Set<String> allProperties() {
+        final Set<String> allProperties = new LinkedHashSet<>();
+        for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : propertyProviders.entrySet()) {
+            allProperties.add(entry.getKey());
+            if (entry.getValue() != null) {
+                allProperties.addAll(entry.getValue().allProperties());
+            }
+        }
+        return allProperties;
     }
 }
