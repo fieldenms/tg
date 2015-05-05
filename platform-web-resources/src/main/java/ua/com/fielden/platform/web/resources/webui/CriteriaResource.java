@@ -128,7 +128,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
                         modifiedPropertiesHolder,
                         CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
                         applied,
-                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm));
+                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm), centre.getAdditionalFetchProvider());
         if (pair.getValue() == null) {
             return restUtil.rawListJSONRepresentation(applied, pair.getKey());
         }

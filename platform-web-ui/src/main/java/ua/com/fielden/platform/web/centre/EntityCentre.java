@@ -25,6 +25,7 @@ import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
@@ -867,5 +868,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     public ICustomPropsAssignmentHandler<AbstractEntity<?>> createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler<AbstractEntity<?>>> assignmentHandlerType) {
         return injector.getInstance(assignmentHandlerType);
+    }
+
+    public Optional<IFetchProvider<T>> getAdditionalFetchProvider() {
+        return dslDefaultConfig.getFetchProvider();
     }
 }

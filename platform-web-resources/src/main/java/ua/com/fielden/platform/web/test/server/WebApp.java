@@ -37,6 +37,7 @@ import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityP
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.AbstractWebApp;
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -254,8 +255,9 @@ public class WebApp extends AbstractWebApp {
                 .addProp("compositeProp")
                 .also()
                 .addProp("stringProp")
-                .also()
-                .addProp("status")
+                //                .also()
+                //                .addProp("status")
+
                 //                .also()
                 //                .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
                 //                .also()
@@ -290,6 +292,8 @@ public class WebApp extends AbstractWebApp {
                 )
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
+                .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status", "status.key"))
+
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)
                 //                .also()
@@ -312,7 +316,7 @@ public class WebApp extends AbstractWebApp {
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 130);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 110);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "status", 30);
+            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "status", 30);
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp2", 30);
             final int statusWidth = 0; // TODO does not matter below 18px -- still remain 18px, +20+20 as padding

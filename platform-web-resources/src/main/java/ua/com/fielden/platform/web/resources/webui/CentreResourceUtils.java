@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -122,9 +124,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param criteriaMetaValues
      * @param applied
      * @param isCentreChanged
+     * @param additionalFetchProvider
      * @return
      */
-    static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied, final boolean isCentreChanged) {
+    static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied, final boolean isCentreChanged, final Optional<IFetchProvider<AbstractEntity<?>>> additionalFetchProvider) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
         customObject.put("isCentreChanged", isCentreChanged);
         customObject.put("metaValues", criteriaMetaValues);
@@ -132,6 +135,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         if (applied.isValid().isSuccessful()) {
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) applied;
             resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
+            if (additionalFetchProvider.isPresent()) {
+                resultingCriteria.setAdditionalFetchProvider(additionalFetchProvider.get());
+            }
             final IPage<AbstractEntity<?>> page;
             final Integer pageCapacity = (Integer) modifiedPropertiesHolder.get("@@pageCapacity");
             modifiedPropertiesHolder.remove("@@pageCapacity");
