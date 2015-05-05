@@ -33,16 +33,15 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.CritOnlyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.CriteriaPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.FirstParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.MapToAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.RequiredAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.SecondParamAnnotation;
@@ -168,7 +167,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final List<NewProperty> generatedProperties = new ArrayList<NewProperty>();
 
         if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
-            generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc));
+            generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
         } else {
             generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation));
         }
@@ -222,9 +221,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 
-        final Optional<MapToAnnotation> mapToAnnotation = generateMapToAnnotation(managedType, propertyType, propertyName);
-        if (mapToAnnotation.isPresent()) {
-            annotations.add(mapToAnnotation.get().newInstance());
+        final Optional<CritOnlyAnnotation> newCritOnly = generateCritOnlyAnnotation(critOnlyAnnotation, propertyType);
+        if (newCritOnly.isPresent()) {
+            annotations.add(newCritOnly.get().newInstance());
         }
 
         return new NewProperty(CriteriaReflector.generateCriteriaPropertyName(root, propertyName), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
@@ -237,15 +236,16 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param managedType
      * @param propertyType
      * @param propertyName
+     * @param critOnlyAnnotation
      * @return
      */
     @SuppressWarnings("serial")
-    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc) {
+    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation) {
         //final boolean isEntityItself = "".equals(propertyName);
         final String firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
         final String secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType;
-        final Optional<MapToAnnotation> mapToAnnotation = generateMapToAnnotation(managedType, propertyType, propertyName);
+        final Optional<CritOnlyAnnotation> newCritOnly = generateCritOnlyAnnotation(critOnlyAnnotation, propertyType);
         //final boolean isRequired = isEntityItself ? false : AnnotationReflector.isPropertyAnnotationPresent(Required.class, managedType, propertyName);
 
         final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(),
@@ -253,9 +253,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(),
                 new CriteriaPropertyAnnotation(managedType, propertyName).newInstance(), new SecondParamAnnotation(firstPropertyName).newInstance(), new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
 
-        if (mapToAnnotation.isPresent()) {
-            firstProperty.addAnnotation(mapToAnnotation.get().newInstance());
-            secondProperty.addAnnotation(mapToAnnotation.get().newInstance());
+        if (newCritOnly.isPresent()) {
+            firstProperty.addAnnotation(newCritOnly.get().newInstance());
+            secondProperty.addAnnotation(newCritOnly.get().newInstance());
         }
 
         return new ArrayList<NewProperty>() {
@@ -267,19 +267,16 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     /**
-     * Generates {@link MapToAnnotation} instance for the specified property in the managed type.
+     * Generates {@link CritOnlyAnnotation} instance for the specified property in the managed type.
      *
      * @param managedType
      * @param propertyType
      * @param propertyName
      * @return
      */
-    private static Optional<MapToAnnotation> generateMapToAnnotation(final Class<?> managedType, final Class<?> propertyType, final String propertyName) {
-        if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            final MapTo mapToAnnot = AnnotationReflector.getPropertyAnnotation(MapTo.class, managedType, propertyName);
-            if (mapToAnnot != null && mapToAnnot.scale() >= 0) {
-                return Optional.of(new MapToAnnotation(mapToAnnot.scale(), mapToAnnot.precision()));
-            }
+    private static Optional<CritOnlyAnnotation> generateCritOnlyAnnotation(final CritOnly critOnlyAnnotation, final Class<?> propertyType) {
+        if (BigDecimal.class.isAssignableFrom(propertyType) && critOnlyAnnotation != null && critOnlyAnnotation.scale() >= 0) {
+            return Optional.of(new CritOnlyAnnotation(Type.SINGLE, critOnlyAnnotation.scale(), critOnlyAnnotation.precision()));
         }
         return Optional.empty();
     }

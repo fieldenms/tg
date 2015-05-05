@@ -18,6 +18,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -105,7 +106,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final String originalPropertyName = CentreUtils.getOriginalPropertyName(entityType, propertyName);
 
             final boolean isEntityItself = "".equals(originalPropertyName); // empty property means "entity itself"
-            return isEntityItself ? (IFetchProvider<V>) coFinder.find(originalType).getFetchProvider() : coFinder.find(originalType).getFetchProvider().fetchFor(originalPropertyName);
+            return isEntityItself ? (IFetchProvider<V>) coFinder.find(originalType).getFetchProvider()
+                    : coFinder.find(originalType).getFetchProvider().fetchFor(originalPropertyName);
         } else {
             return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
         }
@@ -256,7 +258,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 return null;
             } else {
                 final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, propertyName);
-                final Integer propertyScale = mapTo != null && mapTo.scale() >= 0 ? ((int) mapTo.scale()) : 2 /* default value from Hibernate */;
+                final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, type, propertyName);
+                final Integer propertyScale = mapTo != null && mapTo.scale() >= 0 ? ((int) mapTo.scale())
+                        : (critOnly != null && critOnly.scale() >= 0 ? ((int) critOnly.scale()) : 2)/* default value from Hibernate */;
 
                 if (reflectedValue instanceof Integer) {
                     return new BigDecimal(((Integer) reflectedValue).doubleValue()).setScale(propertyScale, RoundingMode.HALF_UP);

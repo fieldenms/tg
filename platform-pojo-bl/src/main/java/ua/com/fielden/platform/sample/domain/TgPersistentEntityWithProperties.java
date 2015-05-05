@@ -130,7 +130,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     private Integer critOnlyIntegerProp;
 
     @IsProperty
-    @CritOnly(Type.SINGLE)
+    @CritOnly(value = Type.SINGLE, scale = 5, precision = 18)
     @Title(value = "Crit-only single bigDecimal prop", desc = "Crit-only single bigDecimal prop desc")
     private BigDecimal critOnlyBigDecimalProp;
 
