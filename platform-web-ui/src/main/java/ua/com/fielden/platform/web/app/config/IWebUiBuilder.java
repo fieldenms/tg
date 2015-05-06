@@ -2,17 +2,17 @@ package ua.com.fielden.platform.web.app.config;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
- * Web application's global configuration object.
+ * A contract for building a Web UI configuration.
  *
  * @author TG Team
  *
  */
-public interface IWebAppConfig {
+public interface IWebUiBuilder {
 
     /**
      * Set the minimal desktop width.
@@ -20,7 +20,7 @@ public interface IWebAppConfig {
      * @param width
      * @return
      */
-    IWebAppConfig setMinDesktopWidth(int width);
+    IWebUiBuilder setMinDesktopWidth(int width);
 
     /**
      * Set the minimal tablet width
@@ -28,7 +28,7 @@ public interface IWebAppConfig {
      * @param width
      * @return
      */
-    IWebAppConfig setMinTabletWidth(int width);
+    IWebUiBuilder setMinTabletWidth(int width);
 
     /**
      * Set the locale for the web application.
@@ -36,7 +36,7 @@ public interface IWebAppConfig {
      * @param locale
      * @return
      */
-    IWebAppConfig setLocale(String locale);
+    IWebUiBuilder setLocale(String locale);
 
     /**
      * Adds the entity master to web application configuration object.
@@ -45,7 +45,7 @@ public interface IWebAppConfig {
      * @param master
      * @return
      */
-    <T extends AbstractEntity<?>> IWebAppConfig addMaster(Class<T> entityType, EntityMaster<T> master);
+    <T extends AbstractEntity<?>> IWebUiBuilder addMaster(Class<T> entityType, EntityMaster<T> master);
 
     /**
      * Adds the entity centre to web application configuration object.
@@ -54,13 +54,13 @@ public interface IWebAppConfig {
      * @param centre
      * @return
      */
-    <M extends MiWithConfigurationSupport<?>> IWebAppConfig addCentre(Class<M> menuType, EntityCentre<?> centre);
+    <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(Class<M> menuType, EntityCentre<?> centre);
 
     /**
      * Finish to configure the web application.
      *
      * @return
      */
-    IWebApp done();
+    IWebUiConfig done();
 
 }

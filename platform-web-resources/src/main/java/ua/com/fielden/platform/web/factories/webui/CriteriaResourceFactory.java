@@ -15,7 +15,7 @@ import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CriteriaResource;
@@ -35,14 +35,14 @@ public class CriteriaResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
     private final ICompanionObjectFinder companionFinder;
-    private final IWebApp webApp;
+    private final IWebUiConfig webApp;
     private final ICriteriaGenerator critGenerator;
 
     /**
      * Instantiates a factory for entity resources.
      *
      */
-    public CriteriaResourceFactory(final IWebApp webApp, final Injector injector) {
+    public CriteriaResourceFactory(final IWebUiConfig webApp, final Injector injector) {
         this.webApp = webApp;
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);

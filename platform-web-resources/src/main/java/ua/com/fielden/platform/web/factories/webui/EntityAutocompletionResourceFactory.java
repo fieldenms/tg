@@ -22,7 +22,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -46,7 +46,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
     private final Injector injector;
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
-    private final IWebApp webApp;
+    private final IWebUiConfig webApp;
 
     /**
      * Instantiates a factory for entity validation resources.
@@ -55,7 +55,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
      *            -- a list of {@link EntityMaster}s from which fetch models and other information arrive
      * @param injector
      */
-    public EntityAutocompletionResourceFactory(final IWebApp webApp, final Injector injector) {
+    public EntityAutocompletionResourceFactory(final IWebUiConfig webApp, final Injector injector) {
         this.webApp = webApp;
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);

@@ -6,7 +6,7 @@ import org.restlet.Component;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.BasicServerApplication;
 import ua.com.fielden.platform.web.factories.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
@@ -71,7 +71,7 @@ public class ApplicationConfiguration extends Component {
                     BasicServerApplication.companionObjectTypes(applicationDomainProvider.domainTypes()))
                     );
 
-            final IWebApp webApp = injector.getInstance(IWebApp.class);
+            final IWebUiConfig webApp = injector.getInstance(IWebUiConfig.class);
 
             getDefaultHost().attach(
                     new WebApplication(

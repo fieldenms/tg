@@ -7,7 +7,7 @@ import org.restlet.data.Method;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -18,14 +18,14 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class MasterComponentResourceFactory extends Restlet {
-    private final IWebApp webApp;
+    private final IWebUiConfig webApp;
 
     /**
      * Creates the {@link MasterComponentResourceFactory} instance with map of available entity masters.
      *
      * @param centres
      */
-    public MasterComponentResourceFactory(final IWebApp webApp) {
+    public MasterComponentResourceFactory(final IWebUiConfig webApp) {
         this.webApp = webApp;
     }
 

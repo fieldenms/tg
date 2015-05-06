@@ -12,7 +12,7 @@ import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreResource;
@@ -30,13 +30,13 @@ import com.google.inject.Injector;
 public class CentreResourceFactory extends Restlet {
     private final Injector injector;
     private final RestServerUtil restUtil;
-    private final IWebApp webApp;
+    private final IWebUiConfig webApp;
 
     /**
      * Instantiates a factory for centre resources.
      *
      */
-    public CentreResourceFactory(final IWebApp webApp, final Injector injector) {
+    public CentreResourceFactory(final IWebUiConfig webApp, final Injector injector) {
         this.webApp = webApp;
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);

@@ -2,12 +2,12 @@ package ua.com.fielden.platform.web.menu;
 
 
 /**
- * An API for configuring application's main menu
+ * An API entry point for building application's main menu.
  *
  * @author TG Team
  *
  */
-public interface IMainMenuConfig {
+public interface IMainMenuBuilder {
 
     /**
      * Adds new module to main menu

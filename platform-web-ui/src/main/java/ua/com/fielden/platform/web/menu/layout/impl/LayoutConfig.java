@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.menu.layout.impl;
 
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.layout.TileLayout;
@@ -11,9 +11,9 @@ import ua.com.fielden.platform.web.menu.layout.IMenuLayoutConfig2;
 public class LayoutConfig implements IMenuLayoutConfig0, IMenuLayoutConfig1, IMenuLayoutConfig2 {
 
     private final TileLayout tileLayout;
-    private final IWebApp webApp;
+    private final IWebUiConfig webApp;
 
-    public LayoutConfig(final TileLayout tileLayout, final IWebApp webApp) {
+    public LayoutConfig(final TileLayout tileLayout, final IWebUiConfig webApp) {
         this.tileLayout = tileLayout;
         this.webApp = webApp;
     }
@@ -25,7 +25,7 @@ public class LayoutConfig implements IMenuLayoutConfig0, IMenuLayoutConfig1, IMe
     }
 
     @Override
-    public IWebApp done() {
+    public IWebUiConfig done() {
         return webApp;
     }
 

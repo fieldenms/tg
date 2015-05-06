@@ -28,7 +28,7 @@ public class WebApplicationServerModule extends ApplicationServerModule implemen
     @Override
     protected void configure() {
         super.configure();
-        bindWebAppResources(new WebApp());
+        bindWebAppResources(new WebUiConfig());
     }
 
     @Override

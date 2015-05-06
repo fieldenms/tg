@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.menu.module;
 
-import ua.com.fielden.platform.web.menu.IMainMenuConfigWithLayout;
+import ua.com.fielden.platform.web.menu.IMainMenuBuilderWithLayout;
 
 public interface IModuleConfigDone {
 
-    IMainMenuConfigWithLayout done();
+    IMainMenuBuilderWithLayout done();
 }

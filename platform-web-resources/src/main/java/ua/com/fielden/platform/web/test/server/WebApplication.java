@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import org.restlet.Context;
 import org.restlet.routing.Router;
 
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebApplication;
 
 import com.google.inject.Injector;
@@ -35,7 +35,7 @@ public class WebApplication extends AbstractWebApplication {
             final String desc,
             final String owner,
             final String author,
-            final IWebApp webApp) {
+            final IWebUiConfig webApp) {
         super(context, injector, new String[0], name, desc, owner, author, webApp);
     }
 

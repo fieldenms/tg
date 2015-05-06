@@ -4,32 +4,32 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.web.app.config.IWebAppConfig;
+import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.menu.IMainMenuConfig;
+import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
- * API for web application configuring.
+ * Represent a contract for Web UI configuring.
  *
  * @author TG Team
  *
  */
-public interface IWebApp {
+public interface IWebUiConfig {
 
     /**
      * Provides access to the global application configuration object.
      *
      * @return
      */
-    IWebAppConfig configApp();
+    IWebUiBuilder configApp();
 
     /**
      * Provides access to the application's main menu configuration object.
      *
      * @return
      */
-    IMainMenuConfig configMainMenu();
+    IMainMenuBuilder configMainMenu();
 
     /**
      * Generates the web application.

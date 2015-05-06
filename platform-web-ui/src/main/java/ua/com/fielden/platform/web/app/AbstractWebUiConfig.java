@@ -5,41 +5,44 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.app.config.IWebAppConfig;
-import ua.com.fielden.platform.web.app.config.WebAppConfig;
+import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
+import ua.com.fielden.platform.web.app.config.WebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.menu.IMainMenuConfig;
-import ua.com.fielden.platform.web.menu.impl.MainMenuConfig;
+import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
+import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import com.google.inject.Injector;
 
 /**
- * The implementation for web application.
+ * The base implementation for Web UI configuration, which should be inherited from in concrete applications for defining the final application specific Web UI configuration.
+ * <p>
+ * Method {@link IWebUiConfig#initConfiguration()} should be implemented in the application specific Web UI configuration, where menus, entity centres and entity master should be registered
+ * by obtaining corresponding builders via methods {@link #configApp()} and {@link #configMainMenu()}.
  *
  * @author TG Team
  *
  */
-public abstract class AbstractWebApp implements IWebApp {
+public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     private final String title;
-    private final WebAppConfig webAppConfig;
-    private final MainMenuConfig mainMenuConfig;
+    private final WebUiBuilder webAppConfig;
+    private final MainMenuBuilder mainMenuConfig;
     private Injector injector;
 
-    public AbstractWebApp(final String title) {
+    public AbstractWebUiConfig(final String title) {
         this.title = title;
-        this.webAppConfig = new WebAppConfig(this);
-        this.mainMenuConfig = new MainMenuConfig(this);
+        this.webAppConfig = new WebUiBuilder(this);
+        this.mainMenuConfig = new MainMenuBuilder(this);
     }
 
     @Override
-    public IWebAppConfig configApp() {
+    public IWebUiBuilder configApp() {
         return webAppConfig;
     }
 
     @Override
-    public IMainMenuConfig configMainMenu() {
+    public IMainMenuBuilder configMainMenu() {
         return mainMenuConfig;
     }
 

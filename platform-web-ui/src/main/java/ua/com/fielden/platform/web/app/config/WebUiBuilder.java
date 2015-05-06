@@ -7,22 +7,22 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
- * Implementation of the {@link IWebAppConfig}.
+ * Implementation of the {@link IWebUiBuilder}.
  *
  * @author TG Team
  *
  */
-public class WebAppConfig implements IWebAppConfig {
+public class WebUiBuilder implements IWebUiBuilder {
 
     /**
-     * The {@link IWebApp} instance for which this configuration object was created.
+     * The {@link IWebUiConfig} instance for which this configuration object was created.
      */
-    private final IWebApp webApplication;
+    private final IWebUiConfig webApplication;
 
     private int minDesktopWidth = 980, minTabletWidth = 768;
     private String locale = "en-AU";
@@ -38,45 +38,45 @@ public class WebAppConfig implements IWebAppConfig {
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new LinkedHashMap<>();
 
     /**
-     * Creates new instance of {@link WebAppConfig} for the specified {@link IWebApp} instance.
+     * Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
      *
      * @param webApplication
      */
-    public WebAppConfig(final IWebApp webApplication) {
+    public WebUiBuilder(final IWebUiConfig webApplication) {
         this.webApplication = webApplication;
     }
 
     @Override
-    public IWebAppConfig setMinDesktopWidth(final int width) {
+    public IWebUiBuilder setMinDesktopWidth(final int width) {
         this.minDesktopWidth = width;
         return this;
     }
 
     @Override
-    public IWebAppConfig setMinTabletWidth(final int width) {
+    public IWebUiBuilder setMinTabletWidth(final int width) {
         this.minTabletWidth = width;
         return this;
     }
 
     @Override
-    public IWebAppConfig setLocale(final String locale) {
+    public IWebUiBuilder setLocale(final String locale) {
         this.locale = locale;
         return this;
     }
 
     @Override
-    public IWebApp done() {
+    public IWebUiConfig done() {
         return webApplication;
     }
 
     @Override
-    public <T extends AbstractEntity<?>> IWebAppConfig addMaster(final Class<T> entityType, final EntityMaster<T> master) {
+    public <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final Class<T> entityType, final EntityMaster<T> master) {
         mastersMap.put(entityType, master);
         return this;
     }
 
     @Override
-    public <M extends MiWithConfigurationSupport<?>> IWebAppConfig addCentre(final Class<M> menuType, final EntityCentre<?> centre) {
+    public <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final Class<M> menuType, final EntityCentre<?> centre) {
         centreMap.put(menuType, centre);
         return this;
     }

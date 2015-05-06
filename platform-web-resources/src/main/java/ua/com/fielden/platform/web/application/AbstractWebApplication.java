@@ -15,7 +15,7 @@ import org.restlet.routing.Template;
 
 import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.MainMenuResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
 import ua.com.fielden.platform.web.factories.WebAppConfigResourceFactory;
@@ -51,7 +51,7 @@ public abstract class AbstractWebApplication extends Application {
     private final Set<String> resourcePaths = new LinkedHashSet<>();
 
     protected final Logger logger = Logger.getLogger(getClass());
-    private final IWebApp webApp;
+    private final IWebUiConfig webApp;
 
     /**
      * Creates an instance of {@link AbstractWebApplication} with custom application name, description, author, owner and resource paths.
@@ -79,7 +79,7 @@ public abstract class AbstractWebApplication extends Application {
             final String desc,
             final String owner,
             final String author,
-            final IWebApp webApp) {
+            final IWebUiConfig webApp) {
         super(context);
         this.webApp = webApp;
         //        this.platformJsScriptsLocation = "../../tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
@@ -156,7 +156,7 @@ public abstract class AbstractWebApplication extends Application {
      * @param router
      * @param masters
      */
-    private void attachMasterResources(final Router router, final IWebApp webApp) {
+    private void attachMasterResources(final Router router, final IWebUiConfig webApp) {
         logger.info("\t\tEntity master resources attaching...");
         router.attach("/users/{username}/entity/{entityType}/{entity-id}", new EntityResourceFactory(webApp, injector));
         router.attach("/users/{username}/validation/{entityType}", new EntityValidationResourceFactory(webApp, injector));
@@ -169,7 +169,7 @@ public abstract class AbstractWebApplication extends Application {
      * @param router
      * @param webApp
      */
-    private void attachAutocompletionResources(final Router router, final IWebApp webApp) {
+    private void attachAutocompletionResources(final Router router, final IWebUiConfig webApp) {
         logger.info("\t\tAutocompletion resources attaching...");
         router.attach("/users/{{username}}/autocompletion/{{entityType}}/{{property}}", new EntityAutocompletionResourceFactory(webApp, injector));
     }
@@ -181,7 +181,7 @@ public abstract class AbstractWebApplication extends Application {
      * @param webApp
      *            - holds the entity centre configurations.
      */
-    private void attachCentreResources(final Router router, final IWebApp webApp) {
+    private void attachCentreResources(final Router router, final IWebUiConfig webApp) {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/users/{username}/criteria/{mitype}", new CriteriaResourceFactory(webApp, injector));
         router.attach("/users/{username}/centre/{mitype}", new CentreResourceFactory(webApp, injector));

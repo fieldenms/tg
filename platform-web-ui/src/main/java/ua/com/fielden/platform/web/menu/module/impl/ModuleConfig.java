@@ -2,10 +2,10 @@ package ua.com.fielden.platform.web.menu.module.impl;
 
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
-import ua.com.fielden.platform.web.menu.IMainMenuConfigWithLayout;
+import ua.com.fielden.platform.web.menu.IMainMenuBuilderWithLayout;
 import ua.com.fielden.platform.web.menu.IModuleConfig;
 import ua.com.fielden.platform.web.menu.IModuleMenuConfig;
-import ua.com.fielden.platform.web.menu.impl.MainMenuConfig;
+import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.menu.module.IModuleConfig0;
 import ua.com.fielden.platform.web.menu.module.IModuleConfig1;
 import ua.com.fielden.platform.web.menu.module.IModuleConfig2;
@@ -16,9 +16,9 @@ import ua.com.fielden.platform.web.menu.module.IModuleConfigDone;
 public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfig1, IModuleConfig2, IModuleConfig3, IModuleConfig4, IModuleConfigDone {
 
     private final WebMenuModule module;
-    private final MainMenuConfig menuConfig;
+    private final MainMenuBuilder menuConfig;
 
-    public ModuleConfig(final MainMenuConfig menuConfig, final WebMenuModule module) {
+    public ModuleConfig(final MainMenuBuilder menuConfig, final WebMenuModule module) {
         this.module = module;
         this.menuConfig = menuConfig;
     }
@@ -71,7 +71,7 @@ public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfi
     }
 
     @Override
-    public IMainMenuConfigWithLayout done() {
+    public IMainMenuBuilderWithLayout done() {
         return menuConfig;
     }
 

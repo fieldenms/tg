@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.provider.IUserController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -32,7 +32,7 @@ public class EntityValidationResourceFactory extends Restlet {
     private final Injector injector;
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
-    private final IWebApp webApp;
+    private final IWebUiConfig webApp;
 
     /**
      * Instantiates a factory for entity validation resources.
@@ -41,7 +41,7 @@ public class EntityValidationResourceFactory extends Restlet {
      *            -- a list of {@link EntityMaster}s from which fetch models and other information arrive
      * @param injector
      */
-    public EntityValidationResourceFactory(final IWebApp webApp, final Injector injector) {
+    public EntityValidationResourceFactory(final IWebUiConfig webApp, final Injector injector) {
         this.webApp = webApp;
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);

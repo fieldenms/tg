@@ -38,8 +38,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.web.app.AbstractWebApp;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
@@ -63,19 +63,19 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import com.google.inject.Inject;
 
 /**
- * App-specific {@link IWebApp} implementation.
+ * App-specific {@link IWebUiConfig} implementation.
  *
  * @author TG Team
  *
  */
-public class WebApp extends AbstractWebApp {
+public class WebUiConfig extends AbstractWebUiConfig {
 
-    public WebApp() {
+    public WebUiConfig() {
         super("TG SERVER");
     }
 
     /**
-     * Configures the {@link WebApp} with custom centres and masters.
+     * Configures the {@link WebUiConfig} with custom centres and masters.
      */
     @Override
     public void initConfiguration() {

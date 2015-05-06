@@ -3,8 +3,8 @@ package ua.com.fielden.platform.web.ioc;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
-import ua.com.fielden.platform.web.app.AbstractWebApp;
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.test.server.WebApplicationServerModule;
 import ua.com.fielden.platform.web.test.server.WebGlobalDomainTreeManager;
 
@@ -28,27 +28,27 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 public interface IBasicWebApplicationServerModule {
 
     /**
-     * Binds all needed resources to enable {@link IWebApp} logic.
+     * Binds all needed resources to enable {@link IWebUiConfig} logic.
      *
      * @param webApp
      */
-    default public void bindWebAppResources(final IWebApp webApp) {
+    default public void bindWebAppResources(final IWebUiConfig webApp) {
         /////////////////////////////// application specific ////////////////////////////
         bindType(IServerGlobalDomainTreeManager.class).to(ServerGlobalDomainTreeManager.class).in(Scopes.SINGLETON);
         bindType(IGlobalDomainTreeManager.class).to(WebGlobalDomainTreeManager.class);
 
         // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
-        bindType(IWebApp.class).toInstance(webApp);
+        bindType(IWebUiConfig.class).toInstance(webApp);
     }
 
     /**
-     * Initialises an already bound {@link IWebApp} instance.
-     * The default implementation assumes that is has a concrete type {@link AbstractWebApp}.
+     * Initialises an already bound {@link IWebUiConfig} instance.
+     * The default implementation assumes that is has a concrete type {@link AbstractWebUiConfig}.
      *
      * @param injector
      */
     default public void initWebApp(final Injector injector) {
-        final AbstractWebApp webApp = (AbstractWebApp) injector.getInstance(IWebApp.class);
+        final AbstractWebUiConfig webApp = (AbstractWebUiConfig) injector.getInstance(IWebUiConfig.class);
         webApp.setInjector(injector);
 
         // initialise IWebApp with its masters / centres

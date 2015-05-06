@@ -5,14 +5,14 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.web.app.IWebApp;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.MainMenuResource;
 
 public class MainMenuResourceFactory extends Restlet {
 
-    private final IWebApp app;
+    private final IWebUiConfig app;
 
-    public MainMenuResourceFactory(final IWebApp webApp) {
+    public MainMenuResourceFactory(final IWebUiConfig webApp) {
         this.app = webApp;
     }
 
