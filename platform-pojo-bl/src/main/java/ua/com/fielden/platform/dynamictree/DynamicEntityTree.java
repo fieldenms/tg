@@ -12,12 +12,12 @@ import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
- * 
- * 
- * @author oleh
- * 
+ * TODO Documentation needed.
+ *
+ * @author TG Team
+ *
  */
-public class DynamicEntityTree<T extends AbstractEntity> {
+public class DynamicEntityTree<T extends AbstractEntity<?>> {
 
     private final DynamicEntityTreeNode root;
 
