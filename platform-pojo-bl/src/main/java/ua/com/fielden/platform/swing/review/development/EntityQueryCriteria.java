@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -165,22 +164,14 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param additionalFetchProvider
      * @return
      */
-    private static <T extends AbstractEntity<?>> fetch<T> createFetchModelFrom(final Class<T> managedType, final Set<String> properties, final Optional<IFetchProvider<T>> additionalFetchProvider) {
+    private static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> fetch<V> createFetchModelFrom(final Class<V> managedType, final Set<String> properties, final Optional<IFetchProvider<T>> additionalFetchProvider) {
+        final IFetchProvider<V> rootProvider = properties.contains("") ? EntityUtils.fetchWithKeyAndDesc(managedType) : EntityUtils.fetch(managedType);
+        final IFetchProvider<V> rootProviderWithResultSetProperties = rootProvider.with(properties);
         if (additionalFetchProvider.isPresent()) {
-
-            // IMPORTANT: please note, that creation of fetch model performs through the use of DynamicFetchBuilder (it is used for dynamic types),
-            //      which adds automatically 'key' and 'desc' under any entity-typed property! This means that for any entity-typed property
-            //      of custom fetch provider 'key' and 'desc' will be fetched.
-            return DynamicFetchBuilder.createFetchOnlyModel(managedType, extendPropsWithFetchProvider(properties, additionalFetchProvider.get()));
+            return rootProviderWithResultSetProperties.with(additionalFetchProvider.get().copy(managedType)).fetchModel();
         } else {
-            return DynamicFetchBuilder.createFetchOnlyModel(managedType, properties);
+            return rootProviderWithResultSetProperties.fetchModel();
         }
-    }
-
-    private static <T extends AbstractEntity<?>> Set<String> extendPropsWithFetchProvider(final Set<String> resultSetProperties, final IFetchProvider<T> additionalFetchProvider) {
-        final Set<String> props = new LinkedHashSet<>(resultSetProperties);
-        props.addAll(additionalFetchProvider.allProperties());
-        return props;
     }
 
     /**
