@@ -15,11 +15,17 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 
-public class MainMenuResource extends ServerResource {
+/**
+ * Responds to GET requests with generated application specific Web UI preferences, which include location, widths settings for responsive layout etc.
+ *
+ * @author TG Team
+ *
+ */
+public class WebUiPreferencesResource extends ServerResource {
 
     private final IWebUiConfig app;
 
-    public MainMenuResource(final IWebUiConfig app, final Context context, final Request request, final Response response) {
+    public WebUiPreferencesResource(final IWebUiConfig app, final Context context, final Request request, final Response response) {
         init(context, request, response);
         this.app = app;
     }
@@ -27,7 +33,7 @@ public class MainMenuResource extends ServerResource {
     @Override
     protected Representation get() throws ResourceException {
         try {
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(app.generateMainMenu().getBytes("UTF-8"))));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(app.genWebUiPreferences().getBytes("UTF-8"))));
         } catch (final UnsupportedEncodingException e) {
             e.printStackTrace();
             throw new ResourceException(e);

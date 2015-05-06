@@ -26,19 +26,19 @@ import com.google.inject.Injector;
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     private final String title;
-    private final WebUiBuilder webAppConfig;
+    private final WebUiBuilder webUiBuilder;
     private final MainMenuBuilder mainMenuConfig;
     private Injector injector;
 
     public AbstractWebUiConfig(final String title) {
         this.title = title;
-        this.webAppConfig = new WebUiBuilder(this);
+        this.webUiBuilder = new WebUiBuilder(this);
         this.mainMenuConfig = new MainMenuBuilder(this);
     }
 
     @Override
     public IWebUiBuilder configApp() {
-        return webAppConfig;
+        return webUiBuilder;
     }
 
     @Override
@@ -52,8 +52,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @return
      */
     @Override
-    public final String generateGlobalConfig() {
-        return webAppConfig.generateConfigComponent();
+    public final String genWebUiPreferences() {
+        return webUiBuilder.genWebUiPrefComponent();
     }
 
     /**
@@ -62,7 +62,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @return
      */
     @Override
-    public final String generateMainMenu() {
+    public final String genMainWebUIComponent() {
         return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app.html").
                 replaceAll("@menuConfig", mainMenuConfig.code().toString());
     }
@@ -73,7 +73,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @return
      */
     @Override
-    public final String generateWebApp() {
+    public final String genAppIndex() {
         return ResourceLoader.getText("ua/com/fielden/platform/web/index.html").
                 replaceAll("@title", title);
     }
@@ -85,7 +85,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      */
     @Override
     public final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> getMasters() {
-        return webAppConfig.getMasters();
+        return webUiBuilder.getMasters();
     }
 
     /**
@@ -95,7 +95,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      */
     @Override
     public final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres() {
-        return webAppConfig.getCentres();
+        return webUiBuilder.getCentres();
     }
 
     public void setInjector(final Injector injector) {

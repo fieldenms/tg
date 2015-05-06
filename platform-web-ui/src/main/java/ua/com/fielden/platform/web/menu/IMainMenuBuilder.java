@@ -10,7 +10,7 @@ package ua.com.fielden.platform.web.menu;
 public interface IMainMenuBuilder {
 
     /**
-     * Adds new module to main menu
+     * Adds new module to main menu, meaning that each main menu item is associated with a logical application module.
      *
      * @param title
      * @return

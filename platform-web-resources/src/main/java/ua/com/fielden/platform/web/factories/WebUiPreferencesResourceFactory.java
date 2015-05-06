@@ -6,13 +6,13 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.resources.WebAppConfigResource;
+import ua.com.fielden.platform.web.resources.WebUiPreferencesResource;
 
-public class WebAppConfigResourceFactory extends Restlet {
+public class WebUiPreferencesResourceFactory extends Restlet {
 
     private final IWebUiConfig app;
 
-    public WebAppConfigResourceFactory(final IWebUiConfig webApp) {
+    public WebUiPreferencesResourceFactory(final IWebUiConfig webApp) {
         this.app = webApp;
     }
 
@@ -21,7 +21,7 @@ public class WebAppConfigResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new WebAppConfigResource(app, getContext(), request, response).handle();
+            new WebUiPreferencesResource(app, getContext(), request, response).handle();
         }
     }
 }

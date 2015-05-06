@@ -16,9 +16,9 @@ import org.restlet.routing.Template;
 import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.factories.MainMenuResourceFactory;
-import ua.com.fielden.platform.web.factories.MainWebApplicationResourceFactory;
-import ua.com.fielden.platform.web.factories.WebAppConfigResourceFactory;
+import ua.com.fielden.platform.web.factories.MainWebUiComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.AppIndexResourceFactory;
+import ua.com.fielden.platform.web.factories.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
@@ -106,9 +106,9 @@ public abstract class AbstractWebApplication extends Application {
         final Router router = new Router(getContext());
 
         // Attach main application resource.
-        router.attach("/", new MainWebApplicationResourceFactory(webApp));
-        router.attach("/tg-web-app/tg-app-config.html", new WebAppConfigResourceFactory(webApp));
-        router.attach("/app/tg-app.html", new MainMenuResourceFactory(webApp));
+        router.attach("/", new AppIndexResourceFactory(webApp));
+        router.attach("/tg-web-app/tg-app-config.html", new WebUiPreferencesResourceFactory(webApp));
+        router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(webApp));
 
         // Registering entity centres:
         attachCentreResources(router, webApp);

@@ -22,7 +22,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     /**
      * The {@link IWebUiConfig} instance for which this configuration object was created.
      */
-    private final IWebUiConfig webApplication;
+    private final IWebUiConfig webUiConfig;
 
     private int minDesktopWidth = 980, minTabletWidth = 768;
     private String locale = "en-AU";
@@ -40,10 +40,10 @@ public class WebUiBuilder implements IWebUiBuilder {
     /**
      * Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
      *
-     * @param webApplication
+     * @param webUiConfig
      */
-    public WebUiBuilder(final IWebUiConfig webApplication) {
-        this.webApplication = webApplication;
+    public WebUiBuilder(final IWebUiConfig webUiConfig) {
+        this.webUiConfig = webUiConfig;
     }
 
     @Override
@@ -66,7 +66,7 @@ public class WebUiBuilder implements IWebUiBuilder {
 
     @Override
     public IWebUiConfig done() {
-        return webApplication;
+        return webUiConfig;
     }
 
     @Override
@@ -90,11 +90,11 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     /**
-     * Generates the html representation of the web application configuration object
+     * Generates a HTML representation of the web application UI preferences.
      *
      * @return
      */
-    public String generateConfigComponent() {
+    public String genWebUiPrefComponent() {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }

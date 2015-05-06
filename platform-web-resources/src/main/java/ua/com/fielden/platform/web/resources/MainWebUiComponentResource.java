@@ -15,19 +15,26 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 
-public class MainWebApplicationResource extends ServerResource {
+/**
+ *
+ * Responds to GET requests with generated application specific main Web UI component, which basically represents a scaffolding for the whole application Web UI client.
+ *
+ * @author TG Team
+ *
+ */
+public class MainWebUiComponentResource extends ServerResource {
 
-    private final IWebUiConfig webApp;
+    private final IWebUiConfig app;
 
-    public MainWebApplicationResource(final IWebUiConfig webApp, final Context context, final Request request, final Response response) {
+    public MainWebUiComponentResource(final IWebUiConfig app, final Context context, final Request request, final Response response) {
         init(context, request, response);
-        this.webApp = webApp;
+        this.app = app;
     }
 
     @Override
     protected Representation get() throws ResourceException {
         try {
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(webApp.generateWebApp().getBytes("UTF-8"))));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(app.genMainWebUIComponent().getBytes("UTF-8"))));
         } catch (final UnsupportedEncodingException e) {
             e.printStackTrace();
             throw new ResourceException(e);

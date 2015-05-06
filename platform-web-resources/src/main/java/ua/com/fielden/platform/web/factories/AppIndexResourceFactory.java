@@ -6,13 +6,13 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.resources.MainMenuResource;
+import ua.com.fielden.platform.web.resources.AppIndexResource;
 
-public class MainMenuResourceFactory extends Restlet {
+public class AppIndexResourceFactory extends Restlet {
 
     private final IWebUiConfig app;
 
-    public MainMenuResourceFactory(final IWebUiConfig webApp) {
+    public AppIndexResourceFactory(final IWebUiConfig webApp) {
         this.app = webApp;
     }
 
@@ -21,7 +21,7 @@ public class MainMenuResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new MainMenuResource(app, getContext(), request, response).handle();
+            new AppIndexResource(app, getContext(), request, response).handle();
         }
     }
 }

@@ -36,21 +36,21 @@ public interface IWebUiConfig {
      *
      * @return
      */
-    String generateWebApp();
+    String genAppIndex();
 
     /**
      * Generates the main menu component.
      *
      * @return
      */
-    String generateMainMenu();
+    String genMainWebUIComponent();
 
     /**
      * Generates the global configuration component.
      *
      * @return
      */
-    String generateGlobalConfig();
+    String genWebUiPreferences();
 
     /**
      * Returns the map of entity masters for this web application.
