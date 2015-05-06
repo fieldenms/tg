@@ -16,8 +16,10 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
@@ -328,6 +330,20 @@ public class WebUiConfig extends AbstractWebUiConfig {
             return centre;
         });
 
+        final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
+                EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
+                        .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).
+                        setLayoutFor(Device.DESKTOP, null, "[[]]")
+
+                        .addProp("property")
+                        .setFetchProvider(EntityUtils.fetch(TgFetchProviderTestEntity.class).with("additionalProperty"))
+                        // .addProp("additionalProp")
+                        .build()
+                ,
+
+                injector(), null);
+
+        configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
         configApp().addCentre(MiTgPersistentEntityWithProperties.class, entityCentre);
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.

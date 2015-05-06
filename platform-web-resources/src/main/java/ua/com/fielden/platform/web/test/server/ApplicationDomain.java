@@ -7,6 +7,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
@@ -46,6 +47,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgONStatusActivationFunctionalEntity.class);
         add(TgSRStatusActivationFunctionalEntity.class);
         add(TgPersistentStatus.class);
+        add(TgFetchProviderTestEntity.class);
     }
 
     @Override

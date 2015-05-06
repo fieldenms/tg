@@ -123,6 +123,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     private static <V extends AbstractEntity<?>> IFetchProvider<V> fetchForPropertyOrDefault(final ICompanionObjectFinder coFinder, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         final IFetchProvider<? extends AbstractEntity<?>> fetchProvider = coFinder.find(entityType).getFetchProvider();
+        //        return fetchProvider.fetchFor(propertyName);
         return fetchProvider.shouldFetch(propertyName)
                 ? fetchProvider.fetchFor(propertyName)
                 : fetchProvider.with(propertyName).fetchFor(propertyName);

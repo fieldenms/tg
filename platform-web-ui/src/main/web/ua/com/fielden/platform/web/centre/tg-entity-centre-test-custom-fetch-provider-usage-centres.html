@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>entity-centre</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+    <script src="/resources/polymer/polymer-test-tools/htmltest.js"></script>
+
+    <link rel="import" href="/users/SU/centre_ui/ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity">
+</head>
+
+<body unresolved>
+    <tg-TgFetchProviderTestEntity-centre id="centre" user="SU"></tg-TgFetchProviderTestEntity-centre>
+
+    <script>
+        document.addEventListener('polymer-ready', function() {
+            var centre = document.querySelector('#centre');
+            var self = this;
+
+            console.log("centre =", centre);
+            
+            var oldOnRun = centre.onRun;
+            
+            centre.onRun = function(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints) {
+            	oldOnRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints);
+            	
+            	var entity = resultEntities[0];
+            	
+                // value ok?
+                assert.ok(entity.get("property"), "Property value should be initialised.");                
+                assert.ok(entity.get("additionalProperty"), "Property value should be initialised.");
+            	
+            	done();
+            };
+
+            
+            centre.onRetrieved = function(entity, bindingEntity, customObject) {
+				centre.run();
+            };
+
+ 			centre.retrieve();
+        });
+    </script>
+
+</body>
+
+</html>

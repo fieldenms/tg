@@ -38,6 +38,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     htmlTest('/resources/master/tg-entity-master-test-save-existing-entity-after-validation.html');
     htmlTest('/resources/master/tg-entity-master-test-save-new-entity.html');
   });
+  
+  htmlSuite('entity-centre-tests', function() {
+    htmlTest('/resources/centre/tg-entity-centre-test-custom-fetch-provider-usage-centres.html');
+    htmlTest('/resources/centre/tg-entity-centre-test-autocompletion-of-props-that-do-not-exist-in-fetch-provider.html');
+  });
  
   mocha.run();
 

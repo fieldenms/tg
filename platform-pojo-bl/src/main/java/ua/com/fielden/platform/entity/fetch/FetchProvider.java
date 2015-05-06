@@ -442,4 +442,10 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return entityType.getSimpleName() + " {/n"
+                + propertyProviders.toString()
+                + "}/n";
+    }
 }

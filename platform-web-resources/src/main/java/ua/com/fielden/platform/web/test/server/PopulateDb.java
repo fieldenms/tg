@@ -15,6 +15,7 @@ import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
+import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
@@ -134,6 +135,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties exampleEnt1 = save(exampleEntToBeSaved);
         System.out.println("exampleEnt1.getBigDecimalProp().scale() == " + exampleEnt1.getBigDecimalProp().scale());
         System.out.println("exampleEnt1.getId() == " + exampleEnt1.getId());
+
+        save(new_(TgFetchProviderTestEntity.class, "FETCH1").setProperty(exampleEnt1).setAdditionalProperty(su));
 
         createDemoDomain(ent1, ent3, compositeEnt1);
         //
