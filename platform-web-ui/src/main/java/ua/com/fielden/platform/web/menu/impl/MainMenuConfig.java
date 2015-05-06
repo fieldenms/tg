@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.menu.impl;
 
+import static java.lang.String.format;
+
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.web.app.IWebApp;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -41,18 +45,21 @@ public class MainMenuConfig implements IMainMenuConfigWithLayout, IExecutable {
         final String tabletLayout = this.tileLayout.getLayout(Device.TABLET, null);
         final String mobileLayout = this.tileLayout.getLayout(Device.MOBILE, null);
         final StringBuilder menuConfig = new StringBuilder();
-        if (desktopLayout != null) {
-            menuConfig.append("whenDesktop: " + desktopLayout + ", ");
+        if (!StringUtils.isEmpty(desktopLayout)) {
+            menuConfig.append(format("whenDesktop: %s, ", desktopLayout));
         }
-        if (tabletLayout != null) {
-            menuConfig.append("whenTablet: " + tabletLayout + ", ");
+        if (!StringUtils.isEmpty(tabletLayout)) {
+            menuConfig.append(format("whenTablet: %s, ", tabletLayout));
         }
-        if (mobileLayout != null) {
-            menuConfig.append("whenMobile: " + mobileLayout + ", ");
+        if (!StringUtils.isEmpty(mobileLayout)) {
+            menuConfig.append(format("whenMobile: %s, ", mobileLayout));
         }
-        menuConfig.append("minCellWidth: \"" + tileLayout.getMinCellWidth() + "px\", ");
-        menuConfig.append("minCellHeight: \"" + tileLayout.getMinCellHeight() + "px\", ");
-        menuConfig.append("items: " + mainMenu.code().toString());
-        return new JsCode("{" + menuConfig.toString() + "}");
+        menuConfig.append(format("minCellWidth: '%spx', ", tileLayout.getMinCellWidth()));
+        menuConfig.append(format("minCellHeight: '%spx', ", tileLayout.getMinCellHeight()));
+        menuConfig.append(format("items: %s", mainMenu.code()));
+
+        System.out.println(new JsCode(format("{%s}", menuConfig)).toString());
+
+        return new JsCode(format("{%s}", menuConfig));
     }
 }
