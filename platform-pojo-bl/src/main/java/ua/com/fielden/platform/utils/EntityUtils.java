@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.fetch.FetchProviderFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -1038,5 +1039,15 @@ public class EntityUtils {
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
         return FetchProviderFactory.createDefaultFetchProvider(entityType);
+    }
+
+    /**
+     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}).
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType);
     }
 }

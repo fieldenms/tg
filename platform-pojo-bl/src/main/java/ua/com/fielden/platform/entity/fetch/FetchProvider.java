@@ -32,7 +32,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private final Class<T> entityType;
     private final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyProviders;
     private fetch<T> fetchModel;
-    private final boolean entityTypedPropertyProvider;
+    private final boolean withKeyAndDesc;
     private final Logger logger = Logger.getLogger(getClass());
 
     /**
@@ -40,14 +40,14 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      *
      * @param entityType
      */
-    FetchProvider(final Class<T> entityType, final boolean entityTypedPropertyProvider) {
-        this(entityType, new LinkedHashMap<>(), entityTypedPropertyProvider);
+    FetchProvider(final Class<T> entityType, final boolean withKeyAndDesc) {
+        this(entityType, new LinkedHashMap<>(), withKeyAndDesc);
     }
 
-    private FetchProvider(final Class<T> entityType, final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyStrategies, final boolean entityTypedPropertyProvider) {
+    private FetchProvider(final Class<T> entityType, final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyStrategies, final boolean withKeyAndDesc) {
         this.entityType = entityType;
         this.propertyProviders = propertyStrategies;
-        this.entityTypedPropertyProvider = entityTypedPropertyProvider;
+        this.withKeyAndDesc = withKeyAndDesc;
     }
 
     @Override
@@ -127,7 +127,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private void validateEntityTyped(final String dotNotationProperty) {
         final Class<?> propertyType = validate(dotNotationProperty);
         if (!EntityUtils.isEntityType(propertyType)) {
-            throw new IllegalStateException(String.format("The property [%s] is not entity-typed in type [%s].", dotNotationProperty, entityType.getSimpleName()));
+            throw new IllegalArgumentException(String.format("The property [%s] is not entity-typed in type [%s].", dotNotationProperty, entityType.getSimpleName()));
         }
     }
 
@@ -138,7 +138,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      */
     private static <M extends AbstractEntity<?>> void validateTypes(final FetchProvider<M> provider1, final FetchProvider<M> provider2) {
         if (!EntityUtils.equalsEx(provider1.entityType(), provider2.entityType())) {
-            throw new IllegalArgumentException(String.format("Two fetch providers of incompatible entity types [%s and %s] is trying to be merged.", provider1.entityType().getSimpleName(), provider2.entityType().getSimpleName()));
+            throw new IllegalArgumentException(String.format("Two fetch providers of incompatible entity types [%s and %s] are trying to be merged.", provider1.entityType().getSimpleName(), provider2.entityType().getSimpleName()));
         }
     }
 
@@ -176,7 +176,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         if (propertyFetchProvider == null) {
             throw new IllegalArgumentException(String.format("Please provide non-null property fetch provider for property [%s] for type [%s]. Or use method 'with(dotNotationProperty)' for default property provider.", dotNotationProperty, entityType.getSimpleName()));
         }
-        final FetchProvider<T> copy = this.copy();
+        final FetchProvider<T> copy = this.copy(withKeyAndDesc);
         copy.enhanceWith(dotNotationProperty, (FetchProvider<AbstractEntity<?>>) propertyFetchProvider);
         return copy;
     }
@@ -184,8 +184,11 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     @Override
     public IFetchProvider<T> with(final IFetchProvider<T> otherStrategy) {
         validateTypes(this, (FetchProvider<T>) otherStrategy);
-        final FetchProvider<T> copy = this.copy();
         final FetchProvider<T> that = (FetchProvider<T>) otherStrategy;
+
+        final boolean mergedWithKeyAndDesc = this.withKeyAndDesc || that.withKeyAndDesc;
+
+        final FetchProvider<T> copy = this.copy(mergedWithKeyAndDesc);
         for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : that.propertyProviders().entrySet()) {
             // no property name validation is required (it was done earlier)
             copy.enhanceWith0(entry.getKey(), entry.getValue());
@@ -199,11 +202,29 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private FetchProvider<T> copy() {
+        return copy(withKeyAndDesc);
+    }
+
+    /**
+     * Creates exact copy of entity fetch provider.
+     *
+     * @return
+     */
+    private FetchProvider<T> copy(final boolean withKeyAndDesc) {
+        return new FetchProvider<T>(entityType, copyPropertyProviders(), withKeyAndDesc);
+    }
+
+    private LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> copyPropertyProviders() {
         final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> copiedPropertyProviders = new LinkedHashMap<>();
         for (final Entry<String, FetchProvider<AbstractEntity<?>>> entry : propertyProviders.entrySet()) {
             copiedPropertyProviders.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().copy());
         }
-        return new FetchProvider<T>(entityType, copiedPropertyProviders, entityTypedPropertyProvider);
+        return copiedPropertyProviders;
+    }
+
+    @Override
+    public <V extends AbstractEntity<?>> IFetchProvider<V> copy(final Class<V> managedType) {
+        return new FetchProvider<V>(managedType, copyPropertyProviders(), withKeyAndDesc);
     }
 
     /**
@@ -269,7 +290,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(entityType, dotNotationProperty);
             if (exists) {
                 if (EntityUtils.isEntityType(propertyType) && propertyProvider != null) {
-                    final FetchProvider<AbstractEntity<?>> merged = (FetchProvider<AbstractEntity<?>>) propertyProvider.with(propertyProviders.get(dotNotationProperty));
+                    final FetchProvider<AbstractEntity<?>> merged = (FetchProvider<AbstractEntity<?>>) propertyProviders.get(dotNotationProperty).with(propertyProvider);
                     propertyProviders.put(dotNotationProperty, merged);
                 } // else -- regular property or entity-typed
             } else {
@@ -335,7 +356,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private fetch<T> createFetchModel() {
         // need to exclude all crit-only properties from fetch model!
         final FetchProvider<T> providerWithoutCritOnlyProps = excludeCritOnlyProps(this);
-        fetch<T> fetchModel = entityTypedPropertyProvider ? EntityQueryUtils.fetchKeyAndDescOnly(providerWithoutCritOnlyProps.entityType) : EntityQueryUtils.fetchOnly(providerWithoutCritOnlyProps.entityType);
+        fetch<T> fetchModel = withKeyAndDesc ? EntityQueryUtils.fetchKeyAndDescOnly(providerWithoutCritOnlyProps.entityType) : EntityQueryUtils.fetchOnly(providerWithoutCritOnlyProps.entityType);
         for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : providerWithoutCritOnlyProps.propertyProviders.entrySet()) {
             final FetchProvider<AbstractEntity<?>> propModel = entry.getValue();
             if (propModel == null) {
@@ -365,9 +386,60 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : propertyProviders.entrySet()) {
             allProperties.add(entry.getKey());
             if (entry.getValue() != null) {
-                allProperties.addAll(entry.getValue().allProperties());
+                allProperties.addAll(prepend(entry.getKey(), entry.getValue().allProperties()));
             }
         }
         return allProperties;
     }
+
+    private static Set<String> prepend(final String prefix, final Set<String> props) {
+        final LinkedHashSet<String> newProps = new LinkedHashSet<>();
+        for (final String prop : props) {
+            newProps.add(prefix + "." + prop);
+        }
+        return newProps;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((entityType == null) ? 0 : entityType.hashCode());
+        result = prime * result + (withKeyAndDesc ? 1231 : 1237);
+        result = prime * result + ((propertyProviders == null) ? 0 : propertyProviders.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final FetchProvider other = (FetchProvider) obj;
+        if (entityType == null) {
+            if (other.entityType != null) {
+                return false;
+            }
+        } else if (!entityType.equals(other.entityType)) {
+            return false;
+        }
+        if (withKeyAndDesc != other.withKeyAndDesc) {
+            return false;
+        }
+        if (propertyProviders == null) {
+            if (other.propertyProviders != null) {
+                return false;
+            }
+        } else if (!propertyProviders.equals(other.propertyProviders)) {
+            return false;
+        }
+        return true;
+    }
+
 }

@@ -115,4 +115,6 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      * @return new immutable {@link IFetchProvider} without specified property(-ies)
      */
     IFetchProvider<T> without(final String dotNotationProperty, final String... otherDotNotationProperties);
+
+    <V extends AbstractEntity<?>> IFetchProvider<V> copy(final Class<V> managedType);
 }
