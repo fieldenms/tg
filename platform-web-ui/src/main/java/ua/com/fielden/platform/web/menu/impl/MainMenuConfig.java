@@ -5,7 +5,6 @@ import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.layout.TileLayout;
-import ua.com.fielden.platform.web.menu.IMainMenuConfig;
 import ua.com.fielden.platform.web.menu.IMainMenuConfigWithLayout;
 import ua.com.fielden.platform.web.menu.IModuleConfig;
 import ua.com.fielden.platform.web.menu.layout.IMenuLayoutConfig0;
@@ -13,7 +12,7 @@ import ua.com.fielden.platform.web.menu.layout.impl.LayoutConfig;
 import ua.com.fielden.platform.web.menu.module.impl.ModuleConfig;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
-public class MainMenuConfig implements IMainMenuConfig, IMainMenuConfigWithLayout, IExecutable {
+public class MainMenuConfig implements IMainMenuConfigWithLayout, IExecutable {
 
     private final WebMainMenu mainMenu = new WebMainMenu();
     private final TileLayout tileLayout = new TileLayout();
