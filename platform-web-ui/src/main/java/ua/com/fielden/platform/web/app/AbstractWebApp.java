@@ -91,7 +91,7 @@ public abstract class AbstractWebApp implements IWebApp {
      * @return
      */
     @Override
-    public final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> getCentres() {
+    public final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres() {
         return webAppConfig.getCentres();
     }
 

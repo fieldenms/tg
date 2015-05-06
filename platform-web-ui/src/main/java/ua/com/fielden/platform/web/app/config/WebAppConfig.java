@@ -35,7 +35,7 @@ public class WebAppConfig implements IWebAppConfig {
     /**
      * Holds the map between entity centre's menu item type and entity centre.
      */
-    private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> centreMap = new LinkedHashMap<>();
+    private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new LinkedHashMap<>();
 
     /**
      * Creates new instance of {@link WebAppConfig} for the specified {@link IWebApp} instance.
@@ -76,7 +76,7 @@ public class WebAppConfig implements IWebAppConfig {
     }
 
     @Override
-    public <M extends MiWithConfigurationSupport<?>> IWebAppConfig addCentre(final Class<M> menuType, final EntityCentre centre) {
+    public <M extends MiWithConfigurationSupport<?>> IWebAppConfig addCentre(final Class<M> menuType, final EntityCentre<?> centre) {
         centreMap.put(menuType, centre);
         return this;
     }
@@ -85,7 +85,7 @@ public class WebAppConfig implements IWebAppConfig {
         return mastersMap;
     }
 
-    public Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> getCentres() {
+    public Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres() {
         return centreMap;
     }
 

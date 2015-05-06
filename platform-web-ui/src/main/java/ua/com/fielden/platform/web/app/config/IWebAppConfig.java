@@ -54,7 +54,7 @@ public interface IWebAppConfig {
      * @param centre
      * @return
      */
-    <M extends MiWithConfigurationSupport<?>> IWebAppConfig addCentre(Class<M> menuType, EntityCentre centre);
+    <M extends MiWithConfigurationSupport<?>> IWebAppConfig addCentre(Class<M> menuType, EntityCentre<?> centre);
 
     /**
      * Finish to configure the web application.

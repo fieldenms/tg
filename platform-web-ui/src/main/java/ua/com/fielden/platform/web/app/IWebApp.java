@@ -64,7 +64,7 @@ public interface IWebApp {
      *
      * @return
      */
-    Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre> getCentres();
+    Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres();
 
     /**
      * Implement this in order to provide custom configurations for entity centre, master and other views.
