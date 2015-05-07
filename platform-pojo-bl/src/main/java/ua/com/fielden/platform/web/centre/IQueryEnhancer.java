@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.centre.api.query_enhancer;
+package ua.com.fielden.platform.web.centre;
 
 import java.util.Optional;
 
@@ -6,7 +6,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
-import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
  *

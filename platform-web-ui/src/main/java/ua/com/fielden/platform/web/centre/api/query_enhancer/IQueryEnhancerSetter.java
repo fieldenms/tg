@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.query_enhancer;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 

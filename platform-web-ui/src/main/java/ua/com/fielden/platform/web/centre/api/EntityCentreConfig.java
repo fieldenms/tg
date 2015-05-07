@@ -16,6 +16,7 @@ import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
@@ -25,7 +26,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritD
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;

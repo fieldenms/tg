@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
 /**
  * A stub implementation for testing purposes.
