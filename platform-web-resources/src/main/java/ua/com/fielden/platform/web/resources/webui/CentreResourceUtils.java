@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources.webui;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -19,7 +20,9 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -30,6 +33,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -124,40 +128,33 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *
      * @param modifiedPropertiesHolder
      * @param criteriaMetaValues
-     * @param applied
+     * @param criteriaEntity
      * @param isCentreChanged
      * @param additionalFetchProvider
      * @return
      */
-    static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied, final boolean isCentreChanged, final Optional<IFetchProvider<AbstractEntity<?>>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContextConfig>>> queryEnhancerConfig) {
+    static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> criteriaEntity, final boolean isCentreChanged, final Optional<IFetchProvider<AbstractEntity<?>>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
         customObject.put("isCentreChanged", isCentreChanged);
         customObject.put("metaValues", criteriaMetaValues);
 
-        if (applied.isValid().isSuccessful()) {
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) applied;
-            resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
+        if (criteriaEntity.isValid().isSuccessful()) {
+            // final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = applied;
+            criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
             if (additionalFetchProvider.isPresent()) {
-                resultingCriteria.setAdditionalFetchProvider(additionalFetchProvider.get());
+                criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
             }
-            if (queryEnhancerConfig.isPresent()) {
-                /* TODO please create the instance of centre context */
-                /* TODO please create the instance of centre context */
-                /* TODO please create the instance of centre context */
-                /* TODO please create the instance of centre context */
-                /* TODO please create the instance of centre context */
-                /* TODO please create the instance of centre context */
-                /* TODO please create the instance of centre context */
-                final IQueryEnhancer<AbstractEntity<?>> queryEnhancer = queryEnhancerConfig.get().getKey();
-                resultingCriteria.setAdditionalQueryEnhancerAndContext(queryEnhancer, Optional.empty() /* TODO please create the instance of centre context */);
+            if (queryEnhancerAndContext.isPresent()) {
+                final IQueryEnhancer<AbstractEntity<?>> queryEnhancer = queryEnhancerAndContext.get().getKey();
+                criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
             }
             final IPage<AbstractEntity<?>> page;
             final Integer pageCapacity = (Integer) modifiedPropertiesHolder.get("@@pageCapacity");
             modifiedPropertiesHolder.remove("@@pageCapacity");
             if (modifiedPropertiesHolder.get("@@pageNumber") == null) {
-                page = resultingCriteria.run(pageCapacity);
+                page = criteriaEntity.run(pageCapacity);
             } else {
-                page = resultingCriteria.getPage((Integer) modifiedPropertiesHolder.get("@@pageNumber"), (Integer) modifiedPropertiesHolder.get("@@pageCount"), pageCapacity);
+                page = criteriaEntity.getPage((Integer) modifiedPropertiesHolder.get("@@pageNumber"), (Integer) modifiedPropertiesHolder.get("@@pageCount"), pageCapacity);
                 modifiedPropertiesHolder.remove("@@pageNumber");
                 modifiedPropertiesHolder.remove("@@pageCount");
             }
@@ -333,6 +330,71 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.resetMetaState();
 
         return validationPrototype;
+    }
+
+    //////////////////////////////////////////////////// CREATE CENTRE CONTEXT FOR CENTRE RUN METHOD ETC. (context config is available) ////////////////////////////////////////////////////
+
+    public static <T extends AbstractEntity<?>> Optional<CentreContext<T, AbstractEntity<?>>> createCentreContext(final CentreContextHolder centreContextHolder, final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, final Optional<CentreContextConfig> contextConfig) {
+        final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
+        if (contextConfig.isPresent()) {
+            final CentreContextConfig config = contextConfig.get();
+            if (config.withSelectionCrit) {
+                context.setSelectionCrit(criteriaEntity);
+            }
+            if (config.withAllSelectedEntities) {
+                context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
+            } else if (config.withCurrentEtity) {
+                context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
+            }
+            if (config.withMasterEntity) {
+                context.setMasterEntity(centreContextHolder.getMasterEntity());
+            }
+            return Optional.of(context);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    //////////////////////////////////////////////////// CREATE CENTRE CONTEXT FOR CENTRE-DEPENDENT FUNCTIONAL ENTITIES ////////////////////////////////////////////////////
+
+    /**
+     * Creates centre context based on serialisation {@link CentreContextHolder} entity.
+     * <p>
+     * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
+     * 'requireMasterEntity').
+     *
+     * @param centreContextHolder
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
+        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
+        context.setSelectionCrit(createSelectionCriteriaEntity(centreContextHolder, companionFinder, gdtm, critGenerator));
+        context.setSelectedEntities(centreContextHolder.getSelectedEntities());
+        context.setMasterEntity(centreContextHolder.getMasterEntity());
+        return (CentreContext<T, AbstractEntity<?>>) context;
+    }
+
+    /**
+     * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
+     *
+     * @param centreContextHolder
+     * @return
+     */
+    private static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> createSelectionCriteriaEntity(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
+        Class<? extends MiWithConfigurationSupport<?>> miType;
+        try {
+            miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getModifHolder().get("@@miType"));
+        } catch (final ClassNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+
+        final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
+
+        CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype =
+                CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+        return EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
     }
 
 }

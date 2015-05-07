@@ -298,7 +298,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
-                .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withMasterEntity().build())
+                .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withSelectedEntities().build())
                 .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
 
                 //                .also()
@@ -779,7 +779,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            return where.prop("status").eq().val(statusCo.findByKey("IS")); // context.get().getMasterEntity()
+            System.err.println("CONTEXT IN QUERY ENHANCER == " + context.get().getSelectedEntities());
+
+            return where.prop("status").eq().val(statusCo.findByKey("IS"));
         }
 
     }

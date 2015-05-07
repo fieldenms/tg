@@ -5,7 +5,7 @@
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
 <link rel="import" href="/resources/centre/tg-criteria-validator.html">
 
-<polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype onRun onRunComplete getSelectedEntities getMasterEntity">
+<polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype onRun onRunComplete getSelectedEntities getMasterEntity requireSelectedEntities requireMasterEntity">
     <template>
         <shadow></shadow>
         <tg-criteria-validator id="validator" user="{{user}}" mitype="{{mitype}}" onvalidated="{{onValidatedDefault}}"></tg-criteria-validator>
@@ -55,6 +55,19 @@
             currentState: "EDIT",
 
             _isCentreChanged: false,
+            
+            /**
+             * Determines whether the selected entities are required to be send inside the centre context during run() method (QueryEnhancer related).
+             *
+             * 'null' -- if not applicable, for e.g. in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
+             */
+            requireSelectedEntities: null,
+            /**
+             * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context during run() method (QueryEnhancer related).
+             *
+             * 'null' -- if not applicable, for e.g. in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
+             */
+            requireMasterEntity: null,
 
             /**
              * Initialisation block. It has all children web components already initialised.
@@ -65,6 +78,7 @@
                 console.log("child ready");
 
                 self.onRunDefault = self.onRunDefault.bind(self);
+                self.createContextHolder = self.createContextHolder.bind(self);
 
                 self.$.ajaxRunner.addEventListener('core-response', function (e) {
                     if (e.detail.xhr.status === 200) {
@@ -307,7 +321,7 @@
              */
             _runModifiedProperties: function (modifiedPropertiesHolder) {
                 // console.log("save: modifiedPropertiesHolder", modifiedPropertiesHolder);
-                var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
+                var ser = this.$.serialiser.serialise(this.createContextHolder(modifiedPropertiesHolder, this.requireSelectedEntities, this.requireMasterEntity));
                 // console.log("save: serialised modifiedPropertiesHolder", ser);
                 this.$.ajaxRunner.body = JSON.stringify(ser);
                 this.$.ajaxRunner.go();
@@ -359,6 +373,22 @@
                 }
                 console.log("propertyModel", propertyModel);
                 return propertyModel;
+            },
+            
+            createContextHolder: function(modifiedPropertiesHolder, requireSelectedEntities, requireMasterEntity) {
+            	var reflector = this.$.reflector;
+                var centreContextHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
+                centreContextHolder.id = null;
+                var paramsHolder = modifiedPropertiesHolder;
+                paramsHolder["@@miType"] = this.mitype;
+                centreContextHolder["modifHolder"] = paramsHolder;
+                if (requireSelectedEntities !== null) {
+                	reflector.provideSelectedEntities(requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
+                }
+                if (requireMasterEntity !== null) {
+                	reflector.provideMasterEntity(requireMasterEntity, centreContextHolder, this.getMasterEntity);
+                }
+                return centreContextHolder;
             }
         });
     </script>

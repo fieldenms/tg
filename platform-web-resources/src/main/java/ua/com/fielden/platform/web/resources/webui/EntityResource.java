@@ -14,20 +14,14 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -83,52 +77,12 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
         if (envelope != null) {
-            final T entity = utils.createValidationPrototypeWithCentreContext(createCentreContext(EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil)));
+            final T entity = utils.createValidationPrototypeWithCentreContext(CentreResourceUtils.createCentreContext(EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil), companionFinder, gdtm, critGenerator));
             ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
             return restUtil.rawListJSONRepresentation(entity);
         } else {
             return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
         }
-    }
-
-    /**
-     * Creates centre context based on serialisation {@link CentreContextHolder} entity.
-     * <p>
-     * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
-     * 'requireMasterEntity').
-     *
-     * @param centreContextHolder
-     * @return
-     */
-    private CentreContext<T, AbstractEntity<?>> createCentreContext(final CentreContextHolder centreContextHolder) {
-        final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
-        context.setSelectionCrit(createSelectionCriteriaEntity(centreContextHolder));
-        context.setSelectedEntities(centreContextHolder.getSelectedEntities());
-        context.setMasterEntity(centreContextHolder.getMasterEntity());
-        return (CentreContext<T, AbstractEntity<?>>) context;
-    }
-
-    /**
-     * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
-     *
-     * @param centreContextHolder
-     * @return
-     */
-    private EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> createSelectionCriteriaEntity(final CentreContextHolder centreContextHolder) {
-        Class<? extends MiWithConfigurationSupport<?>> miType;
-        try {
-            miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getModifHolder().get("@@miType"));
-        } catch (final ClassNotFoundException e) {
-            throw new IllegalStateException(e);
-        }
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
-
-        final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
-
-        CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype =
-                CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
-        return EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
     }
 
     @Delete
@@ -156,7 +110,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         if (savingInfoHolder.getCentreContextHolder() == null) {
             applied = utils.constructEntity(modifiedPropertiesHolder, this.entityId).getKey();
         } else {
-            applied = utils.constructEntity(modifiedPropertiesHolder, createCentreContext(savingInfoHolder.getCentreContextHolder())).getKey();
+            applied = utils.constructEntity(modifiedPropertiesHolder, CentreResourceUtils.createCentreContext(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator)).getKey();
         }
 
         final T potentiallySaved = applied.isDirty() ? save(applied) : applied;

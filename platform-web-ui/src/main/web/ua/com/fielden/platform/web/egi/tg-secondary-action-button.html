@@ -24,7 +24,7 @@
         <paper-dropdown id="dropdown" style="position:absolute" on-tap="{{closeDropDown}}">
         	<div layout vertical>
             	<template repeat="{{action in actions}}">
-            		<tg-ui-action currentEntity="{{currentEntity}}" user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" contextRetriever="{{action.contextRetriever}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
+            		<tg-ui-action currentEntity="{{currentEntity}}" user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
             	</template>
             </div>
         </paper-dropdown>

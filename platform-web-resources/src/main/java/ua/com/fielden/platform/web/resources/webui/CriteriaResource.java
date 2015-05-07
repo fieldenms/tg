@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,11 +24,15 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
@@ -118,19 +123,24 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     public Representation put(final Representation envelope) throws ResourceException {
         final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
-        final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+
+        final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+        final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
+
         CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
-        final AbstractEntity<?> applied = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
 
         final Pair<Map<String, Object>, ArrayList<?>> pair =
                 CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
-                        modifiedPropertiesHolder,
+                        new LinkedHashMap<>(modifiedPropertiesHolder),
                         CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
-                        applied,
-                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm), centre.getAdditionalFetchProvider(), centre.getQueryEnhancerConfig());
+                        appliedCriteriaEntity,
+                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
+                        centre.getAdditionalFetchProvider(),
+                        createQueryEnhancerAndContext(centreContextHolder, centre.getQueryEnhancerConfig(), appliedCriteriaEntity));
         if (pair.getValue() == null) {
-            return restUtil.rawListJSONRepresentation(applied, pair.getKey());
+            return restUtil.rawListJSONRepresentation(appliedCriteriaEntity, pair.getKey());
         }
 
         //Running the rendering customiser for result set of entities.
@@ -147,12 +157,20 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         enhanceResultEntitiesWithCustomPropertyValues(centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
 
         final ArrayList<Object> list = new ArrayList<Object>();
-        list.add(applied);
+        list.add(appliedCriteriaEntity);
         list.add(pair.getKey());
 
         list.addAll(pair.getValue()); // TODO why is this needed for serialisation to perform without problems?!
 
         return restUtil.rawListJSONRepresentation(list.toArray());
+    }
+
+    private static <T extends AbstractEntity<?>> Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, AbstractEntity<?>>>>> createQueryEnhancerAndContext(final CentreContextHolder centreContextHolder, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> queryEnhancerConfig, final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity) {
+        if (queryEnhancerConfig.isPresent()) {
+            return Optional.of(new Pair<>(queryEnhancerConfig.get().getKey(), CentreResourceUtils.createCentreContext(centreContextHolder, criteriaEntity, queryEnhancerConfig.get().getValue())));
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**

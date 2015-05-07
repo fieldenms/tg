@@ -8,7 +8,7 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri contextRetriever requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError">
+<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri createContextHolder requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError">
     <!-- enabledStates currentState  -->
     <template>
         <style>
@@ -70,7 +70,7 @@
                 /**
                  * The function that returns the context for this action (in case of dit action on EGI the context is a selected entity.)
                  */
-                contextRetriever: undefined,
+                createContextHolder: undefined,
 
                 /**
                  * The URI of custom UI component to be loaded on run() action.
@@ -209,7 +209,7 @@
                     console.log("onSaved");
                 };
 
-                var context = self.contextRetriever(self.requireSelectedEntities, self.requireMasterEntity);
+                var context = self.createContextHolder(self.requireSelectedEntities, self.requireMasterEntity);
                 
                 if (self.currentEntity) {
                 	self.enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);

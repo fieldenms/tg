@@ -57,7 +57,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     }
 
     /**
-     * Handles POST request resulting from RAO call to method save.
+     * Handles POST request resulting from tg-entity-editor's (are used as editor in masters) <code>search()</code> method.
      */
     @Post
     @Override

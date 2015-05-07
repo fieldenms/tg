@@ -676,6 +676,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@entity_type", entityType.getSimpleName()).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getName()).
+                replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).
                 replace("<!--@criteria_editors-->", editorContainer.toString()).
                 replace("<!--@egi_columns-->", egiColumns.toString()).
                 replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
@@ -695,6 +696,23 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         };
         return representation;
+    }
+
+    private String queryEnhancerContextConfigString() {
+        return dslDefaultConfig.getQueryEnhancerConfig().isPresent() && dslDefaultConfig.getQueryEnhancerConfig().get().getValue().isPresent() ?
+                createContextAttrs(dslDefaultConfig.getQueryEnhancerConfig().get().getValue().get()) : "";
+    }
+
+    private String createContextAttrs(final CentreContextConfig centreContextConfig) {
+        final StringBuilder sb = new StringBuilder();
+
+        if (centreContextConfig.withSelectionCrit) {
+            // disregarded at this stage -- sends every time
+        }
+        sb.append("requireSelectedEntities=\"" + (centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE") + "\" "));
+        sb.append("requireMasterEntity=\"" + (centreContextConfig.withMasterEntity ? "true" : "false") + "\"");
+
+        return sb.toString();
     }
 
     /**

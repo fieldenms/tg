@@ -83,8 +83,8 @@
                     self.newAction = self.newAction.bind(self);
                     self.showMaster = self.showMaster.bind(self);
                     self.getContext = self.getContext.bind(self);
-                    self.createCentreContextHolder = self.createCentreContextHolder.bind(self);
                     self.onFunctionalEntitySaved = self.onFunctionalEntitySaved.bind(self);
+                    self.createContextHolder = self.createContextHolder.bind(self);
                 },
                 
                 attached: function () {
@@ -180,27 +180,6 @@
                     }
                     return null;
                 }, 
-                
-                createContextHolder: function(requireSelectedEntities, requireMasterEntity) {
-                	var reflector = this.$.selection_criteria.$.reflector;
-                    var centreContextHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
-                    centreContextHolder.id = null;
-                    var paramsHolder = this.$.selection_criteria.createModifiedPropertiesHolder();
-                    paramsHolder["@@miType"] = this.mitype;
-                    centreContextHolder["modifHolder"] = paramsHolder;
-                    if (requireSelectedEntities !== null) {
-                    	reflector.provideSelectedEntities(requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
-                    }
-                    if (requireMasterEntity !== null) {
-                    	reflector.provideMasterEntity(requireMasterEntity, centreContextHolder, this.getMasterEntity);
-                    }
-                    return centreContextHolder;
-                },
-                
-                createCentreContextHolder: function(requireSelectedEntities, requireMasterEntity) {
-                	var self = this;
-                	return self.createContextHolder(requireSelectedEntities, requireMasterEntity);
-                },
                 
                 getSelectedEntities: function () {
                     return this.$.egi.getSelectedEntities();
@@ -324,6 +303,10 @@
                 	if (potentiallySavedEntity.isValid()) {
                 		this.currentPage();	
                 	}
+                },
+                
+                createContextHolder: function(requireSelectedEntities, requireMasterEntity) {
+                    return this.$.selection_criteria.createContextHolder(this.$.selection_criteria.createModifiedPropertiesHolder(), requireSelectedEntities, requireMasterEntity);
                 }
             });
         })();

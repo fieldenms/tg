@@ -21,7 +21,6 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
@@ -68,42 +67,33 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
     }
 
     /**
-     * Handles POST request resulting from RAO call to method save.
+     * Handles POST request resulting from tg-entity-search-criteria's / tg-entity-editor's (both they are used as criteria editors in centres) <code>search()</code> method.
      */
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
         final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
-        final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
+        final Pair<CRITERIA, Map<String, Object>> entityAndHolder = constructCriteriaEntity(centreContextHolder.getModifHolder());
 
-        final Pair<CRITERIA, Map<String, Object>> entityAndHolder = constructCriteriaEntity(modifiedPropertiesHolder);
-        final CRITERIA criteriaEntity = entityAndHolder.getKey();
-        final Map<String, Object> paramsHolder = entityAndHolder.getValue();
+        // create context, if any
+        final Optional<CentreContext<T, AbstractEntity<?>>> context = CentreResourceUtils.createCentreContext(centreContextHolder, (EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>) entityAndHolder.getKey(), contextConfig);
+        if (context.isPresent()) {
+            logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
+            valueMatcher.setContext(context.get());
+        } else {
+            // TODO check whether such setting is needed (need to test autocompletion in centres without that setting) or can be removed:
+            valueMatcher.setContext(new CentreContext<>());
+        }
 
-        final String searchStringVal = (String) paramsHolder.get("@@searchString"); // custom property inside paramsHolder
-        logger.debug(String.format("SEARCH STRING %s", searchStringVal));
+        // populate fetch model
+        valueMatcher.setFetch(EntityResourceUtils.<CRITERIA, T> fetchForProperty(coFinder, criteriaType, criterionPropertyName).fetchModel());
 
+        // prepare search string
+        final String searchStringVal = (String) entityAndHolder.getValue().get("@@searchString"); // custom property inside paramsHolder
         final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
         logger.debug(String.format("SEARCH STRING %s", searchString));
 
-        final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
-        if (contextConfig.isPresent() && contextConfig.get().withSelectionCrit) {
-            context.setSelectionCrit((EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>) criteriaEntity);
-        }
-        if (contextConfig.isPresent() && contextConfig.get().withAllSelectedEntities) {
-            context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
-        } else if (contextConfig.isPresent() && contextConfig.get().withCurrentEtity) {
-            context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
-        }
-        if (contextConfig.isPresent() && contextConfig.get().withMasterEntity) {
-            context.setMasterEntity(centreContextHolder.getMasterEntity());
-        }
-
-        logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
-        valueMatcher.setContext(context);
-        final fetch<T> fetch = EntityResourceUtils.<CRITERIA, T> fetchForProperty(coFinder, criteriaType, criterionPropertyName).fetchModel();
-        valueMatcher.setFetch(fetch);
         final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
         return restUtil.listJSONRepresentation(entities);
