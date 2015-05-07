@@ -50,6 +50,8 @@ import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
 import com.google.inject.Inject;
 
@@ -70,6 +72,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private final C cdtme;
     private final ICompanionObjectFinder controllerProvider;
     private Optional<IFetchProvider<T>> additionalFetchProvider = Optional.empty();
+    private Optional<IQueryEnhancer<T>> additionalQueryEnhancer = Optional.empty();
+    private Optional<CentreContext<T, ?>> centreContextForQueryEnhancer = Optional.empty();
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
@@ -157,6 +161,34 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
+     * Enhances this criteria entity with custom query enhancer and its optional centre context, that will extend the query on top of chosen criteria conditions.
+     *
+     * @param additionalQueryEnhancer
+     * @param centreContextForQueryEnhancer
+     */
+    public void setAdditionalQueryEnhancerAndContext(final IQueryEnhancer<T> additionalQueryEnhancer, final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer) {
+        this.additionalQueryEnhancer = Optional.of(additionalQueryEnhancer);
+        this.centreContextForQueryEnhancer = centreContextForQueryEnhancer;
+    }
+
+    /**
+     * Creates the query model based on 'queryProperties' of the 'managedType' and on custom query enhancer (if any).
+     *
+     * @param managedType
+     * @param queryProperties
+     * @param additionalQueryEnhancer
+     * @param centreContextForQueryEnhancer
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> createQuery(final Class<T> managedType, final List<QueryProperty> queryProperties, final Optional<IQueryEnhancer<T>> additionalQueryEnhancer, final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer) {
+        if (additionalQueryEnhancer.isPresent()) {
+            return DynamicQueryBuilder.createQuery(managedType, queryProperties, Optional.of(new Pair<>(additionalQueryEnhancer.get(), centreContextForQueryEnhancer))).model();
+        } else {
+            return DynamicQueryBuilder.createQuery(managedType, queryProperties).model();
+        }
+    }
+
+    /**
      * Creates the fetch model based on 'properties' of the 'managedType' and on custom fetch provider (if any).
      *
      * @param managedType
@@ -184,7 +216,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
         final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
-        final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
         .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
         .with(createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider))//
@@ -210,7 +242,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
         final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
-        final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
         .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
         .with(createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider))//
@@ -323,7 +355,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
         final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
-        final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
         .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
         .with(createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider))//

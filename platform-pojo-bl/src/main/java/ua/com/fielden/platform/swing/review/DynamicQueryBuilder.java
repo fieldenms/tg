@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -27,6 +28,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionCompoundCondition;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -37,6 +39,8 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
 import ua.com.fielden.snappy.DateUtilities;
@@ -44,9 +48,9 @@ import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * An utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DynamicQueryBuilder {
     private final static Logger logger = Logger.getLogger(DynamicQueryBuilder.class);
@@ -56,9 +60,9 @@ public class DynamicQueryBuilder {
      * <br>
      * Consists of one or possibly two (for "from"/"to" or "is"/"is not") values / exclusiveness-flags, <br>
      * and strictly single datePrefix/Mnemonic pair, "orNull", "not" and "all" flags, and other stuff, which are necessary for query composition.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class QueryProperty {
         private Object value = null, value2 = null;
@@ -206,7 +210,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Determines whether property have empty values.
-         * 
+         *
          * @return
          */
         protected boolean hasEmptyValue() {
@@ -227,7 +231,7 @@ public class DynamicQueryBuilder {
 
         /**
          * No values have been assigned and date mnemonics have not been used.
-         * 
+         *
          * @return
          */
         public boolean isEmpty() {
@@ -237,7 +241,7 @@ public class DynamicQueryBuilder {
         /**
          * Determines whether property should be ignored during query composition, which means that 1) it is crit-only property; 2) it is empty and has not "orNull" condition
          * assigned.
-         * 
+         *
          * @return
          */
         public boolean shouldBeIgnored() {
@@ -247,7 +251,7 @@ public class DynamicQueryBuilder {
         /**
          * Returns <code>true</code> if this property belongs to some collection hierarchy. Method {@link #getCollectionContainerType()} should return the high level collection
          * type.
-         * 
+         *
          * @return
          */
         public boolean isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL() {
@@ -257,7 +261,7 @@ public class DynamicQueryBuilder {
 
         /**
          * The type of collection which contain this property. If this property is not in collection hierarchy it should be <code>null</code>.
-         * 
+         *
          * @return
          */
         public Class<? extends AbstractEntity<?>> getCollectionContainerType() {
@@ -266,7 +270,7 @@ public class DynamicQueryBuilder {
 
         /**
          * The type of the parent of collection which contain this property. If this property is not in collection hierarchy it should be <code>null</code>.
-         * 
+         *
          * @return
          */
         public Class<? extends AbstractEntity<?>> getCollectionContainerParentType() {
@@ -275,7 +279,7 @@ public class DynamicQueryBuilder {
 
         /**
          * The condition building name that is related to parent collection or root entity type (if no collection exists on top of property).
-         * 
+         *
          * @return
          */
         public String getConditionBuildingName() {
@@ -284,7 +288,7 @@ public class DynamicQueryBuilder {
 
         /**
          * The name of collection, which contains this query property, in context of root entity type.
-         * 
+         *
          * @return
          */
         public String getPropertyNameOfCollectionParent() {
@@ -293,7 +297,7 @@ public class DynamicQueryBuilder {
 
         /**
          * The name of collection, which contains this query property, in context of collection parent type.
-         * 
+         *
          * @return
          */
         public String getCollectionNameInItsParentTypeContext() {
@@ -302,7 +306,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Returns <code>true</code> if query property is inside nested (at least two) collections.
-         * 
+         *
          * @return
          */
         public Boolean isInNestedUnionAndCollections() {
@@ -311,7 +315,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Returns value that indicates whether property is in union hierarchy or not.
-         * 
+         *
          * @return
          */
         public boolean isInUnionHierarchy() {
@@ -320,7 +324,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Returns union property parent name that is instance of {@link AbstractUnionEntity} class.
-         * 
+         *
          * @return
          */
         public String getUnionParent() {
@@ -329,7 +333,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Returns the {@link AbstractEntity} property name that is in union.
-         * 
+         *
          * @return
          */
         public String getUnionGroup() {
@@ -338,7 +342,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Returns <code>true</code> if property is crit-only, <code>false</code> otherwise.
-         * 
+         *
          * @return
          */
         public boolean isCritOnly() {
@@ -347,7 +351,7 @@ public class DynamicQueryBuilder {
 
         /**
          * The property name in dot-notation.
-         * 
+         *
          * @return
          */
         public String getPropertyName() {
@@ -356,7 +360,7 @@ public class DynamicQueryBuilder {
 
         /**
          * The type of property.
-         * 
+         *
          * @return
          */
         public Class<?> getType() {
@@ -365,7 +369,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Returns <code>true</code> if property is crit-only and single, <code>false</code> otherwise.
-         * 
+         *
          * @return
          */
         public boolean isSingle() {
@@ -379,7 +383,7 @@ public class DynamicQueryBuilder {
 
     /**
      * A bunch of properties relevant to single collection. Contains <b>collection filtering</b> properties and <b>ANY</b> / <b>ALL</b> properties.
-     * 
+     *
      * @author TG Team
      */
     private static class CollectionProperties {
@@ -396,7 +400,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Adds a property to a relevant sub-collection (FILTERING, ALL, ANY).
-         * 
+         *
          * @param all
          *            -- <code>true</code> to add to ALL properties, <code>false</code> -- to add to ANY properties, <code>null</code> to add to FILTERING properties.
          */
@@ -438,7 +442,7 @@ public class DynamicQueryBuilder {
         /**
          * Returns <code>true</code> if collection has at least one aggregated (at this stage only ANY or ALL) condition, which means that sub-model generation will be performed.
          * Filtering conditions will be irrelevant in case when no aggregated conditions appear.
-         * 
+         *
          * @return
          */
         public boolean hasAggregatedCondition() {
@@ -447,7 +451,7 @@ public class DynamicQueryBuilder {
 
         /**
          * The name of collection, which contains this query property, in context of root entity type.
-         * 
+         *
          * @return
          */
         public String getPropertyNameOfCollectionParent() {
@@ -460,7 +464,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Returns the name of "keyMember" which defines "collectivity" for "collectionElementType".
-         * 
+         *
          * @param collectionOwnerType
          * @param collectionName
          * @return
@@ -472,10 +476,10 @@ public class DynamicQueryBuilder {
 
     /**
      * Enhances current query by property conditions (property could form part of "exists"/"not_exists" statements for collections or part of simple "where" statement).
-     * 
+     *
      * @return
      */
-    private static <ET extends AbstractEntity<?>> ICompleted<ET> buildConditions(final IJoin<ET> query, final List<QueryProperty> properties) {
+    private static <ET extends AbstractEntity<?>> ICompleted<ET> buildConditions(final IJoin<ET> query, final List<QueryProperty> properties, final Optional<Pair<IQueryEnhancer<ET>, Optional<CentreContext<ET, ?>>>> queryEnhancerAndContext) {
         final IStandAloneConditionOperand<ET> condOperand = EntityQueryUtils.<ET> cond();
         IStandAloneConditionCompoundCondition<ET> compoundCondition = null;
 
@@ -523,12 +527,18 @@ public class DynamicQueryBuilder {
                         + ". All FILTERING conditions (if any) will be disregarded.");
             }
         }
-        return compoundCondition == null ? query : query.where().condition(compoundCondition.model());
+
+        if (queryEnhancerAndContext.isPresent()) {
+            final IWhere0<ET> where0 = compoundCondition == null ? query.where() : query.where().condition(compoundCondition.model()).and();
+            return queryEnhancerAndContext.get().getKey().enhanceQuery(where0, queryEnhancerAndContext.get().getValue());
+        } else {
+            return compoundCondition == null ? query : query.where().condition(compoundCondition.model());
+        }
     }
 
     /**
      * Creates condition model for union group.
-     * 
+     *
      * @param unionGroup
      * @return
      */
@@ -543,7 +553,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Creates condition model for union sub group.
-     * 
+     *
      * @param properties
      * @return
      */
@@ -558,7 +568,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Defines a logic that determines an empty value according to <code>type</code> and <code>single</code> flag.
-     * 
+     *
      * @param type
      * @param single
      * @return
@@ -583,10 +593,10 @@ public class DynamicQueryBuilder {
 
     /**
      * Creates a date period [from; to] from a period defined by (datePrefix; dateMnemonic).
-     * 
+     *
      * IMPORTANT : please consider that left boundary should be inclusive and right -- exclusive! E.g. CURR YEAR converts to (01.01.2011 00:00; 01.01.2012 00:00) and need to be
      * used as <i>prop(propertyName).<b>ge()</b>.val(from).and().prop(propertyName).<b>lt()</b>.val(to)</i> in terms of Entity Query.
-     * 
+     *
      * @param datePrefix
      * @param dateMnemonic
      * @return
@@ -602,7 +612,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Creates a new array of values based on the passed string by splitting criteria using comma and by changing * to %.
-     * 
+     *
      * @param criteria
      * @return
      */
@@ -620,7 +630,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Creates new array based on the passed list of string. This method also changes * to % for every element of the passed list.
-     * 
+     *
      * @param criteria
      * @return
      */
@@ -630,7 +640,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Returns <code>true</code> if the <code>type</code> is supported in dynamic criteria, <code>false</code> otherwise.
-     * 
+     *
      * @param type
      * @return
      */
@@ -648,7 +658,7 @@ public class DynamicQueryBuilder {
      * If <b>ALL</b> condition has been applied -- appropriate <b>EXISTS</b> (will be concatenated with previous conditions using <b>AND</b>!) and appropriate <b>NOT_EXISTS</b>
      * (<b>NEGATED</b> condition will be concatenated with previous conditions using <b>OR</b>!) models for collection will be enhanced (+<b>NOT_EXISTS</b> without conditions will
      * be created and concatenated using <b>OR</b>!).<br>
-     * 
+     *
      * @param entry
      *            -- an entry consisting of [collectionType => (anyProperties, allProperties)] which forms exactly one collectional hierarchy
      * @return
@@ -711,7 +721,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Creates sub-model for collection, enhanced with FILTERING properties.
-     * 
+     *
      * @param collectionContainerType
      * @param nameOfCollectionController
      * @param mainModelProperty
@@ -740,7 +750,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Enhances "where" with concrete property condition defined by "key" parameter taking into account condition negation and <b>null</b> values treatment.
-     * 
+     *
      * @param where
      * @param key
      * @param isNegated
@@ -772,7 +782,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Builds atomic condition for some property like "is True", ">= and <", "like" etc. based on property type and assigned parameters.
-     * 
+     *
      * @param key
      * @param mainProperty
      * @param conditionGroup
@@ -792,10 +802,10 @@ public class DynamicQueryBuilder {
                 final IStandAloneConditionComparisonOperator<ET> scag = EntityQueryUtils.<ET> cond().prop(propertyName);
                 final IStandAloneConditionComparisonOperator<ET> scag2 = Boolean.TRUE.equals(property.getExclusive()) ? //
                 /*      */scag.gt().iVal(property.getValue()).and().prop(propertyName) // exclusive
-                        : scag.ge().iVal(property.getValue()).and().prop(propertyName); // inclusive
+                : scag.ge().iVal(property.getValue()).and().prop(propertyName); // inclusive
                 return Boolean.TRUE.equals(property.getExclusive2()) ? //
                 /*      */scag2.lt().iVal(property.getValue2()).model() // exclusive
-                        : scag2.le().iVal(property.getValue2()).model(); // inclusive
+                : scag2.le().iVal(property.getValue2()).model(); // inclusive
             }
         } else if (EntityUtils.isBoolean(property.getType())) {
             final boolean is = (Boolean) property.getValue();
@@ -812,16 +822,16 @@ public class DynamicQueryBuilder {
 
     /**
      * Indicates the unsupported type exception for dynamic criteria.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected static class UnsupportedTypeException extends RuntimeException {
         private static final long serialVersionUID = 8310488278117580979L;
 
         /**
          * Creates the unsupported type exception for dynamic criteria.
-         * 
+         *
          * @param type
          */
         public UnsupportedTypeException(final Class<?> type) {
@@ -831,7 +841,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Starts query building with appropriate join condition.
-     * 
+     *
      * @return
      */
     private static <E extends AbstractEntity<?>> IJoin<E> createJoinCondition(final Class<E> managedType) {
@@ -842,7 +852,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Creates the property name that might be used in query. This condition property is aliased.
-     * 
+     *
      * @param property
      * @return
      */
@@ -851,17 +861,26 @@ public class DynamicQueryBuilder {
     }
 
     /**
+     * Creates the query with configured conditions and enhances it using optional {@link IQueryEnhancer}.
+     *
+     * @return
+     */
+    public static <E extends AbstractEntity<?>> ICompleted<E> createQuery(final Class<E> managedType, final List<QueryProperty> queryProperties, final Optional<Pair<IQueryEnhancer<E>, Optional<CentreContext<E, ?>>>> queryEnhancerAndContext) {
+        return buildConditions(createJoinCondition(managedType), queryProperties, queryEnhancerAndContext);
+    }
+
+    /**
      * Creates the query with configured conditions.
-     * 
+     *
      * @return
      */
     public static <E extends AbstractEntity<?>> ICompleted<E> createQuery(final Class<E> managedType, final List<QueryProperty> queryProperties) {
-        return buildConditions(createJoinCondition(managedType), queryProperties);
+        return buildConditions(createJoinCondition(managedType), queryProperties, Optional.empty());
     }
 
     /**
      * Creates the aggregation query that groups by distribution properties and aggregates by aggregation properties.
-     * 
+     *
      * @param managedType
      * @param queryProperties
      * @param distributionProperties
@@ -890,7 +909,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Groups the given query by specified property.
-     * 
+     *
      * @param proeprtyName
      * @param query
      * @return
@@ -901,7 +920,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Groups the given query by specified property.
-     * 
+     *
      * @param proeprtyName
      * @param query
      * @return
@@ -919,7 +938,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Groups the given query by specified property.
-     * 
+     *
      * @param proeprtyName
      * @param query
      * @return
@@ -937,7 +956,7 @@ public class DynamicQueryBuilder {
 
     /**
      * Removes ".key" part from propertyName.
-     * 
+     *
      * @param propertyName
      * @return
      */

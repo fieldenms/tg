@@ -31,6 +31,8 @@ import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQuer
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreUtils;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -127,7 +129,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param additionalFetchProvider
      * @return
      */
-    static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied, final boolean isCentreChanged, final Optional<IFetchProvider<AbstractEntity<?>>> additionalFetchProvider) {
+    static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final AbstractEntity<?> applied, final boolean isCentreChanged, final Optional<IFetchProvider<AbstractEntity<?>>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContextConfig>>> queryEnhancerConfig) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
         customObject.put("isCentreChanged", isCentreChanged);
         customObject.put("metaValues", criteriaMetaValues);
@@ -137,6 +139,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             resultingCriteria.getGeneratedEntityController().setEntityType(resultingCriteria.getEntityClass());
             if (additionalFetchProvider.isPresent()) {
                 resultingCriteria.setAdditionalFetchProvider(additionalFetchProvider.get());
+            }
+            if (queryEnhancerConfig.isPresent()) {
+                /* TODO please create the instance of centre context */
+                /* TODO please create the instance of centre context */
+                /* TODO please create the instance of centre context */
+                /* TODO please create the instance of centre context */
+                /* TODO please create the instance of centre context */
+                /* TODO please create the instance of centre context */
+                /* TODO please create the instance of centre context */
+                final IQueryEnhancer<AbstractEntity<?>> queryEnhancer = queryEnhancerConfig.get().getKey();
+                resultingCriteria.setAdditionalQueryEnhancerAndContext(queryEnhancer, Optional.empty() /* TODO please create the instance of centre context */);
             }
             final IPage<AbstractEntity<?>> page;
             final Integer pageCapacity = (Integer) modifiedPropertiesHolder.get("@@pageCapacity");

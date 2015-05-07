@@ -12,10 +12,13 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
@@ -44,6 +47,7 @@ import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
@@ -294,6 +298,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
+                .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withMasterEntity().build())
                 .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
 
                 //                .also()
@@ -762,5 +767,20 @@ public class WebUiConfig extends AbstractWebUiConfig {
         public void assignValues(final AbstractEntity<?> entity) {
             // entity.set("customProp", "OK");
         }
+    }
+
+    private static class TgPersistentEntityWithPropertiesQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
+        private final ITgPersistentStatus statusCo;
+
+        @Inject
+        public TgPersistentEntityWithPropertiesQueryEnhancer(final ITgPersistentStatus statusCo) {
+            this.statusCo = statusCo;
+        }
+
+        @Override
+        public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
+            return where.prop("status").eq().val(statusCo.findByKey("IS")); // context.get().getMasterEntity()
+        }
+
     }
 }

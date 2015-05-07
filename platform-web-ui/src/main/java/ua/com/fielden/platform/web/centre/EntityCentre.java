@@ -873,4 +873,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public Optional<IFetchProvider<T>> getAdditionalFetchProvider() {
         return dslDefaultConfig.getFetchProvider();
     }
+
+    public Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {
+        final Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> queryEnhancerConfig = dslDefaultConfig.getQueryEnhancerConfig();
+        if (queryEnhancerConfig.isPresent()) {
+            final Class<? extends IQueryEnhancer<T>> queryEnhancerType = queryEnhancerConfig.get().getKey();
+            return Optional.of(new Pair<>(injector.getInstance(queryEnhancerType), queryEnhancerConfig.get().getValue()));
+        } else {
+            return Optional.empty();
+        }
+    }
 }
