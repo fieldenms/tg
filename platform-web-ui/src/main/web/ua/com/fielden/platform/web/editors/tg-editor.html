@@ -227,7 +227,7 @@
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
             editingValueChanged: function (oldValue, newValue) {
-                console.log("editingValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
+                // console.log("editingValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
 
                 this.$.decorator.updateLabelVisibility(this.editingValue);
 
@@ -253,10 +253,10 @@
 
                         this.bindMessages(newValue, this.propertyName, this.editorValidationMsg);
                     } else {
-                        console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
+                        // console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
                     }
                 } else {
-                    console.log("entityChanged: Not yet initialised this.$!");
+                    // console.log("entityChanged: Not yet initialised this.$!");
                 }
             },
 
@@ -278,12 +278,12 @@
              * IMPORTANT: please do not override this method.
              */
             commValueChanged: function (oldValue, newValue) {
-                console.log("commValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
+                // console.log("commValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
                 try {
                     this.acceptedValue = this.convertFromString(newValue);
                     this.editorValidationMsg = '';
                 } catch (error) {
-                    console.log("commValueChanged catched", error, this);
+                    // console.log("commValueChanged catched", error, this);
                     this.editorValidationMsg = error;
                 }
             },
@@ -295,11 +295,11 @@
              * shouldInvokeValidation() and skipValidationAction().
              */
             acceptedValueChanged: function (oldValue, newValue) {
-                console.log("acceptedValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
+                // console.log("acceptedValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
 
                 if (this.refreshCycleStarted) {
                     this.refreshCycleStarted = false;
-                    console.log("acceptedValueChanged should become false. refreshCycleStarted ==", this.refreshCycleStarted);
+                    // console.log("acceptedValueChanged should become false. refreshCycleStarted ==", this.refreshCycleStarted);
                 } else {
                     this.entity.set(this.propertyName, newValue);
                     if (this.shouldInvokeValidation()) {
@@ -342,14 +342,13 @@
              * Commits editing value.
              */
             commit: function () {
-                console.log("commit");
-                // this.$.input.commit();
+                // console.log("commit");
                 this.commValue = this.editingValue;
             },
 
             externalRefreshCycleChanged: function (oldValue, newValue) {
                 if (newValue === "ACTIVATED") {
-                    console.log("externalRefreshCycleChanged", oldValue, newValue);
+                    // console.log("externalRefreshCycleChanged", oldValue, newValue);
                     this.refreshCycleStarted = true;
                 }
             },

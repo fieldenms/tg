@@ -261,7 +261,7 @@
                 },
 
                 onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints) {
-                    console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount);
+                    // console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount);
                     this.$.egi.entities = resultEntities;
                     this.$.egi.renderingHints = renderingHints;
                 },
@@ -295,7 +295,6 @@
                 },
 
                 canManageCentreConfig: function (isCentreChanged) {
-                    console.log("canManageCentreConfig: ", (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true);
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true;
                 },
                 

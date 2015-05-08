@@ -81,7 +81,7 @@
 
             onActionChanged: function (oldValue, newValue) {
                 var self = this;
-                console.log("onAction changed, old = ", oldValue, newValue);
+                // console.log("onAction changed, old = ", oldValue, newValue);
                 if (newValue && !self.onActionUpgraded) {
                     self.onAction = function (smth) {
                         newValue(smth);
