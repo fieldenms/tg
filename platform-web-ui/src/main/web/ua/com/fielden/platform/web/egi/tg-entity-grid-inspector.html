@@ -342,7 +342,6 @@
 
                 },
                 showDialog: function (e) {
-                    console.log("showDialog: self.masterComponent.noUI ===", this.currentRunningAction.masterComponent.noUI);
                     if (this.currentRunningAction && this.currentRunningAction.masterComponent.noUI === false) {
                         this.$.entityMaster.open();
                     }
