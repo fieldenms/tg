@@ -158,13 +158,46 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 modifiedPropertiesHolder.remove("@@pageNumber");
                 modifiedPropertiesHolder.remove("@@pageCount");
             }
-            final ArrayList<Object> resultEntities = new ArrayList<Object>(page.data());
+            final boolean isNotRefreshingConcreteEntities = modifiedPropertiesHolder.get("@@idsToRefresh") == null;
+            final ArrayList<Object> resultEntities = new ArrayList<Object>(isNotRefreshingConcreteEntities
+                    ? page.data()
+                    : selectEntities(page.data(), convertToListWithLongValues((List) modifiedPropertiesHolder.get("@@idsToRefresh"))));
 
             customObject.put("resultEntities", resultEntities);
             customObject.put("pageCount", page.numberOfPages());
+            if (!isNotRefreshingConcreteEntities) {
+                // mark customObject with a special property, that indicates the process of concrete entities refreshing (potentially this can be removed
+                // and resolved purely on the client side)
+                customObject.put("isRefreshingConcreteEntities", "yes");
+            }
             return new Pair<>(customObject, resultEntities);
         }
         return new Pair<>(customObject, null);
+    }
+
+    /**
+     * Selects the entities from resulting <code>data</code> to contain only those, that have specified <code>longIds</code>.
+     *
+     * @param data
+     * @param ids
+     * @return
+     */
+    private static List<AbstractEntity<?>> selectEntities(final List<AbstractEntity<?>> data, final List<Long> longIds) {
+        final List<AbstractEntity<?>> list = new ArrayList<>();
+        for (final AbstractEntity<?> retrievedEntity : data) {
+            if (longIds.contains(retrievedEntity.getId())) {
+                list.add(retrievedEntity);
+            }
+        }
+        return list;
+    }
+
+    private static List<Long> convertToListWithLongValues(final List ids) {
+        final List<Long> longIds = new ArrayList<>();
+        for (final Object id : ids) {
+            longIds.add(id instanceof Integer ? ((Integer) id).longValue() : (Long) id);
+        }
+        return longIds;
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////

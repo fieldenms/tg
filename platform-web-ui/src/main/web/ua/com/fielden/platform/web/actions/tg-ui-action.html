@@ -196,26 +196,26 @@
                 detail.onValidated = function (validatedEntity, bindingEntity, customObject) {
                     console.log("onValidated");
                 };
+                
+                var context = self.createContextHolder(self.requireSelectedEntities, self.requireMasterEntity);
+                if (self.currentEntity) {
+                	self.enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
+                }
+                detail.savingContext = context;
 
                 detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
                     postal.publish({
                         channel: detail.centreUuid,
                         topic: "detail.saved",
                         data: {
-                            entity: potentiallySavedEntity
+                            entity: potentiallySavedEntity,
+                            // send selectedEntitiesInContext further to be able to update only them on EGI
+                            selectedEntitiesInContext: context.selectedEntities
                         }
                     });
 
                     console.log("onSaved");
                 };
-
-                var context = self.createContextHolder(self.requireSelectedEntities, self.requireMasterEntity);
-                
-                if (self.currentEntity) {
-                	self.enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
-                }
-                
-                detail.savingContext = context;
 
                 detail.entityid = context.id === null ? "new" : (+(context.id));
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)

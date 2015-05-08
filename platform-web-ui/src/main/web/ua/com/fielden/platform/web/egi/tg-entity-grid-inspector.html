@@ -135,6 +135,15 @@
                     }
                     return false;
                 },
+                findEntity = function (entity, entities) {
+                    var i = 0;
+                    for (i = 0; i < entities.length; i += 1) {
+                        if (areEqual(entity, entities[i])) {
+                            return i;
+                        }
+                    }
+                    return -1;
+                },
                 findTdTag = function (path) {
                     // find the TD on the path
                     var index = 0,
@@ -270,6 +279,42 @@
                     } else {
                         column.runAction(entity);
                     }
+                },
+                
+                /**
+                 * Replaces the entitiesThatShouldBeUpdated with the updated ones (and their rendering hints).
+                 *
+                 * Please note, that if some entity from entitiesThatShouldBeUpdated does not exists in updatedEntities list 
+                 *   -- it will be removed from result-set.
+                 */
+                replaceUpdatedEntities: function(updatedEntities, updatedRenderingHints, entitiesThatShouldBeUpdated) {
+                	var newEntities = this.entities.slice(); // array copy (shallow)
+                	var newRenderingHints = this.renderingHints.slice(); // array copy (shallow)
+                	for (var i = 0; i < updatedEntities.length; i = i + 1) {
+                		var updatedEntity = updatedEntities[i];
+                		var updatedEntityRenderingHints = updatedRenderingHints[i];
+                		// console.log("updated", updatedEntity, updatedEntityRenderingHints);
+                		var entityIndex = findEntity(updatedEntity, newEntities);
+                		if (entityIndex !== -1) {
+                			newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
+                			newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
+                		} else {
+                			throw ("Updated entity [" + updateEntity + "] does not exist in original result-set [" + newEntities + "].");
+                		}
+                	}
+                	// need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
+                	for (var j = 0; j < entitiesThatShouldBeUpdated.length; j = j + 1) {
+                		var entityThatShouldBeUpdated = entitiesThatShouldBeUpdated[j];
+                		if (!hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
+                			var index = findEntity(entityThatShouldBeUpdated, newEntities);
+                			
+                			newEntities.splice(index, 1); // remove the entity
+                			newRenderingHints.splice(index, 1); // and its rendering hints
+                		}
+                	}
+                	
+                	this.entities = newEntities;
+                	this.renderingHints = newRenderingHints;
                 }
             });
         })();

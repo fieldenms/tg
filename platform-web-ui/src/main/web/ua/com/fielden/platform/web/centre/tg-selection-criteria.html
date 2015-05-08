@@ -90,7 +90,8 @@
                         var metaValues = customObject.metaValues;
                         var isCentreChanged = customObject.isCentreChanged;
                         var renderingHints = customObject.renderingHints;
-                        self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints);
+                        var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
+                        self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities);
                     }
                 });
 
@@ -191,6 +192,18 @@
                 this.validatePageCount();
                 this._execute(false);
             },
+            
+            /**
+             * Starts the process of refreshing the specified 'entities'.
+             *
+             * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
+             *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed 
+			 *     from the result-set if they became unmatchable to the selection criteria after modification).
+             */
+            refreshEntities: function (entities) {
+                this.validatePageCount();
+                this._execute(false, entities);
+            },
 
             /**
              * Starts the process of centre run.
@@ -268,7 +281,7 @@
             /**
              * Starts the process of centre execution. It does not alter 
              */
-            _execute: function(isRunAction) {
+            _execute: function(isRunAction, entitiesToRefresh) {
                 var self = this;
 
                 if (self._runningInProgress()) {
@@ -285,6 +298,13 @@
                 if (this.pageCount !== null) {
                     self.persistedModifiedPropertiesHolder["@@pageNumber"] = this.pageNumber;
                     self.persistedModifiedPropertiesHolder["@@pageCount"] = this.pageCount;
+                    if (entitiesToRefresh && entitiesToRefresh.length > 0) {
+                    	self.persistedModifiedPropertiesHolder["@@idsToRefresh"] = self.idsToRefresh(entitiesToRefresh);
+                    } else {
+                    	if (typeof self.persistedModifiedPropertiesHolder["@@idsToRefresh"] !== 'undefined') {
+                    		delete (self.persistedModifiedPropertiesHolder)["@@idsToRefresh"];
+                    	}
+                    }
                 } else {
                     if (typeof self.persistedModifiedPropertiesHolder["@@pageNumber"] !== 'undefined') {
                         delete (self.persistedModifiedPropertiesHolder)["@@pageNumber"];
@@ -307,6 +327,14 @@
                 // } else {
                 //     self.$.validator.validate(self._reset(holder));
                 // }
+            },
+            
+            idsToRefresh: function (entities) {
+            	var ids = [];
+            	for (var i = 0; i < entities.length; i = i + 1) {
+            		ids.push(entities[i].id);
+            	}
+            	return ids;
             },
 
             _runningInProgress: function () {
@@ -334,7 +362,7 @@
             /**
              * Default implementation for onRun callback.
              */
-            onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints) {
+            onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities) {
                 this.propertyModel = this.createPropertyModel(metaValues);
                 this._isCentreChanged = isCentreChanged;
                 
@@ -346,7 +374,7 @@
 
                 this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                 // custom external action
-                this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints);
+                this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
             },
 
             /**

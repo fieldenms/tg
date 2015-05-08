@@ -118,7 +118,7 @@
                         channel: self.$.selection_criteria.uuid,
                         topic: "detail.saved",
                         callback: function (data, envelope) {
-                        	self.onFunctionalEntitySaved(data.entity);
+                        	self.onFunctionalEntitySaved(data.entity, data.selectedEntitiesInContext);
                         }
                     });
                 },
@@ -243,6 +243,22 @@
                 prevPage: function () {
                     this.$.selection_criteria.prevPage();
                 },
+                
+                entitiesThatShouldBeUpdated: null,
+                
+                /**
+                 * Starts the process of refreshing the specified 'entities'.
+                 *
+                 * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
+                 *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed 
+				 *     from the result-set if they became unmatchable to the selection criteria after modification).
+                 */
+                refreshEntities: function(entities) {
+                	if (entities.length > 0) {
+                		this.entitiesThatShouldBeUpdated = entities;
+                		this.$.selection_criteria.refreshEntities(this.entitiesThatShouldBeUpdated);
+                	}
+                },
 
                 canNotPrev: function (pageNumber) {
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canPrev(pageNumber);
@@ -260,10 +276,14 @@
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canCurrent(pageNumber, pageCount);
                 },
 
-                onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints) {
+                onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
                     // console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount);
-                    this.$.egi.entities = resultEntities;
-                    this.$.egi.renderingHints = renderingHints;
+                    if (isRefreshingConcreteEntities) {
+                    	this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this.entitiesThatShouldBeUpdated);
+                    } else {
+	                    this.$.egi.entities = resultEntities;
+    	                this.$.egi.renderingHints = renderingHints;
+                    }
                 },
 
                 /**
@@ -298,9 +318,10 @@
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true;
                 },
                 
-                onFunctionalEntitySaved: function (potentiallySavedEntity) {
+                onFunctionalEntitySaved: function (potentiallySavedEntity, selectedEntitiesInContext) {
                 	if (potentiallySavedEntity.isValid()) {
-                		this.currentPage();	
+                		// old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
+                		this.refreshEntities(selectedEntitiesInContext);	
                 	}
                 },
                 

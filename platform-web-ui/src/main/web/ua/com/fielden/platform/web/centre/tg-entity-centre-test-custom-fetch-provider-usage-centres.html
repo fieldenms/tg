@@ -23,8 +23,8 @@
             
             var oldOnRun = centre.onRun;
             
-            centre.onRun = function(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints) {
-            	oldOnRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints);
+            centre.onRun = function(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
+            	oldOnRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
             	
             	var entity = resultEntities[0];
             	
