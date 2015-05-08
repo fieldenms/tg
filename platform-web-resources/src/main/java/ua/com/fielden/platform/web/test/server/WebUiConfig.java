@@ -1,13 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
@@ -19,16 +12,11 @@ import java.util.Date;
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
@@ -311,7 +299,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
-                .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withSelectedEntities().build())
+                .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
                 .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
 
                 //                .also()
@@ -796,11 +784,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
             System.err.println("CONTEXT IN QUERY ENHANCER == " + context.get().getSelectedEntities());
 
-             if (!context.get().getSelectedEntities().isEmpty()) {
-                 final Long id =  (Long) context.get().getSelectedEntities().get(0).get("id");
-                 final TgPersistentEntityWithProperties justUpdatedEntity = coEntity.findById(id, fetchOnly(TgPersistentEntityWithProperties.class).with("status"));
-                 return where.prop("status").eq().val(justUpdatedEntity.getStatus());
-             }
+            if (!context.get().getSelectedEntities().isEmpty()) {
+                final Long id = (Long) context.get().getSelectedEntities().get(0).get("id");
+                final TgPersistentEntityWithProperties justUpdatedEntity = coEntity.findById(id, fetchOnly(TgPersistentEntityWithProperties.class).with("status"));
+                return where.prop("status").eq().val(justUpdatedEntity.getStatus());
+            }
 
             return where.prop("status").eq().val(coStatus.findByKey("IS"));
         }
