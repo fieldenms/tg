@@ -53,19 +53,24 @@ public class StartSecureJetty {
         final Server server = new Server();
 
         final ServerConnector connector = new ServerConnector(server);
+        connector.setHost("localhost");
+
+        final int port = 9998;
 
         final HttpConfiguration https = new HttpConfiguration();
         https.addCustomizer(new SecureRequestCustomizer());
+        https.setSecurePort(port);
+        https.setSecureScheme("https");
 
         final SslContextFactory sslContextFactory = new SslContextFactory();
-        sslContextFactory.setKeyStorePath(ResourceLoader.getURL("tsl/localhost_keystore").getPath());
+        sslContextFactory.setKeyStorePath(ResourceLoader.getURL("tsl/server-keystore").getPath());
         sslContextFactory.setKeyStorePassword("changeit");
         sslContextFactory.setKeyManagerPassword("changeit");
 
         final ServerConnector sslConnector = new ServerConnector(server,
                 new SslConnectionFactory(sslContextFactory, "http/1.1"),
                 new HttpConnectionFactory(https));
-        sslConnector.setPort(9998);
+        sslConnector.setPort(port);
 
         server.setConnectors(new Connector[] { connector, sslConnector });
 

@@ -39,6 +39,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     private M masterEntity;
 
+
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
             return selectedEntities.get(0);
@@ -46,7 +47,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         throw new IllegalStateException(String.format("The number of selected entities is %s, which is not appliacable for determining a current entity.", selectedEntities.size()));
     }
 
-    public List<T> getSelectedEntities() {
+    public List<AbstractEntity<?>> getSelectedEntities() {
         return Collections.unmodifiableList(selectedEntities);
     }
 
