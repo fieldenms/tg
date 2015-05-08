@@ -63,7 +63,7 @@ public class StartSecureJetty {
         https.setSecureScheme("https");
 
         final SslContextFactory sslContextFactory = new SslContextFactory();
-        sslContextFactory.setKeyStorePath(ResourceLoader.getURL("tsl/server-keystore").getPath());
+        sslContextFactory.setKeyStorePath(ResourceLoader.getURL("tsl/ca-signed-keystore").getPath());
         sslContextFactory.setKeyStorePassword("changeit");
         sslContextFactory.setKeyManagerPassword("changeit");
 
