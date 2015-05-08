@@ -40,6 +40,10 @@
              * The current page number.
              */
             pageNumber: null,
+            
+            pageCountUpdated: null,
+            pageNumberUpdated: null,
+            
             /**
              * Currently immutable capacity of the page.
              */
@@ -91,6 +95,7 @@
                         var isCentreChanged = customObject.isCentreChanged;
                         var renderingHints = customObject.renderingHints;
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
+                        
                         self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities);
                     }
                 });
@@ -375,6 +380,9 @@
                 this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                 // custom external action
                 this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+                
+                this.pageNumberUpdated = this.pageNumber;
+                this.pageCountUpdated = this.pageCount;
             },
 
             /**

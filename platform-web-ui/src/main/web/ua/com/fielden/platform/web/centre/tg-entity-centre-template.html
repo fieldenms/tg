@@ -116,7 +116,7 @@
                             <core-icon-button icon="hardware:keyboard-backspace" on-tap="{{prevPage}}" disabled?="{{canNotPrev($.selection_criteria.pageNumber)}}"></core-icon-button>
                             <span class="span-tooltip" tip>Previous page</span>
                         </core-tooltip>
-                        <span class="standart-action">{{$.selection_criteria.pageNumber !== null ? ($.selection_criteria.pageNumber + 1) : 0}} of {{$.selection_criteria.pageCount !== null ? $.selection_criteria.pageCount : 0}}</span>
+                        <span class="standart-action">{{$.selection_criteria.pageNumberUpdated !== null ? ($.selection_criteria.pageNumberUpdated + 1) : 1}} / {{$.selection_criteria.pageCountUpdated !== null ? $.selection_criteria.pageCountUpdated : 1}}</span>
                         <core-tooltip class="delayed standart-action" tabIndex="-1">
                             <core-icon-button class="revers" icon="hardware:keyboard-backspace" on-tap="{{nextPage}}" disabled?="{{canNotNext($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
                             <span class="span-tooltip" tip>Next page</span>
