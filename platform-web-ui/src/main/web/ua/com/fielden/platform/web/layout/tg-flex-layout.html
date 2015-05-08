@@ -14,7 +14,6 @@
         (function () {
             'use strict'
             var setLayout = function (layout) {
-                console.log("-------------------------------- layout master------------------------------------------------");
                     var contentIndex = 0;
                     if (!Array.isArray(layout)) {
                         throw "The layout must be an array";
@@ -34,7 +33,6 @@
                         layout.forEach((function (layoutElem) {
                             contentIndex = createFlexCell.bind(this)(this.container, layoutElem, contentIndex, true);
                         }).bind(this));
-                        console.log("-------------------------------- layout master------------------------------------------------");
                         this.fire('layout-finished', layout);
                     }
                 },
