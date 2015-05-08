@@ -53,6 +53,9 @@
                             }
                         });
                     }
+                },
+                updateHash = function(state) {
+                    location.hash = state.join("/");
                 };
             Polymer({
                 eventDelegates: {
@@ -82,6 +85,7 @@
                         topic: "state.pushed",
                         callback: function (data, envelope) {
                             self.setSelected(data.state[0]);
+                            //updateHash(data.state);
                         }
                     });
                     postal.subscribe({
@@ -89,14 +93,21 @@
                         topic: "state.poped",
                         callback: function (data, envelope) {
                             self.setSelected(data.state[0]);
+                            //updateHash(data.state);
                         }
                     });
-                    self.setSelected(self.views.items[0].title);
-                    history.pushState([self.selected]);
+                    //Set up listener for history events
                     window.onpopstate = function (e) {
-                        console.log(e.state);
                         popState(e.state);
                     };
+                    //Set up listener for hash change events
+                    window.onhashchange = function(e) {
+                        console.log(location.hash);
+                    }
+                    //Selectes the first view 
+                    self.setSelected(self.views.items[0].title);
+                    history.pushState([self.selected]);
+                    //updateHash([self.selected]);
                 }
             });
         })();

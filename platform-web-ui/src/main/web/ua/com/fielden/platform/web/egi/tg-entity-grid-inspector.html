@@ -11,6 +11,8 @@
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 <link rel="import" href="/resources/actions/tg-page-action.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
+<link rel="import" href="/resources/element_loader/load-element.html">
 
 <polymer-element name="tg-entity-grid-inspector" attributes="entityType entities renderingHints">
     <template>
@@ -33,8 +35,15 @@
 
         <paper-ripple id="ripple" class="circle recenteringTouch" style="pointer-events: none;" on-core-transitionend="{{onRippleFinished}}" fit></paper-ripple>
 
+        <!--The template of dialog for tg-ui-action-->
+        <paper-action-dialog id="entityMaster" on-core-overlay-open-completed="{{dialogOpened}}" backdrop autoCloseDisabled>
+            <load-element id="loadMaster" on-after-load="{{afterMasterLoad}}"></load-element>
+            <paper-button affirmative autofocus>Ok</paper-button>
+        </paper-action-dialog>
+
+
         <!--<div class="table-container">-->
-        <div layout horizontal justified style="flex-shrink:0;">
+        <div layout horizontal justified>
             <div layout horizontal>
                 <content select=".entity-specific-action">
             </div>
@@ -158,7 +167,12 @@
                 };
 
             Polymer({
+                eventDelegates: {
+                    'load-dialog-view': 'loadDialog',
+                    'layout-finished': 'showDialog'
+                },
                 ready: function () {
+                    this.currentActionRunning = null;
                     this.selectionModel = [];
                     this.selectedEntities = [];
                     this.columns = [];
@@ -204,12 +218,12 @@
                 onSelectionChanged: function (e, detail, source) {
                     var index = +source.getAttribute("index");
                     if (source.checked) {
-                        if (!hasEntity(this.entities[index], this.selectedEntities) /* this.selectedEntities.indexOf(this.entities[index]) < 0 */) {
+                        if (!hasEntity(this.entities[index], this.selectedEntities) /* this.selectedEntities.indexOf(this.entities[index]) < 0 */ ) {
                             this.selectedEntities.push(this.entities[index]);
                             this.selectionModel[index] = true;
                         }
                     } else {
-                        if (hasEntity(this.entities[index], this.selectedEntities) /* this.selectedEntities.indexOf(this.entities[index]) >= 0 */) {
+                        if (hasEntity(this.entities[index], this.selectedEntities) /* this.selectedEntities.indexOf(this.entities[index]) >= 0 */ ) {
                             this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
                             this.selectionModel[index] = false;
                         }
@@ -244,7 +258,7 @@
                     // for (i = 0; i < this.selectionModel.length; i += 1) {
                     //     this.selectionModel[i] = (source.getAttribute("entityInd") == i);
                     // }
-                	
+
                     var parent = findTdTag(e.path);
                     // attach the ripple component to the found TD
                     this.$.ripple.setAttribute("entityInd", source.getAttribute("entityInd"));
@@ -280,41 +294,69 @@
                         column.runAction(entity);
                     }
                 },
-                
+
                 /**
                  * Replaces the entitiesThatShouldBeUpdated with the updated ones (and their rendering hints).
                  *
-                 * Please note, that if some entity from entitiesThatShouldBeUpdated does not exists in updatedEntities list 
+                 * Please note, that if some entity from entitiesThatShouldBeUpdated does not exists in updatedEntities list
                  *   -- it will be removed from result-set.
                  */
-                replaceUpdatedEntities: function(updatedEntities, updatedRenderingHints, entitiesThatShouldBeUpdated) {
-                	var newEntities = this.entities.slice(); // array copy (shallow)
-                	var newRenderingHints = this.renderingHints.slice(); // array copy (shallow)
-                	for (var i = 0; i < updatedEntities.length; i = i + 1) {
-                		var updatedEntity = updatedEntities[i];
-                		var updatedEntityRenderingHints = updatedRenderingHints[i];
-                		// console.log("updated", updatedEntity, updatedEntityRenderingHints);
-                		var entityIndex = findEntity(updatedEntity, newEntities);
-                		if (entityIndex !== -1) {
-                			newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
-                			newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
-                		} else {
-                			throw ("Updated entity [" + updateEntity + "] does not exist in original result-set [" + newEntities + "].");
-                		}
-                	}
-                	// need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
-                	for (var j = 0; j < entitiesThatShouldBeUpdated.length; j = j + 1) {
-                		var entityThatShouldBeUpdated = entitiesThatShouldBeUpdated[j];
-                		if (!hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
-                			var index = findEntity(entityThatShouldBeUpdated, newEntities);
-                			
-                			newEntities.splice(index, 1); // remove the entity
-                			newRenderingHints.splice(index, 1); // and its rendering hints
-                		}
-                	}
-                	
-                	this.entities = newEntities;
-                	this.renderingHints = newRenderingHints;
+                replaceUpdatedEntities: function (updatedEntities, updatedRenderingHints, entitiesThatShouldBeUpdated) {
+                    var newEntities = this.entities.slice(); // array copy (shallow)
+                    var newRenderingHints = this.renderingHints.slice(); // array copy (shallow)
+                    for (var i = 0; i < updatedEntities.length; i = i + 1) {
+                        var updatedEntity = updatedEntities[i];
+                        var updatedEntityRenderingHints = updatedRenderingHints[i];
+                        // console.log("updated", updatedEntity, updatedEntityRenderingHints);
+                        var entityIndex = findEntity(updatedEntity, newEntities);
+                        if (entityIndex !== -1) {
+                            newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
+                            newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
+                        } else {
+                            throw ("Updated entity [" + updateEntity + "] does not exist in original result-set [" + newEntities + "].");
+                        }
+                    }
+                    // need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
+                    for (var j = 0; j < entitiesThatShouldBeUpdated.length; j = j + 1) {
+                        var entityThatShouldBeUpdated = entitiesThatShouldBeUpdated[j];
+                        if (!hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
+                            var index = findEntity(entityThatShouldBeUpdated, newEntities);
+
+                            newEntities.splice(index, 1); // remove the entity
+                            newRenderingHints.splice(index, 1); // and its rendering hints
+                        }
+                    }
+
+                    this.entities = newEntities;
+                    this.renderingHints = newRenderingHints;
+                },
+
+                loadDialog: function (e) {
+                    if (!this.currentRunningAction) {
+                        this.currentRunningAction = e.detail;
+                        this.$.loadMaster.import = this.currentRunningAction.componentUri;
+                        this.$.loadMaster.elementName = this.currentRunningAction.elementName;
+                        this.$.loadMaster.attrs = this.currentRunningAction.attrs;
+                        this.$.loadMaster.reload();
+                    }
+
+                },
+                showDialog: function (e) {
+                    console.log("showDialog: self.masterComponent.noUI ===", this.currentRunningAction.masterComponent.noUI);
+                    if (this.currentRunningAction && this.currentRunningAction.masterComponent.noUI === false) {
+                        this.$.entityMaster.open();
+                    }
+                },
+                afterMasterLoad: function (e, detail, source) {
+                    if (this.currentRunningAction) {
+                        this.currentRunningAction._onExecuted(e, detail, source);
+                        if (this.currentRunningAction.masterComponent.noUI === true) {
+                            this.currentRunningAction = null;
+                        }
+                    }
+                },
+                dialogOpened: function (e, detail, source) {
+                    this.currentRunningAction = null;
                 }
             });
         })();

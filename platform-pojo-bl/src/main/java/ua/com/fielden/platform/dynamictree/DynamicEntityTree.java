@@ -12,7 +12,7 @@ import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
- * TODO Documentation needed.
+ * Tree structure that holds the properties to fetch.
  *
  * @author TG Team
  *
@@ -21,6 +21,14 @@ public class DynamicEntityTree<T extends AbstractEntity<?>> {
 
     private final DynamicEntityTreeNode root;
 
+    /**
+     * Builds the tree structure of fetch properties.
+     *
+     * @param fetchProperties
+     *            - the set of properties those are used to build the tree of fetch properties.
+     * @param rootType
+     *            - the root type for all fetch properties.
+     */
     public DynamicEntityTree(final Set<String> fetchProperties, final Class<T> rootType) {
         root = new DynamicEntityTreeNode(rootType.getSimpleName(), rootType);
         for (final String property : fetchProperties) {
