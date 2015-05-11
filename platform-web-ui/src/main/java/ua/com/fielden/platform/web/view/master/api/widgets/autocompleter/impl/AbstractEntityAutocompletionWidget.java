@@ -22,10 +22,12 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     private Class<? extends IValueMatcher> matcherType;
     private boolean shouldSearchByDesc = false;
     private final CentreContextConfig centreContextConfig;
+    private final boolean selectionCriteriaWidget;
 
-    public AbstractEntityAutocompletionWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig) {
+    public AbstractEntityAutocompletionWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig, final boolean selectionCriteriaWidget) {
         super(widgetPath, titleDesc, propertyName);
         this.centreContextConfig = centreContextConfig;
+        this.selectionCriteriaWidget = selectionCriteriaWidget;
     }
 
     @Override
@@ -33,7 +35,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         final Map<String, Object> attrs = new LinkedHashMap<>();
         attrs.put("createModifiedPropertiesHolder", "{{createModifiedPropertiesHolder}}");
         attrs.put("user", "{{user}}");
-        attrs.put("entitytype", "{{entitytype}}");
+        attrs.put("autocompletionType", "{{" + (selectionCriteriaWidget ? "mitype" : "entitytype") + "}}");
         attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
         if (centreContextConfig != null) {
             if (centreContextConfig.withSelectionCrit) {

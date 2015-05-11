@@ -12,7 +12,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.Ab
  *
  */
 public class EntityCritAutocompletionWidget extends AbstractEntityAutocompletionWidget {
-    public EntityCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig) {
-        super("editors/tg-entity-search-criteria", titleDesc, propertyName, centreContextConfig);
+    public EntityCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig, final boolean selectionCriteriaWidget) {
+        super("editors/tg-entity-search-criteria", titleDesc, propertyName, centreContextConfig, selectionCriteriaWidget);
     }
 }

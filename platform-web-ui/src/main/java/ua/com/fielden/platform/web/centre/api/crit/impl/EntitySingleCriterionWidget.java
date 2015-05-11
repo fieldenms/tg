@@ -22,7 +22,8 @@ public class EntitySingleCriterionWidget extends AbstractSingleCriterionWidget {
                 new EntityAutocompletionWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),
-                        centreContextConfig
+                        centreContextConfig,
+                        true
                 ));
     }
 }

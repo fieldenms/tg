@@ -15,12 +15,8 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidget {
     private boolean shouldSearchByDescOnly = false;
 
-    public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName) {
-        this(titleDesc, propertyName, null);
-    }
-
-    public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig) {
-        super("editors/tg-entity-editor", titleDesc, propertyName, centreContextConfig);
+    public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig, final boolean selectionCriteriaWidget) {
+        super("editors/tg-entity-editor", titleDesc, propertyName, centreContextConfig, selectionCriteriaWidget);
     }
 
     @Override

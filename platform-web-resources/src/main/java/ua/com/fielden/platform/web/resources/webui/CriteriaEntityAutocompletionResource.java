@@ -25,7 +25,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.CentreUtils;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -36,34 +36,32 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntity<?>, T extends AbstractEntity<?>> extends ServerResource {
-    private final Class<CRITERIA> criteriaType;
+    private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final String criterionPropertyName;
     private final RestServerUtil restUtil;
-    private final IValueMatcherWithCentreContext<T> valueMatcher;
-    private final Optional<CentreContextConfig> contextConfig;
     private final ICompanionObjectFinder coFinder;
     private final IGlobalDomainTreeManager gdtm;
     private final ICriteriaGenerator critGenerator;
+    private final EntityCentre<T> centre;
     private final Logger logger = Logger.getLogger(getClass());
 
     public CriteriaEntityAutocompletionResource(
-            final Class<CRITERIA> criteriaType,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
             final String criterionPropertyName,
-            final Pair<IValueMatcherWithCentreContext<T>, Optional<CentreContextConfig>> valueMatcherAndContextConfig,
+            final EntityCentre<T> centre,
             final ICompanionObjectFinder companionFinder,
             final IGlobalDomainTreeManager gdtm,
             final ICriteriaGenerator critGenerator,
             final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
 
-        this.criteriaType = criteriaType;
+        this.miType = miType;
         this.criterionPropertyName = criterionPropertyName;
-        this.valueMatcher = valueMatcherAndContextConfig.getKey();
-        this.contextConfig = valueMatcherAndContextConfig.getValue();
         this.restUtil = restUtil;
         this.coFinder = companionFinder;
         this.gdtm = gdtm;
         this.critGenerator = critGenerator;
+        this.centre = centre;
     }
 
     /**
@@ -75,6 +73,20 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
         final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
         final Pair<CRITERIA, Map<String, Object>> entityAndHolder = constructCriteriaEntity(centreContextHolder.getModifHolder());
+
+        final Class<CRITERIA> criteriaType = (Class<CRITERIA>) entityAndHolder.getKey().getClass();
+
+        final Pair<IValueMatcherWithCentreContext<T>, Optional<CentreContextConfig>> valueMatcherAndContextConfig;
+        if (centre != null) {
+            valueMatcherAndContextConfig = centre.<T> createValueMatcherAndContextConfig(criteriaType, criterionPropertyName);
+        } else {
+            final String msg = String.format("No EntityCentre instance can be found for already constructed 'criteria entity' with type [%s].", criteriaType.getName());
+            logger.error(msg);
+            throw new IllegalStateException(msg);
+        }
+
+        final IValueMatcherWithCentreContext<T> valueMatcher = valueMatcherAndContextConfig.getKey();
+        final Optional<CentreContextConfig> contextConfig = valueMatcherAndContextConfig.getValue();
 
         // create context, if any
         final Optional<CentreContext<T, AbstractEntity<?>>> context = CentreResourceUtils.createCentreContext(centreContextHolder, (EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>) entityAndHolder.getKey(), contextConfig);
@@ -100,7 +112,6 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
     }
 
     private Pair<CRITERIA, Map<String, Object>> constructCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder) {
-        final Class<? extends MiWithConfigurationSupport<?>> miType = CentreUtils.getMiType(criteriaType);
         final CRITERIA valPrototype = (CRITERIA) CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreResourceUtils.getFreshCentre(gdtm, miType), critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         return EntityResourceUtils.constructEntity(modifiedPropertiesHolder, valPrototype, coFinder);
     }
