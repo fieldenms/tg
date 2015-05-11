@@ -144,7 +144,7 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation errorJSONRepresentation(final Exception ex) throws JsonProcessingException {
+    public Representation errorJSONRepresentation(final Exception ex) {
         logger.debug("Start building error JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(new Result(ex), SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);
@@ -340,7 +340,7 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public <T extends AbstractEntity> Representation singleJSONRepresentation(final T entity) {
+    public <T extends AbstractEntity<?>> Representation singleJSONRepresentation(final T entity) {
         try {
             // create a Result enclosing entity list
             final Result result;

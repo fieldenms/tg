@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
     <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/ajax-form/ajax-form.html">
     <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
 
     <style>
@@ -18,16 +19,52 @@
 </head>
 
 <body unresolved fullbleed>
-    <template is="auto-binding" id="login">
-        <tg-app user="{{user}}" fit></tg-app>
-    </template>
+    <form is="ajax-form" action="login" method="put">
+        <div>
+            <label>User Name:
+                <input type="text" name="username" required>
+            </label>
+        </div>
+
+        <div>
+            <label>Password:
+                <input type="password" name="passwd" required>
+            </label>
+        </div>
+
+        <div>
+            <label>Pin Code:
+                <input type="number" name="pint-code" required>
+            </label>
+        </div>
+
+        <input type="submit">
+    </form>
+
     <script>
         (function () {
             var login = document.querySelector('#login');
-            login.user = {
-                name: "Super User",
-                login: "SU"
-            };
+            var form = document.querySelectorAll('form')[0];
+
+            form.addEventListener('invalid', function () {
+                console.log('login error');
+            });
+
+            form.addEventListener('submitted',
+                function (event) {
+                    // TODO needs to perfrom redirection to / in case of success
+                    // window.location.href = "/";
+                    console.log('Login response code: ', event.detail.status);
+                    console.log('\tresponse: ', event.detail);
+
+                    if (event.detail.status === 200) {
+                        window.location.href = event.detail.response;
+                    }
+
+                }
+            );
+
+
         })();
     </script>
 </body>

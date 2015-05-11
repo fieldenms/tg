@@ -16,8 +16,9 @@ import org.restlet.routing.Template;
 import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.factories.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.AppIndexResourceFactory;
+import ua.com.fielden.platform.web.factories.LoginResourceFactory;
+import ua.com.fielden.platform.web.factories.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
@@ -31,6 +32,7 @@ import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFacto
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import com.google.inject.Injector;
 
@@ -107,6 +109,7 @@ public abstract class AbstractWebApplication extends Application {
 
         // Attach main application resource.
         router.attach("/", new AppIndexResourceFactory(webApp));
+        router.attach("/login", new LoginResourceFactory(webApp, injector.getInstance(RestServerUtil.class)));
         router.attach("/tg-web-app/tg-app-config.html", new WebUiPreferencesResourceFactory(webApp));
         router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(webApp));
 

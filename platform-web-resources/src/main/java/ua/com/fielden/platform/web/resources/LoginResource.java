@@ -1,4 +1,6 @@
-package ua.com.fielden.platform.web.resources.webui;
+package ua.com.fielden.platform.web.resources;
+
+import static java.lang.String.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -10,22 +12,24 @@ import org.restlet.data.Encoding;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.resource.Get;
+import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import com.esotericsoftware.kryo.util.Util;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.centre.EntityCentre;
 
 /**
- * Represents web server resource that returns entity centre component for specified mi type to the client.
+ * A web resource handling explicit user logins.
  *
  * @author TG Team
  *
  */
 public class LoginResource extends ServerResource {
 
+    protected final RestServerUtil restUtil;
     /**
      * Creates {@link LoginResource} and initialises it with centre instance.
      *
@@ -35,10 +39,12 @@ public class LoginResource extends ServerResource {
      * @param response
      */
     public LoginResource(//
+            final RestServerUtil restUtil,//
             final Context context, //
             final Request request, //
             final Response response) {
         init(context, request, response);
+        this.restUtil = restUtil;
     }
 
     @Override
@@ -47,7 +53,7 @@ public class LoginResource extends ServerResource {
             // check if there is a valid authenticator
             // if there is then should respond with redirection to root /.
 
-            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/index.html").replaceAll("@title", "").getBytes("UTF-8");
+            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login.html").replaceAll("@title", "Login").getBytes("UTF-8");
 
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
         } catch (final UnsupportedEncodingException e) {
@@ -56,5 +62,20 @@ public class LoginResource extends ServerResource {
         }
     }
 
+    @Put
+    @Override
+    public Representation put(final Representation entity) throws ResourceException {
+        try {
+            final String username = getRequest().getResourceRef().getQueryAsForm().getFirstValue("username");
+            final String password = getRequest().getResourceRef().getQueryAsForm().getFirstValue("passwd");
+
+            System.out.println(format("Username: %s, password: %s", username, password));
+            final byte[] body = "/".getBytes("UTF-8");
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
+        } catch (final UnsupportedEncodingException ex) {
+            ex.printStackTrace();
+            return restUtil.errorJSONRepresentation(ex);
+        }
+    }
 
 }
