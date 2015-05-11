@@ -6,59 +6,141 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
     <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
+    <link rel="import" href="/resources/polymer/core-input/core-input.html">
     <link rel="import" href="/resources/polymer/ajax-form/ajax-form.html">
     <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+    <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: "RobotoDraft";
             font-size: 10pt;
+            background: #eee;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        h1,
+        h3 {
+            font-weight: 300;
+        }
+        
+        h1 {
+            color: #636363;
+        }
+        
+        h3 {
+            color: #4a89dc;
+        }
+        
+        hgroup {
+            text-align: center;
+            margin-top: 4em;
+        }
+        
+        form {
+            width: 380px;
+            margin: 4em auto;
+            padding: 3em 2em 2em 2em;
+            background: #fafafa;
+            border: 1px solid #ebebeb;
+            box-shadow: rgba(0, 0, 0, 0.14902) 0px 1px 1px 0px, rgba(0, 0, 0, 0.09804) 0px 1px 2px 0px;
+        }
+        
+        .group {
+            position: relative;
+            margin-bottom: 45px;
+        }
+        
+        .submit-normal {
+            background: #42A5F5;
+            color: white;
+        }
+        
+        .submit-error {
+            background: #D32F2F;
+            color: white;
         }
     </style>
 
 </head>
 
 <body unresolved fullbleed>
+
+    <hgroup>
+        <h1>Application Login</h1>
+        <h3>Please provide valid credentials.</h3>
+    </hgroup>
+
+
     <form is="ajax-form" action="login" method="put">
-        <div>
-            <label>User Name:
-                <input type="text" name="username" required>
-            </label>
+        <div class="group">
+            <paper-input-decorator id="decorator" label="User Name" floatingLabel>
+                <div layout horizontal>
+                    <div flex>
+                        <input id="in-username" is="core-input" type="text" name="username" required>
+                    </div>
+                </div>
+            </paper-input-decorator>
+
+
+            <paper-input-decorator id="decorator" label="Password" floatingLabel>
+                <div layout horizontal>
+                    <div flex>
+                        <input id="in-passwd" is="core-input" type="password" name="passwd" required>
+                    </div>
+                </div>
+            </paper-input-decorator>
+
+
+            <paper-input-decorator id="decorator" label="Pin Code" floatingLabel>
+                <div layout horizontal>
+                    <div flex>
+                        <input id="in-pin-code" is="core-input" type="number" step="1" preventInvalidInput name="pin-code">
+                    </div>
+                </div>
+            </paper-input-decorator>
         </div>
 
-        <div>
-            <label>Password:
-                <input type="password" name="passwd" required>
-            </label>
-        </div>
+        <paper-button id="submitButton" roll="button" style="width:100%" class="submit-normal">
+            Login
+        </paper-button>
 
-        <div>
-            <label>Pin Code:
-                <input type="number" name="pint-code" required>
-            </label>
-        </div>
-
-        <input type="submit">
+        <!--input type="submit"-->
     </form>
 
     <script>
         (function () {
-            var login = document.querySelector('#login');
             var form = document.querySelectorAll('form')[0];
+            var submit = document.querySelector('#submitButton');
+            console.log("Submit button: ", submit);
+            submit.onclick = function () {
+                console.log('Submitting');
+                form.submit();
+            }
 
-            form.addEventListener('invalid', function () {
-                console.log('login error');
+
+            form.addEventListener('submitting', function () {
+                submit.disabled = true;
             });
 
             form.addEventListener('submitted',
                 function (event) {
-                    // TODO needs to perfrom redirection to / in case of success
-                    // window.location.href = "/";
                     console.log('Login response code: ', event.detail.status);
                     console.log('\tresponse: ', event.detail);
 
+                    submit.disabled = false;
                     if (event.detail.status === 200) {
+                        submit.classList.remove("submit-error");
+                        submit.innerHTML = "Success";
                         window.location.href = event.detail.response;
+                    } else {
+                        submit.classList.add("submit-error");
+                        submit.innerHTML = "Try Again"
                     }
 
                 }

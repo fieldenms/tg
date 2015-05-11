@@ -9,6 +9,7 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Encoding;
+import org.restlet.data.Status;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
@@ -70,6 +71,9 @@ public class LoginResource extends ServerResource {
             final String password = getRequest().getResourceRef().getQueryAsForm().getFirstValue("passwd");
 
             System.out.println(format("Username: %s, password: %s", username, password));
+            if (username.length() < 5) {
+                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            }
             final byte[] body = "/".getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
         } catch (final UnsupportedEncodingException ex) {
