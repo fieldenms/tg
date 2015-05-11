@@ -69,8 +69,10 @@ public class LoginResource extends ServerResource {
         try {
             final String username = getRequest().getResourceRef().getQueryAsForm().getFirstValue("username");
             final String password = getRequest().getResourceRef().getQueryAsForm().getFirstValue("passwd");
+            final Boolean trustedDevice = Boolean.parseBoolean(getRequest().getResourceRef().getQueryAsForm().getFirstValue("trusted-device"));
 
-            System.out.println(format("Username: %s, password: %s", username, password));
+            System.out.println(format("Form data: %s, %s, %s", username, password, trustedDevice));
+
             if (username.length() < 5) {
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             }

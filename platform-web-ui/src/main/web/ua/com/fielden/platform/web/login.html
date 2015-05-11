@@ -11,6 +11,7 @@
     <link rel="import" href="/resources/polymer/ajax-form/ajax-form.html">
     <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
     <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+    <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 
     <style>
         * {
@@ -56,8 +57,17 @@
             margin-bottom: 45px;
         }
         
+        paper-checkbox {
+            margin: 1em 0px 0px 0px;
+        }
+        
+        paper-checkbox::shadow #checkbox.checked {
+            background-color: #4285f4;
+            border-color: #4285f4;
+        }
+        
         .submit-normal {
-            background: #42A5F5;
+            background: #4285f4;
             color: white;
         }
         
@@ -106,6 +116,9 @@
                 </div>
             </paper-input-decorator>
 
+            <paper-checkbox id="in-trusted-device-mock" label="Trusted device?"></paper-checkbox>
+
+            <input id="in-trusted-device" type="hidden" name="trusted-device">
 
             <!--paper-input-decorator id="decorator" label="Pin Code" floatingLabel>
                 <div layout horizontal>
@@ -127,9 +140,14 @@
         (function () {
             var form = document.querySelectorAll('form')[0];
             var submit = document.querySelector('#submitButton');
-            console.log("Submit button: ", submit);
+            var trustedDevice = document.querySelector('#in-trusted-device');
+            var trustedDeviceMock = document.querySelector('#in-trusted-device-mock');
+
             submit.onclick = function () {
-                console.log('Submitting');
+                trustedDevice.value = trustedDeviceMock.checked;
+
+                console.log("trusted device values: ", trustedDevice.value, trustedDeviceMock.checked);
+
                 form.submit();
             }
 
