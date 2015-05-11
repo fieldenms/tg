@@ -68,7 +68,7 @@
                 bottom: 0px;
             }
         </style>
-        <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right">
+        <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right" on-core-animated-pages-transition-end="{{transitionend}}">
             <div>
                 <div class="selection-criteria" layout vertical style="padding: 40px;">
                     <tg-@entity_type-selection-criteria id="selection_criteria" uuid="{{uuid}}" user="{{user}}" mitype="@mi_type" onRun="{{onRun}}" getSelectedEntities="{{getSelectedEntities}}" onRetrieved="{{onRetrieved}}" @queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
@@ -164,6 +164,15 @@
 
                 onRetrieved: function (entity, newBindingEntity, customObject) {
                     console.log("centre onRetrieved");
+                },
+
+                transitionend: function () {
+                    if (this.selectedView === 1 && this.triggerRun) {
+                        this.triggerRun = false;
+                        this.async(function() {
+                            this.$.selection_criteria.run();    
+                        });
+                    }
                 }
             });
         })();

@@ -28,10 +28,10 @@ td.data-column {
     overflow-x: hidden;
 }*/
 
-tbody>tr.normal-color:not([selected]) {
+tbody>tr:nth-child(even):not([selected]) {
     background-color: white;
 }
-tbody>tr.alternate-color:not([selected]) {
+tbody>tr:nth-child(odd):not([selected]) {
     background-color: #F5F5F5;
 }
 tbody>tr:hover:not([selected]) {
@@ -44,10 +44,10 @@ thead>tr.header-color {
     background-color: #0288D1;
     color: white;
 }
-* /deep/ core-tooltip::shadow #tooltip {
+core-tooltip::shadow #tooltip {
     white-space: normal;
 }
-* /deep/ core-tooltip .span-tooltip {
+core-tooltip .span-tooltip {
     line-height: 15px;
 }
 core-tooltip.delayed:hover::shadow .core-tooltip,
@@ -65,13 +65,7 @@ paper-checkbox::shadow #checkbox.checked {
     background-color: #0288D1;
     border-color: #0288D1;
 }
-tbody>tr.normal-color paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
-    border-color: transparent;
-}
-tbody>tr.alternate-color paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
-    border-color: transparent;
-}
-th paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
+paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
     border-color: transparent;
 }
 .truncate {

@@ -13,7 +13,7 @@
             }
         </style>
         <div class="tabs" layout horizontal center-justified>
-            <paper-tabs selected="{{selectedView}}" style="max-width:600px" flex>
+            <paper-tabs selected="{{selectedView}}" style="max-width:600px" flex noink noslide>
                 <paper-tab>Selection</paper-tab>
                 <paper-tab>Details</paper-tab>
             </paper-tabs>
@@ -205,8 +205,8 @@
                  */
                 run: function () {
                     this.$.egi.clearSelection();
-                    this.$.selection_criteria.run();
                     this.selectedView = 1;
+                    this.triggerRun = true;
                 },
                 
                 /**
