@@ -44,7 +44,7 @@
         
         form {
             width: 380px;
-            margin: 4em auto;
+            margin: 2em auto;
             padding: 3em 2em 2em 2em;
             background: #fafafa;
             border: 1px solid #ebebeb;
@@ -64,6 +64,16 @@
         .submit-error {
             background: #D32F2F;
             color: white;
+        }
+        
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type=number] {
+            -moz-appearance: textfield;
         }
     </style>
 
@@ -97,13 +107,13 @@
             </paper-input-decorator>
 
 
-            <paper-input-decorator id="decorator" label="Pin Code" floatingLabel>
+            <!--paper-input-decorator id="decorator" label="Pin Code" floatingLabel>
                 <div layout horizontal>
                     <div flex>
                         <input id="in-pin-code" is="core-input" type="number" step="1" preventInvalidInput name="pin-code">
                     </div>
                 </div>
-            </paper-input-decorator>
+            </paper-input-decorator-->
         </div>
 
         <paper-button id="submitButton" roll="button" style="width:100%" class="submit-normal">
