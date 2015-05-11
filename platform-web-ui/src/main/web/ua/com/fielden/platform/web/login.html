@@ -96,7 +96,6 @@
         <h3>Please provide valid credentials.</h3>
     </hgroup>
 
-
     <form is="ajax-form" action="login" method="put">
         <div class="group">
             <paper-input-decorator id="decorator" label="User Name" floatingLabel>
@@ -117,9 +116,7 @@
             </paper-input-decorator>
 
             <paper-checkbox id="in-trusted-device-mock" label="Trusted device?"></paper-checkbox>
-
             <input id="in-trusted-device" type="hidden" name="trusted-device">
-
             <!--paper-input-decorator id="decorator" label="Pin Code" floatingLabel>
                 <div layout horizontal>
                     <div flex>
@@ -135,18 +132,19 @@
 
         <!--input type="submit"-->
     </form>
-
     <script>
         (function () {
             var form = document.querySelectorAll('form')[0];
+            form.reset();
+
             var submit = document.querySelector('#submitButton');
             var trustedDevice = document.querySelector('#in-trusted-device');
             var trustedDeviceMock = document.querySelector('#in-trusted-device-mock');
 
             submit.onclick = function () {
+                // need to transfer value from a paper-checkbox that does not get submitted in the from
+                // to a hidden input that does
                 trustedDevice.value = trustedDeviceMock.checked;
-
-                console.log("trusted device values: ", trustedDevice.value, trustedDeviceMock.checked);
 
                 form.submit();
             }
@@ -161,7 +159,6 @@
                     console.log('Login response code: ', event.detail.status);
                     console.log('\tresponse: ', event.detail);
 
-                    submit.disabled = false;
                     if (event.detail.status === 200) {
                         submit.classList.remove("submit-error");
                         submit.innerHTML = "Success";
@@ -169,8 +166,8 @@
                     } else {
                         submit.classList.add("submit-error");
                         submit.innerHTML = "Try Again"
+                        submit.disabled = false;
                     }
-
                 }
             );
 
