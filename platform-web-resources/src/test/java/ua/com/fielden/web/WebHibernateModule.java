@@ -15,7 +15,7 @@ import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
 import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.user.IUser;
@@ -62,7 +62,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserRoleDao.class).to(UserRoleDao.class);
         bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
-        bind(IUserController.class).to(UserDao.class); // UserControllerForTestPurposes.class
+        bind(IUserEx.class).to(UserDao.class); // UserControllerForTestPurposes.class
         bind(IUser.class).to(UserDao.class);
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         bindConstant().annotatedWith(Names.named("attachments.location")).to(".");

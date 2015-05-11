@@ -6,7 +6,7 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
@@ -38,6 +38,6 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         save(new_(TgPerson.class, "Person who is a user").setUsername("TEST").setBase(true));
 
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserController.class));
+        up.setUsername("TEST", getInstance(IUserEx.class));
     }
 }

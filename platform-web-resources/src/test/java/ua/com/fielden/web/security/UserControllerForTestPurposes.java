@@ -12,11 +12,11 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
-public class UserControllerForTestPurposes implements IUserController {
+public class UserControllerForTestPurposes implements IUserEx {
     public static final String USER_NAME = "user";
     public static final String PASSWORD = "password";
     private User user;

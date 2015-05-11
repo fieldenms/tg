@@ -8,7 +8,7 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.EntityInstanceResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -45,7 +45,7 @@ public class EntityInstanceResourceFactory<T extends AbstractEntity<?>, DAO exte
         final DAO dao = injector.getInstance(daoType);
 
         final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
         final EntityInstanceResource<T> resource = new EntityInstanceResource<T>(dao, factory, restUtil, getContext(), request, response);
         if (Method.GET == request.getMethod() || Method.HEAD == request.getMethod() || Method.POST == request.getMethod() || Method.DELETE == request.getMethod()) {

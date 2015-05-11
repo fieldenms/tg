@@ -16,7 +16,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -39,7 +39,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
     @Test
     public void only_expired_user_session_should_have_been_removed() throws SignatureException {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserController.class));
+        up.setUsername("TEST", getInstance(IUserEx.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
         // let's try to clear all expired sessions and check if they're indeed cleared
         constants.setNow(dateTime("2015-04-24 07:31:00"));
@@ -58,7 +58,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
     @Test
     public void all_user_sessions_should_have_been_removed() throws SignatureException {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserController.class));
+        up.setUsername("TEST", getInstance(IUserEx.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         coSession.clearAll(currUser);
@@ -70,7 +70,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
     @Test
     public void all_user_untrusted_sessions_should_have_been_removed() throws SignatureException {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserController.class));
+        up.setUsername("TEST", getInstance(IUserEx.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         constants.setNow(dateTime("2015-04-24 07:31:00"));
@@ -143,7 +143,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
 
         // set some sessions for User-1
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("USER-1", getInstance(IUserController.class));
+        up.setUsername("USER-1", getInstance(IUserEx.class));
         final User user1 = up.getUser();
 
         // trusted session for User-1

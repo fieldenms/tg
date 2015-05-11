@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -54,7 +54,7 @@ public class EntityValidationResourceFactory extends Restlet {
 
         if (Method.POST == request.getMethod()) {
             final String username = (String) request.getAttributes().get("username");
-            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
             final String entityTypeString = (String) request.getAttributes().get("entityType");
             final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);

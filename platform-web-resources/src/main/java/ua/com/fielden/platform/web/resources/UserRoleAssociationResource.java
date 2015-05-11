@@ -21,7 +21,7 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
@@ -32,14 +32,14 @@ import ua.com.fielden.platform.security.user.UserRole;
  */
 public class UserRoleAssociationResource extends ServerResource {
 
-    private final IUserController controller;
+    private final IUserEx controller;
     private final IUserRoleDao userRoleDao;
     private final RestServerUtil restUtil;
 
     /**
      * Principle constructor.
      */
-    public UserRoleAssociationResource(final IUserController controller, final IUserRoleDao userRoleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public UserRoleAssociationResource(final IUserEx controller, final IUserRoleDao userRoleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
         setNegotiated(false);
         getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));

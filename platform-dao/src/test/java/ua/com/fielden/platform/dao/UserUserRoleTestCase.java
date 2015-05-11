@@ -16,7 +16,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -34,7 +34,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
     private final IUserRoleDao userRoleDao = getInstance(IUserRoleDao.class);
     private final IUserAndRoleAssociationDao userAssociationDao = getInstance(IUserAndRoleAssociationDao.class);
     private final ISecurityRoleAssociationDao securityDao = getInstance(ISecurityRoleAssociationDao.class);
-    private final IUserController userDao = getInstance(IUserController.class);
+    private final IUserEx userDao = getInstance(IUserEx.class);
 
     @Test
     public void test_retrieval_of_user_role_associations() {

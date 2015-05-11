@@ -3,7 +3,7 @@ package ua.com.fielden.platform.migration;
 import java.util.List;
 
 import ua.com.fielden.platform.cypher.Cypher;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -18,9 +18,9 @@ import ua.com.fielden.platform.security.user.User;
  * 
  */
 public class ResetUserPassword {
-    private final IUserController controller;
+    private final IUserEx controller;
 
-    public ResetUserPassword(final IUserController controller) {
+    public ResetUserPassword(final IUserEx controller) {
         this.controller = controller;
     }
 

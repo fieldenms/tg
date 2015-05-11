@@ -11,7 +11,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
@@ -26,12 +26,12 @@ import com.google.inject.Inject;
 @EntityType(TgPerson.class)
 public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson {
 
-    private final IUserController userDao;
+    private final IUserEx userDao;
     private final EntityFactory entityFactory;
     private final Logger logger = Logger.getLogger(getClass());
 
     @Inject
-    protected TgPersonDao(final IFilter filter, final EntityFactory entityFactory, final IUserController userDao) {
+    protected TgPersonDao(final IFilter filter, final EntityFactory entityFactory, final IUserEx userDao) {
         super(filter);
         this.entityFactory = entityFactory;
         this.userDao = userDao;

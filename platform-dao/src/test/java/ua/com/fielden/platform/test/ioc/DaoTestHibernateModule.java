@@ -38,7 +38,7 @@ import ua.com.fielden.platform.sample.domain.TgWorkorderDao;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -112,7 +112,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
 
         bind(IUser.class).to(UserDao.class);
-        bind(IUserController.class).to(UserDao.class);
+        bind(IUserEx.class).to(UserDao.class);
         // bind IUserProvider
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
 

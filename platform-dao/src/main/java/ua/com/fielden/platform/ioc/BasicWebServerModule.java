@@ -40,7 +40,7 @@ import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.UserDao;
@@ -79,7 +79,7 @@ import com.google.inject.name.Names;
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
  * <li>Serialisation mechanism;
- * <li>All essential DAO interfaces such as {@link IFilter}, {@link IUserController}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUser},
+ * <li>All essential DAO interfaces such as {@link IFilter}, {@link IUserEx}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUser},
  * {@link IAuthorisationModel} and more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
@@ -154,7 +154,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUserRoleDao.class).to(UserRoleDao.class);
         bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
-        bind(IUserController.class).to(UserDao.class);
+        bind(IUserEx.class).to(UserDao.class);
         bind(IUser.class).to(UserDao.class);
         bind(IUserSession.class).to(UserSessionDao.class);
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);

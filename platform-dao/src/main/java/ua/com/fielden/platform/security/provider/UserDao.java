@@ -34,7 +34,7 @@ import com.google.inject.Inject;
  * 
  */
 @EntityType(User.class)
-public class UserDao extends CommonEntityDao<User> implements IUserController {
+public class UserDao extends CommonEntityDao<User> implements IUserEx {
 
     private final IUserRoleDao userRoleDao;
     private final IUserAndRoleAssociationDao userAssociationDao;

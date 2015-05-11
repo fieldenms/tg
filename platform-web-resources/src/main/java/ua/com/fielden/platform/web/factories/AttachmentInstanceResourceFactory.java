@@ -8,7 +8,7 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.AttachmentInstanceResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -41,7 +41,7 @@ public class AttachmentInstanceResourceFactory extends Restlet {
         final IAttachment dao = injector.getInstance(IAttachment.class);
 
         final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
         final AttachmentInstanceResource resource = new AttachmentInstanceResource(location, dao, factory, restUtil, getContext(), request, response);
         if (Method.GET == request.getMethod() || Method.HEAD == request.getMethod() || Method.POST == request.getMethod() || Method.DELETE == request.getMethod()) {

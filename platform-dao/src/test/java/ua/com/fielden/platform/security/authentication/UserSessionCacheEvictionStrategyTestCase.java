@@ -19,7 +19,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -219,7 +219,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
 
         // ensure that TEST is the current user
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserController.class));
+        up.setUsername("TEST", getInstance(IUserEx.class));
     }
 
 }

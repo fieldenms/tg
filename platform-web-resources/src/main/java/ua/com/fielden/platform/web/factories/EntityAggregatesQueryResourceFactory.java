@@ -6,7 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.EntityAggregatesQueryResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -39,7 +39,7 @@ public class EntityAggregatesQueryResourceFactory extends Restlet {
             final IEntityAggregatesDao dao = injector.getInstance(IEntityAggregatesDao.class);
 
             final String username = (String) request.getAttributes().get("username");
-            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
             new EntityAggregatesQueryResource(dao, restUtil, getContext(), request, response).handle();
         }

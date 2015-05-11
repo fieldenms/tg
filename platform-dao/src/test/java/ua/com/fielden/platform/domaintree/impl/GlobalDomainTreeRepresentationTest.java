@@ -19,7 +19,7 @@ import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -75,7 +75,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
             }
 
             @Override
-            public void setUsername(final String username, final IUserController controller) {
+            public void setUsername(final String username, final IUserEx controller) {
             }
         };
         return baseUserProvider;

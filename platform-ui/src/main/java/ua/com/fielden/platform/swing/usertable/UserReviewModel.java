@@ -17,7 +17,7 @@ import ua.com.fielden.platform.pagination.IPaginatorModel.PageNavigationPhases;
 import ua.com.fielden.platform.pagination.PageChangedEvent;
 import ua.com.fielden.platform.pagination.PageHolder;
 import ua.com.fielden.platform.pagination.PageNavigationEvent;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -39,14 +39,14 @@ public class UserReviewModel {
 
     private final UserTableModel userTableModel;
 
-    private final IUserController userController;
+    private final IUserEx userController;
 
     /**
      * Holds the current page of data.
      */
     private final PageHolder pageHolder;
 
-    public UserReviewModel(final IUserController userController) {
+    public UserReviewModel(final IUserEx userController) {
         this.userTableModel = new UserTableModel();
         this.userController = userController;
         this.pageHolder = new PageHolder();
@@ -227,11 +227,11 @@ public class UserReviewModel {
     }
 
     /**
-     * Returns the {@link IUserController} that is responsible for retrieving and saving data
+     * Returns the {@link IUserEx} that is responsible for retrieving and saving data
      * 
      * @return
      */
-    public IUserController getUserController() {
+    public IUserEx getUserController() {
         return userController;
     }
 

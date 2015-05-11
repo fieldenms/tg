@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 
 /**
  * An abstraction for accessing a logged in application user.
@@ -11,5 +11,5 @@ import ua.com.fielden.platform.security.provider.IUserController;
 public interface IUserProvider {
     User getUser();
 
-    void setUsername(final String username, final IUserController controller);
+    void setUsername(final String username, final IUserEx controller);
 }
