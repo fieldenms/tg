@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.factories.webui;
 
+import org.apache.log4j.Logger;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -24,6 +25,7 @@ import com.google.inject.Injector;
 public class CentreComponentResourceFactory extends Restlet {
     private final IWebUiConfig webApp;
     private final Injector injector;
+    private final Logger logger = Logger.getLogger(getClass());
 
     /**
      * Creates the {@link CentreComponentResourceFactory} instance with map of available entity centres.
@@ -43,14 +45,16 @@ public class CentreComponentResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
+            final String mitypeString = (String) request.getAttributes().get("mitype");
+            logger.debug(String.format("[%s] centre component retrieving...", mitypeString));
             final String username = (String) request.getAttributes().get("username");
             injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
-            final String mitypeString = (String) request.getAttributes().get("mitype");
             final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) ClassesRetriever.findClass(mitypeString);
             final EntityCentre centre = this.webApp.getCentres().get(miType);
 
             new CentreComponentResource(centre, getContext(), request, response).handle();
+            logger.debug(String.format("[%s] centre component retrieving...done", mitypeString));
         }
     }
 }

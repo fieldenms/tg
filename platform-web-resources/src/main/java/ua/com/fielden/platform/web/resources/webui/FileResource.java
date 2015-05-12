@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -23,7 +24,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class FileResource extends ServerResource {
-
+    private final Logger logger = Logger.getLogger(getClass());
     private final List<String> resourcePaths;
 
     /**
@@ -45,14 +46,18 @@ public class FileResource extends ServerResource {
     @Override
     protected Representation get() throws ResourceException {
         try {
-            final String filePath = generateFileName(getReference().getRemainingPart());
+            final String originalPath = getReference().getRemainingPart();
+            logger.debug(String.format("File resource [%s] generation started...", originalPath));
+            final String filePath = generateFileName(originalPath);
             final String extension = getReference().getExtensions();
             if (StringUtils.isEmpty(filePath)) {
-                throw new FileNotFoundException("The requested resource (" + getReference().getRemainingPart() + " + " + extension + ") wasn't found.");
+                throw new FileNotFoundException("The requested resource (" + originalPath + " + " + extension + ") wasn't found.");
             } else {
                 final InputStream stream = ResourceLoader.getStream(filePath);
                 final MediaType mediaType = determineMediaType(extension);
-                return RestServerUtil.encodedRepresentation(stream, mediaType);
+                final Representation encodedRepresentation = RestServerUtil.encodedRepresentation(stream, mediaType);
+                logger.debug(String.format("File resource [%s] generated.", originalPath));
+                return encodedRepresentation;
             }
         } catch (final FileNotFoundException e) {
             e.printStackTrace();

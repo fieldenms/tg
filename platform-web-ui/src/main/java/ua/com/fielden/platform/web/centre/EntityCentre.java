@@ -536,12 +536,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     private IRenderable createRenderableRepresentation() {
+        logger.debug("Initiating fresh centre...");
+
         final ICentreDomainTreeManagerAndEnhancer centre = CentreUtils.getFreshCentre(getUserSpecificGdtm(), this.menuItemType);
-        logger.debug("Building renderable for cdtmae:" + centre);
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
         importPaths.add("master/tg-entity-master");
+
+        logger.debug("Initiating layout...");
 
         final FlexLayout layout = this.dslDefaultConfig.getSelectionCriteriaLayout();
 
@@ -551,6 +554,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final Class<?> root = this.entityType;
 
+        logger.debug("Initiating criteria widgets...");
+
         final List<AbstractCriterionWidget> criteriaWidgets = createCriteriaWidgets(centre, root);
         criteriaWidgets.forEach(widget -> {
             importPaths.add(widget.importPath());
@@ -559,6 +564,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         });
 
         final String prefix = ",\n";
+
+        logger.debug("Initiating property columns...");
 
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
         final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
@@ -589,6 +596,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
 
+        logger.debug("Initiating prop actions...");
+
         final DomContainer egiColumns = new DomContainer();
         final StringBuilder propActionsObject = new StringBuilder();
         propertyColumns.forEach(column -> {
@@ -600,6 +609,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             egiColumns.add(column.render());
         });
 
+        logger.debug("Initiating top-level actions...");
         // final List<FunctionalActionElement> functionalActions = new ArrayList<>();
         final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
 
@@ -620,6 +630,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
 
+        logger.debug("Initiating functional actions...");
         final StringBuilder functionalActionsObjects = new StringBuilder();
 
         final DomContainer functionalActionsDom = new DomContainer();
@@ -634,6 +645,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             functionalActionsDom.add(groupElement);
         }
 
+        logger.debug("Initiating primary actions...");
         //////////////////// Primary result-set action ////////////////////
         final Optional<EntityActionConfig> resultSetPrimaryEntityAction = this.dslDefaultConfig.getResultSetPrimaryEntityAction();
         final DomContainer primaryActionDom = new DomContainer();
@@ -648,6 +660,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
 
         //////////////////// Primary result-set action [END] //////////////
+        logger.debug("Initiating secondary actions...");
 
         final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
         final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
@@ -671,7 +684,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String primaryActionObjectString = primaryActionObject.toString();
         final String propActionsString = propActionsObject.toString();
         final int prefixLength = prefix.length();
-        final String entityCentreStr = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html").
+        logger.debug("Initiating template...");
+        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html");
+        logger.debug("Replacing some parts...");
+        final String entityCentreStr = text.
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
                 replace("@full_entity_type", entityType.getName()).
@@ -688,13 +704,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("<!--@functional_actions-->", functionalActionsDom.toString()).
                 replace("<!--@primary_action-->", primaryActionDom.toString()).
                 replace("<!--@secondary_actions-->", secondaryActionsDom.toString());
-
+        logger.debug("Finishing...");
         final IRenderable representation = new IRenderable() {
             @Override
             public DomElement render() {
                 return new InnerTextElement(entityCentreStr);
             }
         };
+        logger.debug("Done.");
         return representation;
     }
 

@@ -14,7 +14,7 @@
 	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern"
-				value="%d{yyyy-MMM-dd@HH:mm:ss} %X{user} %X{PID} %X{MEM} %5p %c{1} %C{1}:%-3L &quot;%m&quot;%n" />
+				value="[%-22.22t] %-5.5p %-22.22c %d{ISO8601} - %m%n" />
 		</layout>
 	</appender>
 
