@@ -50,10 +50,11 @@
                 /**
                  * Opens the toast with some message and with indication whether progress is started.
                  */
-                openToast: function (entity, toastMsg, hasMoreInfo, moreInfo) {
+                openToast: function (entity, toastMsg, hasMoreInfo, moreInfo, showProgress) {
                     this.$.toastGreeting.text = toastMsg;
                     this.$.toastGreeting.hasMore = hasMoreInfo;
                     this.$.toastGreeting.msgText = moreInfo;
+                    this.$.toastGreeting.showProgress = showProgress;
                     if (hasMoreInfo) {
                         if (!entity.isValid()) {
                             this.$.toastGreeting.msgHeading = "Error";
@@ -183,7 +184,7 @@
                  */
                 onValidatedDefault: function (validatedEntity, customObject) {
                     var msg = this.toastMsg("Validation", validatedEntity);
-                    this.openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg);
+                    this.openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
 
                     var newBindingEntity = this.onEntityReceived(validatedEntity);
                     // custom external action

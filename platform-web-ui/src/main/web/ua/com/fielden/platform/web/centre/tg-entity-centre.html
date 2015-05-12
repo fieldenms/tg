@@ -13,7 +13,7 @@
             }
         </style>
         <div class="tabs" layout horizontal center-justified>
-            <paper-tabs selected="{{selectedView}}" style="max-width:600px" flex noink noslide>
+            <paper-tabs selected="{{selectedView}}" style="max-width:600px" flex>
                 <paper-tab>Selection</paper-tab>
                 <paper-tab>Details</paper-tab>
             </paper-tabs>
@@ -205,7 +205,7 @@
                  */
                 run: function () {
                     this.$.egi.clearSelection();
-                    this.selectedView = 1;
+                    this.$.selection_criteria.run(); 
                     this.triggerRun = true;
                 },
                 
@@ -283,6 +283,12 @@
                     } else {
 	                    this.$.egi.entities = resultEntities;
     	                this.$.egi.renderingHints = renderingHints;
+                        if (this.triggerRun && this.selectedView === 0) {
+                            this.async(function() {
+                                this.selectedView = 1;
+                            }, null, 100);
+                            this.triggerRun = false;
+                        }
                     }
                 },
 

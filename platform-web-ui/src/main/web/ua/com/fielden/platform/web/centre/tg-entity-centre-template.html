@@ -1,6 +1,5 @@
 <!--@imports-->
 <link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
-<link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-from-right.html">
 
 <link rel="import" href="/resources/centre/tg-selection-criteria.html">
 <link rel="import" href="/resources/centre/tg-entity-centre.html">
@@ -68,13 +67,12 @@
                 bottom: 0px;
             }
         </style>
-        <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right" on-core-animated-pages-transition-end="{{transitionend}}">
+        <core-animated-pages selected="{{selectedView}}">
             <div>
                 <div class="selection-criteria" layout vertical style="padding: 40px;">
                     <tg-@entity_type-selection-criteria id="selection_criteria" uuid="{{uuid}}" user="{{user}}" mitype="@mi_type" onRun="{{onRun}}" getSelectedEntities="{{getSelectedEntities}}" onRetrieved="{{onRetrieved}}" @queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
                     <div layout horizontal justified style="margin-top:40px;">
                         <div layout horizontal>
-                            <paper-button id="configurator" raised roll="button" on-tap="{{configure}}" style="margin-left: 0px;">Configure</paper-button>
                             <paper-button id="saver" raised roll="button" on-tap="{{save}}" disabled?="{{!canSave($.selection_criteria._isCentreChanged)}}">Save</paper-button>
                             <paper-button id="discarder" raised roll="button" on-tap="{{discard}}" disabled?="{{!canDiscard($.selection_criteria._isCentreChanged)}}">Discard</paper-button>
                         </div>
@@ -164,15 +162,6 @@
 
                 onRetrieved: function (entity, newBindingEntity, customObject) {
                     console.log("centre onRetrieved");
-                },
-
-                transitionend: function () {
-                    if (this.selectedView === 1 && this.triggerRun) {
-                        this.triggerRun = false;
-                        this.async(function() {
-                            this.$.selection_criteria.run();    
-                        });
-                    }
                 }
             });
         })();

@@ -302,7 +302,7 @@
                 onSavedDefault: function (potentiallySavedEntity) {
                     var self = this,
                         msg = this.toastMsg("Saving", potentiallySavedEntity);
-                    this.openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg);
+                    this.openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
 
                     // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(potentiallySavedEntity);

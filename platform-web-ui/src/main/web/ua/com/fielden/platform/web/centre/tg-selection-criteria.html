@@ -39,10 +39,10 @@
              * The current page number.
              */
             pageNumber: null,
-            
+
             pageCountUpdated: null,
             pageNumberUpdated: null,
-            
+
             /**
              * Currently immutable capacity of the page.
              */
@@ -58,7 +58,7 @@
             currentState: "EDIT",
 
             _isCentreChanged: false,
-            
+
             /**
              * Determines whether the selected entities are required to be send inside the centre context during run() method (QueryEnhancer related).
              *
@@ -94,7 +94,7 @@
                         var isCentreChanged = customObject.isCentreChanged;
                         var renderingHints = customObject.renderingHints;
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
-                        
+
                         self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities);
                     }
                 });
@@ -119,13 +119,13 @@
             validator: function () {
                 return this.$.validator;
             },
-            
+
             onDescendantRetrieved: function (entity, bindingEntity, customObject) {
-    	  		this.super([entity, bindingEntity, customObject]);
+                this.super([entity, bindingEntity, customObject]);
                 this.propertyModel = this.createPropertyModel(customObject.metaValues);
                 this._isCentreChanged = customObject.isCentreChanged;
             },
- 
+
             onValidated: function (validatedEntity, bindingEntity, customObject) {
                 this.propertyModel = this.createPropertyModel(customObject.metaValues);
                 this._isCentreChanged = customObject.isCentreChanged;
@@ -182,12 +182,12 @@
              */
             onRunComplete: function () {},
 
-            validatePageCount: function() {
+            validatePageCount: function () {
                 if (this.pageCount === null) {
                     throw "Do not execute methods firstPage(), nextPage() etc. before the method run().";
                 }
             },
-            
+
             /**
              * Starts the process of refreshing of the current page.
              */
@@ -195,13 +195,13 @@
                 this.validatePageCount();
                 this._execute(false);
             },
-            
+
             /**
              * Starts the process of refreshing the specified 'entities'.
              *
              * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
-             *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed 
-			 *     from the result-set if they became unmatchable to the selection criteria after modification).
+             *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed
+             *     from the result-set if they became unmatchable to the selection criteria after modification).
              */
             refreshEntities: function (entities) {
                 this.validatePageCount();
@@ -267,7 +267,7 @@
             },
             canLast: function (pageNumber, pageCount) {
                 return !(pageNumber + 1 >= pageCount);
-            },            
+            },
             canCurrent: function (pageNumber, pageCount) {
                 return !(pageCount <= 0);
             },
@@ -276,15 +276,17 @@
              * Starts the process of centre run.
              */
             run: function () {
+                var self = this;
+                this.openToast(null, "Loading data", false, "", true);
                 this.pageNumber = 0;
                 this.pageCount = null;
                 this._execute(true);
             },
 
             /**
-             * Starts the process of centre execution. It does not alter 
+             * Starts the process of centre execution. It does not alter
              */
-            _execute: function(isRunAction, entitiesToRefresh) {
+            _execute: function (isRunAction, entitiesToRefresh) {
                 var self = this;
 
                 if (self._runningInProgress()) {
@@ -302,18 +304,18 @@
                     self.persistedModifiedPropertiesHolder["@@pageNumber"] = this.pageNumber;
                     self.persistedModifiedPropertiesHolder["@@pageCount"] = this.pageCount;
                     if (entitiesToRefresh && entitiesToRefresh.length > 0) {
-                    	self.persistedModifiedPropertiesHolder["@@idsToRefresh"] = self.idsToRefresh(entitiesToRefresh);
+                        self.persistedModifiedPropertiesHolder["@@idsToRefresh"] = self.idsToRefresh(entitiesToRefresh);
                     } else {
-                    	if (typeof self.persistedModifiedPropertiesHolder["@@idsToRefresh"] !== 'undefined') {
-                    		delete (self.persistedModifiedPropertiesHolder)["@@idsToRefresh"];
-                    	}
+                        if (typeof self.persistedModifiedPropertiesHolder["@@idsToRefresh"] !== 'undefined') {
+                            delete(self.persistedModifiedPropertiesHolder)["@@idsToRefresh"];
+                        }
                     }
                 } else {
                     if (typeof self.persistedModifiedPropertiesHolder["@@pageNumber"] !== 'undefined') {
-                        delete (self.persistedModifiedPropertiesHolder)["@@pageNumber"];
+                        delete(self.persistedModifiedPropertiesHolder)["@@pageNumber"];
                     }
                     if (typeof self.persistedModifiedPropertiesHolder["@@pageCount"] !== 'undefined') {
-                        delete (self.persistedModifiedPropertiesHolder)["@@pageCount"];
+                        delete(self.persistedModifiedPropertiesHolder)["@@pageCount"];
                     }
                 }
 
@@ -331,13 +333,13 @@
                 //     self.$.validator.validate(self._reset(holder));
                 // }
             },
-            
+
             idsToRefresh: function (entities) {
-            	var ids = [];
-            	for (var i = 0; i < entities.length; i = i + 1) {
-            		ids.push(entities[i].id);
-            	}
-            	return ids;
+                var ids = [];
+                for (var i = 0; i < entities.length; i = i + 1) {
+                    ids.push(entities[i].id);
+                }
+                return ids;
             },
 
             _runningInProgress: function () {
@@ -368,9 +370,9 @@
             onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities) {
                 this.propertyModel = this.createPropertyModel(metaValues);
                 this._isCentreChanged = isCentreChanged;
-                
+
                 var msg = this.toastMsg("Running", criteriaEntity);
-                this.openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg);
+                this.openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                 // this.startRefreshCycleModeForEditors();
                 var newBindingEntity = this.onEntityReceived(criteriaEntity);
@@ -378,7 +380,7 @@
                 this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                 // custom external action
                 this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                
+
                 this.pageNumberUpdated = this.pageNumber;
                 this.pageCountUpdated = this.pageCount;
             },
@@ -387,7 +389,7 @@
              * Creates full property model, which can be binded to metaValue editors, from metaValues that have been arrived from the server.
              * The metaValues contain only those ones that are different from default (see DefaultValueContract).
              */
-            createPropertyModel: function(metaValues) {
+            createPropertyModel: function (metaValues) {
                 var propertyModel = {};
 
                 for (var property in metaValues) {
@@ -407,19 +409,19 @@
                 console.log("propertyModel", propertyModel);
                 return propertyModel;
             },
-            
-            createContextHolder: function(modifiedPropertiesHolder, requireSelectedEntities, requireMasterEntity) {
-            	var reflector = this.$.reflector;
+
+            createContextHolder: function (modifiedPropertiesHolder, requireSelectedEntities, requireMasterEntity) {
+                var reflector = this.$.reflector;
                 var centreContextHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
                 centreContextHolder.id = null;
                 var paramsHolder = modifiedPropertiesHolder;
                 paramsHolder["@@miType"] = this.mitype;
                 centreContextHolder["modifHolder"] = paramsHolder;
                 if (requireSelectedEntities !== null) {
-                	reflector.provideSelectedEntities(requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
+                    reflector.provideSelectedEntities(requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
                 }
                 if (requireMasterEntity !== null) {
-                	reflector.provideMasterEntity(requireMasterEntity, centreContextHolder, this.getMasterEntity);
+                    reflector.provideMasterEntity(requireMasterEntity, centreContextHolder, this.getMasterEntity);
                 }
                 return centreContextHolder;
             }
