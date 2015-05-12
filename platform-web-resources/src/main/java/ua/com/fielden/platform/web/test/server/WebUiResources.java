@@ -4,20 +4,20 @@ import org.restlet.Context;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.application.AbstractWebApplication;
+import ua.com.fielden.platform.web.application.AbstractWebUiResources;
 
 import com.google.inject.Injector;
 
 /**
- * Custom {@link AbstractWebApplication} descendant for Web UI Testing Server. Provided in order to configure entity centres, masters and other client specific stuff.
+ * Custom {@link AbstractWebUiResources} descendant for Web UI Testing Server. Provided in order to configure entity centres, masters and other client specific stuff.
  *
  * @author TG Team
  *
  */
-public class WebApplication extends AbstractWebApplication {
+public class WebUiResources extends AbstractWebUiResources {
 
     /**
-     * Creates an instance of {@link WebApplication} (for more information about the meaning of all this arguments see {@link AbstractWebApplication#AbstractWebApp}
+     * Creates an instance of {@link WebUiResources} (for more information about the meaning of all this arguments see {@link AbstractWebUiResources#AbstractWebApp}
      *
      * @param context
      * @param injector
@@ -28,7 +28,7 @@ public class WebApplication extends AbstractWebApplication {
      * @param author
      * @param username
      */
-    public WebApplication(
+    public WebUiResources(
             final Context context,
             final Injector injector,
             final String name,

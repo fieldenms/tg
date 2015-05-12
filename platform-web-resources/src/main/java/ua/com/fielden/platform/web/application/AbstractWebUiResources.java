@@ -43,7 +43,7 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-public abstract class AbstractWebApplication extends Application {
+public abstract class AbstractWebUiResources extends Application {
 
     protected final Injector injector;
     /**
@@ -56,7 +56,7 @@ public abstract class AbstractWebApplication extends Application {
     private final IWebUiConfig webApp;
 
     /**
-     * Creates an instance of {@link AbstractWebApplication} with custom application name, description, author, owner and resource paths.
+     * Creates an instance of {@link AbstractWebUiResources} with custom application name, description, author, owner and resource paths.
      *
      * @param context
      * @param injector
@@ -70,10 +70,8 @@ public abstract class AbstractWebApplication extends Application {
      *            - the application owner.
      * @param author
      *            - the application author
-     * @param username
-     *            - TODO will be removed later after the authentication mechanism for web browser client will be implemented.
      */
-    public AbstractWebApplication(
+    public AbstractWebUiResources(
             final Context context,
             final Injector injector,
             final String[] resourcePaths,
@@ -109,7 +107,6 @@ public abstract class AbstractWebApplication extends Application {
 
         // Attach main application resource.
         router.attach("/", new AppIndexResourceFactory(webApp));
-        router.attach("/login", new LoginResourceFactory(webApp, injector.getInstance(RestServerUtil.class)));
         router.attach("/tg-web-app/tg-app-config.html", new WebUiPreferencesResourceFactory(webApp));
         router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(webApp));
 
@@ -141,6 +138,8 @@ public abstract class AbstractWebApplication extends Application {
         router.attach("/test/egi", new EgiExampleResourceFactory(injector));
         // type meta info resource
         router.attach("/tg-reflector", new TgReflectorComponentResourceFactory(injector));
+
+        // TODO router should be guarded
 
         return router;
     }

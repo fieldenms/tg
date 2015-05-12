@@ -19,7 +19,7 @@ import com.google.inject.Injector;
  * This is {@link Restlet} implementation that provides logic for correct entity oriented resource instantiation. Specifically, it should be used to instantiate
  * {@link EntityInstanceResource} for specific entity types.
  *
- * @author 01es
+ * @author TG Team
  *
  */
 public class EntityInstanceResourceFactory<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends Restlet {

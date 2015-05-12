@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.BasicServerApplication;
+import ua.com.fielden.platform.web.factories.LoginResourceFactory;
 import ua.com.fielden.platform.web.factories.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -46,37 +47,41 @@ public class ApplicationConfiguration extends Component {
             getDefaultHost().attach("/v0", oldVersionResource);
 
             // attach system resources, which should be beyond the version scope
+            // the interactive login page resource is considered one of the system resources, which does not require guarding
+            getDefaultHost().attach("/login", new LoginResourceFactory(injector.getInstance(RestServerUtil.class), injector));
             getDefaultHost().attach(
                     "/system",//
                     new SystemResources(//
-                    getContext().createChildContext(),//
-                    new UserAuthResourceFactory(injector, serverRestUtil), //
-                    injector,//
-                    injector.getInstance(EntityFactory.class),//
-                    serverRestUtil,//
-                    "/login",//
-                    props.getProperty("dependencies.location"),//
-                    "<h3>Web UI Testing Server</h3> This is a testing server for Trident Genesis platform Web UI module.")
-                    );
+                            getContext().createChildContext(),//
+                            new UserAuthResourceFactory(injector, serverRestUtil), //
+                            injector,//
+                            injector.getInstance(EntityFactory.class),//
+                            serverRestUtil,//
+                            "/login",//
+                            props.getProperty("dependencies.location"),//
+                            "<h3>Web UI Testing Server</h3> This is a testing server for Trident Genesis platform Web UI module."
+                    )
+            );
+
+
 
             // attach application specific resources, which are versioned
             getDefaultHost().attach("/v1",//
-            new ServerApplication(
-                    "Web UI Testing Server", //
-                    getContext().createChildContext(),//
-                    injector,//
-                    injector.getInstance(EntityFactory.class),//
-                    serverRestUtil,//
-                    props.getProperty("attachments.location"),//
-                    BasicServerApplication.companionObjectTypes(applicationDomainProvider.domainTypes()))
+                    new ServerApplication(
+                            "Web UI Testing Server", //
+                            getContext().createChildContext(),//
+                            injector,//
+                            injector.getInstance(EntityFactory.class),//
+                            serverRestUtil,//
+                            props.getProperty("attachments.location"),//
+                            BasicServerApplication.companionObjectTypes(applicationDomainProvider.domainTypes()))
                     );
 
             final IWebUiConfig webApp = injector.getInstance(IWebUiConfig.class);
-
             getDefaultHost().attach(
-                    new WebApplication(
+                    new WebUiResources(
                             getContext().createChildContext(), injector,
-                            "TG Web UI Testing Server", "The testing server for Trident Genesis platform Web UI module", "FMS", "FMS", webApp
+                            "TG Web UI Testing Server", "The testing server for Trident Genesis platform Web UI module", "FMS", "R&D Team", webApp
                     ));
         } catch (final Exception e) {
             e.printStackTrace();
