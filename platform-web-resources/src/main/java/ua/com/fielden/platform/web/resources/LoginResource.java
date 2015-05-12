@@ -89,10 +89,7 @@ public class LoginResource extends ServerResource {
                     userProvider.setUsername(auth.username, coUserEx);
                     final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), authenticator);
                     if (session.isPresent()) {
-                        final CookieSetting newCookie = new CookieSetting(1, AUTHENTICATOR_COOKIE_NAME, session.get().getAuthenticator().get().toString(), "/", null);
-                        newCookie.setAccessRestricted(true);
-                        getResponse().getCookieSettings().clear();
-                        getResponse().getCookieSettings().add(newCookie);
+                        makeAndAssignCookie(session.get().getAuthenticator().get().toString(), getResponse());
                         getResponse().redirectSeeOther("/");
                         return new EmptyRepresentation();
                     }
@@ -128,10 +125,7 @@ public class LoginResource extends ServerResource {
                 final User user = coUserEx.findByKeyAndFetch(fetch(User.class).with("key").with("password"), username);
                 final UserSession session = coUserSession.newSession(user, isDeviceTrusted);
 
-                final CookieSetting newCookie = new CookieSetting(1, AUTHENTICATOR_COOKIE_NAME, session.getAuthenticator().get().toString(), "/", null);
-                newCookie.setAccessRestricted(true);
-                getResponse().getCookieSettings().clear();
-                getResponse().getCookieSettings().add(newCookie);
+                makeAndAssignCookie(session.getAuthenticator().get().toString(), getResponse());
 
 
                 final byte[] body = "/".getBytes("UTF-8");
@@ -142,6 +136,13 @@ public class LoginResource extends ServerResource {
             getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             return restUtil.errorJSONRepresentation(ex);
         }
+    }
+
+    private void makeAndAssignCookie(final String authenticator, final Response response) {
+        final CookieSetting newCookie = new CookieSetting(1, AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
+        newCookie.setAccessRestricted(true);
+        response.getCookieSettings().clear();
+        response.getCookieSettings().add(newCookie);
     }
 
 }
