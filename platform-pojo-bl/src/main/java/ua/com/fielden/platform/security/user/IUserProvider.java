@@ -11,5 +11,5 @@ import ua.com.fielden.platform.security.provider.IUserEx;
 public interface IUserProvider {
     User getUser();
 
-    void setUsername(final String username, final IUserEx controller);
+    void setUsername(final String username, final IUserEx coUserEx);
 }

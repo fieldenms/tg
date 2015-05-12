@@ -24,7 +24,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.web.security.WebResourceGuard;
+import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 import ua.com.fielden.platform.web.test.IWebDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 
@@ -72,7 +72,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         final String authenticator = session.getAuthenticator().get().toString();
 
         final Request request = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
-        final CookieSetting newCookie = new CookieSetting(1, WebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
+        final CookieSetting newCookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         newCookie.setAccessRestricted(true);
         request.getCookies().add(newCookie);
 
@@ -90,14 +90,14 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         final String authenticator = session.getAuthenticator().get().toString();
 
         final Request request = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
-        final CookieSetting newCookie = new CookieSetting(1, WebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
+        final CookieSetting newCookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         newCookie.setAccessRestricted(true);
         request.getCookies().add(newCookie);
 
         final Response response = client.handle(request);
 
         assertEquals(200, response.getStatus().getCode());
-        final CookieSetting returnedCookie = response.getCookieSettings().getFirst(WebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
+        final CookieSetting returnedCookie = response.getCookieSettings().getFirst(AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
         assertNotNull("Authenticator cookie is expected.", returnedCookie);
         assertEquals("Returned authenticator should match the sent one due to very short time past since login.", authenticator, returnedCookie.getValue());
         assertTrue("Returned cookie must have restricted access.", returnedCookie.isAccessRestricted());
@@ -116,7 +116,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         // meanwhile, requests that followed the first one triggering re-authentication, should also be accepted...
         constants.setNow(dateTime("2015-04-23 18:26:00"));
         final Request request1 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
-        final CookieSetting cookie = new CookieSetting(1, WebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
+        final CookieSetting cookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         cookie.setAccessRestricted(true);
         request1.getCookies().add(cookie);
 
@@ -128,14 +128,14 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         final Response response2 = client.handle(request1);
 
         assertEquals(200, response1.getStatus().getCode());
-        final CookieSetting returnedCookie1 = response1.getCookieSettings().getFirst(WebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
+        final CookieSetting returnedCookie1 = response1.getCookieSettings().getFirst(AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
         assertNotNull("Authenticator cookie is expected.", returnedCookie1);
         final String newAuthenticator = returnedCookie1.getValue();
         assertNotEquals("Returned authenticator should not match the sent one due to expected re-authentication.", authenticator, newAuthenticator);
         assertTrue("Returned cookie must have restricted access.", returnedCookie1.isAccessRestricted());
 
         assertEquals(200, response2.getStatus().getCode());
-        final CookieSetting returnedCookie2 = response2.getCookieSettings().getFirst(WebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
+        final CookieSetting returnedCookie2 = response2.getCookieSettings().getFirst(AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
         assertNotNull("Authenticator cookie is expected.", returnedCookie2);
         assertEquals("Returned authenticator should match the re-generated one.", newAuthenticator, returnedCookie2.getValue());
         assertTrue("Returned cookie must have restricted access.", returnedCookie2.isAccessRestricted());
@@ -154,7 +154,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         // meanwhile, requests that followed the first one triggering re-authentication, should also be accepted...
         constants.setNow(dateTime("2015-04-23 17:30:00"));
         final Request request1 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
-        final CookieSetting cookie = new CookieSetting(1, WebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
+        final CookieSetting cookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         cookie.setAccessRestricted(true);
         request1.getCookies().add(cookie);
 
@@ -166,14 +166,14 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         final Response response2 = client.handle(request1);
 
         assertEquals(200, response1.getStatus().getCode());
-        final CookieSetting returnedCookie1 = response1.getCookieSettings().getFirst(WebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
+        final CookieSetting returnedCookie1 = response1.getCookieSettings().getFirst(AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
         assertNotNull("Authenticator cookie is expected.", returnedCookie1);
         final String newAuthenticator = returnedCookie1.getValue();
         assertNotEquals("Returned authenticator should not match the sent one due to expected re-authentication.", authenticator, newAuthenticator);
         assertTrue("Returned cookie must have restricted access.", returnedCookie1.isAccessRestricted());
 
         assertEquals(200, response2.getStatus().getCode());
-        final CookieSetting returnedCookie2 = response2.getCookieSettings().getFirst(WebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
+        final CookieSetting returnedCookie2 = response2.getCookieSettings().getFirst(AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
         assertNotNull("Authenticator cookie is expected.", returnedCookie2);
         assertEquals("Returned authenticator should match the re-generated one.", newAuthenticator, returnedCookie2.getValue());
         assertTrue("Returned cookie must have restricted access.", returnedCookie2.isAccessRestricted());
@@ -191,7 +191,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         // sufficient time passes by to invalidate the authenticator
         constants.setNow(dateTime("2015-04-23 17:33:00"));
         final Request request = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
-        final CookieSetting newCookie = new CookieSetting(1, WebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
+        final CookieSetting newCookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         newCookie.setAccessRestricted(true);
         request.getCookies().add(newCookie);
 
@@ -213,14 +213,14 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         // any subsequent requests with the stolen authenticator post the cache eviction time after regeneration should lead to a recognition of the authenticator theft
         constants.setNow(dateTime("2015-04-23 18:26:00"));
         final Request request1 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
-        final CookieSetting cookie = new CookieSetting(1, WebResourceGuard.AUTHENTICATOR_COOKIE_NAME, stolenAuthenticator, "/", null);
+        final CookieSetting cookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, stolenAuthenticator, "/", null);
         cookie.setAccessRestricted(true);
         request1.getCookies().add(cookie);
 
         // request by an adversary
         final Response response1 = client.handle(request1);
         assertEquals(200, response1.getStatus().getCode());
-        final CookieSetting returnedCookie1 = response1.getCookieSettings().getFirst(WebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
+        final CookieSetting returnedCookie1 = response1.getCookieSettings().getFirst(AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
         assertNotNull("Authenticator cookie is expected.", returnedCookie1);
         final String newAuthenticator = returnedCookie1.getValue();
         assertNotEquals("Returned authenticator should not match the sent one due to expected re-authentication.", stolenAuthenticator, newAuthenticator);

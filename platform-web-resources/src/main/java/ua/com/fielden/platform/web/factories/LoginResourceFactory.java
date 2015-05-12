@@ -6,6 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.LoginResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -33,13 +34,13 @@ public class LoginResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
-        // TODO username can only come from an authentication cookie
-        //final String username = (String) request.getAttributes().get("username");
-        //injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
-
-
         if (Method.GET.equals(request.getMethod()) || Method.PUT.equals(request.getMethod())) {
-            new LoginResource(util, getContext(), request, response).handle();
+            new LoginResource(
+                    injector.getInstance(IUserProvider.class),
+                    injector.getInstance(IUserEx.class),
+                    injector.getInstance(IUserSession.class),
+                    util, getContext(), request, response
+            ).handle();
         }
     }
 }

@@ -11,13 +11,13 @@ import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.factories.EntityInstanceResourceFactory;
-import ua.com.fielden.platform.web.security.WebResourceGuard;
+import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 /**
- * This is a web application specific to testing of {@link WebResourceGuard};
+ * This is a web application specific to testing of {@link AbstractWebResourceGuard};
  *
  * @author TG Team
  *
@@ -52,7 +52,7 @@ class WebResourceGuardTestWebApplication extends Application {
         router.attach(format("/users/{username}/%s/{entity-id}", TgPerson.class.getSimpleName()), webResource);
 
         // setup resource guard for the whole router
-        final WebResourceGuard guard = new WebResourceGuard(getContext(), injector) {
+        final AbstractWebResourceGuard guard = new AbstractWebResourceGuard(getContext(), injector) {
             @Override
             protected User getUser() {
                 if (getCurrUser() == null) {

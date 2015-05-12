@@ -23,12 +23,16 @@ import com.google.inject.Injector;
 /**
  * This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative.
  * It it used to restrict access to sensitive web resources.
+ * <p>
+ * This type is abstract. The only part that is abstract in it, is the way for obtaining current user.
+ * Applications and unit test may need to have different ways for determining current users.
+ * Method {@link #getUser()} needs to be implemented to provide a currently logged in user.
  *
  * @author TG Team
  *
  */
-public abstract class WebResourceGuard extends ChallengeAuthenticator {
-    private final Logger logger = Logger.getLogger(WebResourceGuard.class);
+public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
+    private final Logger logger = Logger.getLogger(AbstractWebResourceGuard.class);
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
     private final Injector injector;
     /**
@@ -38,7 +42,7 @@ public abstract class WebResourceGuard extends ChallengeAuthenticator {
      * @param injector
      * @throws IllegalArgumentException
      */
-    public WebResourceGuard(final Context context, final Injector injector) throws IllegalArgumentException {
+    public AbstractWebResourceGuard(final Context context, final Injector injector) throws IllegalArgumentException {
         super(context, ChallengeScheme.CUSTOM, "TG");
         if (injector == null) {
             throw new IllegalArgumentException("Injector is required.");
