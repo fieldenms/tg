@@ -36,8 +36,10 @@ public class EntQueryGenerator {
     }
 
     public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery generateEntQueryAsResultQuery(final Q query, final OrderingModel orderModel, final Class<T> resultType, final FetchModel<T> fetchModel, final Map<String, Object> paramValues) {
-        paramValues.put(NOW, universalConstants.now().toDate());
-        
+        if (universalConstants.now() != null) {
+        	paramValues.put(NOW, universalConstants.now().toDate());	
+        }
+    	
         return generateEntQuery(query, orderModel, resultType, fetchModel, paramValues, QueryCategory.RESULT_QUERY, filter, username);
     }
 

@@ -224,22 +224,44 @@ public class EntQuery implements ISingleOperand {
             groups.getGroups().add(new GroupBy(entProp));
         }
     }
+    
+    private boolean areAllFetchedPropsAggregatedExpressions(final FetchModel fetchModel) {
+        boolean result = true;
+        for (final Yield yield : yields.getYields()) {
+            if (fetchModel.containsProp(yield.getAlias())) {
+                result = result && determineYieldDetailsType(yield).equals(ResultQueryYieldDetails.YieldDetailsType.AGGREGATED_EXPRESSION);
+            }
+        }
+        return result;
+    }
 
+    private boolean yieldIsOfEntityType(final Yield yield) {
+        final Class yieldType = determineYieldJavaType(yield);
+        return yieldType != null && AbstractEntity.class.isAssignableFrom(yieldType);
+    }
+    
     private void adjustYieldsModelAccordingToFetchModel(final FetchModel fetchModel) {
-        if (fetchModel != null) {
+        if (fetchModel == null) {
+            logger.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
+        } else {
             final Set<Yield> toBeRemoved = new HashSet<Yield>();
+
+            final boolean allFetchedPropsAreAggregatedExpressions = areAllFetchedPropsAggregatedExpressions(fetchModel);
+            // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
+            
             for (final Yield yield : yields.getYields()) {
-                if (!fetchModel.containsProp(yield.getAlias())) {
-                    if (determineYieldJavaType(yield) == null || !AbstractEntity.class.isAssignableFrom(determineYieldJavaType(yield))) {
-                        //System.out.println("--------------------- removing according to fetch: " + yield.getAlias());
-                        //System.out.println("--------------------- determineYieldJavaType(yield): " + determineYieldJavaType(yield) + " " + determineYieldJavaType(yield).isAssignableFrom(AbstractEntity.class));
-                        toBeRemoved.add(yield);    
-                    }
+            	boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
+            	boolean isOfEntityType = yieldIsOfEntityType(yield);
+            	boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
+            	
+                if ((presentInFetchModel || (isOfEntityType && !allFetchedPropsAreAggregatedExpressions)) && !(isHeaderOfMoneyType && allFetchedPropsAreAggregatedExpressions)) {
+                    logger.debug("adjustYieldsModelAccordingToFetchModel: retaining property [" + yield.getAlias() + "]");
+                } else {
+                    logger.debug("adjustYieldsModelAccordingToFetchModel: removing property [" + yield.getAlias() + "]");
+                    toBeRemoved.add(yield);
                 }
             }
             yields.removeYields(toBeRemoved);
-        } else {
-            //System.out.println("--------------------- removing according to fetch: NONE fetch model was provided -- nothing was removed");
         }
     }
 

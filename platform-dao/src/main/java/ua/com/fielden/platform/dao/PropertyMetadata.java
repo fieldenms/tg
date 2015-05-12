@@ -58,6 +58,9 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public YieldDetailsType getYieldDetailType() {
+        if (aggregatedExpression) {
+            return YieldDetailsType.AGGREGATED_EXPRESSION;
+        }
         return isCompositeProperty() ? YieldDetailsType.COMPOSITE_TYPE_HEADER : (isUnionEntity() ? YieldDetailsType.UNION_ENTITY_HEADER : YieldDetailsType.USUAL_PROP);
     }
 
@@ -228,7 +231,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     @Override
     public String toString() {
         return "\nname = " + name + " javaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + " hibType = "
-                + (hibType != null ? hibType/*.getClass().getSimpleName()*/: hibType) + " type = " + type + "\ncolumn(s) = " + columns + " nullable = " + nullable
+                + (hibType != null ? hibType/*.getClass().getSimpleName()*/: hibType) + " type = " + type + " aggregatedExpression = " + isAggregatedExpression() + "\ncolumn(s) = " + columns + " nullable = " + nullable
                 + " calculated = " + isCalculated() + (isCalculated() ? " exprModel = " + expressionModel : "");
     }
 

@@ -35,6 +35,10 @@ public class Yields implements IPropertyCollector {
         }
     }
 
+    public boolean isHeaderOfSimpleMoneyTypeProperty(String propName) {
+    	return yields.containsKey(propName + ".amount");
+    }
+    
     public Yield getFirstYield() {
         return !yields.isEmpty() ? yields.values().iterator().next() : null;
     }

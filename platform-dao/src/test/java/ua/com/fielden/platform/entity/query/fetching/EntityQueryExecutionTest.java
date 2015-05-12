@@ -1531,12 +1531,57 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    public void property_outside_fetch_model_should_be_proxied() {
+    public void not_null_entity_property_outside_fetch_model_should_be_proxied() {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
         final TgVehicle vehicle = vehicleDao.getEntity(from(model).model());
         assertTrue(vehicle.getProperty("replacedBy").isProxy());
     }
 
+    @Test
+    public void not_null_121_property_outside_fetch_model_should_be_proxied() {
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        final TgVehicle vehicle = vehicleDao.getEntity(from(model).model());
+        assertTrue(vehicle.getProperty("finDetails").isProxy());
+    }
+    
+    @Test
+    public void null_property_outside_fetch_model_should_not_be_proxied() {
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        final TgVehicle vehicle = vehicleDao.getEntity(from(model).model());
+        assertNull(vehicle.getReplacedBy());
+    }
+
+    @Test
+    public void null_121_property_outside_fetch_model_should_not_be_proxied() {
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
+        final TgVehicle vehicle = vehicleDao.getEntity(from(model).model());
+        assertNull(vehicle.getFinDetails());
+    }
+
+    @Test
+    public void not_null_121_property_within_fetch_model_should_not_be_proxied() {
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        final TgVehicle vehicle = vehicleDao.getEntity(from(model).with(fetch(TgVehicle.class).with("finDetails", fetchAll(TgVehicleFinDetails.class))).model());
+        assertFalse(vehicle.getProperty("finDetails").isProxy());
+        assertNotNull(vehicle.getFinDetails());
+    }
+
+    @Test
+    public void null_121_property_within_fetch_model_should_not_be_proxied() {
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
+        final TgVehicle vehicle = vehicleDao.getEntity(from(model).with(fetch(TgVehicle.class).with("finDetails", fetch(TgVehicleFinDetails.class))).model());
+        assertFalse(vehicle.getProperty("finDetails").isProxy());
+        assertNull(vehicle.getFinDetails());
+    }
+
+    @Test
+    public void check_for_correct_formula_for_121_prop() {
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("finDetails").isNull().model();
+        final List<TgVehicle> vehicles = vehicleDao.getAllEntities(from(model).model());
+        assertEquals("Only 1 car without finDetails should be found", 1, vehicles.size());
+        assertEquals("Incorrect car", "CAR2", vehicles.get(0).getKey());
+    }
+    
     @Override
     protected void populateDomain() {
         final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));

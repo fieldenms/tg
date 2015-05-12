@@ -283,7 +283,7 @@ public final class AutocompleterConnector<T> extends PropertyConnectorAdapter {
             if (propertyValue != null) {
                 final T tProperty = (T) propertyValue;
                 final Object value = autocompleter.getAutocompleter().value(tProperty);
-                return value.toString();
+                return "" + value;
             } else {
                 return "";
             }

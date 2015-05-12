@@ -22,6 +22,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
@@ -511,7 +512,8 @@ public class DomainMetadata {
         final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, true);
 
-        final ExpressionModel expressionModel = expr().prop("id").model();
+        //final ExpressionModel expressionModel = expr().prop("id").model();
+        final ExpressionModel expressionModel = expr().model(select((Class<? extends AbstractEntity<?>>) calculatedPropfield.getType()).where().prop("key").eq().extProp("id").model()).model();
         return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).expression(expressionModel).hibType(hibernateType).type(PropertyCategory.EXPRESSION).build();
     }
 
