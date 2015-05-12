@@ -98,7 +98,7 @@ public class DynamicEntityKeyTest {
 
     @Test
     public void test_that_creation_of_the_key_failes_for_entity_with_single_key_member() {
-        final EntityWithSingleKeyMemver instance = new EntityWithSingleKeyMemver();
+        final EntityWithSingleKeyMember instance = new EntityWithSingleKeyMember();
         final DynamicEntityKey key = new DynamicEntityKey(instance);
         assertEquals("Incorrect number of key members.", 1, key.getMemberNames().size());
         assertEquals("Incorrect key member.", "property1", key.getMemberNames().get(0));
@@ -360,7 +360,7 @@ public class DynamicEntityKeyTest {
     }
 
     @KeyType(DynamicEntityKey.class)
-    static class EntityWithSingleKeyMemver extends AbstractEntity<DynamicEntityKey> {
+    static class EntityWithSingleKeyMember extends AbstractEntity<DynamicEntityKey> {
         private static final long serialVersionUID = 1L;
         @IsProperty
         @CompositeKeyMember(1)
@@ -369,7 +369,6 @@ public class DynamicEntityKeyTest {
         @IsProperty
         protected Long property2;
 
-        public EntityWithSingleKeyMemver() {
-        }
     }
+
 }
