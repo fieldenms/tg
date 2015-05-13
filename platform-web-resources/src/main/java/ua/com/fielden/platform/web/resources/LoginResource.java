@@ -26,10 +26,12 @@ import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
+import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -43,6 +45,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 public class LoginResource extends ServerResource {
     private final Logger logger = Logger.getLogger(LoginResource.class);
 
+    private final IAuthenticationModel authenticationModel;
     private final IUserProvider userProvider;
     private final IUserEx coUserEx;
     private final IUserSession coUserSession;
@@ -57,7 +60,8 @@ public class LoginResource extends ServerResource {
      * @param response
      */
     public LoginResource(//
-    final IUserProvider userProvider,
+            final IAuthenticationModel authenticationModel,
+            final IUserProvider userProvider,
             final IUserEx coUserEx,
             final IUserSession coUserSession,//
             final RestServerUtil restUtil,//
@@ -65,6 +69,7 @@ public class LoginResource extends ServerResource {
             final Request request, //
             final Response response) {
         init(context, request, response);
+        this.authenticationModel = authenticationModel;
         this.userProvider = userProvider;
         this.coUserEx = coUserEx;
         this.coUserSession = coUserSession;
@@ -101,9 +106,10 @@ public class LoginResource extends ServerResource {
             // otherwise just load the login page for user to login in explicitly
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login.html").replaceAll("@title", "Login").getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
-        } catch (final UnsupportedEncodingException e) {
-            e.printStackTrace();
-            throw new ResourceException(e);
+        } catch (final UnsupportedEncodingException ex) {
+            logger.fatal(ex);
+            getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+            return restUtil.errorJSONRepresentation(ex);
         }
     }
 
@@ -111,20 +117,18 @@ public class LoginResource extends ServerResource {
     @Override
     public Representation put(final Representation entity) throws ResourceException {
         try {
-
             final String username = getRequest().getResourceRef().getQueryAsForm().getFirstValue("username");
             final String password = getRequest().getResourceRef().getQueryAsForm().getFirstValue("passwd");
             final Boolean isDeviceTrusted = Boolean.parseBoolean(getRequest().getResourceRef().getQueryAsForm().getFirstValue("trusted-device"));
 
-            System.out.println(format("Form data: %s, %s, %s", username, password, isDeviceTrusted));
-
-            if (!"SU".equals(username)) {
+            final Result authResult = authenticationModel.authenticate(username, password);
+            if (!authResult.isSuccessful()) {
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-                final byte[] body = "/login".getBytes("UTF-8");
+                final byte[] body = authResult.getMessage().getBytes("UTF-8");
                 return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
             } else {
                 // create a new session for an authenticated user...
-                final User user = coUserEx.findByKeyAndFetch(fetch(User.class).with("key").with("password"), username);
+                final User user = (User) authResult.getInstance();
                 final UserSession session = coUserSession.newSession(user, isDeviceTrusted);
 
                 // ...and provide the response with an authenticating cookie
@@ -136,7 +140,7 @@ public class LoginResource extends ServerResource {
             }
         } catch (final UnsupportedEncodingException ex) {
             logger.fatal(ex);
-            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
             return restUtil.errorJSONRepresentation(ex);
         }
     }

@@ -5,7 +5,7 @@ import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.test.server.WebApplicationServerModule;
+import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
 import ua.com.fielden.platform.web.test.server.WebGlobalDomainTreeManager;
 
 import com.google.inject.Binder;
@@ -20,7 +20,7 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
  *  Each concrete application is expected to have a principle IoC module <code>ApplicationServerModules</code> that binds everything except the <code>Web UI</code> related dependencies.
  *  The reason the principle IoC module cannot bind these dependencies is rooted in the fact that the're not visible at the <code>DAO</code> project module, where it must reside and be used for unit tests, data population and migration utilities and more.
  *  <p>
- *  Module {@link WebApplicationServerModule}, which governs <code>Web UI</code> dependencies for a platform demo and test application server, can be used as an example.
+ *  Module {@link TgTestWebApplicationServerModule}, which governs <code>Web UI</code> dependencies for a platform demo and test application server, can be used as an example.
  *
  * @author TG Team
  *

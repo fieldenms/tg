@@ -16,6 +16,7 @@ import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.session.UserSession;
+import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -34,7 +35,7 @@ import com.google.inject.TypeLiteral;
  * @author TG Team
  *
  */
-public class ApplicationServerModule extends BasicWebServerModule {
+public class TgTestApplicationServerModule extends BasicWebServerModule {
     private final Class<? extends IUniversalConstants> universalConstantsType;
     private final List<Class<? extends AbstractEntity<?>>> domainTypes;
 
@@ -50,7 +51,7 @@ public class ApplicationServerModule extends BasicWebServerModule {
      * @param props
      * @throws Exception
      */
-    public ApplicationServerModule(//
+    public TgTestApplicationServerModule(//
     final Map<Class, Class> defaultHibernateTypes, //
             final IApplicationDomainProvider applicationDomainProvider,//
             final List<Class<? extends AbstractEntity<?>>> domainTypes,//
@@ -74,7 +75,7 @@ public class ApplicationServerModule extends BasicWebServerModule {
      * @param props
      * @throws Exception
      */
-    public ApplicationServerModule(final Map<Class, Class> defaultHibernateTypes, //
+    public TgTestApplicationServerModule(final Map<Class, Class> defaultHibernateTypes, //
             final IApplicationDomainProvider applicationDomainProvider,//
             final List<Class<? extends AbstractEntity<?>>> domainTypes,//
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
@@ -90,6 +91,8 @@ public class ApplicationServerModule extends BasicWebServerModule {
         /////////////////////////////// application specific ////////////////////////////
         // bind IUserProvider
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
+        // bind authentication model
+        bind(IAuthenticationModel.class).to(TgTestAppAuthenticationModel.class);
 
         if (universalConstantsType != null) {
             bind(IUniversalConstants.class).to(universalConstantsType).in(Scopes.SINGLETON);

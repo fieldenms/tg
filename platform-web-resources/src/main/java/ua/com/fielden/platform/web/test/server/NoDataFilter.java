@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 
 /**
- * {@link IFilter} contract implementation is required for instantiation of {@link ApplicationServerModule} for Web UI Testing Server.
+ * {@link IFilter} contract implementation is required for instantiation of {@link TgTestApplicationServerModule} for Web UI Testing Server.
  * <p>
  * This implementation serves as a convenient stub, which does not filter any data.
  *

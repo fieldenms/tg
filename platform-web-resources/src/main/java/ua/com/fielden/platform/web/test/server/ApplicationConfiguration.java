@@ -31,7 +31,7 @@ public class ApplicationConfiguration extends Component {
         try {
             // create application IoC module and injector
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            final WebApplicationServerModule module = new WebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
+            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
             final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
 
             // create and configure REST server utility
