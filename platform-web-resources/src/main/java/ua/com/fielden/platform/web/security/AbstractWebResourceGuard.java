@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.security;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
 
 import java.util.Optional;
 
@@ -21,12 +22,10 @@ import ua.com.fielden.platform.security.user.User;
 import com.google.inject.Injector;
 
 /**
- * This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative.
- * It it used to restrict access to sensitive web resources.
+ * This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative. It it used to restrict access to sensitive web resources.
  * <p>
- * This type is abstract. The only part that is abstract in it, is the way for obtaining current user.
- * Applications and unit test may need to have different ways for determining current users.
- * Method {@link #getUser()} needs to be implemented to provide a currently logged in user.
+ * This type is abstract. The only part that is abstract in it, is the way for obtaining current user. Applications and unit test may need to have different ways for determining
+ * current users. Method {@link #getUser()} needs to be implemented to provide a currently logged in user.
  *
  * @author TG Team
  *
@@ -35,6 +34,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     private final Logger logger = Logger.getLogger(AbstractWebResourceGuard.class);
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
     private final Injector injector;
+
     /**
      * Principle constructor.
      *
@@ -77,20 +77,8 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 return false;
             }
 
-            // create a cookie that will carry an updated authenticator back to the client for further use
-            // it is important to note that the time that will be used by further processing of this request is not known
-            // and thus is not factored in for session authentication time frame
-            // this means that if the processing time exceeds the session expiration time then the next request after this would render invalid, requiring explicit authentication
-            // on the one hand this is potentially limiting for untrusted devices, but for trusted devices this should not a problem
-            // on the other hand, it might server as an additional security level, limiting computationally intensive requests being send from untrusted devices
-            final CookieSetting newCookie = new CookieSetting(1, AUTHENTICATOR_COOKIE_NAME, session.get().getAuthenticator().get().toString(), "/", null);
-            // have to set HttpOnly header, which informs the browser that only the originating server should be able to access the cookie value (hidden for JS access)
-            // ensures client side security of authenticators
-            newCookie.setAccessRestricted(true);
-            // just in case remove any cookies, which is safe as the guard would be the first in the line of request processing logic
-            response.getCookieSettings().clear();
-            // finally associate the refreshed authenticator with the response
-            response.getCookieSettings().add(newCookie);
+            assignAuthenticatingCookie(session.get().getAuthenticator().get().toString(), response);
+
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
             forbid(response);
@@ -99,6 +87,29 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         }
 
         return true;
+    }
+
+    /**
+     * A convenient method that creates an authenticating cookie based on the provided authenticator and associates it with the specified HTTP response.
+     *
+     * @param authenticator
+     * @param response
+     */
+    public static void assignAuthenticatingCookie(final String authenticator, final Response response) {
+        // create a cookie that will carry an updated authenticator back to the client for further use
+        // it is important to note that the time that will be used by further processing of this request is not known
+        // and thus is not factored in for session authentication time frame
+        // this means that if the processing time exceeds the session expiration time then the next request after this would render invalid, requiring explicit authentication
+        // on the one hand this is potentially limiting for untrusted devices, but for trusted devices this should not a problem
+        // on the other hand, it might server as an additional security level, limiting computationally intensive requests being send from untrusted devices
+        final CookieSetting newCookie = new CookieSetting(1, AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
+        // have to set HttpOnly header, which informs the browser that only the originating server should be able to access the cookie value (hidden for JS access)
+        // ensures client side security of authenticators
+        newCookie.setAccessRestricted(true);
+        // just in case remove any cookies, which is safe as the guard would be the first in the line of request processing logic
+        response.getCookieSettings().clear();
+        // finally associate the refreshed authenticator with the response
+        response.getCookieSettings().add(newCookie);
     }
 
     /**

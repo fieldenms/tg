@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
+import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.assignAuthenticatingCookie;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -15,7 +16,6 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Cookie;
-import org.restlet.data.CookieSetting;
 import org.restlet.data.Encoding;
 import org.restlet.data.Status;
 import org.restlet.engine.application.EncodeRepresentation;
@@ -89,7 +89,9 @@ public class LoginResource extends ServerResource {
                     userProvider.setUsername(auth.username, coUserEx);
                     final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), authenticator);
                     if (session.isPresent()) {
-                        makeAndAssignCookie(session.get().getAuthenticator().get().toString(), getResponse());
+                        // response needs to be provided with an authenticating cookie
+                        assignAuthenticatingCookie(session.get().getAuthenticator().get().toString(), getResponse());
+                        // response needs to provide redirection instructions
                         getResponse().redirectSeeOther("/");
                         return new EmptyRepresentation();
                     }
@@ -98,7 +100,6 @@ public class LoginResource extends ServerResource {
 
             // otherwise just load the login page for user to login in explicitly
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login.html").replaceAll("@title", "Login").getBytes("UTF-8");
-
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
         } catch (final UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -122,12 +123,14 @@ public class LoginResource extends ServerResource {
                 final byte[] body = "/login".getBytes("UTF-8");
                 return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
             } else {
+                // create a new session for an authenticated user...
                 final User user = coUserEx.findByKeyAndFetch(fetch(User.class).with("key").with("password"), username);
                 final UserSession session = coUserSession.newSession(user, isDeviceTrusted);
 
-                makeAndAssignCookie(session.getAuthenticator().get().toString(), getResponse());
+                // ...and provide the response with an authenticating cookie
+                assignAuthenticatingCookie(session.getAuthenticator().get().toString(), getResponse());
 
-
+                // the response body should provide an URI where successful login should be redirected to
                 final byte[] body = "/".getBytes("UTF-8");
                 return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
             }
@@ -138,11 +141,6 @@ public class LoginResource extends ServerResource {
         }
     }
 
-    private void makeAndAssignCookie(final String authenticator, final Response response) {
-        final CookieSetting newCookie = new CookieSetting(1, AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
-        newCookie.setAccessRestricted(true);
-        response.getCookieSettings().clear();
-        response.getCookieSettings().add(newCookie);
-    }
+
 
 }
