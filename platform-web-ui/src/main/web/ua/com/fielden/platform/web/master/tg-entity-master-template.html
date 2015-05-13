@@ -1,24 +1,32 @@
 <!--@imports-->
 <link rel="import" href="/resources/master/actions/tg-action.html">
+<link rel="import" href="/resources/components/tg-scroll-container.html">
+
 
 <polymer-element name="tg-@entity_type-master" extends="tg-entity-master" layout vertical>
     <template>
         <style>
-            :host {
+            tg-flex-layout {
                 background-color: white;
+            }
+            tg-scroll-container {
+                overflow-x: hidden;
+                overflow-y: auto;
             }
         </style>
         <shadow></shadow>
 
         <!--EDITORS AND ENTITY ACTIONS DOM (GENERATED) -->
-<!--@editors_and_actions-->
+        <tg-scroll-container fit on-scroll="{{handleScroll}}">
+            <!--@editors_and_actions-->
+        </tg-scroll-container>
 
     </template>
     <script>
         (function () {
             Polymer({
-          		noUI: false,
-            	
+                noUI: false,
+
                 /**
                  * Initialisation block. It has all children web components already initialised.
                  */
@@ -31,6 +39,9 @@
                     //@entityActions
                     // PROPERTY ACTIONS (GENERATED)
                     //@propertyActions
+                },
+                handleScroll: function(e) {
+                   this.fire("scroll-container", e.target);
                 }
             });
         })();

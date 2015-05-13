@@ -67,7 +67,7 @@
                 bottom: 0px;
             }
         </style>
-        <core-animated-pages selected="{{selectedView}}">
+        <core-animated-pages selected="{{selectedPage}}" on-scroll="{{handleScroll}}">
             <div>
                 <div class="selection-criteria" layout vertical style="padding: 40px;">
                     <tg-@entity_type-selection-criteria id="selection_criteria" uuid="{{uuid}}" user="{{user}}" mitype="@mi_type" onRun="{{onRun}}" getSelectedEntities="{{getSelectedEntities}}" onRetrieved="{{onRetrieved}}" @queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
@@ -162,6 +162,9 @@
 
                 onRetrieved: function (entity, newBindingEntity, customObject) {
                     console.log("centre onRetrieved");
+                },
+                handleScroll: function(e) {
+                    this.fire("scroll-container", e.target);
                 }
             });
         })();

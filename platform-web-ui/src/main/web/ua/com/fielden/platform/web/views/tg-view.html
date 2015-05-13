@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
+<link rel="import" href="/resources/components/tg-scroll-container.html">
 
 <polymer-element name="tg-view" attributes="item autoLoad" vertical layout>
     <template>
@@ -13,39 +14,49 @@
                 background-color: #0288D1;
                 color: white;
                 font-size: 18px;
+                transition: top 100ms linear;
+            }
+            .toolbar-visible {
+                top: 0;
+            }
+            .toolbar-hidden {
+                top: -100px;
             }
             core-toolbar::shadow #topBar {
                 height: 100px;
             }
             paper-fab {
-                position: absolute;
                 z-index: 1;
-                bottom: -28px;
-                right: 20px;
                 background-color: #fcfcfc;
                 color: #666464;
             }
             .view {
                 background-color: white;
             }
-            .scroll-panel {
+            tg-scroll-container {
                 position: absolute;
-                top: 100px;
                 right: 0;
                 bottom: 0;
                 left: 0;
+                transition: top 100ms linear;
+            }
+            .scroll-full {
+                top: 0;
+            }
+            .scroll-short {
+                top: 100px;
             }
         </style>
 
 
-        <core-toolbar slide-down>
+        <core-toolbar slide-down class="{{ {'toolbar-visible' : !toolbarHidden, 'toolbar-hidden': toolbarHidden} | tokenList }}">
             <div flex>{{item.title}}</div>
             <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
         </core-toolbar>
 
-        <div class="scroll-panel">
+        <tg-scroll-container on-scroll-container="{{handleScroll}}" class="{{ {'scroll-full' : toolbarHidden, 'scroll-short': !toolbarHidden} | tokenList }}">
             <tg-menu-item-view id="menuItemView" slide-up autoLoad?="{{autoLoad}}" item="{{item}}" on-menu-item-view-loaded="{{onMenuItemLoaded}}"></tg-menu-item-view>
-        </div>
+        </tg-scroll-container>
     </template>
     <script>
         (function () {
@@ -63,6 +74,9 @@
                         value: false
                     }
                 },
+                //Needed for transitioning the toolbar and container
+                toolbarHidden: false,
+                
                 ready: function () {
                     var self = this;
                     postal.subscribe({
@@ -96,6 +110,13 @@
                 },
                 onShowMenuTap: function () {
                     this.fire("main-menu");
+                },
+                handleScroll: function(e) {
+                    if (e.detail.scrollTop === 0) {
+                        this.toolbarHidden = false;
+                    } else if (!this.toolbarHidden) {
+                        this.toolbarHidden = true;
+                    }
                 }
             });
         })();

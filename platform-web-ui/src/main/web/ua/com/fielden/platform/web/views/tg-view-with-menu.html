@@ -22,15 +22,32 @@
                 background-color: #0288D1;
                 color: white;
                 font-size: 18px;
+                transition: top 100ms linear;
+            }
+            .toolbar-visible {
+                top: 0;
+            }
+            .toolbar-hidden {
+                top: -100px;
             }
             core-toolbar::shadow #topBar {
                 height: 100px;
             }
-            paper-fab {
+            core-animated-pages {
                 position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                transition: top 100ms linear;
+            }
+            .pages-full {
+                top: 0;
+            }
+            .pages-short {
+                top: 100px;
+            }
+            paper-fab {
                 z-index: 1;
-                bottom: -28px;
-                right: 20px;
                 background-color: #fcfcfc;
                 color: #666464;
             }
@@ -54,7 +71,8 @@
             core-menu > core-submenu > core-item {
                 transition: all 300ms ease-in-out;
             }
-            core-item, core-submenu {
+            core-item,
+            core-submenu {
                 cursor: pointer !important;
             }
             #drawerPanel [drawer] {
@@ -68,10 +86,6 @@
             }
             .item {
                 background-color: white;
-            }
-            .scroller {
-                overflow-y: auto;
-                overflow-x: hidden;
             }
         </style>
 
@@ -101,24 +115,24 @@
 
             <div main vertical layout>
 
-                <core-toolbar slide-down>
+                <core-toolbar slide-down class="{{ {'toolbar-visible' : !toolbarHidden, 'toolbar-hidden': toolbarHidden} | tokenList }}">
                     <core-icon-button id="menuButton" icon="menu" on-tap="{{togglePanel}}"></core-icon-button>
                     <div flex>{{selected === '__empty__' ? '' : (subSelected ? subSelected : selected)}}</div>
                     <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
                 </core-toolbar>
 
-                <core-animated-pages id="pages" transitions="cross-fade" selected="{{selected + (subSelected ? ('/' + subSelected) : '') }}" on-core-select="{{onPageSelected}}" on-core-animated-pages-transition-end="{{transitionend}}" flex>
+                <core-animated-pages class="{{ {'pages-full' : toolbarHidden, 'pages-short': !toolbarHidden} | tokenList }}" on-scroll-container="{{handleScroll}}" id="pages" transitions="cross-fade" selected="{{selected + (subSelected ? ('/' + subSelected) : '') }}" on-core-select="{{onPageSelected}}" on-core-animated-pages-transition-end="{{transitionend}}">
                     <div name="__empty__">
                         <div slide-up></div>
                     </div>
 
                     <template repeat="{{page in item.menu}}">
-                        <div name="{{page.title}}" class="scroller" onscroll="{{onscroll1}}">
+                        <div name="{{page.title}}">
                             <tg-menu-item-view cross-fade item="{{page}}"></tg-menu-item-view>
                         </div>
                         <template if="{{page.submenu}}">
                             <template repeat="{{subPage in page.submenu}}">
-                                <div name="{{page.title + '/' + subPage.title}}" class="scroller" onscroll="{{onscroll1}}">
+                                <div name="{{page.title + '/' + subPage.title}}">
                                     <tg-menu-item-view slide-up item="{{subPage}}"></tg-menu-item-view>
                                 </div>
                             </template>
@@ -135,6 +149,9 @@
     <script>
         (function () {
             Polymer({
+                //Needed for transitioning the toolbar and container
+                toolbarHidden: false,
+
                 ready: function () {
                     var self = this,
                         masterCounter = 1;
@@ -269,8 +286,12 @@
                         }
                     }
                 },
-                onscroll1: function(e) {
-                    console.log("-------------------scrolling-------------------------------");
+                handleScroll: function (e) {
+                    if (e.detail.scrollTop === 0) {
+                        this.toolbarHidden = false;
+                    } else if (!this.toolbarHidden) {
+                        this.toolbarHidden = true;
+                    }
                 },
                 transitionend: function (e, detail, source) {
                     var name, viewToLoad;

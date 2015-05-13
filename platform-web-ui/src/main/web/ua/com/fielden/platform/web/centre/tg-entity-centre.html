@@ -13,7 +13,7 @@
             }
         </style>
         <div class="tabs" layout horizontal center-justified>
-            <paper-tabs selected="{{selectedView}}" style="max-width:600px" flex>
+            <paper-tabs selected="{{selectedView}}" style="max-width:600px" flex on-core-transitionend="{{selectPage}}">
                 <paper-tab>Selection</paper-tab>
                 <paper-tab>Details</paper-tab>
             </paper-tabs>
@@ -52,6 +52,7 @@
                 },
 
                 selectedView: 0,
+                selectedPage: 0,
 
                 /**
                  * Initialisation block. It has all children web components already initialised.
@@ -85,6 +86,10 @@
                     self.getContext = self.getContext.bind(self);
                     self.onFunctionalEntitySaved = self.onFunctionalEntitySaved.bind(self);
                     self.createContextHolder = self.createContextHolder.bind(self);
+                },
+                
+                selectPage: function(e, detail, source) {
+                    this.selectedPage = this.selectedView; 
                 },
                 
                 attached: function () {
@@ -286,6 +291,7 @@
                         if (this.triggerRun && this.selectedView === 0) {
                             this.async(function() {
                                 this.selectedView = 1;
+                                this.selectedPage = 1;
                             }, null, 100);
                             this.triggerRun = false;
                         }
