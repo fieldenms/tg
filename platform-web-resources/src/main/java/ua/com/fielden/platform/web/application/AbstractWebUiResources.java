@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.application;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -12,12 +13,12 @@ import org.restlet.Context;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
+import org.restlet.security.Authenticator;
 
 import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
 import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.AppIndexResourceFactory;
-import ua.com.fielden.platform.web.factories.LoginResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
@@ -32,7 +33,7 @@ import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFacto
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 
 import com.google.inject.Injector;
 
@@ -129,9 +130,6 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/users/{username}/QueryRunner", new FunctionalEntityResourceFactory<QueryRunner, IQueryRunner>(IQueryRunner.class, injector));
         attachFunctionalEntities(router, injector);
 
-        // Register resources those are in resource paths.
-        attacheResources(router);
-
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
         //For egi example TODO remove later.
@@ -139,9 +137,27 @@ public abstract class AbstractWebUiResources extends Application {
         // type meta info resource
         router.attach("/tg-reflector", new TgReflectorComponentResourceFactory(injector));
 
-        // TODO router should be guarded
+        // attache internal components and related resources
+        //final Set<String> webComponents = new HashSet<>();
+        //webComponents.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
+        //router.attach("/resources/", new FileResourceFactory(Collections.unmodifiableSet(webComponents)), Template.MODE_STARTS_WITH);
+        ///////////////////////////////////////////
+        /////////// Configuring the guard /////////
+        ///////////////////////////////////////////
+        final Authenticator guard = new DefaultWebResourceGuard(getContext(), injector);
+        guard.setNext(router);
 
-        return router;
+
+        final Router mainRouter = new Router(getContext());
+        // standard Polymer components and other resources should not be guarded
+        // Register resources those are in resource paths.
+        attacheResources(mainRouter);
+
+        mainRouter.attach(guard);
+
+
+
+        return mainRouter;
     }
 
     /**

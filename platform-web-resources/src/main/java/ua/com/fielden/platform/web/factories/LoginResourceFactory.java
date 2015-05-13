@@ -9,6 +9,7 @@ import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.resources.LoginResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -20,7 +21,6 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-
 public class LoginResourceFactory extends Restlet {
 
     private final RestServerUtil util;
@@ -37,6 +37,7 @@ public class LoginResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod()) || Method.PUT.equals(request.getMethod())) {
             new LoginResource(
+                    injector.getInstance(IUniversalConstants.class),
                     injector.getInstance(IAuthenticationModel.class),
                     injector.getInstance(IUserProvider.class),
                     injector.getInstance(IUserEx.class),

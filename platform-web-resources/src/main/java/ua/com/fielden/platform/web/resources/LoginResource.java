@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.assignAuthenticatingCookie;
@@ -34,6 +32,7 @@ import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
 /**
@@ -50,6 +49,7 @@ public class LoginResource extends ServerResource {
     private final IUserEx coUserEx;
     private final IUserSession coUserSession;
     private final RestServerUtil restUtil;
+    private final IUniversalConstants constants;
 
     /**
      * Creates {@link LoginResource} and initialises it with centre instance.
@@ -60,6 +60,7 @@ public class LoginResource extends ServerResource {
      * @param response
      */
     public LoginResource(//
+            final IUniversalConstants constants,
             final IAuthenticationModel authenticationModel,
             final IUserProvider userProvider,
             final IUserEx coUserEx,
@@ -69,6 +70,7 @@ public class LoginResource extends ServerResource {
             final Request request, //
             final Response response) {
         init(context, request, response);
+        this.constants = constants;
         this.authenticationModel = authenticationModel;
         this.userProvider = userProvider;
         this.coUserEx = coUserEx;
@@ -95,7 +97,7 @@ public class LoginResource extends ServerResource {
                     final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), authenticator);
                     if (session.isPresent()) {
                         // response needs to be provided with an authenticating cookie
-                        assignAuthenticatingCookie(session.get().getAuthenticator().get().toString(), getResponse());
+                        assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), getRequest(), getResponse());
                         // response needs to provide redirection instructions
                         getResponse().redirectSeeOther("/");
                         return new EmptyRepresentation();
@@ -132,8 +134,7 @@ public class LoginResource extends ServerResource {
                 final UserSession session = coUserSession.newSession(user, isDeviceTrusted);
 
                 // ...and provide the response with an authenticating cookie
-                assignAuthenticatingCookie(session.getAuthenticator().get().toString(), getResponse());
-
+                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), getRequest(), getResponse());
                 // the response body should provide an URI where successful login should be redirected to
                 final byte[] body = "/".getBytes("UTF-8");
                 return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));

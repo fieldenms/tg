@@ -3,10 +3,13 @@ package ua.com.fielden.platform.web.security;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -19,7 +22,9 @@ import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Injector;
 
 /**
@@ -32,9 +37,10 @@ import com.google.inject.Injector;
  *
  */
 public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
-    private final Logger logger = Logger.getLogger(AbstractWebResourceGuard.class);
+    private final Logger logger = Logger.getLogger(getClass());
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
     protected final Injector injector;
+    private final IUniversalConstants constants;
 
     /**
      * Principle constructor.
@@ -48,7 +54,9 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         if (injector == null) {
             throw new IllegalArgumentException("Injector is required.");
         }
+
         this.injector = injector;
+        this.constants = injector.getInstance(IUniversalConstants.class);
         setRechallenging(false);
     }
 
@@ -56,30 +64,40 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     public boolean authenticate(final Request request, final Response response) {
         try {
             logger.debug(format("Starting request authentication to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
-            final Cookie cookie = request.getCookies().getFirst(AUTHENTICATOR_COOKIE_NAME);
-            if (cookie == null) {
+
+            // first collect non-empty authenticating cookies
+            final List<Cookie> cookies = request.getCookies().stream()
+                    .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
+                    .collect(Collectors.toList());
+
+            // check if there any authenticating cookies
+            if (cookies.isEmpty()) {
                 logger.warn(format("Authenticator cookie is missing for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
                 forbid(response);
                 return false;
+
             }
 
-            final String authenticator = cookie.getValue();
-            if (StringUtils.isEmpty(authenticator)) {
-                logger.warn(format("Authenticator value is missing for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
-                forbid(response);
-                return false;
-            }
+            // convert authenticating cookies to authenticators and sort them by expiry date oldest first...
+            final List<Authenticator> authenticators = cookies.stream()
+                    .map(c -> fromString(c.getValue()))
+                    .sorted((auth1, auth2) -> auth1.getExpiryTime().compareTo(auth2.getExpiryTime()))
+                    .collect(Collectors.toList());
 
-            final Authenticator auth = fromString(authenticator);
+            // ...and get the most recent authenticator...
+            final Authenticator auth = Iterables.getLast(authenticators);
+
+            // let's validate the authenticator
             final IUserSession coUserSession = injector.getInstance(IUserSession.class);
-            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), authenticator);
+            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString());
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
                 forbid(response);
                 return false;
             }
 
-            assignAuthenticatingCookie(session.get().getAuthenticator().get().toString(), response);
+            // the provided authenticator was valid and a new cookie should be send back to the client
+            assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), request, response);
 
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
@@ -97,20 +115,33 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @param authenticator
      * @param response
      */
-    public static void assignAuthenticatingCookie(final String authenticator, final Response response) {
+    public static void assignAuthenticatingCookie(final DateTime now, final Authenticator authenticator, final Request request, final Response response) {
         // create a cookie that will carry an updated authenticator back to the client for further use
         // it is important to note that the time that will be used by further processing of this request is not known
         // and thus is not factored in for session authentication time frame
         // this means that if the processing time exceeds the session expiration time then the next request after this would render invalid, requiring explicit authentication
         // on the one hand this is potentially limiting for untrusted devices, but for trusted devices this should not a problem
         // on the other hand, it might server as an additional security level, limiting computationally intensive requests being send from untrusted devices
-        final CookieSetting newCookie = new CookieSetting(1, AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
-        // have to set HttpOnly header, which informs the browser that only the originating server should be able to access the cookie value (hidden for JS access)
-        // ensures client side security of authenticators
-        newCookie.setAccessRestricted(true);
-        // just in case remove any cookies, which is safe as the guard would be the first in the line of request processing logic
-        response.getCookieSettings().clear();
+
+        // calculate maximum cookie age in seconds
+        final int maxAge = (int) (authenticator.expiryTime - now.getMillis()) / 1000;
+
+        if (maxAge <= 0) {
+            throw new IllegalStateException("What the hack is goinig on! maxAge for cookier is not > zero.");
+        }
+
+        final CookieSetting newCookie = new CookieSetting(
+                0 /*version*/,
+                AUTHENTICATOR_COOKIE_NAME /*name*/,
+                authenticator.toString() /*value*/,
+                "/" /*path*/,
+                "tgdev.com" /*domain*/,
+                null /*comment*/,
+                maxAge /* number of seconds before cookie expires */,
+                true /*secure*/,
+                true /*accessRestricted*/);
         // finally associate the refreshed authenticator with the response
+        response.getCookieSettings().clear();
         response.getCookieSettings().add(newCookie);
     }
 

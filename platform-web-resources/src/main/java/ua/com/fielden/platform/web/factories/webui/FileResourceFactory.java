@@ -28,8 +28,8 @@ public class FileResourceFactory extends Restlet {
      * @param resourcePaths
      */
     public FileResourceFactory(final Set<String> resourcePaths) {
-	this.resourcePaths = new ArrayList<String>(resourcePaths);
-	Collections.reverse(this.resourcePaths);
+        this.resourcePaths = new ArrayList<String>(resourcePaths);
+        Collections.reverse(this.resourcePaths);
     }
 
     /**
@@ -43,6 +43,5 @@ public class FileResourceFactory extends Restlet {
             new FileResource(Collections.unmodifiableList(resourcePaths), getContext(), request, response).handle();
         }
     }
-
 
 }

@@ -107,7 +107,7 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data for a test server.");
         bindConstant().annotatedWith(PasswordHashingKey.class).to("This is a hasing key, which is used to hash user passwords for a test server.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
-        bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // five minutes
+        bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(2); // five minutes
         bind(new TypeLiteral<Cache<String, UserSession>>() {
         }).annotatedWith(SessionCache.class).toProvider(SessionCacheBuilder.class).in(Scopes.SINGLETON);
     }

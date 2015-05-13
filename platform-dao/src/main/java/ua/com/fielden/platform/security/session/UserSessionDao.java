@@ -173,13 +173,13 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     }
 
     /**
-     * The main goal of this method is to validate and refresh the user session, which happens for each request.
-     * The validation part has a very strong role for detecting fraudulent attempts to access the system or indications for already compromised users that had their authenticators stolen.
+     * The main goal of this method is to validate and refresh the user session, which happens for each request. The validation part has a very strong role for detecting fraudulent
+     * attempts to access the system or indications for already compromised users that had their authenticators stolen.
      * <p>
      * If the presented authenticator is present in the cache then it is considered to be valid.
      * <p>
-     * Please note that due to the fact that the first argument is a {@link User} instance, this
-     * means that the username has already been verified and identified as belonging to an active user account.
+     * Please note that due to the fact that the first argument is a {@link User} instance, this means that the username has already been verified and identified as belonging to an
+     * active user account.
      */
     @Override
     @SessionRequired
@@ -236,7 +236,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         if (session == null) {
             logger.warn(format("A seemingly correct authenticator %s did not have a corresponding sesssion record. An authenticator theft is suspected. An adversary might have had access to the system as user %s", auth, user.getKey()));
             // in this case, sessions are removed based on user name and series ID, which is required taking into consideration that series ID could have been already regenerated
-            final int count = clearAll(user) + removeSessionsForUsersBy(auth.seriesId);;
+            final int count = clearAll(user) + removeSessionsForUsersBy(auth.seriesId);
+            ;
             logger.debug(format("Removed %s session(s) for series ID %s", count, auth.seriesId));
             return Optional.empty();
         }
@@ -283,34 +284,28 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     @Override
     @SessionRequired
     public UserSession newSession(final User user, final boolean isDeviceTrusted) {
-        try {
-            // let's first construct the next series id
-            final String seriesId = crypto.nextSessionId();
-            // and hash it for storage
-            final String seriesIdHash = crypto.calculateRFC2104HMAC(seriesId, hashingKey);
+        // let's first construct the next series id
+        final String seriesId = crypto.nextSessionId();
+        // and hash it for storage
+        final String seriesIdHash = seriesHash(seriesId); // crypto.calculateRFC2104HMAC(seriesId, hashingKey);
 
-            final UserSession session = user.getEntityFactory().newByKey(UserSession.class, user, seriesIdHash);
-            session.setTrusted(isDeviceTrusted);
-            final Date expiryTime = calcExpiryTime(isDeviceTrusted);
-            session.setExpiryTime(expiryTime);
-            session.setLastAccess(constants.now().toDate());
+        final UserSession session = user.getEntityFactory().newByKey(UserSession.class, user, seriesIdHash);
+        session.setTrusted(isDeviceTrusted);
+        final Date expiryTime = calcExpiryTime(isDeviceTrusted);
+        session.setExpiryTime(expiryTime);
+        session.setLastAccess(constants.now().toDate());
 
-            // authenticator needs to be computed and assigned after the session has been persisted
-            // assign authenticator in way not to disturb the entity meta-state
-            final UserSession saved = save(session);
-            saved.beginInitialising();
-            saved.setAuthenticator(mkAuthenticator(user, seriesId, expiryTime));
-            saved.endInitialising();
+        // authenticator needs to be computed and assigned after the session has been persisted
+        // assign authenticator in way not to disturb the entity meta-state
+        final UserSession saved = save(session);
+        saved.beginInitialising();
+        saved.setAuthenticator(mkAuthenticator(user, seriesId, expiryTime));
+        saved.endInitialising();
 
-            // need to cache the established session in associated with the generated authenticator
-            cache.put(saved.getAuthenticator().get().toString(), saved);
+        // need to cache the established session in associated with the generated authenticator
+        cache.put(saved.getAuthenticator().get().toString(), saved);
 
-            return saved;
-
-        } catch (final SignatureException e) {
-            e.printStackTrace();
-            throw new IllegalStateException(e);
-        }
+        return saved;
     }
 
     /**
