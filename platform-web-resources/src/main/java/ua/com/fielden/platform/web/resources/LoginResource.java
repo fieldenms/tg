@@ -145,6 +145,4 @@ public class LoginResource extends ServerResource {
         }
     }
 
-
-
 }

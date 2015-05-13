@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.security;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
 
 import java.util.Optional;
@@ -15,6 +16,7 @@ import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
 import org.restlet.security.ChallengeAuthenticator;
 
+import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
@@ -69,8 +71,9 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 return false;
             }
 
+            final Authenticator auth = fromString(authenticator);
             final IUserSession coUserSession = injector.getInstance(IUserSession.class);
-            final Optional<UserSession> session = coUserSession.currentSession(getUser(), authenticator);
+            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), authenticator);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
                 forbid(response);
@@ -113,9 +116,9 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     }
 
     /**
-     * Should be implemented in accordance with requirements for obtaining the current user.
+     * Should be implemented in accordance with requirements for obtaining the current user by name.
      *
      * @return
      */
-    protected abstract User getUser();
+    protected abstract User getUser(final String username);
 }

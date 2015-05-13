@@ -54,7 +54,7 @@ class WebResourceGuardTestWebApplication extends Application {
         // setup resource guard for the whole router
         final AbstractWebResourceGuard guard = new AbstractWebResourceGuard(getContext(), injector) {
             @Override
-            protected User getUser() {
+            protected User getUser(final String username) {
                 if (getCurrUser() == null) {
                     throw new IllegalStateException("The current user has not been specified for the test case!");
                 }
