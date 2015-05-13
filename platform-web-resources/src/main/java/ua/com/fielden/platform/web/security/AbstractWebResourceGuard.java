@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.security;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
-import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
 
 import java.util.Optional;
 
@@ -35,7 +34,7 @@ import com.google.inject.Injector;
 public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     private final Logger logger = Logger.getLogger(AbstractWebResourceGuard.class);
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
-    private final Injector injector;
+    protected final Injector injector;
 
     /**
      * Principle constructor.
