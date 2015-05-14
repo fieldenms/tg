@@ -69,7 +69,6 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 
 import com.google.inject.Inject;
 
@@ -663,7 +662,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 //logger.debug("TYPE (" + field.getName() + ") : " + type);
                 final boolean isKey = keyMembers.contains(field);
                 //logger.debug("IS_KEY (" + field.getName() + ") : " + isKey);
-                final boolean isCollectional = !EntityQueryCriteria.class.isAssignableFrom(getType()) && Collection.class.isAssignableFrom(type);
+                final boolean isCollectional = Collection.class.isAssignableFrom(type);
                 //logger.debug("IS_COLLECTIONAL (" + field.getName() + ") : " + isCollectional);
 
                 final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
