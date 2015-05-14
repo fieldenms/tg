@@ -25,7 +25,7 @@ import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
  * @author TG Team
  *
  */
-public class ApplicationDomain implements IApplicationDomainProvider {
+public class TgTestApplicationDomain implements IApplicationDomainProvider {
     private static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
     private static final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 

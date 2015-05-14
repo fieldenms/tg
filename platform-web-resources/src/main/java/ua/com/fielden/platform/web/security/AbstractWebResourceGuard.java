@@ -134,11 +134,11 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 0 /*version*/,
                 AUTHENTICATOR_COOKIE_NAME /*name*/,
                 authenticator.toString() /*value*/,
-                "/" /*path*/,
-                "tgdev.com" /*domain*/,
+                "/" /*path*/, // TODO make application customisable!
+                "tgdev.com" /*domain*/, // TODO make application customisable!
                 null /*comment*/,
                 maxAge /* number of seconds before cookie expires */,
-                true /*secure*/,
+                true /*secure*/, // if secure is set to true then this cookie would only be included into the request if it is done over HTTPS!
                 true /*accessRestricted*/);
         // finally associate the refreshed authenticator with the response
         response.getCookieSettings().clear();

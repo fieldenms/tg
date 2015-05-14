@@ -48,7 +48,7 @@ import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFacto
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
 
-    private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
+    private final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
 
     private PopulateDb(final IDomainDrivenTestCaseConfiguration config) {
         super(config);

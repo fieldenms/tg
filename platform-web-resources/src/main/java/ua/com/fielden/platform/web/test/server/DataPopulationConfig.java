@@ -40,7 +40,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
             props.setProperty("workflow", "development");
 
-            final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
+            final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
             module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
             injector = new ApplicationInjectorFactory().add(module).getInjector();
             entityFactory = injector.getInstance(EntityFactory.class);

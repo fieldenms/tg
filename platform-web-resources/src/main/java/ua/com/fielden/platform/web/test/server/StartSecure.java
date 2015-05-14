@@ -45,7 +45,7 @@ public class StartSecure {
         DOMConfigurator.configure(props.getProperty("log4j"));
 
         logger.info("Starting...");
-        final Component component = new ApplicationConfiguration(props);
+        final Component component = new TgTestApplicationConfiguration(props);
         //component.getServers().add(Protocol.HTTP, Integer.parseInt(props.getProperty("port")));
 
         final org.restlet.Server server = component.getServers().add(Protocol.HTTPS, 9999);
@@ -53,7 +53,7 @@ public class StartSecure {
 
         parameters.add("sslContextFactory", "org.restlet.engine.ssl.DefaultSslContextFactory");
         // I have created self signed certificate. reference is attached with parameter
-        parameters.add("keystorePath", ResourceLoader.getURL("tsl/ca-signed-keystore").getPath());
+        parameters.add("keystorePath", ResourceLoader.getURL("tls/ca-signed-keystore").getPath());
 
         parameters.add("keystorePassword", "changeit");
         parameters.add("keyPassword", "changeit");

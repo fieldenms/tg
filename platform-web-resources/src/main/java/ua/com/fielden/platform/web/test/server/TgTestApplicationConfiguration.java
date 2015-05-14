@@ -22,15 +22,15 @@ import com.google.inject.Injector;
  * @author TG Team
  *
  */
-public class ApplicationConfiguration extends Component {
+public class TgTestApplicationConfiguration extends Component {
 
-    public ApplicationConfiguration(final Properties props) {
+    public TgTestApplicationConfiguration(final Properties props) {
         // /////////////////////////////////////////////////////
         // ////// configure Hibernate and Guice injector ///////
         // /////////////////////////////////////////////////////
         try {
             // create application IoC module and injector
-            final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
+            final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
             final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
             final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
 
