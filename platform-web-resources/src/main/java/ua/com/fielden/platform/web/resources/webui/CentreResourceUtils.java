@@ -12,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
@@ -20,10 +21,14 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
@@ -359,10 +364,73 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             throw new IllegalStateException(e);
         }
 
-        // The meta state reset is necessary to make the entity like 'just saved and retrieved from the database' (originalValues should be equal to values)
-        validationPrototype.resetMetaState();
+        return resetMetaStateForCriteriaValidationPrototype(
+                validationPrototype,
+                CentreUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
+        );
+    }
 
-        return validationPrototype;
+    /**
+     * Resets the meta state for the specified criteria entity.
+     * <p>
+     * The meta state reset is necessary to make the criteria entity like 'just saved and retrieved from the database' (originalValues should be equal to values).
+     * <p>
+     * UPDATE: resetting of the values has been enhanced (comparing to just invoking resetMetaState() on entity) with the functionality, for which the detailed comment is inside
+     * the method implementation.
+     *
+     *
+     * @param criteriaValidationPrototype
+     * @param originalManagedType
+     * @return
+     */
+    public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resetMetaStateForCriteriaValidationPrototype(final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> criteriaValidationPrototype, final Class<?> originalManagedType) {
+        // standard resetting of meta-values: copies values into originalValues for all properties:
+        criteriaValidationPrototype.resetMetaState();
+
+        final Class<? extends AbstractEntity<?>> criteriaType = criteriaValidationPrototype.getType();
+        // For non-single entity-typed criteria properties (the properties with type List<String>, which were originated from entity-typed properties)
+        //   there is a need to populate 'value' into 'originalValue' manually.
+        // This is necessary due to the following:
+        //     1) these properties have type List<String> and are treated as collectional in MetaProperty (see AbstractEntity's setMetaPropertyFactory method);
+        //     2) originalValue is not set for collectional properties during resetMetaState() method (see MetaProperty's setOriginalValue method);
+        //     3) but originalValue is still necessary for criteria entity validation.
+        final List<Field> propFields = Finder.findProperties(criteriaType);
+        for (final Field propField : propFields) {
+            final String originalProperty = CriteriaReflector.getCriteriaProperty(criteriaType, propField.getName());
+            if (List.class.isAssignableFrom(propField.getType()) && isMultiEntityTypedProperty(originalProperty, originalManagedType)) { // only List<String> is needed
+                final MetaProperty<List<String>> metaProperty = criteriaValidationPrototype.getProperty(propField.getName());
+
+                final Field originalValueField = Finder.findFieldByName(MetaProperty.class, "originalValue");
+                final boolean originalValueAccessible = originalValueField.isAccessible();
+                originalValueField.setAccessible(true);
+                try {
+                    originalValueField.set(metaProperty, metaProperty.getValue()); // here 'value' is populated into 'originalValue' for non-single entity-typed criteria property
+                    originalValueField.setAccessible(originalValueAccessible);
+                } catch (IllegalArgumentException | IllegalAccessException e) {
+                    originalValueField.setAccessible(originalValueAccessible);
+                    logger.error(e.getMessage(), e);
+                    throw new IllegalStateException(e);
+                }
+            }
+        }
+        return criteriaValidationPrototype;
+    }
+
+    /**
+     * Determines whether the property represents a) entity-typed property or b) crit-only 'multi' entity-typed property.
+     * <p>
+     * if <code>true</code> -- this means that criterion, generated for that property, will be 'multi', if <code>false</code> -- it will be 'single'.
+     *
+     * @param property
+     * @param managedType
+     * @return
+     */
+    private static boolean isMultiEntityTypedProperty(final String property, final Class<?> managedType) {
+        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
+        final CritOnly critAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, property);
+        final boolean single = critAnnotation != null && Type.SINGLE.equals(critAnnotation.value());
+        return EntityUtils.isEntityType(propertyType) && !single;
     }
 
     //////////////////////////////////////////////////// CREATE CENTRE CONTEXT FOR CENTRE RUN METHOD ETC. (context config is available) ////////////////////////////////////////////////////
@@ -427,7 +495,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype =
                 CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
-        return EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
+
+        return EntityResourceUtils.constructCriteriaEntityAndResetMetaValues(
+                modifiedPropertiesHolder,
+                validationPrototype,
+                CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
+                companionFinder//
+        ).getKey();
     }
 
 }

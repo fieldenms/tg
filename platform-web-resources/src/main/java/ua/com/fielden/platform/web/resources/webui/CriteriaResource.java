@@ -29,6 +29,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
@@ -108,11 +109,17 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
                 CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
 
         return restUtil.rawListJSONRepresentation(
-                EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey(),
+                EntityResourceUtils.constructCriteriaEntityAndResetMetaValues(
+                        modifiedPropertiesHolder,
+                        validationPrototype,
+                        CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
+                        companionFinder//
+                ).getKey(),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
                         CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
-                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm)
-                        ));
+                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm)//
+                )//
+        );
     }
 
     /**
@@ -129,7 +136,12 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
 
         CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = EntityResourceUtils.constructEntityAndResetMetaValues(modifiedPropertiesHolder, validationPrototype, companionFinder).getKey();
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = EntityResourceUtils.constructCriteriaEntityAndResetMetaValues(
+                modifiedPropertiesHolder,
+                validationPrototype,
+                CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
+                companionFinder//
+        ).getKey();
 
         final Pair<Map<String, Object>, ArrayList<?>> pair =
                 CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(

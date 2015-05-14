@@ -313,7 +313,7 @@ public class CentreUtils<T extends AbstractEntity<?>> {
     /**
      * Determines the master type for which criteria entity was generated.
      *
-     * @param miType
+     * @param criteriaType
      * @return
      */
     public static Class<? extends AbstractEntity<?>> getOriginalType(final Class<? extends AbstractEntity<?>> criteriaType) {
@@ -328,5 +328,16 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      */
     public static String getOriginalPropertyName(final Class<?> criteriaClass, final String propertyName) {
         return CriteriaReflector.getCriteriaProperty(criteriaClass, propertyName);
+    }
+
+    /**
+     * Determines the managed (in cdtmae) counter-part for master type for which criteria entity was generated.
+     *
+     * @param criteriaType
+     * @param cdtmae
+     * @return
+     */
+    public static Class<?> getOriginalManagedType(final Class<? extends AbstractEntity<?>> criteriaType, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+        return cdtmae.getEnhancer().getManagedType(CentreUtils.getOriginalType(criteriaType));
     }
 }
