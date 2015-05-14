@@ -5,7 +5,6 @@
         margin: 0px;
         vertical-align: top;
     }
-    
     .search-button {
         padding: 0px;
         margin: 0px;
@@ -13,7 +12,6 @@
         width: 1.0em;
         font: inherit;
     }
-    
     .search-button-invisible {
         padding: 0px;
         margin: 0px;
@@ -25,42 +23,35 @@
     /*paper-spinner.blue::shadow .circle {
         border-color: black;
     }*/
-    
     core-overlay.tg-snatchback {
         background-color: #FFFFFF;
         color: #000;
         min-width: 250px;
         /*border: 1px solid #ccc;*/
         /*border-radius: 3px;*/
-        
         padding: 0px;
         /*min-width: 150px;*/
-        
         overflow: visible;
     }
-    
     .tg-snatchback-suggestions {
         padding: 0px;
         overflow: scroll;
         max-height: 300px;
+        background: white;
         /* should depend on the target element, and adjust dynamically */
     }
-    
     .tg-item {
         font-size: small;
         overflow: visible;
     }
-    
     .key-value {
         font-size: small;
         min-width: 100px;
     }
     /* this is how only not selected values get their matched parts highlighted*/
-    
     paper-item:not(.core-selected) .key-value-highlighted {
         background-color: #ffff46;
     }
-    
     .additional-prop {
         font-size: x-small;
         min-width: 150px;
@@ -69,23 +60,22 @@
         padding-top: 0.5em;
         line-height: 15px;
     }
-    
     .prop-name {
         font-weight: bold;
         padding-right: 0.5em;
     }
-    
     .tg-item:hover {
         cursor: pointer;
         background: #E1F5FE;
         color: #03A9F4;
     }
-    
     .tg-item.core-selected {
         background: #03A9F4;
         color: #E1F5FE;
     }
-    
     .tg-snatchback-button {
         color: #03A9F4;
+    }
+    #toolbar {
+        background: white;
     }
