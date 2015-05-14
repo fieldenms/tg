@@ -1,0 +1,55 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/waypoints-lib.html">
+
+<!-- The scrolling container.-->
+<polymer-element name="component-with-sticky-panel-example">
+    <template>
+        <style>
+            .sticky-panel {
+                height: 48px;
+                background-color: #0288D1;
+                color: white;
+                font-size: 18px;
+                width: 800px;
+            }
+            .view {
+                width: 800px;
+                height: 2000px;
+                border: 1px solid #96999a;
+                background-color: #6fc6d6;
+                margin: 20px auto;
+            }
+            .stuck {
+                position: fixed;
+                top: 0;
+            }
+        </style>
+        <div class="view">
+            <div id="wrapper" style="height: 48px">
+                <div id="stickyBar" class="sticky-panel {{ {'stuck': stick} | tokenList }}" layout horizontal center-center>
+                    Sticky panel
+                </div>
+            </div>
+        </div>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                stick: false,
+                domReady: function () {
+                    var self = this;
+                    var waypoint = new Waypoint({
+                        element: self.$.wrapper,
+                        handler: function (direction) {
+                            if (direction.indexOf("down") > -1) {
+                                self.stick = true;
+                            } else if (direction.indexOf("up") > -1) {
+                                self.stick = false;
+                            }
+                        }
+                    })
+                }
+            })
+        })();
+    </script>
+</polymer-element>
