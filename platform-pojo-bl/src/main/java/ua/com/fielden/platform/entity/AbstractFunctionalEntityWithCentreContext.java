@@ -7,9 +7,8 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
- * A base class for functional entities that are intended to be used on entity centres.
- * The main difference with {@link AbstractEntity} is that it has property <code>context</code> of type {@link CentreContext}, which represents
- * an execution context as provided when a functional entity gets actioned.
+ * A base class for functional entities that are intended to be used on entity centres. The main difference with {@link AbstractEntity} is that it has property <code>context</code>
+ * of type {@link CentreContext}, which represents an execution context as provided when a functional entity gets actioned.
  * <p>
  * It is assumed of course that entity companion is capable of taking advantage of the provided context information for functional entity computations.
  *
@@ -17,7 +16,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  * @param <K>
  */
-public abstract class AbstractFunctionalEntityWithCentreContext<K extends Comparable<K>> extends AbstractEntity<K> {
+public abstract class AbstractFunctionalEntityWithCentreContext<K extends Comparable> extends AbstractEntity<K> {
     private static final long serialVersionUID = 1L;
 
     public static final String CONTEXT = "context";
