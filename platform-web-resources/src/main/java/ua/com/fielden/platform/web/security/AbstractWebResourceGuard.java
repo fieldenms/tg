@@ -65,27 +65,15 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         try {
             logger.debug(format("Starting request authentication to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
 
-            // first collect non-empty authenticating cookies
-            final List<Cookie> cookies = request.getCookies().stream()
-                    .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
-                    .collect(Collectors.toList());
-
-            // check if there any authenticating cookies
-            if (cookies.isEmpty()) {
+            final Optional<Authenticator> oAuth = extractAuthenticator(request);
+            if (!oAuth.isPresent()) {
                 logger.warn(format("Authenticator cookie is missing for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
                 forbid(response);
                 return false;
-
             }
 
-            // convert authenticating cookies to authenticators and sort them by expiry date oldest first...
-            final List<Authenticator> authenticators = cookies.stream()
-                    .map(c -> fromString(c.getValue()))
-                    .sorted((auth1, auth2) -> auth1.getExpiryTime().compareTo(auth2.getExpiryTime()))
-                    .collect(Collectors.toList());
-
-            // ...and get the most recent authenticator...
-            final Authenticator auth = Iterables.getLast(authenticators);
+            // authenticator is present
+            final Authenticator auth = oAuth.get();
 
             // let's validate the authenticator
             final IUserSession coUserSession = injector.getInstance(IUserSession.class);
@@ -107,6 +95,35 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         }
 
         return true;
+    }
+
+    /**
+     * Extracts the latest user authenticator from the provided request.
+     * Returns an empty result in case no authenticating cookies was identified.
+     *
+     * @param request
+     * @return
+     */
+    public static Optional<Authenticator> extractAuthenticator(final Request request) {
+        // first collect non-empty authenticating cookies
+        final List<Cookie> cookies = request.getCookies().stream()
+                .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
+                .collect(Collectors.toList());
+
+        // if there are no authenticating cookies then return an empty result
+        if (cookies.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // convert authenticating cookies to authenticators and sort them by expiry date oldest first...
+        final List<Authenticator> authenticators = cookies.stream()
+                .map(c -> fromString(c.getValue()))
+                .sorted((auth1, auth2) -> auth1.getExpiryTime().compareTo(auth2.getExpiryTime()))
+                .collect(Collectors.toList());
+
+        // ...and get the most recent authenticator...
+        final Authenticator auth = Iterables.getLast(authenticators);
+        return Optional.of(auth);
     }
 
     /**

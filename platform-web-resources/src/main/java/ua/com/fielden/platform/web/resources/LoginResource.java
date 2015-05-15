@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.resources;
 
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
-import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
+import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.*;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.assignAuthenticatingCookie;
 
 import java.io.ByteArrayInputStream;
@@ -34,6 +34,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 
 /**
  * A web resource handling explicit user logins.
@@ -60,7 +61,7 @@ public class LoginResource extends ServerResource {
      * @param response
      */
     public LoginResource(//
-            final IUniversalConstants constants,
+    final IUniversalConstants constants,
             final IAuthenticationModel authenticationModel,
             final IUserProvider userProvider,
             final IUserEx coUserEx,
@@ -76,11 +77,6 @@ public class LoginResource extends ServerResource {
         this.coUserEx = coUserEx;
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
-
-        // TODO username can only come from an authentication cookie
-        //final String username = (String) request.getAttributes().get("username");
-        //injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
-
     }
 
     @Override
@@ -88,20 +84,18 @@ public class LoginResource extends ServerResource {
         try {
             // check if there is a valid authenticator
             // if there is then should respond with redirection to root /.
-            final Cookie cookie = getRequest().getCookies().getFirst(AUTHENTICATOR_COOKIE_NAME);
-            if (cookie != null) {
-                final String authenticator = cookie.getValue();
-                if (!StringUtils.isEmpty(authenticator)) {
-                    final Authenticator auth = fromString(authenticator);
-                    userProvider.setUsername(auth.username, coUserEx);
-                    final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), authenticator);
-                    if (session.isPresent()) {
-                        // response needs to be provided with an authenticating cookie
-                        assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), getRequest(), getResponse());
-                        // response needs to provide redirection instructions
-                        getResponse().redirectSeeOther("/");
-                        return new EmptyRepresentation();
-                    }
+
+            final Optional<Authenticator> oAuth = extractAuthenticator(getRequest());
+            if (oAuth.isPresent()) {
+                final Authenticator auth = oAuth.get();
+                userProvider.setUsername(auth.username, coUserEx);
+                final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString());
+                if (session.isPresent()) {
+                    // response needs to be provided with an authenticating cookie
+                    assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), getRequest(), getResponse());
+                    // response needs to provide redirection instructions
+                    getResponse().redirectSeeOther("/");
+                    return new EmptyRepresentation();
                 }
             }
 
