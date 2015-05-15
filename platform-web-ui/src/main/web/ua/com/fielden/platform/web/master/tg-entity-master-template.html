@@ -6,20 +6,23 @@
 <polymer-element name="tg-@entity_type-master" extends="tg-entity-master" layout vertical>
     <template>
         <style>
-            tg-flex-layout {
+            :host {
+                background-color: white;
+            }
+            /*tg-flex-layout {
                 background-color: white;
             }
             tg-scroll-container {
                 overflow-x: hidden;
                 overflow-y: auto;
-            }
+            }*/
         </style>
         <shadow></shadow>
 
         <!--EDITORS AND ENTITY ACTIONS DOM (GENERATED) -->
-        <tg-scroll-container fit on-scroll="{{handleScroll}}">
+        <!--<tg-scroll-container fit on-scroll="{{handleScroll}}">-->
             <!--@editors_and_actions-->
-        </tg-scroll-container>
+        <!--</tg-scroll-container>-->
 
     </template>
     <script>
