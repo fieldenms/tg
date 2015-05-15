@@ -1,7 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/element_loader/load-element.html">
 
-<polymer-element name="tg-menu-item-view" attributes="item autoLoad" vertical layout>
+<polymer-element name="tg-menu-item-view" attributes="item autoLoad uuid moduleId" vertical layout>
     <template>
         <style>
             .view {
@@ -26,60 +26,67 @@
                         value: false
                     }
                 },
+                ready: function () {
+                    if (this.item.view) {
+                        this.item.view.attrs.uuid = this.uuid;
+                        this.item.view.attrs.moduleId = this.moduleId;
+                    }
+                },
                 onAfterLoad: function (e, detail, view) {
                     var self = this;
                     if (e.target === this.$.elementToLoad) {
-	                    if (this.item.view.type === 'centre') {
-	                     	detail.onRetrieved = function (entity, bindingEntity, customObject) {
-	                          	self.fire("menu-item-view-loaded", self.item);
-	                       	};
-	                       	
-	                        detail.retrieve();
-	                    } else if (this.item.view.type === 'master') {
-	                        detail.onRetrieved = function (entity, bindingEntity, customObject) {
-	                            if (entity.id === null) {
-	                                postal.publish({
-	                                    channel: "view",
-	                                    topic: "master.new.created",
-	                                    data: {
-	                                        centreUuid: detail.centreUuid,
-	                                        item: self.item
-	                                    }
-	                                });
-	                            } else {
-	                                postal.publish({
-	                                    channel: "view",
-	                                    topic: "master.edit.created",
-	                                    data: {
-	                                        entityid: entity.id,
-	                                        centreUuid: detail.centreUuid,
-	                                        item: self.item
-	                                    }
-	                                });
-	                            }
-	                            self.fire("menu-item-view-loaded", self.item);
-	                        };
-	                        detail.onValidated = function (validatedEntity, bindingEntity, customObject) {};
-	                        detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
-	                            //Send postal message that save was completed if it was succefull
-	                            if (potentiallySavedEntity.isValid()) {
-	                                postal.publish({
-	                                    channel: "master",
-	                                    topic: "save.start",
-	                                    data: {
-	                                        centreUuid: detail.centreUuid,
-	                                        masterUuid: detail.uuid,
-	                                        entity: potentiallySavedEntity,
-	                                        item: self.item,
+                        if (this.item.view.type === 'centre') {
+                            detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                                self.fire("menu-item-view-loaded", self.item);
+                            };
+
+                            detail.retrieve();
+                        } else if (this.item.view.type === 'master') {
+                            detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                                if (entity.id === null) {
+                                    postal.publish({
+                                        channel: "view",
+                                        topic: "master.new.created",
+                                        data: {
+                                            centreUuid: detail.centreUuid,
+                                            item: self.item
+                                        }
+                                    });
+                                } else {
+                                    postal.publish({
+                                        channel: "view",
+                                        topic: "master.edit.created",
+                                        data: {
+                                            entityid: entity.id,
+                                            centreUuid: detail.centreUuid,
+                                            item: self.item
+                                        }
+                                    });
+                                }
+                                self.fire("menu-item-view-loaded", self.item);
+                            };
+                            detail.onValidated = function (validatedEntity, bindingEntity, customObject) {};
+                            detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
+                                //Send postal message that save was completed if it was succefull
+                                if (potentiallySavedEntity.isValid()) {
+                                    postal.publish({
+                                        channel: "master",
+                                        topic: "save.start",
+                                        data: {
+                                            centreUuid: detail.centreUuid,
+                                            masterUuid: detail.uuid,
+                                            moduleId: detail.moduleId,
+                                            entity: potentiallySavedEntity,
+                                            item: self.item,
                                             selectedEntitiesInContext: [potentiallySavedEntity]
-	                                    }
-	                                });
-	                            }
-	                        };
-	                        detail.retrieve();
-	                    } else {
-	                        self.fire("menu-item-view-loaded", self.item);
-	                    }
+                                        }
+                                    });
+                                }
+                            };
+                            detail.retrieve();
+                        } else {
+                            self.fire("menu-item-view-loaded", self.item);
+                        }
                     }
                 },
                 load: function () {

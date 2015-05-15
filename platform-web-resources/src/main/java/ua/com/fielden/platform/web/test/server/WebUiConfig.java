@@ -603,7 +603,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 detailIcon("/resources/images/detailed/importUtilities.svg").
                 bgColor("#5FBCD3").
                 captionBgColor("#2C89A0").
-                view(null).done().
+                menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done().done().
                 addModule("Division daily management").
                 description("Division daily management").
                 icon("/resources/images/divisionalDailyManagment.svg").

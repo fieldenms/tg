@@ -14,25 +14,31 @@
                     callback: function (data, envelope) {
                         var fullTypeName = data.entity.type().notEnhancedFullClassName(),
                             simpleTypeName = data.entity.type()._notEnhancedSimpleClassName(),
-                            master = {
-                                title: "Master for " + data.entity.key,
-                                description: "Master for " + data.entity.key,
-                                view: {
-                                    import: "/users/" + user.login + "/master/" + fullTypeName,
-                                    elementName: "tg-" + simpleTypeName + "-master",
-                                    type: "master",
-                                    attrs: {
-                                        user: user.login,
-                                        entityid: data.entity.id,
-                                        entitytype: fullTypeName,
-                                        currentState: 'EDIT',
-                                        centreUuid: data.uuid
-                                    }
+                            centreUuid = data.uuid.split('/'),
+                            masterUuid,
+                            master;
+                        centreUuid[centreUuid.length - 1] = "Master for " + data.entity.key;
+                        masterUuid = centreUuid.join('/');
+                        master = {
+                            title: "Master for " + data.entity.key,
+                            description: "Master for " + data.entity.key,
+                            view: {
+                                import: "/users/" + user.login + "/master/" + fullTypeName,
+                                elementName: "tg-" + simpleTypeName + "-master",
+                                type: "master",
+                                attrs: {
+                                    user: user.login,
+                                    entityid: data.entity.id,
+                                    entitytype: fullTypeName,
+                                    currentState: 'EDIT',
+                                    centreUuid: data.uuid,
+                                    uuid: masterUuid
                                 }
-                            };
+                            }
+                        };
                         if (mastersById["" + data.entity.id]) {
                             postal.publish({
-                                channel: "manager",
+                                channel: "manager_" + data.moduleId,
                                 topic: "master.show",
                                 data: {
                                     item: mastersById["" + data.entity.id],
@@ -41,7 +47,7 @@
                             });
                         } else {
                             postal.publish({
-                                channel: "manager",
+                                channel: "manager_" + data.moduleId,
                                 topic: "master.edit.create",
                                 data: master
                             });
@@ -95,7 +101,7 @@
                             }
                         };
                         postal.publish({
-                            channel: "manager",
+                            channel: "manager_" + data.moduleId,
                             topic: "master.new.create",
                             data: master
                         });
@@ -120,7 +126,7 @@
                     topic: "save.start",
                     callback: function (data, envelope) {
                         postal.publish({
-                            channel: "manager",
+                            channel: "manager_" + data.moduleId,
                             topic: "master.saved",
                             data: data
                         });

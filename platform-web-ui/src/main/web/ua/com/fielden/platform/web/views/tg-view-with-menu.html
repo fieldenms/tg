@@ -11,7 +11,6 @@
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
-<link rel="import" href="/tg-reflector">
 <link rel="import" href="/tg-web-app/tg-app-config.html">
 
 <polymer-element name="tg-view-with-menu" attributes="user item" layout vertical>
@@ -75,7 +74,7 @@
             core-submenu {
                 cursor: pointer !important;
             }
-            #drawerPanel [drawer] {
+            #drawerPanel div[drawer] {
                 background-color: white;
             }
             #drawerPanel:not([narrow]) #menuButton {
@@ -89,7 +88,6 @@
             }
         </style>
 
-        <tg-reflector id="reflector"></tg-reflector>
         <tg-app-config id="app_config"></tg-app-config>
         <core-drawer-panel id="drawerPanel" disableSwipe responsiveWidth="{{$.app_config.minDesktopWidth}}px">
 
@@ -128,12 +126,12 @@
 
                     <template repeat="{{page in item.menu}}">
                         <div name="{{page.title}}">
-                            <tg-menu-item-view cross-fade item="{{page}}"></tg-menu-item-view>
+                            <tg-menu-item-view cross-fade item="{{page}}" uuid="{{item.title + '/' + page.title}}" moduleId="{{item.title}}"></tg-menu-item-view>
                         </div>
                         <template if="{{page.submenu}}">
                             <template repeat="{{subPage in page.submenu}}">
                                 <div name="{{page.title + '/' + subPage.title}}">
-                                    <tg-menu-item-view slide-up item="{{subPage}}"></tg-menu-item-view>
+                                    <tg-menu-item-view slide-up item="{{subPage}}" uuid="{{item.title + '/' + page.title + '/' + subPage.title}}" moduleId="{{item.title}}"></tg-menu-item-view>
                                 </div>
                             </template>
                         </template>
@@ -148,6 +146,14 @@
     </template>
     <script>
         (function () {
+            var findMenuItem = function (menu, itemName) {
+                var ind = 0;
+                for (ind = 0; ind < menu.length; ind++) {
+                    if (menu[ind].title === itemName) {
+                        return menu[ind].submenu;
+                    }
+                }
+            };
             Polymer({
                 //Needed for transitioning the toolbar and container
                 toolbarHidden: false,
@@ -200,24 +206,65 @@
                             }
                         }
                     });
+                    postal.subscribe({
+                        channel: self.item.title,
+                        topic: "state.select",
+                        callback: function (data, envelop) {
+                            if (data.state[1] === self.selected && ((data.state[2] && data.state[2] === self.subSelected) || (!data.state[2] && !self.subSelected))) {
+                                history.pushState(data.state);
+                            } else {
+                                self.selected = data.state[1];
+                                if (data.state.length > 2) {
+                                    self.subSelected = data.state[2];
+                                } else {
+                                    self.subSelected = null;
+                                }
+                            }
+                            postal.publish({
+                                channel: "app",
+                                topic: "state.pushed",
+                                data: data
+                            });
+                        }
+                    });
                     //////////////////////////Edit actions//////////////////////////////////
                     postal.subscribe({
-                        channel: "manager",
+                        channel: "manager_" + self.item.title,
                         topic: "master.edit.create",
                         callback: function (data, envelope) {
-                            data.view.attrs.uuid = self.$.reflector.generateUUID();
-                            self.item.menu.push(data);
-                            self.selected = data.title;
-                            self.subSelected = null;
+                            var idArray = data.view.attrs.uuid.split('/');
+                            self.selected = idArray[1];
+                            if (idArray.length > 2) {
+                                self.subSelected = idArray[2];
+                                findMenuItem(self.item.menu, idArray[1]).push(data);
+                            } else {
+                                self.subSelected = null;
+                                self.item.menu.push(data);
+                            }
                         }
                     });
 
                     postal.subscribe({
-                        channel: "manager",
+                        channel: "manager_" + self.item.title,
                         topic: "master.show",
                         callback: function (data, envelope) {
-                            self.selected = data.item.title;
-                            self.subSelected = null;
+                            var idArray = data.item.view.attrs.uuid.split('/');
+                            if (idArray[0] !== self.item.title) {
+                                postal.publish({
+                                    channel: idArray[0],
+                                    topic: "state.select",
+                                    data: {
+                                        state: idArray
+                                    }
+                                })
+                            } else {
+                                self.selected = idArray[1];
+                                if (idArray.length > 2) {
+                                    self.subSelected = idArray[2];
+                                } else {
+                                    self.subSelected = null;
+                                }
+                            }
                             postal.publish({
                                 channel: "view",
                                 topic: "master.shown",
@@ -227,30 +274,42 @@
                     });
                     /////////////////New Actions//////////////////////////////
                     postal.subscribe({
-                        channel: "manager",
+                        channel: "manager_" + self.item.title,
                         topic: "master.new.create",
                         callback: function (data, envelope) {
-                            var uuid = self.$.reflector.generateUUID();
+                            var centreUuid = data.view.attrs.centreUuid.split('/');
+                            centreUuid[centreUuid.length - 1] = "New Master #" + masterCounter;
                             data.title = "New Master #" + masterCounter;
                             data.description = "New Master #" + masterCounter;
-                            data.view.attrs.uuid = uuid;
-                            self.item.menu.push(data);
+                            data.view.attrs.uuid = centreUuid.join('/');
                             masterCounter += 1;
-                            self.selected = data.title;
-                            self.subSelected = null;
+                            self.selected = centreUuid[1];
+                            if (centreUuid.length > 2) {
+                                findMenuItem(self.item.menu, centreUuid[1]).push(data);
+                                self.subSelected = centreUuid[2];
+                            } else {
+                                self.item.menu.push(data);
+                                self.subSelected = null;
+                            }
                         }
                     });
                     //////////////Master save acation////////////////////////////
                     postal.subscribe({
-                        channel: "manager",
+                        channel: "manager_" + self.item.title,
                         topic: "master.saved",
                         callback: function (data, envelope) {
+                            var centreUuid = data.centreUuid.split('/');
                             postal.publish({
                                 channel: "view",
                                 topic: "master.saved",
                                 data: data
                             });
-                            self.selected = "Entity Centre";
+                            self.selected = centreUuid[1];
+                            if (centreUuid.length > 2) {
+                                self.subSelected = centreUuid[2];
+                            } else {
+                                self.subSelected = null;
+                            }
                         }
                     });
                 },

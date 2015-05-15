@@ -4,7 +4,7 @@
 <link rel="import" href="/resources/binding/tg-entity-binder.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-entity-master" extends="tg-entity-binder" attributes="entitytype entityid onSaved onSavedComplete currentState centreUuid savingContext">
+<polymer-element name="tg-entity-master" extends="tg-entity-binder" attributes="entitytype entityid onSaved onSavedComplete currentState centreUuid savingContext moduleId">
     <template>
         <shadow></shadow>
 
@@ -144,7 +144,7 @@
                         topic: "save.finish",
                         callback: function(data, envelope) {
                             postal.publish({
-                                channel: self.centreUuid,
+                                channel: "centre_" + self.centreUuid,
                                 topic: "detail.saved",
                                 data: data
                             });

@@ -3,7 +3,7 @@
 <link rel="import" href="/resources/polymer/paper-tabs/paper-tab.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-entity-centre" attributes="user entityType mitype uuid getMasterEntity onRetrieved">
+<polymer-element name="tg-entity-centre" attributes="user entityType mitype uuid getMasterEntity onRetrieved moduleId">
     <template>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <style>
@@ -80,7 +80,6 @@
                     });
                     
                     self.editAction = self.editAction.bind(self);
-                    self.editSpecificEntity = self.editSpecificEntity.bind(self);
                     self.newAction = self.newAction.bind(self);
                     self.showMaster = self.showMaster.bind(self);
                     self.getContext = self.getContext.bind(self);
@@ -120,7 +119,7 @@
                     
                     ///////////////////////// Detail onSaved listener //////////////////////////////////////
                     this.detailOnSavedListener = postal.subscribe({
-                        channel: self.$.selection_criteria.uuid,
+                        channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "detail.saved",
                         callback: function (data, envelope) {
                         	self.onFunctionalEntitySaved(data.entity, data.selectedEntitiesInContext);
@@ -141,7 +140,8 @@
                         topic: "edit.start",
                         data: {
                             entity: entity,
-                            uuid: self.$.selection_criteria.uuid
+                            uuid: self.$.selection_criteria.uuid,
+                            moduleId: self.moduleId
                         }
                     });
                 },
@@ -153,7 +153,8 @@
                         data: {
                             entityType: self.entityType,
                             simpleEntityType: self.simpleEntityType(),
-                            uuid: self.$.selection_criteria.uuid
+                            uuid: self.$.selection_criteria.uuid,
+                            moduleId: self.moduleId
                         }
                     });
                 },
@@ -164,18 +165,8 @@
                         topic: "edit.start",
                         data: {
                             entity: self.getContext(),
-                            uuid: self.$.selection_criteria.uuid
-                        }
-                    });
-                },
-                editSpecificEntity: function (entity) {
-                	var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "edit.start",
-                        data: {
-                            entity: entity,
-                            uuid: self.$.selection_criteria.uuid
+                            uuid: self.$.selection_criteria.uuid,
+                            moduleId: self.moduleId
                         }
                     });
                 },
