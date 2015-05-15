@@ -14,7 +14,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
@@ -43,7 +42,6 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @Readonly
     @Title(value = "Integer prop", desc = "Integer prop desc")
     private Integer integerProp;
 

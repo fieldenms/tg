@@ -8,8 +8,6 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.provider.IUserEx;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FunctionalEntityResource;
 
@@ -30,9 +28,6 @@ public class FunctionalEntityResourceFactory<T extends AbstractEntity<?>, DAO ex
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
-
-        final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
         if (Method.POST == request.getMethod()) {
             final DAO dao = injector.getInstance(daoType);

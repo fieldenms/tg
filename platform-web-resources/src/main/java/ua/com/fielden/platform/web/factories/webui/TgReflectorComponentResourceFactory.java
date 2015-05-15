@@ -31,9 +31,6 @@ public class TgReflectorComponentResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
-        // final String username = (String) request.getAttributes().get("username");
-        // injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
-
         if (Method.GET == request.getMethod()) {
             final TgReflectorComponentResource resource = new TgReflectorComponentResource(restUtil, getContext(), request, response, tgJackson);
             resource.handle();

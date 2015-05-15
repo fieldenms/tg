@@ -34,9 +34,6 @@ public class SerialisationTestResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
-        // final String username = (String) request.getAttributes().get("username");
-        // injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
-
         if (Method.POST == request.getMethod() || Method.GET == request.getMethod()) {
             final SerialisationTestResource resource = new SerialisationTestResource(factory, restUtil, getContext(), request, response, testingDate);
             resource.handle();
