@@ -20,6 +20,7 @@ public class DefaultEntityProducer<T extends AbstractEntity<?>> implements IEnti
     private final IEntityDao<T> companion;
     // optional centre context for context-dependent entity producing logic
     private CentreContext<T, AbstractEntity<?>> centreContext;
+    private String chosenProperty;
 
     public DefaultEntityProducer(final EntityFactory factory, final Class<T> entityType) {
         this(factory, entityType, null);
@@ -81,5 +82,18 @@ public class DefaultEntityProducer<T extends AbstractEntity<?>> implements IEnti
 
     public void setCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext) {
         this.centreContext = centreContext;
+    }
+
+    /**
+     * Use this method in case when the chosen property is required for entity instantiation.
+     *
+     * @return
+     */
+    protected String getChosenProperty() {
+        return chosenProperty;
+    }
+
+    public void setChosenProperty(final String chosenProperty) {
+        this.chosenProperty = chosenProperty;
     }
 }

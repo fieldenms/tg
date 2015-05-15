@@ -6,7 +6,7 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri createContextHolder requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError">
+<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri createContextHolder requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError chosenProperty">
     <!-- enabledStates currentState  -->
     <template>
         <style>
@@ -190,6 +190,9 @@
                 if (self.currentEntity) {
                 	self.enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
                 }
+                if (self.chosenProperty) {
+                	self.enhanceContextWithChosenProperty(context, self.chosenProperty);
+                }
                 detail.savingContext = context;
 
                 detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
@@ -212,6 +215,10 @@
 
                 this.afterExecution();
                 //                this.$.entityMaster.updateTargetDimensions();
+            },
+            
+            enhanceContextWithChosenProperty: function(context, chosenProperty) {
+            	context["chosenProperty"] = chosenProperty;
             },
             
             enhanceContextWithCurrentEntity: function(context, currentEntity, requireSelectedEntities) {

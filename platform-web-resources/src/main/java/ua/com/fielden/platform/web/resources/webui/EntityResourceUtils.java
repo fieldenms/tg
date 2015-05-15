@@ -87,9 +87,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    public T createValidationPrototypeWithCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext) {
+    public T createValidationPrototypeWithCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
         final DefaultEntityProducer<T> defProducer = (DefaultEntityProducer<T>) entityProducer;
         defProducer.setCentreContext(centreContext);
+        defProducer.setChosenProperty(chosenProperty);
         return entityProducer.newEntity();
     }
 
@@ -395,8 +396,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext) {
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithCentreContext(centreContext), getCompanionFinder());
+    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
+        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithCentreContext(centreContext, chosenProperty), getCompanionFinder());
     }
 
     /**

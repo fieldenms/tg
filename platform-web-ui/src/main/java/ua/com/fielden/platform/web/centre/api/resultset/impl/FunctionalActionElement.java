@@ -25,6 +25,16 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final int numberOfAction;
     private final FunctionalActionKind functionalActionKind;
     private final boolean masterInvocationAction;
+    private final String chosenProperty;
+
+    /**
+     * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
+     *
+     * @param entityActionConfig
+     */
+    public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final String chosenProperty) {
+        this(entityActionConfig, numberOfAction, FunctionalActionKind.PROP, chosenProperty);
+    }
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
@@ -32,6 +42,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * @param entityActionConfig
      */
     public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind) {
+        this(entityActionConfig, numberOfAction, functionalActionKind, null);
+    }
+
+    /**
+     * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
+     *
+     * @param entityActionConfig
+     */
+    private FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind, final String chosenProperty) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("actions/tg-ui-action");
         this.widgetPath = "actions/tg-ui-action";
         this.entityActionConfig = entityActionConfig;
@@ -39,6 +58,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         this.functionalActionKind = functionalActionKind;
         this.masterInvocationAction = this.entityActionConfig.functionalEntity.isPresent()
                 && this.entityActionConfig.functionalEntity.get().equals(MasterInvocationFunctionalEntity.class);
+        this.chosenProperty = chosenProperty;
     }
 
     /**
@@ -67,6 +87,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("preAction", "{{" + actionsHolderName + "[" + numberOfAction + "].preAction}}");
         attrs.put("postActionSuccess", "{{" + actionsHolderName + "[" + numberOfAction + "].postActionSuccess}}");
         attrs.put("postActionError", "{{" + actionsHolderName + "[" + numberOfAction + "].postActionError}}");
+        if (functionalActionKind == FunctionalActionKind.PROP) {
+            attrs.put("chosenProperty", chosenProperty);
+        }
 
         if (conf().context.isPresent()) {
             if (conf().context.get().withSelectionCrit) {

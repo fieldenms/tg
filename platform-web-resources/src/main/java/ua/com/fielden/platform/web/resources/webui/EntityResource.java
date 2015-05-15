@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -77,7 +78,16 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
         if (envelope != null) {
-            final T entity = utils.createValidationPrototypeWithCentreContext(CentreResourceUtils.createCentreContext(EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil), companionFinder, gdtm, critGenerator));
+            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+            final T entity = utils.createValidationPrototypeWithCentreContext(
+                    CentreResourceUtils.createCentreContext(
+                            centreContextHolder,
+                            companionFinder,
+                            gdtm,
+                            critGenerator //
+                    ),
+                    centreContextHolder.getChosenProperty()
+                    );
             ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
             return restUtil.rawListJSONRepresentation(entity);
         } else {
@@ -110,7 +120,11 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         if (savingInfoHolder.getCentreContextHolder() == null) {
             applied = utils.constructEntity(modifiedPropertiesHolder, this.entityId).getKey();
         } else {
-            applied = utils.constructEntity(modifiedPropertiesHolder, CentreResourceUtils.createCentreContext(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator)).getKey();
+            applied = utils.constructEntity(
+                    modifiedPropertiesHolder,
+                    CentreResourceUtils.createCentreContext(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator),
+                    savingInfoHolder.getCentreContextHolder().getChosenProperty()
+                    ).getKey();
         }
 
         final T potentiallySaved = applied.isDirty() ? save(applied) : applied;

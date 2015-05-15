@@ -585,7 +585,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
                 final Optional<FunctionalActionElement> action;
                 if (resultProp.propAction.isPresent()) {
-                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, FunctionalActionKind.PROP));
+                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, resultPropName));
                     actionIndex += 1;
                 } else {
                     action = Optional.empty();

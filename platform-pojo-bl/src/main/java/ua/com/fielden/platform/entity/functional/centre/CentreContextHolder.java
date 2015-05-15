@@ -39,6 +39,21 @@ public class CentreContextHolder extends AbstractEntity<String> {
     @Title(value = "Master entity", desc = "Master entity")
     private AbstractEntity<?> masterEntity;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Chosen Property", desc = "The property that was clicked during activation result-set functional action")
+    private String chosenProperty;
+
+    @Observable
+    public CentreContextHolder setChosenProperty(final String chosenProperty) {
+        this.chosenProperty = chosenProperty;
+        return this;
+    }
+
+    public String getChosenProperty() {
+        return chosenProperty;
+    }
+
     @Observable
     public CentreContextHolder setMasterEntity(final AbstractEntity<?> masterEntity) {
         this.masterEntity = masterEntity;
