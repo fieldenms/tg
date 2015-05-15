@@ -115,6 +115,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 longDesc("Functional context-dependent action 2").
                                 build()
                 )
+                .also()
+                .addTopAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectionCrit().build()).
+                                icon("assignment").
+                                shortDesc("Function 3").
+                                longDesc("Functional context-dependent action 3").
+                                build()
+                )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectionCrit().withSelectedEntities()./*withMasterEntity().*/build())
                 //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
                 .also()
