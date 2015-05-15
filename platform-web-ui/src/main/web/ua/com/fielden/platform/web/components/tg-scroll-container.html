@@ -1,7 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <!-- The scrolling container.-->
-<polymer-element name="tg-scroll-container" noscript>
+<polymer-element name="tg-scroll-container" on-scroll="{{handleScroll}}">
     <template>
         <style>
             /* style to scroll the inner html */
@@ -11,3 +11,13 @@
         </style>
         <content></content>
     </template>
+    <script>
+        (function(){
+            Polymer({
+                handleScroll: function(e) {
+                    this.fire("scroll-container", e.target);
+                }
+            });
+        })();
+    </script>
+</polymer-element>

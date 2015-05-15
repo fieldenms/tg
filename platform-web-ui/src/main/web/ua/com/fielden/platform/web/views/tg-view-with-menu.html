@@ -12,6 +12,7 @@
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
 <link rel="import" href="/tg-web-app/tg-app-config.html">
+<link rel="import" href="/resources/components/tg-scroll-container.html">
 
 <polymer-element name="tg-view-with-menu" attributes="user item" layout vertical>
     <template>
@@ -86,6 +87,9 @@
             .item {
                 background-color: white;
             }
+            tg-scroll-container {
+                overflow-x: hidden;
+            }
         </style>
 
         <tg-app-config id="app_config"></tg-app-config>
@@ -126,12 +130,16 @@
 
                     <template repeat="{{page in item.menu}}">
                         <div name="{{page.title}}">
-                            <tg-menu-item-view cross-fade item="{{page}}" uuid="{{item.title + '/' + page.title}}" moduleId="{{item.title}}"></tg-menu-item-view>
+                            <tg-scroll-container on-scroll-container="{{handleScroll}}" fit>
+                                <tg-menu-item-view cross-fade item="{{page}}" uuid="{{item.title + '/' + page.title}}" moduleId="{{item.title}}"></tg-menu-item-view>
+                            </tg-scroll-container>
                         </div>
                         <template if="{{page.submenu}}">
                             <template repeat="{{subPage in page.submenu}}">
                                 <div name="{{page.title + '/' + subPage.title}}">
-                                    <tg-menu-item-view slide-up item="{{subPage}}" uuid="{{item.title + '/' + page.title + '/' + subPage.title}}" moduleId="{{item.title}}"></tg-menu-item-view>
+                                    <tg-scroll-container on-scroll-container="{{handleScroll}}" fit>
+                                        <tg-menu-item-view slide-up item="{{subPage}}" uuid="{{item.title + '/' + page.title + '/' + subPage.title}}" moduleId="{{item.title}}"></tg-menu-item-view>
+                                    </tg-scroll-container>
                                 </div>
                             </template>
                         </template>
