@@ -443,8 +443,25 @@
                     // once we found the matching values show them, but only if there are some
                     if (this.hasFocus === true) {
                         if (!this.$.overlay.opened && this.matchedValues.length > 0) {
-                            this.$.overlay.style.position = 'absolute';
-                            this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
+                            // need to handle the situation with autocompletion as part of dialogs differently
+                            // for this need to identify whether there is a currently open dialog
+                            // in where autocompleter is part fo the dialog positioning is handled slightly differently
+                            var dialogs = document.querySelectorAll('body /deep/ paper-action-dialog');
+                            var isPartOfDialog = false;
+                            for (var index = 0; index < dialogs.length; index++) {
+                                if (dialogs[index].opened) {
+                                    isPartOfDialog = true;
+                                    break;
+                                }
+                            }
+
+                            if (isPartOfDialog === false) {
+                                this.$.overlay.style.position = 'absolute';
+                                this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
+                            } else {
+                                this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px !important';
+                            }
+
 
                             // if the editors right edge is close to the right side of the viewport then position the overlay
                             // thus that its right side is aligned with editors right side
@@ -464,7 +481,7 @@
                                 this.$.overlay.style['min-width'] = '250px';
                             }
 
-                            this.$.overlay.toggle();
+                            this.$.overlay.open();
                         } else if (this.$.overlay.opened && this.matchedValues.length == 0) {
                             this.$.overlay.toggle();
                         }
