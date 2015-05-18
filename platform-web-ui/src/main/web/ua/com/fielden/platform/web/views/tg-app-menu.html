@@ -123,6 +123,17 @@
                             self.$.spinner.style.visibility = 'hidden';
                         }
                     });
+                    postal.subscribe({
+                        channel: "menu",
+                        topic: "state.pop",
+                        callback: function (data, envelope) {
+                            postal.publish({
+                                channel: "app",
+                                topic: "state.poped",
+                                data: data
+                            });
+                        }
+                    });
                 },
                 onSelectItem: function (e, detail, source) {
                     //startSpinner.bind(this)(source);

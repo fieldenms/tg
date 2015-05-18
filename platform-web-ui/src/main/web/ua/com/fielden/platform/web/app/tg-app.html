@@ -103,8 +103,8 @@
                         console.log(location.hash);
                     }
                     //Selectes the first view 
-                    self.setSelected(self.views.items[0].title);
-                    history.pushState([self.selected]);
+                    self.setSelected("menu");
+                    history.pushState(["menu"]);
                     //updateHash([self.selected]);
                 }
             });
