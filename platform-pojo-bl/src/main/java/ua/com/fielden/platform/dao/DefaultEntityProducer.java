@@ -34,7 +34,7 @@ public class DefaultEntityProducer<T extends AbstractEntity<?>> implements IEnti
 
     @Override
     public final T newEntity() {
-        final T entity = factory.newEntity(entityType, null);
+        final T entity = factory.newEntity(entityType);
         if (companion != null) {
             provideProxies(entity, companion.getFetchProvider());
         }
