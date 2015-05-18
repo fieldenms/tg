@@ -189,9 +189,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     private static List<AbstractEntity<?>> selectEntities(final List<AbstractEntity<?>> data, final List<Long> longIds) {
         final List<AbstractEntity<?>> list = new ArrayList<>();
-        for (final AbstractEntity<?> retrievedEntity : data) {
-            if (longIds.contains(retrievedEntity.getId())) {
-                list.add(retrievedEntity);
+        if (longIds.isEmpty()) {
+            list.addAll(data);
+        } else {
+            for (final AbstractEntity<?> retrievedEntity : data) {
+                if (longIds.contains(retrievedEntity.getId())) {
+                    list.add(retrievedEntity);
+                }
             }
         }
         return list;
@@ -200,7 +204,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     private static List<Long> convertToListWithLongValues(final List ids) {
         final List<Long> longIds = new ArrayList<>();
         for (final Object id : ids) {
-            longIds.add(id instanceof Integer ? ((Integer) id).longValue() : (Long) id);
+            if (id != null) {
+                longIds.add(id instanceof Integer ? ((Integer) id).longValue() : (Long) id);
+            }
         }
         return longIds;
     }
