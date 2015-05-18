@@ -288,7 +288,7 @@
                 tap: function (entity, property, column) {
                     var value = entity.get(property);
                     if (this._isEntity(value)) {
-                        column.action(value);
+                        column.runAction(value);
                     } else if (property.indexOf(".") > -1) {
                         this.tap(entity, property.substring(0, property.lastIndexOf(".")));
                     } else {
