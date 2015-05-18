@@ -201,6 +201,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         //            It is necessary in case when some property becomes required after the change of other properties.
         entity.isValid();
 
+        disregardCritOnlyRequiredProperties(entity);
+
+        return entity;
+    }
+
+    public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
         // disregard requiredness validation errors for crit-only properties on masters for non-criteria types
         final Class<?> managedType = entity.getType();
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
@@ -212,8 +218,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 }
             }
         }
-
-        return entity;
     }
 
     /**

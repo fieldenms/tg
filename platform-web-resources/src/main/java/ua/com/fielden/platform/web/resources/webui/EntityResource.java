@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -142,12 +143,15 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private T save(final T validatedEntity) {
         try {
-            final Result validationResult = validatedEntity.isValid();
-            if (validationResult.isSuccessful()) {
-                return utils.save(validatedEntity);
-            } else {
-                return validatedEntity;
+            validatedEntity.isValid();
+            EntityResourceUtils.disregardCritOnlyRequiredProperties(validatedEntity);
+            for (final Map.Entry<String, MetaProperty<?>> entry : validatedEntity.getProperties().entrySet()) {
+                if (!entry.getValue().isValid()) {
+                    return validatedEntity;
+                }
             }
+
+            return utils.save(validatedEntity);
         } catch (final Exception ex) {
             logger.error("An undesirable error has occured during saving of already successfully validated entity.", ex);
             throw new IllegalStateException(ex);
