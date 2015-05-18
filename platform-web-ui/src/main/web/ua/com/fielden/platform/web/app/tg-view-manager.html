@@ -6,6 +6,24 @@
         (function () {
             var user,
                 mastersById = {},
+                generateMasterName = function (entity) {
+                    var keyString = "";
+                    if (typeof entity === "object" && typeof entity.type === "function") {
+                        if (entity.type().isCompositeEntity()) {
+                            keyString += "[";
+                            entity.type().compositeKeyNames.forEach(function (element) {
+                                keyString += generateMasterName(entity[element]);
+                            })
+                            return keyString + "]";
+                        } else if (typeof entity.key === "object" && typeof entity.key.type === "function") {
+                            return "(" + generateMasterName(entity.key) + ")";
+                        } else {
+                            return entity.key;
+                        }
+                    } else {
+                        return entity.toString();
+                    }
+                },
                 //mastersByUuid = {},
                 /////////////////////////////////////////////////// Centre Edit action listeners.///////////////////////////////////////////////////
                 editListener = postal.subscribe({
@@ -15,13 +33,14 @@
                         var fullTypeName = data.entity.type().notEnhancedFullClassName(),
                             simpleTypeName = data.entity.type()._notEnhancedSimpleClassName(),
                             centreUuid = data.uuid.split('/'),
+                            masterName = generateMasterName(data.entity),
                             masterUuid,
                             master;
-                        centreUuid[centreUuid.length - 1] = "Master for " + data.entity.key;
+                        centreUuid[centreUuid.length - 1] = "Master for " + masterName;
                         masterUuid = centreUuid.join('/');
                         master = {
-                            title: "Master for " + data.entity.key,
-                            description: "Master for " + data.entity.key,
+                            title: "Master for " + masterName,
+                            description: "Master for " + masterName,
                             view: {
                                 import: "/users/" + user.login + "/master/" + fullTypeName,
                                 elementName: "tg-" + simpleTypeName + "-master",
