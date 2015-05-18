@@ -25,6 +25,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -199,6 +200,18 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         // IMPORTANT: the check for invalid will populate 'required' checks.
         //            It is necessary in case when some property becomes required after the change of other properties.
         entity.isValid();
+
+        // disregard requiredness validation errors for crit-only properties on masters for non-criteria types
+        final Class<?> managedType = entity.getType();
+        if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
+            for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {
+                final String prop = entry.getKey();
+                final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
+                if (critOnlyAnnotation != null) {
+                    entry.getValue().setRequiredValidationResult(Result.successful(entity));
+                }
+            }
+        }
 
         return entity;
     }
