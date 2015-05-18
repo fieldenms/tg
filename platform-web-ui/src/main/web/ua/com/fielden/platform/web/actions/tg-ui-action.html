@@ -197,7 +197,7 @@
 
                 detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
                     postal.publish({
-                        channel: detail.centreUuid,
+                        channel: "centre_" + detail.centreUuid,
                         topic: "detail.saved",
                         data: {
                             entity: potentiallySavedEntity,
