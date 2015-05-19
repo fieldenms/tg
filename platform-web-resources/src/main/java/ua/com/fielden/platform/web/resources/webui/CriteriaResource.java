@@ -165,7 +165,10 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
                 renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>) entity).get());
             }
             pair.getKey().put("renderingHints", renderingHints);
+        } else {
+            pair.getKey().put("renderingHints", new ArrayList<Object>());
         }
+
         enhanceResultEntitiesWithCustomPropertyValues(centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
 
         final ArrayList<Object> list = new ArrayList<Object>();

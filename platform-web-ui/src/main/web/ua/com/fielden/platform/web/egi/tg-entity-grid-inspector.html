@@ -306,7 +306,7 @@
                     if (this._isEntity(value)) {
                         column.runAction(value);
                     } else if (property.indexOf(".") > -1) {
-                        this.tap(entity, property.substring(0, property.lastIndexOf(".")));
+                        this.tap(entity, property.substring(0, property.lastIndexOf(".")), column);
                     } else {
                         column.runAction(entity);
                     }
