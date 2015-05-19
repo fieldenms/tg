@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/paper-dropdown/paper-dropdown.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
+<link rel="import" href="/resources/actions/tg-page-action.html">
 
 <polymer-element name="tg-secondary-action-button" attributes="actions currentEntity">
     <template>
@@ -24,7 +25,8 @@
         <paper-dropdown id="dropdown" style="position:absolute" on-tap="{{closeDropDown}}">
         	<div layout vertical>
             	<template repeat="{{action in actions}}">
-            		<tg-ui-action currentEntity="{{currentEntity}}" user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
+            		<tg-page-action icon="{{action.icon}}" action="{{action.action}}" context="{{currentEntity}}" hidden?="{{!action.action}}"></tg-page-action>
+            		<tg-ui-action hidden?="{{action.action}}" currentEntity="{{currentEntity}}" user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
             	</template>
             </div>
         </paper-dropdown>
