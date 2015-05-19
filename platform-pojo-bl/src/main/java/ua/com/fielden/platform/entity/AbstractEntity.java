@@ -421,19 +421,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @Observable
     public AbstractEntity<K> setKey(final K key) {
         this.key = key;
-        updateKeyMetaProperty();
         return this;
-    }
-
-    /**
-     * At the instantiation time it is not possible to determine key type, because the actual value may not be available. Therefore, this method was introduced to ensure correct
-     * type assignment to the meta-property associated with <code>key</code>.
-     */
-    private void updateKeyMetaProperty() {
-        final MetaProperty<?> property = getProperty(KEY);
-        if (property != null && this.key != null) {
-            property.setType(getKeyType());
-        }
     }
 
     /**
