@@ -79,7 +79,7 @@
             <tbody>
                 <template repeat="{{entity, entityIndex in entities}}">
                     <tr selected?="{{selectionModel[entityIndex]}}">
-                        
+
                         <td class="selection-column">
                             <core-tooltip position="bottom" class="delayed" style="width:100%">
                                 <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
@@ -219,12 +219,12 @@
                 onSelectionChanged: function (e, detail, source) {
                     var index = +source.getAttribute("index");
                     if (source.checked) {
-                        if (!hasEntity(this.entities[index], this.selectedEntities) /* this.selectedEntities.indexOf(this.entities[index]) < 0 */ ) {
+                        if ( /*!hasEntity(this.entities[index], this.selectedEntities)*/ this.selectedEntities.indexOf(this.entities[index]) < 0) {
                             this.selectedEntities.push(this.entities[index]);
                             this.selectionModel[index] = true;
                         }
                     } else {
-                        if (hasEntity(this.entities[index], this.selectedEntities) /* this.selectedEntities.indexOf(this.entities[index]) >= 0 */ ) {
+                        if ( /*hasEntity(this.entities[index], this.selectedEntities)*/ this.selectedEntities.indexOf(this.entities[index]) >= 0) {
                             this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
                             this.selectionModel[index] = false;
                         }
@@ -232,6 +232,15 @@
                     console.log("onSelectionChanged: rows=", this.getSelectedRows(), "SelectedEntities=", this.getSelectedEntities(), "selectionModel=", this.selectionModel);
                 },
                 getSelectedEntities: function () {
+                    var currentSelectedEntities = [];
+                    this.selectionModel.forEach(function (elem, elemIndex) {
+                        if (elem) {
+                            currentSelectedEntities.push(this.entities[elemIndex]);
+                        }
+                    }.bind(this));
+                    return currentSelectedEntities;
+                },
+                getAllSelectedEntities: function() {
                     return this.selectedEntities;
                 },
                 getSelectedRows: function () {
@@ -244,10 +253,16 @@
                     return selectedRows;
                 },
                 entitiesChanged: function (oldValue, newValue) {
-                    console.log("entities changed")
+                    console.log("entities changed");
+                    newValue.forEach(function (entity) {
+                        var entInd = findEntity(entity, this.selectedEntities);
+                        if (entInd > -1) {
+                            this.selectedEntities[entInd] = entity;
+                        }
+                    }.bind(this));
                     this.selectionModel = [];
                     newValue.forEach(function (entity) {
-                        this.selectionModel.push(hasEntity(entity, this.selectedEntities))
+                        this.selectionModel.push(this.selectedEntities.indexOf(entity) > -1);
                     }.bind(this));
                 },
                 clearSelection: function () {
