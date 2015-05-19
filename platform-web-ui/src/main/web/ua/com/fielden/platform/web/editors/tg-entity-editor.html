@@ -459,6 +459,7 @@
                                 this.$.overlay.style.position = 'absolute';
                                 this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
                             } else {
+                                this.$.overlay.style.position = 'inherit';
                                 this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px !important';
                             }
 
@@ -481,7 +482,7 @@
                                 this.$.overlay.style['min-width'] = '250px';
                             }
 
-                            this.$.overlay.open();
+                            this.$.overlay.toggle();
                         } else if (this.$.overlay.opened && this.matchedValues.length == 0) {
                             this.$.overlay.toggle();
                         }
