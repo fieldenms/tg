@@ -455,13 +455,13 @@
                                 }
                             }
 
-                            if (isPartOfDialog === false) {
-                                this.$.overlay.style.position = 'absolute';
-                                this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
-                            } else {
-                                this.$.overlay.style.position = 'inherit';
-                                this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px !important';
-                            }
+                            //if (isPartOfDialog === false) {
+                            this.$.overlay.style.position = 'absolute';
+                            this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
+                            //} else {
+                            //    this.$.overlay.style.position = 'relative';
+                            //    this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px !important';
+                            //}
 
 
                             // if the editors right edge is close to the right side of the viewport then position the overlay
