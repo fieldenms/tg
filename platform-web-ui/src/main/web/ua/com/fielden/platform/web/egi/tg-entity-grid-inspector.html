@@ -330,7 +330,9 @@
                             newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
                             newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
                         } else {
-                            throw ("Updated entity [" + updateEntity + "] does not exist in original result-set [" + newEntities + "].");
+                        	// this is the case when the updateEntity was not present in result-set, but should become present. Adds it into the beginning of the list
+                        	newEntities.unshift(updatedEntity);
+                        	newRenderingHints.unshift(updatedEntityRenderingHints);
                         }
                     }
                     // need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
