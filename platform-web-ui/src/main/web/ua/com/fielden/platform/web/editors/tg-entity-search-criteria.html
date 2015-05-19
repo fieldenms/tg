@@ -295,7 +295,7 @@
 
 
                     // otherwise split 
-                    var searchExp = new RegExp(this.searchQuery, 'g', 'i');
+                    var searchExp = new RegExp(this.searchQuery, 'gi');
                     var match;
                     var startIndex = 0;
                     while ((match = searchExp.exec(text)) !== null) {
