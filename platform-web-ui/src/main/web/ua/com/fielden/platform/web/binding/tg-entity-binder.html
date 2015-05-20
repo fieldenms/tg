@@ -353,14 +353,14 @@
                     originalBindingView["version"] = entity["version"];
 
                     entity.traverseProperties(function (propertyName) {
-                        if (!entity.prop(propertyName).isEditable()) {
+                        // if (!entity.prop(propertyName).isEditable()) {
                         	// EDGE-CASE: in case of non-editable properties -- originalBindingView should hold the value
                         	//   that is equal to bindingView value -- this makes the property 'unmodified' and 
                         	//   such property will not be applied to validationPrototype on the server.
-                         	originalBindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
-                        } else {
-                        	originalBindingView[propertyName] = self.$.reflector.convert(entity.getOriginal(propertyName));
-                        }
+                        //  	originalBindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
+                        // } else {
+                        originalBindingView[propertyName] = self.$.reflector.convert(entity.getOriginal(propertyName));
+                        // }
                     });
 
                     // console.log("       entity + originalBindingView", entity, bindingView);
