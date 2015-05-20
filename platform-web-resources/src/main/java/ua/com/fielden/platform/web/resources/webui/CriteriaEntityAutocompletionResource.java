@@ -114,5 +114,18 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends AbstractEntit
     private Pair<CRITERIA, Map<String, Object>> constructCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder) {
         final CRITERIA valPrototype = (CRITERIA) CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreResourceUtils.getFreshCentre(gdtm, miType), critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         return EntityResourceUtils.constructEntity(modifiedPropertiesHolder, valPrototype, coFinder);
+//        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+//
+//        CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
+//        final CRITERIA valPrototype = (CRITERIA) CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+//
+//        final Pair<CRITERIA, Map<String, Object>> entityAndHolder = (Pair<CRITERIA, Map<String, Object>>)
+//        EntityResourceUtils.constructCriteriaEntityAndResetMetaValues(
+//                modifiedPropertiesHolder,
+//                (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) valPrototype,
+//                CentreUtils.getOriginalManagedType(valPrototype.getType(), originalCdtmae),
+//                coFinder//
+//        );
+//        return entityAndHolder;
     }
 }

@@ -438,15 +438,17 @@
             },
             
             createContextHolder: function(inputText) {
-                var centreContextHolder = this.$.reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
+            	var reflector = this.$.reflector;
+                var centreContextHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
+                centreContextHolder.id = null;
                 var paramsHolder = this.createModifiedPropertiesHolder();
                 paramsHolder["@@searchString"] = inputText;
                 centreContextHolder["modifHolder"] = paramsHolder;
                 if (this.requireSelectedEntities !== null) {
-                	this.$.reflector.provideSelectedEntities(this.requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
+                	reflector.provideSelectedEntities(this.requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
                 }
                 if (this.requireMasterEntity !== null) {
-                	this.$.reflector.provideMasterEntity(this.requireMasterEntity, centreContextHolder, this.getMasterEntity);
+                	reflector.provideMasterEntity(this.requireMasterEntity, centreContextHolder, this.getMasterEntity);
                 }
                 return centreContextHolder;
             }
