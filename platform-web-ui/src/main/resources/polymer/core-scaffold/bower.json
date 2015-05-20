@@ -7,5 +7,5 @@
     "core-icon-button": "Polymer/core-icon-button#^0.5",
     "core-toolbar": "Polymer/core-toolbar#^0.5"
   },
-  "version": "0.5.4"
+  "version": "0.5.6"
 }

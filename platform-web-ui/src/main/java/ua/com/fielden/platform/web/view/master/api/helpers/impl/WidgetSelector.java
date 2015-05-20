@@ -73,7 +73,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IMultilineTextConfig<T> asMultilineText() {
-        widget = new MultilineTextWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName);
+        widget = new MultilineTextWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), smBuilder.entityType, propertyName);
         return new MultilineTextConfig<>((MultilineTextWidget) widget, smBuilder);
     }
 

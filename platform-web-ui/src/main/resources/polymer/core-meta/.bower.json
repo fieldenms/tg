@@ -4,13 +4,13 @@
   "dependencies": {
     "polymer": "Polymer/polymer#^0.5"
   },
-  "version": "0.5.4",
+  "version": "0.5.6",
   "homepage": "https://github.com/Polymer/core-meta",
-  "_release": "0.5.4",
+  "_release": "0.5.6",
   "_resolution": {
     "type": "version",
-    "tag": "0.5.4",
-    "commit": "031761d2b38840586c4c2fbc293fb044493f540d"
+    "tag": "0.5.6",
+    "commit": "10cb9e53ebfab9f2bd30e7bfe1a9146a85202829"
   },
   "_source": "git://github.com/Polymer/core-meta.git",
   "_target": "^0.5",

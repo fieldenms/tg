@@ -1,11 +1,38 @@
 {
-  "name": "web-animations-next",
-  "homepage": "https://github.com/web-animations/web-animations-next",
-  "_release": "12ccae2cc4",
+  "name": "web-animations-js",
+  "description": "JavaScript implementation of the Web Animations API",
+  "homepage": "https://github.com/web-animations/web-animations-js",
+  "main": "web-animations.min.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "animations",
+    "polyfill"
+  ],
+  "license": "Apache-2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "templates",
+    "test",
+    "src",
+    "Gruntfile.js",
+    "package.json",
+    "target-config.js",
+    "target-loader.js",
+    "web-animations.dev.html",
+    "web-animations.dev.js",
+    "web-animations-next.dev.html",
+    "web-animations-next.dev.js",
+    "web-animations-next-lite.dev.html",
+    "web-animations-next-lite.dev.js"
+  ],
+  "_release": "3b0e48a783",
   "_resolution": {
     "type": "branch",
     "branch": "master",
-    "commit": "12ccae2cc48dd11c0fb1b8c85e90f1ce21c9e3ab"
+    "commit": "3b0e48a7835149fcb75783b893bb2d447139a14e"
   },
   "_source": "git://github.com/web-animations/web-animations-next.git",
   "_target": "master",

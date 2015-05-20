@@ -6,8 +6,10 @@
     "polymer": "Polymer/polymer#^0.5",
     "core-focusable": "Polymer/core-focusable#^0.5",
     "core-icon-button": "Polymer/core-icon-button#^0.5",
-    "paper-fab": "Polymer/paper-fab#^0.5",
     "core-resizable": "Polymer/core-resizable#^0.5"
   },
-  "version": "0.5.4"
+  "devDependencies": {
+    "paper-fab": "Polymer/paper-fab#master"
+  },
+  "version": "0.5.6"
 }

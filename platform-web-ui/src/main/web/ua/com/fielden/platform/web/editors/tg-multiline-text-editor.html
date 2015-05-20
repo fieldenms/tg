@@ -3,18 +3,20 @@
 <link rel="import" href="/resources/editors/tg-editor.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-autogrow-textarea.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-char-counter.html">
 <link rel="import" href="/resources/polymer/core-input/core-input.html">
 <link rel="import" href="/resources/master/actions/tg-property-action.html">
 <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 
-<polymer-element name="tg-multiline-text-editor" extends="tg-editor" layout vertical>
+<polymer-element name="tg-multiline-text-editor" extends="tg-editor" attributes="max" layout vertical>
     <template>
         <paper-input-decorator id="decorator" label="{{propTitle}}" flex auto floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
             <div layout horizontal>
                 <div id="input-container" flex>
                     <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}" layout horizontal>
                         <paper-autogrow-textarea maxRows="5" flex>
-                            <textarea id="input"value="{{editingValue}}" on-change="{{changeAction}}" disabled?="{{_isDisabled(currentState)}}"></textarea>
+                            <textarea id="input"value="{{editingValue}}" on-change="{{changeAction}}" disabled?="{{_isDisabled(currentState)}}" maxlength="{{max}}"></textarea>
+                             <paper-char-counter id="inputCounter" showCounter="{{!!max}}" class="footer"></paper-char-counter>
                         </paper-autogrow-textarea>
 <!--                        <textarea id="input" value="{{editingValue}}" on-change="{{changeAction}}" disabled?="{{_isDisabled(currentState)}}"></textarea>-->
                         <span class="span-tooltip" tip>
@@ -31,6 +33,10 @@
     </template>
     <script>
         Polymer('tg-multiline-text-editor', {
+            ready: function() {
+                this.super();
+                this.$.inputCounter.target = this.$.input;
+            },
             /**
              * Converts the value into string representation (which is used in edititing / comm values).
              */
@@ -47,7 +53,7 @@
 
             changeAction: function () {
                 this.commit();
-            }
+            } 
         });
     </script>
 </polymer-element>

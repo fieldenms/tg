@@ -8,13 +8,13 @@
   "ignore": [
     "externs/**"
   ],
-  "version": "0.5.4",
+  "version": "0.5.6",
   "homepage": "https://github.com/Polymer/paper-radio-button",
-  "_release": "0.5.4",
+  "_release": "0.5.6",
   "_resolution": {
     "type": "version",
-    "tag": "0.5.4",
-    "commit": "e9a1003678d4c66d24521bfe776a52807c69b0a1"
+    "tag": "0.5.6",
+    "commit": "67a0a3ed1db10641c9f576af76782fd14a516fcb"
   },
   "_source": "git://github.com/Polymer/paper-radio-button.git",
   "_target": "^0.5",

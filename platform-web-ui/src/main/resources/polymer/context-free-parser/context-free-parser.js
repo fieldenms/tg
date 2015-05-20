@@ -105,6 +105,19 @@
               makePragma(current, pragma, subObj);
               break;
 
+            case 'return':
+              var returnRe = /\{(.+)\}\s+(.*)$/;
+
+              var returnReResult = content.match(returnRe);
+              if (returnReResult) {
+                var subReturnObj = {
+                  type: returnReResult[1],
+                  description: returnReResult[2]
+                };
+                subCurrent[pragma] = subReturnObj;
+              }
+              break;
+
             // everything else
             default:
               current[pragma] = content;
