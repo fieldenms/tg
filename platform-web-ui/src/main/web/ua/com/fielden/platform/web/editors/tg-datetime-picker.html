@@ -43,18 +43,18 @@
                 font: inherit;
             }
         </style>
-        <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
+        <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
             <div layout horizontal>
                 <div id="input-container" flex>
                     <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}">
-                        <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
+                        <input id="input" is="core-input" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
                         <span class="span-tooltip" tip>
                             {{tooltip(propDesc)}}
                         </span>
                     </core-tooltip>
                 </div>
                 <div id="icon">
-                    <core-icon-button on-click="{{showCalendar}}" icon="today" disabled?="{{_isDisabled(currentState)}}"></core-icon-buton>
+                    <core-icon-button on-click="{{showCalendar}}" icon="today" disabled?="{{_isDisabled(currentState, entity, propertyName)}}"></core-icon-buton>
                 </div>
                 <div id="action_icon" hidden?="{{!action}}">
                     <tg-property-action user="{{action.user}}" entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>

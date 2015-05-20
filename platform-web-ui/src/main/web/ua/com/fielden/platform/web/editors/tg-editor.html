@@ -185,13 +185,13 @@
             },
 
             /**
-             * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state).
+             * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state and 'editable' meta-state for the property).
              */
-            _isDisabled: function (state) {
+            _isDisabled: function (state, bindingEntity, propertyName) {
                 if (state === undefined || state === 'VIEW') {
                     return true;
                 } else if (state === 'EDIT') {
-                    return false;
+                    return !(bindingEntity["@" + propertyName + "_editable"]);
                 } else {
                     throw "Unsupported state exception: " + state + ".";
                 }
@@ -438,15 +438,17 @@
             },
             
             createContextHolder: function(inputText) {
-                var centreContextHolder = this.$.reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
+            	var reflector = this.$.reflector;
+                var centreContextHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
+                centreContextHolder.id = null;
                 var paramsHolder = this.createModifiedPropertiesHolder();
                 paramsHolder["@@searchString"] = inputText;
                 centreContextHolder["modifHolder"] = paramsHolder;
                 if (this.requireSelectedEntities !== null) {
-                	this.$.reflector.provideSelectedEntities(this.requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
+                	reflector.provideSelectedEntities(this.requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
                 }
                 if (this.requireMasterEntity !== null) {
-                	this.$.reflector.provideMasterEntity(this.requireMasterEntity, centreContextHolder, this.getMasterEntity);
+                	reflector.provideMasterEntity(this.requireMasterEntity, centreContextHolder, this.getMasterEntity);
                 }
                 return centreContextHolder;
             }

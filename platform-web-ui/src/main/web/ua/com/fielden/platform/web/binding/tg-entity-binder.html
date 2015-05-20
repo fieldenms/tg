@@ -314,7 +314,7 @@
                             bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                         } else {
                             var converted = self.$.reflector.convert(entity.get(propertyName));
-                            bindingView[propertyName] = converted;
+	                        bindingView[propertyName] = converted;
 
                             var value = entity.get(propertyName);
                             if (self._isEntity(value)) {
@@ -333,6 +333,8 @@
                                 bindingView["@" + propertyName + "_uppercase"] = true;
                             }
                         }
+                        
+                        bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
 
                         if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
                             throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
@@ -346,18 +348,25 @@
                 _extractOriginalBindingView: function (entity) {
                     var self = this;
                     var Entity = self.$.reflector.getEntityType();
-                    var bindingView = new Entity();
+                    var originalBindingView = new Entity();
 
-                    bindingView["_type"] = entity["_type"];
-                    bindingView["id"] = entity["id"];
-                    bindingView["version"] = entity["version"];
+                    originalBindingView["_type"] = entity["_type"];
+                    originalBindingView["id"] = entity["id"];
+                    originalBindingView["version"] = entity["version"];
 
                     entity.traverseProperties(function (propertyName) {
-                        bindingView[propertyName] = self.$.reflector.convert(entity.getOriginal(propertyName));
+                        // if (!entity.prop(propertyName).isEditable()) {
+                        	// EDGE-CASE: in case of non-editable properties -- originalBindingView should hold the value
+                        	//   that is equal to bindingView value -- this makes the property 'unmodified' and 
+                        	//   such property will not be applied to validationPrototype on the server.
+                        //  	originalBindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
+                        // } else {
+                        originalBindingView[propertyName] = self.$.reflector.convert(entity.getOriginal(propertyName));
+                        // }
                     });
 
                     // console.log("       entity + originalBindingView", entity, bindingView);
-                    return bindingView;
+                    return originalBindingView;
                 }
             });
         })();
