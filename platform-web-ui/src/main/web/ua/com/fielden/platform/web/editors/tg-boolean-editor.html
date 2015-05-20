@@ -29,11 +29,11 @@
                 border-color: #0288D1;
             }
         </style>
-        <paper-input-decorator id="decorator" label=" " floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
+        <paper-input-decorator id="decorator" label=" " floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
             <div layout horizontal>
                 <div id="input-container" flex>
                     <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}">
-                        <paper-checkbox id="input" checked?="{{editingValue === 'true'}}" label="{{propTitle}}" disabled?="{{_isDisabled(currentState)}}" on-core-change="{{onCoreChange}}"></paper-checkbox>
+                        <paper-checkbox id="input" checked?="{{editingValue === 'true'}}" label="{{propTitle}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}" on-core-change="{{onCoreChange}}"></paper-checkbox>
                         <span class="span-tooltip" tip>
                             {{tooltip(propDesc)}}
                         </span>

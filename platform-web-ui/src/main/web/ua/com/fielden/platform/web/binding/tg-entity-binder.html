@@ -333,6 +333,8 @@
                                 bindingView["@" + propertyName + "_uppercase"] = true;
                             }
                         }
+                        
+                        bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
 
                         if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
                             throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";

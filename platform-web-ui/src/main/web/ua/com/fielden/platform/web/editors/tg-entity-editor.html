@@ -49,12 +49,12 @@
 
         <!-- structure of representation -->
         <div id="all" relative>
-            <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState)}}">
+            <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
                 <div layout horizontal>
                     <div id="input-container" flex>
                         <!-- if tooltip is empty then the core-tooltip is not shown -->
                         <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltipBinding(valueDesc, propDesc)}}">
-                            <input is="core-input" id="input" class="upper-case" on-input="{{onInput}}" on-focus="{{onFocus}}" on-blur="{{onBlur}}" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState)}}">
+                            <input is="core-input" id="input" class="upper-case" on-input="{{onInput}}" on-focus="{{onFocus}}" on-blur="{{onBlur}}" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
                             <span class="span-tooltip" tip>
                                 {{tooltipBinding(valueDesc, propDesc)}}
                             </span>
@@ -65,7 +65,7 @@
                             <paper-spinner id="spinner" active="{{isSearching}}" class="blue" alt="searching"></paper-spinner>
                         </template>
 
-                        <core-icon-button class="{{searchButtonClass(isSearching)}}" on-tap="{{onSearchButtonTap}}" icon="search" disabled?="{{_isDisabled(currentState)}}"></core-icon-buton>
+                        <core-icon-button class="{{searchButtonClass(isSearching)}}" on-tap="{{onSearchButtonTap}}" icon="search" disabled?="{{_isDisabled(currentState, entity, propertyName)}}"></core-icon-buton>
                     </div>
                     <div id="action_icon" hidden?="{{!action}}">
                         <tg-property-action user="{{action.user}}" entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>

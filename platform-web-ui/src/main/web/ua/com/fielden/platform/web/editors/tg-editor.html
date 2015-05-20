@@ -185,13 +185,13 @@
             },
 
             /**
-             * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state).
+             * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state and 'editable' meta-state for the property).
              */
-            _isDisabled: function (state) {
+            _isDisabled: function (state, bindingEntity, propertyName) {
                 if (state === undefined || state === 'VIEW') {
                     return true;
                 } else if (state === 'EDIT') {
-                    return false;
+                    return !(bindingEntity["@" + propertyName + "_editable"]);
                 } else {
                     throw "Unsupported state exception: " + state + ".";
                 }
