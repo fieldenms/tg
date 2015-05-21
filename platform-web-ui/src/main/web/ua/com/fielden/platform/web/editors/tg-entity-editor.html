@@ -577,8 +577,14 @@
 
                     // console.log("entityChanged: newValue === ", newValue);
                     if (this._isEntity(newValue)) {
-                    	// TODO for dot-notation properties -- no desc will be promoted -- this potentially should be changed
-                        if (!this.$.reflector.isDotNotated(this.propertyName) && newValue.get(this.propertyName) !== null) {
+                    	if (this.$.reflector.isDotNotated(this.propertyName)) {
+                    		var propValue = this.getValueFor(newValue, this.propertyName);
+                    		if (this._isEntity(propValue)) {
+                    			this.valueDesc = this.$.reflector.convert(propValue.get("desc"))
+                    		} else {
+                    			this.valueDesc = null;
+                    		}
+                    	} else if (newValue.get(this.propertyName) !== null) {
                             if (newValue._isObjectUndefined("@" + this.propertyName + "_error")) { // if valid -- desc should exist!
                                 this.valueDesc = newValue.get("@" + this.propertyName + "_desc");
                             } else { // if invalid -- use validation message

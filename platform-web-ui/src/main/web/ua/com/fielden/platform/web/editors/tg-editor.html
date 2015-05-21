@@ -220,7 +220,16 @@
              * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
              */
             getBindingValue: function(bindingEntity, dotNotatedName) {
-            	return this.$.reflector.isDotNotated(dotNotatedName) ? this.$.reflector.convert(bindingEntity["@@origin"].get(dotNotatedName)) : bindingEntity.get(dotNotatedName);
+            	return this.$.reflector.isDotNotated(dotNotatedName) ? this.$.reflector.convert(this.getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
+            },
+            
+            /**
+             * Returns the full value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+             *
+             * This method does no conversion of the value to 'binding' representation.
+             */
+            getValueFor: function(bindingEntity, dotNotatedName) {
+            	return bindingEntity["@@origin"].get(dotNotatedName);
             },
 
             /**
