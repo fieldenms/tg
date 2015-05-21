@@ -183,7 +183,7 @@
                             if (self.subSelected) {
                                 newState.push(self.subSelected);
                             }
-                            history.pushState(newState);
+                            history.pushState(newState, "");
                             postal.publish({
                                 channel: "app",
                                 topic: "state.pushed",
@@ -219,7 +219,7 @@
                         topic: "state.select",
                         callback: function (data, envelop) {
                             if (data.state[1] === self.selected && ((data.state[2] && data.state[2] === self.subSelected) || (!data.state[2] && !self.subSelected))) {
-                                history.pushState(data.state);
+                                history.pushState(data.state, "");
                             } else {
                                 self.selected = data.state[1];
                                 if (data.state.length > 2) {
@@ -348,7 +348,7 @@
                                 }
                             });
                         } else {
-                            history.pushState(state);
+                            history.pushState(state, "");
                             this.$.drawerPanel.closeDrawer();
                         }
                     }

@@ -83,7 +83,7 @@
                         channel: this.item.title,
                         topic: "state.push",
                         callback: function (data, envelope) {
-                            history.pushState(data.state);
+                            history.pushState(data.state, "");
                             if (!self.$.menuItemView.wasLoaded()) {
                                 self.$.menuItemView.load();
                             } else {
