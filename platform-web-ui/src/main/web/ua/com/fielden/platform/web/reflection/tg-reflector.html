@@ -756,6 +756,13 @@
                     } else {
                     	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
                     }
+                },
+
+                /**
+                 * Returns 'true' if the propertyName is specified in 'dot-notation' syntax, otherwise 'false'.
+                 */
+                isDotNotated: function(propertyName) {
+                    return propertyName.indexOf(".") > -1;
                 }
             });
         })();

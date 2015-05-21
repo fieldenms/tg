@@ -191,7 +191,7 @@
                 if (state === undefined || state === 'VIEW') {
                     return true;
                 } else if (state === 'EDIT') {
-                    return !(bindingEntity["@" + propertyName + "_editable"]);
+                    return this.$.reflector.isDotNotated(propertyName) ? true : (!(bindingEntity["@" + propertyName + "_editable"]));
                 } else {
                     throw "Unsupported state exception: " + state + ".";
                 }
@@ -205,13 +205,22 @@
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(entity)) {
                         // console.log("_bindingValue prop value", entity.get(propertyName));
-                        return entity.get(propertyName);
+                        return this.getBindingValue(entity, propertyName);
                     } else {
                         return "Not yet initialised currBindingEntity, from which to get binding value!";
                     }
                 } else {
                     return "Not yet initialised this.$!";
                 }
+            },
+
+            /**
+             * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+             *
+             * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
+             */
+            getBindingValue: function(bindingEntity, dotNotatedName) {
+            	return this.$.reflector.isDotNotated(dotNotatedName) ? this.$.reflector.convert(bindingEntity["@@origin"].get(dotNotatedName)) : bindingEntity.get(dotNotatedName);
             },
 
             /**
@@ -245,7 +254,8 @@
                 // console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(newValue)) {
-                        var newEditingValue = this.convertToString(newValue.get(this.propertyName));
+                    	var propValue = this.getBindingValue(newValue, this.propertyName);
+                        var newEditingValue = this.convertToString(propValue);
                         if (newEditingValue === this.editingValue && this.refreshCycleStarted) {
                             this.refreshCycleStarted = false;
                         }
@@ -358,6 +368,9 @@
                     this.bindError(editorValidationMsg);
                 } else if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(entity)) {
+                    	// please, note that dot-notated property will not have any errors / warnings / requiredness
+                    	//     - for these props it does not make sense to propagate such meta-information from
+                    	//     parent property -- the parent prop (if added in master) will show that errors concisely
                         if (typeof entity["@" + property + "_error"] !== 'undefined') {
                             this.bindError(entity["@" + property + "_error"].message);
                         } else if (typeof entity["@" + property + "_warning"] !== 'undefined') {

@@ -299,6 +299,9 @@
                     bindingView = self.$.reflector.newEntity(entity.type().fullClassName());
                     bindingView["id"] = entity["id"];
                     bindingView["version"] = entity["version"];
+                    // this property of the bindingView will hold the reference to fully-fledged entity, 
+                    //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
+                    bindingView["@@origin"] = entity;
 
                     entity.traverseProperties(function (propertyName) {
                         if (self.$.reflector.isError(entity.prop(propertyName).validationResult())) {
