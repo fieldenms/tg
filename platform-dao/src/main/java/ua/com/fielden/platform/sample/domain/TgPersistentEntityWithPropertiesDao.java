@@ -50,7 +50,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("domainInitProp", "nonConflictingProp", "conflictingProp")
                 // .with("entityProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key"))
                 .with("userParam")
-                .with("entityProp")
+                .with("entityProp", "entityProp.entityProp")
                 //                .with("status")
                 .with("critOnlyEntityProp")
                 .with("compositeProp")
