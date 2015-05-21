@@ -88,11 +88,11 @@
                         var entityAndCustomObject = deserialised.instance;
                         var criteriaEntity = entityAndCustomObject[0];
                         var customObject = self.$.reflector.customObject(entityAndCustomObject);
-                        var resultEntities = customObject.resultEntities; // entityAndCustomObject.slice(2);
-                        var pageCount = customObject.pageCount;
+                        var resultEntities = customObject.resultEntities || [];
+                        var pageCount = customObject.pageCount || null;
                         var metaValues = customObject.metaValues;
                         var isCentreChanged = customObject.isCentreChanged;
-                        var renderingHints = customObject.renderingHints;
+                        var renderingHints = customObject.renderingHints || [];
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
 
                         self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities);
