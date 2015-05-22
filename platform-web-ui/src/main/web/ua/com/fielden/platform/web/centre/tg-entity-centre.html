@@ -275,7 +275,7 @@
                 },
 
                 onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
-                    console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+                    // console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
                     if (criteriaEntity.isValid()) {
 	                    if (isRefreshingConcreteEntities) {
 	                    	this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this.entitiesThatShouldBeUpdated);
@@ -290,9 +290,6 @@
 	                            this.triggerRun = false;
 	                        }
 	                    }
-                    } else {
-	                    this.$.egi.entities = [];
-    	                this.$.egi.renderingHints = [];
                     }
                 },
 
