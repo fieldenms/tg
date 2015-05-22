@@ -30,7 +30,7 @@
     <!-- -->
     .invalid core-icon-button /deep/ core-icon { fill : {{g.paperInput.invalidColor}}; }
     <!-- -->
-    paper-spinner { position: absolute; top: {{g.paperInput.top}}; padding: 2px; margin: 0px; width: 16px; height: 16px;}
+    paper-spinner { position: absolute; top: {{g.paperInput.top}}; padding: 0px; margin: 0px; width: 14px; height: 14px;}
     <!-- -->
     paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
     <!-- -->
@@ -577,14 +577,14 @@
 
                     // console.log("entityChanged: newValue === ", newValue);
                     if (this._isEntity(newValue)) {
-                    	if (this.$.reflector.isDotNotated(this.propertyName)) {
-                    		var propValue = this.getValueFor(newValue, this.propertyName);
-                    		if (this._isEntity(propValue)) {
-                    			this.valueDesc = this.$.reflector.convert(propValue.get("desc"))
-                    		} else {
-                    			this.valueDesc = null;
-                    		}
-                    	} else if (newValue.get(this.propertyName) !== null) {
+                        if (this.$.reflector.isDotNotated(this.propertyName)) {
+                            var propValue = this.getValueFor(newValue, this.propertyName);
+                            if (this._isEntity(propValue)) {
+                                this.valueDesc = this.$.reflector.convert(propValue.get("desc"))
+                            } else {
+                                this.valueDesc = null;
+                            }
+                        } else if (newValue.get(this.propertyName) !== null) {
                             if (newValue._isObjectUndefined("@" + this.propertyName + "_error")) { // if valid -- desc should exist!
                                 this.valueDesc = newValue.get("@" + this.propertyName + "_desc");
                             } else { // if invalid -- use validation message
