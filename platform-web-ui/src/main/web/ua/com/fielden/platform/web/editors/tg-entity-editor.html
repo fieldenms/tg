@@ -648,8 +648,23 @@
                         this.selectedItem = null;
 
                         if (selectedItemToStr) {
-                            this.isAcceptingValueFromSuggestions = true;
-                            this.editingValue = selectedItemToStr;
+                        	if (!this.$.reflector.equalsEx(selectedItemToStr, this.editingValue)) {
+	                            this.isAcceptingValueFromSuggestions = true;
+    	                        this.editingValue = selectedItemToStr;
+                        	} else {
+                        		// EDGE-CASE: when the editing value has been already populated
+                        		//   and this value equals to the value that was selected from the list -- 
+                        		//   changing of 'this.editingValue' will not have any effect.
+                        		// Such situation happens if the user edits to, for e.g., 'A10184' and then
+                        		//   choses the entity 'A10184' from the list.
+                        		// TechNote: in such case, before clicking on OK button, the chain reaction 
+                        		//   'editingValueChanged->commValueChanged->acceptedValueChanged' has been already
+                        		//   performed. So there is a need to start validation only ('this.onAcceptedValueChanged()' method).
+                                if (this.isAcceptingValueFromSuggestions) {
+                                    this.isAcceptingValueFromSuggestions = false;
+                                }
+                                this.onAcceptedValueChanged();
+                        	}
                             //this.$.input.value = selectedItemToStr;
                             //this.editingValue = selectedItemToStr;
                         }
