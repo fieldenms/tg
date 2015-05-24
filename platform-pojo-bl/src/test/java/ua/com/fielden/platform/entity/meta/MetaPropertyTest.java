@@ -20,12 +20,12 @@ import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import com.google.inject.Injector;
 
 /**
- * 
+ *
  * This test case is complementary to AbstractEntityTest covering mainly meta-property functionality. A large number of test in AbstractEntityTest also pertain to meta-property
  * functionality.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class MetaPropertyTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
@@ -39,9 +39,10 @@ public class MetaPropertyTest {
     }
 
     @Test
-    public void all_properties_in_newly_instantiated_entities_should_be_dirty_and_not_marked_as_assigned() {
+    public void not_assigned_properties_in_newly_instantiated_entities_should_be_dirty_and_not_marked_as_assigned() {
         assertTrue(entity.getProperty("propWithBce").isDirty());
         assertFalse(entity.getProperty("propWithBce").isAssigned());
+        assertTrue("Property key was assigned by entity factory and thus should be recognised as assigned.", entity.getProperty("key").isAssigned());
     }
 
     @Test
@@ -126,5 +127,5 @@ public class MetaPropertyTest {
         assertFalse(entity.getProperty("propRequired").isValid());
         assertEquals(Finder.findFieldByName(entity.getType(), "propRequired").getAnnotation(Required.class).value(), entity.getProperty("propRequired").getFirstFailure().getMessage());
     }
-    
+
 }

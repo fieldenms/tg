@@ -113,8 +113,9 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     private T lastInvalidValue;
     private int valueChangeCount = 0;
     /**
-     * Indicates whether this property has an assigned value. This flag is requited due to the fact that the value of null could be assigned making it impossible to identify the
-     * fact of value assignment.
+     * Indicates whether this property has an assigned value.
+     * This flag is requited due to the fact that the value of null could be assigned making it impossible to identify the
+     * fact of value assignment in light of the fact that the original property value could, and in most cases is, be <code>null</code>.
      */
     private boolean assigned = false;
     ///////////////////////////////////////////////////////
