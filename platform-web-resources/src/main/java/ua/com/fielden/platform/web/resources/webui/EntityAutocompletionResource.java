@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -20,7 +19,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -64,9 +62,8 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     public Representation post(final Representation envelope) throws ResourceException {
         final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
-        final Pair<CONTEXT, Map<String, Object>> entityAndHolder = utils.constructEntity(centreContextHolder.getModifHolder());
-
-        final CONTEXT context = entityAndHolder.getKey();
+        // TODO complete the changes carefully
+        final CONTEXT context = !centreContextHolder.getModifHolder().containsKey(AbstractEntity.VERSION) ? null : utils.constructEntity(centreContextHolder.getModifHolder()).getKey();
         logger.debug("context = " + context);
 
         final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
@@ -75,7 +72,9 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
         final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
         logger.debug(String.format("SEARCH STRING %s", searchString));
 
-        valueMatcher.setContext(context);
+        if (context != null) {
+            valueMatcher.setContext(context);
+        }
         final fetch<T> fetch = EntityResourceUtils.<CONTEXT, T> fetchForProperty(coFinder, entityType, propertyName).fetchModel();
         valueMatcher.setFetch(fetch);
         final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
