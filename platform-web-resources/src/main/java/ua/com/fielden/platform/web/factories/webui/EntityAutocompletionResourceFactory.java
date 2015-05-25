@@ -10,10 +10,12 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -58,6 +60,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.POST == request.getMethod()) {
+            final String username = injector.getInstance(IUserProvider.class).getUser().getKey();
             final String entityTypeString = (String) request.getAttributes().get("entityType");
             final String propertyName = (String) request.getAttributes().get("property");
 
@@ -68,7 +71,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
             if (MiWithConfigurationSupport.class.isAssignableFrom(type)) {
                 final String criterionPropertyName = propertyName;
 
-                final IGlobalDomainTreeManager gdtm = injector.getInstance(IGlobalDomainTreeManager.class);
+                final IGlobalDomainTreeManager gdtm = injector.getInstance(IServerGlobalDomainTreeManager.class).get(username);
                 final ICriteriaGenerator critGenerator = injector.getInstance(ICriteriaGenerator.class);
                 final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) type; // CentreUtils.getMiType(criteriaType);
                 final EntityCentre<? extends AbstractEntity<?>> centre = this.webApp.getCentres().get(miType);
