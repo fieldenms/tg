@@ -170,6 +170,9 @@
                         }
                     });
                 },
+                deleteAction: function() {
+                    console.log("The selected entities must be deleted here!");
+                },
                 getContext: function () {
                     if (this.$.egi.getSelectedEntities().length > 0) {
                         return this.$.egi.getSelectedEntities()[0];
