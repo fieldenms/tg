@@ -33,14 +33,13 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("createModifiedPropertiesHolder", "{{createModifiedPropertiesHolder}}");
+
         attrs.put("user", "{{user}}");
         attrs.put("autocompletionType", "{{" + (selectionCriteriaWidget ? "mitype" : "entitytype") + "}}");
         attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
         if (centreContextConfig != null) {
-            if (centreContextConfig.withSelectionCrit) {
-                // disregarded at this stage -- sends every time
-            }
+            attrs.put("createModifiedPropertiesHolder", "{{createModifiedPropertiesHolder}}");
+            attrs.put("requireSelectionCriteria", centreContextConfig.withSelectionCrit ? "true" : "false");
             attrs.put("getSelectedEntities", "{{getSelectedEntities}}");
             attrs.put("requireSelectedEntities", centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE"));
             attrs.put("getMasterEntity", "{{getMasterEntity}}");

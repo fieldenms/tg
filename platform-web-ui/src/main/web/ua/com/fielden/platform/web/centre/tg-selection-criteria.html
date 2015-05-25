@@ -410,20 +410,16 @@
                 return propertyModel;
             },
 
-            createContextHolder: function (modifiedPropertiesHolder, requireSelectedEntities, requireMasterEntity) {
-                var reflector = this.$.reflector;
-                var centreContextHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
-                centreContextHolder.id = null;
-                var paramsHolder = modifiedPropertiesHolder;
-                paramsHolder["@@miType"] = this.mitype;
-                centreContextHolder["modifHolder"] = paramsHolder;
-                if (requireSelectedEntities !== null) {
-                    reflector.provideSelectedEntities(requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
-                }
-                if (requireMasterEntity !== null) {
-                    reflector.provideMasterEntity(requireMasterEntity, centreContextHolder, this.getMasterEntity);
-                }
-                return centreContextHolder;
+            /**
+             * Create context holder with custom '@@miType' property.
+             */
+            createContextHolder: function (requireSelectedEntities, requireMasterEntity) {
+                var contextHolder = this.$.reflector.createContextHolder(
+    				/* TODO this.requireSelectionCriteria */ true, requireSelectedEntities, requireMasterEntity,
+    				this.createModifiedPropertiesHolder, this.getSelectedEntities, this.getMasterEntity
+                );
+                this.$.reflector.setCustomProperty(contextHolder, "@@miType", this.mitype);
+                return contextHolder;
             }
         });
     </script>

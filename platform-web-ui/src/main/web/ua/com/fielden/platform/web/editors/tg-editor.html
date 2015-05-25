@@ -459,20 +459,16 @@
                 return propDesc;
             },
             
+            /**
+             * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
+             */
             createContextHolder: function(inputText) {
-            	var reflector = this.$.reflector;
-                var centreContextHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
-                centreContextHolder.id = null;
-                var paramsHolder = this.createModifiedPropertiesHolder();
-                paramsHolder["@@searchString"] = inputText;
-                centreContextHolder["modifHolder"] = paramsHolder;
-                if (this.requireSelectedEntities !== null) {
-                	reflector.provideSelectedEntities(this.requireSelectedEntities, centreContextHolder, this.getSelectedEntities);
-                }
-                if (this.requireMasterEntity !== null) {
-                	reflector.provideMasterEntity(this.requireMasterEntity, centreContextHolder, this.getMasterEntity);
-                }
-                return centreContextHolder;
+                var contextHolder = this.$.reflector.createContextHolder(
+					this.requireSelectionCriteria, this.requireSelectedEntities, this.requireMasterEntity,
+					this.createModifiedPropertiesHolder, this.getSelectedEntities, this.getMasterEntity
+                );
+                this.$.reflector.setCustomProperty(contextHolder, "@@searchString", inputText);
+                return contextHolder;
             }
         });
     </script>

@@ -68,9 +68,8 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
 
         final CONTEXT context = entityAndHolder.getKey();
         logger.debug("context = " + context);
-        final Map<String, Object> paramsHolder = entityAndHolder.getValue();
 
-        final String searchStringVal = (String) paramsHolder.get("@@searchString"); // custom property inside paramsHolder
+        final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
         logger.debug(String.format("SEARCH STRING %s", searchStringVal));
 
         final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");

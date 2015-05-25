@@ -37,7 +37,7 @@
     .invalid paper-spinner { border-color : {{g.paperInput.invalidColor}}; position: absolute; top: {{g.paperInput.top}}; padding: 2px; margin: 0px; width: 16px; height: 16px; }
 </core-style>
 
-<polymer-element name="tg-entity-search-criteria" attributes="composite user autocompletionType createModifiedPropertiesHolder hightlightDesc getSelectedEntities requireSelectedEntities getMasterEntity requireMasterEntity" extends="tg-editor">
+<polymer-element name="tg-entity-search-criteria" attributes="composite user autocompletionType hightlightDesc createModifiedPropertiesHolder requireSelectionCriteria getSelectedEntities requireSelectedEntities getMasterEntity requireMasterEntity" extends="tg-editor">
     <template>
         <!-- CSS -->
         <core-style ref="search-icon-decorator-2"></core-style>
@@ -166,6 +166,12 @@
             Polymer('tg-entity-search-criteria', {
                 publish: {
                     /**
+                     * Determines whether the selection criteria entity are required to be send inside the centre context.
+                     *
+                     * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectionCrit' as relevant for context.
+                     */
+                    requireSelectionCriteria: null,
+                    /**
                      * Determines whether the selected entities are required to be send inside the centre context.
                      *
                      * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
@@ -177,6 +183,8 @@
                      * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
                      */
                     requireMasterEntity: null,
+                    
+                    createModifiedPropertiesHolder: null,
                     getSelectedEntities: null,
                     getMasterEntity: null
                 },

@@ -27,6 +27,10 @@ public class CentreContextHolder extends AbstractEntity<String> {
     private static final long serialVersionUID = -1062648037823353306L;
 
     @IsProperty(Object.class)
+    @Title(value = "Custom object", desc = "Custom object")
+    private final Map<String, Object> customObject = new HashMap<String, Object>();
+
+    @IsProperty(Object.class)
     @Title(value = "Modified properties holder", desc = "Modified properties holder")
     private final Map<String, Object> modifHolder = new HashMap<String, Object>();
 
@@ -86,4 +90,14 @@ public class CentreContextHolder extends AbstractEntity<String> {
         return Collections.unmodifiableMap(modifHolder);
     }
 
+    @Observable
+    protected CentreContextHolder setCustomObject(final Map<String, Object> customObject) {
+        this.customObject.clear();
+        this.customObject.putAll(customObject);
+        return this;
+    }
+
+    public Map<String, Object> getCustomObject() {
+        return Collections.unmodifiableMap(customObject);
+    }
 }

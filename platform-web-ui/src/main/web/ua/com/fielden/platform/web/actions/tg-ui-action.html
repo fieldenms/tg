@@ -62,7 +62,7 @@
                 elementName: null,
                 attrs: null,
                 /**
-                 * The function that returns the context for this action (in case of dit action on EGI the context is a selected entity.)
+                 * The function that creates the context for this action. This function originates from the outside of this component.
                  */
                 createContextHolder: undefined,
 
@@ -186,10 +186,13 @@
                     console.log("onValidated");
                 };
                 
+                // creates the context and
                 var context = self.createContextHolder(self.requireSelectedEntities, self.requireMasterEntity);
+                // enhances it with the information of 'currentEntity' (primary / secondary actions) and
                 if (self.currentEntity) {
                 	self.enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
                 }
+                // enhances it with information of what 'property' was chosen (property result-set actions)
                 if (self.chosenProperty) {
                 	self.enhanceContextWithChosenProperty(context, self.chosenProperty);
                 }

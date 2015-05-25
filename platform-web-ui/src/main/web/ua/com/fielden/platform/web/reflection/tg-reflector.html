@@ -763,6 +763,48 @@
                  */
                 isDotNotated: function(propertyName) {
                     return propertyName.indexOf(".") > -1;
+                },
+                
+                /**
+                 * Creates the context holder to be transferred with actions, centre autocompletion process, query enhancing process etc.
+                 *
+                 * 
+                 */
+                createContextHolder: function (
+                		requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
+                		createModifiedPropertiesHolder, getSelectedEntities, getMasterEntity
+                ) {
+                    var centreContextHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");                    
+                    centreContextHolder.id = null;
+                    centreContextHolder["customObject"] = {}; // should always exist, potentially empty
+                    
+                    if (requireSelectionCriteria !== null) {
+                    	this.provideSelectionCriteria(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder);
+                    }
+                    if (requireSelectedEntities !== null) {
+                    	this.provideSelectedEntities(requireSelectedEntities, centreContextHolder, getSelectedEntities);
+                    }
+                    if (requireMasterEntity !== null) {
+                        this.provideMasterEntity(requireMasterEntity, centreContextHolder, getMasterEntity);
+                    }
+                    return centreContextHolder;
+                },
+                
+                /**
+                 * Fills in the centre context holder with 'selection criteria modified props holder' based on whether should 'requireSelectionCriteria'.
+                 */
+                 provideSelectionCriteria: function(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder) {
+    				if (requireSelectionCriteria === "true") {
+    					centreContextHolder["modifHolder"] = createModifiedPropertiesHolder();
+                    } else if (requireSelectionCriteria === "false") {
+                    	centreContextHolder["modifHolder"] = null;
+                    } else {
+                    	throw "Unknown value for attribute 'requireSelectionCriteria': " + requireSelectionCriteria;
+                    }
+                },
+                
+                setCustomProperty: function(centreContextHolder, name, value) {
+                	centreContextHolder["customObject"][name] = value;
                 }
             });
         })();
