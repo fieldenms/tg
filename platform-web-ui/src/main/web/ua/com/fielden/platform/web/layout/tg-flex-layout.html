@@ -4,7 +4,7 @@
 
 <polymer-element name="tg-flex-layout" attributes="whenDesktop whenTablet whenMobile debug">
     <template>
-        <content select=":not(text)" id="elements"></content>
+        <content select=":not(text):not(template)" id="elements"></content>
         <tg-app-config id="appConfig"></tg-app-config>
         <core-media-query query="max-width: {{$.appConfig.minTabletWidth - 1}}px" querymatches="{{mobileScreen}}" on-core-media-change="{{handleMobileScreen}}"></core-media-query>
         <core-media-query query="(min-width: {{$.appConfig.minTabletWidth}}px) and (max-width: {{$.appConfig.minDesktopWidth - 1}}px)" querymatches="{{tabletScreen}}" on-core-media-change="{{handleTabletScreen}}"></core-media-query>
