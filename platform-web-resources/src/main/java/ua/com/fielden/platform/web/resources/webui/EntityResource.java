@@ -83,9 +83,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             final T entity = utils.createValidationPrototypeWithCentreContext(
                     CentreResourceUtils.createCentreContext(
                             centreContextHolder,
-                            companionFinder,
-                            gdtm,
-                            critGenerator //
+                            CentreResourceUtils.createCriteriaEntity(centreContextHolder, companionFinder, gdtm, critGenerator)//
                     ),
                     centreContextHolder.getChosenProperty()
                     );
@@ -123,7 +121,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         } else {
             applied = utils.constructEntity(
                     modifiedPropertiesHolder,
-                    CentreResourceUtils.createCentreContext(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator),
+                    CentreResourceUtils.createCentreContext(
+                            savingInfoHolder.getCentreContextHolder(),
+                            CentreResourceUtils.createCriteriaEntity(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator)),
                     savingInfoHolder.getCentreContextHolder().getChosenProperty()
                     ).getKey();
         }

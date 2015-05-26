@@ -29,7 +29,6 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
@@ -104,17 +103,9 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
         final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-        CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype =
-                CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
 
         return restUtil.rawListJSONRepresentation(
-                EntityResourceUtils.constructCriteriaEntityAndResetMetaValues(
-                        modifiedPropertiesHolder,
-                        validationPrototype,
-                        CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
-                        companionFinder//
-                ).getKey(),
+                CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, originalCdtmae),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
                         CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(miType, gdtm)//
@@ -129,23 +120,14 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
         final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
-
         final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
-        final Map<String, Object> modifiedPropertiesHolder = centreContextHolder.getModifHolder();
 
-        CentreResourceUtils.applyMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType), modifiedPropertiesHolder);
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> validationPrototype = CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = EntityResourceUtils.constructCriteriaEntityAndResetMetaValues(
-                modifiedPropertiesHolder,
-                validationPrototype,
-                CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
-                companionFinder//
-        ).getKey();
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
 
         final Pair<Map<String, Object>, ArrayList<?>> pair =
                 CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
-                        new LinkedHashMap<>(centreContextHolder.getCustomObject()),
+                        new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject()),
                         CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
                         appliedCriteriaEntity,
                         CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
