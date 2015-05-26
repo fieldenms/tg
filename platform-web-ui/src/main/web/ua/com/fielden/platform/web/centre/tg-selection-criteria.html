@@ -326,7 +326,7 @@
 
                 // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
                 //            This check will be done on server -- and appropriate onRunDefault callback will be triggered.
-                self._runModifiedProperties(self._reset(holder));
+                self._runModifiedProperties(function() { return self._reset(holder); });
                 // if (self._hasModified(holder)) {
                 //     self._saveModifiedProperties(self._reset(holder));
                 // } else {
@@ -351,9 +351,9 @@
              *
              * @param modifiedPropertiesHolder -- the entity with modified properties
              */
-            _runModifiedProperties: function (modifiedPropertiesHolder) {
+            _runModifiedProperties: function (modifiedPropertiesHolderGetter) {
                 // console.log("save: modifiedPropertiesHolder", modifiedPropertiesHolder);
-                var ser = this.$.serialiser.serialise(this.createContextHolder(modifiedPropertiesHolder, this.requireSelectedEntities, this.requireMasterEntity));
+                var ser = this.$.serialiser.serialise(this.createContextHolderWithGetter(modifiedPropertiesHolderGetter, this.requireSelectedEntities, this.requireMasterEntity));
                 // console.log("save: serialised modifiedPropertiesHolder", ser);
                 this.$.ajaxRunner.body = JSON.stringify(ser);
                 this.$.ajaxRunner.go();
@@ -415,8 +415,20 @@
              */
             createContextHolder: function (requireSelectedEntities, requireMasterEntity) {
                 var contextHolder = this.$.reflector.createContextHolder(
-    				/* TODO this.requireSelectionCriteria */ true, requireSelectedEntities, requireMasterEntity,
+    				/* TODO this.requireSelectionCriteria */ "true", requireSelectedEntities, requireMasterEntity,
     				this.createModifiedPropertiesHolder, this.getSelectedEntities, this.getMasterEntity
+                );
+                this.$.reflector.setCustomProperty(contextHolder, "@@miType", this.mitype);
+                return contextHolder;
+            },
+            
+            /**
+             * Create context holder with custom '@@miType' property.
+             */
+            createContextHolderWithGetter: function (modifHolderGetter, requireSelectedEntities, requireMasterEntity) {
+                var contextHolder = this.$.reflector.createContextHolder(
+    				/* TODO this.requireSelectionCriteria */ "true", requireSelectedEntities, requireMasterEntity,
+    				modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
                 );
                 this.$.reflector.setCustomProperty(contextHolder, "@@miType", this.mitype);
                 return contextHolder;
