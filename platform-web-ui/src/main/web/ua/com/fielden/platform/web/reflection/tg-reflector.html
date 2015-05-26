@@ -805,7 +805,13 @@
                 
                 setCustomProperty: function(centreContextHolder, name, value) {
                 	centreContextHolder["customObject"][name] = value;
-                }
+                }, 
+                
+                removeCustomProperty: function(centreContextHolder, name) {
+                    if (typeof (centreContextHolder["customObject"])[name] !== 'undefined') {
+                        delete(centreContextHolder["customObject"])[name];
+                    }
+                } 
             });
         })();
     </script>

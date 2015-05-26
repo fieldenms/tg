@@ -136,8 +136,6 @@
             extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
                 var modPropHolder = this.super([bindingEntity, originalBindingEntity]);
                 if (this._isEntity(bindingEntity)) {
-                    modPropHolder["@@pageCapacity"] = this.pageCapacity;
-
                     modPropHolder["@@metaValues"] = {};
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
@@ -300,33 +298,20 @@
                     self.persistedModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
                 }
 
-                if (this.pageCount !== null) {
-                    self.persistedModifiedPropertiesHolder["@@pageNumber"] = this.pageNumber;
-                    self.persistedModifiedPropertiesHolder["@@pageCount"] = this.pageCount;
-                    if (entitiesToRefresh && entitiesToRefresh.length > 0) {
-                        self.persistedModifiedPropertiesHolder["@@idsToRefresh"] = self.idsToRefresh(entitiesToRefresh);
-                    } else {
-                        if (typeof self.persistedModifiedPropertiesHolder["@@idsToRefresh"] !== 'undefined') {
-                            delete(self.persistedModifiedPropertiesHolder)["@@idsToRefresh"];
-                        }
-                    }
-                } else {
-                    if (typeof self.persistedModifiedPropertiesHolder["@@pageNumber"] !== 'undefined') {
-                        delete(self.persistedModifiedPropertiesHolder)["@@pageNumber"];
-                    }
-                    if (typeof self.persistedModifiedPropertiesHolder["@@pageCount"] !== 'undefined') {
-                        delete(self.persistedModifiedPropertiesHolder)["@@pageCount"];
-                    }
-                }
-
-                var holder = self.persistedModifiedPropertiesHolder;
-                console.log("HOLDER:", holder);
                 // cancel previous validation before starting saving process -- it includes validation process internally!
                 self.$.validator.abortValidationIfAny();
 
                 // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
                 //            This check will be done on server -- and appropriate onRunDefault callback will be triggered.
-                self._runModifiedProperties(function() { return self._reset(holder); });
+                self._runModifiedProperties(
+                	self._createContextHolderForRunning(function() {
+                			return self._reset(self.persistedModifiedPropertiesHolder);
+                		}, 
+                		self.requireSelectedEntities, 
+                		self.requireMasterEntity, 
+                		entitiesToRefresh
+                	)
+                );
                 // if (self._hasModified(holder)) {
                 //     self._saveModifiedProperties(self._reset(holder));
                 // } else {
@@ -349,13 +334,10 @@
             /**
              * Starts the process of centre run.
              *
-             * @param modifiedPropertiesHolder -- the entity with modified properties
+             * @param contextHolder -- the holder of the centre context, which contains the criteria entity's modif props holder
              */
-            _runModifiedProperties: function (modifiedPropertiesHolderGetter) {
-                // console.log("save: modifiedPropertiesHolder", modifiedPropertiesHolder);
-                var ser = this.$.serialiser.serialise(this.createContextHolderWithGetter(modifiedPropertiesHolderGetter, this.requireSelectedEntities, this.requireMasterEntity));
-                // console.log("save: serialised modifiedPropertiesHolder", ser);
-                this.$.ajaxRunner.body = JSON.stringify(ser);
+            _runModifiedProperties: function (contextHolder) {
+                this.$.ajaxRunner.body = JSON.stringify(this.$.serialiser.serialise(contextHolder));
                 this.$.ajaxRunner.go();
             },
 
@@ -414,24 +396,48 @@
              * Create context holder with custom '@@miType' property.
              */
             createContextHolder: function (requireSelectedEntities, requireMasterEntity) {
-                var contextHolder = this.$.reflector.createContextHolder(
-    				/* TODO this.requireSelectionCriteria */ "true", requireSelectedEntities, requireMasterEntity,
-    				this.createModifiedPropertiesHolder, this.getSelectedEntities, this.getMasterEntity
-                );
-                this.$.reflector.setCustomProperty(contextHolder, "@@miType", this.mitype);
-                return contextHolder;
+            	return this._createContextHolder(this.createModifiedPropertiesHolder, requireSelectedEntities, requireMasterEntity);
             },
             
             /**
              * Create context holder with custom '@@miType' property.
              */
-            createContextHolderWithGetter: function (modifHolderGetter, requireSelectedEntities, requireMasterEntity) {
+            _createContextHolder: function (modifHolderGetter, requireSelectedEntities, requireMasterEntity) {
                 var contextHolder = this.$.reflector.createContextHolder(
     				/* TODO this.requireSelectionCriteria */ "true", requireSelectedEntities, requireMasterEntity,
     				modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
                 );
                 this.$.reflector.setCustomProperty(contextHolder, "@@miType", this.mitype);
                 return contextHolder;
+            },
+            
+            /**
+             * Create context holder for running with custom '@@pageCapacity', "@@pageNumber" and other properties for running, page retrieval or 
+             *   concrete entities refresh processes.
+             *
+             * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
+             * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
+             */
+            _createContextHolderForRunning: function (modifHolderGetter, requireSelectedEntities, requireMasterEntity, entitiesToRefresh) {
+            	var self = this;
+            	var contextHolder = self._createContextHolder(modifHolderGetter, requireSelectedEntities, requireMasterEntity);
+            	
+            	self.$.reflector.setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
+                if (self.pageCount !== null) {
+                	self.$.reflector.setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
+                	self.$.reflector.setCustomProperty(contextHolder, "@@pageCount", self.pageCount);
+
+                	if (entitiesToRefresh && entitiesToRefresh.length > 0) {
+                		self.$.reflector.setCustomProperty(contextHolder, "@@idsToRefresh", self.idsToRefresh(entitiesToRefresh));
+                    } else {
+                    	self.$.reflector.removeCustomProperty(contextHolder, "@@idsToRefresh");
+                    }
+                } else {
+                	self.$.reflector.removeCustomProperty(contextHolder, "@@pageNumber");
+                	self.$.reflector.removeCustomProperty(contextHolder, "@@pageCount");
+                }
+            	
+            	return contextHolder;
             }
         });
     </script>

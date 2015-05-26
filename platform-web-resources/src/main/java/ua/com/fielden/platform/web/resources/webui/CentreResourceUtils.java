@@ -131,17 +131,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * Creates the pair of 'custom object' (that contain 'critMetaValues', 'isCentreChanged' flag, 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
      * inside).
      *
-     * @param modifiedPropertiesHolder
+     * @param customObject
      * @param criteriaMetaValues
      * @param criteriaEntity
      * @param isCentreChanged
      * @param additionalFetchProvider
      * @return
      */
-    static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> modifiedPropertiesHolder, final Map<String, Map<String, Object>> criteriaMetaValues, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> criteriaEntity, final boolean isCentreChanged, final Optional<IFetchProvider<AbstractEntity<?>>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext) {
-        final Map<String, Object> customObject = new LinkedHashMap<>();
-        customObject.put("isCentreChanged", isCentreChanged);
-        customObject.put("metaValues", criteriaMetaValues);
+    static Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> customObject, final Map<String, Map<String, Object>> criteriaMetaValues, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> criteriaEntity, final boolean isCentreChanged, final Optional<IFetchProvider<AbstractEntity<?>>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext) {
+        final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
+        resultantCustomObject.put("isCentreChanged", isCentreChanged);
+        resultantCustomObject.put("metaValues", criteriaMetaValues);
 
         if (criteriaEntity.isValid().isSuccessful()) {
             // final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = applied;
@@ -154,30 +154,30 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
             }
             final IPage<AbstractEntity<?>> page;
-            final Integer pageCapacity = (Integer) modifiedPropertiesHolder.get("@@pageCapacity");
-            modifiedPropertiesHolder.remove("@@pageCapacity");
-            if (modifiedPropertiesHolder.get("@@pageNumber") == null) {
+            final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
+            customObject.remove("@@pageCapacity");
+            if (customObject.get("@@pageNumber") == null) {
                 page = criteriaEntity.run(pageCapacity);
             } else {
-                page = criteriaEntity.getPage((Integer) modifiedPropertiesHolder.get("@@pageNumber"), (Integer) modifiedPropertiesHolder.get("@@pageCount"), pageCapacity);
-                modifiedPropertiesHolder.remove("@@pageNumber");
-                modifiedPropertiesHolder.remove("@@pageCount");
+                page = criteriaEntity.getPage((Integer) customObject.get("@@pageNumber"), (Integer) customObject.get("@@pageCount"), pageCapacity);
+                customObject.remove("@@pageNumber");
+                customObject.remove("@@pageCount");
             }
-            final boolean isNotRefreshingConcreteEntities = modifiedPropertiesHolder.get("@@idsToRefresh") == null;
+            final boolean isNotRefreshingConcreteEntities = customObject.get("@@idsToRefresh") == null;
             final ArrayList<Object> resultEntities = new ArrayList<Object>(isNotRefreshingConcreteEntities
                     ? page.data()
-                    : selectEntities(page.data(), convertToListWithLongValues((List) modifiedPropertiesHolder.get("@@idsToRefresh"))));
+                    : selectEntities(page.data(), convertToListWithLongValues((List) customObject.get("@@idsToRefresh"))));
 
-            customObject.put("resultEntities", resultEntities);
-            customObject.put("pageCount", page.numberOfPages());
+            resultantCustomObject.put("resultEntities", resultEntities);
+            resultantCustomObject.put("pageCount", page.numberOfPages());
             if (!isNotRefreshingConcreteEntities) {
                 // mark customObject with a special property, that indicates the process of concrete entities refreshing (potentially this can be removed
                 // and resolved purely on the client side)
-                customObject.put("isRefreshingConcreteEntities", "yes");
+                resultantCustomObject.put("isRefreshingConcreteEntities", "yes");
             }
-            return new Pair<>(customObject, resultEntities);
+            return new Pair<>(resultantCustomObject, resultEntities);
         }
-        return new Pair<>(customObject, null);
+        return new Pair<>(resultantCustomObject, null);
     }
 
     /**

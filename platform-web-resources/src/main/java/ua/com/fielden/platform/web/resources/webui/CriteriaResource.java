@@ -145,7 +145,7 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
 
         final Pair<Map<String, Object>, ArrayList<?>> pair =
                 CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
-                        new LinkedHashMap<>(modifiedPropertiesHolder),
+                        new LinkedHashMap<>(centreContextHolder.getCustomObject()),
                         CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
                         appliedCriteriaEntity,
                         CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
