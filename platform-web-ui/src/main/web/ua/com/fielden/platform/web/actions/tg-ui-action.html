@@ -6,7 +6,7 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri createContextHolder requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError chosenProperty">
+<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri createContextHolder requireSelectionCriteria requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError chosenProperty">
     <!-- enabledStates currentState  -->
     <template>
         <style>
@@ -45,6 +45,12 @@
                  */
                 postActionError: null,
 
+                /**
+                 * Determines whether the 'selection criteria entity' are required to be send inside the centre context.
+                 *
+                 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectionCrit' as relevant for context.
+                 */
+                requireSelectionCriteria: null,
                 /**
                  * Determines whether the selected entities are required to be send inside the centre context.
                  *
@@ -187,7 +193,7 @@
                 };
                 
                 // creates the context and
-                var context = self.createContextHolder(self.requireSelectedEntities, self.requireMasterEntity);
+                var context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity);
                 // enhances it with the information of 'currentEntity' (primary / secondary actions) and
                 if (self.currentEntity) {
                 	self.enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
@@ -196,6 +202,7 @@
                 if (self.chosenProperty) {
                 	self.enhanceContextWithChosenProperty(context, self.chosenProperty);
                 }
+                // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
                 detail.savingContext = context;
 
                 detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {

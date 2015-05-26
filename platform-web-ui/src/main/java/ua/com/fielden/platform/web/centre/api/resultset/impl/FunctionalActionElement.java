@@ -92,9 +92,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
 
         if (conf().context.isPresent()) {
-            if (conf().context.get().withSelectionCrit) {
-                // disregarded at this stage -- sends every time
-            }
+            attrs.put("requireSelectionCriteria", conf().context.get().withSelectionCrit ? "true" : "false");
             attrs.put("requireSelectedEntities", conf().context.get().withCurrentEtity ? "ONE" : (conf().context.get().withAllSelectedEntities ? "ALL" : "NONE"));
             attrs.put("requireMasterEntity", conf().context.get().withMasterEntity ? "true" : "false");
         }

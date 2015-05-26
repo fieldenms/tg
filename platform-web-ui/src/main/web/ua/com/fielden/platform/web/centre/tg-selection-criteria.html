@@ -59,6 +59,11 @@
 
             _isCentreChanged: false,
 
+            /*
+             * NOTE: there is no need to have 'requireSelectionCriteria' attribute (QueryEnhancer related) -- the selection criteria will be send every time, 
+             *   because it is necessary for 'query' construction (see '_createContextHolderForRunning' method).
+             */
+            
             /**
              * Determines whether the selected entities are required to be send inside the centre context during run() method (QueryEnhancer related).
              *
@@ -395,16 +400,16 @@
             /**
              * Create context holder with custom '@@miType' property.
              */
-            createContextHolder: function (requireSelectedEntities, requireMasterEntity) {
-            	return this._createContextHolder(this.createModifiedPropertiesHolder, requireSelectedEntities, requireMasterEntity);
+            createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+            	return this._createContextHolder(this.createModifiedPropertiesHolder, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
             },
             
             /**
              * Create context holder with custom '@@miType' property.
              */
-            _createContextHolder: function (modifHolderGetter, requireSelectedEntities, requireMasterEntity) {
+            _createContextHolder: function (modifHolderGetter, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
                 var contextHolder = this.$.reflector.createContextHolder(
-    				/* TODO this.requireSelectionCriteria */ "true", requireSelectedEntities, requireMasterEntity,
+    				requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
     				modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
                 );
                 this.$.reflector.setCustomProperty(contextHolder, "@@miType", this.mitype);
@@ -420,7 +425,7 @@
              */
             _createContextHolderForRunning: function (modifHolderGetter, requireSelectedEntities, requireMasterEntity, entitiesToRefresh) {
             	var self = this;
-            	var contextHolder = self._createContextHolder(modifHolderGetter, requireSelectedEntities, requireMasterEntity);
+            	var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
             	
             	self.$.reflector.setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
                 if (self.pageCount !== null) {
