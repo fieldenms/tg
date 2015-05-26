@@ -215,7 +215,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("this").withAction(EntityActionConfig.createMasterInvocationActionConfig())
                 .also()
                 .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
-                        withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                        withContext(context().withSelectedEntities().build()).
                         icon("assignment-turned-in").
                         shortDesc("Function 5").
                         longDesc("Functional context-dependent action 5").
@@ -223,35 +223,35 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
                 .also()
                 .addProp(mkProp("DR", "Defect Radio", String.class)).withAction(action(TgStatusActivationFunctionalEntity.class).
-                        withContext(context().withSelectionCrit().withCurrentEntity().build()).
+                        withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to DR").
                         longDesc("Change Status to DR").
                         build())
                 .also()
                 .addProp(mkProp("IS", "In Service", String.class)).withAction(action(TgISStatusActivationFunctionalEntity.class).
-                        withContext(context().withSelectionCrit().withCurrentEntity().build()).
+                        withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to IS").
                         longDesc("Change Status to IS").
                         build())
                 .also()
                 .addProp(mkProp("IR", "In Repair", String.class)).withAction(action(TgIRStatusActivationFunctionalEntity.class).
-                        withContext(context().withSelectionCrit().withCurrentEntity().build()).
+                        withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to IR").
                         longDesc("Change Status to IR").
                         build())
                 .also()
                 .addProp(mkProp("ON", "On Road Defect Station", String.class)).withAction(action(TgONStatusActivationFunctionalEntity.class).
-                        withContext(context().withSelectionCrit().withCurrentEntity().build()).
+                        withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to ON").
                         longDesc("Change Status to ON").
                         build())
                 .also()
                 .addProp(mkProp("SR", "Defect Smash Repair", String.class)).withAction(action(TgSRStatusActivationFunctionalEntity.class).
-                        withContext(context().withSelectionCrit().withCurrentEntity().build()).
+                        withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to SR").
                         longDesc("Change Status to SR").
@@ -281,7 +281,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
                 .addPrimaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                withContext(context().withSelectedEntities().build()).
                                 icon("assignment-turned-in").
                                 shortDesc("Function 2.5").
                                 longDesc("Functional context-dependent action 2.5").
@@ -291,7 +291,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addSecondaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                withContext(context().withSelectedEntities().build()).
                                 icon("assignment-turned-in").
                                 shortDesc("Function 3").
                                 longDesc("Functional context-dependent action 3").
@@ -300,7 +300,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addSecondaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                withContext(context().withSelectedEntities().build()).
                                 icon("attachment").
                                 shortDesc("Function 4").
                                 longDesc("Functional context-dependent action 4").
