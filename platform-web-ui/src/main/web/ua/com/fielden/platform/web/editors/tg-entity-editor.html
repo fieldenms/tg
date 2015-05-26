@@ -37,7 +37,7 @@
     .invalid paper-spinner { border-color: {{g.paperInput.invalidColor}}; position: absolute; top: {{g.paperInput.top}}; padding: 2px; margin: 0px; width: 16px; height: 16px; }
 </core-style>
 
-<polymer-element name="tg-entity-editor" attributes="composite user autocompletionType hightlightDesc createModifiedPropertiesHolder requireSelectionCriteria getSelectedEntities requireSelectedEntities getMasterEntity requireMasterEntity" extends="tg-editor">
+<polymer-element name="tg-entity-editor" attributes="composite user autocompletionType hightlightDesc createModifiedPropertiesHolder requireSelectionCriteria getSelectedEntities requireSelectedEntities getMasterEntity requireMasterEntity asPartOfEntityMaster" extends="tg-editor">
     <template>
         <!-- CSS -->
         <core-style ref="search-icon-decorator"></core-style>
@@ -186,7 +186,14 @@
                     
                     createModifiedPropertiesHolder: null,
                     getSelectedEntities: null,
-                    getMasterEntity: null
+                    getMasterEntity: null,
+                    
+                    /**
+                     * Returns 'true' if this editor is a part of Entity Master, 'false' in case if it is a part of Entity Centre.
+                     *
+                     * Should not be null, should be initialised using generation logic.
+                     */
+                    asPartOfEntityMaster: null
                 },
 
                 /*
@@ -429,7 +436,22 @@
                     } else if (this.$.overlay.opened) { // make sure overlay is closed is no search is performed
                         this.$.overlay.toggle();
                     }
-
+                },
+                
+                /**
+                 * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
+                 */
+                createContextHolder: function(inputText) {
+                	if (this.asPartOfEntityMaster) {
+                        var contextHolder = this.$.reflector.createContextHolder(
+           					"true", null, null,
+           					this.createModifiedPropertiesHolder, null, null
+                        );
+                        this.$.reflector.setCustomProperty(contextHolder, "@@searchString", inputText);
+                        return contextHolder;
+                	} else {
+                		return this.super([inputText]);
+                	}
                 },
 
                 /*

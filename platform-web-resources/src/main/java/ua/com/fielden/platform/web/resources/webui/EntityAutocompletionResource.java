@@ -62,8 +62,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     public Representation post(final Representation envelope) throws ResourceException {
         final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
-        // TODO complete the changes carefully
-        final CONTEXT context = !centreContextHolder.getModifHolder().containsKey(AbstractEntity.VERSION) ? null : utils.constructEntity(centreContextHolder.getModifHolder()).getKey();
+        final CONTEXT context = utils.constructEntity(centreContextHolder.getModifHolder()).getKey();
         logger.debug("context = " + context);
 
         final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
@@ -72,9 +71,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
         final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
         logger.debug(String.format("SEARCH STRING %s", searchString));
 
-        if (context != null) {
-            valueMatcher.setContext(context);
-        }
+        valueMatcher.setContext(context);
         final fetch<T> fetch = EntityResourceUtils.<CONTEXT, T> fetchForProperty(coFinder, entityType, propertyName).fetchModel();
         valueMatcher.setFetch(fetch);
         final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
