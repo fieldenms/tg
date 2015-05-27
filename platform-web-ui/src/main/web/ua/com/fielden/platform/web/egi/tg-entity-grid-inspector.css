@@ -7,17 +7,13 @@ table {
 .selection-column {
     padding: 10px;
 }
-th.data-column,
-td.data-column {
+.data-column {
     padding: 0.75em 1.5em;
 }
-th:nth-of-type(3),
-td.data-column:nth-of-type(3) {
-    padding-left: 10px;
-}
-th:nth-last-of-type(2),
-td:nth-last-of-type(2) {
-    padding-right: 10px;
+.header {
+    background-color: #0288D1;
+    color: white;
+    font-weight: bold;
 }
 th {
     cursor: default;
@@ -26,11 +22,6 @@ td.data-column {
     color: #607D8B;
     cursor: pointer;
 }
-/*.table-container {
-    overflow-y: auto;
-    overflow-x: hidden;
-}*/
-
 tbody>tr:nth-child(even):not([selected]) {
     background-color: white;
 }
@@ -40,12 +31,9 @@ tbody>tr:nth-child(odd):not([selected]) {
 tbody>tr:hover:not([selected]) {
     background-color: #E1F5FE;
 }
-tbody>tr[selected] {
+tbody>tr[selected],
+div[selected] {
     background-color: #B3E5FC;
-}
-thead>tr.header-color {
-    background-color: #0288D1;
-    color: white;
 }
 core-tooltip::shadow #tooltip {
     white-space: normal;
@@ -60,7 +48,7 @@ core-tooltip.delayed:focus::shadow .core-tooltip {
     transition-delay: 1s;
     transform: translate3d(0px, 0px, 0px);
 }
-th paper-checkbox::shadow #checkbox {
+.header paper-checkbox::shadow #checkbox {
     background-color: #0288D1;
     border-color: white;
 }
@@ -76,7 +64,18 @@ paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.column-label {
+.data-label {
     font-size: 0.75em;
     background: transparent;
+    color: #757575;
+    cursor: default;
+}
+.data-value {
+    margin: 0.5em 0 0.25em;
+    border-bottom: 1px solid black;
+    cursor: pointer;
+    color: #607D8B;
+}
+.card {
+    margin: 10px;
 }

@@ -22,7 +22,7 @@
             }
         </style>
         <core-icon-button icon="more-vert" on-tap="{{showDropDown}}"></core-icon-button>
-        <paper-dropdown id="dropdown" style="position:absolute" on-tap="{{closeDropDown}}">
+        <paper-dropdown id="dropdown" style="position:absolute; color:black" on-tap="{{closeDropDown}}">
         	<div layout vertical>
             	<template repeat="{{action in actions}}">
             		<tg-page-action icon="{{action.icon}}" action="{{action.action}}" context="{{currentEntity}}" hidden?="{{!action.action}}"></tg-page-action>

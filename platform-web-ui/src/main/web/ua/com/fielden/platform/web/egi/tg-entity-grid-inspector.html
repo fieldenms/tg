@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-ripple/paper-ripple.html">
 <link rel="import" href="/resources/polymer/paper-dropdown/paper-dropdown.html">
+<link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
 <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/tg-web-app/tg-app-config.html">
@@ -43,7 +44,7 @@
         </paper-action-dialog>
 
         <!--Toolbar template-->
-        <div layout horizontal?="{{desktopScreen}}" vertical?="{{!desktopScreen}}" justified?="{{desktopScreen}}" start-justified?="{{!desktopScreen}}">
+        <div layout horizontal?="{{desktopScreen}}" vertical?="{{!desktopScreen}}" justified?="{{desktopScreen}}" start-justified?="{{!desktopScreen}}" style="{{!desktopScreen ? 'padding: 0 10px;' : ''}}">
             <div layout horizontal>
                 <content select=".entity-specific-action"></content>
             </div>
@@ -66,7 +67,7 @@
 
             <table>
                 <thead>
-                    <tr class="header-color">
+                    <tr class="header">
                         <th class="selection-column">
                             <core-tooltip position="bottom" class="delayed" style="width:100%">
                                 <paper-checkbox checked="{{selectAll}}" on-core-change="{{onAllSelectionChanged}}"></paper-checkbox>
@@ -76,8 +77,8 @@
                         <template if="{{primaryAction}}">
                             <th class="action-column"></th>
                         </template>
-                        <template repeat="{{column in columns}}">
-                            <th class="data-column" style="width: {{column.width}}" align="left">
+                        <template repeat="{{column, columnIndex in columns}}">
+                            <th class="data-column" style="{{columnIndex===0?'padding-left:10px;' : ''}}{{columnIndex===columns.length-1?'padding-right:10px;' : ''}}width: {{column.width}}" align="left">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     {{column.columnTitle}}
                                     <span class="span-tooltip" tip>{{column.columnDesc}}</span>
@@ -106,7 +107,7 @@
                                 </td>
                             </template>
                             <template repeat="{{column, columnIndex in columns}}">
-                                <td class="data-column" style="position: relative; width: {{column.width}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
+                                <td class="data-column" style="{{columnIndex===0?'padding-left:10px;' : ''}}{{columnIndex===columns.length-1?'padding-right:10px;' : ''}}width: {{column.width}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}" relative>
                                     <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
                                     </div>
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
@@ -136,19 +137,27 @@
                 </tbody>
             </table>
         </div>
-        <div hidden?="{{!mobileScreen && !tabletScreen}}">
+        <div hidden?="{{desktopScreen}}">
             <template repeat="{{entity, entityIndex in entities}}">
-                <div>
-                    <div>Title-description</div>
-                    <div>
+                <paper-shadow z="1" class="card" layout vertical>
+                    <div class="header" layout horizontal center>
+                        <div class="selection-column">
+                            <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
+                                <span class="span-tooltip" tip>{{selectionModel[entityIndex] ? 'Unselect': 'Select'}} this entity</span>
+                            </core-tooltip>
+                        </div>
+                        <div class="data-column truncate" style="padding-left:0">{{generateEntityTitle(entity, entityIndex)}}</div>
+                    </div>
+                    <div selected?="{{selectionModel[entityIndex]}}">
                         <tg-flex-layout whenTablet="{{narrowLayout}}" whenMobile="{{narrowLayout}}">
                             <template repeat="{{column, columnIndex in columns}}">
-                                <div layout vertical>
+                                <div class="data-column" layout vertical>
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                        <div class="column-label truncate">{{column.columnTitle}}</div>
+                                        <div class="data-label truncate">{{column.columnTitle}}</div>
                                         <span class="span-tooltip" tip>{{column.columnDesc}}</span>
                                     </core-tooltip>
-                                    <div relative entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
+                                    <div class="data-value" relative entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
                                         <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
                                         </div>
                                         <core-tooltip position="bottom" class="delayed" style="width:100%">
@@ -165,7 +174,22 @@
                             </template>
                         </tg-flex-layout>
                     </div>
-                </div>
+                    <div class="header" hidden?="{{!primaryAction && secondaryActions.length === 0}}" layout horizontal justified?="{{primaryAction}}" end-justified?="{{!primaryAction}}" center>
+                        <div hidden?="{{!primaryAction}}">
+                            <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}" hidden?="{{!primaryAction.action}}"></tg-page-action>
+                            <tg-ui-action currentEntity="{{entity}}" hidden?="{{primaryAction.action}}" user="{{primaryAction.user}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" createContextHolder="{{primaryAction.createContextHolder}}" requireSelectionCriteria="{{primaryAction.requireSelectionCriteria}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
+                        </div>
+                        <div hidden?="{{secondaryActions.length === 0}}">
+                            <div hidden?="{{secondaryActions.length > 1}}">
+                                <tg-page-action icon="{{secondaryActions[0].icon}}" action="{{secondaryActions[0].action}}" context="{{entity}}" hidden?="{{!secondaryActions[0].action}}"></tg-page-action>
+                                <tg-ui-action hidden?="{{secondaryActions[0].action}}" currentEntity="{{entity}}" user="{{secondaryActions[0].user}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" createContextHolder="{{secondaryActions[0].createContextHolder}}" requireSelectionCriteria="{{secondaryActions[0].requireSelectionCriteria}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}"></tg-ui-action>
+                            </div>
+                            <div hidden?="{{secondaryActions.length === 1}}">
+                                <tg-secondary-action-button currentEntity="{{entity}}" actions="{{secondaryActions}}"></tg-secondary-action-button>
+                            </div>
+                        </div>
+                    </div>
+                </paper-shadow>
             </template>
         </div>
     </template>
@@ -226,6 +250,18 @@
                             this.narrowLayout[Math.ceil(index / 2)].push(['flex']);
                         }
                     }.bind(this));
+                },
+                generateEntityTitle: function (entity) {
+                    var keyString = "";
+                    if (entity.type().isCompositeEntity() || entity.get("key") instanceof this.$.reflector.getEntityType()) {
+                        if (entity.get("desc")) {
+                            keyString = entity.get("desc");
+                        }
+                    } else {
+                        keyString += (entity.get("key") ? entity.get("key") : "");
+                        keyString += (keyString.length === 0 ? "" : " : ") + (entity.get("desc") ? entity.get("desc") : "");
+                    } 
+                    return keyString.length === 0 ? (entity.type()._notEnhancedSimpleClassName() + " #" + (findEntity(entity, this.entities) + 1).toString()) : keyString;
                 },
                 getTooltip: function (entity, column) {
                     if (this.$.reflector.findTypeByName(column.type)) {
