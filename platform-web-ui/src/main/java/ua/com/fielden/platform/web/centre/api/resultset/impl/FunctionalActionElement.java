@@ -125,7 +125,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()
                     : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
 
-            return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action-elem").attr("tabIndex", "-1").add(uiActionElement.clazz("entity-specific-action", true)).add(spanElement);
+            return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
         } else {
             return uiActionElement;
         }
