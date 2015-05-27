@@ -210,16 +210,22 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         return entity;
     }
 
-    public static <M extends AbstractEntity<?>> void disregardRequiredProperties(final M entity, final Set<String> modifiedProps) {
+    /**
+     * Disregards the 'required' errors for those properties, that were not 'modified' (for both criteria and simple entities).
+     *
+     * @param entity
+     * @param modifiedProps
+     *            -- list of 'modified' properties
+     * @return
+     */
+    public static <M extends AbstractEntity<?>> M disregardRequiredProperties(final M entity, final Set<String> modifiedProps) {
         // disregard requiredness validation errors for properties on masters for non-criteria types
-        final Class<?> managedType = entity.getType();
-        if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
-            for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {
-                if (entry.getValue().isRequired() && !modifiedProps.contains(entry.getKey())) {
-                    entry.getValue().setRequiredValidationResult(Result.successful(entity));
-                }
+        for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {
+            if (entry.getValue().isRequired() && !modifiedProps.contains(entry.getKey())) {
+                entry.getValue().setRequiredValidationResult(Result.successful(entity));
             }
         }
+        return entity;
     }
 
     public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {

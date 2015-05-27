@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources.webui;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,6 +28,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -143,7 +145,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         resultantCustomObject.put("isCentreChanged", isCentreChanged);
         resultantCustomObject.put("metaValues", criteriaMetaValues);
 
-        if (criteriaEntity.isValid().isSuccessful()) {
+        // the next action validates the entity one more time, but with the check for 'required' properties
+        final Result validationResult = criteriaEntity.isValid();
+
+        if (validationResult.isSuccessful()) {
             // final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = applied;
             criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
             if (additionalFetchProvider.isPresent()) {
@@ -370,9 +375,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             throw new IllegalStateException(e);
         }
 
-        return resetMetaStateForCriteriaValidationPrototype(
-                validationPrototype,
-                CentreUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
+        // IMPORTANT: after the creation of criteria validation prototype there can exist an 'required' validation errors.
+        //     But, why? It seems, that just newly created entity should be empty.. But this is not the case --
+        //     the entity has been already applied the values from 'cdtmae' during CriteriaGenerator generation process.
+        //     So, we potentially have the 'required' errors -- need to disregard all of them!
+        //     (for e.g., in TridentFleet it fixes the errors if no DdsStationAssigner is specified)
+        return EntityResourceUtils.disregardRequiredProperties(
+                resetMetaStateForCriteriaValidationPrototype(
+                        validationPrototype,
+                        CentreUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
+                ), new LinkedHashSet<>()//
         );
     }
 
