@@ -30,7 +30,6 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -444,28 +443,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final ICompanionObjectFinder companionFinder) {
+    private static <M extends AbstractEntity<?>> Pair<M, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final ICompanionObjectFinder companionFinder) {
         return new Pair<>(apply(modifiedPropertiesHolder, validationPrototype, companionFinder), modifiedPropertiesHolder);
-    }
-
-    /**
-     * Constructs the criteria entity from the client envelope and resets the original values of the entity to be equal to the values.
-     * <p>
-     * The envelope contains special version of entity called 'modifiedPropertiesHolder' which has only modified properties and potentially some custom stuff with '@' sign as the
-     * prefix. All custom properties will be disregarded, but can be used later from the returning map.
-     * <p>
-     * All normal properties will be applied in 'validationPrototype'.
-     *
-     * @return applied validationPrototype and modifiedPropertiesHolder map
-     */
-    public static <M extends EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>> Pair<M, Map<String, Object>> constructCriteriaEntityAndResetMetaValues(final Map<String, Object> modifiedPropertiesHolder, final M validationPrototype, final Class<?> originalManagedType, final ICompanionObjectFinder companionFinder) {
-        return new Pair<>(
-                (M) CentreResourceUtils.resetMetaStateForCriteriaValidationPrototype(
-                        apply(modifiedPropertiesHolder, validationPrototype, companionFinder),
-                        originalManagedType
-                        ),
-                modifiedPropertiesHolder//
-        );
     }
 
     /**
