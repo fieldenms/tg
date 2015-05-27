@@ -94,7 +94,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                withContext(context().withSelectedEntities().build()).
                                 preAction(new IPreAction() {
                                     @Override
                                     public JsCode build() {
@@ -109,7 +109,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                withContext(context().withSelectedEntities().build()).
                                 icon("assignment-returned").
                                 shortDesc("Function 2").
                                 longDesc("Functional context-dependent action 2").
@@ -118,7 +118,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectionCrit().build()).
+                                withContext(context().withCurrentEntity().build()).
                                 icon("assignment").
                                 shortDesc("Function 3").
                                 longDesc("Functional context-dependent action 3").
