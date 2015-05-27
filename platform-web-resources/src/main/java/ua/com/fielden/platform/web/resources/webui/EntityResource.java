@@ -143,7 +143,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private T save(final T validatedEntity) {
         try {
+            // the next action validates the entity one more time, but with the check for 'required' properties
             validatedEntity.isValid();
+
             EntityResourceUtils.disregardCritOnlyRequiredProperties(validatedEntity);
             for (final Map.Entry<String, MetaProperty<?>> entry : validatedEntity.getProperties().entrySet()) {
                 if (!entry.getValue().isValid()) {

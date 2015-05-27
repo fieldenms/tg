@@ -8,7 +8,9 @@ import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.restlet.representation.Representation;
@@ -154,7 +156,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final Class<M> type = (Class<M>) entity.getType();
         final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
 
-        // final Set<String> modifiedProps = new LinkedHashSet<>();
+        final Set<String> modifiedProps = new LinkedHashSet<>();
         // iterate through modified properties:
         for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
             final String name = nameAndVal.getKey();
@@ -162,7 +164,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    // modifiedProps.add(name);
+                    modifiedProps.add(name);
                     final Object newValue = convert(type, name, valAndOrigVal.get("val"), companionFinder);
                     if (notFoundEntity(type, name, valAndOrigVal.get("val"), newValue)) {
                         final String msg = String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"));
@@ -203,35 +205,35 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         entity.isValid();
 
         disregardCritOnlyRequiredProperties(entity);
-        // disregardRequiredProperties(entity, modifiedProps);
+        disregardRequiredProperties(entity, modifiedProps);
 
         return entity;
     }
 
-//    public static <M extends AbstractEntity<?>> void disregardRequiredProperties(final M entity, final Set<String> modifiedProps) {
-//        // disregard requiredness validation errors for properties on masters for non-criteria types
-//        final Class<?> managedType = entity.getType();
-//        if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
-//            for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {
-//                if (entry.getValue().isRequired() && !modifiedProps.contains(entry.getKey())) {
-//                    entry.getValue().setRequiredValidationResult(Result.successful(entity));
-//                }
-//            }
-//        }
-//    }
+    public static <M extends AbstractEntity<?>> void disregardRequiredProperties(final M entity, final Set<String> modifiedProps) {
+        // disregard requiredness validation errors for properties on masters for non-criteria types
+        final Class<?> managedType = entity.getType();
+        if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
+            for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {
+                if (entry.getValue().isRequired() && !modifiedProps.contains(entry.getKey())) {
+                    entry.getValue().setRequiredValidationResult(Result.successful(entity));
+                }
+            }
+        }
+    }
 
     public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
         // disregard requiredness validation errors for crit-only properties on masters for non-criteria types
         final Class<?> managedType = entity.getType();
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
             for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {
-                // if (entry.getValue().isRequired()) {
+                if (entry.getValue().isRequired()) {
                     final String prop = entry.getKey();
                     final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
                     if (critOnlyAnnotation != null) {
                         entry.getValue().setRequiredValidationResult(Result.successful(entity));
                     }
-                //}
+                }
             }
         }
     }
