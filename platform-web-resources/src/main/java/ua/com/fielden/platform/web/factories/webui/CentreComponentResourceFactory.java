@@ -10,6 +10,7 @@ import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreComponentResource;
 
 import com.google.inject.Injector;
@@ -22,7 +23,7 @@ import com.google.inject.Injector;
  */
 public class CentreComponentResourceFactory extends Restlet {
     private final IWebUiConfig webApp;
-    private final Injector injector;
+    private final RestServerUtil restUtil;
     private final Logger logger = Logger.getLogger(getClass());
 
     /**
@@ -32,7 +33,7 @@ public class CentreComponentResourceFactory extends Restlet {
      */
     public CentreComponentResourceFactory(final IWebUiConfig webApp, final Injector injector) {
         this.webApp = webApp;
-        this.injector = injector;
+        this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override
@@ -49,7 +50,7 @@ public class CentreComponentResourceFactory extends Restlet {
             final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) ClassesRetriever.findClass(mitypeString);
             final EntityCentre centre = this.webApp.getCentres().get(miType);
 
-            new CentreComponentResource(centre, getContext(), request, response).handle();
+            new CentreComponentResource(restUtil, centre, getContext(), request, response).handle();
             logger.debug(String.format("[%s] centre component retrieving...done", mitypeString));
         }
     }

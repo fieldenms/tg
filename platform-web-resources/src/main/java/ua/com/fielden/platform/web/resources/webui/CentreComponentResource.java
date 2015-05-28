@@ -15,6 +15,7 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Represents web server resource that returns entity centre component for specified mi type to the client.
@@ -23,8 +24,8 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
  *
  */
 public class CentreComponentResource extends ServerResource {
-
     private final EntityCentre<? extends AbstractEntity<?>> centre;
+    private final RestServerUtil restUtil;
 
     /**
      * Creates {@link CentreComponentResource} and initialises it with centre instance.
@@ -34,22 +35,26 @@ public class CentreComponentResource extends ServerResource {
      * @param request
      * @param response
      */
-    public CentreComponentResource(//
-    final EntityCentre<? extends AbstractEntity<?>> centre,//
+    public CentreComponentResource(
+            final RestServerUtil restUtil,
+            final EntityCentre<? extends AbstractEntity<?>> centre,//
             final Context context, //
             final Request request, //
             final Response response) {
         init(context, request, response);
+        this.restUtil = restUtil;
         this.centre = centre;
     }
 
     @Override
     protected Representation get() throws ResourceException {
-        try {
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(centre.build().render().toString().getBytes("UTF-8"))));
-        } catch (final UnsupportedEncodingException e) {
-            e.printStackTrace();
-            throw new ResourceException(e);
-        }
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            try {
+                return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(centre.build().render().toString().getBytes("UTF-8"))));
+            } catch (final UnsupportedEncodingException e) {
+                e.printStackTrace();
+                throw new ResourceException(e);
+            }
+        }, restUtil);
     }
 }

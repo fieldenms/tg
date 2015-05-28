@@ -45,7 +45,7 @@
                             attributes = this.attrs || {},
                             elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
                         if (this.import && !importedURLs.hasOwnProperty(this.import)) {
-                            Polymer.import([this.import], function () {
+                            Polymer.import([this.import], function () { // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
                                 thisElement.fire('after-load', insertElement(thisElement, elementName, attributes));
                             });
                         } else {
