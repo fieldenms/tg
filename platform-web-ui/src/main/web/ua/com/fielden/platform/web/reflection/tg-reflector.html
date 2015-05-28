@@ -652,6 +652,34 @@
                 isWarning: function (result) {
                     return isWarning0(result);
                 },
+                
+                //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
+                /**
+                 * Returns a meaninful representation for exception message (including user-friendly version for NPE, not just 'null').
+                 */
+                exceptionMessage: function (exception) {
+                	return exception.message === null ? "Null pointer exception" : exception.message;
+                },
+                
+                /**
+                 * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
+                 */
+                stackTrace: function (ex) {
+                	var msg = "<p><b>" + this.exceptionMessage(ex) + "</b></p><p>";
+                	for (var i = 0; i < ex.stackTrace.length; i += 1) {
+                		var st = ex.stackTrace[i];
+                		msg = msg + st.className + ".java:" + st.lineNumber + ":" + st.methodName + ";<br>";
+                	}
+                	msg = msg + "</p>";
+                	
+                	if (ex.cause !== null) {
+                		msg = msg + "<b>Caused By:</b><br>" + this.stackTrace(ex.cause);
+                	}
+                	
+	                return msg;
+                },
+                
+                //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////
 
                 /**
                  * Creates the entity with concrete type, specified as 'typeName' string.
