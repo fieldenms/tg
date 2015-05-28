@@ -109,13 +109,18 @@
                     self.doNotValidate = self.doNotValidate.bind(self);
                     self.onValidatedDefault = self.onValidatedDefault.bind(self);
                     self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
+                    self.onRetrievedDefaultError = self.onRetrievedDefaultError.bind(self);
                     self.startRefreshCycleModeForEditors = self.startRefreshCycleModeForEditors.bind(self);
                     self.resetRefreshCycleModeForEditors = self.resetRefreshCycleModeForEditors.bind(self);
                     self.createModifiedPropertiesHolder = self.createModifiedPropertiesHolder.bind(self);
                     self.processResponse = self.processResponse.bind(self);
 
                     self.ajaxRetriever().addEventListener('core-response', function (e) {
-                        self.onRetrievedDefault(e);
+                    	self.processResponse(e, "retrieve", function (entityAndCustomObject) {
+                    		self.onRetrievedDefault(entityAndCustomObject);
+                    	}, function (errorResult) {
+                    		self.onRetrievedDefaultError(errorResult);
+                    	});
                     });
                 },
                 
@@ -191,9 +196,7 @@
                 /**
                  * Default implementation for onRetrieved callback.
                  */
-                onRetrievedDefault: function (e) {
-                    var deserialised = this.$.serialiser.deserialise(e.detail.response);
-                    var entityAndCustomObject = deserialised.instance;
+                onRetrievedDefault: function (entityAndCustomObject) {
                     var entity = this.onPreRetrieved(entityAndCustomObject[0]);
                     var customObject = this.$.reflector.customObject(entityAndCustomObject);
 
@@ -203,6 +206,15 @@
                     this.onDescendantRetrieved(entity, newBindingEntity, customObject);
                     // custom external action
                     this.onRetrieved(entity, newBindingEntity, customObject);
+                },
+                
+                /**
+                 * Default implementation for unsuccessful onRetrieved callback.
+                 */
+                onRetrievedDefaultError: function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
                 },
 
                 //////////////////////////////////////// VALIDATION ////////////////////////////////////////
