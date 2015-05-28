@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 import org.restlet.representation.Representation;
@@ -474,5 +475,22 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
     public EntityFactory entityFactory() {
         return entityFactory;
+    }
+
+    /**
+     * This method wraps the function of representation creation to handle properly <b>undesired</b> server errors.
+     * <p>
+     * Please note that all <b>expected</b> exceptional situations should be handled inside the respective 'representationCreator' and one should not rely on this method for such
+     * errors.
+     *
+     * @param representationCreator
+     * @return
+     */
+    public static Representation handleUndesiredExceptions(final Supplier<Representation> representationCreator, final RestServerUtil restUtil) {
+        try {
+            return representationCreator.get();
+        } catch (final Exception undesiredEx) {
+            return restUtil.errorJSONRepresentation(undesiredEx);
+        }
     }
 }

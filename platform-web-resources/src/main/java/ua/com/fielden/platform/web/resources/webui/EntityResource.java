@@ -69,7 +69,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        return tryToSave(envelope);
+        return EntityResourceUtils.handleUndesiredExceptions(() -> tryToSave(envelope), restUtil);
     }
 
     /**
@@ -78,32 +78,36 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Put
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
-        if (envelope != null) {
-            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
-            final T entity = utils.createValidationPrototypeWithCentreContext(
-                    CentreResourceUtils.createCentreContext(
-                            centreContextHolder,
-                            CentreResourceUtils.createCriteriaEntity(centreContextHolder, companionFinder, gdtm, critGenerator)//
-                    ),
-                    centreContextHolder.getChosenProperty()
-                    );
-            ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
-            return restUtil.rawListJSONRepresentation(entity);
-        } else {
-            return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
-        }
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            if (envelope != null) {
+                final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+                final T entity = utils.createValidationPrototypeWithCentreContext(
+                        CentreResourceUtils.createCentreContext(
+                                centreContextHolder,
+                                CentreResourceUtils.createCriteriaEntity(centreContextHolder, companionFinder, gdtm, critGenerator)//
+                        ),
+                        centreContextHolder.getChosenProperty()
+                        );
+                ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
+                return restUtil.rawListJSONRepresentation(entity);
+            } else {
+                return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
+            }
+        }, restUtil);
     }
 
     @Delete
     @Override
     public Representation delete() {
-        if (entityId == null) {
-            final String message = String.format("New entity was not persisted and thus can not be deleted. Actually this error should be prevented at the client-side.");
-            logger.error(message);
-            throw new IllegalStateException(message);
-        }
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            if (entityId == null) {
+                final String message = String.format("New entity was not persisted and thus can not be deleted. Actually this error should be prevented at the client-side.");
+                logger.error(message);
+                throw new IllegalStateException(message);
+            }
 
-        return delete(entityId);
+            return delete(entityId);
+        }, restUtil);
     }
 
     /**
@@ -142,22 +146,17 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return
      */
     private T save(final T validatedEntity) {
-        try {
-            // the next action validates the entity one more time, but with the check for 'required' properties
-            validatedEntity.isValid();
+        // the next action validates the entity one more time, but with the check for 'required' properties
+        validatedEntity.isValid();
 
-            EntityResourceUtils.disregardCritOnlyRequiredProperties(validatedEntity);
-            for (final Map.Entry<String, MetaProperty<?>> entry : validatedEntity.getProperties().entrySet()) {
-                if (!entry.getValue().isValid()) {
-                    return validatedEntity;
-                }
+        EntityResourceUtils.disregardCritOnlyRequiredProperties(validatedEntity);
+        for (final Map.Entry<String, MetaProperty<?>> entry : validatedEntity.getProperties().entrySet()) {
+            if (!entry.getValue().isValid()) {
+                return validatedEntity;
             }
-
-            return utils.save(validatedEntity);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during saving of already successfully validated entity.", ex);
-            throw new IllegalStateException(ex);
         }
+
+        return utils.save(validatedEntity);
     }
 
     /**
