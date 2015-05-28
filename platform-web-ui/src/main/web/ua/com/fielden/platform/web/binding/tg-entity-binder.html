@@ -67,6 +67,23 @@
                     this.$.toastGreeting.opened = true;
                 },
 
+                /**
+                 * Opens the toast with some error message including full 'moreInfo' message.
+                 */
+                openToastForError: function (toastMsg, moreInfo) {
+                    this.$.toastGreeting.text = toastMsg;
+                    this.$.toastGreeting.hasMore = true;
+                    this.$.toastGreeting.msgText = moreInfo;
+                    this.$.toastGreeting.showProgress = false;
+	                this.$.toastGreeting.msgHeading = "Error";
+                    this.$.toastGreeting.opened = true;
+                },
+                
+                toastMsgForError: function (errorResult) {
+                	var ex = errorResult.ex;
+	                return this.$.reflector.stackTrace(ex);
+                },
+                
                 toastMsg: function (actionName, entity) {
                     if (!entity.isValid()) {
                         return entity.firstFailure().message;
@@ -95,10 +112,43 @@
                     self.startRefreshCycleModeForEditors = self.startRefreshCycleModeForEditors.bind(self);
                     self.resetRefreshCycleModeForEditors = self.resetRefreshCycleModeForEditors.bind(self);
                     self.createModifiedPropertiesHolder = self.createModifiedPropertiesHolder.bind(self);
+                    self.processResponse = self.processResponse.bind(self);
 
                     self.ajaxRetriever().addEventListener('core-response', function (e) {
                         self.onRetrievedDefault(e);
                     });
+                },
+                
+                /**
+                 * This is the standard processor for 'core-response's and is applicable for all
+                 *   responses that contain java Result inside 'e.detail.response'.
+                 *
+                 * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown 
+                 *   and 'customErrorHandlerFor(result)' is invoked.
+                 *
+                 * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
+                 */
+                processResponse: function(e, name, customHandlerFor, customErrorHandlerFor) {
+                	console.log(name, ": core-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                    if (e.detail.xhr.status === 200) {
+                    	var deserialisedResult = this.$.serialiser.deserialise(e.detail.response);
+                    	
+                    	if (this.$.reflector.isError(deserialisedResult)) {
+                    		// throw the toast message about the server-side error
+                            var msg = this.toastMsgForError(deserialisedResult);
+                            this.openToastForError(this.$.reflector.exceptionMessage(deserialisedResult.ex), msg);
+                    		// continue with custom error handling of the error result
+                            customErrorHandlerFor(deserialisedResult);
+                    	} else if (this.$.reflector.isWarning(deserialisedResult)) {
+                    		// TODO how warnings should be handled?
+                    		console.warn(this.toastMsgForError(deserialisedResult));
+                    	} else {
+                    		// continue with normal handling of the result's instance
+    	                    customHandlerFor(deserialisedResult.instance);
+                    	}
+                    } else {
+                    	console.warn(name, ": core-response: non-200-status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                    }
                 },
 
                 /**
@@ -135,9 +185,9 @@
                     return entity;
                 },
                 
-                onDescendantRetrieved: function(entity, newBindingEntity, customObject) {                	
+                onDescendantRetrieved: function(entity, newBindingEntity, customObject) {
                 },
-
+                
                 /**
                  * Default implementation for onRetrieved callback.
                  */
