@@ -17,6 +17,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
  */
 public class DefaultEntityAction extends AbstractAction implements IRenderable, IExecutable {
     private final String onActionFunction;
+    private final String onActionErrorFunction;
 
     /**
      * Creates {@link DefaultEntityAction} from <code>functionalEntityType</code> type and other parameters.
@@ -24,9 +25,10 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
      * @param functionalEntityType
      * @param propertyName
      */
-    public DefaultEntityAction(final String name, final String onActionFunction) {
+    public DefaultEntityAction(final String name, final String onActionFunction, final String onActionErrorFunction) {
         super(name, "master/actions/tg-action");
         this.onActionFunction = onActionFunction;
+        this.onActionErrorFunction = onActionErrorFunction;
     }
 
     @Override
@@ -37,12 +39,17 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
 
         attrs.put("action", "{{" + actionSelector + ".action}}");
         attrs.put("onAction", "{{" + this.onActionFunction() + "}}");
+        attrs.put("onActionError", "{{" + this.onActionErrorFunction() + "}}");
 
         return attrs;
     }
 
     private String onActionFunction() {
         return onActionFunction;
+    }
+
+    private String onActionErrorFunction() {
+        return onActionErrorFunction;
     }
 
     @Override

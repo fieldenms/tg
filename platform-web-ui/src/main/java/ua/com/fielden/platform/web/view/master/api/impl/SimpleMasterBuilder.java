@@ -62,9 +62,25 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IEntityActionConfig4<T> addAction(final MasterActions masterAction) {
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getOnAction(masterAction)), this);
+        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getOnAction(masterAction), getOnActionError(masterAction)), this);
         entityActions.add(entityAction);
         return entityAction;
+    }
+
+    private String getOnActionError(final MasterActions masterAction) {
+        if (MasterActions.REFRESH == masterAction) {
+            return "onRetrievedDefaultError"; // TODO implement this function in 'tg-entity-binder'
+        } else if (MasterActions.VALIDATE == masterAction) {
+            return "onValidatedDefaultError"; // TODO implement this function in 'tg-entity-validator'
+        } else if (MasterActions.SAVE == masterAction) {
+            return "onSavedDefaultError";
+        } else if (MasterActions.EDIT == masterAction) {
+            return "actions['EDIT'].onActionError"; // TODO maybe, should be deleted (no ajax request sends)?
+        } else if (MasterActions.VIEW == masterAction) {
+            return "actions['VIEW'].onActionError"; // TODO maybe, should be deleted (no ajax request sends)?
+        } else {
+            throw new UnsupportedOperationException(masterAction.toString());
+        }
     }
 
     private String getOnAction(final MasterActions masterAction) {

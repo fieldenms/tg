@@ -12,7 +12,7 @@
 </core-style>
 
 
-<polymer-element name="tg-action" attributes="action onAction" extends="tg-abstract-action">
+<polymer-element name="tg-action" attributes="action onAction onActionError" extends="tg-abstract-action">
     <template>
         <shadow></shadow>
         <core-style ref="paper-button-progress"></core-style>
@@ -37,10 +37,15 @@
                 /**
                  * Custom function to be invoked after run() of this action has been executed.
                  */
-                onAction: null
+                onAction: null,
+                /**
+                 * Custom function to be invoked after run() of this action has been executed with error.
+                 */
+                onActionError: null
             },
 
             onActionUpgraded: false,
+            onActionErrorUpgraded: false,
 
             /* Indicates wheather the action is in progress. */
             isWorking: false,
@@ -88,6 +93,18 @@
                         self.afterExecution();
                     };
                     self.onActionUpgraded = true;
+                }
+            },
+            
+            onActionErrorChanged: function (oldValue, newValue) {
+                var self = this;
+                // console.log("onActionError changed, old = ", oldValue, newValue);
+                if (newValue && !self.onActionErrorUpgraded) {
+                    self.onActionError = function (smth) {
+                        newValue(smth);
+                        self.afterExecution();
+                    };
+                    self.onActionErrorUpgraded = true;
                 }
             },
 
