@@ -75,14 +75,16 @@
                     self.edit = self.edit.bind(self);
                     self.view = self.view.bind(self);
                     self.onSavedDefault = self.onSavedDefault.bind(self);
+                    self.onSavedDefaultError = self.onSavedDefaultError.bind(self);
                     self._title = self._title.bind(self);
                     self._desc = self._desc.bind(self);
 
                     self.$.ajaxSaver.addEventListener('core-response', function (e) {
-                        if (e.detail.xhr.status === 200) {
-                            var potentiallySavedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
-                            self.onSavedDefault(potentiallySavedEntity);
-                        }
+                    	self.processResponse(e, "save", function (potentiallySavedEntity) {
+                    		self.onSavedDefault(potentiallySavedEntity);
+                    	}, function (errorResult) {
+                    		self.onSavedDefaultError(errorResult);
+                    	});
                     });
                     self.$.ajaxSaver.addEventListener('core-complete', function (e) {
                         if (e.detail.xhr.status === 200) {
@@ -309,6 +311,15 @@
 
                     // custom external action
                     this.onSaved(potentiallySavedEntity, newBindingEntity);
+                },
+
+                /**
+                 * Default implementation for unsuccessful onSaved callback.
+                 */
+                onSavedDefaultError: function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
                 },
 
                 //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
