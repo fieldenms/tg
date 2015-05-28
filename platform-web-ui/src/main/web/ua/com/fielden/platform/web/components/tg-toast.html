@@ -35,7 +35,7 @@
         </paper-toast>
 
         <paper-action-dialog id="msgDialog" heading="{{msgHeading}}" backdrop autoCloseDisabled layered="false" class="scrolling">
-            <p>{{msgText}}</p>
+            <p id="msgDialogText"></p>
 
             <paper-button affirmative autofocus>Close</paper-button>
         </paper-action-dialog>
@@ -60,6 +60,10 @@
 
                 shouldShowMore: function (progress, more) {
                     return !progress && more;
+                },
+                
+                msgTextChanged: function(oldValue, newValue) {
+                	this.$.msgDialogText.innerHTML = newValue;
                 }
             })
         })();
