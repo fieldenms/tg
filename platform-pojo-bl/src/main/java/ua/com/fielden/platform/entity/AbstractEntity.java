@@ -244,7 +244,7 @@ import com.google.inject.Inject;
 public abstract class AbstractEntity<K extends Comparable> implements Serializable, Comparable<AbstractEntity<K>>, IBindingEntity {
     private static final long serialVersionUID = 1L;
 
-    private transient final Logger logger;
+    protected transient final Logger logger;
 
     @MapTo("_ID")
     private Long id;
