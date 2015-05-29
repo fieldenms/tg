@@ -183,7 +183,7 @@
                      * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
                      */
                     requireMasterEntity: null,
-                    
+
                     createModifiedPropertiesHolder: null,
                     getSelectedEntities: null,
                     getMasterEntity: null
@@ -202,6 +202,12 @@
                         // TODO: Need to convert matched entities to a more suiteable representation
                         self.onFound(foundEntities);
                     });
+
+                    self.$.ajaxSearcher.addEventListener('core-error', function (e) {
+                        self.isSearching = false;
+                        self.$.overlay.close();
+                    });
+
                 },
 
                 /*
@@ -265,7 +271,6 @@
                  */
                 onSelectItem: function (event) {
                     var key = event.detail.item.getAttribute("value");
-                    console.log('selected item: ', event.detail.isSelected, ' ', key);
                     if (event.detail.isSelected) {
                         this.selectedItems[key] = _.find(this.matchedValues, function (obj) {
                             return obj.key === key;
@@ -273,7 +278,6 @@
                     } else {
                         delete this.selectedItems[key];
                     }
-                    console.log('selected items: ', this.selectedItems);
                 },
 
                 /* 
@@ -313,7 +317,6 @@
                                 matched: false
                             };
                             parts.push(part);
-                            //console.log(part);
                         }
 
                         // record the matched part
@@ -322,7 +325,6 @@
                             matched: true
                         };
                         parts.push(part);
-                        //console.log(part);
 
                         startIndex = searchExp.lastIndex;
 
@@ -334,7 +336,6 @@
                             matched: false
                         };
                         parts.push(part);
-                        //console.log(part);
                     }
                     // return the result
                     return parts;
@@ -351,7 +352,6 @@
                         parts.push(index);
                         index = index + 1;
                     }
-                    console.log("PARTS ", parts);
                     return parts;
                 },
 
@@ -425,7 +425,6 @@
                     this.replaceToIndex = toIndex;
 
                     var inputText = this.prepInput(text.substring(fromIndex + 1, toIndex).trim());
-                    console.log('raw search query (to be send to server): ', inputText);
 
                     // prep search string
                     if (!inputText) {
@@ -434,7 +433,6 @@
                     } else {
                         this.searchQuery = replaceAll('*', '\\w*', inputText.toUpperCase());
                     }
-                    console.log('searchQuery as RegEx: ', this.searchQuery);
 
                     // clear selection in the overlay, which could have been left there from last search
                     this.$.suggestions.selected = null;
@@ -464,14 +462,11 @@
                  * Handles the search respons.
                  */
                 onFound: function (entities) {
-                    console.log("ENTITIES: ", entities);
-                    console.log("# of found entities: ", entities.length);
                     for (var index = 0; index < entities.length; index++) {
                         // Entity is converted to a string representation of its key.
                         // This includes correct conversion of simple and composite entities
                         var key = this.$.reflector.convert(entities[index]);
                         entities[index].key = key;
-                        console.log(entities[index].key);
 
                         this.matchedValues.push(entities[index]);
                     }
@@ -525,7 +520,6 @@
                  * during user's interaction with the autocompleter.
                  */
                 onOpenChanged: function (detail) {
-                    // console.log("onOpenChanged this.$.overlay.opened ", this.$.overlay.opened, " this.enforceOnAcceptedValueChanged ", this.enforceOnAcceptedValueChanged, " this.okHasBeenPressed ", this.okHasBeenPressed);
                     if (this.$.overlay.opened === false) {
                         var okHasBeenPressed = this.okHasBeenPressed;
                         if (this.okHasBeenPressed) { // reset the okHasBeenPressed in all cases when the overlay has been closed
@@ -593,7 +587,6 @@
                 entityChanged: function (oldValue, newValue) {
                     this.super([oldValue, newValue]);
 
-                    // console.log("entityChanged: newValue === ", newValue);
                     if (this._isEntity(newValue)) {
                         if (newValue.get(this.propertyName) !== null) {
                             if (newValue._isObjectUndefined("@" + this.propertyName + "_error")) { // if valid -- desc should exist!
@@ -666,23 +659,23 @@
                             var after = this.$.input.value.substr(this.replaceToIndex);
                             var newEditingValue = before + selectedItemsToStr + after;
 
-                        	if (!this.$.reflector.equalsEx(newEditingValue, this.editingValue)) {
-	                            this.isAcceptingValueFromSuggestions = true;
-    	                        this.editingValue = newEditingValue;
-                        	} else {
-                        		// EDGE-CASE: when the editing value has been already populated
-                        		//   and this value equals to the value that was selected from the list -- 
-                        		//   changing of 'this.editingValue' will not have any effect.
-                        		// Such situation happens if the user edits to, for e.g., 'A10184' and then
-                        		//   choses the entity 'A10184' from the list.
-                        		// TechNote: in such case, before clicking on OK button, the chain reaction 
-                        		//   'editingValueChanged->commValueChanged->acceptedValueChanged' has been already
-                        		//   performed. So there is a need to start validation only ('this.onAcceptedValueChanged()' method).
+                            if (!this.$.reflector.equalsEx(newEditingValue, this.editingValue)) {
+                                this.isAcceptingValueFromSuggestions = true;
+                                this.editingValue = newEditingValue;
+                            } else {
+                                // EDGE-CASE: when the editing value has been already populated
+                                //   and this value equals to the value that was selected from the list -- 
+                                //   changing of 'this.editingValue' will not have any effect.
+                                // Such situation happens if the user edits to, for e.g., 'A10184' and then
+                                //   choses the entity 'A10184' from the list.
+                                // TechNote: in such case, before clicking on OK button, the chain reaction 
+                                //   'editingValueChanged->commValueChanged->acceptedValueChanged' has been already
+                                //   performed. So there is a need to start validation only ('this.onAcceptedValueChanged()' method).
                                 if (this.isAcceptingValueFromSuggestions) {
                                     this.isAcceptingValueFromSuggestions = false;
                                 }
                                 this.onAcceptedValueChanged();
-                        	}
+                            }
                         }
 
 
@@ -705,7 +698,6 @@
 
                 /* A helper method to determine whether the passed in value is a composite entity. */
                 isComposite: function (value) {
-                    console.log("CHECKING IS COMPOSITE")
                     if (this._isEntity(value)) {
                         return value.type().isCompositeEntity();
                     } else {
