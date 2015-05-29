@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javassist.util.proxy.ProxyFactory;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -20,7 +21,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public final class EntityContainer<R extends AbstractEntity<?>> {
-
     private final Class<R> resultType;
     private R entity;
     private final Map<String, Object> primitives = new HashMap<String, Object>();
@@ -56,9 +56,10 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
                 : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
-    private Object instantiateProxy(final Class<? extends AbstractEntity<?>> entityType, final R owningEntity, final Long id, final String propName,  final ProxyMode proxyMode) {
+    private <E extends AbstractEntity<?>> Object instantiateProxy(final Class<E> entityType, final R owningEntity, final Long id, final String propName,  final ProxyMode proxyMode) {
         final EntityProxyFactory<?> epf = new EntityProxyFactory<>(entityType);
-        return epf.create(id, owningEntity, propName, coFinder.find(entityType), proxyMode);
+        IEntityDao<E> coForProxy = proxyMode == ProxyMode.LAZY ? coFinder.find(entityType) : null;
+        return epf.create(id, owningEntity, propName, coForProxy, proxyMode);
     }
 
     public R instantiate(final EntityFactory entFactory, final boolean userViewOnly, final ProxyMode proxyMode) {
