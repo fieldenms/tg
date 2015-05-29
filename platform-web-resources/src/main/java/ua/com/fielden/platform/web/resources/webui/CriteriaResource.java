@@ -84,33 +84,42 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Get
     @Override
     public Representation get() throws ResourceException {
-        final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
-        return restUtil.rawListJSONRepresentation(
-                CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, -1L),
-                CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                        CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
-                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm)
-                        ));
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
+            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+            // NOTE: the following line can be the example how 'criteria retrieval' server errors manifest to the client application
+            // throw new IllegalStateException("Illegal state during criteria retrieval.");
+            return restUtil.rawListJSONRepresentation(
+                    CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, -1L),
+                    CentreResourceUtils.createCriteriaMetaValuesCustomObject(
+                            CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
+                            CentreResourceUtils.isFreshCentreChanged(miType, gdtm) //
+                    )//
+            );
+        }, restUtil);
     }
 
     /**
-     * Handles POST request resulting resulting from tg-selection-criteria <code>validate()</code> method.
+     * Handles POST request resulting from tg-selection-criteria <code>validate()</code> method.
      */
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
-        final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
+            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+            final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
-        return restUtil.rawListJSONRepresentation(
-                CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, originalCdtmae),
-                CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                        CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
-                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm)//
-                )//
-        );
+            // NOTE: the following line can be the example how 'criteria retrieval' server errors manifest to the client application
+            // throw new IllegalStateException("Illegal state during criteria validation.");
+            return restUtil.rawListJSONRepresentation(
+                    CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, originalCdtmae),
+                    CentreResourceUtils.createCriteriaMetaValuesCustomObject(
+                            CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
+                            CentreResourceUtils.isFreshCentreChanged(miType, gdtm)//
+                    )//
+            );
+        }, restUtil);
     }
 
     /**
@@ -119,47 +128,51 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
     @Put
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
-        final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
-        final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
+            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
+            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
 
-        final Pair<Map<String, Object>, ArrayList<?>> pair =
-                CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
-                        new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject()),
-                        CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
-                        appliedCriteriaEntity,
-                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
-                        centre.getAdditionalFetchProvider(),
-                        createQueryEnhancerAndContext(centreContextHolder, centre.getQueryEnhancerConfig(), appliedCriteriaEntity));
-        if (pair.getValue() == null) {
-            return restUtil.rawListJSONRepresentation(appliedCriteriaEntity, pair.getKey());
-        }
-
-        //Running the rendering customiser for result set of entities.
-        @SuppressWarnings("unchecked")
-        final Optional<IRenderingCustomiser<AbstractEntity<?>, ?>> renderingCustomiser = centre.getRenderingCustomiser();
-        if (renderingCustomiser.isPresent()) {
-            final IRenderingCustomiser<AbstractEntity<?>, ?> renderer = renderingCustomiser.get();
-            final List<Object> renderingHints = new ArrayList<Object>();
-            for (final Object entity : pair.getValue()) {
-                renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>) entity).get());
+            final Pair<Map<String, Object>, ArrayList<?>> pair =
+                    CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
+                            new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject()),
+                            CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
+                            appliedCriteriaEntity,
+                            CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
+                            centre.getAdditionalFetchProvider(),
+                            createQueryEnhancerAndContext(centreContextHolder, centre.getQueryEnhancerConfig(), appliedCriteriaEntity));
+            if (pair.getValue() == null) {
+                return restUtil.rawListJSONRepresentation(appliedCriteriaEntity, pair.getKey());
             }
-            pair.getKey().put("renderingHints", renderingHints);
-        } else {
-            pair.getKey().put("renderingHints", new ArrayList<Object>());
-        }
 
-        enhanceResultEntitiesWithCustomPropertyValues(centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
+            //Running the rendering customiser for result set of entities.
+            @SuppressWarnings("unchecked")
+            final Optional<IRenderingCustomiser<AbstractEntity<?>, ?>> renderingCustomiser = centre.getRenderingCustomiser();
+            if (renderingCustomiser.isPresent()) {
+                final IRenderingCustomiser<AbstractEntity<?>, ?> renderer = renderingCustomiser.get();
+                final List<Object> renderingHints = new ArrayList<Object>();
+                for (final Object entity : pair.getValue()) {
+                    renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>) entity).get());
+                }
+                pair.getKey().put("renderingHints", renderingHints);
+            } else {
+                pair.getKey().put("renderingHints", new ArrayList<Object>());
+            }
 
-        final ArrayList<Object> list = new ArrayList<Object>();
-        list.add(appliedCriteriaEntity);
-        list.add(pair.getKey());
+            enhanceResultEntitiesWithCustomPropertyValues(centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
 
-        list.addAll(pair.getValue()); // TODO why is this needed for serialisation to perform without problems?!
+            final ArrayList<Object> list = new ArrayList<Object>();
+            list.add(appliedCriteriaEntity);
+            list.add(pair.getKey());
 
-        return restUtil.rawListJSONRepresentation(list.toArray());
+            list.addAll(pair.getValue()); // TODO why is this needed for serialisation to perform without problems?!
+
+            // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
+            // throw new IllegalStateException("Illegal state during criteria running.");
+            return restUtil.rawListJSONRepresentation(list.toArray());
+        }, restUtil);
     }
 
     private static <T extends AbstractEntity<?>> Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, AbstractEntity<?>>>>> createQueryEnhancerAndContext(final CentreContextHolder centreContextHolder, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> queryEnhancerConfig, final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity) {
