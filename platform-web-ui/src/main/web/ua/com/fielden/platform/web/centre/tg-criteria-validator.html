@@ -3,7 +3,7 @@
 <link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 
-<polymer-element name="tg-criteria-validator" attributes="user mitype onValidated" hidden>
+<polymer-element name="tg-criteria-validator" attributes="user mitype onValidatedDefault onValidatedDefaultError processResponse" hidden>
     <template>        
         <tg-reflector id="reflector"></tg-reflector>      
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -14,17 +14,13 @@
             Polymer({
                 ready: function() { 
                     var self = this;
-
+                    
                     self.$.ajaxSender.addEventListener('core-response', function(e) {
-                        if (e.detail.xhr.status === 200) {
-                            var deserialised = self.$.serialiser.deserialise(e.detail.response);
-                            var entityAndCustomObject = deserialised.instance;
-                            var validatedEntity = entityAndCustomObject[0];
-                            var customObject = self.$.reflector.customObject(entityAndCustomObject);
-                            self.onValidated(validatedEntity, customObject);
-                        } else {
-                            console.warn('The bad status for core-response has appeared! status === ', e.detail.xhr.status);
-                        }
+                    	self.processResponse(e, "criteria validate", function (entityAndCustomObject) {
+                            self.onValidatedDefault(entityAndCustomObject);
+                    	}, function (errorResult) {
+                    		self.onValidatedDefaultError(errorResult);
+                    	});
                     });
                 },
 

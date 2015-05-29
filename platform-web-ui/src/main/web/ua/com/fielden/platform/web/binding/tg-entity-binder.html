@@ -11,7 +11,7 @@
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <!-- tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidated="{{onValidatedDefault}}"></tg-entity-validator -->
+        <!-- tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidateddefault="{{onValidatedDefault}}" onvalidateddefaulterror="{{onValidatedDefaultError}}" processResponse="{{processResponse}}"></tg-entity-validator -->
 
         <!-- core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax -->
 
@@ -108,6 +108,7 @@
                     self.validate = self.validate.bind(self);
                     self.doNotValidate = self.doNotValidate.bind(self);
                     self.onValidatedDefault = self.onValidatedDefault.bind(self);
+                    self.onValidatedDefaultError = self.onValidatedDefaultError.bind(self);
                     self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
                     self.onRetrievedDefaultError = self.onRetrievedDefaultError.bind(self);
                     self.startRefreshCycleModeForEditors = self.startRefreshCycleModeForEditors.bind(self);
@@ -244,13 +245,25 @@
                 /**
                  * Default implementation for onValidated callback.
                  */
-                onValidatedDefault: function (validatedEntity, customObject) {
+                onValidatedDefault: function (entityAndCustomObject) {
+                    var validatedEntity = entityAndCustomObject[0];
+                    var customObject = this.$.reflector.customObject(entityAndCustomObject);
+                	
                     var msg = this.toastMsg("Validation", validatedEntity);
                     this.openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
 
                     var newBindingEntity = this.onEntityReceived(validatedEntity);
                     // custom external action
                     this.onValidated(validatedEntity, newBindingEntity, customObject);
+                },
+                
+                /**
+                 * Default implementation for unsuccessful onRetrieved callback.
+                 */
+                onValidatedDefaultError: function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
                 },
 
                 _reset: function (modifiedPropertiesHolder) {

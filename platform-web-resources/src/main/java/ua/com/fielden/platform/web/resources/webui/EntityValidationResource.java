@@ -41,8 +41,12 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-        final T applied = utils.constructEntity(modifiedPropertiesHolder).getKey();
-        return restUtil.rawListJSONRepresentation(applied);
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            // NOTE: the following line can be the example how 'entity validation' server errors manifest to the client application
+            // throw new IllegalStateException("Illegal state during entity validation.");
+            final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+            final T applied = utils.constructEntity(modifiedPropertiesHolder).getKey();
+            return restUtil.rawListJSONRepresentation(applied);
+        }, restUtil);
     }
 }

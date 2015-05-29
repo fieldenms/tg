@@ -71,7 +71,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         if (MasterActions.REFRESH == masterAction) {
             return "onRetrievedDefaultError";
         } else if (MasterActions.VALIDATE == masterAction) {
-            return "onValidatedDefaultError"; // TODO implement this function in 'tg-entity-validator'
+            return "onValidatedDefaultError";
         } else if (MasterActions.SAVE == masterAction) {
             return "onSavedDefaultError";
         } else if (MasterActions.EDIT == masterAction) {
