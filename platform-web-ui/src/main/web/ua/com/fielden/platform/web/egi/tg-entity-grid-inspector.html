@@ -140,14 +140,28 @@
         <div hidden?="{{desktopScreen}}">
             <template repeat="{{entity, entityIndex in entities}}">
                 <paper-shadow z="1" class="card" layout vertical>
-                    <div class="header" layout horizontal center>
-                        <div class="selection-column">
-                            <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
-                                <span class="span-tooltip" tip>{{selectionModel[entityIndex] ? 'Unselect': 'Select'}} this entity</span>
-                            </core-tooltip>
+                    <div class="header" layout horizontal center justified>
+                        <div layout horizontal center>
+                            <div class="selection-column">
+                                <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                    <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
+                                    <span class="span-tooltip" tip>{{selectionModel[entityIndex] ? 'Unselect': 'Select'}} this entity</span>
+                                </core-tooltip>
+                            </div>
+                            <div hidden?="{{!primaryAction}}">
+                                <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}" hidden?="{{!primaryAction.action}}"></tg-page-action>
+                                <tg-ui-action currentEntity="{{entity}}" hidden?="{{primaryAction.action}}" user="{{primaryAction.user}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" createContextHolder="{{primaryAction.createContextHolder}}" requireSelectionCriteria="{{primaryAction.requireSelectionCriteria}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
+                            </div>
                         </div>
-                        <div class="data-column truncate" style="padding-left:0">{{generateEntityTitle(entity, entityIndex)}}</div>
+                        <div hidden?="{{secondaryActions.length === 0}}">
+                            <div hidden?="{{secondaryActions.length > 1}}">
+                                <tg-page-action icon="{{secondaryActions[0].icon}}" action="{{secondaryActions[0].action}}" context="{{entity}}" hidden?="{{!secondaryActions[0].action}}"></tg-page-action>
+                                <tg-ui-action hidden?="{{secondaryActions[0].action}}" currentEntity="{{entity}}" user="{{secondaryActions[0].user}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" createContextHolder="{{secondaryActions[0].createContextHolder}}" requireSelectionCriteria="{{secondaryActions[0].requireSelectionCriteria}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}"></tg-ui-action>
+                            </div>
+                            <div hidden?="{{secondaryActions.length === 1}}">
+                                <tg-secondary-action-button currentEntity="{{entity}}" actions="{{secondaryActions}}"></tg-secondary-action-button>
+                            </div>
+                        </div>
                     </div>
                     <div selected?="{{selectionModel[entityIndex]}}">
                         <tg-flex-layout whenTablet="{{narrowLayout}}" whenMobile="{{narrowLayout}}">
@@ -173,21 +187,6 @@
                                 </div>
                             </template>
                         </tg-flex-layout>
-                    </div>
-                    <div class="header" hidden?="{{!primaryAction && secondaryActions.length === 0}}" layout horizontal justified?="{{primaryAction}}" end-justified?="{{!primaryAction}}" center>
-                        <div hidden?="{{!primaryAction}}">
-                            <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}" hidden?="{{!primaryAction.action}}"></tg-page-action>
-                            <tg-ui-action currentEntity="{{entity}}" hidden?="{{primaryAction.action}}" user="{{primaryAction.user}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" createContextHolder="{{primaryAction.createContextHolder}}" requireSelectionCriteria="{{primaryAction.requireSelectionCriteria}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
-                        </div>
-                        <div hidden?="{{secondaryActions.length === 0}}">
-                            <div hidden?="{{secondaryActions.length > 1}}">
-                                <tg-page-action icon="{{secondaryActions[0].icon}}" action="{{secondaryActions[0].action}}" context="{{entity}}" hidden?="{{!secondaryActions[0].action}}"></tg-page-action>
-                                <tg-ui-action hidden?="{{secondaryActions[0].action}}" currentEntity="{{entity}}" user="{{secondaryActions[0].user}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" createContextHolder="{{secondaryActions[0].createContextHolder}}" requireSelectionCriteria="{{secondaryActions[0].requireSelectionCriteria}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}"></tg-ui-action>
-                            </div>
-                            <div hidden?="{{secondaryActions.length === 1}}">
-                                <tg-secondary-action-button currentEntity="{{entity}}" actions="{{secondaryActions}}"></tg-secondary-action-button>
-                            </div>
-                        </div>
                     </div>
                 </paper-shadow>
             </template>
@@ -288,17 +287,12 @@
                         }
                     }.bind(this));
                 },
-                generateEntityTitle: function (entity) {
-                    var keyString = "";
-                    if (entity.type().isCompositeEntity() || entity.get("key") instanceof this.$.reflector.getEntityType()) {
-                        if (entity.get("desc")) {
-                            keyString = entity.get("desc");
-                        }
+                desktopScreenChanged: function(oldValue, newValue) {
+                    if (this.desktopScreen) {
+                        this.style.removeProperty("width");
                     } else {
-                        keyString += (entity.get("key") ? entity.get("key") : "");
-                        keyString += (keyString.length === 0 ? "" : " : ") + (entity.get("desc") ? entity.get("desc") : "");
+                        this.style.width = "100%";
                     }
-                    return keyString.length === 0 ? (entity.type()._notEnhancedSimpleClassName() + " #" + (findEntity(entity, this.entities) + 1).toString()) : keyString;
                 },
                 getTooltip: function (entity, column) {
                     if (this.$.reflector.findTypeByName(column.type)) {
