@@ -175,7 +175,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         } catch (final Exception e) {
             final String message = String.format("The entity with id [%s] and type [%s] can not be deleted due to existing dependencies.", entityId, utils.getEntityType().getSimpleName());
             logger.error(message, e);
-            return restUtil.resultJSONRepresentation(Result.failure(message));
+            throw new IllegalStateException(e);
         }
     }
 
