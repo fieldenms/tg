@@ -2,11 +2,17 @@ package ua.com.fielden.platform.web.centre.api.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Orientation.LANDSCAPE;
+
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -262,6 +268,26 @@ public class EntityCentreBuilderResultSetTest {
 
         assertEquals(1, config.getResultSetProperties().get().size());
         assertEquals("this", config.getResultSetProperties().get().get(0).propName.get());
+    }
+
+    @Test
+    public void resultset_card_layouting_should_result_in_association_of_layouts_with_specified_devices() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("desc")
+                .also()
+                .addProp("yearlyCost")
+                .setCollapsedCardLayoutFor(DESKTOP, Optional.empty(), "[[][]]")
+                .setCollapsedCardLayoutFor(TABLET, Optional.of(LANDSCAPE), "[select='propName='yearlyCost'']")
+                .withExpansionLayout("[select='propName='desc'']")
+                .build();
+
+        assertNotNull(config.getResultsetCollapsedCardLayout());
+        assertTrue(config.getResultsetCollapsedCardLayout().hasLayoutFor(DESKTOP, null));
+        assertTrue(config.getResultsetCollapsedCardLayout().hasLayoutFor(TABLET, LANDSCAPE));
+
+        assertNotNull(config.getResultsetExpansionCardLayout());
+        assertFalse(config.getResultsetExpansionCardLayout().hasLayoutFor(DESKTOP, null));
+        assertTrue(config.getResultsetExpansionCardLayout().hasLayoutFor(TABLET, LANDSCAPE));
     }
 
 }

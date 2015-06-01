@@ -139,7 +139,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
         this.lastResultsetLayoutDevice = Optional.of(device);
         this.lastResultsetLayoutOrientation = orientation;
-        this.builder.restulsetCollapsedCardLayout.whenMedia(device, orientation.get()).set(flexString);
+        this.builder.restulsetCollapsedCardLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
     }
 
@@ -148,7 +148,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         if (!lastResultsetLayoutDevice.isPresent()) {
             throw new IllegalStateException("Resultset card layout cannot be set if no device is specified.");
         }
-        this.builder.restulsetExpansionCardLayout.whenMedia(lastResultsetLayoutDevice.get(), lastResultsetLayoutOrientation.get()).set(flexString);
+        this.builder.restulsetExpansionCardLayout.whenMedia(lastResultsetLayoutDevice.get(), lastResultsetLayoutOrientation.isPresent() ? lastResultsetLayoutOrientation.get() : null).set(flexString);
         this.lastResultsetLayoutDevice = Optional.empty();
         this.lastResultsetLayoutOrientation = Optional.empty();
         return this;
