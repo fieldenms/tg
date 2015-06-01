@@ -129,6 +129,8 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
         return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            //            // NOTE: the following line can be the example how 'centre running' server errors manifest to the client application
+            //            throw new IllegalStateException("Illegal state during centre running.");
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 

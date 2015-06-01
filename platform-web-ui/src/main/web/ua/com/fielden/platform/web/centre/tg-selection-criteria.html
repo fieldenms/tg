@@ -86,11 +86,10 @@
 
                 self.onRunDefault = self.onRunDefault.bind(self);
                 self.createContextHolder = self.createContextHolder.bind(self);
+                self.onRunDefaultError = self.onRunDefaultError.bind(self);
 
                 self.$.ajaxRunner.addEventListener('core-response', function (e) {
-                    if (e.detail.xhr.status === 200) {
-                        var deserialised = self.$.serialiser.deserialise(e.detail.response);
-                        var entityAndCustomObject = deserialised.instance;
+                	self.processResponse(e, "run", function (entityAndCustomObject) {
                         var criteriaEntity = entityAndCustomObject[0];
                         var customObject = self.$.reflector.customObject(entityAndCustomObject);
                         var resultEntities = customObject.resultEntities || [];
@@ -101,7 +100,9 @@
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
 
                         self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities);
-                    }
+                	}, function (errorResult) {
+                		self.onRunDefaultError(errorResult);
+                	});
                 });
 
                 self.$.ajaxRunner.addEventListener('core-complete', function (e) {
@@ -370,6 +371,14 @@
 
                 this.pageNumberUpdated = this.pageNumber;
                 this.pageCountUpdated = this.pageCount;
+            },
+            
+            /**
+             * Default implementation for unsuccessful onRun callback.
+             */
+            onRunDefaultError: function (errorResult) {
+            	// This function will be invoked after server-side error appear.
+            	console.warn("SERVER ERROR: ", errorResult);
             },
 
             /**
