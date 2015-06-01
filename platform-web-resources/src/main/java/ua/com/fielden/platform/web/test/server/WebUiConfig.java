@@ -173,7 +173,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
                 /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
 
-                .setLayoutFor(Device.DESKTOP, null,
+                .setLayoutFor(Device.DESKTOP, Optional.empty(),
                         ("[['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
@@ -182,7 +182,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
-                .setLayoutFor(Device.TABLET, null,
+                .setLayoutFor(Device.TABLET, Optional.empty(),
                         ("[['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
@@ -193,7 +193,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mr, mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
-                .setLayoutFor(Device.MOBILE, null,
+                .setLayoutFor(Device.MOBILE, Optional.empty(),
                         ("[['center-justified', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
@@ -348,7 +348,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
                         .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).
-                        setLayoutFor(Device.DESKTOP, null, "[[]]")
+                        setLayoutFor(Device.DESKTOP, Optional.empty(), "[[]]")
 
                         .addProp("property")
                         .setFetchProvider(EntityUtils.fetch(TgFetchProviderTestEntity.class).with("additionalProperty"))
@@ -488,19 +488,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'padding:20px', "
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['vertical', 'justified', 'padding:20px', "
                         + "[[mr], [mr], [mr], [mr], [mr]], "
                         + "[[mr], [mr], [mr], [mr], [mr]],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
-                .setLayoutFor(Device.TABLET, null, ("['vertical', 'padding:20px',"
+                .setLayoutFor(Device.TABLET, Optional.empty(), ("['vertical', 'padding:20px',"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
                         + "['horizontal', 'justified', ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
-                .setLayoutFor(Device.MOBILE, null, ("['padding:20px',"
+                .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
@@ -525,15 +525,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['vertical', 'justified', 'margin:20px', "
                         + "[[mr], [mr]], "
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
-                .setLayoutFor(Device.TABLET, null, ("['vertical', 'margin:20px',"
+                .setLayoutFor(Device.TABLET, Optional.empty(), ("['vertical', 'margin:20px',"
                         + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], [mr]],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
-                .setLayoutFor(Device.MOBILE, null, ("['margin:20px',"
+                .setLayoutFor(Device.MOBILE, Optional.empty(), ("['margin:20px',"
                         + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("actionMr", actionMr))

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master;
 
+import java.util.Optional;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.DefaultEntityProducer;
@@ -58,9 +60,9 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     private ISimpleMasterConfig<T> createDefaultConfig(final Class<T> entityType) {
         final ISimpleMasterConfig<T> master = new SimpleMasterBuilder<T>().forEntity(entityType)
                 .addAction(MasterActions.VALIDATE)
-                .setLayoutFor(Device.DESKTOP, null, ("[]"))
-                .setLayoutFor(Device.TABLET, null, ("[]"))
-                .setLayoutFor(Device.MOBILE, null, ("[]"))
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("[]"))
+                .setLayoutFor(Device.TABLET, Optional.empty(), ("[]"))
+                .setLayoutFor(Device.MOBILE, Optional.empty(), ("[]"))
                 .done();
         return master;
     }
