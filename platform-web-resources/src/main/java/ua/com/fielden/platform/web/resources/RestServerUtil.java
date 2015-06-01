@@ -223,19 +223,14 @@ public class RestServerUtil {
      */
     public <T extends AbstractEntity> Representation listJSONRepresentation(final List<T> entities) {
         logger.debug("Start building JSON entities representation.");
-        try {
-            if (entities == null) {
-                throw new IllegalArgumentException("The provided list of entities is null.");
-            }
-            // create a Result enclosing entity list
-            final Result result = new Result(new ArrayList<T>(entities), "All is cool");
-            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-            logger.debug("SIZE: " + bytes.length);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
-        } catch (final Exception ex) {
-            logger.error(ex.getMessage(), ex);
-            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+        if (entities == null) {
+            throw new IllegalArgumentException("The provided list of entities is null.");
         }
+        // create a Result enclosing entity list
+        final Result result = new Result(new ArrayList<T>(entities), "All is cool");
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+        logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
 
     /**
@@ -245,19 +240,14 @@ public class RestServerUtil {
      */
     public Representation rawListJSONRepresentation(final Object... objects) {
         logger.debug("Start building JSON list representation.");
-        try {
-            if (objects.length <= 0) {
-                throw new IllegalArgumentException("Empty objects.");
-            }
-            // create a Result enclosing entity list
-            final Result result = new Result(new ArrayList<>(Arrays.asList(objects)), "All is cool");
-            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-            logger.debug("SIZE: " + bytes.length);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
-        } catch (final Exception ex) {
-            logger.error(ex.getMessage(), ex);
-            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+        if (objects.length <= 0) {
+            throw new IllegalArgumentException("Empty objects.");
         }
+        // create a Result enclosing entity list
+        final Result result = new Result(new ArrayList<>(Arrays.asList(objects)), "All is cool");
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+        logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
 
     /**
@@ -341,28 +331,17 @@ public class RestServerUtil {
      * @throws JsonProcessingException
      */
     public <T extends AbstractEntity<?>> Representation singleJSONRepresentation(final T entity) {
-        try {
-            // create a Result enclosing entity list
-            final Result result;
-            if (entity != null) {
-                // TODO provide representing of invalid entities using unsuccessful result. Check whether it is good approach, because it triggers
-                // revalidation!
-
-                //                final Result valid = entity.isValid();
-                //                if (valid.isSuccessful()) {
-                result = new Result(entity, "OK");
-                //                } else {
-                //                    result = new Result(entity, valid.getMessage(), valid.getEx());
-                //                }
-            } else {
-                result = new Result(null, new Exception("Could not find entity."));
-            }
-            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
-        } catch (final Exception ex) {
-            logger.error(ex);
-            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+        // create a Result enclosing entity list
+        final Result result;
+        if (entity != null) {
+            // valid and invalid entities: both kinds are represented using successful result. Use client-side isValid() method
+            //   in 'tg-reflector' to differentiate them
+            result = new Result(entity, "OK");
+        } else {
+            result = new Result(null, new Exception("Could not find entity."));
         }
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
     }
 
     /**
