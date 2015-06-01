@@ -30,6 +30,10 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2WithPr
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4SecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder6RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
+import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -38,7 +42,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder<T>, IResultSetBuilder0Ordering<T>, IResultSetBuilder1OrderingDirection<T>, IResultSetBuilder4SecondaryAction<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder<T>, IResultSetBuilder0Ordering<T>, IResultSetBuilder1OrderingDirection<T>, IResultSetBuilder4SecondaryAction<T>, IExpandedCardLayoutConfig<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -119,6 +123,30 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder<T> also() {
         completePropIfNeeded();
+        return this;
+    }
+
+
+    private Optional<Device> lastResultsetLayoutDevice = Optional.empty();
+    private Optional<Orientation> lastResultsetLayoutOrientation = Optional.empty();
+
+
+    @Override
+    public IExpandedCardLayoutConfig<T> setCollapsedCardLayoutFor(final Device device, final Orientation orientation, final String flexString) {
+        this.lastResultsetLayoutDevice = Optional.of(device);
+        this.lastResultsetLayoutOrientation = Optional.of(orientation);
+        this.builder.restulsetCollapsedCardLayout.whenMedia(device, orientation).set(flexString);
+        return this;
+    }
+
+    @Override
+    public ICollapsedCardLayoutConfig<T> withExpansionLayout(final String flexString) {
+        if (!lastResultsetLayoutDevice.isPresent() || lastResultsetLayoutOrientation.isPresent()) {
+            throw new IllegalStateException("Resultset card layouting came across an invalid state where either a device or orientation options was not provided.");
+        }
+        this.builder.restulsetExpansionCardLayout.whenMedia(lastResultsetLayoutDevice.get(), lastResultsetLayoutOrientation.get()).set(flexString);
+        this.lastResultsetLayoutDevice = Optional.empty();
+        this.lastResultsetLayoutOrientation = Optional.empty();
         return this;
     }
 
@@ -273,4 +301,5 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
     }
+
 }

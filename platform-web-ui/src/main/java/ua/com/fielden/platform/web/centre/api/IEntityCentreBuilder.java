@@ -20,6 +20,7 @@ import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
 /**
  * This contract is an entry point for an Entity Centre aPI -- an embedded domain specific language for constructing entity centres.
@@ -104,6 +105,9 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
                 .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
                 .also()
                 .addProp(mkProp("IS", "In service", "IS"))
+                .setCollapsedCardLayoutFor(Device.TABLET, Orientation.LANDSCAPE, "some valid string")
+                .withExpansionLayout("more valid strings")
+                .setCollapsedCardLayoutFor(Device.MOBILE, Orientation.LANDSCAPE, "some other valid string")
                 .addPrimaryAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).icon("name").longDesc("tooltip text").build())
                 .also()
                 .addSecondaryAction(null)

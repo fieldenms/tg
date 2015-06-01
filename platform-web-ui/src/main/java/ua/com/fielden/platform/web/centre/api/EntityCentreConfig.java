@@ -111,6 +111,13 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     private final FlexLayout selectionCriteriaLayout;
 
+    /**
+     * Represents the layout settings for card-based resultset representation.
+     */
+    protected final FlexLayout resultsetCollapsedCardLayout;
+    protected final FlexLayout resultsetExpansionCardLayout;
+
+
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
     /////////////////////////////////////////////
@@ -239,7 +246,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria,
 
             final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria,
+
             final FlexLayout selectionCriteriaLayout,
+            final FlexLayout resultsetCollapsedCardLayout,
+            final FlexLayout resultsetExpansionCardLayout,
+
             final List<ResultSetProp> resultSetProperties,
             final LinkedHashMap<String, OrderDirection> resultSetOrdering,
             final EntityActionConfig resultSetPrimaryEntityAction,
@@ -279,7 +290,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.defaultSingleValuesForDateSelectionCriteria.putAll(defaultSingleValuesForDateSelectionCriteria);
 
         this.valueMatchersForSelectionCriteria.putAll(valueMatchersForSelectionCriteria);
+
         this.selectionCriteriaLayout = selectionCriteriaLayout;
+        this.resultsetCollapsedCardLayout = resultsetCollapsedCardLayout;
+        this.resultsetExpansionCardLayout = resultsetExpansionCardLayout;
+
         this.resultSetProperties.addAll(resultSetProperties);
         this.resultSetOrdering.putAll(resultSetOrdering);
         this.resultSetPrimaryEntityAction = resultSetPrimaryEntityAction;
@@ -300,6 +315,24 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     public FlexLayout getSelectionCriteriaLayout() {
         return selectionCriteriaLayout;
+    }
+
+    /**
+     * Provides access to the layout of the top part of the result set card-based representation, which corresponds to the collapsed card state.
+     *
+     * @return
+     */
+    public FlexLayout getResultsetCollapsedCardLayout() {
+        return resultsetCollapsedCardLayout;
+    }
+
+    /**
+     * Provides access to the layout of the expanded part of the resultset card-based representation.
+     *
+     * @return
+     */
+    public FlexLayout getResultsetExpansionCardLayout() {
+        return resultsetExpansionCardLayout;
     }
 
     public Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {

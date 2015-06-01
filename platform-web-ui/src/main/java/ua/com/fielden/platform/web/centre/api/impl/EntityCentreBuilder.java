@@ -91,6 +91,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
 
     protected final FlexLayout selectionCriteriaLayout = new FlexLayout();
+    protected final FlexLayout restulsetCollapsedCardLayout = new FlexLayout();
+    protected final FlexLayout restulsetExpansionCardLayout = new FlexLayout();
 
     /////////////////////////////////////////
     ////////////// RESULT SET ///////////////
@@ -157,6 +159,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 defaultSingleValuesForDateSelectionCriteria,
                 valueMatchersForSelectionCriteria,
                 selectionCriteriaLayout,
+                restulsetCollapsedCardLayout,
+                restulsetExpansionCardLayout,
                 resultSetProperties,
                 properResultSetOrdering,
                 resultSetPrimaryEntityAction,
