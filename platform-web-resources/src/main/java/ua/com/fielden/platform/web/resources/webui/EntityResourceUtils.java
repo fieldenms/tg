@@ -377,6 +377,21 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
+     * Restores the {@link Result} from JSON envelope.
+     *
+     * @param envelope
+     * @return
+     */
+    public static Result restoreJSONResult(final Representation envelope, final RestServerUtil restUtil) {
+        try {
+            return restUtil.restoreJSONResult(envelope);
+        } catch (final Exception ex) {
+            logger.error("An undesirable error has occured during deserialisation of Result.", ex);
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    /**
      * Restores the holder of saving information (modified props + centre context, if any).
      *
      * @param envelope

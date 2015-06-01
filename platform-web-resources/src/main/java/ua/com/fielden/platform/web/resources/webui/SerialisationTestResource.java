@@ -8,11 +8,9 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
@@ -55,21 +53,15 @@ public class SerialisationTestResource extends ServerResource {
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        try {
-            final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) restUtil.restoreJSONResult(envelope).getInstance();
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) EntityResourceUtils.restoreJSONResult(envelope, restUtil).getInstance();
 
             final Result result = deepEqualsForTesting(this.entities, entities, this.dvc);
             if (!result.isSuccessful()) {
                 throw result;
             }
             return restUtil.resultJSONRepresentation(result);
-        } catch (final Exception ex) {
-            ex.printStackTrace();
-            getResponse().setStatus(Status.CLIENT_ERROR_CONFLICT);
-            final String msg = !StringUtils.isEmpty(ex.getMessage()) ? ex.getMessage() : "Exception does not contain any specific message.";
-            //getResponse().setEntity(restUtil.errorRepresentation(msg));
-            return restUtil.errorJSONRepresentation(msg);
-        }
+        }, restUtil);
     }
 
     /**
@@ -77,7 +69,9 @@ public class SerialisationTestResource extends ServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        return restUtil.listJSONRepresentation(this.entities);
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            return restUtil.listJSONRepresentation(this.entities);
+        }, restUtil);
     }
 
     private static Result deepEqualsForTesting(final List<AbstractEntity<?>> entities1, final List<AbstractEntity<?>> entities2, final DefaultValueContract dvc) {
