@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.actions.entity.impl;
 
+import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
@@ -41,7 +43,7 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Orientation orientation, final String flexString) {
+    public ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
         return simpleMasterBuilder.setLayoutFor(device, orientation, flexString);
     }
 

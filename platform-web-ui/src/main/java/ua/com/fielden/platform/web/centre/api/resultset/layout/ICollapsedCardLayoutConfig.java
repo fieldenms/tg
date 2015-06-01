@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web.centre.api.resultset.layout;
 
+import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3PrimaryAction;
-import ua.com.fielden.platform.web.layout.AbstractLayout;
+import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
 /**
  * A contract for specifying card-based layout for an Entity Centre resultset.
@@ -21,5 +24,5 @@ public interface ICollapsedCardLayoutConfig<T extends AbstractEntity<?>> extends
      * @param flexString
      * @return
      */
-    IExpandedCardLayoutConfig<T> setCollapsedCardLayoutFor(final AbstractLayout.Device device, final AbstractLayout.Orientation orientation, final String flexString);
+    IExpandedCardLayoutConfig<T> setCollapsedCardLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString);
 }

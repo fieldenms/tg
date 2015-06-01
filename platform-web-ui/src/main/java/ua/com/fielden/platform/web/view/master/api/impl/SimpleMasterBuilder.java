@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
@@ -127,8 +128,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Orientation orientation, final String flexString) {
-        layout.whenMedia(device, orientation).set(flexString);
+    public ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+        if (device == null || orientation == null) {
+            throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
+        }
+        layout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
     }
 

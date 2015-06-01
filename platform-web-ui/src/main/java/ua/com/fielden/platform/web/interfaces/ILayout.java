@@ -28,7 +28,7 @@ public interface ILayout<T extends ILayoutSetter<?>> {
      *
      *         - a component to be added to layout manager.
      */
-    public enum Device {
+    public static enum Device {
         DESKTOP,
         TABLET,
         MOBILE,
@@ -45,7 +45,7 @@ public interface ILayout<T extends ILayoutSetter<?>> {
      * @author TG Team
      *
      */
-    public enum Orientation {
+    public static enum Orientation {
         LANDSCAPE,
         PORTRAIT;
         @Override

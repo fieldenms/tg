@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -22,8 +24,11 @@ class SelectionCriteriaLayoutBuilder<T extends AbstractEntity<?>> extends Result
     }
 
     @Override
-    public ILayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Orientation orientation, final String flexString) {
-        this.builder.selectionCriteriaLayout.whenMedia(device, orientation).set(flexString);
+    public ILayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+        if (device == null || orientation == null) {
+            throw new IllegalArgumentException("Selection criterial layout requries device and orientation (optional) to be specified.");
+        }
+        this.builder.selectionCriteriaLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
     }
 

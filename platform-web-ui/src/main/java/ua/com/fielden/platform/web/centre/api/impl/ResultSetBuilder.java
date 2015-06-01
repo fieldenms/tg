@@ -132,17 +132,21 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
 
     @Override
-    public IExpandedCardLayoutConfig<T> setCollapsedCardLayoutFor(final Device device, final Orientation orientation, final String flexString) {
+    public IExpandedCardLayoutConfig<T> setCollapsedCardLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+        if (device == null || orientation == null) {
+            throw new IllegalStateException("Resultset card layout requries device and orientation (optional) to be specified.");
+        }
+
         this.lastResultsetLayoutDevice = Optional.of(device);
-        this.lastResultsetLayoutOrientation = Optional.of(orientation);
-        this.builder.restulsetCollapsedCardLayout.whenMedia(device, orientation).set(flexString);
+        this.lastResultsetLayoutOrientation = orientation;
+        this.builder.restulsetCollapsedCardLayout.whenMedia(device, orientation.get()).set(flexString);
         return this;
     }
 
     @Override
     public ICollapsedCardLayoutConfig<T> withExpansionLayout(final String flexString) {
-        if (!lastResultsetLayoutDevice.isPresent() || lastResultsetLayoutOrientation.isPresent()) {
-            throw new IllegalStateException("Resultset card layouting came across an invalid state where either a device or orientation options was not provided.");
+        if (!lastResultsetLayoutDevice.isPresent()) {
+            throw new IllegalStateException("Resultset card layout cannot be set if no device is specified.");
         }
         this.builder.restulsetExpansionCardLayout.whenMedia(lastResultsetLayoutDevice.get(), lastResultsetLayoutOrientation.get()).set(flexString);
         this.lastResultsetLayoutDevice = Optional.empty();

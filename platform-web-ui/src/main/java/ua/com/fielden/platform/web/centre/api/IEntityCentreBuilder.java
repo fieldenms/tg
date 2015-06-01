@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Optional;
 
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -87,13 +88,13 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
                 .addCrit("stringCritOnly").asSingle().text().setDefaultValue(single().text().setValue("*la-la*").canHaveNoValue().value())
                 .also()
                 .addCrit("statusCritOnly").asSingle().autocompleter(TgWorkOrder.class).withMatcher(null)
-                .setLayoutFor(Device.DESKTOP, null, ("['vertical', 'justified', 'margin:20px', "
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['vertical', 'justified', 'margin:20px', "
                         + "[[mr], [mr], [mr], [mr], [mr]], "
                         + "[[mr], [mr], [mr], [mr], [mr]]]"))
-                .setLayoutFor(Device.TABLET, null, ("['vertical', 'justified', 'margin:20px', "
+                .setLayoutFor(Device.TABLET, Optional.empty(), ("['vertical', 'justified', 'margin:20px', "
                         + "[[mr], [mr], [mr], [mr], [mr]], "
                         + "[[mr], [mr], [mr], [mr], [mr]]]"))
-                .setLayoutFor(Device.MOBILE, null, ("['vertical', 'justified', 'margin:20px', "
+                .setLayoutFor(Device.MOBILE, Optional.empty(), ("['vertical', 'justified', 'margin:20px', "
                         + "[[mr], [mr], [mr], [mr], [mr]], "
                         + "[[mr], [mr], [mr], [mr], [mr]]]"))
                 .addProp("status").withAction(null)
@@ -105,9 +106,9 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
                 .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
                 .also()
                 .addProp(mkProp("IS", "In service", "IS"))
-                .setCollapsedCardLayoutFor(Device.TABLET, Orientation.LANDSCAPE, "some valid string")
+                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(), "some valid string")
                 .withExpansionLayout("more valid strings")
-                .setCollapsedCardLayoutFor(Device.MOBILE, Orientation.LANDSCAPE, "some other valid string")
+                .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(), "some other valid string")
                 .addPrimaryAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).icon("name").longDesc("tooltip text").build())
                 .also()
                 .addSecondaryAction(null)

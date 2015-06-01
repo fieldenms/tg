@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.ce
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -34,8 +35,9 @@ import ua.com.fielden.platform.web.centre.api.impl.helpers.DefaultValueAssignerF
 import ua.com.fielden.platform.web.centre.api.impl.helpers.DefaultValueAssignerForSingleInteger;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.DefaultValueAssignerForSingleString;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.DefaultValueAssignerForSingleTgOrgUnit;
-import ua.com.fielden.platform.web.interfaces.ILayout.Device;
-import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Orientation.*;
+
 
 /**
  * A test case for Entity Centre DSL produced selection criteria.
@@ -51,7 +53,7 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
                 .also()
                 .addCrit("orgUnit1").asMulti().autocompleter(TgOrgUnit1.class).withMatcher(CustomOrgUnit1Matcher.class, context().withCurrentEntity().withSelectionCrit().build())
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][]")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
@@ -72,7 +74,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
                     .also()
                     .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][]]")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -85,7 +87,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("this").asRange().date()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][]]")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -98,7 +100,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("this").asSingle().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][]]")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -111,7 +113,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("this").asMulti().autocompleter(TgVehicle.class).withMatcher(CustomVehicleMatcher.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]]")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][]]")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -125,7 +127,7 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addCrit("this").asMulti().autocompleter(TgWorkOrder.class)
                 .also()
                 .addCrit("orgUnit1").asMulti().autocompleter(TgOrgUnit1.class).withMatcher(CustomOrgUnit1Matcher.class, context().withCurrentEntity().withSelectionCrit().build())
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][]")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
@@ -142,7 +144,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("non.existing.property").asMulti().autocompleter(TgVehicle.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -155,7 +157,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("vehicle").asSingle().autocompleter(TgVehicle.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -168,7 +170,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("orgunitCritOnly").asSingle().autocompleter(TgOrgUnit1.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -181,7 +183,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("orgunitCritOnlySingle").asMulti().autocompleter(TgOrgUnit1.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -194,7 +196,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("intSingle").asRange().integer()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -206,7 +208,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void selection_criteria_should_permit_single_critonly_as_single_valued_criteria() {
         final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
                 .addCrit("intSingle").asSingle().integer()
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
@@ -217,7 +219,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void selection_criteria_should_permit_range_critonly_as_range_valued_criteria() {
         final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
                 .addCrit("intRange").asRange().integer()
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
@@ -229,7 +231,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("orgunitCritOnly").asMulti().autocompleter(null) // trying to trick the system
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -242,7 +244,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("key").asMulti().autocompleter(TgWorkOrder.class) // trying to trick the system
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -255,7 +257,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("orgunitCritOnly").asMulti().autocompleter(TgWorkOrder.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -268,7 +270,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("vehicle").asMulti().text()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -281,7 +283,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("vehicle.key").asMulti().bool()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -297,7 +299,7 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addCrit("vehicle.desc").asMulti().text()
                 .also()
                 .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
@@ -323,7 +325,7 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(TgOrgUnit1.class)
                 .also()
                 .addCrit("dateSingle").asSingle().date()
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
@@ -342,7 +344,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("intSingle").asSingle().bool()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -355,7 +357,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("boolSingle").asSingle().integer()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -368,7 +370,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("intSingle").asSingle().decimal()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -381,7 +383,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("intSingle").asSingle().text()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -394,7 +396,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("intSingle").asSingle().date()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -407,7 +409,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(null)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -420,7 +422,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(TgVehicle.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -433,7 +435,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("intSingle").asSingle().autocompleter(TgVehicle.class)
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -451,7 +453,7 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addCrit("vehicle.constValueProp").asRange().integer()
                 .also()
                 .addCrit("vehicle.initDate").asRange().date()
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
@@ -467,7 +469,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("yearlyCost").asRange().date()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -480,7 +482,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("yearlyCost").asRange().integer()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -493,7 +495,7 @@ public class EntityCentreBuilderSelectionCritTest {
         try {
             centreFor(TgWorkOrder.class)
                     .addCrit("vehicle.initDate").asRange().decimal()
-                    .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []")
+                    .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
@@ -531,7 +533,7 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addCrit("vehicle.desc").asMulti().text().setDefaultValue(multi().string().not().setValues("des*", "*la-la*").value())
                 .also()
                 .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).setDefaultValue(multi().string().setValues("AB*", "*CD*GJH").canHaveNoValue().value())
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
@@ -618,7 +620,7 @@ public class EntityCentreBuilderSelectionCritTest {
                 .addCrit("vehicle.desc").asMulti().text().withDefaultValueAssigner(DefaultValueAssignerForMultiString.class)
                 .also()
                 .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).withDefaultValueAssigner(DefaultValueAssignerForMultiString.class)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
 
         assertTrue(config.getSelectionCriteria().isPresent());
@@ -679,7 +681,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_single_bool_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("boolSingle").asSingle().bool().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -687,7 +689,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_single_string_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("stringSingle").asSingle().text().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -695,7 +697,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_single_integer_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("intSingle").asSingle().integer().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -703,7 +705,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_single_deciamal_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("moneySingle").asSingle().decimal().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -711,7 +713,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_single_entity_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("orgunitCritOnlySingle").asSingle().autocompleter(TgOrgUnit1.class).setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -719,7 +721,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_single_date_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("dateSingle").asSingle().date().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -727,7 +729,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_range_decimal_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("yearlyCost").asRange().decimal().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -735,7 +737,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_vaule_for_range_integer_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("vehicle.constValueProp").asRange().integer().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -743,7 +745,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_range_date_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("vehicle.initDate").asRange().date().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -751,7 +753,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_multi_bool_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("vehicle.active").asMulti().bool().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -759,7 +761,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_multi_text_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("vehicle.desc").asMulti().text().setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -767,7 +769,7 @@ public class EntityCentreBuilderSelectionCritTest {
     public void null_default_value_for_multi_entity_selection_crit_is_not_permitted() {
         centreFor(TgWorkOrder.class)
                 .addCrit("vehicle").asMulti().autocompleter(TgVehicle.class).setDefaultValue(null)
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', [][][]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][][]")
                 .addProp("desc").build();
     }
 
@@ -775,11 +777,11 @@ public class EntityCentreBuilderSelectionCritTest {
     public void completed_dsl_statement_should_selection_criteria_for_at_least_one_device() {
         final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
                 .addCrit("yearlyCost").asRange().decimal()
-                .setLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE, "['vertical', 'justified', 'margin:20px', []]")
+                .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []]")
                 .addProp("desc").build();
 
         assertNotNull(config.getSelectionCriteriaLayout());
-        assertTrue(config.getSelectionCriteriaLayout().hasLayoutFor(Device.DESKTOP, Orientation.LANDSCAPE));
+        assertTrue(config.getSelectionCriteriaLayout().hasLayoutFor(DESKTOP, LANDSCAPE));
     }
 
 }

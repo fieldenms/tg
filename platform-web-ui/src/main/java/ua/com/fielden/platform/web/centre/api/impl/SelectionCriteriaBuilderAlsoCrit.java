@@ -33,9 +33,13 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
     }
 
     @Override
-    public ILayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Orientation orientation, final String flexString) {
+    public ILayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
         if (builder.selectionCriteria.size() == 0) {
             throw new IllegalArgumentException("Looks like out of sequence call as there are selection criteria to layout.");
+        }
+
+        if (device == null || orientation == null) {
+            throw new IllegalStateException("Selection criterial layout requries device and orientation (optional) to be specified.");
         }
 
         return new SelectionCriteriaLayoutBuilder<T>(builder).setLayoutFor(device, orientation, flexString);
