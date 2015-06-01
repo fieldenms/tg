@@ -45,6 +45,8 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
             attrs.put("getMasterEntity", "{{getMasterEntity}}");
             attrs.put("requireMasterEntity", centreContextConfig.withMasterEntity ? "true" : "false");
         }
+        attrs.put("processResponse", "{{processResponse}}");
+        attrs.put("onSearchedDefaultError", "{{onSearchedDefaultError}}");
         return attrs;
     };
 

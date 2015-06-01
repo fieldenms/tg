@@ -37,7 +37,7 @@
     .invalid paper-spinner { border-color : {{g.paperInput.invalidColor}}; position: absolute; top: {{g.paperInput.top}}; padding: 2px; margin: 0px; width: 16px; height: 16px; }
 </core-style>
 
-<polymer-element name="tg-entity-search-criteria" attributes="composite user autocompletionType hightlightDesc createModifiedPropertiesHolder requireSelectionCriteria getSelectedEntities requireSelectedEntities getMasterEntity requireMasterEntity" extends="tg-editor">
+<polymer-element name="tg-entity-search-criteria" attributes="composite user autocompletionType hightlightDesc createModifiedPropertiesHolder requireSelectionCriteria getSelectedEntities requireSelectedEntities getMasterEntity requireMasterEntity processResponse onSearchedDefaultError" extends="tg-editor">
     <template>
         <!-- CSS -->
         <core-style ref="search-icon-decorator-2"></core-style>
@@ -197,10 +197,13 @@
                     var self = this;
 
                     self.$.ajaxSearcher.addEventListener('core-response', function (e) {
-                        // TODO: check to make sure the result is an expected one... array of entities....
-                        var foundEntities = self.$.serialiser.deserialise(e.detail.response).instance;
-                        // TODO: Need to convert matched entities to a more suiteable representation
-                        self.onFound(foundEntities);
+                    	self.processResponse(e, "search", function (foundEntities) {
+                            // TODO: Need to convert matched entities to a more suiteable representation
+                            self.onFound(foundEntities);
+                    	}, function (errorResult) {
+                    		self.onSearchedDefaultError(errorResult);
+                    		self.isSearching = false;
+                    	});
                     });
 
                     self.$.ajaxSearcher.addEventListener('core-error', function (e) {

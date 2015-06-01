@@ -70,58 +70,62 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
+            //            throw new IllegalStateException("Illegal state during criteria entity searching.");
+            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
 
-        final M criteriaEntity;
-        final Class<M> criteriaType;
-        if (CentreResourceUtils.isEmpty(centreContextHolder.getModifHolder())) {
-            // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
-            criteriaEntity = null;
-            final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L /* TODO does it matter? */);
-            criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
+            final M criteriaEntity;
+            final Class<M> criteriaType;
+            if (CentreResourceUtils.isEmpty(centreContextHolder.getModifHolder())) {
+                // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
+                criteriaEntity = null;
+                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L /* TODO does it matter? */);
+                criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
 
-        } else {
-            criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), coFinder, critGenerator, miType, originalCdtmae);
-            criteriaType = (Class<M>) criteriaEntity.getClass();
-        }
+            } else {
+                criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), coFinder, critGenerator, miType, originalCdtmae);
+                criteriaType = (Class<M>) criteriaEntity.getClass();
+            }
 
-        // TODO criteriaType is necessary to be used for 1) value matcher creation 2) providing value matcher fetch model
-        // Please, investigate whether such items can be done without 'criteriaType', and this will eliminate the need to create 'criteriaEntity' (above).
+            // TODO criteriaType is necessary to be used for 1) value matcher creation 2) providing value matcher fetch model
+            // Please, investigate whether such items can be done without 'criteriaType', and this will eliminate the need to create 'criteriaEntity' (above).
 
-        final Pair<IValueMatcherWithCentreContext<T>, Optional<CentreContextConfig>> valueMatcherAndContextConfig;
-        if (centre != null) {
-            valueMatcherAndContextConfig = centre.<T> createValueMatcherAndContextConfig(criteriaType, criterionPropertyName);
-        } else {
-            final String msg = String.format("No EntityCentre instance can be found for already constructed 'criteria entity' with type [%s].", criteriaType.getName());
-            logger.error(msg);
-            throw new IllegalStateException(msg);
-        }
+            final Pair<IValueMatcherWithCentreContext<T>, Optional<CentreContextConfig>> valueMatcherAndContextConfig;
+            if (centre != null) {
+                valueMatcherAndContextConfig = centre.<T> createValueMatcherAndContextConfig(criteriaType, criterionPropertyName);
+            } else {
+                final String msg = String.format("No EntityCentre instance can be found for already constructed 'criteria entity' with type [%s].", criteriaType.getName());
+                logger.error(msg);
+                throw new IllegalStateException(msg);
+            }
 
-        final IValueMatcherWithCentreContext<T> valueMatcher = valueMatcherAndContextConfig.getKey();
-        final Optional<CentreContextConfig> contextConfig = valueMatcherAndContextConfig.getValue();
+            final IValueMatcherWithCentreContext<T> valueMatcher = valueMatcherAndContextConfig.getKey();
+            final Optional<CentreContextConfig> contextConfig = valueMatcherAndContextConfig.getValue();
 
-        // create context, if any
-        final Optional<CentreContext<T, ?>> context = CentreResourceUtils.createCentreContext(centreContextHolder, criteriaEntity, contextConfig);
-        if (context.isPresent()) {
-            logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
-            valueMatcher.setContext(context.get());
-        } else {
-            // TODO check whether such setting is needed (need to test autocompletion in centres without that setting) or can be removed:
-            valueMatcher.setContext(new CentreContext<>());
-        }
+            // create context, if any
+            final Optional<CentreContext<T, ?>> context = CentreResourceUtils.createCentreContext(centreContextHolder, criteriaEntity, contextConfig);
+            if (context.isPresent()) {
+                logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
+                valueMatcher.setContext(context.get());
+            } else {
+                // TODO check whether such setting is needed (need to test autocompletion in centres without that setting) or can be removed:
+                valueMatcher.setContext(new CentreContext<>());
+            }
 
-        // populate fetch model
-        valueMatcher.setFetch(EntityResourceUtils.<M, T> fetchForProperty(coFinder, criteriaType, criterionPropertyName).fetchModel());
+            // populate fetch model
+            valueMatcher.setFetch(EntityResourceUtils.<M, T> fetchForProperty(coFinder, criteriaType, criterionPropertyName).fetchModel());
 
-        // prepare search string
-        final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject
-        final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
-        logger.debug(String.format("SEARCH STRING %s", searchString));
+            // prepare search string
+            final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject
+            final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
+            logger.debug(String.format("SEARCH STRING %s", searchString));
 
-        final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
+            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
-        return restUtil.listJSONRepresentation(entities);
+            return restUtil.listJSONRepresentation(entities);
+        }, restUtil);
     }
 }

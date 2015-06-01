@@ -60,22 +60,26 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
+            //            throw new IllegalStateException("Illegal state during entity searching.");
+            final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
-        final CONTEXT context = utils.constructEntity(centreContextHolder.getModifHolder()).getKey();
-        logger.debug("context = " + context);
+            final CONTEXT context = utils.constructEntity(centreContextHolder.getModifHolder()).getKey();
+            logger.debug("context = " + context);
 
-        final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
-        logger.debug(String.format("SEARCH STRING %s", searchStringVal));
+            final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
+            logger.debug(String.format("SEARCH STRING %s", searchStringVal));
 
-        final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
-        logger.debug(String.format("SEARCH STRING %s", searchString));
+            final String searchString = PojoValueMatcher.prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
+            logger.debug(String.format("SEARCH STRING %s", searchString));
 
-        valueMatcher.setContext(context);
-        final fetch<T> fetch = EntityResourceUtils.<CONTEXT, T> fetchForProperty(coFinder, entityType, propertyName).fetchModel();
-        valueMatcher.setFetch(fetch);
-        final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
+            valueMatcher.setContext(context);
+            final fetch<T> fetch = EntityResourceUtils.<CONTEXT, T> fetchForProperty(coFinder, entityType, propertyName).fetchModel();
+            valueMatcher.setFetch(fetch);
+            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
-        return restUtil.listJSONRepresentation(entities);
+            return restUtil.listJSONRepresentation(entities);
+        }, restUtil);
     }
 }

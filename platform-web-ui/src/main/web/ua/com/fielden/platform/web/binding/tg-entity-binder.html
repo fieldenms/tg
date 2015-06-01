@@ -111,6 +111,7 @@
                     self.onValidatedDefaultError = self.onValidatedDefaultError.bind(self);
                     self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
                     self.onRetrievedDefaultError = self.onRetrievedDefaultError.bind(self);
+                    self.onSearchedDefaultError = self.onSearchedDefaultError.bind(self);
                     self.startRefreshCycleModeForEditors = self.startRefreshCycleModeForEditors.bind(self);
                     self.resetRefreshCycleModeForEditors = self.resetRefreshCycleModeForEditors.bind(self);
                     self.createModifiedPropertiesHolder = self.createModifiedPropertiesHolder.bind(self);
@@ -213,6 +214,15 @@
                  * Default implementation for unsuccessful onRetrieved callback.
                  */
                 onRetrievedDefaultError: function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
+                },
+                
+                /**
+                 * Default implementation for unsuccessful onSearched callback.
+                 */
+                onSearchedDefaultError: function (errorResult) {
                 	// This function will be invoked after server-side error appear.
                 	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
                 	console.warn("SERVER ERROR: ", errorResult);
