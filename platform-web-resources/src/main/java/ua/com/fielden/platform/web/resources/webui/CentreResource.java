@@ -13,7 +13,6 @@ import org.restlet.resource.ServerResource;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -58,19 +57,23 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
     @Post
     @Override
     public Representation post(final Representation envelope) throws ResourceException {
-        // gets the fresh centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'fresh centre')
-        final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreResourceUtils.freshCentre(gdtm, miType);
-        // removes the fresh centre -- to be later re-populated
-        CentreResourceUtils.removeFreshCentre(gdtm, miType);
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            //            // NOTE: the following line can be the example how 'centre saving' server errors manifest to the client application
+            //            throw new IllegalStateException("Illegal state during centre saving.");
+            // gets the fresh centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'fresh centre')
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreResourceUtils.freshCentre(gdtm, miType);
+            // removes the fresh centre -- to be later re-populated
+            CentreResourceUtils.removeFreshCentre(gdtm, miType);
 
-        final ICentreDomainTreeManagerAndEnhancer defaultCentre = CentreResourceUtils.getDefaultCentre(gdtm, miType);
-        // creates differences centre from the differences between 'default centre' and 'fresh centre'
-        final ICentreDomainTreeManagerAndEnhancer differencesCentre = CentreResourceUtils.createDifferencesCentre(freshCentre, defaultCentre, CentreResourceUtils.getEntityType(miType), gdtm);
+            final ICentreDomainTreeManagerAndEnhancer defaultCentre = CentreResourceUtils.getDefaultCentre(gdtm, miType);
+            // creates differences centre from the differences between 'default centre' and 'fresh centre'
+            final ICentreDomainTreeManagerAndEnhancer differencesCentre = CentreResourceUtils.createDifferencesCentre(freshCentre, defaultCentre, CentreResourceUtils.getEntityType(miType), gdtm);
 
-        // override old 'diff centre' with recently created one and save it
-        CentreResourceUtils.overrideAndSaveDifferencesCentre(gdtm, miType, differencesCentre);
+            // override old 'diff centre' with recently created one and save it
+            CentreResourceUtils.overrideAndSaveDifferencesCentre(gdtm, miType, differencesCentre);
 
-        return restUtil.rawListJSONRepresentation("OK");
+            return restUtil.rawListJSONRepresentation("OK");
+        }, restUtil);
     }
 
     /**
@@ -79,8 +82,12 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
     @Delete
     @Override
     public Representation delete() {
-        // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
-        CentreResourceUtils.discardFreshCentre(gdtm, miType);
-        return restUtil.resultJSONRepresentation(Result.successful(null));
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            //            // NOTE: the following line can be the example how 'centre discarding' server errors manifest to the client application
+            //            throw new IllegalStateException("Illegal state during centre discarding.");
+            // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
+            CentreResourceUtils.discardFreshCentre(gdtm, miType);
+            return restUtil.rawListJSONRepresentation("OK");
+        }, restUtil);
     }
 }

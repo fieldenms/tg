@@ -63,20 +63,26 @@
 
                     self.onRun = self.onRun.bind(self);
                     self.getSelectedEntities = self.getSelectedEntities.bind(self);
+                    self.onSavedDefaultError = self.onSavedDefaultError.bind(self);
+                    self.onDiscardedDefaultError = self.onDiscardedDefaultError.bind(self);
 
                     self.$.ajaxSaver.addEventListener('core-response', function (e) {
-                        if (e.detail.xhr.status === 200) {
-                            console.log("CENTRE SAVED", e);
+                    	self.$.selection_criteria.processResponse(e, "save", function (okString) {
+                            console.log("CENTRE SAVED", okString);
                             
                             self.retrieve();
-                        }
+                    	}, function (errorResult) {
+                    		self.onSavedDefaultError(errorResult);
+                    	});
                     });
                     self.$.ajaxDiscarder.addEventListener('core-response', function (e) {
-                        if (e.detail.xhr.status === 200) {
-                            console.log("CENTRE DISCARDED", e);
+                    	self.$.selection_criteria.processResponse(e, "discard", function (okString) {
+                            console.log("CENTRE DISCARDED", okString);
                             
                             self.retrieve();
-                        }
+                    	}, function (errorResult) {
+                    		self.onDiscardedDefaultError(errorResult);
+                    	});
                     });
                     
                     self.editAction = self.editAction.bind(self);
@@ -87,6 +93,22 @@
                     self.createContextHolder = self.createContextHolder.bind(self);
                 },
                 
+                /**
+                 * Default implementation for unsuccessful onSave callback.
+                 */
+                onSavedDefaultError: function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	console.warn("SERVER ERROR: ", errorResult);
+                },
+                
+                /**
+                 * Default implementation for unsuccessful onDiscard callback.
+                 */
+                onDiscardedDefaultError: function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	console.warn("SERVER ERROR: ", errorResult);
+                },
+
                 selectPage: function(e, detail, source) {
                     this.selectedPage = this.selectedView; 
                 },
