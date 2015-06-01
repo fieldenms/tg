@@ -16,17 +16,19 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
+@Deprecated
 public class FunctionalEntityResource<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends ServerResource {
 
     private final RestServerUtil restUtil;
     private final DAO dao;
     private final EntityFactory entityFactory;
 
+    @Deprecated
     public FunctionalEntityResource(final DAO dao, final EntityFactory entityFactory, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-	init(context, request, response);
-	this.dao = dao;
-	this.restUtil = restUtil;
-	this.entityFactory = entityFactory;
+        init(context, request, response);
+        this.dao = dao;
+        this.restUtil = restUtil;
+        this.entityFactory = entityFactory;
     }
 
     /**
