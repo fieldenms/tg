@@ -236,12 +236,12 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      * @param miType
      * @return
      */
-    public static Class<AbstractEntity<?>> getEntityType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+    public static <T extends AbstractEntity<?>> Class<T> getEntityType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         final EntityType entityTypeAnnotation = miType.getAnnotation(EntityType.class);
         if (entityTypeAnnotation == null) {
             throw new IllegalStateException(String.format("The menu item type [%s] must be annotated with EntityType annotation", miType.getName()));
         }
-        return (Class<AbstractEntity<?>>) entityTypeAnnotation.value();
+        return (Class<T>) entityTypeAnnotation.value();
     }
 
     /**

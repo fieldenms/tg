@@ -512,9 +512,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      *
      * @return
      */
-    public Optional<IRenderingCustomiser<? extends AbstractEntity<?>, ?>> getRenderingCustomiser() {
+    public Optional<IRenderingCustomiser<T, ?>> getRenderingCustomiser() {
         if (dslDefaultConfig.getResultSetRenderingCustomiserType().isPresent()) {
-            return Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
+            return (Optional<IRenderingCustomiser<T, ?>>) Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
         } else {
             return Optional.empty();
         }
@@ -904,7 +904,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getResultSetProperties();
     }
 
-    public ICustomPropsAssignmentHandler<AbstractEntity<?>> createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler<AbstractEntity<?>>> assignmentHandlerType) {
+    public ICustomPropsAssignmentHandler<T> createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler<T>> assignmentHandlerType) {
         return injector.getInstance(assignmentHandlerType);
     }
 

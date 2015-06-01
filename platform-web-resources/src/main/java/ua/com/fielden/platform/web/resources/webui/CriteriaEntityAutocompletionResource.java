@@ -35,7 +35,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class CriteriaEntityAutocompletionResource<CRITERIA extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>, T extends AbstractEntity<?>> extends ServerResource {
+public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends ServerResource {
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final String criterionPropertyName;
     private final RestServerUtil restUtil;
@@ -74,16 +74,17 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends EnhancedCentr
 
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
 
-        final CRITERIA criteriaEntity;
-        final Class<CRITERIA> criteriaType;
+        final M criteriaEntity;
+        final Class<M> criteriaType;
         if (CentreResourceUtils.isEmpty(centreContextHolder.getModifHolder())) {
             // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
             criteriaEntity = null;
-            criteriaType = (Class<CRITERIA>) ((CRITERIA) CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L /* TODO does it matter? */)).getClass();
+            final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L /* TODO does it matter? */);
+            criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
 
         } else {
-            criteriaEntity = (CRITERIA) CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), coFinder, critGenerator, miType, originalCdtmae);
-            criteriaType = (Class<CRITERIA>) criteriaEntity.getClass();
+            criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), coFinder, critGenerator, miType, originalCdtmae);
+            criteriaType = (Class<M>) criteriaEntity.getClass();
         }
 
         // TODO criteriaType is necessary to be used for 1) value matcher creation 2) providing value matcher fetch model
@@ -102,7 +103,7 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends EnhancedCentr
         final Optional<CentreContextConfig> contextConfig = valueMatcherAndContextConfig.getValue();
 
         // create context, if any
-        final Optional<CentreContext<T, AbstractEntity<?>>> context = CentreResourceUtils.createCentreContext(centreContextHolder, criteriaEntity, contextConfig);
+        final Optional<CentreContext<T, ?>> context = CentreResourceUtils.createCentreContext(centreContextHolder, criteriaEntity, contextConfig);
         if (context.isPresent()) {
             logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
             valueMatcher.setContext(context.get());
@@ -112,7 +113,7 @@ public class CriteriaEntityAutocompletionResource<CRITERIA extends EnhancedCentr
         }
 
         // populate fetch model
-        valueMatcher.setFetch(EntityResourceUtils.<CRITERIA, T> fetchForProperty(coFinder, criteriaType, criterionPropertyName).fetchModel());
+        valueMatcher.setFetch(EntityResourceUtils.<M, T> fetchForProperty(coFinder, criteriaType, criterionPropertyName).fetchModel());
 
         // prepare search string
         final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject

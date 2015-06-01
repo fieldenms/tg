@@ -47,7 +47,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends ServerResource {
+public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends ServerResource {
     private final static Logger logger = Logger.getLogger(CriteriaResource.class);
 
     private final RestServerUtil restUtil;
@@ -55,13 +55,13 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
 
     private final IGlobalDomainTreeManager gdtm;
     private final ICriteriaGenerator critGenerator;
-    private final EntityCentre centre;
+    private final EntityCentre<T> centre;
 
     public CriteriaResource(
             final RestServerUtil restUtil,
             final ICompanionObjectFinder companionFinder,
 
-            final EntityCentre centre,
+            final EntityCentre<T> centre,
             final IGlobalDomainTreeManager gdtm,
             final ICriteriaGenerator critGenerator,
 
@@ -133,11 +133,12 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
+            final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
 
+            final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
             final Pair<Map<String, Object>, ArrayList<?>> pair =
-                    CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
-                            new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject()),
+                    CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(
+                            customObject,
                             CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
                             appliedCriteriaEntity,
                             CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
@@ -149,12 +150,12 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
 
             //Running the rendering customiser for result set of entities.
             @SuppressWarnings("unchecked")
-            final Optional<IRenderingCustomiser<AbstractEntity<?>, ?>> renderingCustomiser = centre.getRenderingCustomiser();
+            final Optional<IRenderingCustomiser<T, ?>> renderingCustomiser = centre.getRenderingCustomiser();
             if (renderingCustomiser.isPresent()) {
-                final IRenderingCustomiser<AbstractEntity<?>, ?> renderer = renderingCustomiser.get();
+                final IRenderingCustomiser<T, ?> renderer = renderingCustomiser.get();
                 final List<Object> renderingHints = new ArrayList<Object>();
                 for (final Object entity : pair.getValue()) {
-                    renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>) entity).get());
+                    renderingHints.add(renderer.getCustomRenderingFor((T) entity).get());
                 }
                 pair.getKey().put("renderingHints", renderingHints);
             } else {
@@ -175,9 +176,12 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         }, restUtil);
     }
 
-    private static <T extends AbstractEntity<?>> Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, AbstractEntity<?>>>>> createQueryEnhancerAndContext(final CentreContextHolder centreContextHolder, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> queryEnhancerConfig, final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity) {
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> createQueryEnhancerAndContext(final CentreContextHolder centreContextHolder, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> queryEnhancerConfig, final M criteriaEntity) {
         if (queryEnhancerConfig.isPresent()) {
-            return Optional.of(new Pair<>(queryEnhancerConfig.get().getKey(), CentreResourceUtils.createCentreContext(centreContextHolder, criteriaEntity, queryEnhancerConfig.get().getValue())));
+            return Optional.of(new Pair<>(
+                    queryEnhancerConfig.get().getKey(),
+                    CentreResourceUtils.<T, M> createCentreContext(centreContextHolder, criteriaEntity, queryEnhancerConfig.get().getValue())//
+            ));
         } else {
             return Optional.empty();
         }
@@ -190,9 +194,9 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
      * @param customPropertiesAsignmentHandler
      * @param entities
      */
-    private void enhanceResultEntitiesWithCustomPropertyValues(final Optional<List<ResultSetProp>> propertiesDefinitions, final Optional<Class<? extends ICustomPropsAssignmentHandler<AbstractEntity<?>>>> customPropertiesAsignmentHandler, final List<AbstractEntity<?>> entities) {
+    private void enhanceResultEntitiesWithCustomPropertyValues(final Optional<List<ResultSetProp>> propertiesDefinitions, final Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> customPropertiesAsignmentHandler, final List<AbstractEntity<?>> entities) {
         if (customPropertiesAsignmentHandler.isPresent()) {
-            setCustomValues(entities, centre.createAssignmentHandlerInstance(customPropertiesAsignmentHandler.get()));
+            setCustomValues(entities, centre.createAssignmentHandlerInstance((Class<? extends ICustomPropsAssignmentHandler<T>>) customPropertiesAsignmentHandler.get()));
         }
 
         if (propertiesDefinitions.isPresent()) {
@@ -214,9 +218,9 @@ public class CriteriaResource<CRITERIA_TYPE extends AbstractEntity<?>> extends S
         }
     }
 
-    private void setCustomValues(final List<AbstractEntity<?>> entities, final ICustomPropsAssignmentHandler<AbstractEntity<?>> assignmentHandler) {
+    private void setCustomValues(final List<AbstractEntity<?>> entities, final ICustomPropsAssignmentHandler<T> assignmentHandler) {
         for (final AbstractEntity<?> entity : entities) {
-            assignmentHandler.assignValues(entity);
+            assignmentHandler.assignValues((T) entity);
         }
     }
 }
