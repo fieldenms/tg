@@ -14,10 +14,12 @@
         (function () {
             'use strict'
             var setLayout = function (layout) {
-                    var contentIndex = 0;
+                    var contentIndex = 0,
+                        selectedElements = [],
+                        orderedElements = [];
                     if (!Array.isArray(layout)) {
                         throw "The layout must be an array";
-                    } 
+                    }
                     if (this.container) {
                         while (this.container.firstChild) {
                             this.container.removeChild(this.container.firstChild);
@@ -30,17 +32,55 @@
                         } else {
                             removeDebugStyle(this.container);
                         }
+                        orderedElements = this.componentsToLayout.slice(0);
+                        splitElements.bind(this)(selectedElements, orderedElements, layout);
                         layout.forEach((function (layoutElem) {
-                            contentIndex = createFlexCell.bind(this)(this.container, layoutElem, contentIndex, true);
+                            contentIndex = createFlexCell.bind(this)(this.container, layoutElem, selectedElements, orderedElements, true);
                         }).bind(this));
                         this.fire('layout-finished', layout);
                     }
                 },
-                setDebugStyle = function(element) {
+                splitElements = function (selectedElements, orderedElements, layout) {
+                    var selectIndex, selectedElement;
+                    if (hasArray(layout)) {
+                        layout.forEach(function (element) {
+                            if (Array.isArray(element)) {
+                                splitElements.bind(this)(selectedElements, orderedElements, element);
+                            }
+                        }.bind(this));
+                    } else {
+                        selectIndex = getSelectIndex(layout);
+                        if (selectIndex >= 0) {
+                            selectedElement = spliceSelectedElement(orderedElements, layout[selectIndex]);
+                            if (selectedElement) {
+                                selectedElements.push(selectedElement);
+                            }
+                        }
+                    }
+                },
+                spliceSelectedElement = function (orderedElements, layoutElement) {
+                    var attribute, value, selectCondition, elementIndex, colonIndex, equalSignIndex;
+                    colonIndex = layoutElement.indexOf(':');
+                    equalSignIndex = layoutElement.indexOf('=');
+                    if (colonIndex >= 0 && equalSignIndex >= 0 && colonIndex < equalSignIndex) {
+                        selectCondition = layoutElement.split(':')[1].split('=');
+                        attribute = selectCondition[0].trim();
+                        value = selectCondition[1].trim();
+                        for (elementIndex = 0; elementIndex < orderedElements.length; elementIndex += 1) {
+                            if (orderedElements[elementIndex].hasAttribute(attribute) && orderedElements[elementIndex].getAttribute(attribute) === value) {
+                                return orderedElements.splice(elementIndex, 1)[0];
+                            }
+                        }
+                    } else {
+                        throw "Syntax error: the select condition must have ':' and '=' signs for example: 'select:propName=key.prop'";
+                    }
+                    return null;
+                },
+                setDebugStyle = function (element) {
                     element.style.border = "1px dashed red";
                 },
-                removeDebugStyle = function(element) {
-                     element.style.removeProperty("border");
+                removeDebugStyle = function (element) {
+                    element.style.removeProperty("border");
                 },
                 removeStylesAndAttributes = function (element) {
                     if (element.stylesToRemove) {
@@ -56,15 +96,17 @@
                         delete element.attributesToRemove;
                     }
                 },
-                createFlexCell = function (container, layoutElem, contentIndex, horizontal) {
+                createFlexCell = function (container, layoutElem, selectedElements, orderedElements, horizontal) {
                     var rowElement, styleValues, trimmedLayoutElement;
                     if (typeof layoutElem === "string") {
                         trimmedLayoutElement = layoutElem.trim();
                         if (layoutElem.indexOf(':') >= 0) {
                             styleValues = layoutElem.split(":");
-                            container.style[styleValues[0].trim()] = styleValues[1].trim();
-                            container.stylesToRemove = container.stylesToRemove || [];
-                            container.stylesToRemove.push(styleValues[0].trim());
+                            if (styleValues[0].trim() !== 'select') {
+                                container.style[styleValues[0].trim()] = styleValues[1].trim();
+                                container.stylesToRemove = container.stylesToRemove || [];
+                                container.stylesToRemove.push(styleValues[0].trim());
+                            }
                         } else {
                             container.attributesToRemove = container.attributesToRemove || [];
                             container.attributesToRemove.push(trimmedLayoutElement);
@@ -75,9 +117,8 @@
                         }
                     } else if (Array.isArray(layoutElem)) {
                         if (!hasArray(layoutElem)) {
-                            rowElement = this.componentsToLayout[contentIndex];
+                            rowElement = getNextElement(selectedElements, orderedElements, layoutElem);
                             removeStylesAndAttributes(rowElement);
-                            contentIndex += 1;
                         } else {
                             rowElement = document.createElement("div");
                             rowElement.setAttribute("layout", "");
@@ -91,11 +132,27 @@
                             removeDebugStyle(rowElement);
                         }
                         layoutElem.forEach((function (columnLayout) {
-                            contentIndex = createFlexCell.bind(this)(rowElement, columnLayout, contentIndex, !horizontal);
+                            createFlexCell.bind(this)(rowElement, columnLayout, selectedElements, orderedElements, !horizontal);
                         }).bind(this));
                         container.appendChild(rowElement);
                     }
-                    return contentIndex;
+                },
+                getNextElement = function (selectedElements, orderedElements, layoutElem) {
+                    var notFoundElement, attribute, value, selectCondition, selectElem, selectIndex = getSelectIndex(layoutElem);
+                    if (selectIndex >= 0) {
+                        selectElem = layoutElem[selectIndex];
+                        selectCondition = selectElem.split(':')[1].split('=');
+                        attribute = selectCondition[0].trim();
+                        value = selectCondition[1].trim();
+                        if (selectedElements.length > 0 && selectedElements[0].hasAttribute(attribute) && selectedElements[0].getAttribute(attribute) === value){
+                            return selectedElements.splice(0, 1)[0];
+                        }
+                    } else if (orderedElements.length > 0) {
+                        return orderedElements.splice(0, 1)[0];
+                    }
+                    notFoundElement = document.createElement('div');
+                    notFoundElement.innerHTML = "element not found!"
+                    return notFoundElement;
                 },
                 hasArray = function (layoutElem) {
                     var elemIndex;
@@ -105,6 +162,15 @@
                         }
                     }
                     return false;
+                },
+                getSelectIndex = function (layoutElem) {
+                    var elemIndex;
+                    for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
+                        if (typeof layoutElem[elemIndex] === 'string' && layoutElem[elemIndex].indexOf("select") >= 0) {
+                            return elemIndex;
+                        }
+                    }
+                    return -1;
                 };
             Polymer({
                 publish: {
