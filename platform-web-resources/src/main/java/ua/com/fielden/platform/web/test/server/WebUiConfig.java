@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Optional;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -77,8 +79,26 @@ import com.google.inject.Inject;
  */
 public class WebUiConfig extends AbstractWebUiConfig {
 
-    public WebUiConfig() {
-        super("TG SERVER");
+    private final String domainName;
+    private final String path;
+
+    public WebUiConfig(final String domainName, final String path) {
+        super("TG Test and Demo Application");
+        if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
+            throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
+        }
+        this.domainName = domainName;
+        this.path = path;
+    }
+
+    @Override
+    public String getDomainName() {
+        return domainName;
+    }
+
+    @Override
+    public String getPath() {
+        return path;
     }
 
     /**

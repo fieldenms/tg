@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.factories;
 
+import org.apache.commons.lang.StringUtils;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -10,6 +11,7 @@ import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.LoginResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -36,7 +38,15 @@ public class LoginResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod()) || Method.PUT.equals(request.getMethod())) {
+            final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
+
+            if (StringUtils.isEmpty(webUiConfig.getDomainName()) || StringUtils.isEmpty(webUiConfig.getPath())) {
+                throw new IllegalStateException("Both the domain name and the applicatin binding path should be provided.");
+            }
+
             new LoginResource(
+                    webUiConfig.getDomainName(),
+                    webUiConfig.getPath(),
                     injector.getInstance(IUniversalConstants.class),
                     injector.getInstance(IAuthenticationModel.class),
                     injector.getInstance(IUserProvider.class),

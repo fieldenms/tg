@@ -144,7 +144,7 @@ public abstract class AbstractWebUiResources extends Application {
         ///////////////////////////////////////////
         /////////// Configuring the guard /////////
         ///////////////////////////////////////////
-        final Authenticator guard = new DefaultWebResourceGuard(getContext(), injector);
+        final Authenticator guard = new DefaultWebResourceGuard(getContext(), webApp.getDomainName(), webApp.getPath(), injector);
         guard.setNext(router);
 
 

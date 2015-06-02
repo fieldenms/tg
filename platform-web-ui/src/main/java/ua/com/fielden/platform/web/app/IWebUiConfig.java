@@ -18,6 +18,21 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public interface IWebUiConfig {
 
     /**
+     * Should return a domain name of a server like <code>tgdev.com</code> where the application is to be deployed.
+     *
+     * @return
+     */
+    String getDomainName();
+
+    /**
+     * Should return a path that follows the domain name where the application is to be bound to.
+     * For example, <code>/</code> for an application that is directly bound to the domain name.
+     * Or, <code>/trident-fleet</code> is the application is bound to <code>https://www.fielden.com.au/trident-fleet</code>.
+     * @return
+     */
+    String getPath();
+
+    /**
      * Provides access to the global application configuration object.
      *
      * @return

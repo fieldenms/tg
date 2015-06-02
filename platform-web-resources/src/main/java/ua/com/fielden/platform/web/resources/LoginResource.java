@@ -45,6 +45,8 @@ import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 public class LoginResource extends ServerResource {
     private final Logger logger = Logger.getLogger(LoginResource.class);
 
+    private final String domainName;
+    private final String path;
     private final IAuthenticationModel authenticationModel;
     private final IUserProvider userProvider;
     private final IUserEx coUserEx;
@@ -61,7 +63,9 @@ public class LoginResource extends ServerResource {
      * @param response
      */
     public LoginResource(//
-    final IUniversalConstants constants,
+            final String domainName,
+            final String path,
+            final IUniversalConstants constants,
             final IAuthenticationModel authenticationModel,
             final IUserProvider userProvider,
             final IUserEx coUserEx,
@@ -71,12 +75,15 @@ public class LoginResource extends ServerResource {
             final Request request, //
             final Response response) {
         init(context, request, response);
+        this.domainName = domainName;
+        this.path = path;
         this.constants = constants;
         this.authenticationModel = authenticationModel;
         this.userProvider = userProvider;
         this.coUserEx = coUserEx;
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
+
     }
 
     @Override
@@ -92,7 +99,7 @@ public class LoginResource extends ServerResource {
                 final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString());
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
-                    assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), getRequest(), getResponse());
+                    assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
                     // response needs to provide redirection instructions
                     getResponse().redirectSeeOther("/");
                     return new EmptyRepresentation();
@@ -128,7 +135,7 @@ public class LoginResource extends ServerResource {
                 final UserSession session = coUserSession.newSession(user, isDeviceTrusted);
 
                 // ...and provide the response with an authenticating cookie
-                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), getRequest(), getResponse());
+                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
                 // the response body should provide an URI where successful login should be redirected to
                 final byte[] body = "/".getBytes("UTF-8");
                 return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));

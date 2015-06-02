@@ -21,14 +21,25 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
  */
 public class TgTestWebApplicationServerModule extends TgTestApplicationServerModule implements IBasicWebApplicationServerModule {
 
-    public TgTestWebApplicationServerModule(final Map<Class, Class> defaultHibernateTypes, final IApplicationDomainProvider applicationDomainProvider, final List<Class<? extends AbstractEntity<?>>> domainTypes, final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, final Class<? extends IFilter> automaticDataFilterType, final Properties props) throws Exception {
+    private final String domainName;
+    private final String path;
+
+    public TgTestWebApplicationServerModule(
+            final Map<Class, Class> defaultHibernateTypes,
+            final IApplicationDomainProvider applicationDomainProvider,
+            final List<Class<? extends AbstractEntity<?>>> domainTypes,
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
+            final Class<? extends IFilter> automaticDataFilterType,
+            final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, props);
+        this.domainName = props.getProperty("web.domain");
+        this.path = props.getProperty("web.path");
     }
 
     @Override
     protected void configure() {
         super.configure();
-        bindWebAppResources(new WebUiConfig());
+        bindWebAppResources(new WebUiConfig(domainName, path));
     }
 
     @Override

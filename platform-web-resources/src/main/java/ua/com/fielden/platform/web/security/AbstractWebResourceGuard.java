@@ -23,6 +23,7 @@ import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Injector;
@@ -41,6 +42,8 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
     protected final Injector injector;
     private final IUniversalConstants constants;
+    private final String domainName;
+    private final String path;
 
     /**
      * Principle constructor.
@@ -49,7 +52,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @param injector
      * @throws IllegalArgumentException
      */
-    public AbstractWebResourceGuard(final Context context, final Injector injector) throws IllegalArgumentException {
+    public AbstractWebResourceGuard(final Context context, final String domainName, final String path, final Injector injector) throws IllegalArgumentException {
         super(context, ChallengeScheme.CUSTOM, "TG");
         if (injector == null) {
             throw new IllegalArgumentException("Injector is required.");
@@ -57,6 +60,13 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
 
         this.injector = injector;
         this.constants = injector.getInstance(IUniversalConstants.class);
+        this.domainName = domainName;
+        this.path = path;
+
+        if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
+            throw new IllegalStateException("Both the domain name and the applicatin binding path should be provided.");
+        }
+
         setRechallenging(false);
     }
 
@@ -85,7 +95,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             }
 
             // the provided authenticator was valid and a new cookie should be send back to the client
-            assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), request, response);
+            assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
 
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
@@ -132,7 +142,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @param authenticator
      * @param response
      */
-    public static void assignAuthenticatingCookie(final DateTime now, final Authenticator authenticator, final Request request, final Response response) {
+    public static void assignAuthenticatingCookie(final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
         // create a cookie that will carry an updated authenticator back to the client for further use
         // it is important to note that the time that will be used by further processing of this request is not known
         // and thus is not factored in for session authentication time frame
@@ -151,8 +161,8 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 0 /*version*/,
                 AUTHENTICATOR_COOKIE_NAME /*name*/,
                 authenticator.toString() /*value*/,
-                "/" /*path*/, // TODO make application customisable!
-                "tgdev.com" /*domain*/, // TODO make application customisable!
+                path /*path*/,
+                domainName /*domain*/,
                 null /*comment*/,
                 maxAge /* number of seconds before cookie expires */,
                 true /*secure*/, // if secure is set to true then this cookie would only be included into the request if it is done over HTTPS!

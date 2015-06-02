@@ -20,8 +20,8 @@ import com.google.inject.Injector;
  */
 public class DefaultWebResourceGuard extends AbstractWebResourceGuard {
 
-    public DefaultWebResourceGuard(final Context context, final Injector injector) throws IllegalArgumentException {
-        super(context, injector);
+    public DefaultWebResourceGuard(final Context context, final String domainName, final String path, final Injector injector) throws IllegalArgumentException {
+        super(context, domainName, path, injector);
     }
 
     @Override
