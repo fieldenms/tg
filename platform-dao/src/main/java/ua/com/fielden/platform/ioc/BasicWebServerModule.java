@@ -17,18 +17,6 @@ import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.entity.functional.CritPropDao;
-import ua.com.fielden.platform.entity.functional.FetchPropDao;
-import ua.com.fielden.platform.entity.functional.QueryEntityDao;
-import ua.com.fielden.platform.entity.functional.QueryRunnerDao;
-import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
-import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
-import ua.com.fielden.platform.entity.functional.centre.ICritProp;
-import ua.com.fielden.platform.entity.functional.centre.IFetchProp;
-import ua.com.fielden.platform.entity.functional.centre.IQueryEntity;
-import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
-import ua.com.fielden.platform.entity.functional.paginator.IPage;
-import ua.com.fielden.platform.entity.functional.paginator.PageDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -79,8 +67,8 @@ import com.google.inject.name.Names;
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
  * <li>Serialisation mechanism;
- * <li>All essential DAO interfaces such as {@link IFilter}, {@link IUserEx}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUser},
- * {@link IAuthorisationModel} and more;
+ * <li>All essential DAO interfaces such as {@link IFilter}, {@link IUserEx}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUser}, {@link IAuthorisationModel} and
+ * more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
  *
@@ -162,14 +150,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
             bind(SecurityTokenProvider.class).toInstance(tokenProvider);
         }
         bind(IAuthorisationModel.class).to(ServerAuthorisationModel.class);
-
-        // bind functional entities dao.
-        bind(IQueryRunner.class).to(QueryRunnerDao.class);
-        bind(IPage.class).to(PageDao.class);
-        bind(IQueryEntity.class).to(QueryEntityDao.class);
-        bind(ICritProp.class).to(CritPropDao.class);
-        bind(IFetchProp.class).to(FetchPropDao.class);
-        bind(ICentreContextHolder.class).to(CentreContextHolderDao.class);
 
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???

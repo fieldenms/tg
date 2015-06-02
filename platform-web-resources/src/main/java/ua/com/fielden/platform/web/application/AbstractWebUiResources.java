@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.application;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -15,8 +14,6 @@ import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 import org.restlet.security.Authenticator;
 
-import ua.com.fielden.platform.entity.functional.centre.IQueryRunner;
-import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebUiComponentResourceFactory;
@@ -29,7 +26,6 @@ import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceF
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.FunctionalEntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
@@ -120,16 +116,6 @@ public abstract class AbstractWebUiResources extends Application {
         // Registering autocompletion resources:
         attachAutocompletionResources(router, webApp);
 
-        // Registering web models.
-        //attachCustomWebViewResources(router, webApp);
-
-        // TODO Register entity masters and other custom views.
-
-        // Attach resource for entity centre query runner.
-        // TODO This is a spike resource. Must be replaced with generic functional entity resource.
-        router.attach("/users/{username}/QueryRunner", new FunctionalEntityResourceFactory<QueryRunner, IQueryRunner>(IQueryRunner.class, injector));
-        attachFunctionalEntities(router, injector);
-
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
         //For egi example TODO remove later.
@@ -147,26 +133,15 @@ public abstract class AbstractWebUiResources extends Application {
         final Authenticator guard = new DefaultWebResourceGuard(getContext(), webApp.getDomainName(), webApp.getPath(), injector);
         guard.setNext(router);
 
-
         final Router mainRouter = new Router(getContext());
         // standard Polymer components and other resources should not be guarded
         // Register resources those are in resource paths.
-        attacheResources(mainRouter);
+        attachResources(mainRouter);
 
         mainRouter.attach(guard);
 
-
-
         return mainRouter;
     }
-
-    /**
-     * Attach custom functional entities to the router.
-     *
-     * @param router
-     * @param injector
-     */
-    protected abstract void attachFunctionalEntities(final Router router, final Injector injector);
 
     /**
      * Attaches all resources relevant to entity masters (entity resource, entity validation resource, UI resources etc.).
@@ -211,7 +186,7 @@ public abstract class AbstractWebUiResources extends Application {
      *
      * @param router
      */
-    private void attacheResources(final Router router) {
+    private void attachResources(final Router router) {
         logger.info("\t\tResources attaching for:..." + "\n\t\t" + StringUtils.join(resourcePaths, "/\n\t\t") + "/");
         router.attach("/resources/", new FileResourceFactory(Collections.unmodifiableSet(resourcePaths)), Template.MODE_STARTS_WITH);
     }

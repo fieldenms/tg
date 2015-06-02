@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
 import org.restlet.Context;
-import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
@@ -37,10 +36,5 @@ public class WebUiResources extends AbstractWebUiResources {
             final String author,
             final IWebUiConfig webApp) {
         super(context, injector, new String[0], name, desc, owner, author, webApp);
-    }
-
-    @Override
-    protected void attachFunctionalEntities(final Router router, final Injector injector) {
-        // router.attach("/users/{username}/CustomFunction", new FunctionalEntityResourceFactory<CustomFunction, ICustomFunction>(ICustomFunction.class, injector));
     }
 }
