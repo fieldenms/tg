@@ -25,9 +25,9 @@ public interface IWebUiConfig {
     String getDomainName();
 
     /**
-     * Should return a path that follows the domain name where the application is to be bound to.
-     * For example, <code>/</code> for an application that is directly bound to the domain name.
-     * Or, <code>/trident-fleet</code> is the application is bound to <code>https://www.fielden.com.au/trident-fleet</code>.
+     * Should return a path that follows the domain name where the application is to be bound to. For example, <code>/</code> for an application that is directly bound to the
+     * domain name. Or, <code>/trident-fleet</code> is the application is bound to <code>https://www.fielden.com.au/trident-fleet</code>.
+     * 
      * @return
      */
     String getPath();

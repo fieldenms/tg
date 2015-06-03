@@ -7,7 +7,7 @@
     <template>
         <tg-reflector id="reflector"></tg-reflector>      
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <core-ajax id="ajaxSender" url="/users/{{user}}/validation/{{entitytype}}" method="POST" handleas="json"></core-ajax> 
+        <core-ajax id="ajaxSender" url="/validation/{{entitytype}}" method="POST" handleas="json"></core-ajax> 
     </template>
     <script>
         (function () {

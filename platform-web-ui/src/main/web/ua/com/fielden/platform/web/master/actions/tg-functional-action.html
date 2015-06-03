@@ -8,7 +8,7 @@
     <template>
         <shadow></shadow>
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <core-ajax id="actionExecutor" url="/users/{{user}}/entity/{{entitytype}}/new" method="POST" handleas="json"></core-ajax>
+        <core-ajax id="actionExecutor" url="/entity/{{entitytype}}/new" method="POST" handleas="json"></core-ajax>
     </template>
     <script>
         Polymer('tg-functional-action', {

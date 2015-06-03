@@ -10,8 +10,8 @@
 
         <tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onValidatedDefault="{{onValidatedDefault}}" onValidatedDefaultError="{{onValidatedDefaultError}}" processResponse="{{processResponse}}"></tg-entity-validator>
 
-        <core-ajax id="ajaxRetriever" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax>
-        <core-ajax id="ajaxSaver" url="/users/{{user}}/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax>
+        <core-ajax id="ajaxRetriever" url="/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax>
+        <core-ajax id="ajaxSaver" url="/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax>
     </template>
     <script>
         (function () {

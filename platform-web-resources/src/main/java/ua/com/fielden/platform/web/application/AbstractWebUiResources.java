@@ -149,36 +149,35 @@ public abstract class AbstractWebUiResources extends Application {
      * @param router
      * @param masters
      */
-    private void attachMasterResources(final Router router, final IWebUiConfig webApp) {
+    private void attachMasterResources(final Router router, final IWebUiConfig webUiConfig) {
         logger.info("\t\tEntity master resources attaching...");
-        router.attach("/users/{username}/entity/{entityType}/{entity-id}", new EntityResourceFactory(webApp, injector));
-        router.attach("/users/{username}/validation/{entityType}", new EntityValidationResourceFactory(webApp, injector));
-        router.attach("/users/{username}/master/{entityType}", new MasterComponentResourceFactory(webApp));
+        router.attach("/entity/{entityType}/{entity-id}", new EntityResourceFactory(webUiConfig, injector));
+        router.attach("/validation/{entityType}", new EntityValidationResourceFactory(webUiConfig, injector));
+        router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(webUiConfig));
     }
 
     /**
      * Attaches all resources relevant to autocompletion.
      *
      * @param router
-     * @param webApp
+     * @param webUiConfig
      */
-    private void attachAutocompletionResources(final Router router, final IWebUiConfig webApp) {
+    private void attachAutocompletionResources(final Router router, final IWebUiConfig webUiConfig) {
         logger.info("\t\tAutocompletion resources attaching...");
-        router.attach("/users/{{username}}/autocompletion/{{entityType}}/{{property}}", new EntityAutocompletionResourceFactory(webApp, injector));
+        router.attach("/autocompletion/{type}/{property}", new EntityAutocompletionResourceFactory(webUiConfig, injector));
     }
 
     /**
-     * Configures router for entity centre resource.
+     * Configures router for entity centre resources.
      *
      * @param router
-     * @param webApp
-     *            - holds the entity centre configurations.
+     * @param webUiConfig
      */
-    private void attachCentreResources(final Router router, final IWebUiConfig webApp) {
+    private void attachCentreResources(final Router router, final IWebUiConfig webUiConfig) {
         logger.info("\t\tCentre resources attaching...");
-        router.attach("/users/{username}/criteria/{mitype}", new CriteriaResourceFactory(webApp, injector));
-        router.attach("/users/{username}/centre/{mitype}", new CentreResourceFactory(webApp, injector));
-        router.attach("/users/{username}/centre_ui/{mitype}", new CentreComponentResourceFactory(webApp, injector));
+        router.attach("/criteria/{mitype}", new CriteriaResourceFactory(webUiConfig, injector));
+        router.attach("/centre/{mitype}", new CentreResourceFactory(webUiConfig, injector));
+        router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(webUiConfig, injector));
     }
 
     /**

@@ -23,7 +23,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class MasterComponentResource extends ServerResource {
-
     private final EntityMaster<? extends AbstractEntity<?>> master;
 
     /**
@@ -34,11 +33,12 @@ public class MasterComponentResource extends ServerResource {
      * @param request
      * @param response
      */
-    public MasterComponentResource(//
-    final EntityMaster<? extends AbstractEntity<?>> master,//
-            final Context context, //
-            final Request request, //
-            final Response response) {
+    public MasterComponentResource(
+            final EntityMaster<? extends AbstractEntity<?>> master,
+            final Context context,
+            final Request request,
+            final Response response //
+    ) {
         init(context, request, response);
         this.master = master;
     }

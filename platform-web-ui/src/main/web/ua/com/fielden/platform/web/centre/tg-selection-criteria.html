@@ -9,8 +9,8 @@
     <template>
         <shadow></shadow>
         <tg-criteria-validator id="validator" user="{{user}}" mitype="{{mitype}}" onValidatedDefault="{{onValidatedDefault}}" onValidatedDefaultError="{{onValidatedDefaultError}}" processResponse="{{processResponse}}"></tg-criteria-validator>
-        <core-ajax id="ajaxRetriever" url="/users/{{user}}/criteria/{{mitype}}" method="GET" handleas="json"></core-ajax>
-        <core-ajax id="ajaxRunner" url="/users/{{user}}/criteria/{{mitype}}" method="PUT" handleas="json"></core-ajax>
+        <core-ajax id="ajaxRetriever" url="/criteria/{{mitype}}" method="GET" handleas="json"></core-ajax>
+        <core-ajax id="ajaxRunner" url="/criteria/{{mitype}}" method="PUT" handleas="json"></core-ajax>
     </template>
     <script>
         var SimultaneousRunException = function () {

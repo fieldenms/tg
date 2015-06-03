@@ -18,7 +18,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
- * Represents web server resource that returns entity centre component for specified mi type to the client.
+ * Represents web server resource that returns entity centre component for the specified 'miType' to the client.
  *
  * @author TG Team
  *

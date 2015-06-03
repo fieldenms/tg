@@ -540,7 +540,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private IRenderable createRenderableRepresentation() {
         logger.debug("Initiating fresh centre...");
 
-        final ICentreDomainTreeManagerAndEnhancer centre = CentreUtils.getFreshCentre(getUserSpecificGdtm(), this.menuItemType);
+        final ICentreDomainTreeManagerAndEnhancer centre = CentreUtils.getFreshCentre(getUserSpecificGlobalManager(), this.menuItemType);
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
@@ -717,6 +717,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
+    /**
+     * Returns the global manager for the user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
+     *
+     * @return
+     */
+    private IGlobalDomainTreeManager getUserSpecificGlobalManager() {
+        return injector.getInstance(IServerGlobalDomainTreeManager.class).get(injector.getInstance(IUserProvider.class).getUser().getKey());
+    }
+
     private String queryEnhancerContextConfigString() {
         return dslDefaultConfig.getQueryEnhancerConfig().isPresent() && dslDefaultConfig.getQueryEnhancerConfig().get().getValue().isPresent() ?
                 createContextAttrs(dslDefaultConfig.getQueryEnhancerConfig().get().getValue().get()) : "";
@@ -846,16 +855,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().isPresent()
                 ? dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().get()
                 : new CentreContextConfig(false, false, false, false);
-    }
-
-    /**
-     * Returns the global manager for the user on this concrete thread, on which {@link #build()} was invoked.
-     *
-     * @return
-     */
-    private IGlobalDomainTreeManager getUserSpecificGdtm() {
-        final String username = injector.getInstance(IUserProvider.class).getUser().getKey();
-        return injector.getInstance(IServerGlobalDomainTreeManager.class).get(username);
     }
 
     /**

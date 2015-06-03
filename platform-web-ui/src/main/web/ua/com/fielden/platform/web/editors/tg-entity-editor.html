@@ -45,7 +45,7 @@
 
         <!-- request related components -->
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <core-ajax id="ajaxSearcher" url="/users/{{user}}/autocompletion/{{autocompletionType}}/{{propertyName}}" method="POST" handleas="json"></core-ajax>
+        <core-ajax id="ajaxSearcher" url="/autocompletion/{{autocompletionType}}/{{propertyName}}" method="POST" handleas="json"></core-ajax>
 
         <!-- structure of representation -->
         <div id="all" relative>

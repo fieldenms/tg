@@ -42,7 +42,7 @@
                             title: "Master for " + masterName,
                             description: "Master for " + masterName,
                             view: {
-                                import: "/users/" + user.login + "/master/" + fullTypeName,
+                                import: "/master_ui/" + fullTypeName,
                                 elementName: "tg-" + simpleTypeName + "-master",
                                 type: "master",
                                 attrs: {
@@ -107,7 +107,7 @@
                     callback: function (data, envelope) {
                         master = {
                             view: {
-                                import: "/users/" + user.login + "/master/" + data.entityType,
+                                import: "/master_ui/" + data.entityType,
                                 elementName: "tg-" + data.simpleEntityType + "-master",
                                 type: "master",
                                 attrs: {

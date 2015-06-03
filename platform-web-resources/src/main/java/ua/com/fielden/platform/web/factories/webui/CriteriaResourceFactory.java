@@ -7,14 +7,8 @@ import org.restlet.data.Method;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -26,7 +20,7 @@ import com.google.inject.Injector;
 /**
  * A factory for criteria resources which instantiate resources based on entity type.
  *
- * The entity type information is a part of the URI: "/users/{username}/criteria/{mitype}".
+ * The entity type information is a part of the URI: "/criteria/{mitype}".
  *
  * @author TG Team
  *
@@ -34,21 +28,19 @@ import com.google.inject.Injector;
 public class CriteriaResourceFactory extends Restlet {
     private final Injector injector;
     private final RestServerUtil restUtil;
-    private final EntityFactory factory;
     private final ICompanionObjectFinder companionFinder;
-    private final IWebUiConfig webApp;
+    private final IWebUiConfig webUiConfig;
     private final ICriteriaGenerator critGenerator;
 
     /**
-     * Instantiates a factory for entity resources.
+     * Instantiates a factory for criteria entity resource.
      *
      */
-    public CriteriaResourceFactory(final IWebUiConfig webApp, final Injector injector) {
-        this.webApp = webApp;
+    public CriteriaResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
+        this.webUiConfig = webUiConfig;
         this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
-        this.factory = injector.getInstance(EntityFactory.class);
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
     }
 
@@ -57,16 +49,16 @@ public class CriteriaResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod() || Method.PUT == request.getMethod() || Method.POST == request.getMethod()) {
-            final String username = injector.getInstance(IUserProvider.class).getUser().getKey();
-
-            final String mitypeString = (String) request.getAttributes().get("mitype");
-            final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) ClassesRetriever.findClass(mitypeString);
-            final EntityCentre centre = this.webApp.getCentres().get(miType);
-
-            final IGlobalDomainTreeManager gdtm = injector.getInstance(IServerGlobalDomainTreeManager.class).get(username);
-
-            final CriteriaResource<AbstractEntity<?>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>> resource = new CriteriaResource<>(restUtil, companionFinder, centre, gdtm, this.critGenerator, getContext(), request, response);
-            resource.handle();
+            new CriteriaResource<AbstractEntity<?>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>>(
+                    restUtil,
+                    companionFinder,
+                    (EntityCentre<AbstractEntity<?>>) ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
+                    ResourceFactoryUtils.getUserSpecificGlobalManager(injector),
+                    critGenerator,
+                    getContext(),
+                    request,
+                    response //
+            ).handle();
         }
     }
 }
