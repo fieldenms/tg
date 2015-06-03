@@ -266,6 +266,61 @@ public class CentreUtils<T extends AbstractEntity<?>> {
     }
 
     /**
+     * Creates 'diff centre' from 'centre' and 'originalCentre' with marked meta-values (only those that are different).
+     *
+     * @param centre
+     * @param originalCentre
+     * @param root
+     * @return
+     */
+    public static ICentreDomainTreeManagerAndEnhancer createDifferencesCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer originalCentre, final Class<AbstractEntity<?>> root, final IGlobalDomainTreeManager gdtm) {
+        final ICentreDomainTreeManagerAndEnhancer differencesCentre = ((GlobalDomainTreeManager) gdtm).copyCentre(centre);
+
+        for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
+            if (!AbstractDomainTree.isPlaceholder(property)) {
+                if (AbstractDomainTree.isDoubleCriterion(managedType(root, differencesCentre), property)) {
+                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getExclusive(root, property), originalCentre.getFirstTick().getExclusive(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.EXCLUSIVE, root, property);
+                    }
+                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getExclusive2(root, property), originalCentre.getFirstTick().getExclusive2(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.EXCLUSIVE2, root, property);
+                    }
+                }
+                final Class<?> propertyType = StringUtils.isEmpty(property) ? managedType(root, differencesCentre) : PropertyTypeDeterminator.determinePropertyType(managedType(root, differencesCentre), property);
+                if (EntityUtils.isDate(propertyType)) {
+                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getDatePrefix(root, property), originalCentre.getFirstTick().getDatePrefix(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.DATE_PREFIX, root, property);
+                    }
+                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getDateMnemonic(root, property), originalCentre.getFirstTick().getDateMnemonic(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.DATE_MNEMONIC, root, property);
+                    }
+                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getAndBefore(root, property), originalCentre.getFirstTick().getAndBefore(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.AND_BEFORE, root, property);
+                    }
+                }
+
+                if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getOrNull(root, property), originalCentre.getFirstTick().getOrNull(root, property))) {
+                    differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.OR_NULL, root, property);
+                }
+                if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getNot(root, property), originalCentre.getFirstTick().getNot(root, property))) {
+                    differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.NOT, root, property);
+                }
+
+                if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getValue(root, property), originalCentre.getFirstTick().getValue(root, property))) {
+                    differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.VALUE, root, property);
+                }
+                if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType(root, differencesCentre), property)) {
+                    if (!EntityUtils.equalsEx(differencesCentre.getFirstTick().getValue2(root, property), originalCentre.getFirstTick().getValue2(root, property))) {
+                        differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.VALUE2, root, property);
+                    }
+                }
+            }
+        }
+
+        return differencesCentre;
+    }
+
+    /**
      * Applies the differences from 'differences centre' on top of 'target centre'.
      *
      * @param targetCentre

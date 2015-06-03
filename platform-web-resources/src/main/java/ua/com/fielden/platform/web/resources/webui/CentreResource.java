@@ -14,6 +14,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -67,7 +68,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
 
             final ICentreDomainTreeManagerAndEnhancer defaultCentre = CentreResourceUtils.getDefaultCentre(gdtm, miType);
             // creates differences centre from the differences between 'default centre' and 'fresh centre'
-            final ICentreDomainTreeManagerAndEnhancer differencesCentre = CentreResourceUtils.createDifferencesCentre(freshCentre, defaultCentre, CentreResourceUtils.getEntityType(miType), gdtm);
+            final ICentreDomainTreeManagerAndEnhancer differencesCentre = CentreUtils.createDifferencesCentre(freshCentre, defaultCentre, CentreResourceUtils.getEntityType(miType), gdtm);
 
             // override old 'diff centre' with recently created one and save it
             CentreResourceUtils.overrideAndSaveDifferencesCentre(gdtm, miType, differencesCentre);
