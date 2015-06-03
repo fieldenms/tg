@@ -10,12 +10,11 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.menu.MiType;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -49,7 +48,10 @@ public class CentreUtils<T extends AbstractEntity<?>> {
     /**
      * Returns the current version of default centre manager (initialises it in case if it is not created yet).
      * <p>
-     * Currently it is created from default configuration in Mi types (CDTMAE is used), but later it should be initialised from Entity Centre DSL.
+     * Currently it is created from Entity Centre DSL through the special gdtm, which knows about Centre DSL configuration.
+     *
+     * IMPORTANT: this 'default centre' is used for constructing 'fresh centre' and 'diff centre', that is why it is very important to make it suitable for Web UI default values.
+     * All other centre will reuse such Web UI specific default values.
      *
      * @param globalManager
      * @param miType
@@ -57,11 +59,30 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      */
     public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType) {
         if (globalManager.getEntityCentreManager(miType, null) == null) {
+            // standard init (from Centre DSL config)
             globalManager.initEntityCentreManager(miType, null);
+
+            // check if it is ok (not changed)
+            if (globalManager.isChangedEntityCentreManager(miType, null)) {
+                throw new IllegalStateException("Should be not changed (after init).");
+            }
+
+            // Web UI default values application
+            final ICentreDomainTreeManagerAndEnhancer defaultedCentre = applyWebUIDefaultValues(
+                    globalManager.getEntityCentreManager(miType, null),
+                    getEntityType(miType) //
+            );
+            ((GlobalDomainTreeManager) globalManager).init(miType, null, defaultedCentre, true);
+
+            // check if it is ok (not changed)
+            if (globalManager.isChangedEntityCentreManager(miType, null)) {
+                throw new IllegalStateException("Should be not changed (after init of defaulted centre instance).");
+            }
         }
 
+        // check if it is ok (not changed)
         if (globalManager.isChangedEntityCentreManager(miType, null)) {
-            throw new IllegalStateException("Should be not changed (after init).");
+            throw new IllegalStateException("Should be not changed.");
         }
 
         return globalManager.getEntityCentreManager(miType, null);
@@ -89,6 +110,10 @@ public class CentreUtils<T extends AbstractEntity<?>> {
                     );
 
             ((GlobalDomainTreeManager) gdtm).init(miType, FRESH_CENTRE_NAME, freshCentre, true);
+
+            if (gdtm.isChangedEntityCentreManager(miType, FRESH_CENTRE_NAME)) {
+                throw new IllegalStateException("Should be not changed.");
+            }
         }
         return freshCentre(gdtm, miType);
     }
@@ -152,10 +177,8 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      * <p>
      * If no 'differences centre' exists -- the following steps are performed:
      * <p>
-     * 1. make sure that 'defalt centre' exists in gdtm;<br>
+     * 1. make sure that 'defalt centre' exists in gdtm (with already applied Web UI default values!);<br>
      * 2. make saveAs from 'default centre' which will be 'diff centre' (this promotes the empty diff to the storage!)<br>
-     * 3. applies correct default values to be in sync with Web UI ones (on top of 'diff centre');<br>
-     * 4. saves the 'diff centre's changes;<br>
      *
      * @param globalManager
      * @param miType
@@ -164,20 +187,16 @@ public class CentreUtils<T extends AbstractEntity<?>> {
     private static ICentreDomainTreeManagerAndEnhancer getDifferencesCentre(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType) {
         if (globalManager.getEntityCentreManager(miType, DIFFERENCES_CENTRE_NAME) == null) {
             try {
+                // init diff centre from persistent storage if exists
                 globalManager.initEntityCentreManager(miType, DIFFERENCES_CENTRE_NAME);
             } catch (final IllegalArgumentException e) {
                 if (e.getMessage().startsWith("Unable to initialise a non-existent entity-centre instance for type")) {
+                    // diff centre does not exist in persistent storage yet -- initialise EMPTY diff (there potentially can be some values from 'default centre',
+                    //   but diff centre will be empty disregarding that fact -- no properties were marked as changed; but initialisation from 'default centre' is important --
+                    //   this makes diff centre nicely synchronised with Web UI default values)
                     getDefaultCentre(globalManager, miType);
 
                     globalManager.saveAsEntityCentreManager(miType, null, DIFFERENCES_CENTRE_NAME);
-
-                    if (globalManager.isChangedEntityCentreManager(miType, DIFFERENCES_CENTRE_NAME)) {
-                        throw new IllegalStateException("Should be not changed.");
-                    }
-
-                    applyDefaultValues(globalManager.getEntityCentreManager(miType, DIFFERENCES_CENTRE_NAME), getEntityType(miType));
-
-                    globalManager.saveEntityCentreManager(miType, DIFFERENCES_CENTRE_NAME);
 
                     if (globalManager.isChangedEntityCentreManager(miType, DIFFERENCES_CENTRE_NAME)) {
                         throw new IllegalStateException("Should be not changed.");
@@ -197,26 +216,28 @@ public class CentreUtils<T extends AbstractEntity<?>> {
 
     /**
      * Applies correct default values to be in sync with Web UI ones on top of 'centre'.
+     * <p>
+     * Currently, only String-typed properties in Web UI have different default values (<code>null</code> instead of ""). This method traverses all String-typed properties and
+     * provides correct default values for them.
+     * <p>
+     * Please, refer to method {@link DynamicQueryBuilder#getEmptyValue(Class, boolean)} for more details on standard default values.
      *
      * @param centre
      * @param root
      */
-    private static void applyDefaultValues(final ICentreDomainTreeManagerAndEnhancer centre, final Class<AbstractEntity<?>> root) {
-        for (final String property : centre.getFirstTick().checkedProperties(root)) {
-            if (!AbstractDomainTree.isPlaceholder(property)) {
+    private static ICentreDomainTreeManagerAndEnhancer applyWebUIDefaultValues(final ICentreDomainTreeManagerAndEnhancer centre, final Class<AbstractEntity<?>> root) {
+        for (final String includedProperty : centre.getRepresentation().includedProperties(root)) {
+            if (!AbstractDomainTree.isDummyMarker(includedProperty)) {
+                final String property = AbstractDomainTree.reflectionProperty(includedProperty);
                 final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? managedType(root, centre) : PropertyTypeDeterminator.determinePropertyType(managedType(root, centre), property);
-                final CritOnly critAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType(root, centre), property);
-                final boolean single = critAnnotation != null && Type.SINGLE.equals(critAnnotation.value());
 
-                if (!EntityUtils.isBoolean(propertyType) && !(EntityUtils.isEntityType(propertyType) && !single)) {
-                    centre.getFirstTick().setValue(root, property, null);
-                    if (AbstractDomainTree.isDoubleCriterion(managedType(root, centre), property)) {
-                        centre.getFirstTick().setValue2(root, property, null);
-                    }
+                if (EntityUtils.isString(propertyType)) {
+                    centre.getRepresentation().getFirstTick().setValueByDefault(root, includedProperty, null);
                 }
             }
         }
+        return centre;
     }
 
     /**
