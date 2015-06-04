@@ -56,7 +56,6 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     public JsCode code() {
         final String code =
                 wrap0("self.actions['%s'] = {", name(), () -> name()) + //
-                wrap0("    user: self.user,") + //
                 wrap0("    entitytype: '%s',", functionalEntityType(), () -> functionalEntityType().getName()) + //
                 wrap0("    shortDesc: '%s',", shortDesc()) + //
                 wrap1("    longDesc: '%s',", longDesc()) + //

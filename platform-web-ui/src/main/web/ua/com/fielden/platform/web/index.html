@@ -20,15 +20,11 @@
 
 <body unresolved fullbleed>
     <template is="auto-binding" id="app">
-        <tg-app user="{{user}}" fit></tg-app>
+        <tg-app fit></tg-app>
     </template>
     <script>
         (function () {
             var app = document.querySelector('#app');
-            app.user={
-                name: "Super User",
-                login: "SU"
-            };
         })();
     </script>
 </body>

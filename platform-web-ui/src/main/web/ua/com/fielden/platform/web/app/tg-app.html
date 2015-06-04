@@ -8,21 +8,21 @@
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/app/tg-view-manager.html">
 
-<polymer-element name="tg-app" attributes="user" layout vertical>
+<polymer-element name="tg-app" layout vertical>
     <template>
         <style>
             :host {
                 overflow: hidden;
             }
         </style>
-        <tg-view-manager user="{{user}}"></tg-view-manager>
+        <tg-view-manager></tg-view-manager>
         <core-animated-pages id="pages" selected="{{selected}}" on-core-animated-pages-transition-end="{{transitionend}}" transitions="hero-transition cross-fade scale-up slide-up slide-down" flex>
 
-            <tg-app-menu id="menu" name="menu" user="{{user}}" items="{{views.items}}" lastSelectedMenuItem="{{lastSelected}}" selectedMenuItem="{{selected}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit></tg-app-menu>
+            <tg-app-menu id="menu" name="menu" items="{{views.items}}" lastSelectedMenuItem="{{lastSelected}}" selectedMenuItem="{{selected}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit></tg-app-menu>
 
             <template repeat="{{view, viewIndex in views.items}}">
                 <div fit name="{{view.title}}">
-                    <tg-app-view user="{{user}}" autoLoad?="{{viewIndex === 0}}" item="{{view}}" hero-id="{{'hero_' + view.title}}" hero?="{{selected === view.title || lastSelected === view.title}}" fit></tg-app-view>
+                    <tg-app-view autoLoad?="{{viewIndex === 0}}" item="{{view}}" hero-id="{{'hero_' + view.title}}" hero?="{{selected === view.title || lastSelected === view.title}}" fit></tg-app-view>
                 </div>
             </template>
 

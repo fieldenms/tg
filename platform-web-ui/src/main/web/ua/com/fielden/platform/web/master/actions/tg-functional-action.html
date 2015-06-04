@@ -4,7 +4,7 @@
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
 
-<polymer-element name="tg-functional-action" attributes="user entitytype preAction postActionSuccess postActionError" extends="tg-abstract-action">
+<polymer-element name="tg-functional-action" attributes="entitytype preAction postActionSuccess postActionError" extends="tg-abstract-action">
     <template>
         <shadow></shadow>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -13,7 +13,6 @@
     <script>
         Polymer('tg-functional-action', {
             publish: {
-            	user: null,
             	entitytype: null,
 
                 /**

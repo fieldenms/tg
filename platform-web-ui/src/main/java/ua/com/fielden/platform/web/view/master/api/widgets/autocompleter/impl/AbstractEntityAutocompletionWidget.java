@@ -34,7 +34,6 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = new LinkedHashMap<>();
 
-        attrs.put("user", "{{user}}");
         attrs.put("autocompletionType", "{{" + (selectionCriteriaWidget ? "mitype" : "entitytype") + "}}");
         attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
         if (centreContextConfig != null) {

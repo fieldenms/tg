@@ -68,7 +68,7 @@
     <template id="centre_example" is="auto-binding">
         <flatiron-director route="{{route}}" autohash></flatiron-director>
         <tg-reflector id="reflector"></tg-reflector>
-        <tg-view-manager user="SU"></tg-view-manager>
+        <tg-view-manager></tg-view-manager>
         <core-scaffold id="scaffold" responsiveWidth="767px">
 
             <nav>
@@ -177,15 +177,12 @@
 
                         document.querySelector("#scaffold").$.drawerPanel.forceNarrow = true;
 
-                        var userName = "SU";
-
                         //////////////////////Initialising centres and route///////////////////////////////
                         centreExample.centres.push({
                             componentUri: "/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties",
                             elementName: "tg-TgPersistentEntityWithProperties-centre",
                             label: "Entity Centre (Generated)",
                             attrs: {
-                                user: userName,
                                 uuid: reflector.generateUUID()
                             }
                         });
@@ -194,7 +191,6 @@
                     elementName: "tg-entity-centre-for-TgPersistentEntityWithProperties",
                     label: "Entity Centre",
                     attrs: {
-                        user: userName,
                         uuid: reflector.generateUUID()
                     }
                 }); */

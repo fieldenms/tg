@@ -3,7 +3,7 @@
 <link rel="import" href="/resources/views/tg-view.html">
 <link rel="import" href="/resources/views/tg-view-with-menu.html">
 
-<polymer-element name="tg-app-view" attributes="user, item autoLoad" vertical layout>
+<polymer-element name="tg-app-view" attributes="item autoLoad" vertical layout>
     <template>
         <style>
             .item-bg {
@@ -26,7 +26,7 @@
                 <tg-view id="view" autoLoad?="{{autoLoad}}" item="{{item}}" fit></tg-view>
             </template>
             <template if="{{item.menu}}">
-                <tg-view-with-menu user="{{user}}" id="view" item="{{item}}" fit></tg-view-with-menu>
+                <tg-view-with-menu id="view" item="{{item}}" fit></tg-view-with-menu>
             </template>
         </div>
     </template>

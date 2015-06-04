@@ -37,7 +37,7 @@
     .invalid paper-spinner { border-color : {{g.paperInput.invalidColor}}; position: absolute; top: {{g.paperInput.top}}; padding: 2px; margin: 0px; width: 16px; height: 16px; }
 </core-style>
 
-<polymer-element name="tg-entity-search-criteria" attributes="composite user autocompletionType hightlightDesc createModifiedPropertiesHolder requireSelectionCriteria getSelectedEntities requireSelectedEntities getMasterEntity requireMasterEntity processResponse onSearchedDefaultError" extends="tg-editor">
+<polymer-element name="tg-entity-search-criteria" attributes="composite autocompletionType hightlightDesc createModifiedPropertiesHolder requireSelectionCriteria getSelectedEntities requireSelectedEntities getMasterEntity requireMasterEntity processResponse onSearchedDefaultError" extends="tg-editor">
     <template>
         <!-- CSS -->
         <core-style ref="search-icon-decorator-2"></core-style>
@@ -68,7 +68,7 @@
                         <core-icon-button class="{{searchButtonClass(isSearching)}}" on-tap="{{onSearchButtonTap}}" icon="search" disabled?="{{_isDisabled(currentState, entity, propertyName)}}"></core-icon-buton>
                     </div>
                     <div id="action_icon" hidden?="{{!action}}">
-                        <tg-property-action user="{{action.user}}" entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
+                        <tg-property-action entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
                     </div>
                 </div>
             </paper-input-decorator>

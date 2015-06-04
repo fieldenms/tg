@@ -6,7 +6,7 @@
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-app-menu" attributes="user items lastSelectedMenuItem selectedMenuItem whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
+<polymer-element name="tg-app-menu" attributes="items lastSelectedMenuItem selectedMenuItem whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
     <template>
         <style>
             core-toolbar {
@@ -67,8 +67,9 @@
         <core-style ref="menu-item-progress"></core-style>
 
         <core-toolbar>
-            <div flex>{{user.name}}</div>
-            <div>{{user.login}}</div>
+        	<!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
+            <!-- div flex>{{user.name}}</div>
+            <div>{{user.login}}</div -->
         </core-toolbar>
 
         <div class="items">

@@ -6,7 +6,7 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-ui-action" attributes="user elementName attrs shortDesc longDesc icon componentUri createContextHolder requireSelectionCriteria requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError chosenProperty">
+<polymer-element name="tg-ui-action" attributes="elementName attrs shortDesc longDesc icon componentUri createContextHolder requireSelectionCriteria requireSelectedEntities requireMasterEntity preAction postActionSuccess postActionError chosenProperty">
     <!-- enabledStates currentState  -->
     <template>
         <style>
@@ -64,7 +64,6 @@
                  */
                 requireMasterEntity: null,
 
-                user: null,
                 elementName: null,
                 attrs: null,
                 /**

@@ -40,7 +40,7 @@ public class WebView implements IExecutable {
             final String viewType = entityCentre != null ? "\"centre\"" : "\"view\"";
             final String attrs;
             if (entityCentre != null) {
-                attrs = "{ user: self.user.login}";
+                attrs = "{}";
             } else {
                 attrs = "null";
             }

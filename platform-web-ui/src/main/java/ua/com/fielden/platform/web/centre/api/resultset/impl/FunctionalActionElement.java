@@ -72,13 +72,12 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("debug", "true");
         }
 
-        attrs.put("user", "{{user}}");
         attrs.put("shortDesc", conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED");
         attrs.put("longDesc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
         attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
         attrs.put("componentUri", "/master_ui/" + conf().functionalEntity.get().getName());
         attrs.put("elementName", "tg-" + conf().functionalEntity.get().getSimpleName() + "-master");
-        attrs.put("attrs", "{{ {user:user, entitytype:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid:uuid} }}");
+        attrs.put("attrs", "{{ {entitytype:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid:uuid} }}");
         attrs.put("createContextHolder", "{{createContextHolder}}");
         final String actionsHolderName = functionalActionKind == FunctionalActionKind.TOP_LEVEL ? "topLevelActions" :
                 functionalActionKind == FunctionalActionKind.PRIMARY_RESULT_SET ? "primaryAction" :

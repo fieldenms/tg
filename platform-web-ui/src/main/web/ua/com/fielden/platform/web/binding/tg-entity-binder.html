@@ -7,11 +7,11 @@
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/components/tg-toast.html">
 
-<polymer-element name="tg-entity-binder" attributes="user onRetrieved onValidated onPreRetrieved currentState uuid">
+<polymer-element name="tg-entity-binder" attributes="onRetrieved onValidated onPreRetrieved currentState uuid">
     <template>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <!-- tg-entity-validator id="validator" user="{{user}}" entitytype="{{entitytype}}" onvalidateddefault="{{onValidatedDefault}}" onvalidateddefaulterror="{{onValidatedDefaultError}}" processResponse="{{processResponse}}"></tg-entity-validator -->
+        <!-- tg-entity-validator id="validator" entitytype="{{entitytype}}" onvalidateddefault="{{onValidatedDefault}}" onvalidateddefaulterror="{{onValidatedDefaultError}}" processResponse="{{processResponse}}"></tg-entity-validator -->
 
         <!-- core-ajax id="ajaxRetriever" url="/entity/{{entitytype}}/{{entityid}}" method="GET" handleas="json"></core-ajax -->
 

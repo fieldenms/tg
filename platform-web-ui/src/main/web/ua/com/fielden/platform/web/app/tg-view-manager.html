@@ -1,11 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-view-manager" attributes="user" hidden>
+<polymer-element name="tg-view-manager" hidden>
     <script>
         (function () {
-            var user,
-                mastersById = {},
+            var mastersById = {},
                 generateMasterName = function (entity) {
                     var keyString = "";
                     if (typeof entity === "object" && typeof entity.type === "function") {
@@ -46,7 +45,6 @@
                                 elementName: "tg-" + simpleTypeName + "-master",
                                 type: "master",
                                 attrs: {
-                                    user: user.login,
                                     entityid: data.entity.id,
                                     entitytype: fullTypeName,
                                     currentState: 'EDIT',
@@ -111,7 +109,6 @@
                                 elementName: "tg-" + data.simpleEntityType + "-master",
                                 type: "master",
                                 attrs: {
-                                    user: user.login,
                                     entityid: "new",
                                     entitytype: data.entityType,
                                     currentState: 'EDIT',
@@ -164,11 +161,6 @@
                 });
             Polymer({
                 ready: function () {
-                    if (!user) {
-                        user = this.user;
-                    } else if (user !== this.user) {
-                        throw "The defined user is different then " + this.user.login + " but was: " + user.login;
-                    }
                 }
             });
         })();

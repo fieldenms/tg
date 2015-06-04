@@ -20,14 +20,14 @@
             <!-- datetime-picker id="editor" label="Your Label" bindTo="{{currBindingEntity['dateProp']}}" ></datetime-picker -->
             <tg-integer-editor debug entity="{{currBindingEntity}}" propertyName="integerProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'integerProp')}}" propDesc="{{_desc(currEntity, 'integerProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-integer-editor>
             <!--tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor-->
-            <tg-entity-editor entity="{{currBindingEntity}}" user="{{user}}" autocompletionType="{{entitytype}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}" processResponse="{{processResponse}}" onSearchedDefaultError="{{onSearchedDefaultError}}"></tg-entity-editor>
+            <tg-entity-editor entity="{{currBindingEntity}}" autocompletionType="{{entitytype}}" propertyName="entityProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'entityProp')}}" propDesc="{{_desc(currEntity, 'entityProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}" processResponse="{{processResponse}}" onSearchedDefaultError="{{onSearchedDefaultError}}"></tg-entity-editor>
             <tg-decimal-editor entity="{{currBindingEntity}}" propertyName="bigDecimalProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'bigDecimalProp')}}" propDesc="{{_desc(currEntity, 'bigDecimalProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-decimal-editor>
             <tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{doNotValidate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor>
             <tg-multiline-text-editor entity="{{currBindingEntity}}" propertyName="stringProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'stringProp')}}" propDesc="{{_desc(currEntity, 'stringProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-multiline-text-editor>
             <tg-datetime-picker entity="{{currBindingEntity}}" propertyName="dateProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'dateProp')}}" propDesc="{{_desc(currEntity, 'dateProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-datetime-picker>
             <tg-boolean-editor entity="{{currBindingEntity}}" propertyName="booleanProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'booleanProp')}}" propDesc="{{_desc(currEntity, 'booleanProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-boolean-editor>
             <!--tg-singleline-text-editor entity="{{currBindingEntity}}" propertyName="compositeProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'compositeProp')}}" propDesc="{{_desc(currEntity, 'compositeProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}"></tg-singleline-text-editor-->
-            <tg-entity-editor entity="{{currBindingEntity}}" user="{{user}}" autocompletionType="{{entitytype}}" propertyName="compositeProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'compositeProp')}}" propDesc="{{_desc(currEntity, 'compositeProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}" processResponse="{{processResponse}}" onSearchedDefaultError="{{onSearchedDefaultError}}"></tg-entity-editor>
+            <tg-entity-editor entity="{{currBindingEntity}}" autocompletionType="{{entitytype}}" propertyName="compositeProp" onAcceptedValueChanged="{{validate}}" propTitle="{{_title(currEntity, 'compositeProp')}}" propDesc="{{_desc(currEntity, 'compositeProp')}}" currentState="{{currentState}}" action="{{actions['SNATCH_BACK_VEHICLE']}}" externalRefreshCycle="{{refreshCycleMode}}" createModifiedPropertiesHolder="{{createModifiedPropertiesHolder}}" processResponse="{{processResponse}}" onSearchedDefaultError="{{onSearchedDefaultError}}"></tg-entity-editor>
 
             <tg-action action="{{actions['REFRESH'].action}}" onAction="{{onRetrievedDefault}}" onActionError="{{onRetrievedDefaultError}}" enabledStates="{{actions['REFRESH'].enabledStates}}" shortDesc="{{actions['REFRESH'].shortDesc}}" longDesc="{{actions['REFRESH'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
@@ -37,7 +37,7 @@
             <tg-action action="{{actions['VALIDATE'].action}}" onAction="{{onValidatedDefault}}" onActionError="{{onValidatedDefaultError}}" enabledStates="{{actions['VALIDATE'].enabledStates}}" shortDesc="{{actions['VALIDATE'].shortDesc}}" longDesc="{{actions['VALIDATE'].longDesc}}" currentState="{{currentState}}"></tg-action>
             <tg-action action="{{actions['SAVE'].action}}" onAction="{{onSavedDefault}}" onActionError="{{onSavedDefaultError}}" enabledStates="{{actions['SAVE'].enabledStates}}" shortDesc="{{actions['SAVE'].shortDesc}}" longDesc="{{actions['SAVE'].longDesc}}" currentState="{{currentState}}"></tg-action>
 
-            <tg-entity-action user="{{actions['EXPORT'].user}}" entitytype="{{actions['EXPORT'].entitytype}}" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
+            <tg-entity-action entitytype="{{actions['EXPORT'].entitytype}}" preAction="{{actions['EXPORT'].preAction}}" postActionSuccess="{{actions['EXPORT'].postActionSuccess}}" postActionError="{{actions['EXPORT'].postActionError}}" enabledStates="{{actions['EXPORT'].enabledStates}}" shortDesc="{{actions['EXPORT'].shortDesc}}" longDesc="{{actions['EXPORT'].longDesc}}" currentState="{{currentState}}"></tg-entity-action>
         </tg-flex-layout>
     </template>
     <script>
@@ -53,7 +53,6 @@
 
                     // TODO smth. like this should be generated here:
                     self.actions['EXPORT'] = {
-                        user: self.user,
                         entitytype: "ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity",
                         shortDesc: 'EXPORT',
                         longDesc: 'Export action for TgPersistentEntityWithProperties ...',
@@ -80,7 +79,6 @@
                     };
 
                     self.actions['SNATCH_BACK_VEHICLE'] = {
-                        user: self.user,
                         entitytype: "ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity", // TODO make separate functional entity
                         shortDesc: 'PROP ACTION',
                         longDesc: 'Snatch back sddsd ...',

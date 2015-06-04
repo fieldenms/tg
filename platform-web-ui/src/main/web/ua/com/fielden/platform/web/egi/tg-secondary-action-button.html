@@ -26,7 +26,7 @@
         	<div layout vertical>
             	<template repeat="{{action in actions}}">
             		<tg-page-action icon="{{action.icon}}" action="{{action.action}}" context="{{currentEntity}}" hidden?="{{!action.action}}"></tg-page-action>
-            		<tg-ui-action hidden?="{{action.action}}" currentEntity="{{currentEntity}}" user="{{action.user}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectionCriteria="{{action.requireSelectionCriteria}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
+            		<tg-ui-action hidden?="{{action.action}}" currentEntity="{{currentEntity}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectionCriteria="{{action.requireSelectionCriteria}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
             	</template>
             </div>
         </paper-dropdown>
