@@ -8,9 +8,11 @@ import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityAggregatesRao;
@@ -23,7 +25,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -34,7 +40,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  * @author TG Team
  * 
  */
-public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
+public class WebResourceEntityAggregatesTestCase extends WebBasedTestCase {
     private final IEntityAggregatesDao rao = new EntityAggregatesRao(new CommonEntityAggregatesRao(config.restClientUtil()));
 
     @Test
@@ -104,7 +110,7 @@ public class WebResourceEntityAggreagatesTestCase extends WebBasedTestCase {
         yield().beginExpr().countOf().prop("id").endExpr().as("kount").modelAsAggregate();
 
         final OrderingModel orderBy = orderBy().prop("entityPropertyOne.intProperty").asc().model();
-        final fetch<EntityAggregates> fetch = fetch(EntityAggregates.class).with("kount").with("entityPropertyOne", fetch(InspectedEntity.class));
+        final fetch<EntityAggregates> fetch = fetchOnly(EntityAggregates.class).with("kount").with("entityPropertyOne", fetch(InspectedEntity.class));
         try {
             final byte[] bytes = rao.export(from(model).with(orderBy).with(fetch).model(), new String[] { "entityPropertyOne.intProperty", "kount" }, new String[] {
                     "Integer Property", "Count" });

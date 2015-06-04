@@ -31,7 +31,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
         this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
 
-    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final FetchModel<E> fetchModel) throws Exception {
+    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
         if (fetchModel != null) {
             final Map<String, fetch<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getFetchModels();
 
@@ -108,6 +108,11 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
         return propValues;
     }
 
+    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
+        return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<T>(fetchModel, domainMetadataAnalyser) : //
+            new EntityRetrievalModel<T>(fetchModel, domainMetadataAnalyser);
+    }
+    
     private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final fetch<T> fetchModel, final String linkPropName)
             throws Exception {
         // Obtaining map between property id and list of entities where this property occurs
@@ -120,7 +125,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
                     : //
-                    new EntityEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, new FetchModel(fetchModel, domainMetadataAnalyser));
+                    new EntityEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, produceRetrievalModel(fetchModel));
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -150,7 +155,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
                     : //
-                    new EntityEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, new FetchModel(fetchModel, domainMetadataAnalyser));
+                    new EntityEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, produceRetrievalModel(fetchModel));
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {

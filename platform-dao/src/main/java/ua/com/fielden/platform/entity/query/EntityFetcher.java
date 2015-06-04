@@ -86,9 +86,9 @@ public class EntityFetcher {
 
     private <T extends AbstractEntity<?>> QueryModelResult<T> getModelResult(final QueryExecutionModel<T, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
         final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, universalConstants);
-        final FetchModel<T> fm = qem.getFetchModel() == null ? //
-              (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? null : new FetchModel(fetch(qem.getQueryModel().getResultType()), domainMetadataAnalyser)) : // 
-                  new FetchModel(qem.getFetchModel(), domainMetadataAnalyser); 
+        final IRetrievalModel<T> fm = qem.getFetchModel() == null ? //
+              (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? null : new EntityRetrievalModel(fetch(qem.getQueryModel().getResultType()), domainMetadataAnalyser)) : // 
+                  (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? new EntityAggregatesRetrievalModel(qem.getFetchModel(), domainMetadataAnalyser) : new EntityRetrievalModel(qem.getFetchModel(), domainMetadataAnalyser)); 
         
         
         final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.getQueryModel(), qem.getOrderModel(), qem.getQueryModel().getResultType(), fm, qem.getParamValues());

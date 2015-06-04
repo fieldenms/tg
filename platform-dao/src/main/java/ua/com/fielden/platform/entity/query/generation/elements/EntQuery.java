@@ -25,8 +25,8 @@ import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.generation.EntQueryBlocks;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
@@ -225,7 +225,7 @@ public class EntQuery implements ISingleOperand {
         }
     }
     
-    private boolean areAllFetchedPropsAggregatedExpressions(final FetchModel fetchModel) {
+    private boolean areAllFetchedPropsAggregatedExpressions(final IRetrievalModel fetchModel) {
         boolean result = true;
         for (final Yield yield : yields.getYields()) {
             if (fetchModel.containsProp(yield.getAlias())) {
@@ -240,7 +240,7 @@ public class EntQuery implements ISingleOperand {
         return yieldType != null && AbstractEntity.class.isAssignableFrom(yieldType);
     }
     
-    private void adjustYieldsModelAccordingToFetchModel(final FetchModel fetchModel) {
+    private void adjustYieldsModelAccordingToFetchModel(final IRetrievalModel fetchModel) {
         if (fetchModel == null) {
             logger.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
         } else {
@@ -426,7 +426,7 @@ public class EntQuery implements ISingleOperand {
 
     public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
             final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, //
-            final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
+            final EntQueryGenerator generator, final IRetrievalModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
@@ -481,7 +481,7 @@ public class EntQuery implements ISingleOperand {
         return foundProps != null ? foundProps : Collections.<EntProp> emptyList();
     }
 
-    private void enhanceToFinalState(final EntQueryGenerator generator, final FetchModel fetchModel) {
+    private void enhanceToFinalState(final EntQueryGenerator generator, final IRetrievalModel fetchModel) {
         for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
             final ISource source = sourceAndItsJoinType.getKey();
             source.assignNullability(sourceAndItsJoinType.getValue());

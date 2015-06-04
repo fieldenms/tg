@@ -2,8 +2,13 @@ package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.IOException;
@@ -41,6 +46,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
@@ -814,9 +820,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected int evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
         final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ? select((EntityResultQueryModel<T>) model).yield().countAll().as("count").modelAsAggregate()
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
-        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetch(EntityAggregates.class).with("count")).lightweight(true).model();
+        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchOnly(EntityAggregates.class).with("count")).lightweight(true).model();
         final List<EntityAggregates> counts = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants). //
         getEntities(countModel);
+
         final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
         return resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;
