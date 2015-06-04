@@ -43,7 +43,10 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final EntityFactory entityFactory,
             final IValueMatcherWithContext<CONTEXT, T> valueMatcher,
             final ICompanionObjectFinder companionFinder,
-            final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+            final RestServerUtil restUtil,
+            final Context context,
+            final Request request,
+            final Response response) {
         init(context, request, response);
 
         utils = new EntityResourceUtils<CONTEXT>(entityType, entityProducer, entityFactory, restUtil, companionFinder);

@@ -13,6 +13,7 @@ import ua.com.fielden.platform.web.factories.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.system.SystemResources;
+import ua.com.fielden.platform.web.test.server.sse.EventSourcingResourceFactory;
 
 import com.google.inject.Injector;
 
@@ -63,8 +64,6 @@ public class TgTestApplicationConfiguration extends Component {
                     )
             );
 
-
-
             // attach application specific resources, which are versioned
             getDefaultHost().attach("/v1",//
                     new ServerApplication(
@@ -83,6 +82,11 @@ public class TgTestApplicationConfiguration extends Component {
                             getContext().createChildContext(), injector,
                             "TG Web UI Testing Server", "The testing server for Trident Genesis platform Web UI module", "FMS", "R&D Team", webApp
                     ));
+
+
+            // try attaching a servlet
+            getDefaultHost().attach("/events",  new EventSourcingResourceFactory());
+
         } catch (final Exception e) {
             e.printStackTrace();
             throw new IllegalStateException(e);
