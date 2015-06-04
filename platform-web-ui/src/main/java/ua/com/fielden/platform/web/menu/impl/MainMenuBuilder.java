@@ -47,9 +47,9 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout, IExecutable 
 
     @Override
     public JsCode code() {
-        final String desktopLayout = this.tileLayout.getLayout(Device.DESKTOP, null);
-        final String tabletLayout = this.tileLayout.getLayout(Device.TABLET, null);
-        final String mobileLayout = this.tileLayout.getLayout(Device.MOBILE, null);
+        final String desktopLayout = this.tileLayout.getLayout(Device.DESKTOP, null).get();
+        final String tabletLayout = this.tileLayout.getLayout(Device.TABLET, null).get();
+        final String mobileLayout = this.tileLayout.getLayout(Device.MOBILE, null).get();
         final StringBuilder menuConfig = new StringBuilder();
         if (!StringUtils.isEmpty(desktopLayout)) {
             menuConfig.append(format("whenDesktop: %s, ", desktopLayout));

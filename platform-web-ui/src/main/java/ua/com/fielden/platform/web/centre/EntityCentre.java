@@ -66,6 +66,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
+import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
@@ -685,6 +686,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String primaryActionObjectString = primaryActionObject.toString();
         final String propActionsString = propActionsObject.toString();
+        final String gridLayoutConfig = generateGridLayoutConfig();
         final int prefixLength = prefix.length();
         logger.debug("Initiating template...");
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html");
@@ -692,6 +694,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String entityCentreStr = text.
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
+                replace("@gridLayout", gridLayoutConfig).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getName()).
                 replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).
@@ -715,6 +718,31 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
         logger.debug("Done.");
         return representation;
+    }
+
+    private String generateGridLayoutConfig() {
+        final StringBuilder resultsetLayout = new StringBuilder(" ");
+        final FlexLayout collapseLayout = dslDefaultConfig.getResultsetCollapsedCardLayout();
+        final FlexLayout expandLayout = dslDefaultConfig.getResultsetExpansionCardLayout();
+        if (collapseLayout.hasLayoutFor(Device.DESKTOP, null)) {
+            resultsetLayout.append("desktopLayoutShort=\"{{" + collapseLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
+        }
+        if (collapseLayout.hasLayoutFor(Device.TABLET, null)) {
+            resultsetLayout.append("tabletLayoutShort=\"{{" + collapseLayout.getLayout(Device.TABLET, null).get() + "}}\" ");
+        }
+        if (collapseLayout.hasLayoutFor(Device.MOBILE, null)) {
+            resultsetLayout.append("mobileLayoutShort=\"{{" + collapseLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
+        }
+        if (expandLayout.hasLayoutFor(Device.DESKTOP, null)) {
+            resultsetLayout.append("desktopLayoutLong=\"{{" + expandLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
+        }
+        if (expandLayout.hasLayoutFor(Device.TABLET, null)) {
+            resultsetLayout.append("tabletLayoutLong=\"{{" + expandLayout.getLayout(Device.TABLET, null).get() + "}}\" ");
+        }
+        if (expandLayout.hasLayoutFor(Device.MOBILE, null)) {
+            resultsetLayout.append("mobileLayoutLong=\"{{" + expandLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
+        }
+        return resultsetLayout.toString();
     }
 
     /**

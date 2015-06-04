@@ -46,7 +46,7 @@ public abstract class AbstractLayout<T extends AbstractLayoutSetter<?>> implemen
      * @param orientation
      * @return
      */
-    private T getLayout(final Device device, final Orientation orientation) {
+    public T getLayout(final Device device, final Orientation orientation) {
         if (device == null) {
             throw new NullPointerException("The layout device can not be null");
         }

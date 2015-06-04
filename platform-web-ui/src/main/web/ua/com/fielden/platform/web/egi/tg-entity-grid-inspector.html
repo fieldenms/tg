@@ -6,6 +6,7 @@
 <link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
 <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
+<link rel="import" href="/resources/polymer/core-collapse/core-collapse.html">
 <link rel="import" href="/tg-web-app/tg-app-config.html">
 <link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/components/moment-component.html">
@@ -44,18 +45,18 @@
         </paper-action-dialog>
 
         <!--Toolbar template-->
-        <div layout horizontal?="{{desktopScreen}}" vertical?="{{!desktopScreen}}" justified?="{{desktopScreen}}" start-justified?="{{!desktopScreen}}" style="{{!desktopScreen ? 'padding: 0 10px;' : ''}}">
+        <div layout horizontal?="{{!cardLayout}}" vertical?="{{cardLayout}}" justified?="{{!cardLayout}}" start-justified?="{{cardLayout}}" style="{{cardLayout ? 'padding: 0 10px;' : ''}}">
             <div layout horizontal>
                 <content select=".entity-specific-action"></content>
             </div>
             <div layout horizontal start-justified center>
-                <div class="selection-column" hidden?="{{desktopScreen}}">
+                <div class="selection-column" hidden?="{{!cardLayout}}">
                     <core-tooltip position="bottom" class="delayed">
                         <paper-checkbox checked="{{selectAll}}" on-core-change="{{onAllSelectionChanged}}"></paper-checkbox>
                         <span class="span-tooltip" tip>{{selectAll ? 'Unselect': 'Select'}} all entities</span>
                     </core-tooltip>
                 </div>
-                <core-tooltip class="delayed" tabIndex="-1" hidden?="{{desktopScreen}}">
+                <core-tooltip class="delayed" tabIndex="-1" hidden?="{{!cardLayout}}">
                     <tg-page-action icon="editor:functions" action="{{show}}"></tg-page-action>
                     <span class="span-tooltip" tip>Show totals</span>
                 </core-tooltip>
@@ -63,7 +64,7 @@
             </div>
         </div>
 
-        <div hidden?="{{!desktopScreen}}">
+        <div hidden?="{{cardLayout}}">
 
             <table>
                 <thead>
@@ -137,7 +138,7 @@
                 </tbody>
             </table>
         </div>
-        <div hidden?="{{desktopScreen}}">
+        <div hidden?="{{!cardLayout}}">
             <template repeat="{{entity, entityIndex in entities}}">
                 <paper-shadow z="1" class="card" layout vertical>
                     <div class="header" layout horizontal center justified>
@@ -163,10 +164,10 @@
                             </div>
                         </div>
                     </div>
-                    <div selected?="{{selectionModel[entityIndex]}}">
-                        <tg-flex-layout whenTablet="{{narrowLayout}}" whenMobile="{{narrowLayout}}">
+                    <div selected?="{{selectionModel[entityIndex]}}" style="position:relative; {{collapsePanelVisible ? 'padding-bottom:24px':''}}">
+                        <tg-flex-layout whenDesktop="{{desktopLayoutShort}}" whenTablet="{{tabletLayoutShort}}" whenMobile="{{mobileLayoutShort}}">
                             <template repeat="{{column, columnIndex in columns}}">
-                                <div class="data-column" layout vertical>
+                                <div class="data-column" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
                                         <div class="data-label truncate">{{column.columnTitle}}</div>
                                         <span class="span-tooltip" tip>{{column.columnDesc}}</span>
@@ -176,7 +177,7 @@
                                         </div>
                                         <core-tooltip position="bottom" class="delayed" style="width:100%">
                                             <div hidden?="{{column.type !== 'Boolean' || get(entity, column) === null}}">
-                                                <core-icon icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
+                                                <core-icon style="height:1.1em" icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
                                             </div>
                                             <div hidden?="{{column.type === 'Boolean'}}">
                                                 <div class="truncate">{{getValue(entity, column)}}</div>
@@ -187,6 +188,32 @@
                                 </div>
                             </template>
                         </tg-flex-layout>
+                        <core-collapse opened?="{{openModel[entityIndex]}}" allowOverflow hidden?="{{!collapsePanelVisible}}">
+                            <tg-flex-layout whenDesktop="{{desktopLayoutLong}}" whenTablet="{{tabletLayoutLong}}" whenMobile="{{mobileLayoutLong}}">
+                                <template repeat="{{column, columnIndex in columns}}">
+                                    <div class="data-column" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
+                                        <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                            <div class="data-label truncate">{{column.columnTitle}}</div>
+                                            <span class="span-tooltip" tip>{{column.columnDesc}}</span>
+                                        </core-tooltip>
+                                        <div class="data-value" relative entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
+                                            <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
+                                            </div>
+                                            <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                                <div hidden?="{{column.type !== 'Boolean' || get(entity, column) === null}}">
+                                                    <core-icon style="height:1.1em" icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
+                                                </div>
+                                                <div hidden?="{{column.type === 'Boolean'}}">
+                                                    <div class="truncate">{{getValue(entity, column)}}</div>
+                                                </div>
+                                                <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
+                                            </core-tooltip>
+                                        </div>
+                                    </div>
+                                </template>
+                            </tg-flex-layout>
+                        </core-collapse>
+                        <core-icon-button hidden?="{{!collapsePanelVisible}}" class="expand-button" id="actionButton" index="{{entityIndex}}" icon="{{openModel[entityIndex] ? 'expand-less':'expand-more'}}" on-tap="{{toggleCollapsePanel}}"></core-icon-button>
                     </div>
                 </paper-shadow>
             </template>
@@ -247,6 +274,9 @@
                     this.selectionModel = [];
                     this.selectedEntities = [];
 
+                    //Initialising the collapsible model.
+                    this.openModel = [];
+
                     //Initialising columns (property column mappings)
                     this.columns = [];
                     Array.prototype.forEach.call(this.$.column_selector.getDistributedNodes(), function (item) {
@@ -262,36 +292,53 @@
                     Array.prototype.forEach.call(this.$.secondary_action_selector.getDistributedNodes(), function (item) {
                         this.secondaryActions.push(item);
                     }.bind(this));
-
-                    //Initialising the layout for desktop view.
-                    if (this.desktopLayoutShort) {
-                        this.desktopShortColumns = getColumnsForLayout(this.desktopLayoutShort, this.columns);
-                        if (this.desktopShortColumns.length < this.columns.length) {
-                            this.desktopLongColumns = this.columns.slice(this.desktopShortColumns.length);
-                        }
-                    }
-
-                    //Initialising the default layout for narrow layout.
-                    this.narrowLayout = ['start-justified'];
-                    this.columns.forEach(function (elem, index) {
-                        var layoutElem;
-                        if (index % 2 === 0) {
-                            layoutElem = ['justified'];
-                            if (index >= 4) {
-                                layoutElem.push('hidden');
-                            }
-                            layoutElem.push(['flex'])
-                            this.narrowLayout.push(layoutElem);
-                        } else {
-                            this.narrowLayout[Math.ceil(index / 2)].push(['flex']);
-                        }
-                    }.bind(this));
                 },
-                desktopScreenChanged: function(oldValue, newValue) {
-                    if (this.desktopScreen) {
-                        this.style.removeProperty("width");
-                    } else {
+                //The following nine functions determine whenther EGI is in card layout or grid and whether callapsible panel of card is visible or not.
+                desktopScreenChanged: function (oldValue, newValue) {
+                    if (newValue) {
+                        this.cardLayout = this.desktopScreen && this.desktopLayoutShort;
+                        this.collapsePanelVisible = this.cardLayout && this.desktopLayoutLong;
+                    }
+                },
+                tabletScreenChanged: function (oldValue, newValue) {
+                    if (newValue) {
+                        this.cardLayout = this.tabletScreen && this.tabletLayoutShort;
+                        this.collapsePanelVisible = this.cardLayout && this.tabletLayoutLong;
+                    }
+                },
+                mobileScreenChanged: function (oldValue, newValue) {
+                    if (newValue) {
+                        this.cardLayout = this.mobileScreen && this.mobileLayoutShort;
+                        this.collapsePanelVisible = this.cardLayout && this.mobileLayoutLong;
+                    }
+                },
+                desktopLayoutShortChanged: function (oldValue, newValue) {
+                    this.cardLayout = this.desktopScreen && this.desktopLayoutShort;
+                    this.collapsePanelVisible = this.cardLayout && this.desktopLayoutLong;
+                },
+                tabletLayoutShortChanged: function (oldValue, newValue) {
+                    this.cardLayout = this.tabletScreen && this.tabletLayoutShort;
+                    this.collapsePanelVisible = this.cardLayout && this.tabletLayoutLong;
+                },
+                mobileLayoutShortChanged: function (oldValue, newValue) {
+                    this.cardLayout = this.mobileScreen && this.mobileLayoutShort;
+                    this.collapsePanelVisible = this.cardLayout && this.mobileLayoutLong;
+                },
+                desktopLayoutLongChanged: function (oldValue, newValue) {
+                    this.collapsePanelVisible = this.cardLayout && this.desktopLayoutLong;
+                },
+                tabletLayoutLongChanged: function (oldValue, newValue) {
+                    this.collapsePanelVisible = this.cardLayout && this.tabletLayoutLong;
+                },
+                mobileLayoutLongChanged: function (oldValue, newValue) {
+                    this.collapsePanelVisible = this.cardLayout && this.mobileLayoutLong;
+                },
+                ////////////////////////////////////////////////////////////////////////////
+                cardLayoutChanged: function (oldValue, newValue) {
+                    if (this.cardLayout) {
                         this.style.width = "100%";
+                    } else {
+                        this.style.removeProperty("width");
                     }
                 },
                 getTooltip: function (entity, column) {
@@ -336,7 +383,11 @@
                             this.selectionModel[index] = false;
                         }
                     }
-                    console.log("onSelectionChanged: rows=", this.getSelectedRows(), "SelectedEntities=", this.getSelectedEntities(), "selectionModel=", this.selectionModel);
+                },
+                toggleCollapsePanel: function (e, detail, source) {
+                    var index = +source.getAttribute("index");
+                    this.openModel[index] = !this.openModel[index];
+                    
                 },
                 getSelectedEntities: function () {
                     var currentSelectedEntities = [];
@@ -360,7 +411,6 @@
                     return selectedRows;
                 },
                 entitiesChanged: function (oldValue, newValue) {
-                    console.log("entities changed");
                     newValue.forEach(function (entity) {
                         var entInd = findEntity(entity, this.selectedEntities);
                         if (entInd > -1) {
@@ -368,8 +418,10 @@
                         }
                     }.bind(this));
                     this.selectionModel = [];
+                    this.openModel = [];
                     newValue.forEach(function (entity) {
                         this.selectionModel.push(this.selectedEntities.indexOf(entity) > -1);
+                        this.openModel.push(false);
                     }.bind(this));
                 },
                 clearSelection: function () {

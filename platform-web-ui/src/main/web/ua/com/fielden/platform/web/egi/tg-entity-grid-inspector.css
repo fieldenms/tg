@@ -71,6 +71,7 @@ paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
     cursor: default;
 }
 .data-value {
+    height: 1.4em;
     margin: 0.5em 0 0.25em;
     border-bottom: 1px solid black;
     cursor: pointer;
@@ -78,4 +79,10 @@ paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
 }
 .card {
     margin: 10px;
+}
+.expand-button {
+    position: absolute;
+    bottom: 0;
+    left: calc(50% - 14px);
+    padding: 0;
 }

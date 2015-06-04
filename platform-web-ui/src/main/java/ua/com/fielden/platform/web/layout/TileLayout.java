@@ -42,10 +42,6 @@ public class TileLayout extends AbstractLayout<AbstractLayoutSetter<TileLayout>>
         return new AbstractLayoutSetter<TileLayout>(this);
     }
 
-    public String getLayout(final Device device, final Orientation orientation) {
-        return layouts.get(new Pair<>(device, orientation)).get();
-    }
-
     public int getMinCellWidth() {
         return minCellWidth;
     }
