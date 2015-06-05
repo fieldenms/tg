@@ -82,7 +82,7 @@ paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
     color: #607D8B;
 }
 .card {
-    margin: 10px;
+    margin: 20px 30px;
     background-color: white;
 }
 .expand-button {
