@@ -141,7 +141,7 @@
         <div hidden?="{{!cardLayout}}">
             <template repeat="{{entity, entityIndex in entities}}">
                 <paper-shadow z="1" class="card" layout vertical>
-                    <div class="header" layout horizontal center justified>
+                    <div selected?="{{selectionModel[entityIndex]}}" class="card-header" layout horizontal center justified>
                         <div layout horizontal center>
                             <div class="selection-column">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
@@ -154,17 +154,14 @@
                                 <tg-ui-action currentEntity="{{entity}}" hidden?="{{primaryAction.action}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" createContextHolder="{{primaryAction.createContextHolder}}" requireSelectionCriteria="{{primaryAction.requireSelectionCriteria}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
                             </div>
                         </div>
-                        <div hidden?="{{secondaryActions.length === 0}}">
-                            <div hidden?="{{secondaryActions.length > 1}}">
-                                <tg-page-action icon="{{secondaryActions[0].icon}}" action="{{secondaryActions[0].action}}" context="{{entity}}" hidden?="{{!secondaryActions[0].action}}"></tg-page-action>
-                                <tg-ui-action hidden?="{{secondaryActions[0].action}}" currentEntity="{{entity}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" createContextHolder="{{secondaryActions[0].createContextHolder}}" requireSelectionCriteria="{{secondaryActions[0].requireSelectionCriteria}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}"></tg-ui-action>
-                            </div>
-                            <div hidden?="{{secondaryActions.length === 1}}">
-                                <tg-secondary-action-button currentEntity="{{entity}}" actions="{{secondaryActions}}"></tg-secondary-action-button>
-                            </div>
+                        <div hidden?="{{secondaryActions.length === 0}}" layout horizontal center>
+                            <template repeat="{{action in secondaryActions}}">
+                                <tg-page-action icon="{{action.icon}}" action="{{action.action}}" context="{{entity}}" hidden?="{{!action.action}}"></tg-page-action>
+                                <tg-ui-action hidden?="{{action.action}}" currentEntity="{{entity}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectionCriteria="{{action.requireSelectionCriteria}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
+                            </template>
                         </div>
                     </div>
-                    <div selected?="{{selectionModel[entityIndex]}}" style="position:relative; {{collapsePanelVisible ? 'padding-bottom:24px':''}}">
+                    <div style="position:relative; {{collapsePanelVisible ? 'padding-bottom:24px':''}}">
                         <tg-flex-layout whenDesktop="{{desktopLayoutShort}}" whenTablet="{{tabletLayoutShort}}" whenMobile="{{mobileLayoutShort}}">
                             <template repeat="{{column, columnIndex in columns}}">
                                 <div class="data-column" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
