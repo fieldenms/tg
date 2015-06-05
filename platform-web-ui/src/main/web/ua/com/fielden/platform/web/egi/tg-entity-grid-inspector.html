@@ -276,6 +276,7 @@
 
                     //Initialising the collapsible model.
                     this.openModel = [];
+                    this.openedEntities = [];
 
                     //Initialising columns (property column mappings)
                     this.columns = [];
@@ -386,8 +387,17 @@
                 },
                 toggleCollapsePanel: function (e, detail, source) {
                     var index = +source.getAttribute("index");
-                    this.openModel[index] = !this.openModel[index];
-                    
+                    if (this.openModel[index]) {
+                        if (this.openedEntities.indexOf(this.entities[index]) >= 0) {
+                            this.openedEntities.splice(this.openedEntities.indexOf(this.entities[index]), 1);
+                            this.openModel[index] = false;
+                        }
+                    } else {
+                        if (this.openedEntities.indexOf(this.entities[index]) < 0) {
+                            this.openedEntities.push(this.entities[index]);
+                            this.openModel[index] = true;
+                        }
+                    }
                 },
                 getSelectedEntities: function () {
                     var currentSelectedEntities = [];
@@ -412,21 +422,29 @@
                 },
                 entitiesChanged: function (oldValue, newValue) {
                     newValue.forEach(function (entity) {
-                        var entInd = findEntity(entity, this.selectedEntities);
-                        if (entInd > -1) {
-                            this.selectedEntities[entInd] = entity;
+                        var selectEntInd = findEntity(entity, this.selectedEntities),
+                            openedEntInd = findEntity(entity, this.openedEntities);
+                        if (selectEntInd >= 0) {
+                            this.selectedEntities[selectEntInd] = entity;
+                        }
+                        if (openedEntInd >= 0) {
+                            this.openedEntities[openedEntInd] = entity;
                         }
                     }.bind(this));
                     this.selectionModel = [];
                     this.openModel = [];
                     newValue.forEach(function (entity) {
                         this.selectionModel.push(this.selectedEntities.indexOf(entity) > -1);
-                        this.openModel.push(false);
+                        this.openModel.push(this.openedEntities.indexOf(entity) > -1);
                     }.bind(this));
                 },
                 clearSelection: function () {
                     this.selectionModel = [];
                     this.selectedEntities = [];
+                },
+                collapseAllCards: function () {
+                    this.openModel = [];
+                    this.openedEntities = [];
                 },
                 tapAction: function (e, detail, source) {
                     // attach the ripple component to the found TD
