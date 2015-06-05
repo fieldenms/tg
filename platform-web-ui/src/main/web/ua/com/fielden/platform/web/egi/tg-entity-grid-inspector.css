@@ -16,7 +16,6 @@ table {
     font-weight: bold;
 }
 .card-header {
-    font-weight: bold;
     border-bottom: 1px solid #e5e5e5;
 }
 th {
@@ -36,8 +35,13 @@ tbody>tr:hover:not([selected]) {
     background-color: #E1F5FE;
 }
 tbody>tr[selected],
-div[selected] {
+.card-header-background[selected] {
     background-color: #B3E5FC;
+    opacity: none;
+}
+.card-header-background:not([selected]) {
+    background-color: white;
+    opacity: 0.7;
 }
 core-tooltip::shadow #tooltip {
     white-space: normal;
@@ -83,7 +87,6 @@ paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
 }
 .card {
     margin: 20px 30px;
-    background-color: white;
 }
 .expand-button {
     position: absolute;
