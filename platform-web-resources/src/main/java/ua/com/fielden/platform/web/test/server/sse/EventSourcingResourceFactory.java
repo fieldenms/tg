@@ -23,7 +23,7 @@ public class EventSourcingResourceFactory extends Restlet {
             new EventSourcingResource(getContext(), request, response) {
 
                 @Override
-                public EventSource newEventSource(final HttpServletRequest request) {
+                public IEventSource newEventSource(final HttpServletRequest request) {
                     return eventSrouce;
                 }
 
@@ -31,12 +31,12 @@ public class EventSourcingResourceFactory extends Restlet {
         }
     }
 
-    public static class TimestampEventSource implements EventSource {
+    public static class TimestampEventSource implements IEventSource {
 
-        private Emitter emitter;
+        private IEmitter emitter;
 
         @Override
-        public void onOpen(final Emitter emitter) throws IOException {
+        public void onOpen(final IEmitter emitter) throws IOException {
             System.out.println("Connection established.");
             this.emitter = emitter;
             emitEvent("connection was established");

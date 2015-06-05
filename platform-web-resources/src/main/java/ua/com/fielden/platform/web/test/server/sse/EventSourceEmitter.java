@@ -14,12 +14,14 @@ import javax.servlet.ServletOutputStream;
 
 /**
  * This EventSource emitter is taken from Jetty source in the attempt to make it working with Restlet.
+ * <p>
+ * TODO: Need to support message id to be able to send the client all the missed messages, and not just to restart sending messages from whatever happens to be the current.
  * TODO: Most likely it should be open sourced. The same goes about a corresponding Restlet web resource.
  *
  * @author TG Team
  *
  */
-public class EventSourceEmitter implements EventSource.Emitter, Runnable {
+public class EventSourceEmitter implements IEmitter, Runnable {
 
     private static final byte[] CRLF = new byte[] { '\r', '\n' };
     private static final byte[] EVENT_FIELD = "event: ".getBytes(StandardCharsets.UTF_8);
@@ -29,13 +31,13 @@ public class EventSourceEmitter implements EventSource.Emitter, Runnable {
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private int heartBeatPeriod = 20;
 
-    private final EventSource eventSource;
+    private final IEventSource eventSource;
     private final AsyncContext async;
     private final ServletOutputStream output;
     private Future<?> heartBeat;
     private boolean closed;
 
-    public EventSourceEmitter(final EventSource eventSource, final AsyncContext async) throws IOException {
+    public EventSourceEmitter(final IEventSource eventSource, final AsyncContext async) throws IOException {
         this.eventSource = eventSource;
         this.async = async;
         this.output = async.getResponse().getOutputStream();

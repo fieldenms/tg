@@ -26,7 +26,7 @@ public abstract class EventSourcingResource extends ServerResource {
 
     }
 
-    public abstract EventSource newEventSource(HttpServletRequest request);
+    public abstract IEventSource newEventSource(HttpServletRequest request);
 
     @Get
     @Override
@@ -35,7 +35,7 @@ public abstract class EventSourcingResource extends ServerResource {
         final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
 
         try {
-            final EventSource eventSource = newEventSource(httpRequest);
+            final IEventSource eventSource = newEventSource(httpRequest);
             if (eventSource == null) {
                 httpResponse.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             } else {
@@ -59,21 +59,15 @@ public abstract class EventSourcingResource extends ServerResource {
             response.setStatus(HttpServletResponse.SC_OK);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
             response.setContentType("text/event-stream");
-
-            // By adding this header, and not closing the connection,
-            // we disable HTTP chunking, and we can use write()+flush()
-            // to send data in the text/event-stream protocol
-            //response.addHeader("Connection", "close");
             response.addHeader("cache-control", "no-cache");
             response.addHeader("connection", "keep-alive");
-
             response.flushBuffer();
         } catch (final IOException e) {
             e.printStackTrace();
         }
     }
 
-    protected void open(final EventSource eventSource, final EventSource.Emitter emitter) throws IOException {
+    protected void open(final IEventSource eventSource, final IEmitter emitter) throws IOException {
         eventSource.onOpen(emitter);
     }
 
