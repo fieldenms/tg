@@ -11,9 +11,9 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
 
     public EntityAggregatesRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         super(originalFetch, domainMetadataAnalyser);
-        
+
         validateModel();
-                        
+
         for (final String propName : originalFetch.getIncudedProps()) {
             with(propName, false);
         }
@@ -22,12 +22,12 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
             with(entry.getKey(), entry.getValue());
         }
     }
-    
+
     private void validateModel() {
         if (!FetchCategory.NONE.equals(getOriginalFetch().getFetchCategory())) {
             throw new IllegalArgumentException("The only acceptable category for EntityAggregates entity type fetch model creation is NONE. Use EntityQueryUtils.fetchOnly(..) method for obtaining correct fetch model.");
         }
-        
+
         if (getOriginalFetch().getExcludedProps().size() > 0) {
             throw new IllegalArgumentException("The possibility to exclude certain properties can't be applied for EntityAggregates entity type fetch model!");
         }

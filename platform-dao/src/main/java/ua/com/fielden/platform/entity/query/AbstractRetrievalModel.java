@@ -40,9 +40,13 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
     public DomainMetadataAnalyser getDomainMetadataAnalyser() {
         return domainMetadataAnalyser;
     }
-    
+
     public boolean containsProp(final String propName) {
         return primProps.contains(propName) || entityProps.containsKey(propName);
+    }
+
+    public boolean containsProxy(final String propName) {
+        return proxiedProps.contains(propName);
     }
 
     public Class<T> getEntityType() {
@@ -52,7 +56,11 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
     public Set<String> getPrimProps() {
         return primProps;
     }
-    
+
+    public Map<String, fetch<? extends AbstractEntity<?>>> getFetchModels() {
+        return entityProps;
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();
@@ -68,10 +76,6 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         }
 
         return sb.toString();
-    }
-
-    public Map<String, fetch<? extends AbstractEntity<?>>> getFetchModels() {
-        return entityProps;
     }
 
     protected PropertyMetadata getPropMetadata(final String propName) {

@@ -114,6 +114,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
         assertFalse(fetchModel.containsProp("make"));
         assertTrue(fetchModel.containsProp("id"));
         assertTrue(fetchModel.containsProp("version"));
+        assertTrue(fetchModel.containsProxy("make"));
     }
 
     @Test
@@ -258,6 +259,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
         final IRetrievalModel<TgVehicle> fetchModel = produceRetrievalModel(fetch);
         assertFalse(fetchModel.containsProp("lastFuelUsage"));
         assertFalse(fetchModel.containsProp("constValueProp"));
+        assertTrue(fetchModel.containsProxy("lastFuelUsage"));
     }
 
     @Test

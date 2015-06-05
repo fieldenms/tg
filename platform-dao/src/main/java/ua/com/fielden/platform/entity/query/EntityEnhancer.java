@@ -184,7 +184,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             }
             final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
             final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(AbstractEntity.ID).in().values(batch).model();
-            final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
+            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
             result.addAll(properties);
             from = to;
             to = to + batchSize;
@@ -247,7 +247,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             }
             final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
             final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
-            final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
+            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
             result.addAll(properties);
             // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
             from = to;

@@ -28,12 +28,17 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     private final Map<String, EntityContainer<? extends AbstractEntity<?>>> entities = new HashMap<String, EntityContainer<? extends AbstractEntity<?>>>();
     private final Map<String, CollectionContainer<? extends AbstractEntity<?>>> collections = new HashMap<String, CollectionContainer<? extends AbstractEntity<?>>>();
     private final ICompanionObjectFinder coFinder;
+    private boolean proxy = false;
 
     public EntityContainer(final Class<R> resultType, final ICompanionObjectFinder coFinder) {
         this.resultType = resultType;
         this.coFinder = coFinder;
     }
 
+    public void setProxy() {
+        this.proxy = true;
+    }
+    
     private int countAllDataItems() {
         return primitives.size() + entities.size() + composites.size() + collections.size();
     }
@@ -111,7 +116,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
             return entityContainer.instantiate(entFactory, userViewOnly, proxyMode);
         }
     }
-
+    
     private void setPropertyValue(final R entity, final String propName, final Object propValue) {
         try {
             if (EntityAggregates.class.equals(resultType) || propValue instanceof Set) {

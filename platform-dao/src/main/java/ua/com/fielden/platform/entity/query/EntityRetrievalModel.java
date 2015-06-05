@@ -79,6 +79,16 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
             with(entry.getKey(), entry.getValue());
         }
+        
+        populateProxies();
+    }
+    
+    private void populateProxies() {
+        for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
+            if (ppi.isEntityOfPersistedType() && !containsProp(ppi.getName())) {
+                getProxiedProps().add(ppi.getName());
+            }
+        }
     }
 
     private void includeAllCompositeKeyMembers() {
