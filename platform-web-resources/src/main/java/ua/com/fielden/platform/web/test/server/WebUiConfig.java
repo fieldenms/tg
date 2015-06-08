@@ -232,7 +232,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
-                .addProp("this").withSummary("kount", "COUNT(this)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInvocationActionConfig())
+                .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInvocationActionConfig())
                 .also()
                 .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
                         withContext(context().withSelectedEntities().build()).
