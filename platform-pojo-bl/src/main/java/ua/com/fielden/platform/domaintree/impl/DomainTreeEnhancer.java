@@ -602,6 +602,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
 
     @Override
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, this));
+    }
+
+    @Override
     public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
         return calculatedPropertyWhichShouldExist(rootType, calculatedPropertyName);
     }
