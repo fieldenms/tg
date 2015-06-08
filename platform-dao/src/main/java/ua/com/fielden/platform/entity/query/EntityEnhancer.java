@@ -23,10 +23,10 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityEnhancer<E extends AbstractEntity<?>> {
-    private final EntityFetcher fetcher;
+    private final EntityContainerFetcher fetcher;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
-
-    protected EntityEnhancer(final EntityFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser) {
+    
+    protected EntityEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.fetcher = fetcher;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
