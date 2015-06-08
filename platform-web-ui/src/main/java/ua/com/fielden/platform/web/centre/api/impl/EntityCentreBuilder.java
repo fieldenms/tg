@@ -18,6 +18,7 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.IEntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -32,6 +33,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 
 /**
  * A class implementing the Entity Centre DSL contracts.
@@ -100,6 +104,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected final List<ResultSetProp> resultSetProperties = new ArrayList<>();
     protected final SortedMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new TreeMap<>();
+    protected final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
     protected EntityActionConfig resultSetPrimaryEntityAction;
     protected final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
     protected Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType = null;
@@ -162,6 +167,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 resultsetCollapsedCardLayout,
                 resultsetExpansionCardLayout,
                 resultSetProperties,
+                summaryExpressions,
                 properResultSetOrdering,
                 resultSetPrimaryEntityAction,
                 resultSetSecondaryEntityActions,

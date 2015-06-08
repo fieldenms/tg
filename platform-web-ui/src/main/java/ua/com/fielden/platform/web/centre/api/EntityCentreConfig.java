@@ -11,6 +11,10 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -127,6 +131,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * with custom properties.
      */
     private final List<ResultSetProp> resultSetProperties = new ArrayList<>();
+    /**
+     * The key in this structure represent resultset properties that are considered to be originating for the associated with them summaries.
+     * Each key may reference several definitions of summary expressions, hence, the use of a multimap.
+     * More specifically, {@link ListMultimap} is used to preserve the order of summary expression as declared using Entity Centre DSL.
+     */
+    private final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
 
     /**
      * A convenient structure to capture result set property definition. It includes either a property name that represents a natural (persistent or calculated) property, or a
@@ -169,6 +179,29 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     }
 
+
+    /**
+     * This is just a convenience structure for capturing a summary property definition.
+     *
+     */
+    public static class SummaryPropDef {
+        public final String alias;
+        public final String expression;
+        public final String title;
+        public final String desc;
+
+        public SummaryPropDef(
+                final String alias,
+                final String expression,
+                final String title,
+                final String desc
+                ) {
+            this.alias = alias;
+            this.expression = expression;
+            this.title = title;
+            this.desc = desc;
+        }
+    }
     /**
      * A map between properties to order by and the ordering direction. The order of elements in this map corresponds to the ordering sequence. That is, the first listed property
      * should be the first in the resultant order statement, the second -- second, and so on.
@@ -252,6 +285,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final FlexLayout resultsetExpansionCardLayout,
 
             final List<ResultSetProp> resultSetProperties,
+            final ListMultimap<String, SummaryPropDef> summaryExpressions,
             final LinkedHashMap<String, OrderDirection> resultSetOrdering,
             final EntityActionConfig resultSetPrimaryEntityAction,
             final List<EntityActionConfig> resultSetSecondaryEntityActions,
@@ -296,6 +330,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultsetExpansionCardLayout = resultsetExpansionCardLayout;
 
         this.resultSetProperties.addAll(resultSetProperties);
+        this.summaryExpressions.putAll(summaryExpressions);
         this.resultSetOrdering.putAll(resultSetOrdering);
         this.resultSetPrimaryEntityAction = resultSetPrimaryEntityAction;
         this.resultSetSecondaryEntityActions.addAll(resultSetSecondaryEntityActions);
@@ -359,6 +394,13 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableList(resultSetProperties));
+    }
+
+    public Optional<ListMultimap<String, SummaryPropDef>> getSummaryExpressions() {
+        if (summaryExpressions == null || summaryExpressions.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(ImmutableListMultimap.copyOf(summaryExpressions));
     }
 
     public Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> getValueMatchersForSelectionCriteria() {

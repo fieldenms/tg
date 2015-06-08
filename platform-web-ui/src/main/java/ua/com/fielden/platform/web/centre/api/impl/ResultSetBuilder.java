@@ -14,6 +14,7 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -32,6 +33,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder6Render
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
@@ -85,19 +87,19 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder2WithPropAction<T> desc() {
+    public IWithSummary<T> desc() {
         this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.DESC));
         return this;
     }
 
     @Override
-    public IResultSetBuilder2WithPropAction<T> asc() {
+    public IWithSummary<T> asc() {
         this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.ASC));
         return this;
     }
 
     @Override
-    public IResultSetBuilder2WithPropAction<T> addProp(final PropDef<?> propDef) {
+    public IWithSummary<T> addProp(final PropDef<?> propDef) {
         if (propDef == null) {
             throw new IllegalArgumentException("Custom property should not be null.");
         }
@@ -108,6 +110,19 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.entityActionConfig = null;
         return this;
     }
+
+    @Override
+    public IWithSummary<T> withSummary(final String alias, final String expression, final String titleAndDesc) {
+        if (!propName.isPresent()) {
+            throw new IllegalStateException("There is no property to associated the summary expression with. This indicated an out of secuquence call, which is most likely due to a programming mistake.");
+        }
+        final String[] td = titleAndDesc.split(":");
+        final String title = td[0];
+        final String desc = td.length > 1 ? td[1] : null;
+        this.builder.summaryExpressions.put(propName.get(), new SummaryPropDef(alias, expression, title, desc));
+        return this;
+    }
+
 
     @Override
     public IAlsoProp<T> withAction(final EntityActionConfig actionConfig) {
