@@ -22,11 +22,11 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class EntityEnhancer<E extends AbstractEntity<?>> {
+public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final EntityContainerFetcher fetcher;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     
-    protected EntityEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser) {
+    protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.fetcher = fetcher;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
@@ -125,7 +125,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
                     : //
-                    new EntityEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, produceRetrievalModel(fetchModel));
+                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, produceRetrievalModel(fetchModel));
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -155,7 +155,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
                     : //
-                    new EntityEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, produceRetrievalModel(fetchModel));
+                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, produceRetrievalModel(fetchModel));
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
