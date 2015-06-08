@@ -121,6 +121,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     protected final FlexLayout resultsetCollapsedCardLayout;
     protected final FlexLayout resultsetExpansionCardLayout;
 
+    protected final FlexLayout resultsetSummaryCardLayout;
+
 
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
@@ -283,6 +285,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final FlexLayout selectionCriteriaLayout,
             final FlexLayout resultsetCollapsedCardLayout,
             final FlexLayout resultsetExpansionCardLayout,
+            final FlexLayout resultsetSummaryCardLayout,
 
             final List<ResultSetProp> resultSetProperties,
             final ListMultimap<String, SummaryPropDef> summaryExpressions,
@@ -328,6 +331,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.selectionCriteriaLayout = selectionCriteriaLayout;
         this.resultsetCollapsedCardLayout = resultsetCollapsedCardLayout;
         this.resultsetExpansionCardLayout = resultsetExpansionCardLayout;
+        this.resultsetSummaryCardLayout = resultsetSummaryCardLayout;
 
         this.resultSetProperties.addAll(resultSetProperties);
         this.summaryExpressions.putAll(summaryExpressions);
@@ -368,6 +372,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     public FlexLayout getResultsetExpansionCardLayout() {
         return resultsetExpansionCardLayout;
+    }
+
+    public FlexLayout getResultsetSummaryCardLayout() {
+        return resultsetSummaryCardLayout;
     }
 
     public Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {

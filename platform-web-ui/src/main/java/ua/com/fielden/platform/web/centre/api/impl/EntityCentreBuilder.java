@@ -97,6 +97,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final FlexLayout selectionCriteriaLayout = new FlexLayout();
     protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout();
     protected final FlexLayout resultsetExpansionCardLayout = new FlexLayout();
+    protected final FlexLayout resultsetSummaryCardLayout = new FlexLayout();
 
     /////////////////////////////////////////
     ////////////// RESULT SET ///////////////
@@ -166,6 +167,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,
                 resultsetExpansionCardLayout,
+                resultsetSummaryCardLayout,
                 resultSetProperties,
                 summaryExpressions,
                 properResultSetOrdering,

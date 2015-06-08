@@ -360,6 +360,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
                 .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
                 .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
+                .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "[[][]]")
 
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)

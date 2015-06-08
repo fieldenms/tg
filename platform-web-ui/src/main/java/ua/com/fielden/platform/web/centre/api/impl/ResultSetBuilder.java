@@ -15,7 +15,6 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
-import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
@@ -27,12 +26,12 @@ import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1OrderingDirection;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2WithPropAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4SecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder6RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
@@ -44,7 +43,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder<T>, IResultSetBuilder0Ordering<T>, IResultSetBuilder1OrderingDirection<T>, IResultSetBuilder4SecondaryAction<T>, IExpandedCardLayoutConfig<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder<T>, IResultSetBuilder0Ordering<T>, IResultSetBuilder1OrderingDirection<T>, IResultSetBuilder4SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -243,7 +242,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IEcbCompletion<T> setFetchProvider(final IFetchProvider<T> fetchProvider) {
+    public ISummaryCardLayout<T> setFetchProvider(final IFetchProvider<T> fetchProvider) {
         if (fetchProvider == null) {
             throw new IllegalArgumentException("Fetch provider should not be null.");
         }
@@ -279,6 +278,17 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.entityActionConfig = null;
     }
 
+    @Override
+    public ISummaryCardLayout<T> setSummaryCardLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+        if (device == null || orientation == null) {
+            throw new IllegalStateException("Summary card layout requries device and orientation (optional) to be specified.");
+        }
+
+        this.builder.resultsetSummaryCardLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
+        return this;
+    }
+
+
     /**
      * A helper class to assist in name collision resolution.
      */
@@ -305,7 +315,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IEcbCompletion<T> setFetchProvider(final IFetchProvider<T> fetchProvider) {
+        public ISummaryCardLayout<T> setFetchProvider(final IFetchProvider<T> fetchProvider) {
             return ResultSetBuilder.this.setFetchProvider(fetchProvider);
         }
 
@@ -319,6 +329,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             return ResultSetBuilder.this;
         }
 
-    }
+        @Override
+        public ISummaryCardLayout<T> setSummaryCardLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+            return ResultSetBuilder.this.setSummaryCardLayoutFor(device, orientation, flexString);
+        }
 
+    }
 }
