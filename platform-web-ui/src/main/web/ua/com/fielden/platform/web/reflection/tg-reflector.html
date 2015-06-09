@@ -435,30 +435,31 @@
     		UnsupportedConversionException: {
     			type: Object,
     			value: function() {
-			        var UnsupportedConversionException1 = function (value) {
+			        var UnsupportedConversionException = function (value) {
 			            Object.call(this);
 			
 			            this.message = "Unsupported conversion exception: the conversion for value [" + value + "] is unsupported at this stage. Value typeof === " + (typeof value) + ".";
 			        };
-			        UnsupportedConversionException1.prototype = Object.create(Object.prototype);
-			        UnsupportedConversionException1.prototype.constructor = UnsupportedConversionException1;
+			        UnsupportedConversionException.prototype = Object.create(Object.prototype);
+			        UnsupportedConversionException.prototype.constructor = UnsupportedConversionException;
 			
 			        /**
 			         * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
 			         *
 			         */
-			        UnsupportedConversionException1.prototype.toString = function () {
+			        UnsupportedConversionException.prototype.toString = function () {
 			            return this.message;
 			        }
-			        return UnsupportedConversionException1;
+			        return UnsupportedConversionException;
     			}
     		},
     		
     		_innerTypeTable: {
     			type: Object,
-    			value: function () {
+    			value: (function () {
+    				console.log("_innerTypeTable computed");
     				return @typeTable;
-    			}
+    			})()
     		},
     		
     		/**
@@ -476,6 +477,7 @@
     	 * 'EntityType' creator. Dependencies: 'EntityTypeProp'.
     	 */
 		createEntityTypePrototype: function (EntityTypeProp) {
+			console.log("createEntityTypePrototype: started");
             ////////////////////////////////////////// THE PROTOTYPE FOR EntityType ////////////////////////////////////////// 
             var EntityType = function (rawObject) {
                 Object.call(this);
@@ -680,9 +682,9 @@
         },
 
         findTypeByName: function (typeName) {
-            for (var key in typeTable) {
-                if (typeTable.hasOwnProperty(key)) {
-                    var entityType = typeTable[key];
+            for (var key in this.typeTable) {
+                if (this.typeTable.hasOwnProperty(key)) {
+                    var entityType = this.typeTable[key];
                     if (entityType.fullClassName() === typeName) {
                         return entityType;
                     }
