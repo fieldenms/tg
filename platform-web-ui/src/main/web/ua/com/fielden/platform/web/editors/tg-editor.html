@@ -81,11 +81,11 @@
     <template>
         <tg-reflector id="reflector"></tg-reflector>
 
-        <template if="{{debug}}">
-            <p>editingValue: {{editingValue}}</p>
-            <p>commValue: {{commValue}}</p>
-            <p>acceptedValue: {{acceptedValue}}</p>
-            <p>_bindingValue: {{_bindingValue(entity, propertyName)}}</p>
+        <template is="dom-if" if="{{debug}}">
+            <p>editingValue: <i>{{editingValue}}</i></p>
+            <p>commValue: <i>{{commValue}}</i></p>
+            <p>acceptedValue: <i>{{acceptedValue}}</i></p>
+            <p>_bindingValue: <i>{{_bindingValue(entity, propertyName)}}</i></p>
         </template>
     </template>
 </dom-module>
@@ -494,13 +494,6 @@
                 } else {
                     this.$.decorator.classList.remove("required");
                 }
-            },
-
-            /**
-             * Determines whether the specified object represents the entity.
-             */
-            _isEntity: function (obj) {
-                return obj !== null && (obj instanceof this.$.reflector.getEntityType());
             },
 
             /**
