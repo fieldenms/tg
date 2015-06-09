@@ -149,15 +149,15 @@ public class EntQuery implements ISingleOperand {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
             if (mainSourceIsTypeBased()) {
                 for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
-//                    if (ppi.isSynthetic()) {
-//                        throw new IllegalStateException(ppi.toString());
-//                    }
+                    //                    if (ppi.isSynthetic()) {
+                    //                        throw new IllegalStateException(ppi.toString());
+                    //                    }
                     final boolean skipProperty = ppi.isSynthetic() || //
                             ppi.isVirtual() || //
                             ppi.isCollection() || //
-                            (ppi.isAggregatedExpression() && !isResultQuery()) 
-                            //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
-                            ;
+                            (ppi.isAggregatedExpression() && !isResultQuery())
+                    //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
+                    ;
                     if (!skipProperty) {
                         //System.out.println("!!!!!!!!!!!!!!!!!!! ------------------------ " + ppi.getName());
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
@@ -224,7 +224,7 @@ public class EntQuery implements ISingleOperand {
             groups.getGroups().add(new GroupBy(entProp));
         }
     }
-    
+
     private boolean areAllFetchedPropsAggregatedExpressions(final IRetrievalModel fetchModel) {
         boolean result = true;
         for (final Yield yield : yields.getYields()) {
@@ -239,30 +239,38 @@ public class EntQuery implements ISingleOperand {
         final Class yieldType = determineYieldJavaType(yield);
         return yieldType != null && AbstractEntity.class.isAssignableFrom(yieldType);
     }
-    
+
     private void adjustYieldsModelAccordingToFetchModel(final IRetrievalModel fetchModel) {
         if (fetchModel == null) {
             logger.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
         } else {
             final Set<Yield> toBeRemoved = new HashSet<Yield>();
 
-            final boolean allFetchedPropsAreAggregatedExpressions = areAllFetchedPropsAggregatedExpressions(fetchModel);
-            // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
-            
             for (final Yield yield : yields.getYields()) {
-            	boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
-            	boolean isOfEntityType = yieldIsOfEntityType(yield);
-            	boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
-            	
-                if ((presentInFetchModel || (isOfEntityType && !allFetchedPropsAreAggregatedExpressions)) && !(isHeaderOfMoneyType && allFetchedPropsAreAggregatedExpressions)) {
-                    logger.debug("adjustYieldsModelAccordingToFetchModel: retaining property [" + yield.getAlias() + "]");
-                } else {
-                    logger.debug("adjustYieldsModelAccordingToFetchModel: removing property [" + yield.getAlias() + "]");
+                if (shouldYieldBeRemoved(fetchModel, yield)) {
                     toBeRemoved.add(yield);
+                    logger.debug("adjustYieldsModelAccordingToFetchModel: removing property [" + yield.getAlias() + "]");
+                } else {
+                    logger.debug("adjustYieldsModelAccordingToFetchModel: retaining property [" + yield.getAlias() + "]");
                 }
             }
             yields.removeYields(toBeRemoved);
         }
+    }
+
+    private boolean shouldYieldBeRemoved(final IRetrievalModel fetchModel, Yield yield) {
+        final boolean allFetchedPropsAreAggregatedExpressions = areAllFetchedPropsAggregatedExpressions(fetchModel);
+        // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
+
+        boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
+        boolean isOfEntityType = yieldIsOfEntityType(yield);
+        boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
+
+        return (!isOfEntityType && !presentInFetchModel) //
+                || //
+                (allFetchedPropsAreAggregatedExpressions && !presentInFetchModel) //
+                || //
+                (allFetchedPropsAreAggregatedExpressions && isHeaderOfMoneyType);
     }
 
     private void adjustOrderBys() {
@@ -270,7 +278,7 @@ public class EntQuery implements ISingleOperand {
         for (final OrderBy orderBy : orderings.getModels()) {
             if (orderBy.getYieldName() != null) {
                 if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(resultType))) {
-                    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>)resultType, sources.getMain().getAlias());
+                    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
                     for (final String keyMemberProp : keyOrderProps) {
                         toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
                     }
@@ -440,7 +448,8 @@ public class EntQuery implements ISingleOperand {
             throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!\n Query: " + queryBlocks);
         }
 
-        persistedType = (resultType == null || resultType == EntityAggregates.class) ? false : (domainMetadataAnalyser.getEntityMetadata(this.resultType) instanceof PersistedEntityMetadata);
+        persistedType = (resultType == null || resultType == EntityAggregates.class) ? false
+                : (domainMetadataAnalyser.getEntityMetadata(this.resultType) instanceof PersistedEntityMetadata);
 
         this.paramValues = paramValues;
 
