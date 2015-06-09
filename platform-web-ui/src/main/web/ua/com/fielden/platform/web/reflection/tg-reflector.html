@@ -10,152 +10,7 @@
     		 */
     		EntityType: {
     			type: Object,
-    			value: function () {
-    	            ////////////////////////////////////////// THE PROTOTYPE FOR EntityType ////////////////////////////////////////// 
-    	            var EntityType = function (rawObject) {
-    	                Object.call(this);
-    	                // copy all properties from rawObject after deserialisation
-    	                for (var prop in rawObject) {
-    	                    if (prop === "_props") {
-    	                        var _props = rawObject[prop];
-
-    	                        for (var p in _props) {
-    	                            if (_props.hasOwnProperty(p)) {
-    	                                var val = _props[p];
-    	                                _props[p] = new EntityTypeProp(val);
-    	                            }
-    	                        }
-
-    	                        this[prop] = _props;
-    	                    } else {
-    	                        this[prop] = rawObject[prop];
-    	                    }
-    	                }
-    	            };
-    	            EntityType.prototype = Object.create(Object.prototype);
-    	            EntityType.prototype.constructor = EntityType;
-
-    	            /**
-    	             * Returns the number for the entity type inside the type table.
-    	             *
-    	             */
-    	            EntityType.prototype.number = function () {
-    	                return this._number;
-    	            }
-
-    	            /**
-    	             * Returns full Java class name for the entity type.
-    	             *
-    	             */
-    	            EntityType.prototype.fullClassName = function () {
-    	                return this.key;
-    	            }
-
-    	            /**
-    	             * Returns full not enhanced Java class name for the entity type.
-    	             */
-    	            EntityType.prototype.notEnhancedFullClassName = function () {
-    	                var enhancedIndex = this.key.indexOf("$$TgEntity");
-    	                if (enhancedIndex >= 0) {
-    	                    return this.key.substring(0, enhancedIndex);
-    	                }
-    	                return this.key;
-    	            }
-
-    	            /**
-    	             * Returns simple Java class name for the entity type.
-    	             *
-    	             */
-    	            EntityType.prototype._simpleClassName = function () {
-    	                var ind = this.fullClassName().lastIndexOf(".") + 1;
-    	                return this.fullClassName().substring(ind);
-    	            }
-
-    	            /**
-    	             * Returns not enhanced simple Java class name for the entity type.
-    	             *
-    	             */
-    	            EntityType.prototype._notEnhancedSimpleClassName = function () {
-    	                var ind = this.fullClassName().lastIndexOf(".") + 1,
-    	                    simpleClassName = this.fullClassName().substring(ind),
-    	                    enhancedIndex = simpleClassName.indexOf("$$TgEntity");
-    	                if (enhancedIndex >= 0) {
-    	                    return simpleClassName.substring(0, enhancedIndex);
-    	                }
-    	                return simpleClassName;
-    	            }
-
-    	            /**
-    	             * Returns 'true' when the entity type represents composite entity, 'false' otherwise.
-    	             *
-    	             * Use compositeKeyNames() function to determine property names for the key members.
-    	             */
-    	            EntityType.prototype.isCompositeEntity = function () {
-    	                return typeof this._compositeKeyNames !== 'undefined' && this._compositeKeyNames && this._compositeKeyNames.length > 0;
-    	            }
-
-    	            /** 
-    	             * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
-    	             */
-    	            EntityType.prototype.compositeKeyNames = function () {
-    	                return this._compositeKeyNames;
-    	            }
-
-    	            /** 
-    	             * Returns the key member separator in case of composite entity, 'undefined' otherwise.
-    	             */
-    	            EntityType.prototype.compositeKeySeparator = function () {
-    	                return typeof this._compositeKeySeparator === 'undefined' ? " " : this._compositeKeySeparator;
-    	            }
-
-    	            /** 
-    	             * Returns entity title.
-    	             */
-    	            EntityType.prototype.entityTitle = function () {
-    	                return typeof this._entityTitle === 'undefined' ? this._entityTitleDefault() : this._entityTitle;
-    	            }
-
-    	            /** 
-    	             * Returns entity type property with the specified name.
-    	             */
-    	            EntityType.prototype.prop = function (name) {
-    	                return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
-    	            }
-
-    	            /** 
-    	             * Returns entity description.
-    	             */
-    	            EntityType.prototype.entityDesc = function () {
-    	                return typeof this._entityDesc === 'undefined' ? this._entityDescDefault() : this._entityDesc;
-    	            }
-
-    	            /** 
-    	             * Returns default entity title.
-    	             */
-    	            EntityType.prototype._entityTitleDefault = function () {
-    	                var title = this._breakToWords(this._simpleClassName());
-    	                return title;
-    	            }
-
-    	            /** 
-    	             * Returns default entity desc.
-    	             */
-    	            EntityType.prototype._entityDescDefault = function () {
-    	                var title = this._breakToWords(this._simpleClassName());
-    	                return title + " entity";
-    	            }
-
-    	            /** 
-    	             * Breaks camelCased string onto words and separates it with ' '.
-    	             */
-    	            EntityType.prototype._breakToWords = function (str) { // see http://stackoverflow.com/questions/10425287/convert-string-to-camelcase-with-regular-expression
-    	                return str.replace(/([A-Z])/g, function (match, group) {
-    	                    return " " + group;
-    	                }).trim();
-    	            }
-    				
-    				return EntityType;
-    			}
+    			computed: 'createEntityTypePrototype(EntityTypeProp)'
     		},
     		
     		/**
@@ -599,6 +454,13 @@
     			}
     		},
     		
+    		_innerTypeTable: {
+    			type: Object,
+    			value: function () {
+    				return @typeTable;
+    			}
+    		},
+    		
     		/**
     		 * The table for entity types.
     		 *
@@ -606,14 +468,159 @@
     		 */
     		typeTable: {
     			type: Object,
-    			value: function() {
-    				var table = this.providePrototypes(@typeTable);
-    				console.log("typeTable = ", table);
-    				return table;
-    			},
-    			readOnly: true
+    			computed: 'providePrototypes(_innerTypeTable, EntityType)'
     		}
     	},
+    	
+    	/**
+    	 * 'EntityType' creator. Dependencies: 'EntityTypeProp'.
+    	 */
+		createEntityTypePrototype: function (EntityTypeProp) {
+            ////////////////////////////////////////// THE PROTOTYPE FOR EntityType ////////////////////////////////////////// 
+            var EntityType = function (rawObject) {
+                Object.call(this);
+                // copy all properties from rawObject after deserialisation
+                for (var prop in rawObject) {
+                    if (prop === "_props") {
+                        var _props = rawObject[prop];
+
+                        for (var p in _props) {
+                            if (_props.hasOwnProperty(p)) {
+                                var val = _props[p];
+                                _props[p] = new EntityTypeProp(val);
+                            }
+                        }
+
+                        this[prop] = _props;
+                    } else {
+                        this[prop] = rawObject[prop];
+                    }
+                }
+            };
+            EntityType.prototype = Object.create(Object.prototype);
+            EntityType.prototype.constructor = EntityType;
+
+            /**
+             * Returns the number for the entity type inside the type table.
+             *
+             */
+            EntityType.prototype.number = function () {
+                return this._number;
+            }
+
+            /**
+             * Returns full Java class name for the entity type.
+             *
+             */
+            EntityType.prototype.fullClassName = function () {
+                return this.key;
+            }
+
+            /**
+             * Returns full not enhanced Java class name for the entity type.
+             */
+            EntityType.prototype.notEnhancedFullClassName = function () {
+                var enhancedIndex = this.key.indexOf("$$TgEntity");
+                if (enhancedIndex >= 0) {
+                    return this.key.substring(0, enhancedIndex);
+                }
+                return this.key;
+            }
+
+            /**
+             * Returns simple Java class name for the entity type.
+             *
+             */
+            EntityType.prototype._simpleClassName = function () {
+                var ind = this.fullClassName().lastIndexOf(".") + 1;
+                return this.fullClassName().substring(ind);
+            }
+
+            /**
+             * Returns not enhanced simple Java class name for the entity type.
+             *
+             */
+            EntityType.prototype._notEnhancedSimpleClassName = function () {
+                var ind = this.fullClassName().lastIndexOf(".") + 1,
+                    simpleClassName = this.fullClassName().substring(ind),
+                    enhancedIndex = simpleClassName.indexOf("$$TgEntity");
+                if (enhancedIndex >= 0) {
+                    return simpleClassName.substring(0, enhancedIndex);
+                }
+                return simpleClassName;
+            }
+
+            /**
+             * Returns 'true' when the entity type represents composite entity, 'false' otherwise.
+             *
+             * Use compositeKeyNames() function to determine property names for the key members.
+             */
+            EntityType.prototype.isCompositeEntity = function () {
+                return typeof this._compositeKeyNames !== 'undefined' && this._compositeKeyNames && this._compositeKeyNames.length > 0;
+            }
+
+            /** 
+             * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
+             */
+            EntityType.prototype.compositeKeyNames = function () {
+                return this._compositeKeyNames;
+            }
+
+            /** 
+             * Returns the key member separator in case of composite entity, 'undefined' otherwise.
+             */
+            EntityType.prototype.compositeKeySeparator = function () {
+                return typeof this._compositeKeySeparator === 'undefined' ? " " : this._compositeKeySeparator;
+            }
+
+            /** 
+             * Returns entity title.
+             */
+            EntityType.prototype.entityTitle = function () {
+                return typeof this._entityTitle === 'undefined' ? this._entityTitleDefault() : this._entityTitle;
+            }
+
+            /** 
+             * Returns entity type property with the specified name.
+             */
+            EntityType.prototype.prop = function (name) {
+                return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
+            }
+
+            /** 
+             * Returns entity description.
+             */
+            EntityType.prototype.entityDesc = function () {
+                return typeof this._entityDesc === 'undefined' ? this._entityDescDefault() : this._entityDesc;
+            }
+
+            /** 
+             * Returns default entity title.
+             */
+            EntityType.prototype._entityTitleDefault = function () {
+                var title = this._breakToWords(this._simpleClassName());
+                return title;
+            }
+
+            /** 
+             * Returns default entity desc.
+             */
+            EntityType.prototype._entityDescDefault = function () {
+                var title = this._breakToWords(this._simpleClassName());
+                return title + " entity";
+            }
+
+            /** 
+             * Breaks camelCased string onto words and separates it with ' '.
+             */
+            EntityType.prototype._breakToWords = function (str) { // see http://stackoverflow.com/questions/10425287/convert-string-to-camelcase-with-regular-expression
+                return str.replace(/([A-Z])/g, function (match, group) {
+                    return " " + group;
+                }).trim();
+            }
+			
+			return EntityType;
+		},
     	
         /**
          * Determines whether the result represents the error.
@@ -632,15 +639,16 @@
     	/**
     	 * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
     	 */
-        providePrototypes: function (typeTable) {
+        providePrototypes: function (typeTable, EntityType) {
             for (var key in typeTable) {
                 if (typeTable.hasOwnProperty(key)) {
                     var entityType = typeTable[key];
-                    typeTable[key] = new this.EntityType(entityType);
+                    typeTable[key] = new EntityType(entityType);
                     // entityType.prototype = EntityType.prototype;
                     // entityType.__proto__ = EntityType.prototype;
                 }
             }
+            console.log("typeTable =", typeTable);
             return typeTable;
         },
 

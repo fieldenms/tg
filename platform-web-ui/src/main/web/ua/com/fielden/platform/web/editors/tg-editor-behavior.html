@@ -1,7 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/tg-reflector">
+<!-- link rel="import" href="/tg-reflector" -->
 
-<dom-module id="tg-editor">
+<!-- dom-module id="tg-editor">
     <style>
     	/* TODO please, migrate the styles to new version: */
     	/* TODO please, migrate the styles to new version: */
@@ -88,13 +88,10 @@
             <p>_bindingValue: <i>{{_bindingValue(entity, propertyName)}}</i></p>
         </template>
     </template>
-</dom-module>
+</dom-module -->
 
     <script>
-        Polymer({
-        	
-        	is: 'tg-editor',
-        	
+        Polymer.TgEditorBehavior = {
         	// TODO PUBLIC API: attributes="entity propertyName onAcceptedValueChanged propTitle propDesc currentState action externalRefreshCycle debug"
         	
             properties: {
@@ -232,7 +229,26 @@
 
             ready: function () {
                 var self = this;
-                this.$.decorator.labelVisible = false;
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO this.$.decorator.labelVisible = false;
             },
 
             /**
@@ -298,7 +314,26 @@
             editingValueChanged: function (newValue, oldValue) {
                 // console.log("editingValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
 
-                this.$.decorator.updateLabelVisibility(this.editingValue);
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO 
+                // TODO this.$.decorator.updateLabelVisibility(this.editingValue);
 
                 if (this.refreshCycleStarted) {
                     this.commit();
@@ -514,5 +549,5 @@
                 this.$.reflector.setCustomProperty(contextHolder, "@@searchString", inputText);
                 return contextHolder;
             }
-        });
+        };
     </script>
