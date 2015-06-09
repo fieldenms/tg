@@ -8,12 +8,15 @@
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="import" href="/resources/polymer/polymer/polymer.html">
     <link rel="import" href="/resources/editors/tg-integer-editor.html">
+    <link rel="import" href="/resources/editors/tg-editor-example-entity.html">
 </head>
 
 <body>
   	<template is="dom-bind">
+  		<tg-editor-example-entity binding-entity="{{entity}}">
+  		</tg-editor-example-entity>
   	
-  	    <tg-integer-editor>  	    
+  	    <tg-integer-editor entity="{{entity}}" property-name="prop" debug>  	    
   	    </tg-integer-editor>
 
   	</template>

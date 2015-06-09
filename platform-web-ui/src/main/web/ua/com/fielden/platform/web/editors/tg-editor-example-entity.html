@@ -1,0 +1,38 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/tg-reflector">
+
+<dom-module id="tg-editor-example-entity">
+    <template>
+        <tg-reflector id="reflector"></tg-reflector>
+    </template>
+</dom-module>
+
+    <script>
+        Polymer({
+        	is: 'tg-editor-example-entity',
+        	
+        	properties: {
+        		bindingEntity: {
+        			type: Object
+        		}
+        	},
+        	
+        	ready: function () {
+        		this.bindingEntity = this.createBindingEntity();
+        	},
+        	
+        	createBindingEntity: function () {
+				var bindingView = this.$.reflector.newEntity('ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger');
+                bindingView["id"] = 333;
+                bindingView["version"] = 0;
+                
+                bindingView["@@origin"] = null;
+                
+                bindingView['prop'] = 23;
+                
+                bindingView["@prop_editable"] = true;
+				
+				return bindingView;
+        	}
+        });
+    </script>
