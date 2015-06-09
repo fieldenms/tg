@@ -300,7 +300,7 @@
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canCurrent(pageNumber, pageCount);
                 },
 
-                onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
+                onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
                     // console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
                     if (criteriaEntity.isValid()) {
 	                    if (isRefreshingConcreteEntities) {
@@ -308,6 +308,9 @@
 	                    } else {
 		                    this.$.egi.entities = resultEntities;
 	    	                this.$.egi.renderingHints = renderingHints;
+                            if (typeof summary !== 'undefined') {
+                                this.$.egi.totals = summary;
+                            }
 	                        if (this.triggerRun && this.selectedView === 0) {
 	                            this.async(function() {
 	                                this.selectedView = 1;

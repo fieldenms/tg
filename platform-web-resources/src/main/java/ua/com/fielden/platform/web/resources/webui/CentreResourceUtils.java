@@ -123,6 +123,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 // and resolved purely on the client side)
                 resultantCustomObject.put("isRefreshingConcreteEntities", "yes");
             }
+            if (isNotRefreshingConcreteEntities && customObject.get("@@pageNumber") == null) {
+                resultantCustomObject.put("summary", page.summary());
+            }
             return new Pair<>(resultantCustomObject, resultEntities);
         }
         return new Pair<>(resultantCustomObject, null);
@@ -462,7 +465,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = getFreshCentre(gdtm, miType);
 
-        return isEmpty(centreContextHolder.getModifHolder()) ? null : createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
+        return isEmpty(centreContextHolder.getModifHolder()) ? null
+                : createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
     }
 
     /**

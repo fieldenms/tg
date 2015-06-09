@@ -291,36 +291,36 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("compositeProp")
                 .also()
                 .addProp("stringProp")
-                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
-                        "["
-                      + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
-                      + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp'], ['flex', 'select:property=dateProp'],    ['flex', 'select:property=compositeProp']]"
-                      + "]")
-                .withExpansionLayout(
-                        "["
-                      + "[['flex', 'select:property=stringProp']]"
-                      + "]")
+                //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
+                //                        "["
+                //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
+                //                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp'], ['flex', 'select:property=dateProp'],    ['flex', 'select:property=compositeProp']]"
+                //                                + "]")
+                //                .withExpansionLayout(
+                //                        "["
+                //                                + "[['flex', 'select:property=stringProp']]"
+                //                                + "]")
                 .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
                         "["
-                      + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
-                      + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
-                      + "]")
+                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
+                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
+                                + "]")
                 .withExpansionLayout(
                         "["
-                      + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
-                      + "[['flex', 'select:property=stringProp']]"
-                      + "]")
+                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
+                                + "[['flex', 'select:property=stringProp']]"
+                                + "]")
                 .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(),
                         "["
-                      + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
-                      + "[['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]"
-                      + "]")
+                                + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
+                                + "[['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]"
+                                + "]")
                 .withExpansionLayout(
                         "["
-                      + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
-                      + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
-                      + "[['flex', 'select:property=stringProp']]"
-                      + "]")
+                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
+                                + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
+                                + "[['flex', 'select:property=stringProp']]"
+                                + "]")
                 //                .also()
                 //                .addProp("status")
 
@@ -360,7 +360,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
                 .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
                 .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
-                .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "[['select:prop=kount']]")
+                .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "[['select:property=kount']]")
+                .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "[['select:property=kount']]")
+                .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "[['select:property=kount']]")
 
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)

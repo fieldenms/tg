@@ -125,6 +125,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
     /**
      * Handles PUT request resulting from tg-selection-criteria <code>run()</code> method.
      */
+    @SuppressWarnings("unchecked")
     @Put
     @Override
     public Representation put(final Representation envelope) throws ResourceException {
@@ -151,7 +152,6 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             }
 
             //Running the rendering customiser for result set of entities.
-            @SuppressWarnings("unchecked")
             final Optional<IRenderingCustomiser<T, ?>> renderingCustomiser = centre.getRenderingCustomiser();
             if (renderingCustomiser.isPresent()) {
                 final IRenderingCustomiser<T, ?> renderer = renderingCustomiser.get();

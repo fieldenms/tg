@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -26,6 +28,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private final Class<?> propertyType;
     private final Pair<String, String> titleDesc;
     private final Optional<FunctionalActionElement> action;
+    private final List<SummaryElement> summary;
     private boolean debug = false;
 
     /**
@@ -42,6 +45,46 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         this.propertyType = propertyType;
         this.titleDesc = titleDesc;
         this.action = action;
+        this.summary = new ArrayList<SummaryElement>();
+    }
+
+    /**
+     * Adds the summary to this {@link PropertyColumnElement} instance.
+     *
+     * @param propertyName
+     * @param propertyType
+     * @param titleDesc
+     */
+    public void addSummary(final String propertyName, final Class<?> propertyType, final Pair<String, String> titleDesc) {
+        summary.add(new SummaryElement(propertyName, width, propertyType, titleDesc));
+    }
+
+    /**
+     * Determines whether this {@link PropertyColumnElement} instance has totals or not.
+     *
+     * @return
+     */
+    public boolean hasSummary() {
+        return summary.size() > 0;
+    }
+
+    /**
+     * Returns the size of summary properties associated with this {@link PropertyColumnElement} instance.
+     *
+     * @return
+     */
+    public int getSummaryCount() {
+        return summary.size();
+    }
+
+    /**
+     * Returns the summary property associated with this {@link PropertyColumnElement} instance at specified position.
+     *
+     * @param index
+     * @return
+     */
+    public SummaryElement getSummary(final int index) {
+        return summary.get(index);
     }
 
     /**
@@ -98,6 +141,9 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && !this.action.get().isMasterInvocationAction()) {
             columnElement.add(action.get().render());
+        }
+        if (hasSummary()) {
+            summary.forEach(summary -> columnElement.add(summary.render()));
         }
         return columnElement;
     }
