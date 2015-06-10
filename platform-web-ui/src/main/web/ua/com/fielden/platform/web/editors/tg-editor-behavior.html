@@ -270,7 +270,7 @@
             _bindingValue: function (entity, propertyName) {
                 // console.log("_bindingValue entity", entity);
                 if (typeof this.$ !== 'undefined') {
-                    if (this._isEntity(entity)) {
+                    if (this.$.reflector.isEntity(entity)) {
                         // console.log("_bindingValue prop value", entity.get(propertyName));
                         return this.getBindingValue(entity, propertyName);
                     } else {
@@ -297,13 +297,6 @@
              */
             getValueFor: function(bindingEntity, dotNotatedName) {
             	return bindingEntity["@@origin"].get(dotNotatedName);
-            },
-
-            /**
-             * Determines whether the specified object represents the entity.
-             */
-            _isEntity: function (obj) {
-                return obj !== null && (obj instanceof this.$.reflector.getEntityType());
             },
 
             /**
@@ -348,7 +341,7 @@
             entityChanged: function (newValue, oldValue) {
                 console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
                 if (typeof this.$ !== 'undefined') {
-                    if (this._isEntity(newValue)) {
+                    if (this.$.reflector.isEntity(newValue)) {
                     	var propValue = this.getBindingValue(newValue, this.propertyName);
                         var newEditingValue = this.convertToString(propValue);
                         if (newEditingValue === this.editingValue && this.refreshCycleStarted) {
@@ -367,7 +360,7 @@
 
             editorValidationMsgChanged: function (newValue, oldValue) {
                 if (typeof this.$ !== 'undefined') {
-                    if (this._isEntity(this.entity)) {
+                    if (this.$.reflector.isEntity(this.entity)) {
                         this.bindMessages(this.entity, this.propertyName, newValue);
                     } else {
                         console.log("editorValidationMsgChanged: Not yet initialised currBindingEntity, from which to get binding value!");
@@ -462,7 +455,7 @@
                 if (editorValidationMsg) {
                     this.bindError(editorValidationMsg);
                 } else if (typeof this.$ !== 'undefined') {
-                    if (this._isEntity(entity)) {
+                    if (this.$.reflector.isEntity(entity)) {
                     	// please, note that dot-notated property will not have any errors / warnings / requiredness
                     	//     - for these props it does not make sense to propagate such meta-information from
                     	//     parent property -- the parent prop (if added in master) will show that errors concisely

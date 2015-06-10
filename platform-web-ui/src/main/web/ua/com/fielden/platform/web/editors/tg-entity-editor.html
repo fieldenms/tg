@@ -601,10 +601,10 @@
                 entityChanged: function (oldValue, newValue) {
                     this.super([oldValue, newValue]);
 
-                    if (this._isEntity(newValue)) {
+                    if (this.$.reflector.isEntity(newValue)) {
                         if (this.$.reflector.isDotNotated(this.propertyName)) {
                             var propValue = this.getValueFor(newValue, this.propertyName);
-                            if (this._isEntity(propValue)) {
+                            if (this.$.reflector.isEntity(propValue)) {
                                 this.valueDesc = this.$.reflector.convert(propValue.get("desc"))
                             } else {
                                 this.valueDesc = null;
@@ -713,7 +713,7 @@
 
                 /* A helper method to determine whether the passed in value is a composite entity. */
                 isComposite: function (value) {
-                    if (this._isEntity(value)) {
+                    if (this.$.reflector.isEntity(value)) {
                         return value.type().isCompositeEntity();
                     } else {
                         return false;

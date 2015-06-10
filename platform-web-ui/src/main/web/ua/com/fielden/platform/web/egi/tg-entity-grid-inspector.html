@@ -446,16 +446,9 @@
                     this.tap(entity, dotNotatedName, this.columns[columnIndex]);
                 },
 
-                /**
-                 * Determines whether the specified object represents the entity.
-                 */
-                _isEntity: function (obj) {
-                    return obj !== null && (obj instanceof this.$.reflector.getEntityType());
-                },
-
                 tap: function (entity, property, column) {
                     var value = entity.get(property);
-                    if (this._isEntity(value)) {
+                    if (this.$.reflector.isEntity(value)) {
                         column.runAction(value);
                     } else if (property.indexOf(".") > -1) {
                         this.tap(entity, property.substring(0, property.lastIndexOf(".")), column);

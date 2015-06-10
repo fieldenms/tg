@@ -79,8 +79,7 @@
                     var objectMap = {},
                         self = this,
                         deserialiseMetaProperty = function(obj) {
-                            var EntityInstanceProp = self.$.reflector.getEntityInstancePropType();
-                            var deserialisedObject = new EntityInstanceProp();
+                            var deserialisedObject = self.$.reflector.newEntityInstancePropEmpty();
 
                             // var deserialisedObject = {};
 
@@ -129,8 +128,7 @@
                                     // If it is an object with "@id" property then create new object with "_id" and "_type" properties and add to the object map.
                                     var typeIndex = obj["@id"].split("#")[0];
 
-                                    var Entity = self.$.reflector.getEntityType();
-                                    deserialisedObject = new Entity();
+                                    deserialisedObject = self.$.reflector.newEntityEmpty();
                                     // deserialisedObject = {};
 
                                     var foundType = self.$.reflector.getType(typeIndex);

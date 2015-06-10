@@ -61,13 +61,11 @@
                             var functionalEntity = {
                                 id: null,
                                 version: 0
-                            }; // self.$.reflector.newEntity("ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity");
-                            // functionalEntity.parentEntity = null;
+                            };
                             functionalEntity.parentEntity = {
                                 val: self.currEntity.get("key"),
                                 origVal: null
                             };
-                            // functionalEntity.set("parentEntity", { val: self.currEntity.get("key"), origVal: null });
                             return functionalEntity;
                         },
                         postActionSuccess: function (entity) {
@@ -88,13 +86,11 @@
                             var functionalEntity = {
                                 id: null,
                                 version: 0
-                            }; // self.$.reflector.newEntity("ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity");
-                            // functionalEntity.parentEntity = null;
+                            };
                             functionalEntity.parentEntity = {
                                 val: self.currEntity.get("key"),
                                 origVal: null
                             };
-                            // functionalEntity.set("parentEntity", { val: self.currEntity.get("key"), origVal: null });
                             return functionalEntity;
                         },
                         postActionSuccess: function (entity) {

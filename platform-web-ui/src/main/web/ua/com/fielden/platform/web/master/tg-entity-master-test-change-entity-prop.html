@@ -25,7 +25,7 @@
             master.onValidated = function(validatedEntity, bindingEntity, customObject) {                
                 // value ok?
                 assert.ok(validatedEntity.get("entityProp"), "The property should be initialised.");                
-                assert.instanceOf(validatedEntity.get("entityProp"), reflector.getEntityType(), "The property should be of entity type.");
+                assert.instanceOf(validatedEntity.get("entityProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
                 assert.strictEqual(validatedEntity.get("entityProp").get("key"), "KEY1", "The entity response property should be entity instance with appropriate key.");
 
                 // value is changed?
@@ -44,7 +44,7 @@
             master.onRetrieved = function(entity, bindingEntity, customObject) {
                 // value ok?
                 assert.ok(entity.get("entityProp"), "The property should be initialised.");                
-                assert.instanceOf(entity.get("entityProp"), reflector.getEntityType(), "The property should be of entity type.");
+                assert.instanceOf(entity.get("entityProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
                 assert.strictEqual(entity.get("entityProp").get("key"), "KEY3", "The entity response property should be entity instance with appropriate key.");
 
                 // value is changed?

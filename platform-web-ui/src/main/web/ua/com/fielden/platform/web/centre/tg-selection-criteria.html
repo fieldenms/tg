@@ -141,7 +141,7 @@
 
             extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
                 var modPropHolder = this.super([bindingEntity, originalBindingEntity]);
-                if (this._isEntity(bindingEntity)) {
+                if (this.$.reflector.isEntity(bindingEntity)) {
                     modPropHolder["@@metaValues"] = {};
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {

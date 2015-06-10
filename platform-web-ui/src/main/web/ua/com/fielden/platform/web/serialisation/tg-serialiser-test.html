@@ -27,8 +27,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         document.addEventListener('polymer-ready', function() {
             var serialiser = document.querySelector('#serialiser'),
                 reflector = serialiser.$.reflector,
-                EntityInstanceProp = reflector.getEntityInstancePropType(),
-                Entity = reflector.getEntityType(),
+                EntityInstanceProp = reflector.getEntityInstancePropPrototype(),
+                Entity = reflector.getEntityPrototype(),
                 keyProp1 = new EntityInstanceProp(),
                 descProp1 = new EntityInstanceProp(),
                 keyProp2 = new EntityInstanceProp(),

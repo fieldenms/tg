@@ -179,7 +179,7 @@
                  */
                 _title: function (entity, property) {
                     if (typeof this.$ !== 'undefined') {
-                        if (this._isEntity(entity)) {
+                        if (this.$.reflector.isEntity(entity)) {
                             // console.log("_title entity", entity);
                             // console.log("_title entity type", entity.type());
                             // console.log("_title entity type prop", entity.type().prop(property));
@@ -198,7 +198,7 @@
                  */
                 _desc: function (entity, property) {
                     if (typeof this.$ !== 'undefined') {
-                        if (this._isEntity(entity)) {
+                        if (this.$.reflector.isEntity(entity)) {
                             return entity.type().prop(property).desc();
                         } else {
                             return "Not yet initialised currEntity, from which to get desc!";

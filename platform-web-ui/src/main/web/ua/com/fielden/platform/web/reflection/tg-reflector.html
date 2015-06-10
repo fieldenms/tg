@@ -2,13 +2,24 @@
 
 <script>
 (function() {
-	console.log("INVOKE TG-REFLECTOR");
-	
+    /**
+     * Determines whether the result represents the error.
+     */
+    var _isError0 = function (result) {
+        return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result" && (typeof result.ex !== 'undefined');
+    };
+
+    /**
+     * Determines whether the result represents the warning.
+     */
+    var _isWarning0 = function (result) {
+        return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
+    };
+    
 	/**
 	 * 'EntityTypeProp' creator. Dependencies: none.
 	 */
-	var createEntityTypePropPrototype = function() {
-		console.log("createEntityTypePropPrototype");
+	var _createEntityTypePropPrototype = function() {
         ////////////////////////////////////////// THE PROTOTYPE FOR EntityTypeProp ////////////////////////////////////////// 
         var EntityTypeProp = function (rawObject) {
             Object.call(this);
@@ -107,8 +118,7 @@
 	/**
 	 * 'EntityInstanceProp' creator. Dependencies: none.
 	 */
-	var createEntityInstancePropPrototype = function () {
-		console.log("createEntityInstancePropPrototype");
+	var _createEntityInstancePropPrototype = function () {
         ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
         var EntityInstanceProp = function () {
             Object.call(this);
@@ -218,8 +228,7 @@
 	/**
 	 * 'Entity' creator. Dependencies: 'EntityInstanceProp'.
 	 */
-	var createEntityPrototype = function (EntityInstanceProp) {
-		console.log("createEntityPrototype");
+	var _createEntityPrototype = function (EntityInstanceProp, StrictProxyException, _isError0, _isWarning0) {
         ////////////////////////////////////////// THE PROTOTYPE FOR Entity ////////////////////////////////////////// 
         var Entity = function (rawObject) { // rawObject
             Object.call(this);
@@ -348,7 +357,7 @@
             var self = this;
             var first = null;
             self.traverseProperties(function (propName) {
-                if (isError0(self.prop(propName).validationResult())) {
+                if (_isError0(self.prop(propName).validationResult())) {
                     first = self.prop(propName).validationResult();
                     return;
                 }
@@ -372,7 +381,7 @@
             var self = this;
             var first = null;
             self.traverseProperties(function (propName) {
-                if (isWarning0(self.prop(propName).validationResult())) {
+                if (_isWarning0(self.prop(propName).validationResult())) {
                     first = self.prop(propName).validationResult();
                     return;
                 }
@@ -392,8 +401,7 @@
 	/**
 	 * 'EntityType' creator. Dependencies: 'EntityTypeProp'.
 	 */
-	var createEntityTypePrototype = function (EntityTypeProp) {
-		console.log("createEntityTypePrototype");
+	var _createEntityTypePrototype = function (EntityTypeProp) {
         ////////////////////////////////////////// THE PROTOTYPE FOR EntityType ////////////////////////////////////////// 
         var EntityType = function (rawObject) {
             Object.call(this);
@@ -539,12 +547,79 @@
 		
 		return EntityType;
 	};
-
-	var ETPPrototype = createEntityTypePropPrototype();
-	var ETPrototype = createEntityTypePrototype(ETPPrototype);
 	
-	var EIPPrototype = createEntityInstancePropPrototype();
-	var EPrototype = createEntityPrototype(EIPPrototype);
+	//////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////// EXCEPTIONS /////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * 'StrictProxyException' creator.
+	 */
+	var _createStrictProxyExceptionPrototype = function () {
+	   	/**
+	  	 * Exception prototype for strict proxy exceptions.
+	  	 */
+		var StrictProxyException = function (propName, simpleClassName) { // rawObject
+	        Object.call(this);
+	
+	        this.message = "Strict proxy exception: the property [" + propName + "] does not exist in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
+	    };
+	    StrictProxyException.prototype = Object.create(Object.prototype);
+	    StrictProxyException.prototype.constructor = StrictProxyException;
+	
+	    /**
+	     * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+	     *
+	     */
+	    StrictProxyException.prototype.toString = function () {
+	        return this.message;
+	    }
+	    return StrictProxyException;
+	}
+	
+	/**
+	 * 'UnsupportedConversionException' creator.
+	 */
+	var _createUnsupportedConversionExceptionPrototype = function () {
+		/**
+		 * Exception prototype for unsupported conversions.
+		 */
+	    var UnsupportedConversionException = function (value) {
+	        Object.call(this);
+	
+	        this.message = "Unsupported conversion exception: the conversion for value [" + value + "] is unsupported at this stage. Value typeof === " + (typeof value) + ".";
+	    };
+	    UnsupportedConversionException.prototype = Object.create(Object.prototype);
+	    UnsupportedConversionException.prototype.constructor = UnsupportedConversionException;
+	
+	    /**
+	     * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+	     *
+	     */
+	    UnsupportedConversionException.prototype.toString = function () {
+	        return this.message;
+	    }
+	    return UnsupportedConversionException;
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////// EXCEPTIONS [END] /////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////
+
+	var _SPEPrototype = _createStrictProxyExceptionPrototype();
+	var _UCEPrototype = _createUnsupportedConversionExceptionPrototype();
+	
+	var _ETPPrototype = _createEntityTypePropPrototype();
+	var _ETPrototype = _createEntityTypePrototype(_ETPPrototype);
+	
+	/**
+	 * The prototype for entity's instance-scoped property. Can be reached by 'entity.prop("name")' call.
+	 */
+	var _EIPPrototype = _createEntityInstancePropPrototype();
+	/**
+	 * The prototype for entities.
+	 */
+	var _EPrototype = _createEntityPrototype(_EIPPrototype, _SPEPrototype, _isError0, _isWarning0);
 	
 	/**
 	 * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
@@ -562,128 +637,15 @@
         return typeTable;
     };
 	
-	var _tTable = _providePrototypes(@typeTable, ETPrototype);
+	/**
+	 * The table for entity types.
+	 *
+	 * NOTE: '@typeTable' part will be generated by server to provide current state for the entity types table.
+	 */
+	var _typeTable = _providePrototypes(@typeTable, _ETPrototype);
 	
     Polymer({
     	is: 'tg-reflector',
-    	
-    	properties: {
-    		/**
-    		 * The prototype for entity's type. Can be reached by 'entity.type()' call.
-    		 */
-    		EntityType: {
-    			type: Object,
-    			value: function () {
-    				return ETPrototype;
-    			}
-    		},
-    		
-    		/**
-    		 * The prototype for entity's type-scoped property. Can be reached by 'entity.type().prop("name")' call.
-    		 */
-    		EntityTypeProp: {
-    			type: Object,
-    			value: function () {
-    				return ETPPrototype;
-    			}
-    		},
-    		
-    		/**
-    		 * The prototype for entity's instance-scoped property. Can be reached by 'entity.prop("name")' call.
-    		 */
-    		EntityInstanceProp: {
-    			type: Object,
-    			value: function () {
-    				return EIPPrototype;
-    			}
-    		},
-    		
-    		/**
-    		 * The prototype for entities.
-    		 */
-    		Entity: {
-    			type: Object,
-    			value: function () {
-    				return EPrototype;
-    			}
-    		},
-    		
-    		/**
-    		 * The table for entity types.
-    		 *
-    		 * NOTE: '@typeTable' part will be generated by server to provide current state for the entity types table.
-    		 */
-    		typeTable: {
-    			type: Object,
-    			value: function () {
-    				return _tTable;
-    			}
-    		},
-    		
-    		/**
-    		 * Exception prototype for strict proxy exceptions.
-    		 */
-    		StrictProxyException: {
-    			type: Object,
-    			value: function() {
-			        var StrictProxyException = function (propName, simpleClassName) { // rawObject
-			            Object.call(this);
-			
-			            this.message = "Strict proxy exception: the property [" + propName + "] does not exist in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
-			        };
-			        StrictProxyException.prototype = Object.create(Object.prototype);
-			        StrictProxyException.prototype.constructor = StrictProxyException;
-			
-			        /**
-			         * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
-			         *
-			         */
-			        StrictProxyException.prototype.toString = function () {
-			            return this.message;
-			        }
-			        return StrictProxyException;
-    			}
-    		},		
-    
-    		/**
-    		 * Exception prototype for unsupported conversions.
-    		 */
-    		UnsupportedConversionException: {
-    			type: Object,
-    			value: function() {
-			        var UnsupportedConversionException = function (value) {
-			            Object.call(this);
-			
-			            this.message = "Unsupported conversion exception: the conversion for value [" + value + "] is unsupported at this stage. Value typeof === " + (typeof value) + ".";
-			        };
-			        UnsupportedConversionException.prototype = Object.create(Object.prototype);
-			        UnsupportedConversionException.prototype.constructor = UnsupportedConversionException;
-			
-			        /**
-			         * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
-			         *
-			         */
-			        UnsupportedConversionException.prototype.toString = function () {
-			            return this.message;
-			        }
-			        return UnsupportedConversionException;
-    			}
-    		}
-    	},
-    	
-        /**
-         * Determines whether the result represents the error.
-         */
-        isError0: function (result) {
-            return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result" && (typeof result.ex !== 'undefined');
-        },
-
-        /**
-         * Determines whether the result represents the warning.
-         */
-        isWarning0: function (result) {
-            return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
-        },
     	
         /**
          * Generates the unique identifier.
@@ -699,23 +661,43 @@
         },
 
         getType: function (number) {
-            return this.typeTable[number];
+            return _typeTable[number];
         },
 
         /**
          * Registers new entity type inside the type table.
          */
         registerEntityType: function (newType) {
-            var registeredType = new this.EntityType(newType);
-            typeTable[newType['_number']] = registeredType;
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	// TODO
+        	var Entity = this.getEntityPrototype();
+            var registeredType = new Entity(newType);
+            _typeTable[newType['_number']] = registeredType;
             console.log("Registering new type with number ", newType['_number'], registeredType);
             return registeredType;
         },
 
+        /**
+         * Finds the entity type by its full class name. Returns 'null' if no registered entity type for such 'typeName' exists.
+         */
         findTypeByName: function (typeName) {
-            for (var key in this.typeTable) {
-                if (this.typeTable.hasOwnProperty(key)) {
-                    var entityType = this.typeTable[key];
+            for (var key in _typeTable) {
+                if (_typeTable.hasOwnProperty(key)) {
+                    var entityType = _typeTable[key];
                     if (entityType.fullClassName() === typeName) {
                         return entityType;
                     }
@@ -724,16 +706,31 @@
             return null;
         },
 
-        getEntityInstancePropType: function () {
-            return this.EntityInstanceProp;
+        /**
+         * Returns the prototype for 'EntityInstanceProp'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        getEntityInstancePropPrototype: function () {
+            return _EIPPrototype;
         },
 
-        getEntityType: function () {
-            return this.Entity;
+        /**
+         * Returns the prototype for 'Entity'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        getEntityPrototype: function () {
+            return _EPrototype;
         },
 
-        getStrictProxyExceptionType: function () {
-            return this.StrictProxyException;
+        /**
+         * Returns the prototype for 'StrictProxyException'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        getStrictProxyExceptionPrototype: function () {
+            return _SPEPrototype;
         },
 
         /**
@@ -748,22 +745,23 @@
             //     }
             // }
 
-            // TODO rectify whether this implementation is good:
+            // TODO 1: rectify whether this implementation is good
+            // TODO 2: potentially, extend implementation to support composite types: arrays and objects?
             return value1 === value2;
         },
 
         /**
-         * Determines whether the result represents the error.
+         * Determines whether result represents the error.
          */
         isError: function (result) {
-            return isError0(result);
+            return _isError0(result);
         },
 
         /**
-         * Determines whether the result represents the warning.
+         * Determines whether result represents the warning.
          */
         isWarning: function (result) {
-            return isWarning0(result);
+            return _isWarning0(result);
         },
         
         //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
@@ -793,21 +791,45 @@
         },
         
         //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////
+        
+        /**
+         * Determines whether the specified object represents the entity.
+         */
+        isEntity: function (obj) {
+            return obj !== null && (obj instanceof this.getEntityPrototype());
+        },
 
         /**
-         * Creates the entity with concrete type, specified as 'typeName' string.
+         * Creates the 'entity' without concrete type specified.
+         */
+        newEntityEmpty: function () {
+            var Entity = this.getEntityPrototype();
+            return new Entity();
+        },
+        
+        /**
+         * Creates the 'entity instance prop'.
+         */
+        newEntityInstancePropEmpty: function () {
+            var EntityInstanceProp = this.getEntityInstancePropPrototype();
+            return new EntityInstanceProp();
+        },
+                
+        /**
+         * Creates the 'entity' with concrete type, specified as 'typeName' string.
          */
         newEntity: function (typeName) {
-            var self = this;
-            var Entity = self.getEntityType();
-            var newOne = new Entity();
+            var newOne = this.newEntityEmpty();
 
-            newOne["_type"] = self.findTypeByName(typeName);
+            newOne["_type"] = this.findTypeByName(typeName);
             newOne["id"] = null;
             newOne["version"] = 0;
             return newOne;
         },
 
+        /**
+         * Converts the property value, that has got from deserialised entity instance, to the form, that is suitable for editors binding.
+         */
         convert: function (value) {
             if (value === null) { // 'null' is the missing value representation for TG web editors
                 return null;
@@ -824,7 +846,7 @@
             } else if (value.constructor === Array) { // for Array value -- return the same value for tg-entity-search-criteria editor
                 return value;
             } else {
-                throw new UnsupportedConversionException(value);
+                throw new _UCEPrototype(value);
             }
         },
 
@@ -863,9 +885,12 @@
             return str;
         },
 
-        customObject: function (array) {
-            if (array.length >= 2) {
-                return array[1];
+        /**
+         * Convenient method for retrieving of 'customObject' from deserialised array.
+         */
+        customObject: function (arrayOfEntityAndCustomObject) {
+            if (arrayOfEntityAndCustomObject.length >= 2) {
+                return arrayOfEntityAndCustomObject[1];
             } else {
                 return null;
             }
@@ -944,10 +969,16 @@
             }
         },
         
+        /**
+         * Provides custom property into 'centreContextHolder' internals.
+         */
         setCustomProperty: function(centreContextHolder, name, value) {
         	centreContextHolder["customObject"][name] = value;
         }, 
         
+        /**
+         * Removes custom property from 'centreContextHolder' internals, if exists.
+         */
         removeCustomProperty: function(centreContextHolder, name) {
             if (typeof (centreContextHolder["customObject"])[name] !== 'undefined') {
                 delete(centreContextHolder["customObject"])[name];

@@ -46,7 +46,7 @@
                 //     if (ex instanceof chai.AssertionError) {
                 //         throw ex;
                 //     }
-                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionType(), true, "The exception thrown should be of type StrictProxyException.");                       
+                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");                       
                 // }
 
                 // try {
@@ -57,7 +57,7 @@
                 //     if (ex instanceof chai.AssertionError) {
                 //         throw ex;
                 //     }
-                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionType(), true, "The exception thrown should be of type StrictProxyException.");                       
+                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");                       
                 // }
 
                 // instance meta-properties
@@ -76,7 +76,7 @@
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // value ok?
                 assert.ok(entity.get("producerInitProp"), "The property should be initialised.");                
-                assert.instanceOf(entity.get("producerInitProp"), reflector.getEntityType(), "The property should be of entity type.");
+                assert.instanceOf(entity.get("producerInitProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
                 assert.strictEqual(entity.get("producerInitProp").get("key"), "DEFAULT_KEY", "The entity response property should be entity instance with appropriate key.");
 
                 // value is changed?

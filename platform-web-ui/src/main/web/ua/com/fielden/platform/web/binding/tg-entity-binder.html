@@ -281,19 +281,12 @@
                     return modifiedPropertiesHolder;
                 },
 
-                /**
-                 * Determines whether the specified object represents the entity.
-                 */
-                _isEntity: function (obj) {
-                    return obj !== null && (obj instanceof this.$.reflector.getEntityType());
-                },
-
                 extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
                     var modPropHolder = {
                         "@modified": false
                     };
                     var self = this;
-                    if (self._isEntity(bindingEntity)) {
+                    if (self.$.reflector.isEntity(bindingEntity)) {
                         modPropHolder["id"] = bindingEntity["id"];
                         modPropHolder["version"] = bindingEntity["version"];
 
@@ -401,11 +394,10 @@
 
                             bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                         } else {
-                            var converted = self.$.reflector.convert(entity.get(propertyName));
-	                        bindingView[propertyName] = converted;
+	                        bindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
 
                             var value = entity.get(propertyName);
-                            if (self._isEntity(value)) {
+                            if (self.$.reflector.isEntity(value)) {
                                 bindingView["@" + propertyName + "_desc"] = self.$.reflector.convert(value.get("desc"));
                             }
 
@@ -435,22 +427,14 @@
 
                 _extractOriginalBindingView: function (entity) {
                     var self = this;
-                    var Entity = self.$.reflector.getEntityType();
-                    var originalBindingView = new Entity();
+                    var originalBindingView = self.$.reflector.newEntityEmpty();
 
                     originalBindingView["_type"] = entity["_type"];
                     originalBindingView["id"] = entity["id"];
                     originalBindingView["version"] = entity["version"];
 
                     entity.traverseProperties(function (propertyName) {
-                        // if (!entity.prop(propertyName).isEditable()) {
-                        	// EDGE-CASE: in case of non-editable properties -- originalBindingView should hold the value
-                        	//   that is equal to bindingView value -- this makes the property 'unmodified' and 
-                        	//   such property will not be applied to validationPrototype on the server.
-                        //  	originalBindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
-                        // } else {
                         originalBindingView[propertyName] = self.$.reflector.convert(entity.getOriginal(propertyName));
-                        // }
                     });
 
                     // console.log("       entity + originalBindingView", entity, bindingView);
