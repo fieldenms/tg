@@ -4,6 +4,7 @@
 <polymer-element name="tg-property-column" attributes="property type width columnTitle columnDesc action" hidden>
     <template>
         <content id="action_selector" select="tg-ui-action" hidden></content>
+        <content id="summary_selection" select="tg-summary-property" hidden></content>
     </template>
     <script>
         (function () {
@@ -12,14 +13,18 @@
                     action: null
                 },
                 ready: function () {
+                    this.summary = [];
+                    Array.prototype.forEach.call(this.$.summary_selection.getDistributedNodes(), function (item) {
+                        this.summary.push(item);
+                    }.bind(this));
                     this.runAction = this.runAction.bind(this);
                     this.customAction = this.$.action_selector.getDistributedNodes().length > 0 ? this.$.action_selector.getDistributedNodes()[0] : null;
                 },
-                runAction: function(entity) {
+                runAction: function (entity) {
                     if (this.action) {
                         this.action(entity);
                     } else if (this.customAction) {
-                    	this.customAction.currentEntity = entity;
+                        this.customAction.currentEntity = entity;
                         this.customAction.run();
                     }
                 }

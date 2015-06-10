@@ -492,6 +492,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                             : calcAnnotation.origination(), dte, validateTitleContextOfExtractedProperties);
 
                     // TODO tricky setting!
+                    if (!EntityUtils.equalsEx(calculatedField.getName(), calculatedProperty.name())) {
+                        calculatedProperty.provideCustomPropertyName(calculatedField.getName());
+                    }
                     calculatedProperty.setNameVeryTricky(calculatedField.getName());
 
                     newCalcProperties.add(calculatedProperty);
@@ -602,6 +605,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
 
     @Override
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, this));
+    }
+
+    @Override
     public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
         return calculatedPropertyWhichShouldExist(rootType, calculatedPropertyName);
     }
@@ -692,7 +700,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
             final Set<CalculatedPropertyInfo> set = new HashSet<>();
             for (final CalculatedProperty cp : entry.getValue()) {
-                set.add(new CalculatedPropertyInfo(cp.getRoot(), cp.getContextPath(), cp.getContextualExpression(), cp.getTitle(), cp.getAttribute(), cp.getOriginationProperty(), cp.getDesc()));
+                set.add(new CalculatedPropertyInfo(cp.getRoot(), cp.getContextPath(), cp.getCustomPropertyName(), cp.getContextualExpression(), cp.getTitle(), cp.getAttribute(), cp.getOriginationProperty(), cp.getDesc()));
             }
             map.put(entry.getKey(), set);
         }
@@ -712,7 +720,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Set<CalculatedPropertyInfo>> entry : calculatedPropertiesInfo.entrySet()) {
             final List<CalculatedProperty> list = new ArrayList<>();
             for (final CalculatedPropertyInfo cpInfo : entry.getValue()) {
-                list.add(CalculatedProperty.createCorrect(dte.getSerialiser().factory(), cpInfo.getRoot(), cpInfo.getContextPath(), cpInfo.getContextualExpression(), cpInfo.getTitle(), cpInfo.getDesc(), cpInfo.getAttribute(), cpInfo.getOriginationProperty(), dte, true));
+                list.add(CalculatedProperty.createCorrect(dte.getSerialiser().factory(), cpInfo.getRoot(), cpInfo.getContextPath(), cpInfo.getCustomPropertyName(), cpInfo.getContextualExpression(), cpInfo.getTitle(), cpInfo.getDesc(), cpInfo.getAttribute(), cpInfo.getOriginationProperty(), dte, true));
             }
             map.put(entry.getKey(), list);
         }

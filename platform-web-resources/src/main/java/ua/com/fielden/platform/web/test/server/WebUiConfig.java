@@ -232,7 +232,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
-                .addProp("this").withAction(EntityActionConfig.createMasterInvocationActionConfig())
+                .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInvocationActionConfig())
                 .also()
                 .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
                         withContext(context().withSelectedEntities().build()).
@@ -278,9 +278,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
 
                 .also()
-                .addProp("integerProp")
+                .addProp("integerProp").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
                 .also()
-                .addProp("bigDecimalProp")
+                .addProp("bigDecimalProp").withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
+                .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
                 .also()
                 .addProp("entityProp")
                 .also()
@@ -291,17 +292,36 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("compositeProp")
                 .also()
                 .addProp("stringProp")
-                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(), "[[['flex', 'select:property=this'], ['flex', 'select:property=desc'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
-                        + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp'], ['flex', 'select:property=dateProp'], ['flex', 'select:property=compositeProp']]]")
-                .withExpansionLayout("[[['flex', 'select:property=stringProp']]]")
-                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(), "[[['flex', 'select:property=this'],['flex', 'select:property=desc'],['flex', 'select:property=integerProp']],"
-                        + "[['flex', 'select:property=bigDecimalProp'],['flex', 'select:property=entityProp'],['flex', 'select:property=booleanProp']]]")
-                .withExpansionLayout("[[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],[['flex', 'select:property=stringProp']]]")
-                .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(), "[[['flex', 'select:property=this'],['flex', 'select:property=desc']],"
-                        + "[['flex', 'select:property=integerProp'],['flex', 'select:property=bigDecimalProp']]]")
-                .withExpansionLayout("[[['flex', 'select:property=entityProp'],['flex', 'select:property=booleanProp']],"
-                        + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
-                        + "[['flex', 'select:property=stringProp']]]")
+                //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
+                //                        "["
+                //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
+                //                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp'], ['flex', 'select:property=dateProp'],    ['flex', 'select:property=compositeProp']]"
+                //                                + "]")
+                //                .withExpansionLayout(
+                //                        "["
+                //                                + "[['flex', 'select:property=stringProp']]"
+                //                                + "]")
+                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
+                        "["
+                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
+                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
+                                + "]")
+                .withExpansionLayout(
+                        "["
+                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
+                                + "[['flex', 'select:property=stringProp']]"
+                                + "]")
+                .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(),
+                        "["
+                                + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
+                                + "[['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]"
+                                + "]")
+                .withExpansionLayout(
+                        "["
+                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
+                                + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
+                                + "[['flex', 'select:property=stringProp']]"
+                                + "]")
                 //                .also()
                 //                .addProp("status")
 
@@ -341,6 +361,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
                 .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
                 .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
+                .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']]]")
+                .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']]]")
+                .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']]]")
 
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)

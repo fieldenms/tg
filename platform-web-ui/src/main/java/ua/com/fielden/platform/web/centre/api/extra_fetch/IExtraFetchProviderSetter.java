@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre.api.extra_fetch;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
+import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 
 /**
  *
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
  *
  * @param <T>
  */
-public interface IExtraFetchProviderSetter<T extends AbstractEntity<?>> extends IEcbCompletion<T> {
+public interface IExtraFetchProviderSetter<T extends AbstractEntity<?>> extends ISummaryCardLayout<T> {
 
-    IEcbCompletion<T> setFetchProvider(final IFetchProvider<T> fetchProvider);
+    ISummaryCardLayout<T> setFetchProvider(final IFetchProvider<T> fetchProvider);
 }

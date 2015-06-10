@@ -17,8 +17,9 @@
 <link rel="import" href="/resources/element_loader/load-element.html">
 <link rel="import" href="/resources/polymer/core-icons/editor-icons.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="stylesheet" href="/resources/egi/tg-totals-dialog.css">
 
-<polymer-element name="tg-entity-grid-inspector" attributes="entityType entities renderingHints desktopLayoutShort desktopLayoutLong tabletLayoutShort tabletLayoutLong mobileLayoutShort mobileLayoutLong">
+<polymer-element name="tg-entity-grid-inspector" attributes="entityType entities totals renderingHints desktopLayoutShort desktopLayoutLong tabletLayoutShort tabletLayoutLong mobileLayoutShort mobileLayoutLong summaryDesktopLayout summaryTabletLayout summaryMobileLayout">
     <template>
         <link rel="stylesheet" href="/resources/egi/tg-entity-grid-inspector.css">
         <content id="column_selector" select="tg-property-column" hidden></content>
@@ -40,12 +41,33 @@
         </paper-action-dialog>
 
         <!--The template for total's dialog.-->
-        <paper-action-dialog id="totalsDialog" backdrop>
-            Here should be a totals.
+        <paper-action-dialog id="summaryDialog" class="summary-dialog" backdrop>
+            <tg-flex-layout whenDesktop="{{summaryDesktopLayout}}" whenTablet="{{summaryTabletLayout}}" whenMobile="{{summaryMobileLayout}}">
+                <template repeat="{{summary in cardSummary}}">
+                    <div class="data-column" property="{{summary.property === '' ? 'this' : summary.property}}" layout vertical>
+                        <core-tooltip position="bottom" class="delayed" style="width:100%">
+                            <div class="data-label truncate">{{summary.columnTitle}}</div>
+                            <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
+                        </core-tooltip>
+                        <div class="data-value">
+                            <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                <div hidden?="{{summary.type !== 'Boolean' || get(totals, summary) === null}}">
+                                    <core-icon style="height:1.1em" icon="{{get(totals, summary) ? 'check' : 'clear'}}"></core-icon>
+                                </div>
+                                <div hidden?="{{summary.type === 'Boolean'}}">
+                                    <div class="truncate">{{getValue(totals, summary)}}</div>
+                                </div>
+                                <span class="span-tooltip" tip>{{getTooltip(totals, summary)}}</span>
+                            </core-tooltip>
+                        </div>
+                    </div>
+                </template>
+            </tg-flex-layout>
+            <paper-button affirmative autofocus>Close</paper-button>
         </paper-action-dialog>
 
         <!--Toolbar template-->
-        <div layout horizontal?="{{!cardLayout}}" vertical?="{{cardLayout}}" justified?="{{!cardLayout}}" start-justified?="{{cardLayout}}" style="{{cardLayout ? 'padding: 0 10px;' : ''}}">
+        <div layout horizontal?="{{!cardLayout}}" vertical?="{{cardLayout}}" justified?="{{!cardLayout}}" start-justified?="{{cardLayout}}" style="background-color:white; {{cardLayout ? 'padding: 0 30px;' : ''}}">
             <div layout horizontal>
                 <content select=".entity-specific-action"></content>
             </div>
@@ -56,15 +78,15 @@
                         <span class="span-tooltip" tip>{{selectAll ? 'Unselect': 'Select'}} all entities</span>
                     </core-tooltip>
                 </div>
-                <core-tooltip class="delayed" tabIndex="-1" hidden?="{{!cardLayout}}">
-                    <tg-page-action icon="editor:functions" action="{{show}}"></tg-page-action>
-                    <span class="span-tooltip" tip>Show totals</span>
+                <core-tooltip class="delayed" tabIndex="-1" hidden?="{{!cardLayout}}" disabled?="{{!totals}}">
+                    <core-icon-button icon="editor:functions" on-tap="{{showSummary}}"></core-icon-button>
+                    <span class="span-tooltip" tip>Show summary</span>
                 </core-tooltip>
                 <content select=".standart-action"></content>
             </div>
         </div>
 
-        <div hidden?="{{cardLayout}}">
+        <div hidden?="{{cardLayout}}" style="background-color:white;">
 
             <table>
                 <thead>
@@ -93,7 +115,7 @@
                 </thead>
                 <tbody>
                     <template repeat="{{entity, entityIndex in entities}}">
-                        <tr selected?="{{selectionModel[entityIndex]}}">
+                        <tr class="{{entityIndex % 2 === 0 ? 'regular_color':'alternate-color'}}" selected?="{{selectionModel[entityIndex]}}">
 
                             <td class="selection-column">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
@@ -135,14 +157,48 @@
                             </template>
                         </tr>
                     </template>
+                    <template repeat="{{summaryRow, summaryIndex in gridSummary}}">
+                        <tr class="{{ (entities.length + summaryIndex) % 2 === 0 ? 'regular_color':'alternate-color'}}" hidden?="{{!totals}}">
+                            <td>
+                                <!--This is dummy column that is under selection column-->
+                            </td>
+                            <template if="{{primaryAction}}">
+                                <td>
+                                    <!--This is dummy column that is under primary action column-->
+                                </td>
+                            </template>
+                            <template repeat="{{summary, summaryIndex in summaryRow}}">
+                                <td hidden?="{{!summary}}" class="data-column" style="{{summaryIndex===0?'padding-left:10px;' : ''}}{{summaryIndex===summaryRow.length-1?'padding-right:10px;' : ''}}width: {{summary.width}}">
+                                    <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                        <template if="{{summary.type === 'Boolean' && get(totals, summary) !== null}}">
+                                            <core-icon icon="{{get(totals, summary) ? 'check' : 'clear'}}"></core-icon>
+                                        </template>
+                                        <template if="{{summary.type !== 'Boolean'}}">
+                                            <div class="truncate" style="width: {{summary.width}}">{{getValue(totals, summary)}}</div>
+                                        </template>
+                                        <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
+                                    </core-tooltip>
+                                </td>
+                                <td hidden?="{{summary}}">
+                                    <!--This is dummy column that is represents empty summary cell-->
+                                </td>
+                            </template>
+                            <template if="{{secondaryActions.length > 0}}">
+                                <td>
+                                    <!--This is dummy column that is under secondary action column-->
+                                </td>
+                            </template>
+                        </tr>
+                    </template>
                 </tbody>
             </table>
         </div>
         <div hidden?="{{!cardLayout}}">
             <template repeat="{{entity, entityIndex in entities}}">
                 <paper-shadow z="1" class="card" layout vertical>
-                    <div class="header" layout horizontal center justified>
-                        <div layout horizontal center>
+                    <div class="card-header" layout horizontal center justified relative>
+                        <div selected?="{{selectionModel[entityIndex]}}" class="card-header-background" fit></div>
+                        <div layout horizontal center relative>
                             <div class="selection-column">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
@@ -154,17 +210,14 @@
                                 <tg-ui-action currentEntity="{{entity}}" hidden?="{{primaryAction.action}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" createContextHolder="{{primaryAction.createContextHolder}}" requireSelectionCriteria="{{primaryAction.requireSelectionCriteria}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
                             </div>
                         </div>
-                        <div hidden?="{{secondaryActions.length === 0}}">
-                            <div hidden?="{{secondaryActions.length > 1}}">
-                                <tg-page-action icon="{{secondaryActions[0].icon}}" action="{{secondaryActions[0].action}}" context="{{entity}}" hidden?="{{!secondaryActions[0].action}}"></tg-page-action>
-                                <tg-ui-action hidden?="{{secondaryActions[0].action}}" currentEntity="{{entity}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" createContextHolder="{{secondaryActions[0].createContextHolder}}" requireSelectionCriteria="{{secondaryActions[0].requireSelectionCriteria}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}"></tg-ui-action>
-                            </div>
-                            <div hidden?="{{secondaryActions.length === 1}}">
-                                <tg-secondary-action-button currentEntity="{{entity}}" actions="{{secondaryActions}}"></tg-secondary-action-button>
-                            </div>
+                        <div hidden?="{{secondaryActions.length === 0}}" layout horizontal center relative>
+                            <template repeat="{{action in secondaryActions}}">
+                                <tg-page-action icon="{{action.icon}}" action="{{action.action}}" context="{{entity}}" hidden?="{{!action.action}}"></tg-page-action>
+                                <tg-ui-action hidden?="{{action.action}}" currentEntity="{{entity}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectionCriteria="{{action.requireSelectionCriteria}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
+                            </template>
                         </div>
                     </div>
-                    <div selected?="{{selectionModel[entityIndex]}}" style="position:relative; {{collapsePanelVisible ? 'padding-bottom:24px':''}}">
+                    <div style="position:relative; background-color: white; {{collapsePanelVisible ? 'padding-bottom:24px':''}}">
                         <tg-flex-layout whenDesktop="{{desktopLayoutShort}}" whenTablet="{{tabletLayoutShort}}" whenMobile="{{mobileLayoutShort}}">
                             <template repeat="{{column, columnIndex in columns}}">
                                 <div class="data-column" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
@@ -267,6 +320,8 @@
                     'layout-finished': 'showDialog'
                 },
                 ready: function () {
+                    var summaryRowsCount, rowTotals;
+
                     //Initialising the action runner
                     this.currentActionRunning = null;
 
@@ -276,12 +331,35 @@
 
                     //Initialising the collapsible model.
                     this.openModel = [];
+                    this.openedEntities = [];
 
                     //Initialising columns (property column mappings)
                     this.columns = [];
+                    summaryRowsCount = 0;
                     Array.prototype.forEach.call(this.$.column_selector.getDistributedNodes(), function (item) {
+                        if (item.summary && item.summary.length > summaryRowsCount) {
+                            summaryRowsCount = item.summary.length;
+                        }
                         this.columns.push(item);
                     }.bind(this));
+
+                    //Initialising totals.
+                    if (summaryRowsCount > 0) {
+                        this.gridSummary = [];
+                        this.cardSummary = [];
+                        for (propertyCounter = 0; propertyCounter < summaryRowsCount; propertyCounter += 1) {
+                            rowTotals = [];
+                            this.columns.forEach(function (item) {
+                                if (item.summary && item.summary[propertyCounter]) {
+                                    rowTotals.push(item.summary[propertyCounter]);
+                                    this.cardSummary.push(item.summary[propertyCounter]);
+                                } else {
+                                    rowTotals.push(null);
+                                }
+                            }.bind(this));
+                            this.gridSummary.push(rowTotals);
+                        }
+                    }
 
                     //Initialising the primary action.
                     this.primaryAction = null;
@@ -349,10 +427,10 @@
                     }
                 },
                 get: function (entity, column) {
-                    return entity.get(column.property);
+                    return entity && entity.get(column.property);
                 },
                 getValue: function (entity, column) {
-                    if (this.get(entity, column) === null) {
+                    if (!entity || !column || !this.get(entity, column)) {
                         return "";
                     } else if (this.$.reflector.findTypeByName(column.type)) {
                         return this.$.reflector.convert(this.get(entity, column));
@@ -386,8 +464,17 @@
                 },
                 toggleCollapsePanel: function (e, detail, source) {
                     var index = +source.getAttribute("index");
-                    this.openModel[index] = !this.openModel[index];
-                    
+                    if (this.openModel[index]) {
+                        if (this.openedEntities.indexOf(this.entities[index]) >= 0) {
+                            this.openedEntities.splice(this.openedEntities.indexOf(this.entities[index]), 1);
+                            this.openModel[index] = false;
+                        }
+                    } else {
+                        if (this.openedEntities.indexOf(this.entities[index]) < 0) {
+                            this.openedEntities.push(this.entities[index]);
+                            this.openModel[index] = true;
+                        }
+                    }
                 },
                 getSelectedEntities: function () {
                     var currentSelectedEntities = [];
@@ -412,21 +499,29 @@
                 },
                 entitiesChanged: function (oldValue, newValue) {
                     newValue.forEach(function (entity) {
-                        var entInd = findEntity(entity, this.selectedEntities);
-                        if (entInd > -1) {
-                            this.selectedEntities[entInd] = entity;
+                        var selectEntInd = findEntity(entity, this.selectedEntities),
+                            openedEntInd = findEntity(entity, this.openedEntities);
+                        if (selectEntInd >= 0) {
+                            this.selectedEntities[selectEntInd] = entity;
+                        }
+                        if (openedEntInd >= 0) {
+                            this.openedEntities[openedEntInd] = entity;
                         }
                     }.bind(this));
                     this.selectionModel = [];
                     this.openModel = [];
                     newValue.forEach(function (entity) {
                         this.selectionModel.push(this.selectedEntities.indexOf(entity) > -1);
-                        this.openModel.push(false);
+                        this.openModel.push(this.openedEntities.indexOf(entity) > -1);
                     }.bind(this));
                 },
                 clearSelection: function () {
                     this.selectionModel = [];
                     this.selectedEntities = [];
+                },
+                collapseAllCards: function () {
+                    this.openModel = [];
+                    this.openedEntities = [];
                 },
                 tapAction: function (e, detail, source) {
                     // attach the ripple component to the found TD
@@ -520,6 +615,11 @@
                 },
                 dialogOpened: function (e, detail, source) {
                     this.currentRunningAction = null;
+                },
+                showSummary: function (e, detail, source) {
+                    if (this.cardLayout && this.totals) {
+                        this.$.summaryDialog.open();
+                    }
                 }
             });
         })();

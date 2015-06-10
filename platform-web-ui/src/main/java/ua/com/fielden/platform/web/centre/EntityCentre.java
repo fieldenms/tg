@@ -2,9 +2,11 @@ package ua.com.fielden.platform.web.centre;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -18,6 +20,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -37,6 +40,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.ICentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -72,6 +76,7 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
+import com.google.common.collect.ListMultimap;
 import com.google.inject.Injector;
 
 /**
@@ -147,6 +152,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     } else {
                         throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
                     }
+                }
+            }
+        }
+
+        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
+        if (summaryExpressions.isPresent()) {
+            for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
+                final String originationProperty = treeName(entry.getKey());
+                for (final SummaryPropDef summaryProp : entry.getValue()) {
+                    cdtmae.getEnhancer().addCalculatedProperty(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, summaryProp.desc, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF"
+                            : originationProperty);
+                    cdtmae.getEnhancer().apply();
+                    cdtmae.getSecondTick().check(entityType, summaryProp.alias, true);
                 }
             }
         }
@@ -572,6 +590,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
         final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
+        final Optional<ListMultimap<String, SummaryPropDef>> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
             int actionIndex = 0;
@@ -595,6 +614,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
+                    final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
+                    summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
+                }
                 propertyColumns.add(el);
             }
         }
@@ -605,6 +628,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final StringBuilder propActionsObject = new StringBuilder();
         propertyColumns.forEach(column -> {
             importPaths.add(column.importPath());
+            if (column.hasSummary()) {
+                importPaths.add(column.getSummary(0).importPath());
+            }
             if (column.getAction().isPresent()) {
                 importPaths.add(column.getAction().get().importPath());
                 propActionsObject.append(prefix + createActionObject(column.getAction().get()));
@@ -724,6 +750,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final StringBuilder resultsetLayout = new StringBuilder(" ");
         final FlexLayout collapseLayout = dslDefaultConfig.getResultsetCollapsedCardLayout();
         final FlexLayout expandLayout = dslDefaultConfig.getResultsetExpansionCardLayout();
+        final FlexLayout summaryLayout = dslDefaultConfig.getResultsetSummaryCardLayout();
         if (collapseLayout.hasLayoutFor(Device.DESKTOP, null)) {
             resultsetLayout.append("desktopLayoutShort=\"{{" + collapseLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
         }
@@ -741,6 +768,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         if (expandLayout.hasLayoutFor(Device.MOBILE, null)) {
             resultsetLayout.append("mobileLayoutLong=\"{{" + expandLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
+        }
+        if (summaryLayout.hasLayoutFor(Device.DESKTOP, null)) {
+            resultsetLayout.append("summaryDesktopLayout=\"{{" + summaryLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
+        }
+        if (summaryLayout.hasLayoutFor(Device.TABLET, null)) {
+            resultsetLayout.append("summaryTabletLayout=\"{{" + summaryLayout.getLayout(Device.TABLET, null).get() + "}}\" ");
+        }
+        if (summaryLayout.hasLayoutFor(Device.MOBILE, null)) {
+            resultsetLayout.append("summaryMobileLayout=\"{{" + summaryLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
         }
         return resultsetLayout.toString();
     }
