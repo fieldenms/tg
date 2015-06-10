@@ -346,7 +346,7 @@
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
             entityChanged: function (newValue, oldValue) {
-                // console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
+                console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
                 if (typeof this.$ !== 'undefined') {
                     if (this._isEntity(newValue)) {
                     	var propValue = this.getBindingValue(newValue, this.propertyName);
@@ -358,10 +358,10 @@
 
                         this.bindMessages(newValue, this.propertyName, this.editorValidationMsg);
                     } else {
-                        // console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
+                        console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
                     }
                 } else {
-                    // console.log("entityChanged: Not yet initialised this.$!");
+                    console.log("entityChanged: Not yet initialised this.$!");
                 }
             },
 
