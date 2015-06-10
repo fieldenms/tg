@@ -1,0 +1,24 @@
+html /deep/ .summary-dialog::shadow #scroller {
+    padding: 30px;
+}
+html /deep/ .summary-dialog .data-column {
+    padding: 0.75em 1.5em;
+}
+html /deep/ .summary-dialog .data-label {
+    font-size: 0.75em;
+    background: transparent;
+    color: #757575;
+    cursor: default;
+}
+html /deep/ .summary-dialog .truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+html /deep/ .summary-dialog .data-value {
+    height: 1.4em;
+    margin: 0.5em 0 0.25em;
+    border-bottom: 1px solid black;
+    cursor: pointer;
+    color: #607D8B;
+}

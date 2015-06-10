@@ -17,6 +17,7 @@
 <link rel="import" href="/resources/element_loader/load-element.html">
 <link rel="import" href="/resources/polymer/core-icons/editor-icons.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="stylesheet" href="/resources/egi/tg-totals-dialog.css">
 
 <polymer-element name="tg-entity-grid-inspector" attributes="entityType entities totals renderingHints desktopLayoutShort desktopLayoutLong tabletLayoutShort tabletLayoutLong mobileLayoutShort mobileLayoutLong summaryDesktopLayout summaryTabletLayout summaryMobileLayout">
     <template>
@@ -40,38 +41,28 @@
         </paper-action-dialog>
 
         <!--The template for total's dialog.-->
-        <paper-action-dialog id="summaryDialog" backdrop>
-            <div>
-                <tg-flex-layout whenDesktop="{{summaryDesktopLayout}}" whenTablet="{{summaryTabletLayout}}" whenMobile="{{summaryMobileLayout}}">
-                    <template repeat="{{summary in cardSummary}}">
-                        <div property="{{summary.property === '' ? 'this' : summary.property}}">
+        <paper-action-dialog id="summaryDialog" class="summary-dialog" backdrop>
+            <tg-flex-layout whenDesktop="{{summaryDesktopLayout}}" whenTablet="{{summaryTabletLayout}}" whenMobile="{{summaryMobileLayout}}">
+                <template repeat="{{summary in cardSummary}}">
+                    <div class="data-column" property="{{summary.property === '' ? 'this' : summary.property}}" layout vertical>
+                        <core-tooltip position="bottom" class="delayed" style="width:100%">
+                            <div class="data-label truncate">{{summary.columnTitle}}</div>
+                            <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
+                        </core-tooltip>
+                        <div class="data-value">
                             <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                <div class="data-label truncate">{{summary.columnTitle}}</div>
-                                <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
+                                <div hidden?="{{summary.type !== 'Boolean' || get(totals, summary) === null}}">
+                                    <core-icon style="height:1.1em" icon="{{get(totals, summary) ? 'check' : 'clear'}}"></core-icon>
+                                </div>
+                                <div hidden?="{{summary.type === 'Boolean'}}">
+                                    <div class="truncate">{{getValue(totals, summary)}}</div>
+                                </div>
+                                <span class="span-tooltip" tip>{{getTooltip(totals, summary)}}</span>
                             </core-tooltip>
                         </div>
-                        <!--
-                        <div class="data-column" property="{{summary.property === '' ? 'this' : summary.property}}" layout vertical>
-                            <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                <div class="data-label truncate">{{summary.columnTitle}}</div>
-                                <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
-                            </core-tooltip>
-                            <div class="data-value">
-                                <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                    <div hidden?="{{summary.type !== 'Boolean' || get(totals, summary) === null}}">
-                                        <core-icon style="height:1.1em" icon="{{get(totals, summary) ? 'check' : 'clear'}}"></core-icon>
-                                    </div>
-                                    <div hidden?="{{summary.type === 'Boolean'}}">
-                                        <div class="truncate">{{getValue(totals, summary)}}</div>
-                                    </div>
-                                    <span class="span-tooltip" tip>{{getTooltip(totals, summary)}}</span>
-                                </core-tooltip>
-                            </div>
-                        </div>
--->
-                    </template>
-                </tg-flex-layout>
-            </div>
+                    </div>
+                </template>
+            </tg-flex-layout>
             <paper-button affirmative autofocus>Close</paper-button>
         </paper-action-dialog>
 
@@ -124,7 +115,7 @@
                 </thead>
                 <tbody>
                     <template repeat="{{entity, entityIndex in entities}}">
-                        <tr selected?="{{selectionModel[entityIndex]}}">
+                        <tr class="{{entityIndex % 2 === 0 ? 'regular_color':'alternate-color'}}" selected?="{{selectionModel[entityIndex]}}">
 
                             <td class="selection-column">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
@@ -166,8 +157,8 @@
                             </template>
                         </tr>
                     </template>
-                    <template repeat="{{summaryRow in gridSummary}}">
-                        <tr>
+                    <template repeat="{{summaryRow, summaryIndex in gridSummary}}">
+                        <tr class="{{ (entities.length + summaryIndex) % 2 === 0 ? 'regular_color':'alternate-color'}}" hidden?="{{!totals}}">
                             <td>
                                 <!--This is dummy column that is under selection column-->
                             </td>
