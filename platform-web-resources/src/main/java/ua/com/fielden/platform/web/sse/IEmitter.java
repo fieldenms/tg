@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.test.server.sse;
+package ua.com.fielden.platform.web.sse;
 
 import java.io.IOException;
 

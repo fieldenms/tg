@@ -12,8 +12,8 @@ import ua.com.fielden.platform.web.factories.LoginResourceFactory;
 import ua.com.fielden.platform.web.factories.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.sse.EventSourcingResourceFactory;
 import ua.com.fielden.platform.web.system.SystemResources;
-import ua.com.fielden.platform.web.test.server.sse.EventSourcingResourceFactory;
 
 import com.google.inject.Injector;
 
@@ -84,8 +84,8 @@ public class TgTestApplicationConfiguration extends Component {
                     ));
 
 
-            // try attaching a servlet
-            getDefaultHost().attach("/events",  new EventSourcingResourceFactory());
+            // this is a place where server-side eventing get configured
+            //getDefaultHost().attach("/events",  new EventSourcingResourceFactory(injector, stream, subscriberType));
 
         } catch (final Exception e) {
             e.printStackTrace();

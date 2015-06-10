@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.test.server.sse;
+package ua.com.fielden.platform.web.sse;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -46,7 +46,7 @@ public abstract class EventSourcingResource extends ServerResource {
                 async.setTimeout(0);
                 final EventSourceEmitter emitter = new EventSourceEmitter(eventSource, async);
                 emitter.scheduleHeartBeat();
-                open(eventSource, emitter);
+                eventSource.onOpen(emitter);
             }
         } catch (final IOException ex) {
             throw new ResourceException(ex);
@@ -67,8 +67,5 @@ public abstract class EventSourcingResource extends ServerResource {
         }
     }
 
-    protected void open(final IEventSource eventSource, final IEmitter emitter) throws IOException {
-        eventSource.onOpen(emitter);
-    }
 
 }
