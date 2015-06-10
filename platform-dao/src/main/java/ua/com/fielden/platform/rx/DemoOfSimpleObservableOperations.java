@@ -12,14 +12,14 @@ public class DemoOfSimpleObservableOperations {
     public static void hello(final String... names) {
         final Observable<String> stream = Observable
         .from(names)
-        .filter( v -> v.startsWith("M"))
-        .map(v -> v.toUpperCase());
+        .map(v -> v.toUpperCase())
+        .filter( v -> v.startsWith("M"));
 
         stream.subscribe( s ->  System.out.println("Hello " + s + "!"));
         stream.subscribe( s ->  System.out.println("Goodby " + s + "!"));
     }
 
     public static void main(final String[] args) {
-        hello("Mike", "Bruce", "Mark", "Frederic");
+        hello("mike", "bruce", "Mark", "Frederic");
     }
 }
