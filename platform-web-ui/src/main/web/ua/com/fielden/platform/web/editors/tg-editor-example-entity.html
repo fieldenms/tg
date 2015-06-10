@@ -13,24 +13,32 @@
         	
         	properties: {
         		bindingEntity: {
-        			type: Object
+        			type: Object,
+        			notify: true
         		}
         	},
         	
         	ready: function () {
         		this.bindingEntity = this.createBindingEntity();
+        		
+        		this.bindingEntity.prop('integerProp');
+        		this.bindingEntity.type().prop('integerProp');
+        		
+        		console.log("this.bindingEntity", this.bindingEntity);
         	},
         	
         	createBindingEntity: function () {
-				var bindingView = this.$.reflector.newEntity('ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger');
+				var bindingView = this.$.reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
                 bindingView["id"] = 333;
                 bindingView["version"] = 0;
                 
                 bindingView["@@origin"] = null;
                 
-                bindingView['prop'] = 23;
+                bindingView['integerProp'] = 23;
                 
-                bindingView["@prop_editable"] = true;
+                bindingView["@integerProp_editable"] = true;
+                
+                console.log("bindingView instanceof this.$.reflector.getEntityType()", bindingView instanceof this.$.reflector.getEntityType());
 				
 				return bindingView;
         	}
