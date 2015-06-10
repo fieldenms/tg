@@ -4,6 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,7 +20,13 @@ import javassist.util.proxy.ProxyFactory;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
@@ -37,7 +51,7 @@ public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
     public void lazily_loaded_vehicle_should_have_all_entity_props_proxied() {
         final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR1").getId());
 
-        assertNull("Should be null", vehicle.getStation());
+        assertTrue("Should be proxy", vehicle.getProperty("station").isProxy());
         assertTrue("Should be proxy", vehicle.getProperty("model").isProxy());
         assertTrue("Should be proxy", vehicle.getProperty("replacedBy").isProxy());
     }
@@ -46,16 +60,16 @@ public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
     public void normally_loaded_vehicle_should_have_all_entity_props_proxied() {
         final TgVehicle vehicle = vehicleDao.findById(vehicleDao.findByKey("CAR1").getId());
 
-        assertNull("Should be null", vehicle.getStation());
+        assertTrue("Should be proxy", vehicle.getProperty("station").isProxy());
         assertTrue("Should be proxy", vehicle.getProperty("model").isProxy());
         assertTrue("Should be proxy", vehicle.getProperty("replacedBy").isProxy());
     }
 
     @Test
-    public void null_valued_properties_should_not_have_proxies_for_now() {
+    public void null_valued_properties_should_also_be_proxied_if_outside_fetch_model() {
         final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
 
-        assertNull("Should be null", vehicle.getReplacedBy());
+        assertTrue("Should be proxy", vehicle.getProperty("replacedBy").isProxy());
     }
 
     @Test

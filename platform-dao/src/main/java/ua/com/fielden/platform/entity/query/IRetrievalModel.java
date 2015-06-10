@@ -13,6 +13,8 @@ public interface IRetrievalModel<T extends AbstractEntity<?>> {
     
     Set<String> getPrimProps();
     
+    Set<String> getProxiedProps();
+    
     boolean containsProp(final String propName);
     
     boolean containsProxy(final String propName);

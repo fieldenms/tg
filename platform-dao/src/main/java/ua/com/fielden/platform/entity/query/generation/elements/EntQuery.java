@@ -120,7 +120,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-        return yields.size() == 0 && !isSubQuery() && //
+        return yields.size() == 0 && !isSubQuery() &&
                 ((mainSourceIsTypeBased() && persistedType) || mainSourceIsQueryBased());
     }
 
@@ -153,8 +153,8 @@ public class EntQuery implements ISingleOperand {
                     //                        throw new IllegalStateException(ppi.toString());
                     //                    }
                     final boolean skipProperty = ppi.isSynthetic() || //
-                            ppi.isVirtual() || //
-                            ppi.isCollection() || //
+                            ppi.isVirtual() ||
+                            ppi.isCollection() ||
                             (ppi.isAggregatedExpression() && !isResultQuery())
                     //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
                     ;
@@ -266,10 +266,10 @@ public class EntQuery implements ISingleOperand {
         boolean isOfEntityType = yieldIsOfEntityType(yield);
         boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
 
-        return (!isOfEntityType && !presentInFetchModel) //
-                || //
-                (allFetchedPropsAreAggregatedExpressions && !presentInFetchModel) //
-                || //
+        return (!isOfEntityType && !presentInFetchModel)
+                ||
+                (allFetchedPropsAreAggregatedExpressions && !presentInFetchModel)
+                ||
                 (allFetchedPropsAreAggregatedExpressions && isHeaderOfMoneyType);
     }
 
@@ -333,14 +333,14 @@ public class EntQuery implements ISingleOperand {
         int yieldIndex = 0;
         for (final Yield yield : yields.getYields()) {
             yieldIndex = yieldIndex + 1;
-            yield.setInfo(new ResultQueryYieldDetails( //
-            yield.getAlias(), //
-            determineYieldJavaType(yield), //
-            determineYieldHibType(yield), //
-            "C" + yieldIndex, //
-            determineYieldNullability(yield), //
-            determineYieldDetailsType(yield)) //
-            );
+            yield.setInfo(new ResultQueryYieldDetails(
+                    yield.getAlias(),
+                    determineYieldJavaType(yield),
+                    determineYieldHibType(yield),
+                    "C" + yieldIndex,
+                    determineYieldNullability(yield),
+                    determineYieldDetailsType(yield))
+                    );
         }
     }
 
@@ -382,8 +382,8 @@ public class EntQuery implements ISingleOperand {
 
         if (persistedType) {
             if (qsYt != null && !qsYt.equals(rtYt)) {
-                if (!(isPersistedEntityType(qsYt) && Long.class.equals(rtYt)) && //
-                        !(isPersistedEntityType(rtYt) && Long.class.equals(qsYt)) && //
+                if (!(isPersistedEntityType(qsYt) && Long.class.equals(rtYt)) &&
+                        !(isPersistedEntityType(rtYt) && Long.class.equals(qsYt)) &&
                         !(rtYt.equals(DynamicEntityKey.class) && qsYt.equals(String.class)) && !rtYt.equals(Money.class)) {
                     throw new IllegalStateException("Different types: from source = " + qsYt.getSimpleName() + " from result type = " + rtYt.getSimpleName());
                 }

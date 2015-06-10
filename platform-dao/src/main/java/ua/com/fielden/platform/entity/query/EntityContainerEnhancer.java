@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -25,7 +27,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final EntityContainerFetcher fetcher;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
-    
+    transient private final Logger logger = Logger.getLogger(this.getClass());
+
     protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.fetcher = fetcher;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
@@ -74,6 +77,26 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             }
         }
 
+        return enhanceWithProxies(entities, fetchModel);
+    }
+
+    protected List<EntityContainer<E>> enhanceWithProxies(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
+        if (fetchModel != null && fetchModel.getEntityType() != EntityAggregates.class) {
+            final Set<String> proxiedProps = fetchModel.getProxiedProps();
+
+            for (final EntityContainer<E> entContainer : entities) {
+                for (final String proxiedProp : proxiedProps) {
+                    if (entContainer.getEntities().get(proxiedProp) != null) {
+                        entContainer.getEntities().get(proxiedProp).setProxy();
+                    } else {
+                        //TODO this situation should disappear once possibility of explicit per-property yielding of persisted entities is removed in upcoming version of EQL 
+                        logger.debug("Property [" + proxiedProp + "] is outside the list of entity props containers of entity container for type [" + fetchModel.getEntityType()
+                                + "]");
+                    }
+                }
+            }
+        }
+
         return entities;
     }
 
@@ -110,9 +133,9 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
 
     private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
         return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<T>(fetchModel, domainMetadataAnalyser) : //
-            new EntityRetrievalModel<T>(fetchModel, domainMetadataAnalyser);
+                new EntityRetrievalModel<T>(fetchModel, domainMetadataAnalyser);
     }
-    
+
     private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final fetch<T> fetchModel, final String linkPropName)
             throws Exception {
         // Obtaining map between property id and list of entities where this property occurs

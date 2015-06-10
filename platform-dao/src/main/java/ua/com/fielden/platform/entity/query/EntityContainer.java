@@ -38,12 +38,20 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     public void setProxy() {
         this.proxy = true;
     }
-    
+
     private int countAllDataItems() {
         return primitives.size() + entities.size() + composites.size() + collections.size();
     }
 
     public boolean isEmpty() {
+        if (isUnionEntityType(resultType)) {
+            for (EntityContainer<? extends AbstractEntity<?>> entityContainer : entities.values()) {
+                if (!entityContainer.isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
+        }
         return (countAllDataItems() == 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null) || (isUnionEntityType(resultType) && countAllDataItems() == 0);
     }
 
@@ -61,7 +69,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
                 : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
-    private <E extends AbstractEntity<?>> Object instantiateProxy(final Class<E> entityType, final R owningEntity, final Long id, final String propName,  final ProxyMode proxyMode) {
+    private <E extends AbstractEntity<?>> Object instantiateProxy(final Class<E> entityType, final R owningEntity, final Long id, final String propName, final ProxyMode proxyMode) {
         final EntityProxyFactory<?> epf = new EntityProxyFactory<>(entityType);
         IEntityDao<E> coForProxy = proxyMode == ProxyMode.LAZY ? coFinder.find(entityType) : null;
         return epf.create(id, owningEntity, propName, coForProxy, proxyMode);
@@ -70,9 +78,9 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     public R instantiate(final EntityFactory entFactory, final boolean userViewOnly, final ProxyMode proxyMode) {
         entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
         entity.beginInitialising();
-        
-        final List<String> proxiedProps = new ArrayList<>(); 
-        
+
+        final List<String> proxiedProps = new ArrayList<>();
+
         final boolean unionEntity = isUnionEntityType(resultType);
 
         for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {
@@ -90,7 +98,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
             }
             setPropertyValue(entity, entityEntry.getKey(), propValue);
             if (unionEntity && propValue != null /*&& userViewOnly*/) {
-                ((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
+                // FIXME ((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
             }
         }
 
@@ -99,7 +107,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         }
 
         if (!userViewOnly) {
-            EntityUtils.handleMetaProperties(entity, proxiedProps.toArray(new String[]{}));
+            EntityUtils.handleMetaProperties(entity, proxiedProps.toArray(new String[] {}));
         }
 
         entity.endInitialising();
@@ -107,16 +115,18 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         return entity;
     }
 
-    private Object determinePropValue(final R owningEntity, final String propName, final EntityContainer<? extends AbstractEntity<?>> entityContainer, final EntityFactory entFactory, final boolean userViewOnly,  final ProxyMode proxyMode) {
-        if (entityContainer.isEmpty() || entityContainer.notYetInitialised()) {
+    private Object determinePropValue(final R owningEntity, final String propName, final EntityContainer<? extends AbstractEntity<?>> entityContainer, final EntityFactory entFactory, final boolean userViewOnly, final ProxyMode proxyMode) {
+        if (entityContainer.proxy) {
             return instantiateProxy(entityContainer.resultType, owningEntity, entityContainer.getId(), propName, proxyMode);
+        } else if (entityContainer.isEmpty()) {
+            return null;
         } else if (entityContainer.isInstantiated()) {
             return entityContainer.entity;
         } else {
             return entityContainer.instantiate(entFactory, userViewOnly, proxyMode);
         }
     }
-    
+
     private void setPropertyValue(final R entity, final String propName, final Object propValue) {
         try {
             if (EntityAggregates.class.equals(resultType) || propValue instanceof Set) {

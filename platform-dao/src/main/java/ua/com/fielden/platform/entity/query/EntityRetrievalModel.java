@@ -85,7 +85,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     
     private void populateProxies() {
         for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
-            if (ppi.isEntityOfPersistedType() && !containsProp(ppi.getName())) {
+            if (!ppi.isSynthetic() && ppi.isEntityOfPersistedType() && !containsProp(ppi.getName())) {
                 getProxiedProps().add(ppi.getName());
             }
         }
