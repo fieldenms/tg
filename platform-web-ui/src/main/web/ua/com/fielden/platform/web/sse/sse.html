@@ -30,9 +30,12 @@
             }, false);
 
             source.addEventListener('error', function (e) {
+                // TODO Might need to implement some error recovery strategy to reconnect to the server-side observable
+
                 if (e.readyState == EventSource.CLOSED) {
                     // Connection was closed.
                 }
+
             }, false);
         } else {
             console.error("There is no native suport for EventSource, which is requried to avoid polyfilling.")

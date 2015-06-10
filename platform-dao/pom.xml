@@ -49,7 +49,12 @@
 			<artifactId>hibernate-c3p0</artifactId>
 			<version>3.6.10.Final</version>
 		</dependency>
-
+		<!-- Reactive X dependency to provide observable sequences -->
+		<dependency>
+			<groupId>io.reactivex</groupId>
+			<artifactId>rxjava</artifactId>
+			<version>1.0.11</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<resources>

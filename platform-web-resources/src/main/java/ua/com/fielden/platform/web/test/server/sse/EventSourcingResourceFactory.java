@@ -54,7 +54,6 @@ public class EventSourcingResourceFactory extends Restlet {
         @Override
         public void onClose() {
             System.out.println("Connection has been closed.");
-
         }
 
     }
