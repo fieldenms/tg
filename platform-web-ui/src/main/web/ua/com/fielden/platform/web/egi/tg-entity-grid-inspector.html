@@ -86,7 +86,7 @@
             </div>
         </div>
 
-        <div hidden?="{{cardLayout}}" style="background-color:white;">
+        <div hidden?="{{cardLayout}}" style="margin-top:20px">
 
             <table>
                 <thead>
@@ -157,18 +157,19 @@
                             </template>
                         </tr>
                     </template>
-                    <template repeat="{{summaryRow, summaryIndex in gridSummary}}">
-                        <tr class="{{ (entities.length + summaryIndex) % 2 === 0 ? 'regular-color':'alternate-color'}}" hidden?="{{!totals}}" style="font-weight:bold">
-                            <td>
+                    <tr hidden?="{{!totals}}" style="height:20px"></tr>
+                    <template repeat="{{summaryRow, summaryRowIndex in gridSummary}}">
+                        <tr class="summary" hidden?="{{!totals}}" style="font-weight:bold">
+                            <td class="column-transparent {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}">
                                 <!--This is dummy column that is under selection column-->
                             </td>
                             <template if="{{primaryAction}}">
-                                <td>
+                                <td class="column-transparent {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}">
                                     <!--This is dummy column that is under primary action column-->
                                 </td>
                             </template>
                             <template repeat="{{summary, summaryIndex in summaryRow}}">
-                                <td hidden?="{{!summary}}" class="data-column" style="width: {{summary.width}}">
+                                <td hidden?="{{!summary}}" class="data-column {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}" style="width: {{summary.width}}">
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
                                         <template if="{{summary.type === 'Boolean' && get(totals, summary) !== null}}">
                                             <core-icon icon="{{get(totals, summary) ? 'check' : 'clear'}}"></core-icon>
@@ -179,12 +180,12 @@
                                         <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
                                     </core-tooltip>
                                 </td>
-                                <td hidden?="{{summary}}">
+                                <td hidden?="{{summary}}" class="{{columns[summaryIndex].summary ? '': 'column-transparent'}} {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}">
                                     <!--This is dummy column that is represents empty summary cell-->
                                 </td>
                             </template>
                             <template if="{{secondaryActions.length > 0}}">
-                                <td>
+                                <td class="column-transparent {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}">
                                     <!--This is dummy column that is under secondary action column-->
                                 </td>
                             </template>

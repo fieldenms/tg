@@ -4,10 +4,6 @@
 table {
     border-collapse: collapse;
 }
-.summary-table {
-    margin-top: 4px;
-    font-weight: bold;
-}
 th {
     font-weight: normal;
 }
@@ -26,7 +22,7 @@ div.selection-column {
 td.selection-column {
     vertical-align: bottom;
 }
-td.data-column {
+tr:not(.header):not(.summary)>.data-column {
     color: #607D8B;
     cursor: pointer;
 }
@@ -40,22 +36,26 @@ tg-secondary-action-button::shadow core-icon-button{
 .header {
     background-color: #0288D1;
     color: white;
-    font-weight: bold;
+    cursor: default;
 }
 .card-header {
     padding: 4px;
     border-bottom: 1px solid #e5e5e5;
 }
-th {
-    cursor: default;
-}
-tbody>tr.regular-color:not([selected]) {
+tr.regular-color:not([selected]),
+td.regular-color{
     background-color: white;
 }
-tbody>tr.alternate-color:not([selected]) {
+tr.alternate-color:not([selected]),
+td.alternate-color{
     background-color: #F5F5F5;
 }
-tbody>tr:hover:not([selected]) {
+.summary {
+    height: 34px;
+    color: #607D8B;
+    cursor: default;
+}
+tr:not(.header):not(.summary):hover:not([selected]) {
     background-color: #E1F5FE;
 }
 tbody>tr[selected],
@@ -120,4 +120,7 @@ paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
     bottom: 0;
     left: calc(50% - 14px);
     padding: 0;
+}
+.column-transparent {
+    opacity: 0.5;
 }
