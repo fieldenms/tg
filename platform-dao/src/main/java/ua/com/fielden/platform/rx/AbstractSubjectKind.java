@@ -36,4 +36,19 @@ public abstract class AbstractSubjectKind<T> implements IObservableKind<T> {
         return observable;
     }
 
+    @Override
+    public final void publish(final T value) {
+        observable.onNext(value);
+    }
+
+    @Override
+    public final void complete() {
+        observable.onCompleted();
+    }
+
+    @Override
+    public final void error(final Throwable ex) {
+        observable.onError(ex);
+    }
+
 }
