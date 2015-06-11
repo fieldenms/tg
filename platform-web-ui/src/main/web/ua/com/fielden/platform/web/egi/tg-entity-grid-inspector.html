@@ -430,7 +430,7 @@
                     return entity && entity.get(column.property);
                 },
                 getValue: function (entity, column) {
-                    if (!entity || !column || !this.get(entity, column)) {
+                    if (!entity || !column || this.get(entity, column) === null) {
                         return "";
                     } else if (this.$.reflector.findTypeByName(column.type)) {
                         return this.$.reflector.convert(this.get(entity, column));

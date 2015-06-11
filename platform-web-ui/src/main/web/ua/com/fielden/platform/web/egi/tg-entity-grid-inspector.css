@@ -8,11 +8,14 @@ table {
     margin-top: 4px;
     font-weight: bold;
 }
+th {
+    font-weight: normal;
+}
 .selection-column {
     padding: 10px;
 }
 .data-column {
-    padding: 4px;
+    padding: 4px 8px;
 }
 .selection-column{
     padding: 4px 4px 4px 8px;
