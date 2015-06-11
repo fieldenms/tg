@@ -36,7 +36,7 @@
         	<label>[[propTitle]]</label>
             <div> <!-- TODO layout horizontal  -->
                 <div id="input-container"> <!--   flex -->
-	                <input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{editingValue}}" committed-value="{{commValue}}" disabled$="{{_isDisabled(currentState, entity, propertyName)}}">
+	                <input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="{{_isDisabled(currentState, entity, propertyName)}}"> <!-- allowed-pattern="[0-9]" committed-value="{{commValue}}" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
                 
 					<!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}">
 						<input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{editingValue}}" committed-value="{{commValue}}" disabled$="{{_isDisabled(currentState, entity, propertyName)}}">

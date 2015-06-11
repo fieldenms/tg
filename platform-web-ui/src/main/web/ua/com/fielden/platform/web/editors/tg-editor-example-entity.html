@@ -15,16 +15,33 @@
         		bindingEntity: {
         			type: Object,
         			notify: true
+        			/* value: function () {
+                		var bindingEntity = this.createBindingEntity();
+                		
+                		return bindingEntity;
+        			} */
+        		},
+        		
+        		validationCallback: {
+        			type: Object,
+        			notify: true,        			
+        			/* value: function () {
+        				console.log("tg-editor-example-entity. !!!validationCallback default value is intitialised!!!");
+        				var func = function () {
+        					console.log("tg-editor-example-entity. !!!validationCallback!!!");
+        				};
+        				return func;
+        			}, */
+                	observer: '_validationCallbackChanged'
         		}
         	},
         	
         	ready: function () {
         		this.bindingEntity = this.createBindingEntity();
         		
-        		this.bindingEntity.prop('integerProp');
-        		this.bindingEntity.type().prop('integerProp');
-        		
-        		console.log("this.bindingEntity", this.bindingEntity);
+        		this.validationCallback = function () {
+        			console.log("!!!validationCallback2!!!");
+        		};
         	},
         	
         	createBindingEntity: function () {
@@ -38,7 +55,15 @@
                 
                 bindingView["@integerProp_editable"] = true;
                 
+                bindingView.prop('integerProp');
+                bindingView.type().prop('integerProp');
+        		
+        		console.log("this.bindingEntity", bindingView);
 				return bindingView;
-        	}
+        	},
+        	
+            _validationCallbackChanged: function (newValue, oldValue) {
+            	console.log("_validationCallbackChangedXXX:", newValue, oldValue);
+            }
         });
     </script>

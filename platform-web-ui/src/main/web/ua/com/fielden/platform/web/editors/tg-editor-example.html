@@ -13,10 +13,17 @@
 
 <body>
   	<template is="dom-bind">
-  		<tg-editor-example-entity binding-entity="{{entity}}">
+  		<tg-editor-example-entity binding-entity="{{entity}}" validation-callback="{{validationCallback}}">
   		</tg-editor-example-entity>
   	
-  	    <tg-integer-editor entity="{{entity}}" property-name="integerProp" current-state="EDIT" debug>  	    
+  	    <tg-integer-editor 
+  	    	entity="[[entity]]" 
+  	    	property-name="integerProp" 
+  	    	current-state="EDIT" 
+  	    	debug 
+  	    	prop-title="Integer property title" 
+  	    	prop-desc="Integer property desc" 
+  	    	validation-callback="[[validationCallback]]">
   	    </tg-integer-editor>
 
   	</template>

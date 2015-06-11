@@ -99,16 +99,14 @@
                  * The title for this editor. It normally appears as the caption for the editor.
                  */
                 propTitle: {
-                	type: String,
-                	value: 'Unknown title. Please specify the title for the editor.' // TODO please remove default value, as it is necessary to specify such property from the outside
+                	type: String
                 },
 
                 /**
                  * The description for this editor.
                  */
                 propDesc: {
-                	type: String,
-                	value: 'Unknown desc. Please specify the desc for the editor.' // TODO please remove default value, as it is necessary to specify such property from the outside
+                	type: String                	
                 },
 
                 /**
@@ -116,7 +114,6 @@
                  */
                 entity: {
                 	type: Object,
-                	value: function() { return null; }, // TODO please remove default value, as it is necessary to specify such property from the outside
                 	observer: 'entityChanged'
                 },
                 
@@ -124,24 +121,22 @@
                  * This published property specifies to what property this editor should be bound.
                  */
                 propertyName: {
-                	type: String,
-                	value: null // TODO please remove default value, as it is necessary to specify such property from the outside
+                	type: String
                 },
 
                 /**
                  * This callback should be used for custom action after the 'acceptedValue' has been changed (for e.g. validation).
                  */
-                onAcceptedValueChanged: {
+                validationCallback: {
                 	type: Object,
-                	value: function() { return null; } // TODO please remove default value, as it is necessary to specify such property from the outside
+                	observer: '_validationCallbackChanged'
                 },
 
                 /**
                  * The message about the editor-specific validation. If 'null' -- the validation was successfull.
                  */
                 editorValidationMsg: {
-                	type: String,
-                	value: '',
+                	type: String,                	
                 	observer: 'editorValidationMsgChanged'
                 },
 
@@ -157,8 +152,7 @@
                  */
                 currentState: {
                 	type: String,
-                    reflectToAttribute: true, // TODO why is this needed???
-                    value: 'VIEW' // TODO temporal default value (please make it 'null' later)
+                    reflectToAttribute: true // TODO why is this needed???
                 },
 
                 /**
@@ -167,24 +161,21 @@
                  * If the action attribute is not specified -- no action button should be displayed.
                  */
                 action: {
-                	type: Object,
-                	value: function() { return null; } // TODO please remove default value, as it is necessary to specify such property from the outside
+                	type: Object
                 },
 
                 /**
                  * The switch, that turns on refresh cycle.
                  */
                 externalRefreshCycle: {
-                	type: String,
-                	value: null
+                	type: String
                 },
                 
                 /**
                  * Controls rendering of debug information for an entity editor. 
                  */
                 debug: {
-                	type: Boolean,
-                	value: false
+                	type: Boolean
                 },
                 
                 /**
@@ -194,7 +185,6 @@
                  */
                 editingValue: {
                 	type: String,
-                	value: '',
                 	observer: 'editingValueChanged'
                 },
 
@@ -205,7 +195,6 @@
                  */
                 commValue: {
                 	type: String,
-                	value: '',
                 	observer: 'commValueChanged'
                 },
 
@@ -217,19 +206,39 @@
                  */
                 acceptedValue: {
                 	type: String,
-                	value: '',
                 	observer: 'acceptedValueChanged'
                 },
 
                 refreshCycleStarted: {
-                	type: Boolean,
-                	value: false
+                	type: Boolean
                 }
             },
 
             ready: function () {
                 var self = this;
                 this.$.decorator.labelVisible = false;
+                
+                // console.log("READY: propTitle", this.propTitle);
+                
+                ///////////////// DEFAULT VALUES ////////////////////
+                // this.debug = false;
+                
+                // this.propTitle = 'Unknown title. Please specify the title for the editor.';
+                
+                // console.log("READY: propTitle new", this.propTitle);
+                
+                // this.propDesc = 'Unknown desc. Please specify the desc for the editor.';
+                this.refreshCycleStarted = false;
+                // this.entity, this.propertyName, this.validationCallback -- no value should be specified -- will be bound from the outside
+                this.editorValidationMsg = 'Init editor val message.'; // was ''
+                // this.currentState = 'VIEW'; // TODO temporal default value (please make it 'null' later)
+                
+                // this.action -- no value should be specified -- will be bound from the outside
+                
+                this.externalRefreshCycle = null;
+                this.editingValue = '';
+                this.commValue = '';
+                this.acceptedValue = '';
             },
 
             /**
@@ -278,6 +287,10 @@
              */
             getValueFor: function(bindingEntity, dotNotatedName) {
             	return bindingEntity["@@origin"].get(dotNotatedName);
+            },
+            
+            _validationCallbackChanged: function (newValue, oldValue) {
+            	console.log("tg-editor-bahviour: _validationCallbackChanged:", newValue, oldValue);
             },
 
             /**
@@ -356,18 +369,20 @@
              * shouldInvokeValidation() and skipValidationAction().
              */
             acceptedValueChanged: function (newValue, oldValue) {
-                // console.log("acceptedValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
+                console.log("acceptedValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
 
                 if (this.refreshCycleStarted) {
                     this.refreshCycleStarted = false;
                     // console.log("acceptedValueChanged should become false. refreshCycleStarted ==", this.refreshCycleStarted);
                 } else {
-                    this.entity.set(this.propertyName, newValue);
-                    if (this.shouldInvokeValidation()) {
-                        this.onAcceptedValueChanged();
-                    } else {
-                        this.skipValidationAction();
-                    }
+                	if (this.$.reflector.isEntity(this.entity)) {
+	                    this.entity.set(this.propertyName, newValue);
+    	                if (this.shouldInvokeValidation()) {
+        	                this.validationCallback();
+            	        } else {
+                	        this.skipValidationAction();
+                    	}
+                	}
                 }
             },
 
@@ -403,8 +418,8 @@
              * Commits editing value.
              */
             commit: function () {
-                // console.log("commit");
-                this.commValue = this.editingValue;
+                console.log("commit [", this.editingValue, "] value.");
+   	            this.commValue = this.editingValue;
             },
 
             externalRefreshCycleChanged: function (oldValue, newValue) {
@@ -504,6 +519,41 @@
                 );
                 this.$.reflector.setCustomProperty(contextHolder, "@@searchString", inputText);
                 return contextHolder;
-            }
+            },
+            
+            ////////////////////////////// EVENT HANDLERS FOR INNER INPUT COMPONENTS ////////////////////////////// 
+        	_onInput: function (event) {
+        		console.log("_onInput:", event);
+        	},
+
+        	/**
+        	 * This event is invoked after the component has been changed (it is invoked after the focus was lost). Provides value commit behaviour.
+        	 */
+        	_onChange: function (event) {
+        		console.log("_onChange:", event);
+        		
+        		if (!this.$.reflector.equalsEx(this.editingValue, this.commValue)) {
+        			this.commit();
+        		}
+        	},
+
+        	_onBlur: function (event) {
+        		console.log("focus lost: _onBlur:", event);
+        	},
+        	
+        	_onFocus: function (event) {
+        		console.log("focus got: _onFocus:", event);
+        	},
+
+        	/**
+        	 * This event is invoked after some key has been pressed. We are interested in 'Enter' key to provide value commit behaviour.
+        	 */
+        	_onKeypress: function (event) {
+        		console.log("_onKeypress:", event);
+        		
+        		if (event.keyCode === 13 && !this.$.reflector.equalsEx(this.editingValue, this.commValue)) { // 'Enter' has been pressed
+        			this.commit();
+        		}
+        	}
         };
     </script>
