@@ -85,7 +85,7 @@ public class TgTestApplicationConfiguration extends Component {
 
 
             // this is a place where server-side eventing get configured
-            //getDefaultHost().attach("/events",  new EventSourcingResourceFactory(injector, stream, subscriberType));
+            //getDefaultHost().attach("/events",  new EventSourcingResourceFactory(injector, subscriberType));
 
         } catch (final Exception e) {
             e.printStackTrace();

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.rx;
+package ua.com.fielden.platform.rx.spikes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
