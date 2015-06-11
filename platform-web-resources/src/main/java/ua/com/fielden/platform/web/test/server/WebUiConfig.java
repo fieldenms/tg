@@ -331,12 +331,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
                 .addPrimaryAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
-                                icon("assignment-turned-in").
-                                shortDesc("Function 2.5").
-                                longDesc("Functional context-dependent action 2.5").
-                                build()
+                        EntityActionConfig.createMasterInvocationActionConfig()
+                //                        action(TgFunctionalEntityWithCentreContext.class).
+                //                                withContext(context().withSelectedEntities().build()).
+                //                                icon("assignment-turned-in").
+                //                                shortDesc("Function 2.5").
+                //                                longDesc("Functional context-dependent action 2.5").
+                //                                build()
 
                 ) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
                 .also()
@@ -390,7 +391,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "status", 30);
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp2", 30);
-            final int statusWidth = 0; // TODO does not matter below 18px -- still remain 18px, +20+20 as padding
+            final int statusWidth = 26; // TODO does not matter below 18px -- still remain 18px, +20+20 as padding
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dR", statusWidth);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iS", statusWidth);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iR", statusWidth);

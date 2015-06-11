@@ -44,7 +44,7 @@
         <paper-action-dialog id="summaryDialog" class="summary-dialog" backdrop>
             <tg-flex-layout whenDesktop="{{summaryDesktopLayout}}" whenTablet="{{summaryTabletLayout}}" whenMobile="{{summaryMobileLayout}}">
                 <template repeat="{{summary in cardSummary}}">
-                    <div class="data-column" property="{{summary.property === '' ? 'this' : summary.property}}" layout vertical>
+                    <div class="data-entry" property="{{summary.property === '' ? 'this' : summary.property}}" layout vertical>
                         <core-tooltip position="bottom" class="delayed" style="width:100%">
                             <div class="data-label truncate">{{summary.columnTitle}}</div>
                             <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
@@ -67,7 +67,7 @@
         </paper-action-dialog>
 
         <!--Toolbar template-->
-        <div layout horizontal?="{{!cardLayout}}" vertical?="{{cardLayout}}" justified?="{{!cardLayout}}" start-justified?="{{cardLayout}}" style="background-color:white; {{cardLayout ? 'padding: 0 30px;' : ''}}">
+        <div layout horizontal?="{{!cardLayout}}" vertical?="{{cardLayout}}" justified?="{{!cardLayout}}" start-justified?="{{cardLayout}}" style="background-color:white; {{cardLayout ? 'padding: 0 34px;' : 'padding-left:2px'}}">
             <div layout horizontal>
                 <content select=".entity-specific-action"></content>
             </div>
@@ -101,7 +101,7 @@
                             <th class="action-column"></th>
                         </template>
                         <template repeat="{{column, columnIndex in columns}}">
-                            <th class="data-column" style="{{columnIndex===0?'padding-left:10px;' : ''}}{{columnIndex===columns.length-1?'padding-right:10px;' : ''}}width: {{column.width}}" align="left">
+                            <th class="data-column" style="width: {{column.width}}" align="left">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
                                     {{column.columnTitle}}
                                     <span class="span-tooltip" tip>{{column.columnDesc}}</span>
@@ -115,7 +115,7 @@
                 </thead>
                 <tbody>
                     <template repeat="{{entity, entityIndex in entities}}">
-                        <tr class="{{entityIndex % 2 === 0 ? 'regular_color':'alternate-color'}}" selected?="{{selectionModel[entityIndex]}}">
+                        <tr class="{{entityIndex % 2 === 0 ? 'regular-color':'alternate-color'}}" selected?="{{selectionModel[entityIndex]}}">
 
                             <td class="selection-column">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
@@ -130,7 +130,7 @@
                                 </td>
                             </template>
                             <template repeat="{{column, columnIndex in columns}}">
-                                <td class="data-column" style="{{columnIndex===0?'padding-left:10px;' : ''}}{{columnIndex===columns.length-1?'padding-right:10px;' : ''}}width: {{column.width}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}" relative>
+                                <td class="data-column" style="width: {{column.width}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}" relative>
                                     <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
                                     </div>
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
@@ -158,7 +158,7 @@
                         </tr>
                     </template>
                     <template repeat="{{summaryRow, summaryIndex in gridSummary}}">
-                        <tr class="{{ (entities.length + summaryIndex) % 2 === 0 ? 'regular_color':'alternate-color'}}" hidden?="{{!totals}}">
+                        <tr class="{{ (entities.length + summaryIndex) % 2 === 0 ? 'regular-color':'alternate-color'}}" hidden?="{{!totals}}" style="font-weight:bold">
                             <td>
                                 <!--This is dummy column that is under selection column-->
                             </td>
@@ -168,7 +168,7 @@
                                 </td>
                             </template>
                             <template repeat="{{summary, summaryIndex in summaryRow}}">
-                                <td hidden?="{{!summary}}" class="data-column" style="{{summaryIndex===0?'padding-left:10px;' : ''}}{{summaryIndex===summaryRow.length-1?'padding-right:10px;' : ''}}width: {{summary.width}}">
+                                <td hidden?="{{!summary}}" class="data-column" style="width: {{summary.width}}">
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
                                         <template if="{{summary.type === 'Boolean' && get(totals, summary) !== null}}">
                                             <core-icon icon="{{get(totals, summary) ? 'check' : 'clear'}}"></core-icon>
@@ -220,7 +220,7 @@
                     <div style="position:relative; background-color: white; {{collapsePanelVisible ? 'padding-bottom:24px':''}}">
                         <tg-flex-layout whenDesktop="{{desktopLayoutShort}}" whenTablet="{{tabletLayoutShort}}" whenMobile="{{mobileLayoutShort}}">
                             <template repeat="{{column, columnIndex in columns}}">
-                                <div class="data-column" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
+                                <div class="data-entry" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
                                         <div class="data-label truncate">{{column.columnTitle}}</div>
                                         <span class="span-tooltip" tip>{{column.columnDesc}}</span>
@@ -244,7 +244,7 @@
                         <core-collapse opened?="{{openModel[entityIndex]}}" allowOverflow hidden?="{{!collapsePanelVisible}}">
                             <tg-flex-layout whenDesktop="{{desktopLayoutLong}}" whenTablet="{{tabletLayoutLong}}" whenMobile="{{mobileLayoutLong}}">
                                 <template repeat="{{column, columnIndex in columns}}">
-                                    <div class="data-column" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
+                                    <div class="data-entry" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
                                         <core-tooltip position="bottom" class="delayed" style="width:100%">
                                             <div class="data-label truncate">{{column.columnTitle}}</div>
                                             <span class="span-tooltip" tip>{{column.columnDesc}}</span>

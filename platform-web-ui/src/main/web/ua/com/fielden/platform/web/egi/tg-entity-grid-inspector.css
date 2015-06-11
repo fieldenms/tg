@@ -4,11 +4,35 @@
 table {
     border-collapse: collapse;
 }
+.summary-table {
+    margin-top: 4px;
+    font-weight: bold;
+}
 .selection-column {
     padding: 10px;
 }
 .data-column {
-    padding: 0.75em 1.5em;
+    padding: 4px;
+}
+.selection-column{
+    padding: 4px 4px 4px 8px;
+}
+div.selection-column {
+    padding 4px;
+}
+td.selection-column {
+    vertical-align: bottom;
+}
+td.data-column {
+    color: #607D8B;
+    cursor: pointer;
+}
+core-icon-button,
+tg-ui-action::shadow core-icon-button,
+tg-page-action::shadow core-icon-button,
+tg-secondary-action-button::shadow core-icon-button{
+    padding: 4px;
+    margin: 0px;
 }
 .header {
     background-color: #0288D1;
@@ -16,16 +40,13 @@ table {
     font-weight: bold;
 }
 .card-header {
+    padding: 4px;
     border-bottom: 1px solid #e5e5e5;
 }
 th {
     cursor: default;
 }
-td.data-column {
-    color: #607D8B;
-    cursor: pointer;
-}
-tbody>tr.regular_color:not([selected]) {
+tbody>tr.regular-color:not([selected]) {
     background-color: white;
 }
 tbody>tr.alternate-color:not([selected]) {
@@ -71,6 +92,9 @@ paper-checkbox::shadow #checkbox:not(.checked)>#checkmark {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.data-entry {
+    padding: 0.75em 1.5em;
 }
 .data-label {
     font-size: 0.75em;
