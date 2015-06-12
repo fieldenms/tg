@@ -32,22 +32,23 @@
     </style>
 
     <template>
-        <paper-input-container id="decorator" attr-for-value="editing-value" disabled$="{{_isDisabled(currentState, entity, propertyName)}}"> <!-- no-label-float -->
+        <paper-input-container id="decorator" attr-for-value="editing-value" disabled$="[[_disabled]]"> <!-- no-label-float -->
         	<label>[[propTitle]]</label>
             <div> <!-- TODO layout horizontal  -->
                 <div id="input-container"> <!--   flex -->
-	                <input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="{{_isDisabled(currentState, entity, propertyName)}}"> <!-- allowed-pattern="[0-9]" committed-value="{{commValue}}" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
+	                <input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]"> <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
                 
 					<!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}">
-						<input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{editingValue}}" committed-value="{{commValue}}" disabled$="{{_isDisabled(currentState, entity, propertyName)}}">
+						<input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" disabled$="{{_isDisabled(currentState, entity, propertyName)}}">
 						<span class="span-tooltip" tip>
                             {{tooltip(propDesc)}}
                         </span>
                     </core-tooltip> --> 
                 </div>
-                <!-- <div id="icon" hidden?="{{!action}}">
-                    <tg-property-action entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
-                </div> -->
+                <div id="icon" hidden$="[[_actionDoesNotExist(action)]]">
+                	<p>ICON</p>
+                    <!-- <tg-property-action entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action> -->
+                </div>
             </div>
         </paper-input-container>
         
@@ -57,11 +58,11 @@
 
         <tg-reflector id="reflector"></tg-reflector>
 
-        <template is="dom-if" if="{{debug}}">
-            <p>editingValue: <i>{{editingValue}}</i></p>
-            <p>commValue: <i>{{commValue}}</i></p>
-            <p>acceptedValue: <i>{{acceptedValue}}</i></p>
-            <p>_bindingValue: <i>{{_bindingValue(entity, propertyName)}}</i></p>
+        <template is="dom-if" if="[[debug]]">
+            <p>_editingValue: <i>[[_editingValue]]</i></p>
+            <p>_commValue: <i>[[_commValue]]</i></p>
+            <p>_acceptedValue: <i>[[_acceptedValue]]</i></p>
+            <p>_bindingValue: <i>[[_bindingValue(entity, propertyName)]]</i></p>
         </template>
     </template>
 </dom-module>

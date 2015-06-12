@@ -82,9 +82,9 @@
         <tg-reflector id="reflector"></tg-reflector>
 
         <template is="dom-if" if="{{debug}}">
-            <p>editingValue: <i>{{editingValue}}</i></p>
-            <p>commValue: <i>{{commValue}}</i></p>
-            <p>acceptedValue: <i>{{acceptedValue}}</i></p>
+            <p>_editingValue: <i>{{_editingValue}}</i></p>
+            <p>_commValue: <i>{{_commValue}}</i></p>
+            <p>_acceptedValue: <i>{{_acceptedValue}}</i></p>
             <p>_bindingValue: <i>{{_bindingValue(entity, propertyName)}}</i></p>
         </template>
     </template>
@@ -92,9 +92,14 @@
 
     <script>
         Polymer.TgEditorBehavior = {
-        	// TODO PUBLIC API: attributes="entity propertyName onAcceptedValueChanged propTitle propDesc currentState action externalRefreshCycle debug"
-        	
             properties: {
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            	// No default values are allowed in this case.														   //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
                 /**
                  * The title for this editor. It normally appears as the caption for the editor.
                  */
@@ -125,23 +130,14 @@
                 },
 
                 /**
-                 * This callback should be used for custom action after the 'acceptedValue' has been changed (for e.g. validation).
+                 * This callback should be used for custom action after the '_acceptedValue' has been changed (for e.g. validation).
                  */
                 validationCallback: {
-                	type: Object,
-                	observer: '_validationCallbackChanged'
+                	type: Object
                 },
-
+                
                 /**
-                 * The message about the editor-specific validation. If 'null' -- the validation was successfull.
-                 */
-                editorValidationMsg: {
-                	type: String,                	
-                	observer: 'editorValidationMsgChanged'
-                },
-
-                /**
-                 * The state for the editor.
+                 * The state for the editor (governed by external hosts, that hold this editor).
                  *
                  * The editor can be only in two states: EDIT and VIEW. The state EDIT
                  * allows user to edit property.
@@ -151,10 +147,12 @@
                  * The initial state can be VIEW or EDIT.
                  */
                 currentState: {
-                	type: String,
-                    reflectToAttribute: true // TODO why is this needed???
+                	type: String
+                    // TODO why is this needed??? reflectToAttribute: true
                 },
-
+                
+                ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
+                
                 /**
                  * The action object that represents an action to be embedded as an icon button inside this editor.
                  *
@@ -163,12 +161,13 @@
                 action: {
                 	type: Object
                 },
-
+                
                 /**
                  * The switch, that turns on refresh cycle.
                  */
                 externalRefreshCycle: {
-                	type: String
+                	type: String,
+                	observer: '_externalRefreshCycleChanged'
                 },
                 
                 /**
@@ -177,40 +176,78 @@
                 debug: {
                 	type: Boolean
                 },
+
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            	//   prefix and default values specified in 'value' specificator of the property definition.           //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
+            	_disabled: {
+            		type: Boolean,
+            		computed: '_isDisabled(currentState, entity, propertyName)'
+            	},
+                
+                /**
+                 * The message about the editor-specific validation. If 'null' -- the validation was successfull.
+                 */
+                _editorValidationMsg: {
+                	type: String,                	
+                	value: null,
+                	observer: '_editorValidationMsgChanged'
+                },
+                
+                /**
+                 * Indicates whether 'refresh cycle' has been initiated, which means that new entity has been arrived.  
+                 *   After the '_editingValue' has been populated -- this value should be immediately committed, but 
+                 *   without additional validation.
+                 *
+                 * 'true' and 'false' are the only permitted values.
+                 */
+                _refreshCycleStarted: {
+                	type: Boolean, 
+                	value: false
+                },
+
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            	//   prefix and default values specified in 'value' specificator of the property definition.           //
+            	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+            	//   populate their default values in ready callback (to have these values populated in children)!     //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
                 
                 /**
                  * The value being edited (main editing capability). If there are other editing views in this editor -- maintain their editingValues separately.
                  *
                  * This value is of the data type for editing (main editing capability), most likely String.
                  */
-                editingValue: {
+                _editingValue: {
                 	type: String,
-                	observer: 'editingValueChanged'
+                	observer: '_editingValueChanged'
                 },
-
+                
                 /**
                  * The value being committed (main editing capability). If there are other editing views in this editor -- maintain their committedValues separately.
                  *
                  * This value is of the data type for editing (main editing capability), most likely String.
                  */
-                commValue: {
+                _commValue: {
                 	type: String,
-                	observer: 'commValueChanged'
+                	observer: '_commValueChanged'
                 },
-
+                
                 /**
                  * The value being accepted after the editing. The commit can be done using 'TAB off' or 'Enter key pressed'.
                  *
                  * This value is of the data type for concrete component, for e.g. for tg-datetime-picker it is Number, tg-textfield -- String etc.
                  * The type strictly conforms to the type of 'bindTo' attribute.
                  */
-                acceptedValue: {
+                _acceptedValue: {
                 	type: String,
-                	observer: 'acceptedValueChanged'
-                },
-
-                refreshCycleStarted: {
-                	type: Boolean
+                	observer: '_acceptedValueChanged'
                 }
             },
 
@@ -218,27 +255,18 @@
                 var self = this;
                 this.$.decorator.labelVisible = false;
                 
-                // console.log("READY: propTitle", this.propTitle);
-                
-                ///////////////// DEFAULT VALUES ////////////////////
-                // this.debug = false;
-                
-                // this.propTitle = 'Unknown title. Please specify the title for the editor.';
-                
-                // console.log("READY: propTitle new", this.propTitle);
-                
-                // this.propDesc = 'Unknown desc. Please specify the desc for the editor.';
-                this.refreshCycleStarted = false;
-                // this.entity, this.propertyName, this.validationCallback -- no value should be specified -- will be bound from the outside
-                this.editorValidationMsg = 'Init editor val message.'; // was ''
-                // this.currentState = 'VIEW'; // TODO temporal default value (please make it 'null' later)
-                
-                // this.action -- no value should be specified -- will be bound from the outside
-                
-                this.externalRefreshCycle = null;
-                this.editingValue = '';
-                this.commValue = '';
-                this.acceptedValue = '';
+                //////////// INNER PROPERTIES, THAT GOVERN CHILDREN: default values population ////////////
+				this._editingValue = '';
+				this._commValue = '';
+            },
+            
+            /**
+             * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
+             *
+             * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
+             */
+            _actionDoesNotExist: function (action) {
+            	return action === null;
             },
 
             /**
@@ -288,23 +316,24 @@
             getValueFor: function(bindingEntity, dotNotatedName) {
             	return bindingEntity["@@origin"].get(dotNotatedName);
             },
-            
-            _validationCallbackChanged: function (newValue, oldValue) {
-            	console.log("tg-editor-bahviour: _validationCallbackChanged:", newValue, oldValue);
-            },
 
             /**
              * This method is called during editing.
              *
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
-            editingValueChanged: function (newValue, oldValue) {
-                // console.log("editingValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
+            _editingValueChanged: function (newValue, oldValue) {
+                console.log("_editingValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
                 
                 // TODO provide alternative?
-                // this.$.decorator.updateLabelVisibility(this.editingValue);
+                // TODO provide alternative?
+                // TODO provide alternative?
+                // TODO provide alternative?
+                // TODO provide alternative?
+                // TODO provide alternative?
+                // this.$.decorator.updateLabelVisibility(this._editingValue);
 
-                if (this.refreshCycleStarted) {
+                if (this._refreshCycleStarted === true) {
                     this.commit();
                 }
             },
@@ -315,17 +344,17 @@
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
             entityChanged: function (newValue, oldValue) {
-                console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
+                console.log("entityChanged", oldValue, newValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
                 if (typeof this.$ !== 'undefined') {
                     if (this.$.reflector.isEntity(newValue)) {
                     	var propValue = this.getBindingValue(newValue, this.propertyName);
                         var newEditingValue = this.convertToString(propValue);
-                        if (newEditingValue === this.editingValue && this.refreshCycleStarted) {
-                            this.refreshCycleStarted = false;
+                        if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
+                            this._refreshCycleStarted = false;
                         }
-                        this.editingValue = newEditingValue;
+                        this._editingValue = newEditingValue;
 
-                        this.bindMessages(newValue, this.propertyName, this.editorValidationMsg);
+                        this.bindMessages(newValue, this.propertyName, this._editorValidationMsg);
                     } else {
                         console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
                     }
@@ -334,16 +363,12 @@
                 }
             },
 
-            editorValidationMsgChanged: function (newValue, oldValue) {
-                if (typeof this.$ !== 'undefined') {
-                    if (this.$.reflector.isEntity(this.entity)) {
-                        this.bindMessages(this.entity, this.propertyName, newValue);
-                    } else {
-                        console.log("editorValidationMsgChanged: Not yet initialised currBindingEntity, from which to get binding value!");
-                    }
-                } else {
-                    console.log("editorValidationMsgChanged: Not yet initialised this.$!");
-                }
+            _editorValidationMsgChanged: function (newValue, oldValue) {
+	            if (this.$.reflector.isEntity(this.entity)) {
+	                this.bindMessages(this.entity, this.propertyName, newValue);
+	            } else {
+	                console.log("_editorValidationMsgChanged: Not yet initialised currBindingEntity, from which to get binding value!");
+	            }
             },
 
             /**
@@ -351,14 +376,14 @@
              *
              * IMPORTANT: please do not override this method.
              */
-            commValueChanged: function (newValue, oldValue) {
-                // console.log("commValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
+            _commValueChanged: function (newValue, oldValue) {
+                console.log("_commValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
                 try {
-                    this.acceptedValue = this.convertFromString(newValue);
-                    this.editorValidationMsg = '';
+                    this._acceptedValue = this.convertFromString(newValue);
+                    this._editorValidationMsg = null;
                 } catch (error) {
-                    // console.log("commValueChanged catched", error, this);
-                    this.editorValidationMsg = error;
+                    // console.log("_commValueChanged catched", error, this);
+                    this._editorValidationMsg = error;
                 }
             },
 
@@ -368,12 +393,12 @@
              * IMPORTANT: please do not override this method. This method have some additional customisation points:
              * shouldInvokeValidation() and skipValidationAction().
              */
-            acceptedValueChanged: function (newValue, oldValue) {
-                console.log("acceptedValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
+            _acceptedValueChanged: function (newValue, oldValue) {
+                console.log("_acceptedValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
 
-                if (this.refreshCycleStarted) {
-                    this.refreshCycleStarted = false;
-                    // console.log("acceptedValueChanged should become false. refreshCycleStarted ==", this.refreshCycleStarted);
+                if (this._refreshCycleStarted) {
+                    this._refreshCycleStarted = false;
+                    // console.log("_acceptedValueChanged should become false. _refreshCycleStarted ==", this._refreshCycleStarted);
                 } else {
                 	if (this.$.reflector.isEntity(this.entity)) {
 	                    this.entity.set(this.propertyName, newValue);
@@ -387,14 +412,14 @@
             },
 
             /**
-             * Please override this method in case when no validation should occur after acceptedValueChanged.
+             * Please override this method in case when no validation should occur after _acceptedValueChanged.
              */
             shouldInvokeValidation: function () {
                 return true;
             },
 
             /**
-             * Please override this method in case when some custom action is needed when shouldInvokeValidation() returns 'false' after acceptedValueChanged.
+             * Please override this method in case when some custom action is needed when shouldInvokeValidation() returns 'false' after _acceptedValueChanged.
              */
             skipValidationAction: function () {},
 
@@ -418,20 +443,20 @@
              * Commits editing value.
              */
             commit: function () {
-                console.log("commit [", this.editingValue, "] value.");
-   	            this.commValue = this.editingValue;
+                console.log("commit [", this._editingValue, "] value.");
+   	            this._commValue = this._editingValue;
             },
 
-            externalRefreshCycleChanged: function (oldValue, newValue) {
+            _externalRefreshCycleChanged: function (newValue, oldValue) {
                 if (newValue === "ACTIVATED") {
                     // console.log("externalRefreshCycleChanged", oldValue, newValue);
-                    this.refreshCycleStarted = true;
+                    this._refreshCycleStarted = true;
                 }
             },
 
-            bindMessages: function (entity, property, editorValidationMsg) {
-                if (editorValidationMsg) {
-                    this.bindError(editorValidationMsg);
+            bindMessages: function (entity, property, _editorValidationMsg) {
+                if (_editorValidationMsg !== null) {
+                    this.bindError(_editorValidationMsg);
                 } else if (typeof this.$ !== 'undefined') {
                     if (this.$.reflector.isEntity(entity)) {
                     	// please, note that dot-notated property will not have any errors / warnings / requiredness
@@ -532,7 +557,7 @@
         	_onChange: function (event) {
         		console.log("_onChange:", event);
         		
-        		if (!this.$.reflector.equalsEx(this.editingValue, this.commValue)) {
+        		if (!this.$.reflector.equalsEx(this._editingValue, this._commValue)) {
         			this.commit();
         		}
         	},
@@ -551,7 +576,7 @@
         	_onKeypress: function (event) {
         		console.log("_onKeypress:", event);
         		
-        		if (event.keyCode === 13 && !this.$.reflector.equalsEx(this.editingValue, this.commValue)) { // 'Enter' has been pressed
+        		if (event.keyCode === 13 && !this.$.reflector.equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
         			this.commit();
         		}
         	}
