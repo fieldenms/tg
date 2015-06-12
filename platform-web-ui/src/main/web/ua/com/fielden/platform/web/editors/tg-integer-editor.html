@@ -74,12 +74,16 @@
     <script>
         Polymer({
         	is: 'tg-integer-editor',
-        	behaviors: [ Polymer.TgEditorBehavior ],
+        	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
         	
             /**
              * Converts the value into string representation (which is used in edititing / comm values).
              */
             convertToString: function (value) {
+            	// NOTE: consider the follwing example, of how 'super' method can be invoked.
+            	//   Just use concrete name of the 'super' behavior and call the function excplicitly:            		
+            	// Polymer.TgBehaviors.TgEditorBehavior.convertToString(value);
+            	
                 return value === null ? "" : "" + value;
             },
 
