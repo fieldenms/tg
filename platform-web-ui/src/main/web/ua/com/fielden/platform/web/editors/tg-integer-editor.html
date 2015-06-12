@@ -50,6 +50,10 @@
                     <!-- <tg-property-action entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action> -->
                 </div>
             </div>
+            
+	        <template is="dom-if" if="[[_error]]">
+	  	    	<paper-input-error>[[_error]]</paper-input-error>
+	    	</template>
         </paper-input-container>
         
         <!-- <shadow></shadow> -->
@@ -83,6 +87,9 @@
              * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
              */
             convertFromString: function (strValue) {
+            	if (strValue === '77') {
+            		throw 'The value is 77, not permitted.';
+            	}
                 return strValue === '' ? null : parseInt(strValue);
             }
         });

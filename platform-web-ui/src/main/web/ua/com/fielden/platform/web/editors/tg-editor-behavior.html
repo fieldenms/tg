@@ -194,8 +194,7 @@
                  */
                 _editorValidationMsg: {
                 	type: String,                	
-                	value: null,
-                	observer: '_editorValidationMsgChanged'
+                	value: null
                 },
                 
                 /**
@@ -208,6 +207,14 @@
                 _refreshCycleStarted: {
                 	type: Boolean, 
                 	value: false
+                },
+                
+                /**
+                 * The validation error message.
+                 */
+                _error: {
+                	type: String,
+                	value: null
                 },
 
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -250,6 +257,10 @@
                 	observer: '_acceptedValueChanged'
                 }
             },
+            
+            observers: [
+            	'bindMessages(entity, propertyName, _editorValidationMsg)'
+			],
 
             ready: function () {
                 var self = this;
@@ -353,22 +364,12 @@
                             this._refreshCycleStarted = false;
                         }
                         this._editingValue = newEditingValue;
-
-                        this.bindMessages(newValue, this.propertyName, this._editorValidationMsg);
                     } else {
                         console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
                     }
                 } else {
                     console.log("entityChanged: Not yet initialised this.$!");
                 }
-            },
-
-            _editorValidationMsgChanged: function (newValue, oldValue) {
-	            if (this.$.reflector.isEntity(this.entity)) {
-	                this.bindMessages(this.entity, this.propertyName, newValue);
-	            } else {
-	                console.log("_editorValidationMsgChanged: Not yet initialised currBindingEntity, from which to get binding value!");
-	            }
             },
 
             /**
@@ -455,29 +456,25 @@
             },
 
             bindMessages: function (entity, property, _editorValidationMsg) {
+            	console.log("bindMessages: ", entity, property, _editorValidationMsg);
                 if (_editorValidationMsg !== null) {
                     this.bindError(_editorValidationMsg);
-                } else if (typeof this.$ !== 'undefined') {
-                    if (this.$.reflector.isEntity(entity)) {
-                    	// please, note that dot-notated property will not have any errors / warnings / requiredness
-                    	//     - for these props it does not make sense to propagate such meta-information from
-                    	//     parent property -- the parent prop (if added in master) will show that errors concisely
-                        if (typeof entity["@" + property + "_error"] !== 'undefined') {
-                            this.bindError(entity["@" + property + "_error"].message);
-                        } else if (typeof entity["@" + property + "_warning"] !== 'undefined') {
-                            this.bindWarning(entity["@" + property + "_warning"].message);
-                        } else if (typeof entity["@" + property + "_required"] !== 'undefined') {
-                            this.bindRequired(entity["@" + property + "_required"]);
-                        } else {
-                            this.resetMessages();
-                        }
-
-                        this.bindUppercase(entity, property);
-
+                } else if (this.$.reflector.isEntity(entity)) {
+                	// please, note that dot-notated property will not have any errors / warnings / requiredness
+                	//     - for these props it does not make sense to propagate such meta-information from
+                	//     parent property -- the parent prop (if added in master) will show that errors concisely
+                    if (typeof entity["@" + property + "_error"] !== 'undefined') {
+                        this.bindError(entity["@" + property + "_error"].message);
+                    } else if (typeof entity["@" + property + "_warning"] !== 'undefined') {
+                        this.bindWarning(entity["@" + property + "_warning"].message);
+                    } else if (typeof entity["@" + property + "_required"] !== 'undefined') {
+                        this.bindRequired(entity["@" + property + "_required"]);
                     } else {
                         this.resetMessages();
-                        this.resetMetaPropDecorations();
                     }
+
+                    this.bindUppercase(entity, property);
+
                 } else {
                     this.resetMessages();
                     this.resetMetaPropDecorations();
@@ -497,8 +494,8 @@
             },
 
             resetMessages: function () {
-                this.$.decorator.isInvalid = false;
-                this.$.decorator.error = "";
+                this.$.decorator.invalid = false;
+                this._error = null;
                 this.$.decorator.classList.remove("warning");
             },
 
@@ -506,16 +503,16 @@
                 this.resetMessages();
                 this.$.decorator.classList.remove("required");
                 this.$.decorator.classList.remove("warning");
-                this.$.decorator.isInvalid = true;
-                this.$.decorator.error = msg;
+                this.$.decorator.invalid = true;
+                this._error = msg;
             },
 
             bindWarning: function (msg) {
                 this.resetMessages();
                 this.$.decorator.classList.remove("required");
                 this.$.decorator.classList.add("warning");
-                this.$.decorator.isInvalid = true;
-                this.$.decorator.error = "" + msg;
+                this.$.decorator.invalid = true;
+                this._error = "" + msg;
             },
 
             bindRequired: function (required) {
