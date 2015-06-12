@@ -19,12 +19,12 @@ import com.google.inject.Injector;
  *
  * @param <T>
  */
-public class EventSourcingResourceFactory<S extends AbstractEventSource<?, ?>> extends Restlet {
+public class EventSourcingResourceFactory extends Restlet {
 
     private final Injector injector;
-    private final Class<S> eventSourceType;
+    private final Class<? extends AbstractEventSource<?, ?>> eventSourceType;
 
-    public EventSourcingResourceFactory(final Injector injector, final Class<S> eventSourceType) {
+    public EventSourcingResourceFactory(final Injector injector, final Class<? extends AbstractEventSource<?, ?>> eventSourceType) {
         this.injector = injector;
         this.eventSourceType = eventSourceType;
     }
@@ -37,6 +37,7 @@ public class EventSourcingResourceFactory<S extends AbstractEventSource<?, ?>> e
 
                 @Override
                 public IEventSource newEventSource(final HttpServletRequest request) {
+                    System.out.println("New EVENT SOURCE has been created");
                     return injector.getInstance(eventSourceType);
                 }
 

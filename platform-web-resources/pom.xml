@@ -115,6 +115,18 @@
 			<artifactId>jetty-servlet</artifactId>
 			<version>9.2.10.v20150310</version>
 		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-continuation</artifactId>
+			<version>9.2.10.v20150310</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-servlets</artifactId>
+			<version>9.2.10.v20150310</version>
+		</dependency>
+
+
 		<!-- end of RESTlet and Jetty libraries -->
 
 		<!-- begin of Java Mail libraries -->

@@ -12,25 +12,32 @@
         }
     </style>
 
-    <body unresolved fullbleed>
-        <template id="app" is="auto-binding">
-        </template>
+    <body>
     </body>
+
     <script>
-        var app = document.querySelector("#app");
-        // TODO will need to add output to the page by chaning its content
         if (!!window.EventSource) {
             var source = new EventSource('/events');
             source.addEventListener('message', function (e) {
                 console.log("RECEIVED DATA: ", e.data);
+                document.body.innerHTML += e.data + '<br>';
+            }, false);
+
+            source.addEventListener('completed', function (e) {
+                console.log('the observable at the server-side completed');
+            }, false);
+
+            source.addEventListener('connection', function (e) {
+                console.log('connection message received from server');
             }, false);
 
             source.addEventListener('open', function (e) {
-                // Connection was opened.
+                console.log('opened connection');
             }, false);
 
             source.addEventListener('error', function (e) {
                 // TODO Might need to implement some error recovery strategy to reconnect to the server-side observable
+                console.log('an error occurred: ', e);
 
                 if (e.readyState == EventSource.CLOSED) {
                     // Connection was closed.
