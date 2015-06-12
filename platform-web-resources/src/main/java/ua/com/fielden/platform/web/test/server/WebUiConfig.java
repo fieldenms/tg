@@ -382,10 +382,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 60);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "desc", 200);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "integerProp", 30);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "bigDecimalProp", 30);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "integerProp", 42);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "bigDecimalProp", 68);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "entityProp", 40);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "booleanProp", 30);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "booleanProp", 49);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 130);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 110);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);

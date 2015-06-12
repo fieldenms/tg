@@ -86,7 +86,7 @@
             </div>
         </div>
 
-        <div hidden?="{{cardLayout}}" style="margin-top:20px">
+        <div hidden?="{{cardLayout}}" style="margin-top:8px">
 
             <table>
                 <thead>
@@ -157,7 +157,7 @@
                             </template>
                         </tr>
                     </template>
-                    <tr hidden?="{{!totals}}" style="height:20px"></tr>
+                    <tr hidden?="{{!totals}}" style="height:5px"></tr>
                     <template repeat="{{summaryRow, summaryRowIndex in gridSummary}}">
                         <tr class="summary" hidden?="{{!totals}}" style="font-weight:bold">
                             <td class="column-transparent {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}">
