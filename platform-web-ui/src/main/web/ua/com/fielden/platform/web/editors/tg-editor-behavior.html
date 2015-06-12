@@ -119,7 +119,7 @@
                  */
                 entity: {
                 	type: Object,
-                	observer: 'entityChanged'
+                	observer: '_entityChanged'
                 },
                 
                 /**
@@ -259,7 +259,7 @@
             },
             
             observers: [
-            	'bindMessages(entity, propertyName, _editorValidationMsg)'
+            	'_bindMessages(entity, propertyName, _editorValidationMsg)'
 			],
 
             ready: function () {
@@ -283,30 +283,13 @@
             /**
              * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state and 'editable' meta-state for the property).
              */
-            _isDisabled: function (state, bindingEntity, propertyName) {
-                if (state === undefined || state === 'VIEW') {
+            _isDisabled: function (currentState, bindingEntity, propertyName) {
+                if (currentState === 'VIEW') {
                     return true;
-                } else if (state === 'EDIT') {
+                } else if (currentState === 'EDIT') {
                     return this.$.reflector.isDotNotated(propertyName) ? true : (!(bindingEntity["@" + propertyName + "_editable"]));
                 } else {
-                    throw "Unsupported state exception: " + state + ".";
-                }
-            },
-
-            /** 
-             * The function for binding property value. The argument 'entity' will be changed in future. Polymer will listen to that change.
-             */
-            _bindingValue: function (entity, propertyName) {
-                // console.log("_bindingValue entity", entity);
-                if (typeof this.$ !== 'undefined') {
-                    if (this.$.reflector.isEntity(entity)) {
-                        // console.log("_bindingValue prop value", entity.get(propertyName));
-                        return this.getBindingValue(entity, propertyName);
-                    } else {
-                        return "Not yet initialised currBindingEntity, from which to get binding value!";
-                    }
-                } else {
-                    return "Not yet initialised this.$!";
+                    throw "Unsupported state exception: " + currentState + ".";
                 }
             },
 
@@ -334,7 +317,7 @@
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
             _editingValueChanged: function (newValue, oldValue) {
-                console.log("_editingValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
+                // console.log("_editingValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
                 
                 // TODO provide alternative?
                 // TODO provide alternative?
@@ -354,21 +337,17 @@
              *
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
-            entityChanged: function (newValue, oldValue) {
-                console.log("entityChanged", oldValue, newValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
-                if (typeof this.$ !== 'undefined') {
-                    if (this.$.reflector.isEntity(newValue)) {
-                    	var propValue = this.getBindingValue(newValue, this.propertyName);
-                        var newEditingValue = this.convertToString(propValue);
-                        if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
-                            this._refreshCycleStarted = false;
-                        }
-                        this._editingValue = newEditingValue;
-                    } else {
-                        console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
+            _entityChanged: function (newValue, oldValue) {
+                console.log("_entityChanged", newValue, oldValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
+                if (this.$.reflector.isEntity(newValue)) {
+                	var propValue = this.getBindingValue(newValue, this.propertyName);
+                    var newEditingValue = this.convertToString(propValue);
+                    if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
+                        this._refreshCycleStarted = false;
                     }
+                    this._editingValue = newEditingValue;
                 } else {
-                    console.log("entityChanged: Not yet initialised this.$!");
+                    console.log("_entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
                 }
             },
 
@@ -392,7 +371,7 @@
              * This method is called once the the accepted value was changed after the editor has commited its value.
              *
              * IMPORTANT: please do not override this method. This method have some additional customisation points:
-             * shouldInvokeValidation() and skipValidationAction().
+             * _shouldInvokeValidation() and _skipValidationAction().
              */
             _acceptedValueChanged: function (newValue, oldValue) {
                 console.log("_acceptedValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
@@ -403,10 +382,10 @@
                 } else {
                 	if (this.$.reflector.isEntity(this.entity)) {
 	                    this.entity.set(this.propertyName, newValue);
-    	                if (this.shouldInvokeValidation()) {
+    	                if (this._shouldInvokeValidation()) {
         	                this.validationCallback();
             	        } else {
-                	        this.skipValidationAction();
+                	        this._skipValidationAction();
                     	}
                 	}
                 }
@@ -415,14 +394,14 @@
             /**
              * Please override this method in case when no validation should occur after _acceptedValueChanged.
              */
-            shouldInvokeValidation: function () {
+            _shouldInvokeValidation: function () {
                 return true;
             },
 
             /**
-             * Please override this method in case when some custom action is needed when shouldInvokeValidation() returns 'false' after _acceptedValueChanged.
+             * Please override this method in case when some custom action is needed when _shouldInvokeValidation() returns 'false' after _acceptedValueChanged.
              */
-            skipValidationAction: function () {},
+            _skipValidationAction: function () {},
 
             /**
              * Converts the value into string representation (which is used in editing / comm values). Please implement this method in descendant editor.
@@ -455,33 +434,33 @@
                 }
             },
 
-            bindMessages: function (entity, property, _editorValidationMsg) {
-            	console.log("bindMessages: ", entity, property, _editorValidationMsg);
+            _bindMessages: function (entity, property, _editorValidationMsg) {
+            	console.log("_bindMessages: ", entity, property, _editorValidationMsg);
                 if (_editorValidationMsg !== null) {
-                    this.bindError(_editorValidationMsg);
+                    this._bindError(_editorValidationMsg);
                 } else if (this.$.reflector.isEntity(entity)) {
                 	// please, note that dot-notated property will not have any errors / warnings / requiredness
                 	//     - for these props it does not make sense to propagate such meta-information from
                 	//     parent property -- the parent prop (if added in master) will show that errors concisely
                     if (typeof entity["@" + property + "_error"] !== 'undefined') {
-                        this.bindError(entity["@" + property + "_error"].message);
+                        this._bindError(entity["@" + property + "_error"].message);
                     } else if (typeof entity["@" + property + "_warning"] !== 'undefined') {
-                        this.bindWarning(entity["@" + property + "_warning"].message);
+                        this._bindWarning(entity["@" + property + "_warning"].message);
                     } else if (typeof entity["@" + property + "_required"] !== 'undefined') {
-                        this.bindRequired(entity["@" + property + "_required"]);
+                        this._bindRequired(entity["@" + property + "_required"]);
                     } else {
-                        this.resetMessages();
+                        this._resetMessages();
                     }
 
-                    this.bindUppercase(entity, property);
+                    this._bindUppercase(entity, property);
 
                 } else {
-                    this.resetMessages();
-                    this.resetMetaPropDecorations();
+                    this._resetMessages();
+                    this._resetMetaPropDecorations();
                 }
             },
 
-            bindUppercase: function (entity, property) {
+            _bindUppercase: function (entity, property) {
                 if (typeof entity["@" + property + "_uppercase"] !== 'undefined') {
                     this.$.input.classList.add("upper-case");
                 } else {
@@ -489,34 +468,34 @@
                 }
             },
 
-            resetMetaPropDecorations: function () {
+            _resetMetaPropDecorations: function () {
                 this.$.decorator.classList.remove("required");
             },
 
-            resetMessages: function () {
+            _resetMessages: function () {
                 this.$.decorator.invalid = false;
                 this._error = null;
                 this.$.decorator.classList.remove("warning");
             },
 
-            bindError: function (msg) {
-                this.resetMessages();
+            _bindError: function (msg) {
+                this._resetMessages();
                 this.$.decorator.classList.remove("required");
                 this.$.decorator.classList.remove("warning");
                 this.$.decorator.invalid = true;
                 this._error = msg;
             },
 
-            bindWarning: function (msg) {
-                this.resetMessages();
+            _bindWarning: function (msg) {
+                this._resetMessages();
                 this.$.decorator.classList.remove("required");
                 this.$.decorator.classList.add("warning");
                 this.$.decorator.invalid = true;
                 this._error = "" + msg;
             },
 
-            bindRequired: function (required) {
-                this.resetMessages();
+            _bindRequired: function (required) {
+                this._resetMessages();
                 if (required) {
                     this.$.decorator.classList.add("required");
                 } else {
