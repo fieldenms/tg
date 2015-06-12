@@ -31,6 +31,11 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
         if (getOriginalFetch().getExcludedProps().size() > 0) {
             throw new IllegalArgumentException("The possibility to exclude certain properties can't be applied for EntityAggregates entity type fetch model!");
         }
+
+        if (getOriginalFetch().getIncludedPropsWithModels().size() + getOriginalFetch().getIncudedProps().size() == 0) {
+            throw new IllegalArgumentException("Can't accept empty fetch model for EntityAggregates entity type fetching!");
+        }
+
     }
 
     private void with(final String propName, final boolean skipEntities) {

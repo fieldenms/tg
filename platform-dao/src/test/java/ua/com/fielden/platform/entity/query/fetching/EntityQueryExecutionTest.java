@@ -10,6 +10,7 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
@@ -457,7 +458,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_retrieval_of_synthetic_entity() {
         final AggregatedResultQueryModel model = select(TgMakeCount.class).where().prop("key.key").in().values("MERC", "BMW").yield().prop("key").as("make").modelAsAggregate();
-        final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).with(fetchOnly(EntityAggregates.class).with("make", fetchAll(TgVehicleMake.class))).model());
+        final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).with(fetchAggregates().with("make", fetchAll(TgVehicleMake.class))).model());
         assertEquals("Incorrect key", 2, models.size());
     }
 
@@ -1218,7 +1219,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_aggregates_fetching() {
         final AggregatedResultQueryModel model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").yield().prop("model").as("model").modelAsAggregate();
-        final fetch<EntityAggregates> fetchModel = fetchOnly(EntityAggregates.class).with("model", fetch(TgVehicleModel.class).with("make"));
+        final fetch<EntityAggregates> fetchModel = fetchAggregates().with("model", fetch(TgVehicleModel.class).with("make"));
         final EntityAggregates value = aggregateDao.getAllEntities(from(model).with(fetchModel).model()).get(0);
         assertEquals("Incorrect key", "316", ((TgVehicleModel) value.get("model")).getKey());
         assertEquals("Incorrect key", "MERC", ((TgVehicleModel) value.get("model")).getMake().getKey());
@@ -1227,7 +1228,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_aggregates_fetching_with_nullable_props() {
         final AggregatedResultQueryModel model = select(TgFuelUsage.class).yield().prop("vehicle.station").as("station").yield().sumOf().prop("qty").as("totalQty").modelAsAggregate();
-        final fetch<EntityAggregates> fetchModel = fetchOnly(EntityAggregates.class).with("station", fetch(TgOrgUnit5.class));
+        final fetch<EntityAggregates> fetchModel = fetchAggregates().with("station", fetch(TgOrgUnit5.class));
         final EntityAggregates value = aggregateDao.getAllEntities(from(model).with(fetchModel).model()).get(0);
         assertEquals("Incorrect key", "orgunit1 orgunit2 orgunit3 orgunit4 orgunit5", ((TgOrgUnit5) value.get("station")).getKey().toString());
     }

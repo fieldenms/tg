@@ -1,5 +1,15 @@
 package ua.com.fielden.web.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -8,11 +18,9 @@ import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityAggregatesRao;
@@ -21,18 +29,6 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.InspectedEntity;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Provides a unit test for entity aggregates web resource.
@@ -110,7 +106,7 @@ public class WebResourceEntityAggregatesTestCase extends WebBasedTestCase {
         yield().beginExpr().countOf().prop("id").endExpr().as("kount").modelAsAggregate();
 
         final OrderingModel orderBy = orderBy().prop("entityPropertyOne.intProperty").asc().model();
-        final fetch<EntityAggregates> fetch = fetchOnly(EntityAggregates.class).with("kount").with("entityPropertyOne", fetch(InspectedEntity.class));
+        final fetch<EntityAggregates> fetch = fetchAggregates().with("kount").with("entityPropertyOne", fetch(InspectedEntity.class));
         try {
             final byte[] bytes = rao.export(from(model).with(orderBy).with(fetch).model(), new String[] { "entityPropertyOne.intProperty", "kount" }, new String[] {
                     "Integer Property", "Count" });
