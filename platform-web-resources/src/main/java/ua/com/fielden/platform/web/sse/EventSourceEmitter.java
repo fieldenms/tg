@@ -22,7 +22,7 @@ import javax.servlet.ServletOutputStream;
  * @author TG Team
  *
  */
-public class EventSourceEmitter implements IEmitter, Runnable {
+public final class EventSourceEmitter implements IEmitter, Runnable {
 
     private static final byte[] CRLF = new byte[] { '\r', '\n' };
     private static final byte[] EVENT_FIELD = "event: ".getBytes(StandardCharsets.UTF_8);

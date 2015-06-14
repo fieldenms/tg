@@ -1,6 +1,4 @@
-package ua.com.fielden.platform.web.sse;
-
-import javax.servlet.http.HttpServletRequest;
+package ua.com.fielden.platform.web.sse.resources;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -8,6 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import rx.Observable;
+import ua.com.fielden.platform.web.sse.AbstractEventSource;
 
 import com.google.inject.Injector;
 
@@ -33,15 +32,7 @@ public class EventSourcingResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
 
         if (Method.GET == request.getMethod()) {
-            new EventSourcingResource(getContext(), request, response) {
-
-                @Override
-                public IEventSource newEventSource(final HttpServletRequest request) {
-                    System.out.println("New EVENT SOURCE has been created");
-                    return injector.getInstance(eventSourceType);
-                }
-
-            }.handle();
+            new EventSourcingResource(injector.getInstance(eventSourceType), getContext(), request, response).handle();
         }
     }
 

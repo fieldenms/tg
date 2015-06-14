@@ -10,8 +10,7 @@ import java.io.IOException;
  * <p>
  * {@link IEmitter} instances are fully thread safe and can be used from multiple threads.
  */
-public interface IEmitter
-{
+public interface IEmitter {
     /**
      * Sends a named event with data to the client.
      * <p>

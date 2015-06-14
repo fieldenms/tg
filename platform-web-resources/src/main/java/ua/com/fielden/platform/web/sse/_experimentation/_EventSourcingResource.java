@@ -22,7 +22,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.web.sse.ServletUtils;
+import ua.com.fielden.platform.web.utils.ServletUtils;
 
 public abstract class _EventSourcingResource extends ServerResource implements Runnable {
 

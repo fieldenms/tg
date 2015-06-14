@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.sse;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -39,6 +41,8 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      */
     private Observable<T> stream;
 
+    private final Logger logger = Logger.getLogger(this.getClass());
+
     protected AbstractEventSource(final OK observableKind) {
         this.stream = observableKind.asObservable();
         if (stream == null) {
@@ -48,11 +52,12 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
 
     @Override
     public final void onOpen(final IEmitter emitter) throws IOException {
-        System.out.println("Connection established.");
+        logger.debug("client subscription in progress...");
         this.emitter = emitter;
         subscription = getStream().subscribe(new EventObserver());
 
         this.emitter.event("connection", "established");
+        logger.debug("client subscribed successfully");
     }
 
     /**
@@ -85,7 +90,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
 
     @Override
     public void onClose() {
-        System.out.println("Connection has been closed.");
+        logger.debug("client subscription connection has been closed");
         if (subscription != null) {
             subscription.unsubscribe();
         }
@@ -94,14 +99,14 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
     /**
      * A convenience implementation for an observer to receive events from the subscribed to data stream with immediate dispatch of received events to the client.
      */
-    private class EventObserver implements Observer<T> {
+    private final class EventObserver implements Observer<T> {
 
         @Override
         public void onCompleted() {
             try {
                 emitter.event("completed", "The server-side data stream has completed.");
-            } catch (final IOException e) {
-                e.printStackTrace();
+            } catch (final IOException ex) {
+                logger.error(ex);
             } finally {
                 emitter.close();
             }
@@ -112,7 +117,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
             try {
                 emitter.event("exception", e.getMessage());
             } catch (final IOException ex) {
-                ex.printStackTrace();
+                logger.error(ex);
             } finally {
                 emitter.close();
             }
@@ -122,8 +127,8 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
         public void onNext(final T value) {
             try {
                 emitter.data(eventToData(value));
-            } catch (final IOException e) {
-                e.printStackTrace();
+            } catch (final IOException ex) {
+                logger.error(ex);
             }
         }
     }

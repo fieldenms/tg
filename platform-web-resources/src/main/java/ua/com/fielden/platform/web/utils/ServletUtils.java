@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.sse;
+package ua.com.fielden.platform.web.utils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

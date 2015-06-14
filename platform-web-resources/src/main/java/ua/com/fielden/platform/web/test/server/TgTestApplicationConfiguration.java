@@ -12,7 +12,7 @@ import ua.com.fielden.platform.web.factories.LoginResourceFactory;
 import ua.com.fielden.platform.web.factories.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.sse.EventSourcingResourceFactory;
+import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 import ua.com.fielden.platform.web.system.SystemResources;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
