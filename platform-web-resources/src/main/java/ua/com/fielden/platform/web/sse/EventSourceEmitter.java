@@ -129,16 +129,19 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
 
     @Override
     public void close() {
-        synchronized (this) {
-            closed = true;
-            heartBeat.cancel(false);
-            if (scheduler != null) {
-                scheduler.shutdown();
+        try {
+            synchronized (this) {
+                closed = true;
+                heartBeat.cancel(false);
+                if (scheduler != null) {
+                    scheduler.shutdown();
+                }
             }
+            async.complete();
+            eventSource.onClose();
+        } finally {
+            shouldResourceThreadBeBlocked.set(false);
         }
-        async.complete();
-        shouldResourceThreadBeBlocked.set(false);
-        eventSource.onClose();
     }
 
     public void scheduleHeartBeat() {
