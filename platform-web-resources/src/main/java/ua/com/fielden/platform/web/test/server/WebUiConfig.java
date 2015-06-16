@@ -641,81 +641,98 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         null,
                         injector())).
                 done();
-        configMainMenu().
-                addModule("Fleet").
-                description("Fleet").
-                icon("/resources/images/fleet.svg").
-                detailIcon("/resources/images/detailed/fleet.svg").
-                bgColor("#00D4AA").
-                captionBgColor("#00AA88").
-                view(null).
-                done().
-                addModule("Import utilities").
-                description("Import utilities").
-                icon("/resources/images/importUtilities.svg").
-                detailIcon("/resources/images/detailed/importUtilities.svg").
-                bgColor("#5FBCD3").
-                captionBgColor("#2C89A0").
-                menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done().done().
-                addModule("Division daily management").
-                description("Division daily management").
-                icon("/resources/images/divisionalDailyManagment.svg").
-                detailIcon("/resources/images/detailed/divisionalDailyManagment.svg").
-                bgColor("#CFD8DC").
-                captionBgColor("#78909C").
-                menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done().done().
-                addModule("Accidents").
-                description("Accidents").
-                icon("/resources/images/accidents.svg").
-                detailIcon("/resources/images/detailed/accidents.svg").
-                bgColor("#FF9943").
-                captionBgColor("#C87137").
-                view(null).done().
-                addModule("Maintenance").
-                description("Maintenance").
-                icon("/resources/images/maintanance.svg").
-                detailIcon("/resources/images/detailed/maintanance.svg").
-                bgColor("#00AAD4").
-                captionBgColor("#0088AA").
-                view(null).done().
-                addModule("User").
-                description("User").
-                icon("/resources/images/user.svg").
-                detailIcon("/resources/images/detailed/user.svg").
-                bgColor("#FFE680").
-                captionBgColor("#FFD42A").
-                view(null).done().
-                addModule("Online reports").
-                description("Online reports").
-                icon("/resources/images/onlineReports.svg").
-                detailIcon("/resources/images/detailed/onlineReports.svg").
-                bgColor("#00D4AA").
-                captionBgColor("#00AA88").
-                view(null).done().
-                addModule("Fuel").
-                description("Fuel").
-                icon("/resources/images/fuel.svg").
-                detailIcon("/resources/images/detailed/fuel.svg").
-                bgColor("#FFE680").
-                captionBgColor("#FFD42A").
-                view(null).done().
-                addModule("Organisational").
-                description("Organisational").
-                icon("/resources/images/organisational.svg").
-                detailIcon("/resources/images/detailed/organisational.svg").
-                bgColor("#2AD4F6").
-                captionBgColor("#00AAD4").
-                view(null).done().
-                addModule("Preventive maintenance").
-                description("Preventive maintenance").
-                icon("/resources/images/preventiveMaintenence.svg").
-                detailIcon("/resources/images/detailed/preventiveMaintenence.svg").
-                bgColor("#F6899A").
-                captionBgColor("#D35F5F").
-                view(null).done().
-                setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [{colspan: 2}]]]").
-                setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[{colspan: 2}]]]").
-                setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
+
+        // here comes main menu configuration
+        // it has two purposes -- one is to provide a high level navigation structure for the application,
+        // another is to bind entity centre (and potentially other views) to respective menu items
+        configMainMenu()
+            .addModule("Fleet")
+                .description("Fleet")
+                .icon("/resources/images/fleet.svg")
+                .detailIcon("/resources/images/detailed/fleet.svg")
+                .bgColor("#00D4AA")
+                .captionBgColor("#00AA88")
+                .view(null)
+            .done()
+            .addModule("Import utilities")
+                .description("Import utilities")
+                .icon("/resources/images/importUtilities.svg")
+                .detailIcon("/resources/images/detailed/importUtilities.svg")
+                .bgColor("#5FBCD3")
+                .captionBgColor("#2C89A0")
+                .menu()
+                    .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                .done()
+            .done()
+            .addModule("Division daily management")
+                .description("Division daily management")
+                .icon("/resources/images/divisionalDailyManagment.svg")
+                .detailIcon("/resources/images/detailed/divisionalDailyManagment.svg")
+                .bgColor("#CFD8DC")
+                .captionBgColor("#78909C")
+                .menu()
+                    .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                .done()
+            .done()
+            .addModule("Accidents")
+                .description("Accidents")
+                .icon("/resources/images/accidents.svg")
+                .detailIcon("/resources/images/detailed/accidents.svg")
+                .bgColor("#FF9943")
+                .captionBgColor("#C87137")
+                .view(null)
+            .done()
+            .addModule("Maintenance")
+                .description("Maintenance")
+                .icon("/resources/images/maintanance.svg")
+                .detailIcon("/resources/images/detailed/maintanance.svg")
+                .bgColor("#00AAD4")
+                .captionBgColor("#0088AA")
+                .view(null)
+            .done()
+                .addModule("User")
+                .description("User")
+                .icon("/resources/images/user.svg")
+                .detailIcon("/resources/images/detailed/user.svg")
+                .bgColor("#FFE680")
+                .captionBgColor("#FFD42A")
+                .view(null)
+            .done()
+            .addModule("Online reports")
+                .description("Online reports")
+                .icon("/resources/images/onlineReports.svg")
+                .detailIcon("/resources/images/detailed/onlineReports.svg")
+                .bgColor("#00D4AA")
+                .captionBgColor("#00AA88").
+                view(null)
+            .done()
+                .addModule("Fuel")
+                .description("Fuel")
+                .icon("/resources/images/fuel.svg")
+                .detailIcon("/resources/images/detailed/fuel.svg")
+                .bgColor("#FFE680")
+                .captionBgColor("#FFD42A")
+                .view(null)
+            .done()
+            .addModule("Organisational")
+                .description("Organisational")
+                .icon("/resources/images/organisational.svg")
+                .detailIcon("/resources/images/detailed/organisational.svg")
+                .bgColor("#2AD4F6")
+                .captionBgColor("#00AAD4")
+                .view(null)
+            .done()
+                .addModule("Preventive maintenance")
+                .description("Preventive maintenance")
+                .icon("/resources/images/preventiveMaintenence.svg")
+                .detailIcon("/resources/images/detailed/preventiveMaintenence.svg")
+                .bgColor("#F6899A")
+                .captionBgColor("#D35F5F")
+                .view(null)
+            .done()
+            .setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [{colspan: 2}]]]")
+            .setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[{colspan: 2}]]]")
+            .setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
 
     }
 
