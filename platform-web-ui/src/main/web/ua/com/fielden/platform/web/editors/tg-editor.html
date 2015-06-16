@@ -21,8 +21,13 @@
  		            <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
                 
                 	<!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
-               		<input id="input" is="iron-input" hidden$="[[_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_boundOnChange" on-keypress="_boundOnKeypress" disabled$="[[_disabled]]"> 
+       				<input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_boundOnChange" on-keypress="_boundOnKeypress" disabled$="[[_disabled]]">
                 	<!-- </template> -->
+                	
+                	<!-- <template is="dom-if" if="[[_isSinglelineText(_editorKind)]]"> -->
+               		<input id="input" is="iron-input" hidden$="[[!_isSinglelineText(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_boundOnChange" on-keypress="_boundOnKeypress" disabled$="[[_disabled]]">
+                	<!-- </template> -->
+                	
 					
 					<!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}" -->
 						<!-- input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]" -->
@@ -82,17 +87,22 @@
         		_boundOnKeypress: Function
         	},
         	
+        	_isInteger: function (_editorKind) {
+        		return 'INTEGER' === _editorKind;
+        	},
+        	
+        	_isSinglelineText: function (_editorKind) {
+        		return 'SINGLELINE_TEXT' === _editorKind;
+        	},
+        	
             /**
              * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
              *
              * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
              */
             _actionDoesNotExist: function (action) {
+            	console.log("_actionDoesNotExist: ", action);
             	return action === null;
-            },
-            
-            _isInteger: function (_editorKind) {
-            	return 'INTEGER' === _editorKind;
             }
         });
     </script>

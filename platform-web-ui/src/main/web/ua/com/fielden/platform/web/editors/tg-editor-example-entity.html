@@ -38,12 +38,16 @@
                 
                 bindingView["@@origin"] = null;
                 
-                bindingView['integerProp'] = 23;
-                
-                bindingView["@integerProp_editable"] = true;
+                // integer
+                bindingView['integerProp'] = 23;                
+                bindingView['@integerProp_editable'] = true;
                 
                 bindingView.prop('integerProp');
                 bindingView.type().prop('integerProp');
+
+                // string
+                bindingView['stringProp'] = 'OK';                
+                bindingView['@stringProp_editable'] = true;
         		
         		console.log("this.bindingEntity", bindingView);
 				return bindingView;

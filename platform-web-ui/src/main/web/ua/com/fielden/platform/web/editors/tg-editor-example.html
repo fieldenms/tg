@@ -7,8 +7,10 @@
     
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="import" href="/resources/polymer/polymer/polymer.html">
-    <link rel="import" href="/resources/editors/tg-integer-editor.html">
     <link rel="import" href="/resources/editors/tg-editor-example-entity.html">
+
+    <link rel="import" href="/resources/editors/tg-integer-editor.html">
+    <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
 </head>
 
 <body>
@@ -26,7 +28,18 @@
   	    	action="null" 
   	    	externalRefreshCycle="null"  	    	
   	    	validation-callback="[[validationCallback]]">
-  	    </tg-integer-editor> <!-- externalRefreshCycle="ACTIVATED" -->
+  	    </tg-integer-editor>
+  	    <tg-singleline-text-editor 
+  	    	entity="[[entity]]" 
+  	    	property-name="stringProp" 
+  	    	current-state="EDIT" 
+  	    	debug 
+  	    	prop-title="String property title" 
+  	    	prop-desc="String property desc"
+  	    	action="null" 
+  	    	externalRefreshCycle="null"  	    	
+  	    	validation-callback="[[validationCallback]]">
+  	    </tg-singleline-text-editor>  	    
 
   	</template>
 </body>

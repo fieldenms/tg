@@ -38,8 +38,7 @@
     		_accepted-value="[[_acceptedValue]]" 
     		debug="[[debug]]" 
     		_bound-on-change="[[_boundOnChange]]" 
-    		_bound-on-keypress="[[_boundOnKeypress]]" 
-    		_editorKind="INTEGER">
+    		_bound-on-keypress="[[_boundOnKeypress]]">
     	</tg-editor>
     </template>
 </dom-module>
@@ -48,6 +47,12 @@
     Polymer({
     	is: 'tg-integer-editor',
     	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+    	
+    	ready: function () {
+    		Polymer.TgBehaviors.TgEditorBehavior.ready.call(this);
+    		
+    		this.$.editorDom._editorKind = "INTEGER";
+    	},
     	
         /**
          * Converts the value into string representation (which is used in edititing / comm values).

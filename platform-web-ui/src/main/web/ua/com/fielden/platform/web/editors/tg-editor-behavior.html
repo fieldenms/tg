@@ -303,15 +303,6 @@
             },
             
             /**
-             * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
-             *
-             * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
-             */
-            _actionDoesNotExist: function (action) {
-            	return action === null;
-            },
-
-            /**
              * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state and 'editable' meta-state for the property).
              */
             _isDisabled: function (currentState, bindingEntity, propertyName) {
