@@ -182,7 +182,8 @@
             	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-            	//   prefix and default values specified in 'value' specificator of the property definition.           //
+            	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
+            	//   alternatively, computing function needs to be specified). 									       //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	
             	_disabled: {
@@ -222,7 +223,7 @@
             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-            	//   prefix and default values specified in 'value' specificator of the property definition.           //
+            	//   prefix. 																				           //
             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
             	//   populate their default values in ready callback (to have these values populated in children)!     //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -256,6 +257,20 @@
                 _acceptedValue: {
                 	type: String,
                 	observer: '_acceptedValueChanged'
+                },
+                
+                _boundOnChange: {
+                    type: Function,
+                    value: function () {
+                    	return this._onChange.bind(this);
+                    }
+                },
+
+                _boundOnKeypress: {
+                    type: Function,
+                    value: function () {
+                    	return this._onKeypress.bind(this);
+                    }
                 }
             },
             
@@ -265,11 +280,26 @@
 
             ready: function () {
                 var self = this;
-                this.$.decorator.labelVisible = false;
+                this.decorator().labelVisible = false;
                 
                 //////////// INNER PROPERTIES, THAT GOVERN CHILDREN: default values population ////////////
 				this._editingValue = '';
 				this._commValue = '';
+            },
+            
+            decorator: function () {
+            	return this.$.editorDom.$.decorator;
+            },
+            
+            reflector: function () {
+            	return this.$.editorDom.$.reflector;
+            },
+            
+            decoratedInput: function () {
+            	// var contentEl = Polymer.dom(this.decorator()).querySelector('content');            	
+            	// return Polymer.dom(contentEl).getDistributedNodes()[0]; // Polymer.dom(this.$.editorDom)    // .$.input;
+            	
+            	return this.$.editorDom.$.input;
             },
             
             /**
@@ -288,7 +318,7 @@
                 if (currentState === 'VIEW') {
                     return true;
                 } else if (currentState === 'EDIT') {
-                    return this.$.reflector.isDotNotated(propertyName) ? true : (!(bindingEntity["@" + propertyName + "_editable"]));
+                    return this.reflector().isDotNotated(propertyName) ? true : (!(bindingEntity["@" + propertyName + "_editable"]));
                 } else {
                     throw "Unsupported state exception: " + currentState + ".";
                 }
@@ -300,7 +330,7 @@
              * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
              */
             getBindingValue: function(bindingEntity, dotNotatedName) {
-            	return this.$.reflector.isDotNotated(dotNotatedName) ? this.$.reflector.convert(this.getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
+            	return this.reflector().isDotNotated(dotNotatedName) ? this.reflector().convert(this.getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
             },
             
             /**
@@ -326,7 +356,7 @@
                 // TODO provide alternative?
                 // TODO provide alternative?
                 // TODO provide alternative?
-                // this.$.decorator.updateLabelVisibility(this._editingValue);
+                // this.decorator().updateLabelVisibility(this._editingValue);
 
                 if (this._refreshCycleStarted === true) {
                     this.commit();
@@ -340,7 +370,7 @@
              */
             _entityChanged: function (newValue, oldValue) {
                 console.log("_entityChanged", newValue, oldValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
-                if (this.$.reflector.isEntity(newValue)) {
+                if (this.reflector().isEntity(newValue)) {
                 	var propValue = this.getBindingValue(newValue, this.propertyName);
                     var newEditingValue = this.convertToString(propValue);
                     if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
@@ -381,7 +411,7 @@
                     this._refreshCycleStarted = false;
                     // console.log("_acceptedValueChanged should become false. _refreshCycleStarted ==", this._refreshCycleStarted);
                 } else {
-                	if (this.$.reflector.isEntity(this.entity)) {
+                	if (this.reflector().isEntity(this.entity)) {
 	                    this.entity.set(this.propertyName, newValue);
     	                if (this._shouldInvokeValidation()) {
         	                this.validationCallback();
@@ -439,7 +469,7 @@
             	console.log("_bindMessages: ", entity, property, _editorValidationMsg);
                 if (_editorValidationMsg !== null) {
                     this._bindError(_editorValidationMsg);
-                } else if (this.$.reflector.isEntity(entity)) {
+                } else if (this.reflector().isEntity(entity)) {
                 	// please, note that dot-notated property will not have any errors / warnings / requiredness
                 	//     - for these props it does not make sense to propagate such meta-information from
                 	//     parent property -- the parent prop (if added in master) will show that errors concisely
@@ -463,44 +493,44 @@
 
             _bindUppercase: function (entity, property) {
                 if (typeof entity["@" + property + "_uppercase"] !== 'undefined') {
-                    this.$.input.classList.add("upper-case");
+                    this.decoratedInput().classList.add("upper-case");
                 } else {
-                    this.$.input.classList.remove("upper-case");
+                    this.decoratedInput().classList.remove("upper-case");
                 }
             },
 
             _resetMetaPropDecorations: function () {
-                this.$.decorator.classList.remove("required");
+                this.decorator().classList.remove("required");
             },
 
             _resetMessages: function () {
-                this.$.decorator.invalid = false;
+                this.decorator().invalid = false;
                 this._error = null;
-                this.$.decorator.classList.remove("warning");
+                this.decorator().classList.remove("warning");
             },
 
             _bindError: function (msg) {
                 this._resetMessages();
-                this.$.decorator.classList.remove("required");
-                this.$.decorator.classList.remove("warning");
-                this.$.decorator.invalid = true;
+                this.decorator().classList.remove("required");
+                this.decorator().classList.remove("warning");
+                this.decorator().invalid = true;
                 this._error = msg;
             },
 
             _bindWarning: function (msg) {
                 this._resetMessages();
-                this.$.decorator.classList.remove("required");
-                this.$.decorator.classList.add("warning");
-                this.$.decorator.invalid = true;
+                this.decorator().classList.remove("required");
+                this.decorator().classList.add("warning");
+                this.decorator().invalid = true;
                 this._error = "" + msg;
             },
 
             _bindRequired: function (required) {
                 this._resetMessages();
                 if (required) {
-                    this.$.decorator.classList.add("required");
+                    this.decorator().classList.add("required");
                 } else {
-                    this.$.decorator.classList.remove("required");
+                    this.decorator().classList.remove("required");
                 }
             },
 
@@ -515,11 +545,11 @@
              * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
              */
             createContextHolder: function(inputText) {
-                var contextHolder = this.$.reflector.createContextHolder(
+                var contextHolder = this.reflector().createContextHolder(
 					this.requireSelectionCriteria, this.requireSelectedEntities, this.requireMasterEntity,
 					this.createModifiedPropertiesHolder, this.getSelectedEntities, this.getMasterEntity
                 );
-                this.$.reflector.setCustomProperty(contextHolder, "@@searchString", inputText);
+                this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
                 return contextHolder;
             },
             
@@ -534,7 +564,7 @@
         	_onChange: function (event) {
         		console.log("_onChange:", event);
         		
-        		if (!this.$.reflector.equalsEx(this._editingValue, this._commValue)) {
+        		if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
         			this.commit();
         		}
         	},
@@ -553,7 +583,7 @@
         	_onKeypress: function (event) {
         		console.log("_onKeypress:", event);
         		
-        		if (event.keyCode === 13 && !this.$.reflector.equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
+        		if (event.keyCode === 13 && !this.reflector().equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
         			this.commit();
         		}
         	}
