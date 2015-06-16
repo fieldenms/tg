@@ -271,6 +271,13 @@
                     value: function () {
                     	return this._onKeypress.bind(this);
                     }
+                },
+                
+                _boundOnKeypressForTextArea: {
+                    type: Function,
+                    value: function () {
+                    	return this._onKeypressForTextArea.bind(this);
+                    }
                 }
             },
             
@@ -577,6 +584,15 @@
         		if (event.keyCode === 13 && !this.reflector().equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
         			this.commit();
         		}
+        	},
+        	
+        	/**
+        	 * This event is invoked after some key has been pressed.
+        	 */
+        	_onKeypressForTextArea: function (event) {
+        		console.log("_onKeypress (for text area):", event);
+        		
+        		// TODO potentially, commit on CTRL+Enter?
         	}
         };
     </script>

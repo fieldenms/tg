@@ -20,6 +20,11 @@
         		validationCallback: {
         			type: Object,
         			notify: true
+        		},
+        		
+        		maxTextAreaLength: {
+        			type: Number,
+        			notify: true
         		}
         	},
         	
@@ -29,6 +34,8 @@
         		this.validationCallback = function () {
         			console.log("	validationCallback2");
         		};
+        		
+        		this.maxTextAreaLength = 30;
         	},
         	
         	createBindingEntity: function () {

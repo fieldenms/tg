@@ -11,6 +11,7 @@
 
     <link rel="import" href="/resources/editors/tg-integer-editor.html">
     <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
+    <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
 </head>
 
 <body>
@@ -39,7 +40,19 @@
   	    	action="null" 
   	    	externalRefreshCycle="null"  	    	
   	    	validation-callback="[[validationCallback]]">
-  	    </tg-singleline-text-editor>  	    
+  	    </tg-singleline-text-editor>
+  	    <tg-multiline-text-editor 
+  	    	entity="[[entity]]" 
+  	    	property-name="stringProp" 
+  	    	current-state="EDIT" 
+  	    	debug 
+  	    	prop-title="String property (area) title" 
+  	    	prop-desc="String property (area) desc"
+  	    	action="null" 
+  	    	externalRefreshCycle="null"  	    	
+  	    	validation-callback="[[validationCallback]]"
+  	    	max-length="[[maxTextAreaLength]]">
+  	    </tg-multiline-text-editor>  	  	    
 
   	</template>
 </body>
