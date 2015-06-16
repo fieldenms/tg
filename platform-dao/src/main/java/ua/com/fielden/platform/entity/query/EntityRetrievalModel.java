@@ -79,14 +79,18 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
             with(entry.getKey(), entry.getValue());
         }
-        
+
         populateProxies();
     }
-    
+
     private void populateProxies() {
         for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
-            if (!ppi.isSynthetic() && ppi.isEntityOfPersistedType() && !containsProp(ppi.getName())) {
-                getProxiedProps().add(ppi.getName());
+            if (ppi.isEntityOfPersistedType() && !containsProp(ppi.getName())) {
+                if (ppi.isCalculated()) {
+                    getProxiedPropsWithoutId().put(ppi.getName(), ppi.getJavaType());
+                } else if (!ppi.isSynthetic()) {
+                    getProxiedProps().add(ppi.getName());
+                }
             }
         }
     }
@@ -112,10 +116,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void includeAllFirstLevelPrimPropsAndKey() {
         for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
             if (!ppi.isCalculated()) {
-                final boolean skipEntities = !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) || //
-                        ppi.getType().equals(PropertyCategory.ENTITY_AS_KEY) || //
-                        ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) || //
-                ppi.getType().equals(PropertyCategory.UNION_ENTITY_HEADER));
+                final boolean skipEntities = !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) ||
+                        ppi.getType().equals(PropertyCategory.ENTITY_AS_KEY) ||
+                        ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) ||
+                        ppi.getType().equals(PropertyCategory.UNION_ENTITY_HEADER));
                 with(ppi.getName(), skipEntities);
             }
         }

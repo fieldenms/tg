@@ -17,7 +17,6 @@ public class EntityHibernateRetrievalQueryProducer {
     private final Integer pageCapacity;
     private final Logger logger = Logger.getLogger(this.getClass());
 
-    
     public EntityHibernateRetrievalQueryProducer(String sql, SortedSet<HibernateScalar> retrievedColumns, Map<String, Object> queryParams, Integer pageNumber, Integer pageCapacity) {
         super();
         this.sql = sql;
@@ -63,10 +62,10 @@ public class EntityHibernateRetrievalQueryProducer {
 
     private void specifyPaginationToHibernateQuery(SQLQuery query, final Integer pageNumber, final Integer pageCapacity) {
         if (pageNumber != null && pageCapacity != null) {
-            query.//
-            setFirstResult(pageNumber * pageCapacity).//
-            setFetchSize(pageCapacity).//
-            setMaxResults(pageCapacity);
+            query.
+                    setFirstResult(pageNumber * pageCapacity).
+                    setFetchSize(pageCapacity).
+                    setMaxResults(pageCapacity);
         }
     }
 }

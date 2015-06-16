@@ -1,32 +1,18 @@
 package ua.com.fielden.platform.entity.proxy;
 
+import static javassist.util.proxy.ProxyFactory.isProxyClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import javassist.util.proxy.ProxyFactory;
-
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
@@ -45,88 +31,109 @@ import ua.com.fielden.platform.types.Money;
 
 public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
 
-    private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
+    private final ITgVehicle coVehicle = getInstance(ITgVehicle.class);
+
+    private TgVehicle lazyLoad(String vehicle) {
+        return coVehicle.lazyLoad(coVehicle.findByKey(vehicle).getId());
+    }
+    
+    private static void shouldBeProxy(Class<? extends AbstractEntity<?>> entityClass) {
+        assertTrue("Should be proxy", isProxyClass(entityClass));
+    }
+    
+    private static void shouldNotBeProxy(Class<? extends AbstractEntity<?>> entityClass) {
+        assertFalse("Should not be proxy", isProxyClass(entityClass));
+    }
+
+    private static void shouldBeProxy(MetaProperty<?> metaProperty) {
+        assertTrue("Should be proxy", metaProperty.isProxy());
+    }
 
     @Test
     public void lazily_loaded_vehicle_should_have_all_entity_props_proxied() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR1").getId());
+        final TgVehicle vehicle = lazyLoad("CAR1");
 
-        assertTrue("Should be proxy", vehicle.getProperty("station").isProxy());
-        assertTrue("Should be proxy", vehicle.getProperty("model").isProxy());
-        assertTrue("Should be proxy", vehicle.getProperty("replacedBy").isProxy());
+        shouldBeProxy(vehicle.getProperty("station"));
+        shouldBeProxy(vehicle.getProperty("model"));
+        shouldBeProxy(vehicle.getProperty("replacedBy"));
     }
 
     @Test
     public void normally_loaded_vehicle_should_have_all_entity_props_proxied() {
-        final TgVehicle vehicle = vehicleDao.findById(vehicleDao.findByKey("CAR1").getId());
+        final TgVehicle vehicle = coVehicle.findById(coVehicle.findByKey("CAR1").getId());
 
-        assertTrue("Should be proxy", vehicle.getProperty("station").isProxy());
-        assertTrue("Should be proxy", vehicle.getProperty("model").isProxy());
-        assertTrue("Should be proxy", vehicle.getProperty("replacedBy").isProxy());
+        shouldBeProxy(vehicle.getProperty("station"));
+        shouldBeProxy(vehicle.getProperty("model"));
+        shouldBeProxy(vehicle.getProperty("replacedBy"));
     }
 
     @Test
     public void null_valued_properties_should_also_be_proxied_if_outside_fetch_model() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
+        final TgVehicle vehicle = lazyLoad("CAR2");
 
-        assertTrue("Should be proxy", vehicle.getProperty("replacedBy").isProxy());
+        shouldBeProxy(vehicle.getProperty("replacedBy"));
     }
 
     @Test
     public void accessing_lazily_loaded_property_model_should_initialise_it_with_lazy_proxy_properties() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR1").getId());
+        final TgVehicle vehicle = lazyLoad("CAR1");
 
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(vehicle.getModel().getClass()));
+        shouldBeProxy(vehicle.getModel().getClass());
 
         final TgVehicleMake make = vehicle.getModel().getMake();
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(vehicle.getModel().getClass()));
+        shouldNotBeProxy(vehicle.getModel().getClass());
 
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(make.getClass()));
+        shouldBeProxy(make.getClass());
     }
 
     @Test
     public void accessing_lazily_loaded_property_station_with_composite_key_should_be_initialised_with_non_proxied_key_members() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
+        final TgVehicle vehicle = lazyLoad("CAR2");
 
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
+        shouldBeProxy(vehicle.getStation().getClass());
 
         final TgOrgUnit4 zone = vehicle.getStation().getParent();
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
+        shouldNotBeProxy(vehicle.getStation().getClass());
 
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(zone.getClass()));
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(zone.getParent().getClass()));
+        shouldNotBeProxy(zone.getClass());
+        shouldNotBeProxy(zone.getParent().getClass());
     }
 
     @Test
     public void accessing_lazily_loaded_property_station_should_be_initialised_with_lazy_proxies_for_non_key_entity_props() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
+        final TgVehicle vehicle = lazyLoad("CAR2");
 
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
+        shouldBeProxy(vehicle.getStation().getClass());
 
         final TgFuelType fuelType = vehicle.getStation().getFuelType();
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
+        shouldNotBeProxy(vehicle.getStation().getClass());
 
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(fuelType.getClass()));
+        shouldBeProxy(fuelType.getClass());
     }
 
     @Test
     public void deep_nested_access_to_lazily_loaded_property_should_work() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
+        final TgVehicle vehicle = lazyLoad("CAR2");
 
-        assertTrue("Should be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getClass()));
+        shouldBeProxy(vehicle.getStation().getClass());
 
         final String fuelTypeCode = vehicle.getStation().getFuelType().getKey();
         assertEquals("Unexpected key value", "P", fuelTypeCode);
-        assertFalse("Should not be proxy", ProxyFactory.isProxyClass(vehicle.getStation().getFuelType().getClass()));
+        shouldNotBeProxy(vehicle.getStation().getFuelType().getClass());
     }
 
 
     @Test
-    public void not_fetched_calculated_property_should_be_proxied_and_loaded_on_demand() {
-        final TgVehicle vehicle = vehicleDao.lazyLoad(vehicleDao.findByKey("CAR2").getId());
+    public void not_fetched_calculated_property_should_be_proxied_and_but_currently_not_loaded_on_demand() {
+        final TgVehicle vehicle = lazyLoad("CAR2");
 
-        assertTrue(ProxyFactory.isProxyClass(vehicle.getLastFuelUsage().getClass()));
-        assertEquals("P", vehicle.getLastFuelUsage().getFuelType().getKey());
+        shouldBeProxy(vehicle.getLastFuelUsage().getClass());
+
+        try {
+            vehicle.getLastFuelUsage().getFuelType();
+            fail("Should have failed while trying to access [fuelType] subproperty of strictly proxied calculated property [lastFuelUsage]");
+        } catch (final Exception e) {
+        }
     }
 
     @Override

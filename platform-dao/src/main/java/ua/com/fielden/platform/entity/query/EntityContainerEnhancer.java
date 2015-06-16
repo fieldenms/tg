@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -82,16 +83,28 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
 
     protected List<EntityContainer<E>> enhanceWithProxies(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
         if (fetchModel != null && fetchModel.getEntityType() != EntityAggregates.class) {
-            final Set<String> proxiedProps = fetchModel.getProxiedProps();
 
             for (final EntityContainer<E> entContainer : entities) {
-                for (final String proxiedProp : proxiedProps) {
+                for (final String proxiedProp : fetchModel.getProxiedProps()) {
                     if (entContainer.getEntities().get(proxiedProp) != null) {
                         entContainer.getEntities().get(proxiedProp).setProxy();
                     } else {
                         //TODO this situation should disappear once possibility of explicit per-property yielding of persisted entities is removed in upcoming version of EQL 
                         logger.debug("Property [" + proxiedProp + "] is outside the list of entity props containers of entity container for type [" + fetchModel.getEntityType()
                                 + "]");
+
+                        final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), proxiedProp);
+                        EntityContainer<AbstractEntity<?>> idlessPropContainer = new EntityContainer<AbstractEntity<?>>((Class<AbstractEntity<?>>) ppi.getJavaType(), null);
+                        idlessPropContainer.setStrictProxy();
+                        entContainer.getEntities().put(proxiedProp, idlessPropContainer);
+                    }
+                }
+
+                for (final Entry<String, Class<? extends AbstractEntity<?>>> proxiedProp : fetchModel.getProxiedPropsWithoutId().entrySet()) {
+                    if (entContainer.getEntities().get(proxiedProp) == null) {
+                        EntityContainer<AbstractEntity<?>> calcPropContainer = new EntityContainer<AbstractEntity<?>>((Class<AbstractEntity<?>>) proxiedProp.getValue(), null);
+                        calcPropContainer.setStrictProxy();
+                        entContainer.getEntities().put(proxiedProp.getKey(), calcPropContainer);
                     }
                 }
             }

@@ -15,6 +15,8 @@ public interface IRetrievalModel<T extends AbstractEntity<?>> {
     
     Set<String> getProxiedProps();
     
+    Map<String, Class<? extends AbstractEntity<?>>> getProxiedPropsWithoutId();
+    
     boolean containsProp(final String propName);
     
     boolean containsProxy(final String propName);

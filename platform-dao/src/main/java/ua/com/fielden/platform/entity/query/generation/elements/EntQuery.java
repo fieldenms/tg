@@ -152,7 +152,7 @@ public class EntQuery implements ISingleOperand {
                     //                    if (ppi.isSynthetic()) {
                     //                        throw new IllegalStateException(ppi.toString());
                     //                    }
-                    final boolean skipProperty = ppi.isSynthetic() || //
+                    final boolean skipProperty = ppi.isSynthetic() ||
                             ppi.isVirtual() ||
                             ppi.isCollection() ||
                             (ppi.isAggregatedExpression() && !isResultQuery())
@@ -263,14 +263,17 @@ public class EntQuery implements ISingleOperand {
         // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
 
         boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
+        boolean presentInProxiedCalculatedProps = fetchModel.getProxiedPropsWithoutId().containsKey(yield.getAlias()); 
         boolean isOfEntityType = yieldIsOfEntityType(yield);
         boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
-
+        logger.debug("shouldYieldBeRemoved: yield [" + yield.getAlias() + "] presentInFetchModel [" + presentInFetchModel + "] isOfEntityType [" + isOfEntityType + "] presentInProxiedCalculatedProps [" + presentInProxiedCalculatedProps + "]");
         return (!isOfEntityType && !presentInFetchModel)
                 ||
                 (allFetchedPropsAreAggregatedExpressions && !presentInFetchModel)
                 ||
-                (allFetchedPropsAreAggregatedExpressions && isHeaderOfMoneyType);
+                (allFetchedPropsAreAggregatedExpressions && isHeaderOfMoneyType)
+                ||
+                presentInProxiedCalculatedProps;
     }
 
     private void adjustOrderBys() {
@@ -432,8 +435,8 @@ public class EntQuery implements ISingleOperand {
         }
     }
 
-    public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
-            final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, //
+    public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category,
+            final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username,
             final EntQueryGenerator generator, final IRetrievalModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
@@ -472,15 +475,6 @@ public class EntQuery implements ISingleOperand {
                 result.put(propStage, newStageProps);
             }
         }
-
-        //	for (final Entry<EntPropStage, List<EntProp>> entProp : result.entrySet()) {
-        //	    System.out.println("           " + entProp.getKey());
-        //	    for (final EntProp prop : entProp.getValue()) {
-        //		System.out.println("                          " + prop);
-        //	    }
-        //
-        //	}
-
         return result;
     }
 
@@ -497,24 +491,20 @@ public class EntQuery implements ISingleOperand {
             source.populateSourceItems(sourceAndItsJoinType.getValue());
         }
 
-        enhanceYieldsModel(); //!! adds new properties in yield section
-        //System.out.println("                         1------------------ " + yields.getYields());
+        enhanceYieldsModel();
         adjustYieldsModelAccordingToFetchModel(fetchModel);
-        //System.out.println("                         2------------------ " + yields.getYields());
-        adjustOrderBys(); // enahnce order by model with yields and transforming unrecognised yieldedName into prop(..) calls
+        adjustOrderBys();
         enhanceGroupBysModelFromYields();
         enhanceGroupBysModelFromOrderBys();
 
         int countOfUnprocessed = 1;
 
         while (countOfUnprocessed > 0) {
-            //System.out.println("---------------------------generateMissingSources for getSources().count = " + getSources().getAllSourcesAndTheirJoinType().size());
             for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
                 final ISource source = sourceAndItsJoinType.getKey();
                 getSources().getCompounds().addAll(source.generateMissingSources()); //source.getReferencingProps()
             }
 
-            //System.out.println("---------------------------countOfUnprocessed = " + countOfUnprocessed);
             final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
             associateSubqueriesWithMasterQuery(immediateSubqueries);
 
@@ -523,7 +513,6 @@ public class EntQuery implements ISingleOperand {
             propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries, EntPropStage.UNPROCESSED));
 
             countOfUnprocessed = propsToBeResolved.size();
-            //System.out.println("================propsToBeResolved preliminary=========" + propsToBeResolved);
 
             unresolvedProps.addAll(resolveProps(propsToBeResolved, generator));
 
@@ -572,8 +561,6 @@ public class EntQuery implements ISingleOperand {
                     unresolvedPropsFromSubqueries.add(entProp);
                 }
             }
-
-            //entQuery.unresolvedProps.clear();
         }
         return unresolvedPropsFromSubqueries;
     }
