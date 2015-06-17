@@ -17,10 +17,10 @@ public final class CollectionContainer<R extends AbstractEntity<?>> {
         this.containers = containers;
     }
 
-    public Collection<R> instantiate(final EntityFactory entFactory, final boolean userViewOnly,  final ProxyMode proxyMode) {
+    public Collection<R> instantiate(final EntityFactory entFactory, final boolean userViewOnly,  final ProxyMode proxyMode, final ProxyCache cache) {
         for (final EntityContainer<R> container : containers) {
             if (!container.notYetInitialised()) {
-                data.add(container.instantiate(entFactory, userViewOnly, proxyMode));
+                data.add(container.instantiate(entFactory, userViewOnly, proxyMode, cache));
             }
         }
 

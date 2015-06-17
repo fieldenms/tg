@@ -35,8 +35,8 @@ public class EntityFetcher {
     private <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity, final ProxyMode proxyMode) {
         try {
             final DateTime st = new DateTime();
-            EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
-            List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(queryModel, pageNumber, pageCapacity);
+            final EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
+            final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(queryModel, pageNumber, pageCapacity);
             final List<E> result = instantiateFromContainers(containers, queryModel.isLightweight(), proxyMode);
             final Period pd = new Period(st, new DateTime());
             logger.info("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + result.size());
@@ -49,8 +49,9 @@ public class EntityFetcher {
 
     private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final boolean userViewOnly, final ProxyMode proxyMode) {
         final List<E> result = new ArrayList<E>();
+        final ProxyCache cache = new ProxyCache();
         for (final EntityContainer<E> entityContainer : containers) {
-            result.add(entityContainer.instantiate(executionContext.getEntityFactory(), userViewOnly, proxyMode));
+            result.add(entityContainer.instantiate(executionContext.getEntityFactory(), userViewOnly, proxyMode, cache));
         }
         return result;
     }
