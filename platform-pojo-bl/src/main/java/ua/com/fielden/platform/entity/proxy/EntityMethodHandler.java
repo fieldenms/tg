@@ -33,7 +33,7 @@ public class EntityMethodHandler implements MethodHandler {
             final String propertyName,
             final ProxyMode mode) {
         if (owner == null && mode.equals(ProxyMode.LAZY)) {
-            throw new IllegalArgumentException("Owner entity is required.");
+            throw new IllegalArgumentException("Owner entity is required in LAZY mode.");
         }
         if (type == null) {
             throw new IllegalArgumentException("Property type is required.");
