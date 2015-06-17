@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.persistence;
 
+import java.util.Collections;
+
 import org.hibernate.event.PostLoadEvent;
 import org.hibernate.event.def.DefaultPostLoadEventListener;
 
@@ -20,7 +22,7 @@ public class MetaPostLoadListener extends DefaultPostLoadEventListener {
     public void onPostLoad(final PostLoadEvent event) {
         final AbstractEntity<?> instance = (AbstractEntity<?>) event.getEntity();
         instance.beginInitialising();
-        EntityUtils.handleMetaProperties(instance);
+        EntityUtils.handleMetaProperties(instance, Collections.emptySet());
         instance.endInitialising();
         super.onPostLoad(event);
     }

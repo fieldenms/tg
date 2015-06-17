@@ -17,14 +17,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @Ignore
 @CompanionObject(ITgVehicleMake.class)
 public class TgVehicleMake extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgVehicleMake() {
-    }
-
     @IsProperty
     @Title(value = "Non-persisted prop", desc = "Desc")
     private String npProp;

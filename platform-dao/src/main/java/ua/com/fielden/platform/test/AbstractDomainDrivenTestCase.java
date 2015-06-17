@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -36,6 +37,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  */
 public abstract class AbstractDomainDrivenTestCase {
+    transient private final Logger logger = Logger.getLogger(this.getClass());
 
     private static final List<String> dataScript = new ArrayList<String>();
     private static final List<String> truncateScript = new ArrayList<String>();
@@ -107,6 +109,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
         if (domainPopulated) {
             // apply data population script
+            logger.debug("Executing data population script.");
             exec(dataScript, conn);
         } else {
             populateDomain();
@@ -150,8 +153,8 @@ public abstract class AbstractDomainDrivenTestCase {
     public final void afterTest() throws Exception {
         final Connection conn = createConnection();
 
-        System.out.println("TRUNCATE TABLES");
         // TODO need to switch off referential integrity
+        logger.debug("Executing tables truncation script.");
         exec(truncateScript, conn);
     }
 

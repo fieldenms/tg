@@ -817,9 +817,9 @@ public class EntityUtils {
      * @param instance
      * @return
      */
-    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final String ... proxiesProps) {
-        final List<String> proxied = Arrays.asList(proxiesProps);
-        if (!(instance instanceof AbstractUnionEntity) && instance.getProperties().containsKey("key")) {
+    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final Set<String> proxiedProps) {
+        boolean unionEntity = instance instanceof AbstractUnionEntity;
+        if (!unionEntity && instance.getProperties().containsKey("key")) {
             final Object keyValue = instance.get("key");
             if (keyValue != null) {
                 // handle property "key" assignment
@@ -827,16 +827,19 @@ public class EntityUtils {
             }
         }
 
-        for (final MetaProperty meta : instance.getProperties().values()) {
-            if (meta != null && !(COMMON_PROPS.contains(meta.getName()) && instance instanceof AbstractUnionEntity) && !(proxied.contains(meta.getName()))) {
-                final Object newOriginalValue = instance.get(meta.getName());
-                meta.setOriginalValue(newOriginalValue);
-                if (!meta.isCollectional()) {
-                    meta.define(newOriginalValue);
+        for (final MetaProperty metaProp : instance.getProperties().values()) {
+            boolean notNull = metaProp != null;
+            boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
+            boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
+            if (notNull && notCommonPropOfUnionEntity && notProxied) {
+                final Object newOriginalValue = instance.get(metaProp.getName());
+                metaProp.setOriginalValue(newOriginalValue);
+                if (!metaProp.isCollectional()) {
+                    metaProp.define(newOriginalValue);
                 }
             }
         }
-        if (!(instance instanceof AbstractUnionEntity)) {
+        if (!unionEntity) {
             instance.setDirty(false);
         }
 
