@@ -23,6 +23,12 @@
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+
+<link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+
 <!-- <core-style id="datetime-icon-decorator">
 
     core-icon-button /deep/ core-icon[role="img"] {fill: {{g.paperInput.labelColor}};}
@@ -70,12 +76,19 @@
                 <paper-icon-button on-tap="showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
             </div>
     	</tg-editor>
-    	<p>TTUB</p>
-        <!-- <paper-action-dialog class="date-time-picker" backdrop autoCloseDisabled opened="[[_calendarVisible]]">
-            <tg-calendar id="datePicker" auto-vertical pickTime></tg-calendar>
-            <paper-button affirmative on-tap="{{cancelDate}}">Cancel</paper-button>
-            <paper-button affirmative autofocus on-tap="{{acceptDate}}">Ok</paper-button>
-        </paper-action-dialog> -->
+        <paper-dialog 
+        	class="date-time-picker" 
+        	with-backdrop 
+        	no-cancel-on-outside-click 
+        	opened="[[_calendarVisible]]" 
+        	entry-animation="scale-up-animation"
+        	exit-animation="fade-out-animation">
+        	
+        	<p>TEST</p>
+            <!-- <tg-calendar id="datePicker" auto-vertical pick-time></tg-calendar> -->
+            <paper-button dialog-dismiss affirmative on-tap="_cancelDate">Cancel</paper-button>
+            <paper-button dialog-confirm affirmative autofocus on-tap="_acceptDate">Ok</paper-button>
+        </paper-dialog>
     </template>
 </dom-module>
 
@@ -162,7 +175,7 @@
                     this.$.datePicker.selectedHour = 0;
                     this.$.datePicker.selectedMinute = 0;
                 },
-                acceptDate: function () {
+                _acceptDate: function () {
                     this._isAcceptingDateFromPicker = true;
                     this._editingValue = moment(this.$.datePicker.selectedDate)
                         .hour(this.$.datePicker.selectedHour)
@@ -181,7 +194,7 @@
                     }
                 },
 
-                cancelDate: function () {
+                _cancelDate: function () {
                     this.decoratedInput().focus();
                 }
             });
