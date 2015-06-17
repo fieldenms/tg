@@ -20,6 +20,9 @@
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+
 <!-- <core-style id="datetime-icon-decorator">
 
     core-icon-button /deep/ core-icon[role="img"] {fill: {{g.paperInput.labelColor}};}
@@ -66,8 +69,7 @@
     		_bound-on-keypress-for-text-area="[[_boundOnKeypressForTextArea]]"
     		>
    		    <div id="icon" class="custom-icon-buttons">
-   		    	<p>BUTT</p>
-                <!-- <core-icon-button on-click="showCalendar" icon="today" disabled$="[[_disabled]]"></core-icon-buton> -->
+                <paper-icon-button on-tap="showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
             </div>
     	</tg-editor>
     	<p>TTUB</p>
