@@ -12,6 +12,7 @@
     <link rel="import" href="/resources/editors/tg-integer-editor.html">
     <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
+    <link rel="import" href="/resources/editors/tg-datetime-picker.html">
 </head>
 
 <body>
@@ -52,7 +53,19 @@
   	    	externalRefreshCycle="null"  	    	
   	    	validation-callback="[[validationCallback]]"
   	    	max-length="[[maxTextAreaLength]]">
-  	    </tg-multiline-text-editor>  	  	    
+  	    </tg-multiline-text-editor>
+  	    
+   	    <tg-datetime-picker 
+  	    	entity="[[entity]]" 
+  	    	property-name="dateProp" 
+  	    	current-state="EDIT" 
+  	    	debug 
+  	    	prop-title="Date property title" 
+  	    	prop-desc="Date property desc"
+  	    	action="null" 
+  	    	externalRefreshCycle="null"  	    	
+  	    	validation-callback="[[validationCallback]]">
+  	    </tg-datetime-picker>
 
   	</template>
 </body>
