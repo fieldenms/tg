@@ -33,7 +33,7 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
-        assertEquals("EntityExists validator: Could not find entity Cat2 (ua.com.fielden.platform.sample.domain.TgCategory)", result.getMessage());
+        assertEquals("Tg Category Cat2 exists, but is not active.", result.getMessage());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
-        assertEquals("EntityExists validator: Could not find entity Cat2 (ua.com.fielden.platform.sample.domain.TgCategory)", result.getMessage());
+        assertEquals("Tg Category Cat2 does not exist.", result.getMessage());
     }
 
     @Test
@@ -87,7 +87,7 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
-        assertEquals("EntityExists validator: Could not find entity Cat2 (ua.com.fielden.platform.sample.domain.TgCategory)", result.getMessage());
+        assertEquals("Tg Category Cat2 does not exist.", result.getMessage());
     }
 
     @Test

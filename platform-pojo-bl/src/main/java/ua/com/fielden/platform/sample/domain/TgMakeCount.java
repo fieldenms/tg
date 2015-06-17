@@ -17,14 +17,15 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @KeyType(TgVehicleMake.class)
 @CompanionObject(ITgMakeCount.class)
 public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
-    // TODO support make property being entity key (KeyType(TgVehicleMake))
-    private static final long serialVersionUID = 1L;
-    private static final EntityResultQueryModel<TgMakeCount> model_ = select(TgVehicleModel.class).groupBy().prop("make"). //
-    yield().prop("make").as("key"). //
-    yield().countAll().as("count"). //
-    yield().countAll().as("cost.amount"). //
-    yield().countAll().as("cost"). //
-    modelAsEntity(TgMakeCount.class);
+
+    private static final EntityResultQueryModel<TgMakeCount> model_ = select(TgVehicleModel.class).
+            groupBy().prop("make").
+            yield().prop("make").as("key").
+            yield().countAll().as("count").
+            yield().countAll().as("cost.amount").
+            yield().countAll().as("cost").
+            modelAsEntity(TgMakeCount.class);
+
     @IsProperty
     @Title(value = "Count", desc = "Vehicle Model Count per Make")
     private BigInteger count;
@@ -52,11 +53,5 @@ public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
 
     public BigInteger getCount() {
         return count;
-    }
-
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgMakeCount() {
     }
 }

@@ -34,7 +34,6 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     private final Class<? extends Comparable> keyType;
     private final Class<T> entityType;
-    private final QueryExecutionModel<T, EntityResultQueryModel<T>> defaultModel;
     private IFetchProvider<T> fetchProvider;
 
     protected boolean getFilterable() {
@@ -53,7 +52,6 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         }
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
-        this.defaultModel = produceDefaultQueryExecutionModel(entityType);
     }
 
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
@@ -64,7 +62,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     }
 
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> getDefaultQueryExecutionModel() {
-        return defaultModel;
+        return produceDefaultQueryExecutionModel(entityType);
     }
 
     @Override

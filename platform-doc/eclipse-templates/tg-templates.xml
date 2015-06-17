@@ -305,6 +305,9 @@ ${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch,
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll,
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly,
                     ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select)}   
 
 ${:import(ua.com.fielden.platform.entity.query.model.EntityResultQueryModel,

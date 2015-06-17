@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import ua.com.fielden.platform.entity.query.FetchModel;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 
 public class EntQuery2 implements ISingleOperand2 {
@@ -19,7 +20,7 @@ public class EntQuery2 implements ISingleOperand2 {
     }
 
     public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class resultType, final QueryCategory category, //
-            final FetchModel fetchModel) {
+            final IRetrievalModel<? extends AbstractEntity<?>> fetchModel) {
         super();
         this.category = category;
         this.sources = queryBlocks.getSources();

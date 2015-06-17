@@ -10,9 +10,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
@@ -22,16 +25,17 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class EntityEnhancer<E extends AbstractEntity<?>> {
-    private final EntityFetcher fetcher;
+public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
+    private final EntityContainerFetcher fetcher;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
+    transient private final Logger logger = Logger.getLogger(this.getClass());
 
-    protected EntityEnhancer(final EntityFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser) {
+    protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.fetcher = fetcher;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
     }
 
-    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final FetchModel<E> fetchModel) throws Exception {
+    protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
         if (fetchModel != null) {
             final Map<String, fetch<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getFetchModels();
 
@@ -74,20 +78,52 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             }
         }
 
+        return enhanceWithProxies(entities, fetchModel);
+    }
+
+    protected List<EntityContainer<E>> enhanceWithProxies(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
+        if (fetchModel != null && fetchModel.getEntityType() != EntityAggregates.class) {
+
+            for (final EntityContainer<E> entContainer : entities) {
+                for (final String proxiedProp : fetchModel.getProxiedProps()) {
+                    if (entContainer.getEntities().get(proxiedProp) != null) {
+                        entContainer.getEntities().get(proxiedProp).setProxy();
+                    } else {
+                        //TODO this situation should disappear once possibility of explicit per-property yielding of persisted entities is removed in upcoming version of EQL 
+                        logger.debug("Property [" + proxiedProp + "] is outside the list of entity props containers of entity container for type [" + fetchModel.getEntityType()
+                                + "]");
+
+                        final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), proxiedProp);
+                        EntityContainer<AbstractEntity<?>> idlessPropContainer = new EntityContainer<AbstractEntity<?>>((Class<AbstractEntity<?>>) ppi.getJavaType(), null);
+                        idlessPropContainer.setStrictProxy();
+                        entContainer.getEntities().put(proxiedProp, idlessPropContainer);
+                    }
+                }
+
+                for (final Entry<String, Class<? extends AbstractEntity<?>>> proxiedProp : fetchModel.getProxiedPropsWithoutId().entrySet()) {
+                    if (entContainer.getEntities().get(proxiedProp) == null) {
+                        EntityContainer<AbstractEntity<?>> calcPropContainer = new EntityContainer<AbstractEntity<?>>((Class<AbstractEntity<?>>) proxiedProp.getValue(), null);
+                        calcPropContainer.setStrictProxy();
+                        entContainer.getEntities().put(proxiedProp.getKey(), calcPropContainer);
+                    }
+                }
+            }
+        }
+
         return entities;
     }
 
     private Map<Long, List<EntityContainer<E>>> getEntityPropertyIds(final List<EntityContainer<E>> entities, final String propertyName) {
         final Map<Long, List<EntityContainer<E>>> propValuesMap = new HashMap<Long, List<EntityContainer<E>>>();
         for (final EntityContainer<E> entity : entities) {
-            if (entity == null) {
+            if (entity.isEmpty()) {
                 throw new IllegalStateException("Entity is null!");
             }
             if (entity.getEntities() == null) {
                 throw new IllegalStateException("Entity.getEntities() is null!");
             }
             final EntityContainer<? extends AbstractEntity<?>> propEntity = entity.getEntities().get(propertyName);
-            if (propEntity != null && propEntity.getId() != null) {
+            if (propEntity != null && !propEntity.isEmpty() && propEntity.getId() != null) {
                 if (!propValuesMap.containsKey(propEntity.getId())) {
                     propValuesMap.put(propEntity.getId(), new ArrayList<EntityContainer<E>>());
                 }
@@ -101,11 +137,16 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
         final List<EntityContainer<T>> propValues = new ArrayList<EntityContainer<T>>();
         for (final EntityContainer<E> entity : entities) {
             final EntityContainer<T> prop = (EntityContainer<T>) entity.getEntities().get(propName);
-            if (prop != null && !prop.notYetInitialised()) {
+            if (prop != null && !prop.isEmpty() && !prop.notYetInitialised()) {
                 propValues.add(prop);
             }
         }
         return propValues;
+    }
+
+    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
+        return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<T>(fetchModel, domainMetadataAnalyser) : //
+                new EntityRetrievalModel<T>(fetchModel, domainMetadataAnalyser);
     }
 
     private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final fetch<T> fetchModel, final String linkPropName)
@@ -120,7 +161,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
                     : //
-                    new EntityEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, new FetchModel(fetchModel, domainMetadataAnalyser));
+                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, produceRetrievalModel(fetchModel));
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -150,7 +191,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
             getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
                     : //
-                    new EntityEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, new FetchModel(fetchModel, domainMetadataAnalyser));
+                    new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser).enhance(retrievedPropertyInstances, produceRetrievalModel(fetchModel));
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -179,7 +220,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             }
             final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
             final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(AbstractEntity.ID).in().values(batch).model();
-            final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
+            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
             result.addAll(properties);
             from = to;
             to = to + batchSize;
@@ -242,7 +283,7 @@ public class EntityEnhancer<E extends AbstractEntity<?>> {
             }
             final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
             final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
-            final List<EntityContainer<T>> properties = fetcher.listContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
+            final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(from(currTypePropertyModel).with(fetchModel).model(), null, null);
             result.addAll(properties);
             // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
             from = to;
