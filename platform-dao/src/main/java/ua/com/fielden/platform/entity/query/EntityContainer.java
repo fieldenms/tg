@@ -3,9 +3,8 @@ package ua.com.fielden.platform.entity.query;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -87,7 +86,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
         entity.beginInitialising();
 
-        final List<String> proxiedProps = new ArrayList<>();
+        final Set<String> proxiedProps = new HashSet<>();
 
         final boolean unionEntity = isUnionEntityType(resultType);
 
@@ -115,7 +114,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         }
 
         if (!userViewOnly) {
-            EntityUtils.handleMetaProperties(entity, proxiedProps.toArray(new String[] {}));
+            EntityUtils.handleMetaProperties(entity, proxiedProps);
         }
 
         entity.endInitialising();
