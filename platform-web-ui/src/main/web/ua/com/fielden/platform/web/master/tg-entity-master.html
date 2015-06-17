@@ -186,7 +186,7 @@
                             // console.log("_title entity type prop title", entity.type().prop(property).title());
                             return entity.type().prop(property).title();
                         } else {
-                            return "Not yet initialised currEntity, from which to get title!";
+                            return "Not yet initialised _currEntity, from which to get title!";
                         }
                     } else {
                         return "Not yet initialised this.$!";
@@ -201,7 +201,7 @@
                         if (this.$.reflector.isEntity(entity)) {
                             return entity.type().prop(property).desc();
                         } else {
-                            return "Not yet initialised currEntity, from which to get desc!";
+                            return "Not yet initialised _currEntity, from which to get desc!";
                         }
                     } else {
                         return "Not yet initialised this.$!";
@@ -238,7 +238,7 @@
 
                 //////////////////////////////////////// SAVING ////////////////////////////////////////
                 /**
-                 * Starts the process of entity saving (based on currBindingEntity).
+                 * Starts the process of entity saving (based on _currBindingEntity).
                  */
                 save: function () {
                     var self = this;
@@ -250,7 +250,7 @@
 
                     self.startRefreshCycleModeForEditors();
 
-                    var holder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    var holder = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     self.$.validator.abortValidationIfAny();
 

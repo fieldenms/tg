@@ -140,8 +140,8 @@
                 console.log("onValidated", customObject);
             },
 
-            extractModifiedPropertiesHolder: function (bindingEntity, originalBindingEntity) {
-                var modPropHolder = this.super([bindingEntity, originalBindingEntity]);
+            extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
+                var modPropHolder = this.super([bindingEntity, _originalBindingEntity]);
                 if (this.$.reflector.isEntity(bindingEntity)) {
                     modPropHolder["@@metaValues"] = {};
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
@@ -302,7 +302,7 @@
                 self.startRefreshCycleModeForEditors();
 
                 if (isRunAction) {
-                    self.persistedModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self.currBindingEntity, self.originalBindingEntity);
+                    self.persistedModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                 }
 
                 // cancel previous validation before starting saving process -- it includes validation process internally!
