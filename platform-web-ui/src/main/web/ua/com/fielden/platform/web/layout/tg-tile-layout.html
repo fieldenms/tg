@@ -5,16 +5,16 @@
 <dom-module id="tg-tile-layout">
 
     <style>
-        tg-tile-layout .tile {
+        :host ::content .tile {
             position: absolute;
         }
     </style>
 
     <template>
         <tg-app-config id="appConfig"></tg-app-config>
-        <iron-media-query query="max-width: [[calcMaxMobileWidth()]]px" querymatches="{{mobileScreen}}"></iron-media-query>
-        <iron-media-query query="(min-width: [[calcMinTabletWidth()]]px) and (max-width: [[calcMaxTabletWidth()]]px)" querymatches="{{tabletScreen}}"></iron-media-query>
-        <iron-media-query query="min-width: [[calcMinDesktopWidth()]]px" querymatches="{{desktopScreen}}"></iron-media-query>
+        <iron-media-query query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
+        <iron-media-query query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
+        <iron-media-query query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>
         <content id="items" select=".tile"></content>
     </template>
 
@@ -39,7 +39,7 @@
                 });
                 this.rows = rows;
                 this.cols = cols;
-                Array.prototype.forEach.call(this.$.items.getDistributedNodes(), function (item, itemIndex) {
+                Array.prototype.forEach.call(Polymer.dom(this.$.items).getDistributedNodes(), function (item, itemIndex) {
                     item.style.top = 100 * layout[itemIndex].y / rows + "%";
                     item.style.left = 100 * layout[itemIndex].x / cols + "%";
                     item.style.width = 100 * layout[itemIndex].width / cols + "%";
@@ -52,17 +52,17 @@
             },
             setMinDimensions = function () {
                 var self = this;
-                if (self.minCellHeight) {
+                if (self.minCellHeight && self.rows) {
                     self.style.minHeight = "calc(" + self.minCellHeight + " * " + self.rows + ")";
                 }
-                if (self.minCellWidth) {
+                if (self.minCellWidth && self.cols) {
                     self.style.minWidth = "calc(" + self.minCellWidth + " * " + self.cols + ")";
                 }
-                Array.prototype.forEach.call(this.$.items.getDistributedNodes(), function (item, itemIndex) {
-                    if (self.minCellHeight) {
+                Array.prototype.forEach.call(Polymer.dom(this.$.items).getDistributedNodes(), function (item, itemIndex) {
+                    if (self.minCellHeight && item.rows) {
                         item.style.minHeight = "calc(" + self.minCellHeight + " * " + item.rows + ")";
                     }
-                    if (self.minCellWidth) {
+                    if (self.minCellWidth && item.cols) {
                         item.style.minWidth = "calc(" + self.minCellWidth + " * " + item.cols + ")";
                     }
                 });
@@ -236,61 +236,62 @@
             properties: {
                 whenDesktop: {
                     type: Array,
-                    readOnly: true,
                     observer: "_whenDesktopChanged"
                 },
                 whenTablet: {
                     type: Array,
-                    readOnly: true,
                     observer: "_whenTabletChanged"
                 },
                 whenMobile: {
                     type: Array,
-                    readOnly: true,
                     observer: "_whenMobileChanged"
                 },
                 minCellHeight: {
                     type: String,
-                    readOnly: true,
                     observer: "_minCellHeightChanged"
                 },
                 minCellWidth: {
                     type: String,
-                    readOnly: true,
                     observer: "_minCellWidthChanged"
                 },
                 desktopScreen: {
                     type: Boolean,
-                    notify: true,
                     readOnly: true,
                     observer: "_handleDesktopScreen"
                 },
                 tabletScreen: {
                     type: Boolean,
-                    notify: true,
                     readOnly: true,
                     observer: "_handleTabletScreen"
                 },
                 mobileScreen: {
                     type: Boolean,
-                    notify: true,
                     readOnly: true,
                     observer: "_handleMobileScreen"
                 }
             },
 
-            _handleMobileScreen: function (e) {
-                if (e.detail.matches && this.whenMobile) {
+            _mobileChanged: function(e, detail) {
+                this._setMobileScreen(detail.value);
+            },
+            _tabletChanged: function(e, detail) {
+                this._setTabletScreen(detail.value);
+            },
+            _desktopChanged: function(e, detail) {
+                this._setDesktopScreen(detail.value);
+            },
+            _handleMobileScreen: function (newValue, oldValue) {
+                if (newValue && this.whenMobile) {
                     setLayout.bind(this)(this.whenMobile);
                 }
             },
-            _handleTabletScreen: function (e) {
-                if (e.detail.matches && this.whenTablet) {
+            _handleTabletScreen: function (newValue, oldValue) {
+                if (newValue && this.whenTablet) {
                     setLayout.bind(this)(this.whenTablet);
                 }
             },
-            _handleDesktopScreen: function (e) {
-                if (e.detail.matches && this.whenDesktop) {
+            _handleDesktopScreen: function (newValue, oldValue) {
+                if (newValue && this.whenDesktop) {
                     setLayout.bind(this)(this.whenDesktop);
                 }
             },
@@ -315,17 +316,14 @@
             _minCellWidthChanged: function (newValue, oldValue) {
                 setMinDimensions.bind(this)();
             },
-            calcMaxMobileWidth: function() {
-                return this.$.appConfig.minTabletWidth - 1;
+            _calcMobileQuery: function() {
+                return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
             },
-            calcMinTabletWidth: function() {
-                return this.$.appConfig.minTabletWidth;
+            _calcTabletQuery: function() {
+                return "(min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 1) + "px)";
             },
-            calcMaxTabletWidth: function() {
-                return this.$.appConfig.minDesktopWidth - 1;
-            },
-            calcMinDesktopWidth: function() {
-                return this.$.appConfig.minDesktopWidth;
+            _calcDesktopQuery: function() {
+                return "min-width: " + this.$.appConfig.minDesktopWidth + "px";
             }
         });
     })()
