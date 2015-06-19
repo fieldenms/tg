@@ -18,9 +18,8 @@
     		_accepted-value="[[_acceptedValue]]" 
     		debug="[[debug]]" 
     		_on-change="[[_onChange]]" 
-    		_on-keypress="[[_onKeypress]]"
-    		_maxLength="[[maxLength]]"
     		_on-keypress-for-text-area="[[_onKeypressForTextArea]]"
+    		_maxLength="[[maxLength]]"
     		>
     	</tg-editor>
     </template>
@@ -52,7 +51,25 @@
         	 */
         	maxLength: {
     			type: Number
-    		}
+    		},
+    		
+            
+        	/**
+        	 * This specific textArea's event is invoked after some key has been pressed.
+        	 *
+        	 * Designated to be bound to child elements.
+        	 */
+            _onKeypressForTextArea: {
+            	type: Function,
+            	value: function () {
+            		return (function (event) {
+                		console.log("_onKeypress (for text area):", event);
+                		this.__test(); // to demonstrate, that the native '__test' function will be invoked in other contexts!
+                		
+                		// TODO potentially, commit on CTRL+Enter?
+                	}).bind(this);
+            	}
+            }
     	},
     	
         /**

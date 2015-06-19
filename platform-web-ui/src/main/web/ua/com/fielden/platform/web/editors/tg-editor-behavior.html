@@ -293,23 +293,6 @@
                     		}
                     	}).bind(this);
                 	}
-                },
-                
-            	/**
-            	 * This specific textArea's event is invoked after some key has been pressed.
-            	 *
-            	 * Designated to be bound to child elements.
-            	 */
-                _onKeypressForTextArea: {
-                	type: Function,
-                	value: function () {
-                		return (function (event) {
-                    		console.log("_onKeypress (for text area):", event);
-                    		this.__test(); // to demonstrate, that the native '__test' function will be invoked in other contexts!
-                    		
-                    		// TODO potentially, commit on CTRL+Enter?
-                    	}).bind(this);
-                	}
                 }
                 
                 /* The following functions will potentially be needed. In this case, use the appropriate form of 'function-property' definition (to be able to bind to child elements). */
