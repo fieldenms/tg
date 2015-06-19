@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Flex layout example</title>
-    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
     <link rel="import" href="tg-flex-layout.html">
     <style>
         .test {
@@ -13,31 +14,31 @@
         }
     </style>
 
-    <body unresolved fullbleed>
-        <template id="app" is="auto-binding">
-            <tg-flex-layout whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" debug>
+    <body unresolved class="fullbleed">
+        <template id="app" is="dom-bind">
+            <tg-flex-layout when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]" debug>
                 <input class="test" type="text" value="test1">
                 <input class="test" type="text" value="test2">
                 <input class="test" type="text" value="test3">
                 <input class="test" type="text" value="test4">
             </tg-flex-layout>
-            <tg-flex-layout style="margin-top:20px" whenDesktop="{{whenDesktop1}}" whenTablet="{{whenTablet1}}" whenMobile="{{whenMobile1}}" debug>
+            <tg-flex-layout style="margin-top:20px" when-desktop="[[_whenDesktop1()]]" when-tablet="[[_whenTablet1()]]" when-mobile="[[_whenMobile1()]]" debug>
                 <input class="test" type="text" value="test1" prop="test1">
                 <input class="test" type="text" value="test2" prop="test2">
                 <input class="test" type="text" value="test3" prop="test3">
                 <input class="test" type="text" value="test4" prop="test4">
             </tg-flex-layout>
-            <tg-flex-layout style="margin-top:20px" whenDesktop="{{whenDesktop2}}" whenTablet="{{whenTablet2}}" whenMobile="{{whenMobile2}}" debug>
+            <tg-flex-layout style="margin-top:20px" when-desktop="[[_whenDesktop2()]]" when-tablet="[[_whenTablet2()]]" when-mobile="[[_whenMobile2()]]" debug>
                 <input class="test" type="text" value="test1" prop="test1">
                 <input class="test" type="text" value="noname">
                 <input class="test" type="text" value="noname">
                 <input class="test" type="text" value="test2" prop="test2">
             </tg-flex-layout>
-            <tg-flex-layout style="margin-top:20px" whenDesktop="{{whenDesktop3}}" whenTablet="{{whenTablet3}}" whenMobile="{{whenMobile3}}" debug>
+            <tg-flex-layout style="margin-top:20px" when-desktop="[[_whenDesktop3()]]" when-tablet="[[_whenTablet3()]]" when-mobile="[[_whenMobile3()]]" debug>
                 <input class="test" type="text" value="test1" prop="test1">
                 <input class="test" type="text" value="noname">
             </tg-flex-layout>
-            <tg-flex-layout style="margin-top:20px" whenDesktop="{{whenDesktop4}}" whenTablet="{{whenTablet4}}" whenMobile="{{whenMobile4}}" debug>
+            <tg-flex-layout style="margin-top:20px" when-desktop="[[_whenDesktop4()]]" when-tablet="[[_whenTablet4()]]" when-mobile="[[_whenMobile4()]]" debug>
                 <input class="test" type="text" value="test1" prop="test1">
                 <input class="test" type="text" value="noname">
                 <input class="test" type="text" value="noname">
@@ -53,25 +54,21 @@
     </body>
     <script>
         var app = document.querySelector("#app");
-        app.whenDesktop = [[[], [], [], []]];
-        app.whenTablet = [[[], []], [[], []]];
-        app.whenMobile = [[], [], [], []];
-        app.whenDesktop1 = [[['select:prop=test2'], ['select:prop=test4'], ['select:prop=test3'], ['select:prop=test1']]];
-        app.whenTablet1 = [[['select:prop=test4'], ['select:prop=test1']], [['select:prop=test3'], ['select:prop=test2']]];
-        app.whenMobile1 = [['select:prop=test2'], ['select:prop=test1'], ['select:prop=test4'], ['select:prop=test3']];
-        app.whenDesktop2 = [[[], ['select:prop=test2'], [], ['select:prop=test1']]];
-        app.whenTablet2 = [[['select:prop=test1'], ['select:prop=test2']], [[], []]];
-        app.whenMobile2 = [[], ['select:prop=test1'], ['select:prop=test2'], []];
-        app.whenDesktop3 = [[[], ['select:prop=test3'], [], ['select:prop=test1']]];
-        app.whenTablet3 = [[['select:prop=test5'], ['select:prop=test1']], [[], []]];
-        app.whenMobile3 = [[], ['select:prop=test6'], ['select:prop=test1'], []];
-        app.whenDesktop4 = [[[], ['select:prop=test1'], [], ['select:prop=test2']]];
-        app.whenTablet4 = [[['select:prop=test1'], ['select:prop=test2']], [[], []]];
-        app.whenMobile4 = [[], ['select:prop=test2'], ['select:prop=test1'], []];
-
-        function handleFiles(files) {
-            console.log(files[0]);
-        }
+        app._whenDesktop = function () { return [[[], [], [], []]];};
+        app._whenTablet = function () { return [[[], []], [[], []]];};
+        app._whenMobile = function () { return [[], [], [], []];};
+        app._whenDesktop1 = function () { return [[['select:prop=test2'], ['select:prop=test4'], ['select:prop=test3'], ['select:prop=test1']]];};
+        app._whenTablet1 = function () { return [[['select:prop=test4'], ['select:prop=test1']], [['select:prop=test3'], ['select:prop=test2']]];};
+        app._whenMobile1 = function () { return [['select:prop=test2'], ['select:prop=test1'], ['select:prop=test4'], ['select:prop=test3']];};
+        app._whenDesktop2 = function () { return [[[], ['select:prop=test2'], [], ['select:prop=test1']]];};
+        app._whenTablet2 = function () { return [[['select:prop=test1'], ['select:prop=test2']], [[], []]];};
+        app._whenMobile2 = function () { return [[], ['select:prop=test1'], ['select:prop=test2'], []];};
+        app._whenDesktop3 = function () { return [[[], ['select:prop=test3'], [], ['select:prop=test1']]];};
+        app._whenTablet3 = function () { return [[['select:prop=test5'], ['select:prop=test1']], [[], []]];};
+        app._whenMobile3 = function () { return [[], ['select:prop=test6'], ['select:prop=test1'], []];};
+        app._whenDesktop4 = function () { return [[[], ['select:prop=test1'], [], ['select:prop=test2']]];};
+        app._whenTablet4 = function () { return [[['select:prop=test1'], ['select:prop=test2']], [[], []]];};
+        app._whenMobile4 = function () { return [[], ['select:prop=test2'], ['select:prop=test1'], []];};
     </script>
 
 </html>
