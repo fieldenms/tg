@@ -28,7 +28,7 @@
                 	
                		<input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
                 	
-                    <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-keypress="_onKeypressForTextArea" disabled$="[[_disabled]]"> <!--  flex -->
+                    <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]"> <!--  flex -->
                         <textarea id="input" disabled$="[[_disabled]]"></textarea>
                     </iron-autogrow-textarea>                	
 					
@@ -90,7 +90,6 @@
         		_editorKind: String,
         		_onChange: Function,
         		_onKeypress: Function,
-        		_onKeypressForTextArea: Function,
         		_maxLength: Number
         	},
         	
