@@ -19,7 +19,7 @@
             var master = document.querySelector('#master');
             var self = this;
 
-            master.onValidated = function(validatedEntity, bindingEntity, customObject) {                
+            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
                 assert.strictEqual(validatedEntity.version, 1, "Entity version should be increased.");
 
                 ////////////////////////////////////////// CHECK NON-CONFLICTING PROP //////////////////////////////////////////

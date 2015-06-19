@@ -8,7 +8,7 @@
     <template>
         <shadow></shadow>
 
-        <tg-entity-validator id="validator" entitytype="{{entitytype}}" onValidatedDefault="{{onValidatedDefault}}" onValidatedDefaultError="{{onValidatedDefaultError}}" processResponse="{{processResponse}}"></tg-entity-validator>
+        <tg-entity-validator id="validator" entitytype="{{entitytype}}" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError}}" process-response="[[_processResponse]]"></tg-entity-validator>
 
         <core-ajax id="ajaxRetriever" url="/entity/{{entitytype}}/{{entityid}}" method="PUT" handleas="json"></core-ajax>
         <core-ajax id="ajaxSaver" url="/entity/{{entitytype}}/{{entityid}}" method="POST" handleas="json"></core-ajax>
@@ -69,7 +69,7 @@
                     self.super();
 
                     // IMPORTANT: it is crucial to bind the functions, which will potentially be passed
-                    //            into other contexts (for e.g. onValidatedDefault will be used in tg-entity-validator),
+                    //            into other contexts (for e.g. postValidatedDefault will be used in tg-entity-validator),
                     //            with its original context!
                     self.save = self.save.bind(self);
                     self.edit = self.edit.bind(self);
@@ -80,7 +80,7 @@
                     self._desc = self._desc.bind(self);
 
                     self.$.ajaxSaver.addEventListener('core-response', function (e) {
-                    	self.processResponse(e, "save", function (potentiallySavedEntity) {
+                    	self._processResponse(e, "save", function (potentiallySavedEntity) {
                     		self.onSavedDefault(potentiallySavedEntity);
                     	}, function (errorResult) {
                     		self.onSavedDefaultError(errorResult);
@@ -248,7 +248,7 @@
                         throw new SimultaneousSaveException();
                     }
 
-                    self.startRefreshCycleModeForEditors();
+                    self._startRefreshCycleModeForEditors();
 
                     var holder = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                     // cancel previous validation before starting saving process -- it includes validation process internally!
@@ -306,7 +306,6 @@
                         msg = this.toastMsg("Saving", potentiallySavedEntity);
                     this.openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
 
-                    // this.startRefreshCycleModeForEditors();
                     var newBindingEntity = this.onEntityReceived(potentiallySavedEntity);
 
                     // custom external action

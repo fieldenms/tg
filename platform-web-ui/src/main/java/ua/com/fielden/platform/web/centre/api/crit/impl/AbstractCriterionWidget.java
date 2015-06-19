@@ -83,7 +83,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         if (isDebug()) {
             attrs.put("debug", "true");
         }
-        attrs.put("onAcceptedValueChanged", "{{validate}}");
+        attrs.put("validation-callback", "[[validate]]");
         return attrs;
     }
 

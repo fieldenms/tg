@@ -4,7 +4,12 @@
     (function () {
     	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
     	Polymer.TgBehaviors.TgEntityBinderBehavior = {
-    		// TODO PUBLIC API: attributes="onRetrieved onValidated onPreRetrieved currentState uuid"
+    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
+    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
+    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
+    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
+    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
+    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
     		
     		properties: {
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +91,197 @@
                  */
                 _currBindingEntity: {
                 	type: Object
+                },
+
+                /**
+                 * '_createModifiedPropertiesHolder' function, that is designated for binding.
+                 */
+                _createModifiedPropertiesHolder: {
+                	type: Function,
+                	value: function () {
+                		return (function () {
+                            var self = this;
+                            var mph = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                            return self._reset(mph);
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * Default implementation for postValidated callback.
+                 */
+                _postValidatedDefault: {
+                	type: Function,
+                	value: function () {
+                		return (function (entityAndCustomObject) {
+                            var validatedEntity = entityAndCustomObject[0];
+                            var customObject = this.$.reflector.customObject(entityAndCustomObject);
+                        	
+                            var msg = this.toastMsg("Validation", validatedEntity);
+                            this.openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+
+                            var newBindingEntity = this.onEntityReceived(validatedEntity);
+                            // custom external action
+                            this.postValidated(validatedEntity, newBindingEntity, customObject);
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * Default implementation for unsuccessful postValidated callback.
+                 */
+                _postValidatedDefaultError: {
+                	type: Function,
+                	value: function () {
+                		return (function (errorResult) {
+                        	// This function will be invoked after server-side error appear.
+                        	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+                        	console.warn("SERVER ERROR: ", errorResult);
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * Default implementation for postRetrieved callback.
+                 */
+                _postRetrievedDefault: {
+                	type: Function,
+                	value: function () {
+                		return (function (entityAndCustomObject) {
+                            var entity = this.onPreRetrieved(entityAndCustomObject[0]);
+                            var customObject = this.$.reflector.customObject(entityAndCustomObject);
+
+                            var newBindingEntity = this.onEntityReceived(entity);
+                            
+                            this.onDescendantRetrieved(entity, newBindingEntity, customObject);
+                            // custom external action
+                            this.onRetrieved(entity, newBindingEntity, customObject);
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * Default implementation for unsuccessful postRetrieved callback.
+                 */
+                _postRetrievedDefaultError: {
+                	type: Function,
+                	value: function () {
+                		return (function (errorResult) {
+                        	// This function will be invoked after server-side error appear.
+                        	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+                        	console.warn("SERVER ERROR: ", errorResult);
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * Default implementation for unsuccessful postSearched callback.
+                 */
+                _postSearchedDefaultError: {
+                	type: Function,
+                	value: function () {
+                		return (function (errorResult) {
+                        	// This function will be invoked after server-side error appear.
+                        	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+                        	console.warn("SERVER ERROR: ", errorResult);
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * This is the standard processor for 'core-response's and is applicable for all
+                 *   responses that contain java Result inside 'e.detail.response'.
+                 *
+                 * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown 
+                 *   and 'customErrorHandlerFor(result)' is invoked.
+                 *
+                 * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
+                 *
+                 *
+                 * This is the function, that is designated for binding.
+                 */
+                _processResponse: {
+                	type: Function,
+                	value: function () {
+                		return (function(e, name, customHandlerFor, customErrorHandlerFor) {
+                        	console.log(name, ": core-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                            if (e.detail.xhr.status === 200) {
+                            	var deserialisedResult = this.$.serialiser.deserialise(e.detail.response);
+                            	
+                            	if (this.$.reflector.isError(deserialisedResult)) {
+                            		// throw the toast message about the server-side error
+                                    var msg = this.toastMsgForError(deserialisedResult);
+                                    this.openToastForError(this.$.reflector.exceptionMessage(deserialisedResult.ex), msg);
+                            		// continue with custom error handling of the error result
+                                    customErrorHandlerFor(deserialisedResult);
+                            	} else if (this.$.reflector.isWarning(deserialisedResult)) {
+                            		// TODO how warnings should be handled?
+                            		console.warn(this.toastMsgForError(deserialisedResult));
+                            	} else {
+                            		// continue with normal handling of the result's instance
+            	                    customHandlerFor(deserialisedResult.instance);
+                            	}
+                            } else {
+                            	console.warn(name, ": core-response: non-200-status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                            }
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * Starts the process of entity validation (based on _currBindingEntity).
+                 *
+                 * This function is designated for binding.
+                 */
+                validate: {
+                	type: Function,
+                	value: function () {
+                		return (function () {
+                            console.log("_validate");
+                            var self = this;
+
+                            var holder = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
+                            // (if the entity was not modified -- _validate(holder) will start the error recovery process)
+
+                            // cancel previous validation before starting new one! The results of previous validation are irrelevant!
+                            self.validator().abortValidationIfAny();
+                            self.validator().validate(self._reset(holder));
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * The function that explicitly says that validation is skipped.
+                 *
+                 * This function is designated for binding.
+                 */
+                doNotValidate: {
+                	type: Function,
+                	value: function () {
+                		return (function () {
+                            console.log("do not validate");
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * Starts the process of entity retrieval (based on current entityid).
+                 *
+                 * This function is designated for binding.
+                 */
+                retrieve: {
+                	type: Function,
+                	value: function () {
+                		return (function (context) {
+                        	if (context) {
+                                var ser = this.$.serialiser.serialise(context);
+                                this.ajaxRetriever().body = JSON.stringify(ser);
+                        	}
+                            this.ajaxRetriever().go();
+                            this._startRefreshCycleModeForEditors();
+                        }).bind(this);
+                	}
                 }
     		},
             
@@ -95,30 +291,14 @@
             ready: function () {
                 var self = this;
                 
-                this.resetRefreshCycleModeForEditors(); // init the value for '_refreshCycleMode'
+                this._resetRefreshCycleModeForEditors(); // init the value for '_refreshCycleMode'
                 this._currBindingEntity = null; // TODO previously, was {} -- empty object. Please, use more safe form ('null'). And check, if 'null' is appropriately working with editors.
 
-                // IMPORTANT: it is crucial to bind the functions, which will potentially be passed
-                //            into other contexts (for e.g. onValidatedDefault will be used in tg-entity-validator),
-                //            with its original context!
-                self.retrieve = self.retrieve.bind(self);
-                self.validate = self.validate.bind(self);
-                self.doNotValidate = self.doNotValidate.bind(self);
-                self.onValidatedDefault = self.onValidatedDefault.bind(self);
-                self.onValidatedDefaultError = self.onValidatedDefaultError.bind(self);
-                self.onRetrievedDefault = self.onRetrievedDefault.bind(self);
-                self.onRetrievedDefaultError = self.onRetrievedDefaultError.bind(self);
-                self.onSearchedDefaultError = self.onSearchedDefaultError.bind(self);
-                self.startRefreshCycleModeForEditors = self.startRefreshCycleModeForEditors.bind(self);
-                self.resetRefreshCycleModeForEditors = self.resetRefreshCycleModeForEditors.bind(self);
-                self.createModifiedPropertiesHolder = self.createModifiedPropertiesHolder.bind(self);
-                self.processResponse = self.processResponse.bind(self);
-
                 self.ajaxRetriever().addEventListener('core-response', function (e) {
-                	self.processResponse(e, "retrieve", function (entityAndCustomObject) {
-                		self.onRetrievedDefault(entityAndCustomObject);
+                	self._processResponse(e, "retrieve", function (entityAndCustomObject) {
+                		self._postRetrievedDefault(entityAndCustomObject);
                 	}, function (errorResult) {
-                		self.onRetrievedDefaultError(errorResult);
+                		self._postRetrievedDefaultError(errorResult);
                 	});
                 });
             },
@@ -173,38 +353,6 @@
             //////////////////////////////////////////////
 
             /**
-             * This is the standard processor for 'core-response's and is applicable for all
-             *   responses that contain java Result inside 'e.detail.response'.
-             *
-             * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown 
-             *   and 'customErrorHandlerFor(result)' is invoked.
-             *
-             * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
-             */
-            processResponse: function(e, name, customHandlerFor, customErrorHandlerFor) {
-            	console.log(name, ": core-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
-                if (e.detail.xhr.status === 200) {
-                	var deserialisedResult = this.$.serialiser.deserialise(e.detail.response);
-                	
-                	if (this.$.reflector.isError(deserialisedResult)) {
-                		// throw the toast message about the server-side error
-                        var msg = this.toastMsgForError(deserialisedResult);
-                        this.openToastForError(this.$.reflector.exceptionMessage(deserialisedResult.ex), msg);
-                		// continue with custom error handling of the error result
-                        customErrorHandlerFor(deserialisedResult);
-                	} else if (this.$.reflector.isWarning(deserialisedResult)) {
-                		// TODO how warnings should be handled?
-                		console.warn(this.toastMsgForError(deserialisedResult));
-                	} else {
-                		// continue with normal handling of the result's instance
-	                    customHandlerFor(deserialisedResult.instance);
-                	}
-                } else {
-                	console.warn(name, ": core-response: non-200-status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
-                }
-            },
-
-            /**
              * The core-ajax component for entity retrieval.
              */
             ajaxRetriever: function () {
@@ -220,18 +368,6 @@
 
             //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
             /**
-             * Starts the process of entity retrieval (based on current entityid).
-             */
-            retrieve: function (context) {
-            	if (context) {
-                    var ser = this.$.serialiser.serialise(context);
-                    this.ajaxRetriever().body = JSON.stringify(ser);
-            	}
-                this.ajaxRetriever().go();
-                this.startRefreshCycleModeForEditors();
-            },
-
-            /**
              * Default implementation for onPreRetrieved callback.
              */
             onPreRetrieved: function (entity) {
@@ -241,87 +377,7 @@
             onDescendantRetrieved: function(entity, newBindingEntity, customObject) {
             },
             
-            /**
-             * Default implementation for onRetrieved callback.
-             */
-            onRetrievedDefault: function (entityAndCustomObject) {
-                var entity = this.onPreRetrieved(entityAndCustomObject[0]);
-                var customObject = this.$.reflector.customObject(entityAndCustomObject);
-
-                // this.startRefreshCycleModeForEditors();
-                var newBindingEntity = this.onEntityReceived(entity);
-                
-                this.onDescendantRetrieved(entity, newBindingEntity, customObject);
-                // custom external action
-                this.onRetrieved(entity, newBindingEntity, customObject);
-            },
-            
-            /**
-             * Default implementation for unsuccessful onRetrieved callback.
-             */
-            onRetrievedDefaultError: function (errorResult) {
-            	// This function will be invoked after server-side error appear.
-            	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
-            	console.warn("SERVER ERROR: ", errorResult);
-            },
-            
-            /**
-             * Default implementation for unsuccessful onSearched callback.
-             */
-            onSearchedDefaultError: function (errorResult) {
-            	// This function will be invoked after server-side error appear.
-            	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
-            	console.warn("SERVER ERROR: ", errorResult);
-            },
-
             //////////////////////////////////////// VALIDATION ////////////////////////////////////////
-            /**
-             * Starts the process of entity validation (based on _currBindingEntity).
-             */
-            validate: function () {
-                console.log("validate");
-                var self = this;
-
-                var holder = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
-                // (if the entity was not modified -- validate(holder) will start the error recovery process)
-
-                // cancel previous validation before starting new one! The results of previous validation are irrelevant!
-                self.validator().abortValidationIfAny();
-                self.validator().validate(self._reset(holder));
-            },
-
-            /**
-             * The function that explicitly says that validation is skipped.
-             */
-            doNotValidate: function () {
-                console.log("do not validate");
-            },
-
-            /**
-             * Default implementation for onValidated callback.
-             */
-            onValidatedDefault: function (entityAndCustomObject) {
-                var validatedEntity = entityAndCustomObject[0];
-                var customObject = this.$.reflector.customObject(entityAndCustomObject);
-            	
-                var msg = this.toastMsg("Validation", validatedEntity);
-                this.openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
-
-                var newBindingEntity = this.onEntityReceived(validatedEntity);
-                // custom external action
-                this.onValidated(validatedEntity, newBindingEntity, customObject);
-            },
-            
-            /**
-             * Default implementation for unsuccessful onRetrieved callback.
-             */
-            onValidatedDefaultError: function (errorResult) {
-            	// This function will be invoked after server-side error appear.
-            	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
-            	console.warn("SERVER ERROR: ", errorResult);
-            },
-
             _reset: function (modifiedPropertiesHolder) {
                 delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
                 return modifiedPropertiesHolder;
@@ -364,12 +420,6 @@
                 return modPropHolder;
             },
 
-            createModifiedPropertiesHolder: function () {
-                var self = this;
-                var mph = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                return self._reset(mph);
-            },
-
             _idConvert: function (id) {
                 return id === null ? "new" : ("" + id);
             },
@@ -385,11 +435,11 @@
              * If the state is simple -- the value promotes through the next chain: editingValue (commit) => commValue => acceptedValue =>
              * => entity prop value (validate) => new entity prop.
              */
-            startRefreshCycleModeForEditors: function () {
+            _startRefreshCycleModeForEditors: function () {
                 this._refreshCycleMode = "ACTIVATED";
             },
 
-            resetRefreshCycleModeForEditors: function () {
+            _resetRefreshCycleModeForEditors: function () {
                 this._refreshCycleMode = null;
             },
 
@@ -412,7 +462,7 @@
                 self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
 
-                this.resetRefreshCycleModeForEditors();
+                this._resetRefreshCycleModeForEditors();
 
                 console.log("       onEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
                 return self._currBindingEntity;

@@ -70,9 +70,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     private String getOnActionError(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
-            return "onRetrievedDefaultError";
+            return "_postRetrievedDefaultError";
         } else if (MasterActions.VALIDATE == masterAction) {
-            return "onValidatedDefaultError";
+            return "_postValidatedDefaultError";
         } else if (MasterActions.SAVE == masterAction) {
             return "onSavedDefaultError";
         } else if (MasterActions.EDIT == masterAction) {
@@ -86,9 +86,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     private String getOnAction(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
-            return "onRetrievedDefault";
+            return "_postRetrievedDefault";
         } else if (MasterActions.VALIDATE == masterAction) {
-            return "onValidatedDefault";
+            return "_postValidatedDefault";
         } else if (MasterActions.SAVE == masterAction) {
             return "onSavedDefault";
         } else if (MasterActions.EDIT == masterAction) {

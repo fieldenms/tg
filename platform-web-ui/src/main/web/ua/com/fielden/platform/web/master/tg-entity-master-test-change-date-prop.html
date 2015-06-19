@@ -19,7 +19,7 @@
             var master = document.querySelector('#master');
             var self = this;
 
-            master.onValidated = function(validatedEntity, bindingEntity, customObject) {                
+            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
                 // value ok?
                 assert.ok(validatedEntity.get("dateProp"), "Property value should be initialised.");                
                 assert.strictEqual(validatedEntity.get("dateProp"), 10000, "Property value should be correct.");

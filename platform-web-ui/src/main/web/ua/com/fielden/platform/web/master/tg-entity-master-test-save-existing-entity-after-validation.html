@@ -70,7 +70,7 @@
                 }
             };
 
-            master.onValidated = function(validatedEntity, newBindingEntity, customObject) {
+            master.postValidated = function(validatedEntity, newBindingEntity, customObject) {
                 master.save(); 
             };
 

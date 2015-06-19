@@ -20,7 +20,7 @@
             var self = this;
             self.onValidatedCount = 0;
 
-            master.onValidated = function(validatedEntity, bindingEntity, customObject) {
+            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                 self.onValidatedCount = self.onValidatedCount + 1;
                 if (self.onValidatedCount > 1) {
                     assert.fail("", "", "The validation should occur only once.")

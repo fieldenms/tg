@@ -19,7 +19,7 @@
             var master = document.querySelector('#master');
             var self = this;
 
-            master.onValidated = function(validatedEntity, bindingEntity, customObject) {                
+            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
                 assert.strictEqual(validatedEntity.id, null, "The id of entity is not correct.");
                 // value ok?
                 assert.ok(validatedEntity.get("stringProp"), "Property value should be initialised.");                

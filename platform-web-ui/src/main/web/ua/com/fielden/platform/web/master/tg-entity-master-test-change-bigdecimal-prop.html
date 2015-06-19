@@ -19,7 +19,7 @@
             var master = document.querySelector('#master');
             var self = this;
 
-            master.onValidated = function(validatedEntity, bindingEntity, customObject) {                
+            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
                 // value ok?
                 assert.ok(validatedEntity.get("bigDecimalProp"), "Property value should be initialised.");                
                 assert.strictEqual(validatedEntity.get("bigDecimalProp"), 46.5, "Property value should be correct.");
