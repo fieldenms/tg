@@ -101,7 +101,7 @@
                 if (element.classesToRemove) {
                     element.classesToRemove.forEach(function (className) {
                         this.toggleClass(className, false, element);
-                    });
+                    }.bind(this));
                     delete element.classesToRemove;
                 }
             },
@@ -127,7 +127,7 @@
                 } else if (Array.isArray(layoutElem)) {
                     if (!hasArray(layoutElem)) {
                         rowElement = getNextElement(selectedElements, orderedElements, layoutElem);
-                        removeStylesAndClasses(rowElement);
+                        removeStylesAndClasses.bind(this)(rowElement);
                     } else {
                         rowElement = document.createElement("div");
                         this.toggleClass("layout", true, rowElement);
