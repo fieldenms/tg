@@ -34,6 +34,7 @@
                 while (Polymer.dom(this).firstChild) {
                     Polymer.dom(this).removeChild(Polymer.dom(this).firstChild);
                 }
+                Polymer.dom.flush();
                 removeStylesAndClasses.bind(this)(this);
                 this.toggleClass("layout", true);
                 this.toggleClass("vertical", true);
@@ -42,7 +43,7 @@
                 } else {
                     removeDebugStyle(this);
                 }
-                orderedElements = this.componentsToLayout.slice(0);
+                orderedElements = this.componentsToLayout.slice();
                 splitElements.bind(this)(selectedElements, orderedElements, layout);
                 layout.forEach((function (layoutElem) {
                     contentIndex = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, true);
