@@ -116,20 +116,24 @@
             /**
              * The core-ajax component for entity retrieval.
              */
-            ajaxRetriever: function () {
+            _ajaxRetriever: function () {
                 return this.$.ajaxRetriever;
             },
 
             /**
              * The tg-entity-validator component for entity validation.
              */
-            validator: function () {
+            _validator: function () {
                 return this.$.validator;
             },
 
-            onDescendantRetrieved: function (entity, bindingEntity, customObject) {
-                this.super([entity, bindingEntity, customObject]);
-                this.propertyModel = this.createPropertyModel(customObject.metaValues);
+            /**
+             * Overridden to populate 'propertyModel' and '_isCentreChange' flag from arrived information.
+             */
+            _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
+            	Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+
+            	this.propertyModel = this.createPropertyModel(customObject.metaValues);
                 this._isCentreChanged = customObject.isCentreChanged;
             },
 
@@ -159,8 +163,8 @@
                 console.log("postValidated", customObject);
             },
 
-            extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
-                var modPropHolder = this.super([bindingEntity, _originalBindingEntity]);
+            _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
+                var modPropHolder = Polymer.TgBehaviors.TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
                 if (this.$.reflector.isEntity(bindingEntity)) {
                     modPropHolder["@@metaValues"] = {};
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
@@ -301,7 +305,7 @@
              */
             run: function () {
                 var self = this;
-                this.openToast(null, "Loading data", false, "", true);
+                this._openToast(null, "Loading data", false, "", true);
                 this.pageNumber = 0;
                 this.pageCount = null;
                 this._execute(true);
@@ -321,11 +325,11 @@
                 self._startRefreshCycleModeForEditors();
 
                 if (isRunAction) {
-                    self.persistedModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                    self.persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                 }
 
                 // cancel previous validation before starting saving process -- it includes validation process internally!
-                self.$.validator.abortValidationIfAny();
+                self._validator().abortValidationIfAny();
 
                 // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
                 //            This check will be done on server -- and appropriate onRunDefault callback will be triggered.
@@ -341,7 +345,7 @@
                 // if (self._hasModified(holder)) {
                 //     self._saveModifiedProperties(self._reset(holder));
                 // } else {
-                //     self.$.validator.validate(self._reset(holder));
+                //     self._validator().validate(self._reset(holder));
                 // }
             },
 
@@ -379,10 +383,10 @@
                 this.propertyModel = this.createPropertyModel(metaValues);
                 this._isCentreChanged = isCentreChanged;
 
-                var msg = this.toastMsg("Running", criteriaEntity);
-                this.openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
+                var msg = this._toastMsg("Running", criteriaEntity);
+                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
-                var newBindingEntity = this.onEntityReceived(criteriaEntity);
+                var newBindingEntity = this._postEntityReceived(criteriaEntity);
 
                 this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                 // custom external action

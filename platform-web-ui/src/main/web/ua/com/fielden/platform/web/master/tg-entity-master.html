@@ -163,14 +163,14 @@
                 /**
                  * The core-ajax component for entity retrieval.
                  */
-                ajaxRetriever: function () {
+                _ajaxRetriever: function () {
                     return this.$.ajaxRetriever;
                 },
 
                 /**
                  * The tg-entity-validator component for entity validation.
                  */
-                validator: function () {
+                _validator: function () {
                     return this.$.validator;
                 },
 
@@ -250,9 +250,9 @@
 
                     self._startRefreshCycleModeForEditors();
 
-                    var holder = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                    var holder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                     // cancel previous validation before starting saving process -- it includes validation process internally!
-                    self.$.validator.abortValidationIfAny();
+                    self._validator().abortValidationIfAny();
 
                     // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
                     //            This check will be done on server -- and appropriate onSavedDefault callback will be triggered.
@@ -260,7 +260,7 @@
                     // if (self._hasModified(holder)) {
                     //     self._saveModifiedProperties(self._reset(holder));
                     // } else {
-                    //     self.$.validator.validate(self._reset(holder));
+                    //     self._validator().validate(self._reset(holder));
                     // }
                 },
 
@@ -302,11 +302,10 @@
                  * Default implementation for onSaved callback.
                  */
                 onSavedDefault: function (potentiallySavedEntity) {
-                    var self = this,
-                        msg = this.toastMsg("Saving", potentiallySavedEntity);
-                    this.openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
+                    var msg = this._toastMsg("Saving", potentiallySavedEntity);
+                    this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
 
-                    var newBindingEntity = this.onEntityReceived(potentiallySavedEntity);
+                    var newBindingEntity = this._postEntityReceived(potentiallySavedEntity);
 
                     // custom external action
                     this.onSaved(potentiallySavedEntity, newBindingEntity);
