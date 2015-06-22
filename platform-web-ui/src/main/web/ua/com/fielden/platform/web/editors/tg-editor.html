@@ -23,12 +23,12 @@
  		            <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
                 
                 	<!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
-       				<input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_boundOnChange" on-keypress="_boundOnKeypress" disabled$="[[_disabled]]">
+       				<input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
                 	<!-- </template> -->
                 	
-               		<input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_boundOnChange" on-keypress="_boundOnKeypress" disabled$="[[_disabled]]">
+               		<input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
                 	
-                    <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_boundOnChange" on-keypress="_boundOnKeypressForTextArea" disabled$="[[_disabled]]"> <!--  flex -->
+                    <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]"> <!--  flex -->
                         <textarea id="input" disabled$="[[_disabled]]"></textarea>
                     </iron-autogrow-textarea>                	
 					
@@ -88,9 +88,8 @@
         		_acceptedValue: String,
         		debug: Boolean,
         		_editorKind: String,
-        		_boundOnChange: Function,
-        		_boundOnKeypress: Function,
-        		_boundOnKeypressForTextArea: Function,
+        		_onChange: Function,
+        		_onKeypress: Function,
         		_maxLength: Number
         	},
         	

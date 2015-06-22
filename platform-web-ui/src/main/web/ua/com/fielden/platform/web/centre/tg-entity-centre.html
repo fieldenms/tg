@@ -67,7 +67,7 @@
                     self.onDiscardedDefaultError = self.onDiscardedDefaultError.bind(self);
 
                     self.$.ajaxSaver.addEventListener('core-response', function (e) {
-                    	self.$.selection_criteria.processResponse(e, "save", function (okString) {
+                    	self.$.selection_criteria._processResponse(e, "save", function (okString) {
                             console.log("CENTRE SAVED", okString);
                             
                             self.retrieve();
@@ -76,7 +76,7 @@
                     	});
                     });
                     self.$.ajaxDiscarder.addEventListener('core-response', function (e) {
-                    	self.$.selection_criteria.processResponse(e, "discard", function (okString) {
+                    	self.$.selection_criteria._processResponse(e, "discard", function (okString) {
                             console.log("CENTRE DISCARDED", okString);
                             
                             self.retrieve();

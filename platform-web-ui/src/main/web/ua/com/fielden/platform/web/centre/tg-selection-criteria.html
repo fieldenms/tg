@@ -8,7 +8,7 @@
 <polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype onRun onRunComplete getSelectedEntities getMasterEntity requireSelectedEntities requireMasterEntity">
     <template>
         <shadow></shadow>
-        <tg-criteria-validator id="validator" mitype="{{mitype}}" onValidatedDefault="{{onValidatedDefault}}" onValidatedDefaultError="{{onValidatedDefaultError}}" processResponse="{{processResponse}}"></tg-criteria-validator>
+        <tg-criteria-validator id="validator" mitype="{{mitype}}" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]"></tg-criteria-validator>
         <core-ajax id="ajaxRetriever" url="/criteria/{{mitype}}" method="GET" handleas="json"></core-ajax>
         <core-ajax id="ajaxRunner" url="/criteria/{{mitype}}" method="PUT" handleas="json"></core-ajax>
     </template>
@@ -89,7 +89,7 @@
                 self.onRunDefaultError = self.onRunDefaultError.bind(self);
 
                 self.$.ajaxRunner.addEventListener('core-response', function (e) {
-                	self.processResponse(e, "run", function (entityAndCustomObject) {
+                	self._processResponse(e, "run", function (entityAndCustomObject) {
                         var criteriaEntity = entityAndCustomObject[0];
                         var customObject = self.$.reflector.customObject(entityAndCustomObject);
                         var resultEntities = customObject.resultEntities || [];
@@ -133,11 +133,30 @@
                 this._isCentreChanged = customObject.isCentreChanged;
             },
 
-            onValidated: function (validatedEntity, bindingEntity, customObject) {
+            /**
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             * TODO this function should be bound through the attribute!!
+             */
+            [post]Validated: function (validatedEntity, bindingEntity, customObject) {
                 this.propertyModel = this.createPropertyModel(customObject.metaValues);
                 this._isCentreChanged = customObject.isCentreChanged;
 
-                console.log("onValidated", customObject);
+                console.log("postValidated", customObject);
             },
 
             extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
@@ -187,7 +206,7 @@
              */
             onRunComplete: function () {},
 
-            validatePageCount: function () {
+            _validatePageCount: function () {
                 if (this.pageCount === null) {
                     throw "Do not execute methods firstPage(), nextPage() etc. before the method run().";
                 }
@@ -197,7 +216,7 @@
              * Starts the process of refreshing of the current page.
              */
             currentPage: function () {
-                this.validatePageCount();
+                this._validatePageCount();
                 this._execute(false);
             },
 
@@ -209,7 +228,7 @@
              *     from the result-set if they became unmatchable to the selection criteria after modification).
              */
             refreshEntities: function (entities) {
-                this.validatePageCount();
+                this._validatePageCount();
                 this._execute(false, entities);
             },
 
@@ -217,7 +236,7 @@
              * Starts the process of centre run.
              */
             nextPage: function () {
-                this.validatePageCount();
+                this._validatePageCount();
                 if (!this.canNext()) {
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
                 }
@@ -229,7 +248,7 @@
              * Starts the process of centre run.
              */
             prevPage: function () {
-                this.validatePageCount();
+                this._validatePageCount();
                 if (!this.canPrev()) {
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
                 }
@@ -241,7 +260,7 @@
              * Starts the process of centre run.
              */
             firstPage: function () {
-                this.validatePageCount();
+                this._validatePageCount();
                 if (!this.canFirst()) {
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
@@ -253,7 +272,7 @@
              * Starts the process of centre run.
              */
             lastPage: function () {
-                this.validatePageCount();
+                this._validatePageCount();
                 if (!this.canLast()) {
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
@@ -299,7 +318,7 @@
                     throw new SimultaneousRunException();
                 }
 
-                self.startRefreshCycleModeForEditors();
+                self._startRefreshCycleModeForEditors();
 
                 if (isRunAction) {
                     self.persistedModifiedPropertiesHolder = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
@@ -363,7 +382,6 @@
                 var msg = this.toastMsg("Running", criteriaEntity);
                 this.openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
-                // this.startRefreshCycleModeForEditors();
                 var newBindingEntity = this.onEntityReceived(criteriaEntity);
 
                 this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
@@ -411,7 +429,7 @@
              * Create context holder with custom '@@miType' property.
              */
             createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
-            	return this._createContextHolder(this.createModifiedPropertiesHolder, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
+            	return this._createContextHolder(this._createModifiedPropertiesHolder, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
             },
             
             /**

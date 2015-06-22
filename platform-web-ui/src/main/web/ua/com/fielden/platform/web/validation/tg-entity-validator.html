@@ -3,7 +3,7 @@
 <link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 
-<polymer-element name="tg-entity-validator" attributes="entitytype onValidatedDefault onValidatedDefaultError processResponse" hidden>
+<polymer-element name="tg-entity-validator" attributes="entitytype postValidatedDefault postValidatedDefaultError processResponse" hidden>
     <template>
         <tg-reflector id="reflector"></tg-reflector>      
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -17,9 +17,9 @@
 
                     self.$.ajaxSender.addEventListener('core-response', function(e) {
                     	self.processResponse(e, "validate", function (entityAndCustomObject) {
-                            self.onValidatedDefault(entityAndCustomObject);
+                            self.postValidatedDefault(entityAndCustomObject);
                     	}, function (errorResult) {
-                    		self.onValidatedDefaultError(errorResult);
+                    		self.postValidatedDefaultError(errorResult);
                     	});
                     });
                 },

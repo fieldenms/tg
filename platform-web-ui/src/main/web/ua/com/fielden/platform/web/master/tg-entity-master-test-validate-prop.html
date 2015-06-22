@@ -19,7 +19,7 @@
             var master = document.querySelector('#master');
             var self = this;
 
-            master.onValidated = function(validatedEntity, bindingEntity, customObject) {
+            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                 // value ok?
                 assert.ok(validatedEntity.get("integerProp"), "Property value should be initialised.");                
                 assert.strictEqual(validatedEntity.get("integerProp"), 43, "Property value remain the same (validation did not succeed).");

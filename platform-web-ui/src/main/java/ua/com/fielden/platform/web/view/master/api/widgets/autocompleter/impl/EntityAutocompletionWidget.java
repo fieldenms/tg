@@ -23,7 +23,7 @@ public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidg
         final Map<String, Object> attrs = super.createCustomAttributes();
         // attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
         attrs.put("asPartOfEntityMaster", true);
-        attrs.put("createModifiedPropertiesHolder", "{{createModifiedPropertiesHolder}}");
+        attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
         return attrs;
     };
 

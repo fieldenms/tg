@@ -37,15 +37,15 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         attrs.put("autocompletionType", "{{" + (selectionCriteriaWidget ? "mitype" : "entitytype") + "}}");
         attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
         if (centreContextConfig != null) {
-            attrs.put("createModifiedPropertiesHolder", "{{createModifiedPropertiesHolder}}");
+            attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
             attrs.put("requireSelectionCriteria", centreContextConfig.withSelectionCrit ? "true" : "false");
             attrs.put("getSelectedEntities", "{{getSelectedEntities}}");
             attrs.put("requireSelectedEntities", centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE"));
             attrs.put("getMasterEntity", "{{getMasterEntity}}");
             attrs.put("requireMasterEntity", centreContextConfig.withMasterEntity ? "true" : "false");
         }
-        attrs.put("processResponse", "{{processResponse}}");
-        attrs.put("onSearchedDefaultError", "{{onSearchedDefaultError}}");
+        attrs.put("process-response", "[[_processResponse]]");
+        attrs.put("post-searched-default-error", "[[_postSearchedDefaultError]]");
         return attrs;
     };
 
