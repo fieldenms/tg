@@ -4,12 +4,12 @@
     (function () {
     	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
     	Polymer.TgBehaviors.TgEntityBinderBehavior = {
-    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
-    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
-    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
-    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
-    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
-    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
+    		// TODO PUBLIC API: attributes="preRetrieved"
+    		// TODO PUBLIC API: attributes="preRetrieved"
+    		// TODO PUBLIC API: attributes="preRetrieved"
+    		// TODO PUBLIC API: attributes="preRetrieved"
+    		// TODO PUBLIC API: attributes="preRetrieved"
+    		// TODO PUBLIC API: attributes="preRetrieved"
     		
     		properties: {
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +48,13 @@
                  * Custom callback that will be invoked after successfull retrieval.
                  */
                 postRetrieved: {
+                	type: Function                	
+                },
+                
+                /**
+                 * Custom callback that will be invoked after successfull validation.
+                 */
+                postValidated: {
                 	type: Function                	
                 },
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////

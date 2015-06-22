@@ -18,11 +18,11 @@
         document.addEventListener('polymer-ready', function() {
             var master = document.querySelector('#master');
             var self = this;
-            self.onValidatedCount = 0;
+            self.postValidatedCount = 0;
 
             master.postValidated = function(validatedEntity, bindingEntity, customObject) {
-                self.onValidatedCount = self.onValidatedCount + 1;
-                if (self.onValidatedCount > 1) {
+                self.postValidatedCount = self.postValidatedCount + 1;
+                if (self.postValidatedCount > 1) {
                     assert.fail("", "", "The validation should occur only once.")
                 }
 

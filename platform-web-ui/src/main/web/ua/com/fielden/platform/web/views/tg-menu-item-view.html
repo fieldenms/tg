@@ -65,7 +65,7 @@
                                 }
                                 self.fire("menu-item-view-loaded", self.item);
                             };
-                            detail.onValidated = function (validatedEntity, bindingEntity, customObject) {};
+                            detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                             detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
                                 //Send postal message that save was completed if it was succefull
                                 if (potentiallySavedEntity.isValid()) {
