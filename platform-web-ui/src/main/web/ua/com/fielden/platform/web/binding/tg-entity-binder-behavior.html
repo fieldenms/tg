@@ -4,13 +4,7 @@
     (function () {
     	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
     	Polymer.TgBehaviors.TgEntityBinderBehavior = {
-    		// TODO PUBLIC API: attributes="preRetrieved"
-    		// TODO PUBLIC API: attributes="preRetrieved"
-    		// TODO PUBLIC API: attributes="preRetrieved"
-    		// TODO PUBLIC API: attributes="preRetrieved"
-    		// TODO PUBLIC API: attributes="preRetrieved"
-    		// TODO PUBLIC API: attributes="preRetrieved"
-    		
+    			
     		properties: {
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
@@ -45,7 +39,25 @@
                 },
                 
                 /**
+                 * Custom callback that will be invoked after successfull retrieval / deserialisation and before actual promotion of the entity to the entity binder.
+                 *
+                 * This function-property should be mainly used for testing. That is why default function-property value is set -- it does just nothing.
+                 *
+                 * arguments: entity
+                 */
+                preRetrieved: {
+                	type: Function,
+                	value: function () {
+                		return function (entity) {
+                            return entity;
+                        };
+                	}
+                },
+                
+                /**
                  * Custom callback that will be invoked after successfull retrieval.
+                 *
+                 * arguments: entity, bindingEntity, customObject
                  */
                 postRetrieved: {
                 	type: Function                	
@@ -53,6 +65,8 @@
                 
                 /**
                  * Custom callback that will be invoked after successfull validation.
+                 *
+                 * arguments: validatedEntity, bindingEntity, customObject
                  */
                 postValidated: {
                 	type: Function                	
@@ -161,7 +175,7 @@
                 	type: Function,
                 	value: function () {
                 		return (function (entityAndCustomObject) {
-                            var entity = this.onPreRetrieved(entityAndCustomObject[0]);
+                            var entity = this.preRetrieved(entityAndCustomObject[0]);
                             var customObject = this.$.reflector.customObject(entityAndCustomObject);
 
                             var newBindingEntity = this.onEntityReceived(entity);
@@ -380,12 +394,6 @@
             },
 
             //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
-            /**
-             * Default implementation for onPreRetrieved callback.
-             */
-            onPreRetrieved: function (entity) {
-                return entity;
-            },
             
             onDescendantRetrieved: function(entity, newBindingEntity, customObject) {
             },

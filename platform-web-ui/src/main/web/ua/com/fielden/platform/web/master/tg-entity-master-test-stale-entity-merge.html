@@ -57,7 +57,7 @@
                 done();
             };
 
-            master.onPreRetrieved = function(entity) {
+            master.preRetrieved = function(entity) {
                 entity.version = 0;
                 entity.set("conflictingProp", "initial");
                 return entity;
