@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +15,7 @@ import ua.com.fielden.platform.entity.proxy.ProxyMode;
 
 public class EntityFetcher {
     private final QueryExecutionContext executionContext;
-    
+
     private final Logger logger = Logger.getLogger(this.getClass());
 
     public EntityFetcher(final QueryExecutionContext executionContext) {
@@ -31,7 +33,7 @@ public class EntityFetcher {
     public <E extends AbstractEntity<?>> List<E> getEntities(final QueryExecutionModel<E, ?> queryModel) {
         return getEntitiesOnPage(queryModel, null, null);
     }
-    
+
     private <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity, final ProxyMode proxyMode) {
         try {
             final DateTime st = new DateTime();
@@ -39,10 +41,10 @@ public class EntityFetcher {
             final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(queryModel, pageNumber, pageCapacity);
             final List<E> result = instantiateFromContainers(containers, queryModel.isLightweight(), proxyMode);
             final Period pd = new Period(st, new DateTime());
-            logger.info("Duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + result.size());
+            logger.debug(format("Duration: %s m %s s %s ms. Entities count: %s", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), result.size()));
             return result;
         } catch (final Exception e) {
-            e.printStackTrace();
+            logger.error(e);
             throw new IllegalStateException(e);
         }
     }

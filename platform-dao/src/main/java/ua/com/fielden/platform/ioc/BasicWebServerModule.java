@@ -88,6 +88,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
     private final IApplicationDomainProvider applicationDomainProvider;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
     private final Class<? extends IFilter> automaticDataFilterType;
+    private final Class<? extends IAuthorisationModel> authorisationModelType;
 
     public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes, //
             final IApplicationDomainProvider applicationDomainProvider,//
@@ -101,6 +102,23 @@ public class BasicWebServerModule extends CommonFactoryModule {
         this.applicationDomainProvider = applicationDomainProvider;
         this.serialisationClassProviderType = serialisationClassProviderType;
         this.automaticDataFilterType = automaticDataFilterType;
+        this.authorisationModelType = ServerAuthorisationModel.class;
+    }
+
+    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes, //
+            final IApplicationDomainProvider applicationDomainProvider,//
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
+            final Class<? extends IFilter> automaticDataFilterType, //
+            final Class<? extends IAuthorisationModel> authorisationModelType,
+            final SecurityTokenProvider tokenProvider,//
+            final Properties props) throws Exception {
+        super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
+        this.props = props;
+        this.tokenProvider = tokenProvider;
+        this.applicationDomainProvider = applicationDomainProvider;
+        this.serialisationClassProviderType = serialisationClassProviderType;
+        this.automaticDataFilterType = automaticDataFilterType;
+        this.authorisationModelType = authorisationModelType;
     }
 
     @Override
@@ -153,7 +171,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         if (tokenProvider != null) {
             bind(SecurityTokenProvider.class).toInstance(tokenProvider);
         }
-        bind(IAuthorisationModel.class).to(ServerAuthorisationModel.class);
+        bind(IAuthorisationModel.class).to(authorisationModelType);
 
         // bind functional entities dao.
         bind(IQueryRunner.class).to(QueryRunnerDao.class);
