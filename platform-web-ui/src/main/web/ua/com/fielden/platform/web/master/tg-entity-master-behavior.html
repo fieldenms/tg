@@ -1,0 +1,349 @@
+<link rel="import" href="/resources/components/postal-lib.html">
+
+<script>
+    (function () {
+        var SimultaneousSaveException = function () {
+            Object.call(this);
+
+            this.message = "Simultaneous save exception: the save process has been already started before and not ended. Please, block UI until the save action completes.";
+        };
+        SimultaneousSaveException.prototype = Object.create(Object.prototype);
+        SimultaneousSaveException.prototype.constructor = SimultaneousSaveException;
+
+        /**
+         * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+         *
+         */
+        SimultaneousSaveException.prototype.toString = function () {
+            return this.message;
+        }
+
+        Polymer({
+        	is: 'tg-entity-master',
+        	
+        	properties: {
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+            	// No default values are allowed in this case.														   //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
+                /**
+                 * Custom callback that will be invoked after successfull retrieval.
+                 *
+                 * arguments: entity, bindingEntity, customObject
+                 */
+                postSaved: {
+                	type: Function                	
+                }, 
+            		
+        	},
+        	
+        	
+        	
+        	// TODO PUBLIC API: attributes="entitytype entityid onSaved onSavedComplete currentState centreUuid savingContext moduleId"
+        	
+        	
+            publish: {
+                // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
+                
+                /**
+                 * The context in which save() action should be performed ('null' in case when context is not needed).
+                 */
+            	savingContext: null
+            },
+
+            /**
+             * The map of actions by their name ids.
+             *
+             * Every action consists of three callbacks ('preAction', 'postActionSuccess', 'postActionError') and
+             * 'shortDesc', 'longDesc', 'icon' + 'enabledStates'.
+             *
+             * 'EnabledStates' are the states in which the action is enabled.
+             */
+            actions: null,
+
+            /**
+             * Initialisation block (after 'ready'). It is designated to use for inner object / arrays initialisation.
+             */
+            created: function () {
+                this.super();
+                this.actions = {};
+                // TODO ...
+                this.actions['NEW'] = {};
+            },
+
+            /**
+             * Initialisation block. It has all children web components already initialised.
+             */
+            ready: function () {
+                var self = this;
+                self.super();
+
+                // IMPORTANT: it is crucial to bind the functions, which will potentially be passed
+                //            into other contexts (for e.g. postValidatedDefault will be used in tg-entity-validator),
+                //            with its original context!
+                self.save = self.save.bind(self);
+                self.edit = self.edit.bind(self);
+                self.view = self.view.bind(self);
+                self.onSavedDefault = self.onSavedDefault.bind(self);
+                self.onSavedDefaultError = self.onSavedDefaultError.bind(self);
+                self._title = self._title.bind(self);
+                self._desc = self._desc.bind(self);
+                
+                
+                self._processSaverResponse = function (e) {
+                	self._processResponse(e, "save", function (potentiallySavedEntity) {
+                		self.onSavedDefault(potentiallySavedEntity);
+                	}, function (errorResult) {
+                		self.onSavedDefaultError(errorResult);
+                	});
+                };
+                
+                self._processSaverError = function (e) {
+                	self._processError(e, "save");
+                };
+
+                // TODO: provide generic method (like _processResponse or _processError) for that?
+                self.$.ajaxSaver.addEventListener('core-complete', function (e) {
+                    if (e.detail.xhr.status === 200) {
+                        self.onSavedComplete();
+                    }
+                });
+
+                self.actions['REFRESH'] = {
+                    shortDesc: 'REFRESH',
+                    longDesc: 'REFRESH ACTION...',
+                    enabledStates: ['EDIT', 'VIEW'],
+                    action: function () {
+                        self.retrieve();
+                    }
+                };
+                self.actions['VALIDATE'] = {
+                    shortDesc: 'VALIDATE',
+                    longDesc: 'VALIDATE ACTION...',
+                    enabledStates: ['EDIT'],
+                    action: function () {
+                        self.validate();
+                    }
+                };
+                self.actions['SAVE'] = {
+                    shortDesc: 'SAVE',
+                    longDesc: 'SAVE ACTION...',
+                    enabledStates: ['EDIT'],
+                    action: function () {
+                        self.save();
+                    }
+                };
+
+                self.actions['EDIT'] = {
+                    shortDesc: 'EDIT',
+                    longDesc: 'EDIT ACTION...',
+                    enabledStates: ['VIEW'],
+                    action: function () {
+                        self.edit();
+                        this.onAction(null);
+                    },
+                    onAction: function (e) {}
+                };
+                self.actions['VIEW'] = {
+                    shortDesc: 'VIEW',
+                    longDesc: 'VIEW ACTION...',
+                    enabledStates: ['EDIT'],
+                    action: function () {
+                        self.view();
+                        this.onAction(null);
+                    },
+                    onAction: function (e) {}
+                };
+            },
+            
+            attached: function() {
+                var self = this;
+                self.saveListener = postal.subscribe({
+                    channel: "master_"  + self.uuid,
+                    topic: "save.finish",
+                    callback: function(data, envelope) {
+                        postal.publish({
+                            channel: "centre_" + self.centreUuid,
+                            topic: "detail.saved",
+                            data: data
+                        });
+                        console.log("--------------saved finished for: " + self.uuid + "------------");
+                    }
+                });
+            },
+            
+            detached: function() {
+                console.log("-------master detached: " + this.uuid + "------------");
+                this.saveListener.unsubscribe();
+            },
+
+            /**
+             * The core-ajax component for entity retrieval.
+             */
+            _ajaxRetriever: function () {
+                return this.$.ajaxRetriever;
+            },
+
+            /**
+             * The tg-entity-validator component for entity validation.
+             */
+            _validator: function () {
+                return this.$.validator;
+            },
+
+            /** 
+             * The function for binding property title. The argument 'entity' will be changed in future. Polymer will listen to that change.
+             */
+            _title: function (entity, property) {
+                if (typeof this.$ !== 'undefined') {
+                    if (this.$.reflector.isEntity(entity)) {
+                        // console.log("_title entity", entity);
+                        // console.log("_title entity type", entity.type());
+                        // console.log("_title entity type prop", entity.type().prop(property));
+                        // console.log("_title entity type prop title", entity.type().prop(property).title());
+                        return entity.type().prop(property).title();
+                    } else {
+                        return "Not yet initialised _currEntity, from which to get title!";
+                    }
+                } else {
+                    return "Not yet initialised this.$!";
+                }
+            },
+
+            /** 
+             * The function for binding property desc. The argument 'entity' will be changed in future. Polymer will listen to that change.
+             */
+            _desc: function (entity, property) {
+                if (typeof this.$ !== 'undefined') {
+                    if (this.$.reflector.isEntity(entity)) {
+                        return entity.type().prop(property).desc();
+                    } else {
+                        return "Not yet initialised _currEntity, from which to get desc!";
+                    }
+                } else {
+                    return "Not yet initialised this.$!";
+                }
+            },
+
+            //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
+            /**
+             * Default implementation for onSavedComplete callback.
+             */
+            onSavedComplete: function () {},
+
+            /**
+             * Changes the state to 'EDIT'.
+             */
+            edit: function () {
+                if (this.currentState === 'EDIT') {
+                    console.warn("The master is already in EDIT state. state == ", this.currentState);
+                } else {
+                    this.currentState = 'EDIT';
+                }
+            },
+
+            /**
+             * Changes the state to 'VIEW'.
+             */
+            view: function () {
+                if (this.currentState === 'VIEW') {
+                    console.warn("The master is already in VIEW state. state == ", this.currentState);
+                } else {
+                    this.currentState = 'VIEW';
+                }
+            },
+
+            //////////////////////////////////////// SAVING ////////////////////////////////////////
+            /**
+             * Starts the process of entity saving (based on _currBindingEntity).
+             */
+            save: function () {
+                var self = this;
+
+                if (self._savingInProgress()) {
+                    var SimultaneousSaveException = this._getSimultaneousSaveExceptionType();
+                    throw new SimultaneousSaveException();
+                }
+
+                self._startRefreshCycleModeForEditors();
+
+                var holder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                // cancel previous validation before starting saving process -- it includes validation process internally!
+                self._validator().abortValidationIfAny();
+
+                // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+                //            This check will be done on server -- and appropriate onSavedDefault callback will be triggered.
+                self._saveModifiedProperties(self._reset(holder));
+                // if (self._hasModified(holder)) {
+                //     self._saveModifiedProperties(self._reset(holder));
+                // } else {
+                //     self._validator().validate(self._reset(holder));
+                // }
+            },
+
+            _savingInProgress: function () {
+                return this.$.ajaxSaver.loading;
+            },
+
+            /**
+             * Starts the process of entity saving.
+             *
+             * @param modifiedPropertiesHolder -- the entity with modified properties
+             */
+            _saveModifiedProperties: function (modifiedPropertiesHolder) {
+            	var reflector = this.$.reflector;
+                var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
+                savingInfoHolder.id = null;
+                savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
+            	
+            	if (this.savingContext) {
+                    savingInfoHolder["centreContextHolder"] = this.savingContext;
+            	}
+            	
+                this.$.ajaxSaver.body = JSON.stringify(this.$.serialiser.serialise(savingInfoHolder));
+                this.$.ajaxSaver.go();
+            },
+
+            /**
+             * Returns 'true' if the entity has been modified from original, 'false' otherwise.
+             *
+             * NOTE: it is designed to be used once (after that hasModified() will not be working for the same instance of modPropsHolder).
+             *
+             * @param modifiedPropertiesHolder -- the entity with modified properties
+             */
+            _hasModified: function (modifiedPropertiesHolder) {
+                return modifiedPropertiesHolder["@modified"];
+            },
+
+            /**
+             * Default implementation for onSaved callback.
+             */
+            onSavedDefault: function (potentiallySavedEntity) {
+                var msg = this._toastMsg("Saving", potentiallySavedEntity);
+                this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
+
+                var newBindingEntity = this._postEntityReceived(potentiallySavedEntity);
+
+                // custom external action
+                this.onSaved(potentiallySavedEntity, newBindingEntity);
+            },
+
+            /**
+             * Default implementation for unsuccessful onSaved callback.
+             */
+            onSavedDefaultError: function (errorResult) {
+            	// This function will be invoked after server-side error appear.
+            	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+            	console.warn("SERVER ERROR: ", errorResult);
+            },
+
+            //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
+            _getSimultaneousSaveExceptionType: function () {
+                return SimultaneousSaveException;
+            }
+        });
+    })();
+</script>

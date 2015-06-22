@@ -256,6 +256,33 @@
                 },
                 
                 /**
+                 * This is the standard processor for 'core-response's and is applicable for all
+                 *   responses that contain java Result inside 'e.detail.response'.
+                 *
+                 * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown 
+                 *   and 'customErrorHandlerFor(result)' is invoked.
+                 *
+                 * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
+                 *
+                 *
+                 * This is the function, that is designated for binding.
+                 */
+                _processError: {
+                	type: Function,
+                	value: function () {
+                		return (function(e, name) {
+                			var errorObject = e.detail.error;
+                        	console.log(name, ": iron-error: e.detail.error = ", errorObject);
+                        	
+                    		// throw the toast message about the error (unhandled server error, connection problem, 403 authorisation error etc.)
+                            var msg = this._toastMsgForErrorObject(errorObject);
+                            this._openToastForError(this.$.reflector.exceptionMessageForErrorObject(errorObject), msg);
+                    		// TODO: support this case, if needed: continue with custom error handling of the error result -- customErrorHandlerFor(deserialisedResult);
+                        }).bind(this);
+                	}
+                },
+                
+                /**
                  * Starts the process of entity validation (based on _currBindingEntity).
                  *
                  * This function is designated for binding.
@@ -320,14 +347,18 @@
                 
                 this._resetRefreshCycleModeForEditors(); // init the value for '_refreshCycleMode'
                 this._currBindingEntity = null; // TODO previously, was {} -- empty object. Please, use more safe form ('null'). And check, if 'null' is appropriately working with editors.
-
-                self._ajaxRetriever().addEventListener('core-response', function (e) {
+                
+                self._processRetrieverResponse = function (e) {
                 	self._processResponse(e, "retrieve", function (entityAndCustomObject) {
                 		self._postRetrievedDefault(entityAndCustomObject);
                 	}, function (errorResult) {
                 		self._postRetrievedDefaultError(errorResult);
                 	});
-                });
+                };
+                
+                self._processRetrieverError = function (e) {
+                	self._processError(e, "retrieve");
+                };
             },
 
             ///////////// toast related //////////////////
@@ -341,6 +372,9 @@
                 this.$.toastGreeting.showProgress = showProgress;
                 if (hasMoreInfo) {
                     if (!entity.isValid()) {
+                    	// TODO is it still relevant? msgHeading
+              			// TODO is it still relevant? msgHeading
+      					// TODO is it still relevant? msgHeading
                         this.$.toastGreeting.msgHeading = "Error";
                     } else if (entity.isValidWithWarning()) {
                         this.$.toastGreeting.msgHeading = "Warning";
@@ -359,6 +393,9 @@
                 this.$.toastGreeting.hasMore = true;
                 this.$.toastGreeting.msgText = moreInfo;
                 this.$.toastGreeting.showProgress = false;
+            	// TODO is it still relevant? msgHeading
+      			// TODO is it still relevant? msgHeading
+				// TODO is it still relevant? msgHeading
              	this.$.toastGreeting.msgHeading = "Error";
                 this.$.toastGreeting.show();
             },
@@ -366,6 +403,11 @@
             _toastMsgForError: function (errorResult) {
             	var ex = errorResult.ex;
             	return this.$.reflector.stackTrace(ex);
+            },
+            
+            _toastMsgForErrorObject: function (errorObject) {            	
+            	var stack = errorObject.stack;
+            	return this.$.reflector.stackTraceForErrorObjectStack(stack);
             },
             
             _toastMsg: function (actionName, entity) {

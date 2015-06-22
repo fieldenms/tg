@@ -771,6 +771,13 @@
         exceptionMessage: function (exception) {
         	return exception.message === null ? "Null pointer exception" : exception.message;
         },
+
+        /**
+         * Returns a meaninful representation for errorObject message.
+         */
+        exceptionMessageForErrorObject: function (errorObject) {
+        	return errorObject.message;
+        },
         
         /**
          * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
@@ -789,6 +796,14 @@
         	
          	return msg;
         },
+        
+        /**
+         * Returns html representation for the specified errorObject stack.
+         */
+        stackTraceForErrorObjectStack: function (stack) {
+        	console.log("STACK", stack);
+        	throw "NOT IMPLEMENTED!";
+        },        
         
         //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////
         
