@@ -36,13 +36,13 @@
                     var self = this;
                     if (e.target === this.$.elementToLoad) {
                         if (this.item.view.type === 'centre') {
-                            detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                            detail.postRetrieved = function (entity, bindingEntity, customObject) {
                                 self.fire("menu-item-view-loaded", self.item);
                             };
 
                             detail.retrieve();
                         } else if (this.item.view.type === 'master') {
-                            detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                            detail.postRetrieved = function (entity, bindingEntity, customObject) {
                                 if (entity.id === null) {
                                     postal.publish({
                                         channel: "view",

@@ -136,7 +136,7 @@
 
                 centreExample.onMasterLoaded = function (e, detail, source) {
 
-                    detail.onRetrieved = function (entity, bindingEntity, customObject) {
+                    detail.postRetrieved = function (entity, bindingEntity, customObject) {
                         if (entity.id === null) {
                             postal.publish({
                                 channel: "view",

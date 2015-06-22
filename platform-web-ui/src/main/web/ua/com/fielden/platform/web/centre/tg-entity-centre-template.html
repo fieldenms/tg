@@ -69,7 +69,7 @@
         <core-animated-pages selected="{{selectedPage}}" on-scroll="{{handleScroll}}">
             <div>
                 <div class="selection-criteria" layout vertical style="padding: 40px;">
-                    <tg-@entity_type-selection-criteria id="selection_criteria" uuid="{{uuid}}" mitype="@mi_type" onRun="{{onRun}}" getSelectedEntities="{{getSelectedEntities}}" onRetrieved="{{onRetrieved}}" @queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
+                    <tg-@entity_type-selection-criteria id="selection_criteria" uuid="{{uuid}}" mitype="@mi_type" onRun="{{onRun}}" getSelectedEntities="{{getSelectedEntities}}" post-retrieved="[[postRetrieved]]" @queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
                     <div layout horizontal justified style="margin-top:40px;">
                         <div layout horizontal>
                             <paper-button id="saver" raised roll="button" on-tap="{{save}}" disabled?="{{!canSave($.selection_criteria._isCentreChanged)}}">Save</paper-button>
@@ -159,8 +159,8 @@
                     ];
                 },
 
-                onRetrieved: function (entity, newBindingEntity, customObject) {
-                    console.log("centre onRetrieved");
+                postRetrieved: function (entity, newBindingEntity, customObject) {
+                    console.log("centre postRetrieved");
                 },
                 handleScroll: function(e) {
                     this.fire("scroll-container", e.target);

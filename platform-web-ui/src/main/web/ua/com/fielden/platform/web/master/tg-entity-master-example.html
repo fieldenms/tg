@@ -21,8 +21,8 @@
             document.addEventListener('polymer-ready', function() {
                 var master = document.querySelector('#master'); 
 
-                master.onRetrieved = function(entity, bindingEntity, customObject) {
-                    console.log("onRetrieved");
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    console.log("postRetrieved");
                 };
 
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {

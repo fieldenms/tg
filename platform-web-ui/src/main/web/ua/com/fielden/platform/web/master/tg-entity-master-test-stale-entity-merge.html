@@ -63,7 +63,7 @@
                 return entity;
             };
 
-            master.onRetrieved = function(entity, bindingEntity, customObject) {
+            master.postRetrieved = function(entity, bindingEntity, customObject) {
                 assert.strictEqual(entity.version, 0, "Entity version should be original.");
 
                 ////////////////////////////////////////// CHECK NON-CONFLICTING PROP //////////////////////////////////////////

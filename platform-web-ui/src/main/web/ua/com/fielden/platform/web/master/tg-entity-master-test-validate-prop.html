@@ -38,7 +38,7 @@
                 done();
             };
 
-            master.onRetrieved = function(entity, bindingEntity, customObject) {
+            master.postRetrieved = function(entity, bindingEntity, customObject) {
                 // value ok?
                 assert.ok(entity.get("integerProp"), "Property value should be initialised.");                
                 assert.strictEqual(entity.get("integerProp"), 43, "Property value should be correct.");

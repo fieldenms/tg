@@ -41,7 +41,7 @@
                 done();
             };
 
-            master.onRetrieved = function(entity, bindingEntity, customObject) {
+            master.postRetrieved = function(entity, bindingEntity, customObject) {
                 // value ok?
                 assert.ok(entity.get("moneyProp"), "Property value should be initialised.");                
                 assert.strictEqual(entity.get("moneyProp").amount, 23.0, "Property value amount should be correct.");

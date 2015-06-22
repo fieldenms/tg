@@ -4,12 +4,12 @@
     (function () {
     	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
     	Polymer.TgBehaviors.TgEntityBinderBehavior = {
-    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
-    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
-    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
-    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
-    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
-    		// TODO PUBLIC API: attributes="postRetrieved postValidated preRetrieved currentState uuid"
+    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
+    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
+    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
+    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
+    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
+    		// TODO PUBLIC API: attributes="postValidated preRetrieved"
     		
     		properties: {
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,7 +42,14 @@
                  */
                 uuid: {
                 	type: String
-                },                
+                },
+                
+                /**
+                 * Custom callback that will be invoked after successfull retrieval.
+                 */
+                postRetrieved: {
+                	type: Function                	
+                },
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,9 +107,8 @@
                 	type: Function,
                 	value: function () {
                 		return (function () {
-                            var self = this;
-                            var mph = self.extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                            return self._reset(mph);
+                            var mph = this.extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                            return this._reset(mph);
                         }).bind(this);
                 	}
                 },
@@ -155,7 +161,7 @@
                             
                             this.onDescendantRetrieved(entity, newBindingEntity, customObject);
                             // custom external action
-                            this.onRetrieved(entity, newBindingEntity, customObject);
+                            this.postRetrieved(entity, newBindingEntity, customObject);
                         }).bind(this);
                 	}
                 },
