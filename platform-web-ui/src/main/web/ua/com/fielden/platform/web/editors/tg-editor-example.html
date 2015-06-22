@@ -13,11 +13,23 @@
     <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-datetime-picker.html">
+    
+    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
 </head>
 
 <body>
   	<template is="dom-bind">
-  		<tg-editor-example-entity binding-entity="{{entity}}" validation-callback="{{validationCallback}}">
+  		<iron-ajax
+  			auto
+  			url='/entity/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties1/new'
+  			method="POST"
+  			handle-as="json"
+  			on-response="processResponse"
+  			on-error="processError"
+  			>
+  		</iron-ajax>
+  		
+  		<tg-editor-example-entity binding-entity="{{entity}}" validation-callback="{{validationCallback}}" process-response="{{processResponse}}" process-error="{{processError}}">
   		</tg-editor-example-entity>
   	
   	    <tg-integer-editor 

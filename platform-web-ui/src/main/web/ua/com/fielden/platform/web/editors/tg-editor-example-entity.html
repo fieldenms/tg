@@ -25,6 +25,16 @@
         		maxTextAreaLength: {
         			type: Number,
         			notify: true
+        		},
+        		
+        		processResponse: {
+        			type: Function,
+        			notify: true
+        		},
+        		
+        		processError: {
+        			type: Function,
+        			notify: true
         		}
         	},
         	
@@ -36,6 +46,13 @@
         		};
         		
         		this.maxTextAreaLength = 30;
+
+        		this.processResponse = function (event) {
+					console.log("RESPONSE =", event, event.detail.response); // event.detail is 'iron-request' (which has 'response' inside)
+				};
+        		this.processError = function (event) {
+    				console.log("ERROR =", event, event.detail.error); // event.detail is { error: 'error', request: 'iron-request' }
+    			};
         	},
         	
         	createBindingEntity: function () {
