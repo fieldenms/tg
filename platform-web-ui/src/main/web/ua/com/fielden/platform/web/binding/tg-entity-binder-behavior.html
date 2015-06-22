@@ -348,7 +348,7 @@
                         this.$.toastGreeting.msgHeading = "Info";
                     }
                 }
-                this.$.toastGreeting.opened = true;
+                this.$.toastGreeting.show();
             },
 
             /**
@@ -360,7 +360,7 @@
                 this.$.toastGreeting.msgText = moreInfo;
                 this.$.toastGreeting.showProgress = false;
              	this.$.toastGreeting.msgHeading = "Error";
-                this.$.toastGreeting.opened = true;
+                this.$.toastGreeting.show();
             },
             
             _toastMsgForError: function (errorResult) {
