@@ -91,7 +91,6 @@
                         topic: "state.poped",
                         callback: function (data, envelope) {
                             self.setSelected(data.state[0]);
-                            //updateHash(data.state);
                         }
                     });
                     //Set up listener for history events
@@ -105,7 +104,6 @@
                     //Selectes the first view 
                     self.setSelected("menu");
                     history.pushState(["menu"], "");
-                    //updateHash([self.selected]);
                 }
             });
         })();
