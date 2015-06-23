@@ -24,8 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,9 +36,6 @@ import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityContainerEnhancer;
-import ua.com.fielden.platform.entity.query.EntityContainerFetcher;
-import ua.com.fielden.platform.entity.query.EntityHibernateRetrievalQueryProducer;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
@@ -49,7 +44,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -984,10 +978,6 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_all_quantified_condition() {
-      Logger.getLogger(EntQuery.class).setLevel(Level.DEBUG);
-      Logger.getLogger(EntityContainerEnhancer.class).setLevel(Level.DEBUG);
-      Logger.getLogger(EntityContainerFetcher.class).setLevel(Level.DEBUG);
-      Logger.getLogger(EntityHibernateRetrievalQueryProducer.class).setLevel(Level.DEBUG); 
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().val(100).lt().all(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").yield().prop("qty").modelAsPrimitive()).model();
         final List<TgVehicle> values = vehicleDao.getAllEntities(from(model).model());
         assertEquals("Incorrect count", 1, values.size());
