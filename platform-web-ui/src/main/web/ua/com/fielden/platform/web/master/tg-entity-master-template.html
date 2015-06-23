@@ -1,52 +1,75 @@
 <!--@imports-->
+
+<link rel="import" href="/resources/master/tg-entity-master.html">
+<link rel="import" href="/resources/master/tg-entity-master-behavior.html">
+
 <link rel="import" href="/resources/master/actions/tg-action.html">
 <link rel="import" href="/resources/components/tg-scroll-container.html">
 
-
-<polymer-element name="tg-@entity_type-master" extends="tg-entity-master" layout vertical>
+<dom-module id="tg-@entity_type-master"> <!-- TODO layout vertical -->
+    <style>
+        :host {
+            background-color: white;
+        }
+        /*tg-flex-layout {
+            background-color: white;
+        }
+        tg-scroll-container {
+            overflow-x: hidden;
+            overflow-y: auto;
+        }*/
+    </style>
     <template>
-        <style>
-            :host {
-                background-color: white;
-            }
-            /*tg-flex-layout {
-                background-color: white;
-            }
-            tg-scroll-container {
-                overflow-x: hidden;
-                overflow-y: auto;
-            }*/
-        </style>
-        <shadow></shadow>
-
-        <!--EDITORS AND ENTITY ACTIONS DOM (GENERATED) -->
-        <!--<tg-scroll-container fit on-scroll="{{handleScroll}}">-->
-            <!--@editors_and_actions-->
-        <!--</tg-scroll-container>-->
-
+    	<tg-entity-master entity-type="[[entityType]]" 
+    		entity-id="[[entityId]]"
+    		_post-validated-default="[[_postValidatedDefault]]"
+    		_postValidatedDefaultError="[[_postValidatedDefaultError]]"
+    		_process-response="[[_processResponse]]"
+    		_process-retriever-response="[[_processRetrieverResponse]]"
+    		_process-retriever-error="[[_processRetrieverError]]"
+    		_processSaverResponse="[[_processSaverResponse]]"
+    		_process-saver-error="[[_processSaverError]]">
+   	        <!--EDITORS AND ENTITY ACTIONS DOM (GENERATED) -->
+   	        <!--@editors_and_actions-->
+   	        
+	        <!--<tg-scroll-container fit on-scroll="{{handleScroll}}">-->
+	        <!--</tg-scroll-container>-->
+    	</tg-entity-master>
     </template>
-    <script>
-        (function () {
-            Polymer({
-                noUI: false,
+</dom-module>
 
-                /**
-                 * Initialisation block. It has all children web components already initialised.
-                 */
-                ready: function () {
-                    this.super();
+<script>
+    (function () {
+        Polymer({
+        	is: 'tg-@entity_type-master',
+        	
+        	behaviors: [ Polymer.TgBehaviors.TgEntityMasterBehavior ],
+        	
+        	properties: {
+        		/**
+        		 * The property which indicates whether entity master is 'UI-less'.
+        		 */
+	            noUI: {
+	            	type: Boolean,
+	            	value: false
+	            }
+        	},
 
-                    var self = this;
+            /**
+             * Initialisation block. It has all children web components already initialised.
+             */
+            ready: function () {
+                var self = this;
 
-                    // ENTITY ACTIONS (GENERATED)
-                    //@entityActions
-                    // PROPERTY ACTIONS (GENERATED)
-                    //@propertyActions
-                },
-                handleScroll: function(e) {
-                   this.fire("scroll-container", e.target);
-                }
-            });
-        })();
-    </script>
-</polymer-element>
+                // ENTITY ACTIONS (GENERATED)
+                //@entityActions
+                // PROPERTY ACTIONS (GENERATED)
+                //@propertyActions
+            }
+            
+            /* handleScroll: function(e) {
+               this.fire("scroll-container", e.target);
+            } */
+        });
+    })();
+</script>

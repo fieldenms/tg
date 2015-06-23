@@ -99,8 +99,6 @@
             	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
             	
             	ready: function () {
-            		Polymer.TgBehaviors.TgEditorBehavior.ready.call(this);
-            		
             		this._calendarVisible = false;
             		this.$.editorDom._editorKind = "DATE";
             	},

@@ -203,7 +203,6 @@
              */
             ready: function () {
                 var self = this;
-                Polymer.TgBehaviors.TgEntityBinderBehavior.ready.call(self);
                 
                 self._processSaverResponse = function (e) {
                 	self._processResponse(e, "save", function (potentiallySavedEntity) {
@@ -244,14 +243,14 @@
             /**
              * Creates default master actions.
              */
-            _createActions: functions () {
+            _createActions: function () {
             	var self = this;
-                self.actions = {};
+                self._actions = {};
 
                 // TODO ...
-                self.actions['NEW'] = {};
+                self._actions['NEW'] = {};
                 
-                self.actions['REFRESH'] = {
+                self._actions['REFRESH'] = {
                     shortDesc: 'REFRESH',
                     longDesc: 'REFRESH ACTION...',
                     enabledStates: ['EDIT', 'VIEW'],
@@ -259,7 +258,7 @@
                         self.retrieve();
                     }
                 };
-                self.actions['VALIDATE'] = {
+                self._actions['VALIDATE'] = {
                     shortDesc: 'VALIDATE',
                     longDesc: 'VALIDATE ACTION...',
                     enabledStates: ['EDIT'],
@@ -267,7 +266,7 @@
                         self.validate();
                     }
                 };
-                self.actions['SAVE'] = {
+                self._actions['SAVE'] = {
                     shortDesc: 'SAVE',
                     longDesc: 'SAVE ACTION...',
                     enabledStates: ['EDIT'],
@@ -276,7 +275,7 @@
                     }
                 };
 
-                self.actions['EDIT'] = {
+                self._actions['EDIT'] = {
                     shortDesc: 'EDIT',
                     longDesc: 'EDIT ACTION...',
                     enabledStates: ['VIEW'],
@@ -286,7 +285,7 @@
                     },
                     onAction: function (e) {}
                 };
-                self.actions['VIEW'] = {
+                self._actions['VIEW'] = {
                     shortDesc: 'VIEW',
                     longDesc: 'VIEW ACTION...',
                     enabledStates: ['EDIT'],
