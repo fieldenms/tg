@@ -1,168 +1,165 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-view-manager" hidden>
-    <script>
-        (function () {
-            var mastersById = {},
-                generateMasterName = function (entity) {
-                    var keyString = "";
-                    if (typeof entity === "object" && typeof entity.type === "function") {
-                        if (entity.type().isCompositeEntity()) {
-                            keyString += "[";
-                            entity.type().compositeKeyNames.forEach(function (element) {
-                                keyString += generateMasterName(entity[element]);
-                            })
-                            return keyString + "]";
-                        } else if (typeof entity.key === "object" && typeof entity.key.type === "function") {
-                            return "(" + generateMasterName(entity.key) + ")";
-                        } else {
-                            return entity.key;
-                        }
+<script>
+    (function () {
+        var mastersById = {},
+            generateMasterName = function (entity) {
+                var keyString = "";
+                if (typeof entity === "object" && typeof entity.type === "function") {
+                    if (entity.type().isCompositeEntity()) {
+                        keyString += "[";
+                        entity.type().compositeKeyNames.forEach(function (element) {
+                            keyString += generateMasterName(entity[element]);
+                        })
+                        return keyString + "]";
+                    } else if (typeof entity.key === "object" && typeof entity.key.type === "function") {
+                        return "(" + generateMasterName(entity.key) + ")";
                     } else {
-                        return entity.toString();
+                        return entity.key;
                     }
-                },
-                //mastersByUuid = {},
-                /////////////////////////////////////////////////// Centre Edit action listeners.///////////////////////////////////////////////////
-                editListener = postal.subscribe({
-                    channel: "centre",
-                    topic: "edit.start",
-                    callback: function (data, envelope) {
-                        var fullTypeName = data.entity.type().notEnhancedFullClassName(),
-                            simpleTypeName = data.entity.type()._notEnhancedSimpleClassName(),
-                            centreUuid = data.uuid.split('/'),
-                            masterName = generateMasterName(data.entity),
-                            masterUuid,
-                            master;
-                        centreUuid[centreUuid.length - 1] = "Master for " + masterName;
-                        masterUuid = centreUuid.join('/');
-                        master = {
-                            title: "Master for " + masterName,
-                            description: "Master for " + masterName,
-                            view: {
-                                import: "/master_ui/" + fullTypeName,
-                                elementName: "tg-" + simpleTypeName + "-master",
-                                type: "master",
-                                attrs: {
-                                    entityid: data.entity.id,
-                                    entitytype: fullTypeName,
-                                    currentState: 'EDIT',
-                                    centreUuid: data.uuid,
-                                    uuid: masterUuid
-                                }
+                } else {
+                    return entity.toString();
+                }
+            },
+            //mastersByUuid = {},
+            /////////////////////////////////////////////////// Centre Edit action listeners.///////////////////////////////////////////////////
+            editListener = postal.subscribe({
+                channel: "centre",
+                topic: "edit.start",
+                callback: function (data, envelope) {
+                    var fullTypeName = data.entity.type().notEnhancedFullClassName(),
+                        simpleTypeName = data.entity.type()._notEnhancedSimpleClassName(),
+                        centreUuid = data.uuid.split('/'),
+                        masterName = generateMasterName(data.entity),
+                        masterUuid,
+                        master;
+                    centreUuid[centreUuid.length - 1] = "Master for " + masterName;
+                    masterUuid = centreUuid.join('/');
+                    master = {
+                        title: "Master for " + masterName,
+                        description: "Master for " + masterName,
+                        view: {
+                            import: "/master_ui/" + fullTypeName,
+                            elementName: "tg-" + simpleTypeName + "-master",
+                            type: "master",
+                            attrs: {
+                                entityid: data.entity.id,
+                                entitytype: fullTypeName,
+                                currentState: 'EDIT',
+                                centreUuid: data.uuid,
+                                uuid: masterUuid
                             }
-                        };
-                        if (mastersById["" + data.entity.id]) {
-                            postal.publish({
-                                channel: "manager_" + data.moduleId,
-                                topic: "master.show",
-                                data: {
-                                    item: mastersById["" + data.entity.id],
-                                    centreUuid: data.uuid
-                                }
-                            });
-                        } else {
-                            postal.publish({
-                                channel: "manager_" + data.moduleId,
-                                topic: "master.edit.create",
-                                data: master
-                            });
                         }
-                    }
-                }),
-                masterCreatedListener = postal.subscribe({
-                    channel: "view",
-                    topic: "master.edit.created",
-                    callback: function (data, envelope) {
-                        mastersById["" + data.entityid] = data.item;
-                        postal.publish({
-                            channel: "centre_" + data.centreUuid,
-                            topic: "edit.finish.created",
-                            data: {
-                                item: data.item
-                            }
-                        });
-                    }
-                }),
-                masterShownListener = postal.subscribe({
-                    channel: "view",
-                    topic: "master.shown",
-                    callback: function (data, envelope) {
-                        postal.publish({
-                            channel: "centre_" + data.centreUuid,
-                            topic: "edit.finish.shown",
-                            data: {
-                                item: data.item
-                            }
-                        });
-                    }
-                }),
-                /////////////////////////////////////////////////// Centre New action listeners.///////////////////////////////////////////////////
-                newListener = postal.subscribe({
-                    channel: "centre",
-                    topic: "new.start",
-                    callback: function (data, envelope) {
-                        master = {
-                            view: {
-                                import: "/master_ui/" + data.entityType,
-                                elementName: "tg-" + data.simpleEntityType + "-master",
-                                type: "master",
-                                attrs: {
-                                    entityid: "new",
-                                    entitytype: data.entityType,
-                                    currentState: 'EDIT',
-                                    centreUuid: data.uuid
-                                }
-                            }
-                        };
+                    };
+                    if (mastersById["" + data.entity.id]) {
                         postal.publish({
                             channel: "manager_" + data.moduleId,
-                            topic: "master.new.create",
+                            topic: "master.show",
+                            data: {
+                                item: mastersById["" + data.entity.id],
+                                centreUuid: data.uuid
+                            }
+                        });
+                    } else {
+                        postal.publish({
+                            channel: "manager_" + data.moduleId,
+                            topic: "master.edit.create",
                             data: master
                         });
                     }
-                }),
-                masterNewListener = postal.subscribe({
-                    channel: "view",
-                    topic: "master.new.created",
-                    callback: function (data, envelope) {
-                        postal.publish({
-                            channel: "centre_" + data.centreUuid,
-                            topic: "new.finish",
-                            data: {
-                                item: data.item
+                }
+            }),
+            masterCreatedListener = postal.subscribe({
+                channel: "view",
+                topic: "master.edit.created",
+                callback: function (data, envelope) {
+                    mastersById["" + data.entityid] = data.item;
+                    postal.publish({
+                        channel: "centre_" + data.centreUuid,
+                        topic: "edit.finish.created",
+                        data: {
+                            item: data.item
+                        }
+                    });
+                }
+            }),
+            masterShownListener = postal.subscribe({
+                channel: "view",
+                topic: "master.shown",
+                callback: function (data, envelope) {
+                    postal.publish({
+                        channel: "centre_" + data.centreUuid,
+                        topic: "edit.finish.shown",
+                        data: {
+                            item: data.item
+                        }
+                    });
+                }
+            }),
+            /////////////////////////////////////////////////// Centre New action listeners.///////////////////////////////////////////////////
+            newListener = postal.subscribe({
+                channel: "centre",
+                topic: "new.start",
+                callback: function (data, envelope) {
+                    master = {
+                        view: {
+                            import: "/master_ui/" + data.entityType,
+                            elementName: "tg-" + data.simpleEntityType + "-master",
+                            type: "master",
+                            attrs: {
+                                entityid: "new",
+                                entitytype: data.entityType,
+                                currentState: 'EDIT',
+                                centreUuid: data.uuid
                             }
-                        });
-                    }
-                }),
-                /////////////////////////////////////////////////Master Save Action.//////////////////////////////////////////////////////////
-                saveListener = postal.subscribe({
-                    channel: "master",
-                    topic: "save.start",
-                    callback: function (data, envelope) {
-                        postal.publish({
-                            channel: "manager_" + data.moduleId,
-                            topic: "master.saved",
-                            data: data
-                        });
-                    }
-                }),
-                masterClosedListener = postal.subscribe({
-                    channel: "view",
-                    topic: "master.saved",
-                    callback: function (data, envelope) {
-                        postal.publish({
-                            channel: "master_" + data.masterUuid,
-                            topic: "save.finish",
-                            data: data
-                        });
-                    }
-                });
-            Polymer({
-                ready: function () {
+                        }
+                    };
+                    postal.publish({
+                        channel: "manager_" + data.moduleId,
+                        topic: "master.new.create",
+                        data: master
+                    });
+                }
+            }),
+            masterNewListener = postal.subscribe({
+                channel: "view",
+                topic: "master.new.created",
+                callback: function (data, envelope) {
+                    postal.publish({
+                        channel: "centre_" + data.centreUuid,
+                        topic: "new.finish",
+                        data: {
+                            item: data.item
+                        }
+                    });
+                }
+            }),
+            /////////////////////////////////////////////////Master Save Action.//////////////////////////////////////////////////////////
+            saveListener = postal.subscribe({
+                channel: "master",
+                topic: "save.start",
+                callback: function (data, envelope) {
+                    postal.publish({
+                        channel: "manager_" + data.moduleId,
+                        topic: "master.saved",
+                        data: data
+                    });
+                }
+            }),
+            masterClosedListener = postal.subscribe({
+                channel: "view",
+                topic: "master.saved",
+                callback: function (data, envelope) {
+                    postal.publish({
+                        channel: "master_" + data.masterUuid,
+                        topic: "save.finish",
+                        data: data
+                    });
                 }
             });
-        })();
-    </script>
-</polymer-element>
+        Polymer({
+            is: "tg-view-manager"
+        });
+    })();
+</script>
