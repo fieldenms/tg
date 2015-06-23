@@ -1,79 +1,133 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-toolbar/core-toolbar.html">
+<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 <link rel="import" href="/resources/layout/tg-tile-layout.html">
-<link rel="import" href="/resources/polymer/core-icon/core-icon.html">
-<link rel="import" href="/resources/polymer/core-icons/av-icons.html">
-<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+
+<dom-module id="tg-app-menu">
+    <style>
+        :host {
+            overflow: hidden;
+            --paper-toolbar-background: green;
+            --paper-toolbar-color: white;
+            --paper-toolbar {
+                height: 100px;
+                font-size: 18px;
+            }
+        }
+        .item-name {
+            height: 48px;
+            min-height: 48px;
+            padding: 0 16px;
+            font-size: 12px;
+            color: white;
+        }
+        .item-icon-bg {
+            width: 80%;
+            height: 80%;
+        }
+        .item-icon-bg core-icon {
+            width: 100%;
+            height: 100%;
+        }
+        iron-icon>div {
+            background-repeat: no-repeat;
+        }
+        .item {
+            margin: 4px;
+        }
+        .items {
+            position: absolute;
+            top: 100px;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            margin: 4px -4px;
+            overflow: auto;
+        }
+    </style>
+
+    <template>
+
+        <paper-toolbar>
+            <!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
+        </paper-toolbar>
+
+        <div class="items">
+            <tg-tile-layout class="fit" when-desktop="{{whenDesktop}}" when-tablet="{{whenTablet}}" when-mobile="{{whenMobile}}" min-cell-height="{{minCellHeight}}" min-cell-width="{{minCellWidth}}">
+                <template repeat="{{item in items}}">
+                    <div class="tile" vertical layout>
+                        <div class="item" name="{{item.title}}" style="background-color: {{item.bgColor}}" fit hero-id="{{'hero_' + item.title}}" hero?="{{selectedMenuItem === item.title || lastSelectedMenuItem === item.title}}" on-tap="{{onSelectItem}}"></div>
+                        <div class="item" name="{{item.title}}" flex auto vertical layout relative on-tap="{{onSelectItem}}">
+                            <div flex auto relative>
+                                <div fit layout vertical center center-justified>
+                                    <div class="item-icon-bg" style="background-color: {{item.bgColor}}" relative flex auto>
+                                        <core-icon style="color: {{item.bgColor}}" src="{{item.icon}}" fit></core-icon>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="item-name" style="background-color: {{item.captionBgColor}}" horizontal center layout>
+                                <div flex>
+                                    <span>{{item.title}}</span>
+                                </div>
+                                <core-icon icon="av:play-arrow"></core-icon>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </tg-tile-layout>
+        </div>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-app-menu",
+
+            hostAttributes: {
+                "class": "layout vertical"
+            },
+            
+            properties: {
+                
+            }
+
+            ready: function () {
+                var self = this;
+                postal.subscribe({
+                    channel: "menu",
+                    topic: "state.pop",
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: "app",
+                            topic: "state.poped",
+                            data: data
+                        });
+                    }
+                });
+            },
+            onSelectItem: function (e, detail, source) {
+                //startSpinner.bind(this)(source);
+                this.fire("menu-item-selected", source.getAttribute("name"));
+            }
+        });
+    })();
+</script>
 
 <polymer-element name="tg-app-menu" attributes="items lastSelectedMenuItem selectedMenuItem whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
     <template>
-        <style>
-            core-toolbar {
-                height: 100px;
-                background-color: #0288D1;
-                color: #fff;
-                font-size: 18px;
-            }
-            core-toolbar::shadow #topBar {
-                height: 100px;
-            }
-            .item-name {
-                height: 48px;
-                min-height: 48px;
-                padding: 0 16px;
-                font-size: 12px;
-                color: white;
-            }
-            .item-icon-bg {
-                width: 80%;
-                height: 80%;
-            }
-            .item-icon-bg core-icon {
-                width: 100%;
-                height: 100%;
-            }
-            core-icon>div {
-                background-repeat: no-repeat;
-            }
-            .item {
-                margin: 4px;
-            }
-            .items {
-                position: absolute;
-                top: 100px;
-                right: 0;
-                bottom: 0;
-                left: 0;
-                margin: 4px -4px;
-                overflow: auto;
-            }
-            :host {
-                overflow: hidden;
-            }
-            paper-spinner {
-                position: absolute;
-                top: 0px;
-                padding: 2px;
-                margin: 0px;
-                width: 24px;
-                height: 24px;
-                z-index: 1;
-            }
-            paper-spinner.blue::shadow .circle {
-                border-color: #0288D1;
-            }
-        </style>
-        <core-style ref="menu-item-progress"></core-style>
 
         <core-toolbar>
-        	<!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
+            <!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
             <!-- div flex>{{user.name}}</div>
             <div>{{user.login}}</div -->
         </core-toolbar>
 
         <div class="items">
-            <paper-spinner id="spinner" active="{{spinnerWorking}}" class="blue" style="visibility: hidden;" alt="loading..."></paper-spinner>
             <tg-tile-layout fit whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellHeight="{{minCellHeight}}" minCellWidth="{{minCellWidth}}">
                 <template repeat="{{item in items}}">
                     <div class="tile" vertical layout>
@@ -98,49 +152,5 @@
             </tg-tile-layout>
         </div>
     </template>
-    <script>
-        (function () {
-            var startSpinner = function (source) {
-                var width = parseInt(this.minCellWidth);
-                var height = parseInt(this.minCellHeight);
-                var size = width < height ? width : height;
-                // Position, size and make spinner visible
-                this.spinnerWorking = true;
-                this.$.spinner.style.width = size + 'px';
-                this.$.spinner.style.height = size + 'px';
-                this.$.spinner.style.left = (source.offsetParent.offsetLeft + (source.offsetWidth / 2 - size / 2)) + 'px';
-                this.$.spinner.style.top = (source.offsetParent.offsetTop + (source.offsetHeight / 2 - size / 2)) + 'px';
-                this.$.spinner.style.visibility = 'visible';
-            };
-            Polymer({
-                ready: function () {
-                    var self = this;
-                    postal.subscribe({
-                        channel: "menu",
-                        topic: "item.loaded",
-                        callback: function (data, envelope) {
-                            self.spinnerWorking = false;
-                            // Make spinner invisible
-                            self.$.spinner.style.visibility = 'hidden';
-                        }
-                    });
-                    postal.subscribe({
-                        channel: "menu",
-                        topic: "state.pop",
-                        callback: function (data, envelope) {
-                            postal.publish({
-                                channel: "app",
-                                topic: "state.poped",
-                                data: data
-                            });
-                        }
-                    });
-                },
-                onSelectItem: function (e, detail, source) {
-                    //startSpinner.bind(this)(source);
-                    this.fire("menu-item-selected", source.getAttribute("name"));
-                }
-            });
-        })();
-    </script>
+
 </polymer-element>
