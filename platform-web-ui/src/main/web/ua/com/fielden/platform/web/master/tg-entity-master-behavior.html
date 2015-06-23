@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
 
 <script>
     (function () {
@@ -18,12 +19,9 @@
             return this.message;
         }
 
-        Polymer({
-        	is: 'tg-entity-master',
-        	
-        	// TODO PUBLIC API: attributes="entitytype entityid currentState centreUuid savingContext moduleId"
-
-        	
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    	Polymer.TgBehaviors.TgEntityMasterBehaviorImpl = {
+    			
         	properties: {
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
@@ -31,6 +29,22 @@
             	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
             	// No default values are allowed in this case.														   //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
+            	/**
+            	 * The full java class name of the entity type. The entities of this type will be bound to this entity master.
+            	 */
+            	entityType: {
+            		type: String
+            	},
+
+            	/**
+            	 * The id of the curently bound entity (or 'new' in case of entity without id, aka 'not yet persisted' one).
+            	 *
+            	 * Sets initially during tg-entity-master generation phase and then updates accordingly.
+            	 */
+            	entityId: {
+            		type: String
+            	},
             	
                 /**
                  * Custom callback that will be invoked after successfull retrieval.
@@ -41,6 +55,31 @@
                 	type: Function                	
                 }, 
                 
+                /**
+                 * Universal identifier of parent centre instance (used for pub / sub communication).
+                 *
+                 * Should be given from the outside of the element.
+                 */
+                centreUuid: {
+                	type: String
+                },
+                
+				////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
+                
+                /**
+                 * The context in which save() action should be performed (it is not defined in case when context is not needed).
+                 */
+            	savingContext: {
+            		type: Object
+            	},
+            	
+            	// TODO can we remove moduleId?
+            	// TODO can we remove moduleId?
+            	// TODO can we remove moduleId?
+            	// TODO can we remove moduleId?
+            	// TODO can we remove moduleId?
+            	// TODO can we remove moduleId?
+            	
              	/////////////////////////////////////////////////////////////////////////////////////////////////////////
              	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
              	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,55 +119,91 @@
                         	console.warn("SERVER ERROR: ", errorResult);
                         }).bind(this);
                 	}
-                }
-        	},
-        	
-        	
-            publish: {
-                // entityid, -- represents the id of the current entity (sets initially during tg-entity-master generation phase and then updates accordingly)
+                },
                 
                 /**
-                 * The context in which save() action should be performed ('null' in case when context is not needed).
+                 * The map of actions by their name ids.
+                 *
+                 * Every action consists of three callbacks ('preAction', 'postActionSuccess', 'postActionError') and
+                 * 'shortDesc', 'longDesc', 'icon' + 'enabledStates'.
+                 *
+                 * 'EnabledStates' are the states in which the action is enabled.
                  */
-            	savingContext: null
-            },
+                _actions: {
+                	type: Object
+                },
+                
+                /**
+                 * Changes the state to 'EDIT'.
+                 */
+                edit: {
+                	type: Function,
+                	value: function () {
+                		return (function () {
+                            if (this.currentState === 'EDIT') {
+                                console.warn("The master is already in EDIT state. state == ", this.currentState);
+                            } else {
+                                this.currentState = 'EDIT';
+                            }
+                        }).bind(this);
+                	}
+                },
 
-            /**
-             * The map of actions by their name ids.
-             *
-             * Every action consists of three callbacks ('preAction', 'postActionSuccess', 'postActionError') and
-             * 'shortDesc', 'longDesc', 'icon' + 'enabledStates'.
-             *
-             * 'EnabledStates' are the states in which the action is enabled.
-             */
-            actions: null,
+                /**
+                 * Changes the state to 'VIEW'.
+                 */
+                view: {
+                	type: Function,
+                	value: function () {
+                		return (function () {
+                            if (this.currentState === 'VIEW') {
+                                console.warn("The master is already in VIEW state. state == ", this.currentState);
+                            } else {
+                                this.currentState = 'VIEW';
+                            }
+                        }).bind(this);
+                	}
+                },
 
-            /**
-             * Initialisation block (after 'ready'). It is designated to use for inner object / arrays initialisation.
-             */
-            created: function () {
-                this.super();
-                this.actions = {};
-                // TODO ...
-                this.actions['NEW'] = {};
-            },
+                /**
+                 * Starts the process of entity saving (based on _currBindingEntity).
+                 */
+                save: {
+                	type: Function,
+                	value: function () {
+                		return (function () {
+                            var self = this;
+
+                            if (self._savingInProgress()) {
+                                var SimultaneousSaveException = this._getSimultaneousSaveExceptionType();
+                                throw new SimultaneousSaveException();
+                            }
+
+                            self._startRefreshCycleModeForEditors();
+
+                            var holder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                            // cancel previous validation before starting saving process -- it includes validation process internally!
+                            self._validator().abortValidationIfAny();
+
+                            // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+                            //            This check will be done on server -- and appropriate _postSavedDefault callback will be triggered.
+                            self._saveModifiedProperties(self._reset(holder));
+                            // if (self._hasModified(holder)) {
+                            //     self._saveModifiedProperties(self._reset(holder));
+                            // } else {
+                            //     self._validator().validate(self._reset(holder));
+                            // }
+                        }).bind(this);
+                	}
+                }
+        	},
 
             /**
              * Initialisation block. It has all children web components already initialised.
              */
             ready: function () {
                 var self = this;
-                self.super();
-
-                // IMPORTANT: it is crucial to bind the functions, which will potentially be passed
-                //            into other contexts (for e.g. postValidatedDefault will be used in tg-entity-validator),
-                //            with its original context!
-                self.save = self.save.bind(self);
-                self.edit = self.edit.bind(self);
-                self.view = self.view.bind(self);
-                self._title = self._title.bind(self);
-                self._desc = self._desc.bind(self);
-                
+                Polymer.TgBehaviors.TgEntityBinderBehavior.ready.call(self);
                 
                 self._processSaverResponse = function (e) {
                 	self._processResponse(e, "save", function (potentiallySavedEntity) {
@@ -142,6 +217,40 @@
                 	self._processError(e, "save");
                 };
 
+				self._createActions();
+            },
+            
+            attached: function() {
+                var self = this;
+                self.saveListener = postal.subscribe({
+                    channel: "master_"  + self.uuid,
+                    topic: "save.finish",
+                    callback: function(data, envelope) {
+                        postal.publish({
+                            channel: "centre_" + self.centreUuid,
+                            topic: "detail.saved",
+                            data: data
+                        });
+                        console.log("--------------saved finished for: " + self.uuid + "------------");
+                    }
+                });
+            },
+            
+            detached: function() {
+                console.log("-------master detached: " + this.uuid + "------------");
+                this.saveListener.unsubscribe();
+            },
+            
+            /**
+             * Creates default master actions.
+             */
+            _createActions: functions () {
+            	var self = this;
+                self.actions = {};
+
+                // TODO ...
+                self.actions['NEW'] = {};
+                
                 self.actions['REFRESH'] = {
                     shortDesc: 'REFRESH',
                     longDesc: 'REFRESH ACTION...',
@@ -188,27 +297,6 @@
                     onAction: function (e) {}
                 };
             },
-            
-            attached: function() {
-                var self = this;
-                self.saveListener = postal.subscribe({
-                    channel: "master_"  + self.uuid,
-                    topic: "save.finish",
-                    callback: function(data, envelope) {
-                        postal.publish({
-                            channel: "centre_" + self.centreUuid,
-                            topic: "detail.saved",
-                            data: data
-                        });
-                        console.log("--------------saved finished for: " + self.uuid + "------------");
-                    }
-                });
-            },
-            
-            detached: function() {
-                console.log("-------master detached: " + this.uuid + "------------");
-                this.saveListener.unsubscribe();
-            },
 
             /**
              * The core-ajax component for entity retrieval.
@@ -225,90 +313,11 @@
             },
 
             /** 
-             * The function for binding property title. The argument 'entity' will be changed in future. Polymer will listen to that change.
+             * The function for binding property title -- entity.type().prop(property).title(). The argument 'entity' will be changed in future. Polymer will listen to that change.
+             * The function for binding property desc -- entity.type().prop(property).desc(). The argument 'entity' will be changed in future. Polymer will listen to that change.
              */
-            _title: function (entity, property) {
-                if (typeof this.$ !== 'undefined') {
-                    if (this.$.reflector.isEntity(entity)) {
-                        // console.log("_title entity", entity);
-                        // console.log("_title entity type", entity.type());
-                        // console.log("_title entity type prop", entity.type().prop(property));
-                        // console.log("_title entity type prop title", entity.type().prop(property).title());
-                        return entity.type().prop(property).title();
-                    } else {
-                        return "Not yet initialised _currEntity, from which to get title!";
-                    }
-                } else {
-                    return "Not yet initialised this.$!";
-                }
-            },
-
-            /** 
-             * The function for binding property desc. The argument 'entity' will be changed in future. Polymer will listen to that change.
-             */
-            _desc: function (entity, property) {
-                if (typeof this.$ !== 'undefined') {
-                    if (this.$.reflector.isEntity(entity)) {
-                        return entity.type().prop(property).desc();
-                    } else {
-                        return "Not yet initialised _currEntity, from which to get desc!";
-                    }
-                } else {
-                    return "Not yet initialised this.$!";
-                }
-            },
-
-            //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
-            /**
-             * Changes the state to 'EDIT'.
-             */
-            edit: function () {
-                if (this.currentState === 'EDIT') {
-                    console.warn("The master is already in EDIT state. state == ", this.currentState);
-                } else {
-                    this.currentState = 'EDIT';
-                }
-            },
-
-            /**
-             * Changes the state to 'VIEW'.
-             */
-            view: function () {
-                if (this.currentState === 'VIEW') {
-                    console.warn("The master is already in VIEW state. state == ", this.currentState);
-                } else {
-                    this.currentState = 'VIEW';
-                }
-            },
 
             //////////////////////////////////////// SAVING ////////////////////////////////////////
-            /**
-             * Starts the process of entity saving (based on _currBindingEntity).
-             */
-            save: function () {
-                var self = this;
-
-                if (self._savingInProgress()) {
-                    var SimultaneousSaveException = this._getSimultaneousSaveExceptionType();
-                    throw new SimultaneousSaveException();
-                }
-
-                self._startRefreshCycleModeForEditors();
-
-                var holder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                // cancel previous validation before starting saving process -- it includes validation process internally!
-                self._validator().abortValidationIfAny();
-
-                // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                //            This check will be done on server -- and appropriate _postSavedDefault callback will be triggered.
-                self._saveModifiedProperties(self._reset(holder));
-                // if (self._hasModified(holder)) {
-                //     self._saveModifiedProperties(self._reset(holder));
-                // } else {
-                //     self._validator().validate(self._reset(holder));
-                // }
-            },
-
             _savingInProgress: function () {
                 return this.$.ajaxSaver.loading;
             },
@@ -324,7 +333,7 @@
                 savingInfoHolder.id = null;
                 savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
             	
-            	if (this.savingContext) {
+            	if (this.savingContext) { // if saving context was defined (not 'undefined'):
                     savingInfoHolder["centreContextHolder"] = this.savingContext;
             	}
             	
@@ -347,6 +356,12 @@
             _getSimultaneousSaveExceptionType: function () {
                 return SimultaneousSaveException;
             }
-        });
+        };
+    	
+		Polymer.TgBehaviors.TgEntityMasterBehavior = [
+			Polymer.TgBehaviors.TgEntityBinderBehavior,
+			Polymer.TgBehaviors.TgEntityMasterBehaviorImpl
+		];
+		
     })();
 </script>

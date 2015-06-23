@@ -55,7 +55,7 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     @Override
     public JsCode code() {
         final String code =
-                wrap0("self.actions['%s'] = {", name(), () -> name()) + //
+                wrap0("self._actions['%s'] = {", name(), () -> name()) + //
                 wrap0("    entitytype: '%s',", functionalEntityType(), () -> functionalEntityType().getName()) + //
                 wrap0("    shortDesc: '%s',", shortDesc()) + //
                 wrap1("    longDesc: '%s',", longDesc()) + //
@@ -95,7 +95,7 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     protected Map<String, Object> createCustomAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
-        final String actionSelector = "actions['" + this.name() + "']";
+        final String actionSelector = "_actions['" + this.name() + "']";
 
         attrs.put("preAction", "{{" + actionSelector + ".preAction}}");
         attrs.put("postActionSuccess", "{{" + actionSelector + ".postActionSuccess}}");

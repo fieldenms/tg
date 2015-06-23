@@ -35,11 +35,11 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
     protected Map<String, Object> createCustomAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
-        final String actionSelector = "actions['" + this.name() + "']";
+        final String actionSelector = "_actions['" + this.name() + "']";
 
-        attrs.put("action", "{{" + actionSelector + ".action}}");
-        attrs.put("onAction", "{{" + this.onActionFunction() + "}}");
-        attrs.put("onActionError", "{{" + this.onActionErrorFunction() + "}}");
+        attrs.put("action", "[[" + actionSelector + ".action]]");
+        attrs.put("TODO on-action", "[[" + this.onActionFunction() + "]]");
+        attrs.put("TODO on-action-error", "[[" + this.onActionErrorFunction() + "]]");
 
         return attrs;
     }
@@ -60,9 +60,9 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
     @Override
     public JsCode code() {
         final String code =
-                wrap1("self.actions['" + name() + "'].shortDesc = '%s';", shortDesc()) + //
-                wrap1("self.actions['" + name() + "'].longDesc = '%s';", longDesc()) + //
-                wrap1("self.actions['" + name() + "'].icon = '%s';", icon());
+                wrap1("self._actions['" + name() + "'].shortDesc = '%s';", shortDesc()) + //
+                wrap1("self._actions['" + name() + "'].longDesc = '%s';", longDesc()) + //
+                wrap1("self._actions['" + name() + "'].icon = '%s';", icon());
         return new JsCode(code);
     }
 }
