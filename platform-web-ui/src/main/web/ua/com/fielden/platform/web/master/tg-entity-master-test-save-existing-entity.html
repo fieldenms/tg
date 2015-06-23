@@ -20,6 +20,7 @@
             var self = this;
             var onSavedFirst = true;
 
+			// TODO reimplement this test without onSavedComplete -- use onSaved
             master.onSavedComplete = function() {   
                 if (onSavedFirst === true) {
                     onSavedFirst = false;

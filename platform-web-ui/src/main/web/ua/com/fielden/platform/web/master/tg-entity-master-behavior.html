@@ -42,7 +42,7 @@
         	
         	
         	
-        	// TODO PUBLIC API: attributes="entitytype entityid onSaved onSavedComplete currentState centreUuid savingContext moduleId"
+        	// TODO PUBLIC API: attributes="entitytype entityid onSaved currentState centreUuid savingContext moduleId"
         	
         	
             publish: {
@@ -104,13 +104,6 @@
                 self._processSaverError = function (e) {
                 	self._processError(e, "save");
                 };
-
-                // TODO: provide generic method (like _processResponse or _processError) for that?
-                self.$.ajaxSaver.addEventListener('core-complete', function (e) {
-                    if (e.detail.xhr.status === 200) {
-                        self.onSavedComplete();
-                    }
-                });
 
                 self.actions['REFRESH'] = {
                     shortDesc: 'REFRESH',
@@ -229,11 +222,6 @@
             },
 
             //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
-            /**
-             * Default implementation for onSavedComplete callback.
-             */
-            onSavedComplete: function () {},
-
             /**
              * Changes the state to 'EDIT'.
              */
