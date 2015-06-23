@@ -2,23 +2,47 @@
 <html>
 
 <head>
+    <meta charset="utf-8">
     <title>Generated Master</title>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-
-    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    
+    <!-- <link rel="import" href="/resources/editors/tg-integer-editor.html"> -->
 
     <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+</head>
 
-    </head>
-
-<body unresolved fullbleed>
-    <tg-TgPersistentEntityWithProperties-master id="master" entitytype="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" entityid="15" currentState="VIEW"></tg-TgPersistentEntityWithProperties-master>
+<body>
+    <tg-TgPersistentEntityWithProperties-master 
+    	id="master" 
+    	entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" 
+    	entity-id="15" 
+    	current-state="VIEW">
+    </tg-TgPersistentEntityWithProperties-master>
+    
+        <!-- <tg-integer-editor
+      	    id="editor" 
+  	    	entity="null" 
+  	    	property-name="integerProp" 
+  	    	current-state="EDIT" 
+  	    	debug 
+  	    	prop-title="Integer property title" 
+  	    	prop-desc="Integer property desc"
+  	    	action="null" 
+  	    	externalRefreshCycle="null"  	    	
+  	    	validation-callback="null">
+  	    </tg-integer-editor> -->
+    
+    <!-- uuid centre-uuid -->
 
     <script>
         (function () {            
-            document.addEventListener('polymer-ready', function() {
+        	window.addEventListener('WebComponentsReady', function(e) {
+        		// imports are loaded and elements have been registered
+        		console.log('Components are ready');
+        		
+        		/* var editor = document.querySelector('#editor'); */
+        		
                 var master = document.querySelector('#master'); 
 
                 master.postRetrieved = function(entity, bindingEntity, customObject) {
@@ -34,13 +58,9 @@
                 };
 
                 master.retrieve();
-            });
-
+        	});
         })();
-
-
     </script>
-
 </body>
 
 </html>

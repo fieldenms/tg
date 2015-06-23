@@ -6,22 +6,22 @@
     <title>tg-editor for Polymer 1.0</title>
     
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+    
     <link rel="import" href="/resources/editors/tg-editor-example-entity.html">
 
     <link rel="import" href="/resources/editors/tg-integer-editor.html">
     <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-datetime-picker.html">
-    
-    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
 </head>
 
 <body>
   	<template is="dom-bind">
   		<iron-ajax
   			auto
-  			url='/entity/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties1/new'
+  			url='/entity/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties/new'
   			method="POST"
   			handle-as="json"
   			on-response="processResponse"
