@@ -74,7 +74,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         } else if (MasterActions.VALIDATE == masterAction) {
             return "_postValidatedDefaultError";
         } else if (MasterActions.SAVE == masterAction) {
-            return "onSavedDefaultError";
+            return "_postSavedDefaultError";
         } else if (MasterActions.EDIT == masterAction) {
             return "actions['EDIT'].onActionError"; // TODO maybe, should be deleted (no ajax request sends)?
         } else if (MasterActions.VIEW == masterAction) {
@@ -90,7 +90,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         } else if (MasterActions.VALIDATE == masterAction) {
             return "_postValidatedDefault";
         } else if (MasterActions.SAVE == masterAction) {
-            return "onSavedDefault";
+            return "_postSavedDefault";
         } else if (MasterActions.EDIT == masterAction) {
             return "actions['EDIT'].onAction";
         } else if (MasterActions.VIEW == masterAction) {

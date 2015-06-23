@@ -204,7 +204,7 @@
                 // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
                 detail.savingContext = context;
 
-                detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
+                detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {
                     postal.publish({
                         channel: "centre_" + detail.centreUuid,
                         topic: "detail.saved",
@@ -215,7 +215,7 @@
                         }
                     });
 
-                    console.log("onSaved");
+                    console.log("postSaved");
                 };
 
                 detail.entityid = context.id === null ? "new" : (+(context.id));

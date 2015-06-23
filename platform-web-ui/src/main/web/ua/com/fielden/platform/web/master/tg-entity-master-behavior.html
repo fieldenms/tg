@@ -21,6 +21,9 @@
         Polymer({
         	is: 'tg-entity-master',
         	
+        	// TODO PUBLIC API: attributes="entitytype entityid currentState centreUuid savingContext moduleId"
+
+        	
         	properties: {
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
@@ -37,12 +40,48 @@
                 postSaved: {
                 	type: Function                	
                 }, 
-            		
+                
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+             	//   prefix. 																				           //
+             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+             	//   populate their default values in ready callback (to have these values populated in children)!     //
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////                
+                
+                /**
+                 * Default implementation for postSaved callback.
+                 */
+                _postSavedDefault: {
+                	type: Function,
+                	value: function () {
+                		return (function (potentiallySavedEntity) {
+                            var msg = this._toastMsg("Saving", potentiallySavedEntity);
+                            this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
+
+                            var newBindingEntity = this._postEntityReceived(potentiallySavedEntity);
+
+                            // custom external action
+                            this.postSaved(potentiallySavedEntity, newBindingEntity);
+                        }).bind(this);
+                	}
+                },
+                
+                /**
+                 * Default implementation for unsuccessful postSaved callback.
+                 */
+                _postSavedDefaultError: {
+                	type: Function,
+                	value: function () {
+                		return (function (errorResult) {
+                        	// This function will be invoked after server-side error appear.
+                        	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+                        	console.warn("SERVER ERROR: ", errorResult);
+                        }).bind(this);
+                	}
+                }
         	},
-        	
-        	
-        	
-        	// TODO PUBLIC API: attributes="entitytype entityid onSaved currentState centreUuid savingContext moduleId"
         	
         	
             publish: {
@@ -87,17 +126,15 @@
                 self.save = self.save.bind(self);
                 self.edit = self.edit.bind(self);
                 self.view = self.view.bind(self);
-                self.onSavedDefault = self.onSavedDefault.bind(self);
-                self.onSavedDefaultError = self.onSavedDefaultError.bind(self);
                 self._title = self._title.bind(self);
                 self._desc = self._desc.bind(self);
                 
                 
                 self._processSaverResponse = function (e) {
                 	self._processResponse(e, "save", function (potentiallySavedEntity) {
-                		self.onSavedDefault(potentiallySavedEntity);
+                		self._postSavedDefault(potentiallySavedEntity);
                 	}, function (errorResult) {
-                		self.onSavedDefaultError(errorResult);
+                		self._postSavedDefaultError(errorResult);
                 	});
                 };
                 
@@ -263,7 +300,7 @@
                 self._validator().abortValidationIfAny();
 
                 // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                //            This check will be done on server -- and appropriate onSavedDefault callback will be triggered.
+                //            This check will be done on server -- and appropriate _postSavedDefault callback will be triggered.
                 self._saveModifiedProperties(self._reset(holder));
                 // if (self._hasModified(holder)) {
                 //     self._saveModifiedProperties(self._reset(holder));
@@ -304,28 +341,6 @@
              */
             _hasModified: function (modifiedPropertiesHolder) {
                 return modifiedPropertiesHolder["@modified"];
-            },
-
-            /**
-             * Default implementation for onSaved callback.
-             */
-            onSavedDefault: function (potentiallySavedEntity) {
-                var msg = this._toastMsg("Saving", potentiallySavedEntity);
-                this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
-
-                var newBindingEntity = this._postEntityReceived(potentiallySavedEntity);
-
-                // custom external action
-                this.onSaved(potentiallySavedEntity, newBindingEntity);
-            },
-
-            /**
-             * Default implementation for unsuccessful onSaved callback.
-             */
-            onSavedDefaultError: function (errorResult) {
-            	// This function will be invoked after server-side error appear.
-            	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
-            	console.warn("SERVER ERROR: ", errorResult);
             },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////

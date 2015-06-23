@@ -19,7 +19,7 @@
             var master = document.querySelector('#master');
             var self = this;
 
-            master.onSaved = function(potentiallySavedEntity, bindingEntity) {   
+            master.postSaved = function(potentiallySavedEntity, bindingEntity) {   
                 assert.isNotNull(potentiallySavedEntity.id, "Entity id should be not null.");
                 assert.strictEqual(potentiallySavedEntity.version, 0, "Entity version should be the same.");
              

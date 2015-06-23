@@ -29,8 +29,8 @@
                     console.log("postValidated");
                 };
 
-                master.onSaved = function(potentiallySavedEntity, newBindingEntity) {
-                    console.log("onSaved");
+                master.postSaved = function(potentiallySavedEntity, newBindingEntity) {
+                    console.log("postSaved");
                 };
 
                 master.retrieve();

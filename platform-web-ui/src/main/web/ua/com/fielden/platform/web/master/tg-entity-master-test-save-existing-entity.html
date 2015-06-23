@@ -18,18 +18,18 @@
         document.addEventListener('polymer-ready', function() {
             var master = document.querySelector('#master');
             var self = this;
-            var onSavedFirst = true;
+            var postSavedFirst = true;
 
-			// TODO reimplement this test without onSavedComplete -- use onSaved
-            master.onSavedComplete = function() {   
-                if (onSavedFirst === true) {
-                    onSavedFirst = false;
+			// TODO reimplement this test without postSaved[Complete] -- use postSaved
+            master.postSaved[Complete] = function() {   
+                if (postSavedFirst === true) {
+                    postSavedFirst = false;
                     master.save(); 
                 }
             };
 
-            master.onSaved = function(potentiallySavedEntity, bindingEntity) {   
-                if (onSavedFirst === true) {
+            master.postSaved = function(potentiallySavedEntity, bindingEntity) {   
+                if (postSavedFirst === true) {
                     assert.isNotNull(potentiallySavedEntity.id, "Entity id should be not null.");
                     assert.strictEqual(potentiallySavedEntity.version, 0, "Entity version should be 0.");
              

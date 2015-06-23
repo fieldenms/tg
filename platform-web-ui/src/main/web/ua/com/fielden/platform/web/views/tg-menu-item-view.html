@@ -66,7 +66,7 @@
                                 self.fire("menu-item-view-loaded", self.item);
                             };
                             detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
-                            detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
+                            detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {
                                 //Send postal message that save was completed if it was succefull
                                 if (potentiallySavedEntity.isValid()) {
                                     postal.publish({

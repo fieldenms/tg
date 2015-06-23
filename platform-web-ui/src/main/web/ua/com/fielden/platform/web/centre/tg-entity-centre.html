@@ -63,7 +63,7 @@
 
                     self.onRun = self.onRun.bind(self);
                     self.getSelectedEntities = self.getSelectedEntities.bind(self);
-                    self.onSavedDefaultError = self.onSavedDefaultError.bind(self);
+                    self._postSavedDefaultError = self._postSavedDefaultError.bind(self);
                     self.onDiscardedDefaultError = self.onDiscardedDefaultError.bind(self);
 
                     self.$.ajaxSaver.addEventListener('core-response', function (e) {
@@ -72,7 +72,7 @@
                             
                             self.retrieve();
                     	}, function (errorResult) {
-                    		self.onSavedDefaultError(errorResult);
+                    		self._postSavedDefaultError(errorResult);
                     	});
                     });
                     self.$.ajaxDiscarder.addEventListener('core-response', function (e) {
@@ -96,7 +96,7 @@
                 /**
                  * Default implementation for unsuccessful onSave callback.
                  */
-                onSavedDefaultError: function (errorResult) {
+                _postSavedDefaultError: function (errorResult) {
                 	// This function will be invoked after server-side error appear.
                 	console.warn("SERVER ERROR: ", errorResult);
                 },
@@ -139,8 +139,8 @@
                         }
                     });
                     
-                    ///////////////////////// Detail onSaved listener //////////////////////////////////////
-                    this.detailOnSavedListener = postal.subscribe({
+                    ///////////////////////// Detail postSaved listener //////////////////////////////////////
+                    postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "detail.saved",
                         callback: function (data, envelope) {
