@@ -38,6 +38,9 @@ import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityContainerEnhancer;
+import ua.com.fielden.platform.entity.query.EntityContainerFetcher;
+import ua.com.fielden.platform.entity.query.EntityHibernateRetrievalQueryProducer;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionCompoundCondition0;
@@ -121,6 +124,14 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
 
+
+    @Test
+    public void test_h2_deficiency() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).yield().val(0).as("ciInsAmount").modelAsAggregate();
+        final List<EntityAggregates> models = aggregateDao.getAllEntities(from(qry).model());
+        
+    }
+    
     /////////////////////////////////////// WITHOUT ASSERTIONS /////////////////////////////////////////
 
     @Test
@@ -973,9 +984,13 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_all_quantified_condition() {
+      Logger.getLogger(EntQuery.class).setLevel(Level.DEBUG);
+      Logger.getLogger(EntityContainerEnhancer.class).setLevel(Level.DEBUG);
+      Logger.getLogger(EntityContainerFetcher.class).setLevel(Level.DEBUG);
+      Logger.getLogger(EntityHibernateRetrievalQueryProducer.class).setLevel(Level.DEBUG); 
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().val(100).lt().all(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").yield().prop("qty").modelAsPrimitive()).model();
         final List<TgVehicle> values = vehicleDao.getAllEntities(from(model).model());
-        assertEquals("Incorrect count", 0, values.size());
+        assertEquals("Incorrect count", 1, values.size());
     }
 
     @Test
@@ -1143,7 +1158,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals("Incorrect value", "0", values.get(0).get("zero-days").toString());
         assertEquals("Incorrect value", "0", values.get(0).get("zero-months").toString());
         assertEquals("Incorrect value", "0", values.get(0).get("zero-years").toString());
-        assertEquals("Incorrect value", "150", values.get(0).get("avgPrice").toString());
+        assertEquals(BigDecimal.class, values.get(0).get("avgPrice").getClass());
+        assertEquals("Incorrect value", 0, ((BigDecimal) values.get(0).get("avgPrice")).compareTo(new BigDecimal("150")));
         assertEquals("Incorrect value", "66.7", values.get(0).get("third-of-price").toString());
     }
 
