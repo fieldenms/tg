@@ -1,48 +1,66 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-icon/core-icon.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="/resources/views/tg-view.html">
 <link rel="import" href="/resources/views/tg-view-with-menu.html">
 
-<polymer-element name="tg-app-view" attributes="item autoLoad" vertical layout>
+<dom-module id="tg-app-view">
+    <style>
+        .item-bg {
+            width: 512px;
+            height: 512px;
+        }
+        .item-bg > core-icon {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
     <template>
-        <style>
-            .item-bg {
-                width: 512px;
-                height: 512px;
-            }
-            .item-bg > core-icon {
-                position: absolute;
-                height: 100%;
-                width: 100%;
-            }
-        </style>
-        <div style="background-color: {{item.bgColor}}" fit layout vertical center center-justified>
-            <div class="item-bg" relative>
-                <core-icon style="color: {{item.bgColor}}; opacity:0.5" src="{{item.detailIcon}}" fit></core-icon>
+        <div class="fit layout vertical center-center" style="[[_calcStyleForThisItem()]]">
+            <div class="item-bg relative">
+                <iron-icon class="fit" style="[[_calcSvgStyleForThisItem()]]" src="[[menuItem.detailIcon]]"></iron-icon>
             </div>
         </div>
-        <div flex vertical layout cross-fade>
-            <template if="{{!item.menu}}">
-                <tg-view id="view" autoLoad?="{{autoLoad}}" item="{{item}}" fit></tg-view>
+        <div class="flex layout vertical"> <!-- cross-fade animation here -->
+            <template is="dom-if" if="[[!menuItem.menu]]">
+                <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[_getMenuItem()]]"></tg-view>
             </template>
-            <template if="{{item.menu}}">
-                <tg-view-with-menu id="view" item="{{item}}" fit></tg-view-with-menu>
+            <template is="dom-if" if="[[menuItem.menu]]">
+                <tg-view-with-menu class="fit" id="view" menu-item="[[_getMenuItem()]]"></tg-view-with-menu>
             </template>
         </div>
+
+
     </template>
-    <script>
-        (function () {
-            Polymer({
-                publish: {
-                    autoLoad: {
-                        reflect: true,
-                        value: false
-                    }
-                },
-                load: function () {
-                    this.$.view.load();
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-app-view",
+
+            properties: {
+                menuItem: Object,
+                autoLoad: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
                 }
-            });
-        })();
-    </script>
-</polymer-element>
+            },
+
+            load: function () {
+                this.$$("#view").load();
+            },
+            _calcStyleForThisItem: function () {
+                return "background-color: " + menuItem.bgColor + ";";
+            },
+            _calcSvgStyleForThisItem: function () {
+                return "color: " + menuItem.bgColor + "; opacity:0.5;";
+            },
+            _getMenuItem: function() {
+                return this.menuItem;
+            }
+        });
+    })();
+</script>

@@ -56,7 +56,7 @@
 
         <div class="items">
             <tg-tile-layout class="fit" when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]" min-cell-height="[[menuConfig.minCellHeight]]" min-cell-width="[[menuConfig.minCellWidth]]">
-                <template is="dom-repeat" items="{{menuConfig.items}}">
+                <template is="dom-repeat" items="[[menuConfig.items]]">
                     <div class="tile layout vertical">
                         <div class="item fit" name$="[[item.title]]" style$="[[_calcStyleForItem(item)]]" on-tap="_itemSelected"></div>
                     </div>
