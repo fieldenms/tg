@@ -1,0 +1,88 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<dom-module id="tg-element-loader">
+    <template>
+        <content></content>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        var importedURLs = {},
+            //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
+            insertElement = function (insertToElement, elementName, attributes) {
+                if (elementName && elementName.toString().length > 0) {
+                    var customElement = document.createElement(elementName);
+                    if (attributes && typeof attributes === "object") {
+                        for (attr in attributes) {
+                            customElement[attr] = attributes[attr];
+                        }
+                        Polymer.dom(insertToElement).innerHTML = "";
+                        Polymer.dom(insertToElement).appendChild(customElement);
+                    }
+                    return customElement;
+                }
+            };
+        Polymer({
+
+            is: "tg-element-loader",
+
+            properties: {
+                auto: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
+                },
+                wasLoaded: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
+                }
+            },
+            publish: {
+                //Defines whether to load element automaticaly or not.
+                auto: {
+                    value: false,
+                    reflect: true
+                },
+                wasLoaded: {
+                    value: false,
+                    reflect: true
+                },
+                import: String,
+                elementName: String,
+                attrs: Object
+            },
+
+            ready: function () {
+                if (this.auto) {
+                    this.load();
+                }
+            },
+            //Loads the custom element and fires after-load event with loaded element.
+            load: function () {
+                var self = this,
+                    attributes = this.attrs || {},
+                    elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
+                if (!this.wasLoaded) {
+                    if (this.import && !importedURLs.hasOwnProperty(this.import)) {
+                        this.importHref(this.import, function (e) {
+                            thisElement.fire('after-load', insertElement(self, elementName, attributes));
+                            // e.target.import is the import document.
+                        }, function (e) {
+                            // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
+                            console.log("error happened", e);
+                            // loading error
+                        });
+                    } else {
+                        this.fire('after-load', insertElement(this, elementName, attributes));
+                    }
+                    this.wasLoaded = true;
+                }
+            },
+            reload: function () {
+                this.wasLoaded = false;
+                this.load();
+            }
+        });
+    })();
+</script>
