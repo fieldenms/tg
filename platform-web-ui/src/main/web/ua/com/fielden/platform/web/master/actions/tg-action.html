@@ -90,7 +90,7 @@
                 if (newValue && !self.onActionUpgraded) {
                     self.onAction = function (smth) {
                         newValue(smth);
-                        self.afterExecution();
+                        self._afterExecution();
                     };
                     self.onActionUpgraded = true;
                 }
@@ -102,13 +102,13 @@
                 if (newValue && !self.onActionErrorUpgraded) {
                     self.onActionError = function (smth) {
                         newValue(smth);
-                        self.afterExecution();
+                        self._afterExecution();
                     };
                     self.onActionErrorUpgraded = true;
                 }
             },
 
-            afterExecution: function () {
+            _afterExecution: function () {
                 this.isWorking = false;
                 // prevent not yet activated spinner from activating if any
                 if (this.startSpinnerTimer) {

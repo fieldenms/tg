@@ -161,7 +161,7 @@
             /**
              * The function that is invoked after the action has completed (error or success).
              */
-            afterExecution: function () {
+            _afterExecution: function () {
                 console.log(this.shortDesc + ": after execution");
                 // this.enabled = true;
             },
@@ -222,7 +222,7 @@
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
                 detail.retrieve(context);
 
-                this.afterExecution();
+                this._afterExecution();
                 //                this.$.entityMaster.updateTargetDimensions();
             },
             

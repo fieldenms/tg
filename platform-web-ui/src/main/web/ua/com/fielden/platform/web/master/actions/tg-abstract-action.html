@@ -2,101 +2,39 @@
 
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-abstract-action" attributes="enabledStates currentState shortDesc longDesc icon">
+<dom-module id="tg-abstract-action">
+    <style>
+        :host::shadow * /deep/ core-tooltip::shadow #tooltip {
+            white-space: normal;
+        }
+        
+        :host::shadow * /deep/ core-tooltip .span-tooltip {
+            line-height: 15px;
+        }
+        
+        :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
+        :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
+            opacity: 1;
+            -webkit-transition-delay: 1s;
+            transition-delay: 1s;
+            transform: translate3d(0px, 0px, 0px);
+        }
+    </style>
     <template>
-        <style>
-            :host::shadow * /deep/ core-tooltip::shadow #tooltip {
-                white-space: normal;
-            }
-            
-            :host::shadow * /deep/ core-tooltip .span-tooltip {
-                line-height: 15px;
-            }
-            
-            :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
-            :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
-                opacity: 1;
-                -webkit-transition-delay: 1s;
-                transition-delay: 1s;
-                transform: translate3d(0px, 0px, 0px);
-            }
-        </style>
         <tg-reflector id="reflector"></tg-reflector>
     </template>
-    <script>
-        Polymer('tg-abstract-action', {
-            publish: {
-                /**
-                 * A list of the states in which the action can be enabled.
-                 */
-                enabledStates: null,
+</dom-module>
 
-                /**
-                 * The state of the parent view.
-                 */
-                currentState: null,
+<script>
+	Polymer({
+		is: 'tg-abstract-action',
+		
+		/**
+		 * Reflector component.
+		 */
+		_reflector: function () {
+			return this.$.reflector;
+		}
+	});
 
-                /**
-                 * Short description for the action (for e.g. it can be used as button title).
-                 */
-                shortDesc: null,
-
-                /**
-                 * Long description for the action.
-                 */
-                longDesc: null,
-
-                /**
-                 * The icon specificator (string id).
-                 */
-                icon: null
-            },
-
-            /**
-             * This inner state is triggered by the action itself after the action button has been pressed (enabled:=false) and after the action
-             * has been executed (enabled:=true).
-             */
-            enabled: true,
-
-            /**
-             * Initialisation block.
-             */
-            ready: function () {
-                var self = this;
-
-                self.run = self.run.bind(self);
-            },
-
-            /**
-             * Returns whether the action is enabled in current moment.
-             */
-            isEnabled: function (enabledStates, currentState, enabled) {
-                if (enabledStates) {
-                    // console.log("isEnabled successful: enabledStates == ", enabledStates, "currentState == ", currentState, "enabled == ", enabled);
-                    return enabledStates.indexOf(currentState) >= 0 && enabled;
-                } else {
-                    // console.warn("isEnabled: enabledStates is not ready at this stage! enabledStates == ", enabledStates);
-                    return false;
-                }
-            },
-
-            /**
-             * Executes the action.
-             *
-             * Please override this method in descendands to implement specific execution logic.
-             */
-            run: function () {
-                this.enabled = false;
-                console.log(this.shortDesc + ": execute");
-            },
-
-            /**
-             * The function that is invoked after the action has completed (error or success).
-             */
-            afterExecution: function () {
-                console.log(this.shortDesc + ": after execution");
-                this.enabled = true;
-            }
-        });
-    </script>
-</polymer-element>
+</script>

@@ -115,7 +115,7 @@
                 	value: function () {
                 		return (function (errorResult) {
                         	// This function will be invoked after server-side error appear.
-                        	// 'tg-action' will augment this function with its own 'afterExecution' logic (spinner stopping etc.).                	
+                        	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
                         	console.warn("SERVER ERROR: ", errorResult);
                         }).bind(this);
                 	}

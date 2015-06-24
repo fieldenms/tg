@@ -1,0 +1,108 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<script>
+    Polymer({
+    	is: 'tg-abstract-action',
+    	
+        properties: {
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+        	// No default values are allowed in this case.														   //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	
+            /**
+             * A list of the states in which the action can be enabled.
+             */
+            enabledStates: {
+            	type: Array
+            },
+
+            /**
+             * The state of the parent view.
+             */
+            currentState: {
+            	type: String
+            },
+
+            /**
+             * Short description for the action (for e.g. it can be used as button title).
+             */
+            shortDesc: {
+            	type: String
+            },
+
+            /**
+             * Long description for the action.
+             */
+            longDesc: {
+            	type: String
+            },
+
+            /**
+             * The icon specificator (string id).
+             */
+            icon: {
+            	type: String
+            },
+            
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
+        	//   alternatively, computing function needs to be specified). 									       //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            
+	        /**
+	         * This inner state is triggered by the action itself after the action button has been pressed (enabled:=false) and after the action
+	         * has been executed (enabled:=true).
+	         */
+	        _enabled: {
+	        	type: Boolean,
+	        	value: true	
+	        },
+	        
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        	//   prefix. 																				           //
+        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+        	//   populate their default values in ready callback (to have these values populated in children)!     //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+	        
+	        /**
+	         * Executes the action.
+	         *
+	         * Please override this method in descendands to implement specific execution logic.
+	         */
+	        run: {
+            	type: Function,
+            	value: function () {
+            		return (function () {
+        	            this._enabled = false;
+        	            console.log(this.shortDesc + ": execute");
+        	        }).bind(this);
+            	}
+            }
+        },
+
+        /**
+         * Returns whether the action is enabled in current moment.
+         */
+        _isEnabled: function (enabledStates, currentState, _enabled) {
+            // console.log("isEnabled successful: enabledStates == ", enabledStates, "currentState == ", currentState, "enabled == ", enabled);
+            return enabledStates.indexOf(currentState) >= 0 && _enabled;
+        },
+
+        /**
+         * The function that is invoked after the action has completed (error or success).
+         */
+        _afterExecution: function () {
+            console.log(this.shortDesc + ": after execution");
+            this._enabled = true;
+        }
+    });
+</script>
