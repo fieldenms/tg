@@ -848,7 +848,7 @@
         convert: function (value) {
             if (value === null) { // 'null' is the missing value representation for TG web editors
                 return null;
-            } else if (value instanceof Entity) {
+            } else if (value instanceof this.getEntityPrototype()) {
                 return (value.type().isCompositeEntity()) ? this.convertCompositeEntity(value) : this.convertSimpleEntity(value);
             } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
                 return value;

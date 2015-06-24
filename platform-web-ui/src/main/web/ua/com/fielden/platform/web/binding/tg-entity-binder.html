@@ -1,12 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/resources/components/tg-toast.html">
 
 <dom-module id="tg-entity-binder">
     <template>
-        <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <tg-toast id="toastGreeting"></tg-toast>
     </template>
@@ -14,6 +12,27 @@
 
 <script>
     Polymer({
-    	is: 'tg-entity-binder'
+    	is: 'tg-entity-binder',
+    	
+        /**
+         * The component for entity serialisation.
+         */
+        _serialiser: function () {
+        	return this.$.serialiser;
+        },
+        
+        /**
+         * The reflector component.
+         */
+        _reflector: function () {
+        	return this._serialiser().reflector();
+        },
+
+        /**
+         * The toast component.
+         */
+        _toastGreeting: function () {
+        	return this.$.toastGreeting;
+        }
     });
 </script>

@@ -112,7 +112,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 // console.log("deserialised with tg-serialiser: ", JSON.stringify(resultWithEntities));
                 entitySender.body = JSON.stringify(serialiser.serialise(resultWithEntities));
                 // console.log("serialised with tg-serialiser: ", entitySender.body);
-                entitySender.go();
+                entitySender.generateRequest();
             });
 
             entitySender.addEventListener('core-response', function(e) {

@@ -34,7 +34,7 @@
                     var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
                     // console.log("validate: serialised modifiedPropertiesHolder", ser);
                     this.$.ajaxSender.body = JSON.stringify(ser);
-                    this.$.ajaxSender.go();
+                    this.$.ajaxSender.generateRequest();
                 },
 
                 /**

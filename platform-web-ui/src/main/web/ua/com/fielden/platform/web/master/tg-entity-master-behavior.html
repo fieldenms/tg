@@ -298,13 +298,6 @@
             },
 
             /**
-             * The core-ajax component for entity retrieval.
-             */
-            _ajaxRetriever: function () {
-                return this.$.ajaxRetriever;
-            },
-
-            /**
              * The tg-entity-validator component for entity validation.
              */
             _validator: function () {
@@ -327,7 +320,7 @@
              * @param modifiedPropertiesHolder -- the entity with modified properties
              */
             _saveModifiedProperties: function (modifiedPropertiesHolder) {
-            	var reflector = this.$.reflector;
+            	var reflector = this._reflector();
                 var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
                 savingInfoHolder.id = null;
                 savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
@@ -336,8 +329,8 @@
                     savingInfoHolder["centreContextHolder"] = this.savingContext;
             	}
             	
-                this.$.ajaxSaver.body = JSON.stringify(this.$.serialiser.serialise(savingInfoHolder));
-                this.$.ajaxSaver.go();
+                this.$.ajaxSaver.body = JSON.stringify(this._serialiser().serialise(savingInfoHolder));
+                this.$.ajaxSaver.generateRequest();
             },
 
             /**

@@ -3,8 +3,8 @@
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 
-<link rel="import" href="/resources/master/actions/tg-action.html">
-<link rel="import" href="/resources/components/tg-scroll-container.html">
+<!-- TODO this import should be generated <link rel="import" href="/resources/master/actions/tg-action.html"> -->
+<!-- <link rel="import" href="/resources/components/tg-scroll-container.html"> -->
 
 <dom-module id="tg-@entity_type-master"> <!-- TODO layout vertical -->
     <style>
@@ -20,7 +20,9 @@
         }*/
     </style>
     <template>
-    	<tg-entity-master entity-type="[[entityType]]" 
+    	<tg-entity-master
+    		id="masterDom"
+    		entity-type="[[entityType]]" 
     		entity-id="[[entityId]]"
     		_post-validated-default="[[_postValidatedDefault]]"
     		_postValidatedDefaultError="[[_postValidatedDefaultError]]"
@@ -65,6 +67,31 @@
                 //@entityActions
                 // PROPERTY ACTIONS (GENERATED)
                 //@propertyActions
+            },
+            
+            _masterDom: function () {
+            	return this.$.masterDom;
+            },
+            
+            /**
+             * The core-ajax component for entity retrieval.
+             */
+            _ajaxRetriever: function () {
+                return this._masterDom()._ajaxRetriever();
+            },
+            
+            /**
+             * The component for entity serialisation.
+             */
+            _serialiser: function () {
+            	return this._masterDom()._serialiser();
+            },
+            
+            /**
+             * The reflector component.
+             */
+            _reflector: function () {
+            	return this._masterDom()._reflector();
             }
             
             /* handleScroll: function(e) {

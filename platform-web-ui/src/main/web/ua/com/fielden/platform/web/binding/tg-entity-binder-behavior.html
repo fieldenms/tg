@@ -142,7 +142,7 @@
                 	value: function () {
                 		return (function (entityAndCustomObject) {
                             var validatedEntity = entityAndCustomObject[0];
-                            var customObject = this.$.reflector.customObject(entityAndCustomObject);
+                            var customObject = this._reflector().customObject(entityAndCustomObject);
                         	
                             var msg = this._toastMsg("Validation", validatedEntity);
                             this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
@@ -176,7 +176,7 @@
                 	value: function () {
                 		return (function (entityAndCustomObject) {
                             var entity = this.preRetrieved(entityAndCustomObject[0]);
-                            var customObject = this.$.reflector.customObject(entityAndCustomObject);
+                            var customObject = this._reflector().customObject(entityAndCustomObject);
 
                             var newBindingEntity = this._postEntityReceived(entity);
                             
@@ -231,17 +231,17 @@
                 	type: Function,
                 	value: function () {
                 		return (function(e, name, customHandlerFor, customErrorHandlerFor) {
-                        	console.log(name, ": core-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                        	console.log(name, ": iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
                             if (e.detail.xhr.status === 200) {
-                            	var deserialisedResult = this.$.serialiser.deserialise(e.detail.response);
+                            	var deserialisedResult = this._serialiser().deserialise(e.detail.response);
                             	
-                            	if (this.$.reflector.isError(deserialisedResult)) {
+                            	if (this._reflector().isError(deserialisedResult)) {
                             		// throw the toast message about the server-side error
                                     var msg = this._toastMsgForError(deserialisedResult);
-                                    this._openToastForError(this.$.reflector.exceptionMessage(deserialisedResult.ex), msg);
+                                    this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg);
                             		// continue with custom error handling of the error result
                                     customErrorHandlerFor(deserialisedResult);
-                            	} else if (this.$.reflector.isWarning(deserialisedResult)) {
+                            	} else if (this._reflector().isWarning(deserialisedResult)) {
                             		// TODO how warnings should be handled?
                             		console.warn(this._toastMsgForError(deserialisedResult));
                             	} else {
@@ -249,7 +249,7 @@
             	                    customHandlerFor(deserialisedResult.instance);
                             	}
                             } else {
-                            	console.warn(name, ": core-response: non-200-status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                            	console.warn(name, ": iron-response: non-200-status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
                             }
                         }).bind(this);
                 	}
@@ -276,7 +276,7 @@
                         	
                     		// throw the toast message about the error (unhandled server error, connection problem, 403 authorisation error etc.)
                             var msg = this._toastMsgForErrorObject(errorObject);
-                            this._openToastForError(this.$.reflector.exceptionMessageForErrorObject(errorObject), msg);
+                            this._openToastForError(this._reflector().exceptionMessageForErrorObject(errorObject), msg);
                     		// TODO: support this case, if needed: continue with custom error handling of the error result -- customErrorHandlerFor(deserialisedResult);
                         }).bind(this);
                 	}
@@ -329,10 +329,10 @@
                 	value: function () {
                 		return (function (context) {
                         	if (context) {
-                                var ser = this.$.serialiser.serialise(context);
+                                var ser = this._serialiser().serialise(context);
                                 this._ajaxRetriever().body = JSON.stringify(ser);
                         	}
-                            this._ajaxRetriever().go();
+                            this._ajaxRetriever().generateRequest();
                             this._startRefreshCycleModeForEditors();
                         }).bind(this);
                 	}
@@ -402,12 +402,12 @@
             
             _toastMsgForError: function (errorResult) {
             	var ex = errorResult.ex;
-            	return this.$.reflector.stackTrace(ex);
+            	return this._reflector().stackTrace(ex);
             },
             
             _toastMsgForErrorObject: function (errorObject) {            	
             	var stack = errorObject.stack;
-            	return this.$.reflector.stackTraceForErrorObjectStack(stack);
+            	return this._reflector().stackTraceForErrorObjectStack(stack);
             },
             
             _toastMsg: function (actionName, entity) {
@@ -420,6 +420,13 @@
                 }
             },
             //////////////////////////////////////////////
+            
+            /**
+             * The component for entity serialisation.
+             */
+            _serialiser: function () {
+                throw "_serialiser: not implemented";
+            },
 
             /**
              * The core-ajax component for entity retrieval.
@@ -433,6 +440,13 @@
              */
             _validator: function () {
                 throw "_validator: not implemented";
+            },
+            
+            /**
+             * The reflector component.
+             */
+            _reflector: function () {
+                throw "_reflector: not implemented";
             },
 
             //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
@@ -454,7 +468,7 @@
                     "@modified": false
                 };
                 var self = this;
-                if (self.$.reflector.isEntity(bindingEntity)) {
+                if (self._reflector().isEntity(bindingEntity)) {
                     modPropHolder["id"] = bindingEntity["id"];
                     modPropHolder["version"] = bindingEntity["version"];
 
@@ -467,7 +481,7 @@
                         //                 The "modified" property is marked by existence of "val" sub-property.
                         //
                         //                 All modified properties will be applied on the server upon the validation prototype.
-                        if (!self.$.reflector.equalsEx(value, originalValue)) {
+                        if (!self._reflector().equalsEx(value, originalValue)) {
                             // the property is 'modified'
                             modPropHolder[propertyName] = {
                                 "val": value,
@@ -536,7 +550,7 @@
 
             _extractBindingView: function (entity, previousModifiedPropertiesHolder) {
                 var self = this;
-                bindingView = self.$.reflector.newEntity(entity.type().fullClassName());
+                bindingView = self._reflector().newEntity(entity.type().fullClassName());
                 bindingView["id"] = entity["id"];
                 bindingView["version"] = entity["version"];
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
@@ -544,7 +558,7 @@
                 bindingView["@@origin"] = entity;
 
                 entity.traverseProperties(function (propertyName) {
-                    if (self.$.reflector.isError(entity.prop(propertyName).validationResult())) {
+                    if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
                         if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
                             // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
                             //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
@@ -556,14 +570,14 @@
 
                         bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                     } else {
-                    	bindingView[propertyName] = self.$.reflector.convert(entity.get(propertyName));
+                    	bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
 
                         var value = entity.get(propertyName);
-                        if (self.$.reflector.isEntity(value)) {
-                            bindingView["@" + propertyName + "_desc"] = self.$.reflector.convert(value.get("desc"));
+                        if (self._reflector().isEntity(value)) {
+                            bindingView["@" + propertyName + "_desc"] = self._reflector().convert(value.get("desc"));
                         }
 
-                        if (self.$.reflector.isWarning(entity.prop(propertyName).validationResult())) {
+                        if (self._reflector().isWarning(entity.prop(propertyName).validationResult())) {
                             bindingView["@" + propertyName + "_warning"] = entity.prop(propertyName).validationResult();
                         }
                         if (entity.prop(propertyName).isRequired()) {
@@ -589,14 +603,14 @@
 
             _extractOriginalBindingView: function (entity) {
                 var self = this;
-                var originalBindingView = self.$.reflector.newEntityEmpty();
+                var originalBindingView = self._reflector().newEntityEmpty();
 
                 originalBindingView["_type"] = entity["_type"];
                 originalBindingView["id"] = entity["id"];
                 originalBindingView["version"] = entity["version"];
 
                 entity.traverseProperties(function (propertyName) {
-                    originalBindingView[propertyName] = self.$.reflector.convert(entity.getOriginal(propertyName));
+                    originalBindingView[propertyName] = self._reflector().convert(entity.getOriginal(propertyName));
                 });
 
                 // console.log("       entity + originalBindingView", entity, bindingView);

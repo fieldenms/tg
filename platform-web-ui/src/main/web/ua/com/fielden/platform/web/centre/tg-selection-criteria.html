@@ -91,7 +91,7 @@
                 self.$.ajaxRunner.addEventListener('core-response', function (e) {
                 	self._processResponse(e, "run", function (entityAndCustomObject) {
                         var criteriaEntity = entityAndCustomObject[0];
-                        var customObject = self.$.reflector.customObject(entityAndCustomObject);
+                        var customObject = self._reflector().customObject(entityAndCustomObject);
                         var resultEntities = customObject.resultEntities || [];
                         var pageCount = customObject.pageCount || null;
                         var metaValues = customObject.metaValues;
@@ -165,7 +165,7 @@
 
             _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
                 var modPropHolder = Polymer.TgBehaviors.TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
-                if (this.$.reflector.isEntity(bindingEntity)) {
+                if (this._reflector().isEntity(bindingEntity)) {
                     modPropHolder["@@metaValues"] = {};
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
@@ -367,8 +367,8 @@
              * @param contextHolder -- the holder of the centre context, which contains the criteria entity's modif props holder
              */
             _runModifiedProperties: function (contextHolder) {
-                this.$.ajaxRunner.body = JSON.stringify(this.$.serialiser.serialise(contextHolder));
-                this.$.ajaxRunner.go();
+                this.$.ajaxRunner.body = JSON.stringify(this._serialiser().serialise(contextHolder));
+                this.$.ajaxRunner.generateRequest();
             },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
@@ -440,11 +440,11 @@
              * Create context holder with custom '@@miType' property.
              */
             _createContextHolder: function (modifHolderGetter, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
-                var contextHolder = this.$.reflector.createContextHolder(
+                var contextHolder = this._reflector().createContextHolder(
     				requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
     				modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
                 );
-                this.$.reflector.setCustomProperty(contextHolder, "@@miType", this.mitype);
+                this._reflector().setCustomProperty(contextHolder, "@@miType", this.mitype);
                 return contextHolder;
             },
             
@@ -459,19 +459,19 @@
             	var self = this;
             	var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
             	
-            	self.$.reflector.setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
+            	self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
                 if (self.pageCount !== null) {
-                	self.$.reflector.setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
-                	self.$.reflector.setCustomProperty(contextHolder, "@@pageCount", self.pageCount);
+                	self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
+                	self._reflector().setCustomProperty(contextHolder, "@@pageCount", self.pageCount);
 
                 	if (entitiesToRefresh && entitiesToRefresh.length > 0) {
-                		self.$.reflector.setCustomProperty(contextHolder, "@@idsToRefresh", self.idsToRefresh(entitiesToRefresh));
+                		self._reflector().setCustomProperty(contextHolder, "@@idsToRefresh", self.idsToRefresh(entitiesToRefresh));
                     } else {
-                    	self.$.reflector.removeCustomProperty(contextHolder, "@@idsToRefresh");
+                    	self._reflector().removeCustomProperty(contextHolder, "@@idsToRefresh");
                     }
                 } else {
-                	self.$.reflector.removeCustomProperty(contextHolder, "@@pageNumber");
-                	self.$.reflector.removeCustomProperty(contextHolder, "@@pageCount");
+                	self._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
+                	self._reflector().removeCustomProperty(contextHolder, "@@pageCount");
                 }
             	
             	return contextHolder;

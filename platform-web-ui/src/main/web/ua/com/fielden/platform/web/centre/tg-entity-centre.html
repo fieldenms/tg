@@ -330,7 +330,7 @@
                         throw "Cannot save the not modified centre.";
                     }
                     console.log("CENTRE SAVE");
-                    this.$.ajaxSaver.go();
+                    this.$.ajaxSaver.generateRequest();
                 },
                 canSave: function (isCentreChanged) {
                     return this.canManageCentreConfig(isCentreChanged);
@@ -344,7 +344,7 @@
                         throw "Cannot discard the not modified centre.";
                     }
                     console.log("CENTRE DISCARD");
-                    this.$.ajaxDiscarder.go();
+                    this.$.ajaxDiscarder.generateRequest();
                 },
                 canDiscard: function (isCentreChanged) {
                     return this.canManageCentreConfig(isCentreChanged);

@@ -57,7 +57,7 @@
 
                 var ser = this.$.serialiser.serialise(functionalEntity);
                 this.$.actionExecutor.body = JSON.stringify(ser);
-                this.$.actionExecutor.go();
+                this.$.actionExecutor.generateRequest();
             },
 
             /**

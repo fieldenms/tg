@@ -433,7 +433,7 @@
                         var serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
 
                         this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
-                        this.$.ajaxSearcher.go();
+                        this.$.ajaxSearcher.generateRequest();
                     } else if (this.$.overlay.opened) { // make sure overlay is closed is no search is performed
                         this.$.overlay.toggle();
                     }
