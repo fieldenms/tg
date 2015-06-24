@@ -53,10 +53,13 @@
                 attrs: Object
             },
 
-            ready: function () {
-                if (this.auto) {
-                    this.load();
-                }
+            attached: function () {
+                var self = this;
+                this.async(function () {
+                    if (self.auto) {
+                        self.load();
+                    }
+                });
             },
             //Loads the custom element and fires after-load event with loaded element.
             load: function () {
@@ -66,7 +69,7 @@
                 if (!this.wasLoaded) {
                     if (this.import && !importedURLs.hasOwnProperty(this.import)) {
                         this.importHref(this.import, function (e) {
-                            thisElement.fire('after-load', insertElement(self, elementName, attributes));
+                            self.fire('after-load', insertElement(self, elementName, attributes));
                             // e.target.import is the import document.
                         }, function (e) {
                             // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
