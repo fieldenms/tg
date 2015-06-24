@@ -63,12 +63,12 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IEntityActionConfig4<T> addAction(final MasterActions masterAction) {
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getOnAction(masterAction), getOnActionError(masterAction)), this);
+        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction)), this);
         entityActions.add(entityAction);
         return entityAction;
     }
 
-    private String getOnActionError(final MasterActions masterAction) {
+    private String getPostActionError(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
             return "_postRetrievedDefaultError";
         } else if (MasterActions.VALIDATE == masterAction) {
@@ -76,15 +76,15 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         } else if (MasterActions.SAVE == masterAction) {
             return "_postSavedDefaultError";
         } else if (MasterActions.EDIT == masterAction) {
-            return "_actions['EDIT'].onActionError"; // TODO maybe, should be deleted (no ajax request sends)?
+            return "_actions['EDIT'].postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
         } else if (MasterActions.VIEW == masterAction) {
-            return "_actions['VIEW'].onActionError"; // TODO maybe, should be deleted (no ajax request sends)?
+            return "_actions['VIEW'].postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
         } else {
             throw new UnsupportedOperationException(masterAction.toString());
         }
     }
 
-    private String getOnAction(final MasterActions masterAction) {
+    private String getPostAction(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
             return "_postRetrievedDefault";
         } else if (MasterActions.VALIDATE == masterAction) {
@@ -92,9 +92,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         } else if (MasterActions.SAVE == masterAction) {
             return "_postSavedDefault";
         } else if (MasterActions.EDIT == masterAction) {
-            return "_actions['EDIT'].onAction";
+            return "_actions['EDIT'].postAction";
         } else if (MasterActions.VIEW == masterAction) {
-            return "_actions['VIEW'].onAction";
+            return "_actions['VIEW'].postAction";
         } else {
             throw new UnsupportedOperationException(masterAction.toString());
         }

@@ -281,9 +281,9 @@
                     enabledStates: ['VIEW'],
                     action: function () {
                         self.edit();
-                        this.onAction(null);
+                        this.postAction(null);
                     },
-                    onAction: function (e) {}
+                    postAction: function (e) {}
                 };
                 self._actions['VIEW'] = {
                     shortDesc: 'VIEW',
@@ -291,9 +291,9 @@
                     enabledStates: ['EDIT'],
                     action: function () {
                         self.view();
-                        this.onAction(null);
+                        this.postAction(null);
                     },
-                    onAction: function (e) {}
+                    postAction: function (e) {}
                 };
             },
 

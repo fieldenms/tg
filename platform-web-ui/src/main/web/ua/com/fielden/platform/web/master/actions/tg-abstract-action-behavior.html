@@ -1,9 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <script>
-    Polymer({
-    	is: 'tg-abstract-action',
-    	
+	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+	Polymer.TgBehaviors.TgAbstractActionBehavior = {
         properties: {
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
@@ -104,5 +103,5 @@
             console.log(this.shortDesc + ": after execution");
             this._enabled = true;
         }
-    });
+    };
 </script>

@@ -16,8 +16,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
  *
  */
 public class DefaultEntityAction extends AbstractAction implements IRenderable, IExecutable {
-    private final String onActionFunction;
-    private final String onActionErrorFunction;
+    private final String postActionFunction;
+    private final String postActionErrorFunction;
 
     /**
      * Creates {@link DefaultEntityAction} from <code>functionalEntityType</code> type and other parameters.
@@ -25,10 +25,10 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
      * @param functionalEntityType
      * @param propertyName
      */
-    public DefaultEntityAction(final String name, final String onActionFunction, final String onActionErrorFunction) {
+    public DefaultEntityAction(final String name, final String postActionFunction, final String postActionErrorFunction) {
         super(name, "master/actions/tg-action");
-        this.onActionFunction = onActionFunction;
-        this.onActionErrorFunction = onActionErrorFunction;
+        this.postActionFunction = postActionFunction;
+        this.postActionErrorFunction = postActionErrorFunction;
     }
 
     @Override
@@ -38,18 +38,18 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
         final String actionSelector = "_actions['" + this.name() + "']";
 
         attrs.put("action", "[[" + actionSelector + ".action]]");
-        attrs.put("TODO on-action", "[[" + this.onActionFunction() + "]]");
-        attrs.put("TODO on-action-error", "[[" + this.onActionErrorFunction() + "]]");
+        attrs.put("post-action", "[[" + this.postActionFunction() + "]]");
+        attrs.put("post-action-error", "[[" + this.postActionErrorFunction() + "]]");
 
         return attrs;
     }
 
-    private String onActionFunction() {
-        return onActionFunction;
+    private String postActionFunction() {
+        return postActionFunction;
     }
 
-    private String onActionErrorFunction() {
-        return onActionErrorFunction;
+    private String postActionErrorFunction() {
+        return postActionErrorFunction;
     }
 
     @Override
