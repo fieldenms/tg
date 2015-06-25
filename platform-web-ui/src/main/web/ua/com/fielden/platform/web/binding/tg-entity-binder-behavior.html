@@ -125,94 +125,42 @@
                  * '_createModifiedPropertiesHolder' function, that is designated for binding.
                  */
                 _createModifiedPropertiesHolder: {
-                	type: Function,
-                	value: function () {
-                		return (function () {
-                            var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-                            return this._reset(mph);
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
                  * Default implementation for postValidated callback.
                  */
                 _postValidatedDefault: {
-                	type: Function,
-                	value: function () {
-                		return (function (entityAndCustomObject) {
-                            var validatedEntity = entityAndCustomObject[0];
-                            var customObject = this._reflector().customObject(entityAndCustomObject);
-                        	
-                            var msg = this._toastMsg("Validation", validatedEntity);
-                            this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
-
-                            var newBindingEntity = this._postEntityReceived(validatedEntity);
-                            // custom external action
-                            this.postValidated(validatedEntity, newBindingEntity, customObject);
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
                  * Default implementation for unsuccessful postValidated callback.
                  */
                 _postValidatedDefaultError: {
-                	type: Function,
-                	value: function () {
-                		return (function (errorResult) {
-                        	// This function will be invoked after server-side error appear.
-                        	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
-                        	console.warn("SERVER ERROR: ", errorResult);
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
                  * Default implementation for postRetrieved callback.
                  */
                 _postRetrievedDefault: {
-                	type: Function,
-                	value: function () {
-                		return (function (entityAndCustomObject) {
-                            var entity = this.preRetrieved(entityAndCustomObject[0]);
-                            var customObject = this._reflector().customObject(entityAndCustomObject);
-
-                            var newBindingEntity = this._postEntityReceived(entity);
-                            
-                            this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
-                            // custom external action
-                            this.postRetrieved(entity, newBindingEntity, customObject);
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
                  * Default implementation for unsuccessful postRetrieved callback.
                  */
                 _postRetrievedDefaultError: {
-                	type: Function,
-                	value: function () {
-                		return (function (errorResult) {
-                        	// This function will be invoked after server-side error appear.
-                        	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
-                        	console.warn("SERVER ERROR: ", errorResult);
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
                  * Default implementation for unsuccessful postSearched callback.
                  */
                 _postSearchedDefaultError: {
-                	type: Function,
-                	value: function () {
-                		return (function (errorResult) {
-                        	// This function will be invoked after server-side error appear.
-                        	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
-                        	console.warn("SERVER ERROR: ", errorResult);
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
@@ -228,31 +176,7 @@
                  * This is the function, that is designated for binding.
                  */
                 _processResponse: {
-                	type: Function,
-                	value: function () {
-                		return (function(e, name, customHandlerFor, customErrorHandlerFor) {
-                        	console.log(name, ": iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
-                            if (e.detail.xhr.status === 200) {
-                            	var deserialisedResult = this._serialiser().deserialise(e.detail.response);
-                            	
-                            	if (this._reflector().isError(deserialisedResult)) {
-                            		// throw the toast message about the server-side error
-                                    var msg = this._toastMsgForError(deserialisedResult);
-                                    this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg);
-                            		// continue with custom error handling of the error result
-                                    customErrorHandlerFor(deserialisedResult);
-                            	} else if (this._reflector().isWarning(deserialisedResult)) {
-                            		// TODO how warnings should be handled?
-                            		console.warn(this._toastMsgForError(deserialisedResult));
-                            	} else {
-                            		// continue with normal handling of the result's instance
-            	                    customHandlerFor(deserialisedResult.instance);
-                            	}
-                            } else {
-                            	console.warn(name, ": iron-response: non-200-status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
-                            }
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
@@ -268,18 +192,7 @@
                  * This is the function, that is designated for binding.
                  */
                 _processError: {
-                	type: Function,
-                	value: function () {
-                		return (function(e, name) {
-                			var errorObject = e.detail.error;
-                        	console.log(name, ": iron-error: e.detail.error = ", errorObject);
-                        	
-                    		// throw the toast message about the error (unhandled server error, connection problem, 403 authorisation error etc.)
-                            var msg = this._toastMsgForErrorObject(errorObject);
-                            this._openToastForError(this._reflector().exceptionMessageForErrorObject(errorObject), msg);
-                    		// TODO: support this case, if needed: continue with custom error handling of the error result -- customErrorHandlerFor(deserialisedResult);
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
@@ -288,21 +201,7 @@
                  * This function is designated for binding.
                  */
                 validate: {
-                	type: Function,
-                	value: function () {
-                		return (function () {
-                            console.log("_validate");
-                            var self = this;
-
-                            var holder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
-                            // (if the entity was not modified -- _validate(holder) will start the error recovery process)
-
-                            // cancel previous validation before starting new one! The results of previous validation are irrelevant!
-                            self._validator().abortValidationIfAny();
-                            self._validator().validate(self._reset(holder));
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
@@ -311,12 +210,7 @@
                  * This function is designated for binding.
                  */
                 doNotValidate: {
-                	type: Function,
-                	value: function () {
-                		return (function () {
-                            console.log("do not validate");
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
@@ -325,17 +219,7 @@
                  * This function is designated for binding.
                  */
                 retrieve: {
-                	type: Function,
-                	value: function () {
-                		return (function (context) {
-                        	if (context) {
-                                var ser = this._serialiser().serialise(context);
-                                this._ajaxRetriever().body = JSON.stringify(ser);
-                        	}
-                            this._ajaxRetriever().generateRequest();
-                            this._startRefreshCycleModeForEditors();
-                        }).bind(this);
-                	}
+                	type: Function
                 }
     		},
             
@@ -348,6 +232,11 @@
                 this._resetRefreshCycleModeForEditors(); // init the value for '_refreshCycleMode'
                 this._currBindingEntity = null; // TODO previously, was {} -- empty object. Please, use more safe form ('null'). And check, if 'null' is appropriately working with editors.
                 
+                self._createModifiedPropertiesHolder = (function () {
+	                var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                    return this._reset(mph);
+                }).bind(self);
+                
                 self._processRetrieverResponse = function (e) {
                 	self._processResponse(e, "retrieve", function (entityAndCustomObject) {
                 		self._postRetrievedDefault(entityAndCustomObject);
@@ -359,6 +248,112 @@
                 self._processRetrieverError = function (e) {
                 	self._processError(e, "retrieve");
                 };
+                
+                self._processResponse = (function(e, name, customHandlerFor, customErrorHandlerFor) {
+                	console.log(name, ": iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                    if (e.detail.xhr.status === 200) {
+                    	var deserialisedResult = this._serialiser().deserialise(e.detail.response);
+                    	
+                    	if (this._reflector().isError(deserialisedResult)) {
+                    		// throw the toast message about the server-side error
+                            var msg = this._toastMsgForError(deserialisedResult);
+                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg);
+                    		// continue with custom error handling of the error result
+                            customErrorHandlerFor(deserialisedResult);
+                    	} else if (this._reflector().isWarning(deserialisedResult)) {
+                    		// TODO how warnings should be handled?
+                    		console.warn(this._toastMsgForError(deserialisedResult));
+                    	} else {
+                    		// continue with normal handling of the result's instance
+    	                    customHandlerFor(deserialisedResult.instance);
+                    	}
+                    } else {
+                    	console.warn(name, ": iron-response: non-200-status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                    }
+                }).bind(self);
+                
+                self._processError = (function(e, name) {
+        			var errorObject = e.detail.error;
+                	console.log(name, ": iron-error: e.detail.error = ", errorObject);
+                	
+            		// throw the toast message about the error (unhandled server error, connection problem, 403 authorisation error etc.)
+                    var msg = this._toastMsgForErrorObject(errorObject);
+                    this._openToastForError(this._reflector().exceptionMessageForErrorObject(errorObject), msg);
+            		// TODO: support this case, if needed: continue with custom error handling of the error result -- customErrorHandlerFor(deserialisedResult);
+                }).bind(self);
+                
+             	// calbacks, that will be bound by editor child elements:
+                self.validate = (function () {
+                    console.log("validate");
+
+                    var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                    // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
+                    // (if the entity was not modified -- _validate(holder) will start the error recovery process)
+
+                    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
+                    this._validator().abortValidationIfAny();
+                    this._validator().validate(this._reset(holder));
+                }).bind(self);
+             	
+                self.doNotValidate = (function () {
+                    console.log("do not validate");
+                }).bind(self);
+                
+                self.retrieve = (function (context) {
+                	if (context) {
+                        var ser = this._serialiser().serialise(context);
+                        this._ajaxRetriever().body = JSON.stringify(ser);
+                	}
+                    this._ajaxRetriever().generateRequest();
+                    this._startRefreshCycleModeForEditors();
+                }).bind(self);
+                
+                // calbacks, that will potentially be augmented by tg-action child elements:
+                // 				retrieval:
+                self._postRetrievedDefault = (function (entityAndCustomObject) {
+                    var entity = this.preRetrieved(entityAndCustomObject[0]);
+                    var customObject = this._reflector().customObject(entityAndCustomObject);
+                    
+				    var msg = this._toastMsg("Refreshing", entity);
+				    this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
+
+                    var newBindingEntity = this._postEntityReceived(entity);
+                    
+                    this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
+                    // custom external action
+                    this.postRetrieved(entity, newBindingEntity, customObject);
+                }).bind(self);
+                
+                self._postRetrievedDefaultError = (function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
+                }).bind(self);
+             	// 				validation:
+                self._postValidatedDefault = (function (entityAndCustomObject) {
+                    var validatedEntity = entityAndCustomObject[0];
+                    var customObject = this._reflector().customObject(entityAndCustomObject);
+                	
+                    var msg = this._toastMsg("Validation", validatedEntity);
+                    this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+
+                    var newBindingEntity = this._postEntityReceived(validatedEntity);
+                    // custom external action
+                    this.postValidated(validatedEntity, newBindingEntity, customObject);
+                }).bind(self);
+                
+                self._postValidatedDefaultError = (function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
+                }).bind(self);
+
+				// 				searching:
+                self._postSearchedDefaultError = (function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
+                }).bind(this);
             },
 
             ///////////// toast related //////////////////
@@ -366,38 +361,38 @@
              * Opens the toast with some message and with indication whether progress is started.
              */
             _openToast: function (entity, toastMsg, hasMoreInfo, moreInfo, showProgress) {
-                this.$.toastGreeting.text = toastMsg;
-                this.$.toastGreeting.hasMore = hasMoreInfo;
-                this.$.toastGreeting.msgText = moreInfo;
-                this.$.toastGreeting.showProgress = showProgress;
+                this._toastGreeting().text = toastMsg;
+                this._toastGreeting().hasMore = hasMoreInfo;
+                this._toastGreeting().msgText = moreInfo;
+                this._toastGreeting().showProgress = showProgress;
                 if (hasMoreInfo) {
                     if (!entity.isValid()) {
                     	// TODO is it still relevant? msgHeading
               			// TODO is it still relevant? msgHeading
       					// TODO is it still relevant? msgHeading
-                        this.$.toastGreeting.msgHeading = "Error";
+                        this._toastGreeting().msgHeading = "Error";
                     } else if (entity.isValidWithWarning()) {
-                        this.$.toastGreeting.msgHeading = "Warning";
+                        this._toastGreeting().msgHeading = "Warning";
                     } else {
-                        this.$.toastGreeting.msgHeading = "Info";
+                        this._toastGreeting().msgHeading = "Info";
                     }
                 }
-                this.$.toastGreeting.show();
+                this._toastGreeting().show();
             },
 
             /**
              * Opens the toast with some error message including full 'moreInfo' message.
              */
             _openToastForError: function (toastMsg, moreInfo) {
-                this.$.toastGreeting.text = toastMsg;
-                this.$.toastGreeting.hasMore = true;
-                this.$.toastGreeting.msgText = moreInfo;
-                this.$.toastGreeting.showProgress = false;
+                this._toastGreeting().text = toastMsg;
+                this._toastGreeting().hasMore = true;
+                this._toastGreeting().msgText = moreInfo;
+                this._toastGreeting().showProgress = false;
             	// TODO is it still relevant? msgHeading
       			// TODO is it still relevant? msgHeading
 				// TODO is it still relevant? msgHeading
-             	this.$.toastGreeting.msgHeading = "Error";
-                this.$.toastGreeting.show();
+             	this._toastGreeting().msgHeading = "Error";
+                this._toastGreeting().show();
             },
             
             _toastMsgForError: function (errorResult) {
@@ -447,6 +442,13 @@
              */
             _reflector: function () {
                 throw "_reflector: not implemented";
+            },
+            
+            /**
+             * The toast component.
+             */
+            _toastGreeting: function () {
+                throw "_toastGreeting: not implemented";
             },
 
             //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////

@@ -88,16 +88,16 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         if (isDebug()) {
             attrs.put("debug", "true");
         }
-        attrs.put("entity", "[[currBindingEntity]]");
-        attrs.put("propertyName", this.propertyName);
+        attrs.put("entity", "[[_currBindingEntity]]");
+        attrs.put("property-name", this.propertyName);
         attrs.put("validation-callback", this.skipValidation ? "[[doNotValidate]]" : "[[validate]]");
-        attrs.put("propTitle", this.title);
-        attrs.put("propDesc", this.desc);
-        attrs.put("currentState", "[[currentState]]");
+        attrs.put("prop-title", this.title);
+        attrs.put("prop-desc", this.desc);
+        attrs.put("current-state", "[[currentState]]");
         if (this.action != null) {
-            attrs.put("action", "[[_actions['" + this.action.name() + "']]]");
+            attrs.put("action", "[[_actions." + this.action.name() + "]]");
         }
-        attrs.put("externalRefreshCycle", "[[_refreshCycleMode]]");
+        attrs.put("external-refresh-cycle", "[[_refreshCycleMode]]");
         return attrs;
     }
 

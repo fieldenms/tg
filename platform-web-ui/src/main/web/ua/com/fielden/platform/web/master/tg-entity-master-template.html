@@ -25,11 +25,11 @@
     		entity-type="[[entityType]]" 
     		entity-id="[[entityId]]"
     		_post-validated-default="[[_postValidatedDefault]]"
-    		_postValidatedDefaultError="[[_postValidatedDefaultError]]"
+    		_post-validated-default-error="[[_postValidatedDefaultError]]"
     		_process-response="[[_processResponse]]"
     		_process-retriever-response="[[_processRetrieverResponse]]"
     		_process-retriever-error="[[_processRetrieverError]]"
-    		_processSaverResponse="[[_processSaverResponse]]"
+    		_process-saver-response="[[_processSaverResponse]]"
     		_process-saver-error="[[_processSaverError]]">
    	        <!--EDITORS AND ENTITY ACTIONS DOM (GENERATED) -->
    	        <!--@editors_and_actions-->
@@ -92,6 +92,13 @@
              */
             _reflector: function () {
             	return this._masterDom()._reflector();
+            },
+            
+            /**
+             * The toast component.
+             */
+            _toastGreeting: function () {
+            	return this._masterDom()._toastGreeting();
             }
             
             /* handleScroll: function(e) {

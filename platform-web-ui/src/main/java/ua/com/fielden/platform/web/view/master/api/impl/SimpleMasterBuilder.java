@@ -76,9 +76,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         } else if (MasterActions.SAVE == masterAction) {
             return "_postSavedDefaultError";
         } else if (MasterActions.EDIT == masterAction) {
-            return "_actions['EDIT'].postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
+            return "_actions.EDIT.postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
         } else if (MasterActions.VIEW == masterAction) {
-            return "_actions['VIEW'].postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
+            return "_actions.VIEW.postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
         } else {
             throw new UnsupportedOperationException(masterAction.toString());
         }
@@ -92,9 +92,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         } else if (MasterActions.SAVE == masterAction) {
             return "_postSavedDefault";
         } else if (MasterActions.EDIT == masterAction) {
-            return "_actions['EDIT'].postAction";
+            return "_actions.EDIT.postAction";
         } else if (MasterActions.VIEW == masterAction) {
-            return "_actions['VIEW'].postAction";
+            return "_actions.VIEW.postAction";
         } else {
             throw new UnsupportedOperationException(masterAction.toString());
         }

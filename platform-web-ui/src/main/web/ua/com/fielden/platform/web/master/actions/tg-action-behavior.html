@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/master/actions/tg-abstract-action-behavior.html">
+
 <script>
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
 	Polymer.TgBehaviors.TgActionBehaviorImpl = {
@@ -23,7 +25,8 @@
              */
             postAction: {
             	type: Function,
-            	observer: '_postActionChanged'
+            	observer: '_postActionChanged',
+            	notify: true
             },
             
             /**
@@ -31,7 +34,8 @@
              */
             postActionError: {
             	type: Function,
-            	observer: '_postActionErrorChanged'
+            	observer: '_postActionErrorChanged',
+            	notify: true
             },
             
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +72,7 @@
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             
             /* Indicates wheather the action is in progress. */
-            _isWorking: {
+            _working: {
             	type: Boolean
             },
             
@@ -88,7 +92,7 @@
                         this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
 
                         // start the action
-                        this._isWorking = true;
+                        this._working = true;
                         this.action();
                     }).bind(this);
             	}
@@ -96,8 +100,8 @@
         },
 
         ready: function () {
-			this._isWorking = false;     	
-        }
+			this._working = false;     	
+        },
 
         /* Timer callback that performs spinner activation. */
         _startSpinnerCallback: function () {
@@ -109,30 +113,30 @@
 
         _postActionChanged: function (newValue, oldValue) {
             var self = this;
-            // console.log("postAction changed, old = ", oldValue, newValue);
+            console.log("postAction changed", newValue, oldValue);
             if (newValue && !self._postActionUpgraded) {
+                self._postActionUpgraded = true;
                 self.postAction = function (smth) {
                     newValue(smth);
                     self._afterExecution();
                 };
-                self._postActionUpgraded = true;
             }
         },
         
         _postActionErrorChanged: function (newValue, oldValue) {
             var self = this;
-            // console.log("postActionError changed, old = ", oldValue, newValue);
+           	console.log("postActionError changed", newValue, oldValue);
             if (newValue && !self._postActionErrorUpgraded) {
+                self._postActionErrorUpgraded = true;
                 self.postActionError = function (smth) {
                     newValue(smth);
                     self._afterExecution();
                 };
-                self._postActionErrorUpgraded = true;
             }
         },
 
         _afterExecution: function () {
-            this._isWorking = false;
+            this._working = false;
             // prevent not yet activated spinner from activating if any
             if (this._startSpinnerTimer) {
                 clearTimeout(this._startSpinnerTimer);

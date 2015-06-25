@@ -116,15 +116,12 @@ public abstract class AbstractAction implements IImportable {
     protected Map<String, Object> createAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
-        // TODO re-implement:
-        // TODO re-implement:
-        // TODO re-implement:
-        final String actionSelector = "actions['" + this.name() + "']";
-        attrs.put("entitytype", "{{" + actionSelector + ".entitytype}}");
-        attrs.put("enabledStates", "{{" + actionSelector + ".enabledStates}}");
-        attrs.put("shortDesc", "{{" + actionSelector + ".shortDesc}}");
-        attrs.put("longDesc", "{{" + actionSelector + ".longDesc}}");
-        attrs.put("currentState", "{{currentState}}");
+        final String actionSelector = "_actions." + this.name();
+        attrs.put("entity-type", "[[" + actionSelector + ".entityType]]");
+        attrs.put("enabled-states", "[[" + actionSelector + ".enabledStates]]");
+        attrs.put("short-desc", "[[" + actionSelector + ".shortDesc]]");
+        attrs.put("long-desc", "[[" + actionSelector + ".longDesc]]");
+        attrs.put("current-state", "[[currentState]]");
 
         return attrs;
     }

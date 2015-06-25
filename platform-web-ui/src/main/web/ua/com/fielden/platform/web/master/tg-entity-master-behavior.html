@@ -93,32 +93,14 @@
                  * Default implementation for postSaved callback.
                  */
                 _postSavedDefault: {
-                	type: Function,
-                	value: function () {
-                		return (function (potentiallySavedEntity) {
-                            var msg = this._toastMsg("Saving", potentiallySavedEntity);
-                            this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
-
-                            var newBindingEntity = this._postEntityReceived(potentiallySavedEntity);
-
-                            // custom external action
-                            this.postSaved(potentiallySavedEntity, newBindingEntity);
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
                  * Default implementation for unsuccessful postSaved callback.
                  */
                 _postSavedDefaultError: {
-                	type: Function,
-                	value: function () {
-                		return (function (errorResult) {
-                        	// This function will be invoked after server-side error appear.
-                        	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
-                        	console.warn("SERVER ERROR: ", errorResult);
-                        }).bind(this);
-                	}
+                	type: Function
                 },
                 
                 /**
@@ -130,71 +112,28 @@
                  * 'EnabledStates' are the states in which the action is enabled.
                  */
                 _actions: {
-                	type: Object
+                	type: Object                	
                 },
                 
                 /**
                  * Changes the state to 'EDIT'.
                  */
                 edit: {
-                	type: Function,
-                	value: function () {
-                		return (function () {
-                            if (this.currentState === 'EDIT') {
-                                console.warn("The master is already in EDIT state. state == ", this.currentState);
-                            } else {
-                                this.currentState = 'EDIT';
-                            }
-                        }).bind(this);
-                	}
+                	type: Function
                 },
 
                 /**
                  * Changes the state to 'VIEW'.
                  */
                 view: {
-                	type: Function,
-                	value: function () {
-                		return (function () {
-                            if (this.currentState === 'VIEW') {
-                                console.warn("The master is already in VIEW state. state == ", this.currentState);
-                            } else {
-                                this.currentState = 'VIEW';
-                            }
-                        }).bind(this);
-                	}
+                	type: Function
                 },
 
                 /**
                  * Starts the process of entity saving (based on _currBindingEntity).
                  */
                 save: {
-                	type: Function,
-                	value: function () {
-                		return (function () {
-                            var self = this;
-
-                            if (self._savingInProgress()) {
-                                var SimultaneousSaveException = this._getSimultaneousSaveExceptionType();
-                                throw new SimultaneousSaveException();
-                            }
-
-                            self._startRefreshCycleModeForEditors();
-
-                            var holder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                            // cancel previous validation before starting saving process -- it includes validation process internally!
-                            self._validator().abortValidationIfAny();
-
-                            // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                            //            This check will be done on server -- and appropriate _postSavedDefault callback will be triggered.
-                            self._saveModifiedProperties(self._reset(holder));
-                            // if (self._hasModified(holder)) {
-                            //     self._saveModifiedProperties(self._reset(holder));
-                            // } else {
-                            //     self._validator().validate(self._reset(holder));
-                            // }
-                        }).bind(this);
-                	}
+                	type: Function
                 }
         	},
 
@@ -217,6 +156,61 @@
                 };
 
 				self._createActions();
+				
+				// calbacks, that will potentially be augmented by tg-action child elements: 
+                self._postSavedDefault = (function (potentiallySavedEntity) {
+				    var msg = this._toastMsg("Saving", potentiallySavedEntity);
+				    this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
+				
+				    var newBindingEntity = this._postEntityReceived(potentiallySavedEntity);
+				
+				    // custom external action
+				    this.postSaved(potentiallySavedEntity, newBindingEntity);
+				}).bind(self);
+				
+                self._postSavedDefaultError = (function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
+                }).bind(self);
+                
+                self.edit = (function () {
+                    if (this.currentState === 'EDIT') {
+                        console.warn("The master is already in EDIT state. state == ", this.currentState);
+                    } else {
+                        this.currentState = 'EDIT';
+                    }
+                }).bind(self);
+                
+                self.view = (function () {
+                    if (this.currentState === 'VIEW') {
+                        console.warn("The master is already in VIEW state. state == ", this.currentState);
+                    } else {
+                        this.currentState = 'VIEW';
+                    }
+                }).bind(self);
+                
+                self.save = (function () {
+                    if (this._savingInProgress()) {
+                        var SimultaneousSaveException = this._getSimultaneousSaveExceptionType();
+                        throw new SimultaneousSaveException();
+                    }
+
+                    this._startRefreshCycleModeForEditors();
+
+                    var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                    // cancel previous validation before starting saving process -- it includes validation process internally!
+                    this._validator().abortValidationIfAny();
+
+                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+                    //            This check will be done on server -- and appropriate _postSavedDefault callback will be triggered.
+                    this._saveModifiedProperties(this._reset(holder));
+                    // if (this._hasModified(holder)) {
+                    //     this._saveModifiedProperties(this._reset(holder));
+                    // } else {
+                    //     this._validator().validate(this._reset(holder));
+                    // }
+                }).bind(self);
             },
             
             attached: function() {
@@ -247,9 +241,6 @@
             	var self = this;
                 self._actions = {};
 
-                // TODO ...
-                self._actions['NEW'] = {};
-                
                 self._actions['REFRESH'] = {
                     shortDesc: 'REFRESH',
                     longDesc: 'REFRESH ACTION...',
@@ -258,6 +249,7 @@
                         self.retrieve();
                     }
                 };
+                self._notifyActionPathsFor('REFRESH', true);
                 self._actions['VALIDATE'] = {
                     shortDesc: 'VALIDATE',
                     longDesc: 'VALIDATE ACTION...',
@@ -266,6 +258,7 @@
                         self.validate();
                     }
                 };
+                self._notifyActionPathsFor('VALIDATE', true);
                 self._actions['SAVE'] = {
                     shortDesc: 'SAVE',
                     longDesc: 'SAVE ACTION...',
@@ -273,7 +266,8 @@
                     action: function () {
                         self.save();
                     }
-                };
+                };                
+                self._notifyActionPathsFor('SAVE', true);
 
                 self._actions['EDIT'] = {
                     shortDesc: 'EDIT',
@@ -285,6 +279,19 @@
                     },
                     postAction: function (e) {}
                 };
+                self._notifyActionPathsFor('EDIT', false);
+                
+                /* self.set('_actions.VIEW', {});
+                self.set('_actions.VIEW.shortDesc', 'VIEW');
+                self.set('_actions.VIEW.longDesc', 'VIEW ACTION...');
+                self.set('_actions.VIEW.enabledStates', ['EDIT']);
+                self.set('_actions.VIEW.action', function () {
+                    self.view();
+                    this.postAction(null);
+                });
+                self.set('_actions.VIEW.postAction', function (e) {                	
+                }); */
+                
                 self._actions['VIEW'] = {
                     shortDesc: 'VIEW',
                     longDesc: 'VIEW ACTION...',
@@ -295,6 +302,25 @@
                     },
                     postAction: function (e) {}
                 };
+                self._notifyActionPathsFor('VIEW', false);
+            },
+            
+            /**
+             * Notifies all the paths of newly promoted action with concrete name (this is necessary for binding to child elements).
+             */
+            _notifyActionPathsFor: function (actionName, withoutPostAction) {
+            	var path0 = '_actions.' + actionName;
+            	var action0 = this._actions[actionName];
+            	
+            	this.notifyPath(path0, action0); // notify root
+            	this.notifyPath(path0 + ".shortDesc", action0.shortDesc);
+            	this.notifyPath(path0 + ".longDesc", action0.longDesc);
+            	this.notifyPath(path0 + ".enabledStates", action0.enabledStates);
+            	this.notifyPath(path0 + ".action", action0.action);
+            	if (!withoutPostAction) {
+	            	this.notifyPath(path0 + ".postAction", action0.postAction);
+            	}
+            	// TODO postActionError?
             },
 
             /**
