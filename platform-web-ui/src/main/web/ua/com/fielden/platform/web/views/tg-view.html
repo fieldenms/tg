@@ -1,124 +1,103 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-toolbar/core-toolbar.html">
-<link rel="import" href="/resources/polymer/core-icons/core-icons.html">
+<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
-<link rel="import" href="/resources/components/tg-scroll-container.html">
 
-<polymer-element name="tg-view" attributes="item autoLoad" vertical layout>
-    <template>
-        <style>
-            core-toolbar {
+<dom-module id="tg-view">
+    <style>
+        :host {
+            --paper-toolbar-background: #0288D1;
+            --paper-toolbar-color: white;
+            --paper-fab-background: #fcfcfc;
+            --paper-toolbar {
                 height: 100px;
-                background-color: #0288D1;
-                color: white;
                 font-size: 18px;
-                transition: top 100ms linear;
             }
-            .toolbar-visible {
-                top: 0;
-            }
-            .toolbar-hidden {
-                top: -100px;
-            }
-            core-toolbar::shadow #topBar {
-                height: 100px;
-            }
-            paper-fab {
+            --paper-fab {
                 z-index: 1;
-                background-color: #fcfcfc;
                 color: #666464;
             }
-            .view {
-                background-color: white;
-            }
-            tg-scroll-container {
-                position: absolute;
-                right: 0;
-                bottom: 0;
-                left: 0;
-                transition: top 100ms linear;
-            }
-            .scroll-full {
-                top: 0;
-            }
-            .scroll-short {
-                top: 100px;
-            }
-        </style>
-
-
-        <core-toolbar slide-down class="{{ {'toolbar-visible' : !toolbarHidden, 'toolbar-hidden': toolbarHidden} | tokenList }}">
-            <div flex>{{item.title}}</div>
-            <paper-fab icon="apps" on-tap="{{onShowMenuTap}}" scale-up></paper-fab>
-        </core-toolbar>
-
-        <tg-scroll-container on-scroll-container="{{handleScroll}}" class="{{ {'scroll-full' : toolbarHidden, 'scroll-short': !toolbarHidden} | tokenList }}">
-            <tg-menu-item-view id="menuItemView" slide-up autoLoad?="{{autoLoad}}" item="{{item}}" on-menu-item-view-loaded="{{onMenuItemLoaded}}"></tg-menu-item-view>
-        </tg-scroll-container>
+        }
+        .view {
+            background-color: white;
+        }
+    </style>
+    <template>
+        <paper-toolbar>
+            <!-- slide-down animation -->
+            <div class="flex">[[menuItem.title]]</div>
+            <paper-fab icon="apps" on-tap="_showMenu"></paper-fab>
+            <!-- scale-up animation -->
+        </paper-toolbar>
+        <tg-menu-item-view id="menuItemView" auto-load?="[[autoLoad]]" menuItem="[[_getMenuItem()]]" on-menu-item-view-loaded="_menuItemLoaded"></tg-menu-item-view>
+        <!-- slide-up animation -->
     </template>
-    <script>
-        (function () {
-            var statePushed = function (data) {
-                postal.publish({
-                    channel: "app",
-                    topic: "state.pushed",
-                    data: data
-                });
-            };
-            Polymer({
-                publish: {
-                    autoLoad: {
-                        reflect: true,
-                        value: false
-                    }
-                },
-                //Needed for transitioning the toolbar and container
-                toolbarHidden: false,
-                
-                ready: function () {
-                    var self = this;
-                    postal.subscribe({
-                        channel: this.item.title,
-                        topic: "state.push",
-                        callback: function (data, envelope) {
-                            history.pushState(data.state, "");
-                            if (!self.$.menuItemView.wasLoaded()) {
-                                self.$.menuItemView.load();
-                            } else {
-                                statePushed(data);
-                            }
-                        }
-                    });
-                    postal.subscribe({
-                        channel: this.item.title,
-                        topic: "state.pop",
-                        callback: function (data, envelope) {
-                            postal.publish({
-                                channel: "app",
-                                topic: "state.poped",
-                                data: data
-                            });
-                        }
-                    });
-                },
-                onMenuItemLoaded: function (e, detail, source) {
-                    statePushed({
-                        state: [detail.title]
-                    });
-                },
-                onShowMenuTap: function () {
-                    this.fire("main-menu");
-                },
-                handleScroll: function(e) {
-                    if (e.detail.scrollTop === 0) {
-                        this.toolbarHidden = false;
-                    } else if (!this.toolbarHidden) {
-                        this.toolbarHidden = true;
-                    }
-                }
+</dom-module>
+<script>
+    (function () {
+        var statePushed = function (data) {
+            postal.publish({
+                channel: "app",
+                topic: "state.pushed",
+                data: data
             });
-        })();
-    </script>
-</polymer-element>
+        };
+        Polymer({
+
+            is: "tg-view",
+
+            properties: {
+                menuItem: Object,
+                autoLoad: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
+                }
+            },
+
+            hostAttributes: {
+                "class": "layout vertical"
+            },
+
+            ready: function () {
+                var self = this;
+                postal.subscribe({
+                    channel: this.menuItem.title,
+                    topic: "state.push",
+                    callback: function (data, envelope) {
+                        history.pushState(data.state, "");
+                        if (!self.$.menuItemView.wasLoaded()) {
+                            self.$.menuItemView.load();
+                        } else {
+                            statePushed(data);
+                        }
+                    }
+                });
+                postal.subscribe({
+                    channel: this.menuItem.title,
+                    topic: "state.pop",
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: "app",
+                            topic: "state.poped",
+                            data: data
+                        });
+                    }
+                });
+            },
+            _menuItemLoaded: function (e, detail, source) {
+                statePushed({
+                    state: [detail.title]
+                });
+            },
+            _showMenu: function (e, detail, source) {
+                this.fire("main-menu");
+            },
+            _getMenuItem: function () {
+                return this.menuItem;
+            }
+        });
+    })();
+</script>

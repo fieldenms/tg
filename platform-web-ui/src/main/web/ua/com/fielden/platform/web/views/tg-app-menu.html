@@ -9,7 +9,7 @@
     <style>
         :host {
             overflow: hidden;
-            --paper-toolbar-background: green;
+            --paper-toolbar-background: #0288D1;
             --paper-toolbar-color: white;
             --paper-toolbar {
                 height: 100px;
@@ -68,7 +68,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="item-name" style="[[_calcCaptionStyleForItem(item)]]" horizontal center layout>
                             <div flex>
                                 <span>[[item.title]]</span>
@@ -125,10 +125,10 @@
             _calcStyleForItem: function (item) {
                 return "background-color: " + item.bgColor + ";";
             },
-            _calcIconStyleForItem: function(item) {
+            _calcIconStyleForItem: function (item) {
                 return "color: " + item.bgColor + ";";
             },
-            _calcCaptionStyleForItem: function(item) {
+            _calcCaptionStyleForItem: function (item) {
                 return "background-color: " + item.captionBgColor + ";";
             }
         });
