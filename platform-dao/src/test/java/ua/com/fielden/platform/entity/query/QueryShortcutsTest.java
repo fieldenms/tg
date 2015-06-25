@@ -103,35 +103,36 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
         assertModelsEquals(//
         select(VEHICLE).model(),
 
-        select(VEHICLE). //
-        yield().prop("id").as("id"). //
-        yield().prop("version").as("version"). //
-        yield().prop("key").as("key"). //
-        yield().prop("desc").as("desc"). //
-        yield().prop("replacedBy").as("replacedBy"). //
-        yield().prop("initDate").as("initDate"). //
-        yield().prop("model").as("model"). //
-        yield().prop("station").as("station"). //
-        yield().prop("price").as("price"). //
-        yield().prop("price.amount").as("price.amount"). //
-        yield().prop("purchasePrice").as("purchasePrice"). //
-        yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
-        yield().prop("active").as("active"). //
-        yield().prop("leased").as("leased"). //
-        yield().prop("finDetails").as("finDetails"). //
-        yield().prop("lastMeterReading").as("lastMeterReading"). //
-        yield().prop("calc0").as("calc0"). //
-        yield().prop("sumOfPrices").as("sumOfPrices"). //
-        yield().prop("sumOfPrices.amount").as("sumOfPrices.amount"). //
-        yield().prop("calc2").as("calc2"). //
-        yield().prop("calc3").as("calc3"). //
-        yield().prop("calc4").as("calc4"). //
-        yield().prop("calc5").as("calc5"). //
-        yield().prop("calc6").as("calc6"). //
-        yield().prop("lastFuelUsage").as("lastFuelUsage"). //
-        yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). //
-        yield().prop("constValueProp").as("constValueProp"). //
-        yield().prop("calcModel").as("calcModel"). //
+        select(VEHICLE). 
+        yield().prop("id").as("id"). 
+        yield().prop("version").as("version"). 
+        yield().prop("key").as("key"). 
+        yield().prop("desc").as("desc"). 
+        yield().prop("replacedBy").as("replacedBy"). 
+        yield().prop("initDate").as("initDate"). 
+        yield().prop("model").as("model"). 
+        yield().prop("station").as("station"). 
+        yield().prop("price").as("price"). 
+        yield().prop("price.amount").as("price.amount"). 
+        yield().prop("purchasePrice").as("purchasePrice"). 
+        yield().prop("purchasePrice.amount").as("purchasePrice.amount"). 
+        yield().prop("active").as("active"). 
+        yield().prop("leased").as("leased"). 
+        yield().prop("finDetails").as("finDetails"). 
+        yield().prop("lastMeterReading").as("lastMeterReading"). 
+        yield().prop("calc0").as("calc0"). 
+        yield().prop("sumOfPrices").as("sumOfPrices"). 
+        yield().prop("sumOfPrices.amount").as("sumOfPrices.amount"). 
+        yield().prop("calc2").as("calc2"). 
+        yield().prop("calc3").as("calc3"). 
+        yield().prop("calc4").as("calc4"). 
+        yield().prop("calc5").as("calc5"). 
+        yield().prop("calc6").as("calc6"). 
+        yield().prop("lastFuelUsage").as("lastFuelUsage"). 
+        yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). 
+        yield().prop("constValueProp").as("constValueProp"). 
+        yield().prop("calcModel").as("calcModel"). 
+        yield().prop("mostlyMoreThan10L").as("mostlyMoreThan10L"). 
         modelAsEntity(VEHICLE));
     }
 
@@ -140,11 +141,11 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
         assertModelsEquals(//
         select(VEHICLE_FIN_DETAILS).model(),
 
-        select(VEHICLE_FIN_DETAILS). //
-        yield().prop("id").as("id"). //
-        yield().prop("key").as("key"). //
-        yield().prop("version").as("version"). //
-        yield().prop("capitalWorksNo").as("capitalWorksNo"). //
+        select(VEHICLE_FIN_DETAILS). 
+        yield().prop("id").as("id"). 
+        yield().prop("key").as("key"). 
+        yield().prop("version").as("version"). 
+        yield().prop("capitalWorksNo").as("capitalWorksNo"). 
         modelAsEntity(VEHICLE_FIN_DETAILS));
     }
 
@@ -155,36 +156,37 @@ public class QueryShortcutsTest extends BaseEntQueryTCase {
         join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
         model(), //
 
-        select(VEHICLE). //
-        join(MODEL).as("model").on().prop("model").eq().prop("model.id"). //
-        yield().prop("id").as("id"). //
-        yield().prop("version").as("version"). //
-        yield().prop("key").as("key"). //
-        yield().prop("desc").as("desc"). //
-        yield().prop("replacedBy").as("replacedBy"). //
-        yield().prop("initDate").as("initDate"). //
-        yield().prop("model").as("model"). //
-        yield().prop("station").as("station"). //
-        yield().prop("price").as("price"). //
-        yield().prop("price.amount").as("price.amount"). //
-        yield().prop("purchasePrice").as("purchasePrice"). //
-        yield().prop("purchasePrice.amount").as("purchasePrice.amount"). //
-        yield().prop("active").as("active"). //
-        yield().prop("leased").as("leased"). //
-        yield().prop("finDetails").as("finDetails"). //
-        yield().prop("lastMeterReading").as("lastMeterReading"). //
-        yield().prop("sumOfPrices").as("sumOfPrices"). //
-        yield().prop("sumOfPrices.amount").as("sumOfPrices.amount"). //
-        yield().prop("calc0").as("calc0"). //
-        yield().prop("calc2").as("calc2"). //
-        yield().prop("calc3").as("calc3"). //
-        yield().prop("calc4").as("calc4"). //
-        yield().prop("calc5").as("calc5"). //
-        yield().prop("calc6").as("calc6"). //
-        yield().prop("lastFuelUsage").as("lastFuelUsage"). //
-        yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). //
-        yield().prop("constValueProp").as("constValueProp"). //
-        yield().prop("calcModel").as("calcModel"). //
+        select(VEHICLE). 
+        join(MODEL).as("model").on().prop("model").eq().prop("model.id"). 
+        yield().prop("id").as("id"). 
+        yield().prop("version").as("version"). 
+        yield().prop("key").as("key"). 
+        yield().prop("desc").as("desc"). 
+        yield().prop("replacedBy").as("replacedBy"). 
+        yield().prop("initDate").as("initDate"). 
+        yield().prop("model").as("model"). 
+        yield().prop("station").as("station"). 
+        yield().prop("price").as("price"). 
+        yield().prop("price.amount").as("price.amount"). 
+        yield().prop("purchasePrice").as("purchasePrice"). 
+        yield().prop("purchasePrice.amount").as("purchasePrice.amount"). 
+        yield().prop("active").as("active"). 
+        yield().prop("leased").as("leased"). 
+        yield().prop("finDetails").as("finDetails"). 
+        yield().prop("lastMeterReading").as("lastMeterReading"). 
+        yield().prop("sumOfPrices").as("sumOfPrices"). 
+        yield().prop("sumOfPrices.amount").as("sumOfPrices.amount"). 
+        yield().prop("calc0").as("calc0"). 
+        yield().prop("calc2").as("calc2"). 
+        yield().prop("calc3").as("calc3").
+        yield().prop("calc4").as("calc4"). 
+        yield().prop("calc5").as("calc5"). 
+        yield().prop("calc6").as("calc6"). 
+        yield().prop("lastFuelUsage").as("lastFuelUsage"). 
+        yield().prop("lastFuelUsageQty").as("lastFuelUsageQty"). 
+        yield().prop("constValueProp").as("constValueProp"). 
+        yield().prop("calcModel").as("calcModel"). 
+        yield().prop("mostlyMoreThan10L").as("mostlyMoreThan10L"). 
         modelAsEntity(VEHICLE));
     }
 

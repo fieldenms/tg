@@ -20,9 +20,12 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
@@ -83,6 +86,26 @@ public class TgVehicle extends AbstractEntity<String> {
     @Title("Last meter reading")
     private BigDecimal lastMeterReading;
 
+    
+    @IsProperty
+    @Readonly
+    @Calculated
+    @Title(value = "Mostly more than 10l", desc = "Indicates that vehicle has more fuel usages with qty exceeding 10l than those below 10l")
+    private boolean mostlyMoreThan10L;
+    private static PrimitiveResultQueryModel exceeds10LCountSubqry = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().prop("qty").gt().val(10).yield().countAll().modelAsPrimitive();
+    private static PrimitiveResultQueryModel lessThan10LCountSubqry = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().prop("qty").le().val(10).yield().countAll().modelAsPrimitive();
+    private static ExpressionModel mostlyMoreThan10L_ = expr().caseWhen().model(exceeds10LCountSubqry).gt().model(lessThan10LCountSubqry).then().val(true).otherwise().val(false).endAsBool().model();
+
+    @Observable
+    protected TgVehicle setMostlyMoreThan10L(final boolean mostlyMoreThan10L) {
+        this.mostlyMoreThan10L = mostlyMoreThan10L;
+        return this;
+    }
+
+    public boolean getMostlyMoreThan10L() {
+        return mostlyMoreThan10L;
+    }
+    
     @IsProperty(linkProperty = "vehicle")
     @Calculated
     @Title("Last fuel usage")

@@ -405,20 +405,18 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         model());
     }
 
-
     @Test
     public void test_21() {
-        transform(//
-        select(TgOrgUnit1.class).as("L1").where().exists( //
-        select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L1.id").and().exists( // 
-        select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L1.id").and().prop("key").isNotNull(). //
-        model()). //
-        model()). //
-        model()). //
-        model()). //
-        model());
+        transform(select(TgOrgUnit1.class).as("L1").where().exists(
+                select(TgOrgUnit2.class).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists(
+                        select(TgOrgUnit3.class).as("L3").where().prop("parent").eq().extProp("L1.id").and().exists(
+                                select(TgOrgUnit4.class).as("L4").where().prop("parent").eq().extProp("L1.id").and().exists(
+                                        select(TgOrgUnit5.class).as("L5").where().prop("parent").eq().extProp("L1.id").and().prop("key").isNotNull().
+                                                model()).
+                                        model()).
+                                model()).
+                        model()).
+                model());
     }
 
     @Test
@@ -437,7 +435,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         transform(select(select(TgVehicle.class).yield().prop("key").as("key").yield().prop("desc").as("desc").yield().prop("model.make").as("model-make").modelAsAggregate()).where().prop("model-make").isNotNull().model());
     }
 
-    
     //TODO EQL transfer to S2 tests
     //  @Test
     //  public void test_user_data_filtering() {
