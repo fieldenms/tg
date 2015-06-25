@@ -81,6 +81,13 @@
             },
             
             /**
+             * The validator component.
+             */
+            _validator: function () {
+                return this._masterDom()._validator();
+            },
+            
+            /**
              * The component for entity serialisation.
              */
             _serialiser: function () {

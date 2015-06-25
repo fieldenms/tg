@@ -76,7 +76,8 @@
              * Cancels any unfinished validation that was requested earlier (if any).
              */
             abortValidationIfAny: function() {
-                this.$.ajaxSender.abort();
+            	var reflector = this.$.serialiser.$.reflector;
+            	reflector.discardAllRequests(this.$.ajaxSender);
             },
             
         	/**

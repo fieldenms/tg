@@ -998,7 +998,18 @@
             if (typeof (centreContextHolder["customObject"])[name] !== 'undefined') {
                 delete(centreContextHolder["customObject"])[name];
             }
-        } 
+        },
+        
+        /**
+         * Discards all requests of 'ajaxElement' if any.
+         */
+        discardAllRequests: function (ajaxElement) {
+        	if (ajaxElement.loading) {
+        		// get oldest request and discard it
+        		ajaxElement.discardRequest(ajaxElement.activeRequests[0]);
+        		this.discardAllRequests(ajaxElement);
+        	}
+        }
     });
 })();    
 </script>

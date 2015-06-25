@@ -583,7 +583,8 @@
                  * Cancels any active search request.
                  */
                 abortSearch: function () {
-                    this.$.ajaxSearcher.abort();
+                	var reflector = this.$.serialiser.$.reflector;
+                	reflector.discardAllRequests(this.$.ajaxSearcher);
                 },
 
                 /* A function responsible for determining tooltip text, alternating between property and value descriptions. */
