@@ -345,7 +345,11 @@
                 if (currentState === 'VIEW') {
                     return true;
                 } else if (currentState === 'EDIT') {
-                    return this.reflector().isDotNotated(propertyName) ? true : (!(bindingEntity["@" + propertyName + "_editable"]));
+                	if (this.reflector().isEntity(bindingEntity)) {
+	                    return this.reflector().isDotNotated(propertyName) ? true : (!(bindingEntity["@" + propertyName + "_editable"]));
+                	} else {
+                		return true;
+                	}
                 } else {
                     throw "Unsupported state exception: " + currentState + ".";
                 }
