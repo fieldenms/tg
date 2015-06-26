@@ -45,16 +45,6 @@
         	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
         	//   alternatively, computing function needs to be specified). 									       //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	
-            _postActionUpgraded: {
-            	type: Boolean,
-            	value: false
-            },
-            
-            _postActionErrorUpgraded: {
-            	type: Boolean,
-            	value: false
-            },
             
             /* Timer to prevent spinner from activating for quick actions. */
             _startSpinnerTimer: {
@@ -113,25 +103,27 @@
 
         _postActionChanged: function (newValue, oldValue) {
             var self = this;
-            console.log("postAction changed", newValue, oldValue);
-            if (newValue && !self._postActionUpgraded) {
-                self._postActionUpgraded = true;
-                self.postAction = function (smth) {
-                    newValue(smth);
-                    self._afterExecution();
-                };
+            // console.log("_postActionChanged", newValue, oldValue);
+            if (newValue && oldValue === undefined) {
+                self.async(function () { 
+                	self.postAction = function (smth) {
+                    	newValue(smth);
+                    	self._afterExecution();
+                	};
+                });
             }
         },
         
         _postActionErrorChanged: function (newValue, oldValue) {
             var self = this;
-           	console.log("postActionError changed", newValue, oldValue);
-            if (newValue && !self._postActionErrorUpgraded) {
-                self._postActionErrorUpgraded = true;
-                self.postActionError = function (smth) {
-                    newValue(smth);
-                    self._afterExecution();
-                };
+           	// console.log("_postActionErrorChanged", newValue, oldValue);
+            if (newValue && oldValue === undefined) {
+                self.async(function () { 
+	                self.postActionError = function (smth) {
+	                    newValue(smth);
+	                    self._afterExecution();
+	                };
+                });
             }
         },
 

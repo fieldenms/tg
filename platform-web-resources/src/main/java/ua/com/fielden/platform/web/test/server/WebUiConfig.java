@@ -519,9 +519,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
 
                 .addAction(MasterActions.REFRESH)
-//                //      */.icon("trending-up") SHORT-CUT
-//                /*      */.shortDesc("REFRESH2")
-//                /*      */.longDesc("REFRESH2 action")
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("REFRESH2")
+                /*      */.longDesc("REFRESH2 action")
 
                 // ENTITY CUSTOM ACTIONS
                 //.addAction("#export", TgExportFunctionalEntity.class)
@@ -533,10 +533,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //*      */.shortDesc("Export")
                 //*      */.longDesc("Export action")
 
-//                .addAction(MasterActions.VALIDATE)
-//                .addAction(MasterActions.SAVE)
-//                .addAction(MasterActions.EDIT)
-//                .addAction(MasterActions.VIEW)
+                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.EDIT)
+                .addAction(MasterActions.VIEW)
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['vertical', 'justified', 'padding:20px', "
                         + "[[mr], [mr], [mr], [mr], [mr]], "
