@@ -78,13 +78,7 @@
 	         * Please override this method in descendands to implement specific execution logic.
 	         */
 	        run: {
-            	type: Function,
-            	value: function () {
-            		return (function () {
-        	            this._innerEnabled = false;
-        	            console.log(this.shortDesc + ": execute");
-        	        }).bind(this);
-            	}
+            	type: Function
             },
             
             /**
@@ -94,6 +88,15 @@
             	type: Boolean,
             	computed: "_isDisabled(enabledStates, currentState, _innerEnabled)"
             }
+        },
+        
+        ready: function () {
+        	var self = this;
+        	
+        	self.run = (function () {
+	            this._innerEnabled = false;
+	            console.log(this.shortDesc + ": execute");
+	        }).bind(self);       	
         },
 
         /**

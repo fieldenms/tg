@@ -2,77 +2,78 @@
 
 <link rel="import" href="/resources/master/actions/tg-abstract-action.html">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
-<link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+<link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
 
-<polymer-element name="tg-functional-action" attributes="entitytype preAction postActionSuccess postActionError" extends="tg-abstract-action">
+<dom-module id="tg-functional-action">
     <template>
-        <shadow></shadow>
+    	<tg-abstract-action id="abstractActionDom">
+		</tg-abstract-action>    	
+    
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <core-ajax id="actionExecutor" url="/entity/{{entitytype}}/new" method="POST" handleas="json"></core-ajax>
+        <iron-ajax id="actionExecutor" url="[[_url]]" method="POST" handle-as="json" on-response="_processExecutorResponse" on-error="_processExecutorError"></iron-ajax>
     </template>
-    <script>
-        Polymer('tg-functional-action', {
-            publish: {
-            	entitytype: null,
+</dom-module>
 
-                /**
-                 * The function to be invoked before the action starts execution (UI actions and FE creation).
-                 *
-                 * returns -- created functional entity instance.
-                 */
-                preAction: null,
+<script>
+    Polymer({
+    	is: 'tg-functional-action',
+    	
+    	properties: {
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+        	// No default values are allowed in this case.														   //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	
+    		entityType: String,
+    		_processExecutorResponse: Function,
+    		_processExecutorError: Function,
+    		
+         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+         	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+         	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+         	//   prefix. 																				           //
+         	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+         	//   populate their default values in ready callback (to have these values populated in children)!     //
+         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+         	_url: {
+         		type: String,
+         		computed: '_computeUrl(entityType)'
+         	}
+    	},
+    	
+    	/**
+    	 * Computes URL for 'actionExecutor'.
+    	 */
+    	_computeUrl: function (entityType) {
+    		return "/entity/" + entityType + "/new";
+    	},
+    	
+        /**
+         * The core-ajax component for action executor.
+         */
+        _actionExecutor: function () {
+            return this.$.actionExecutor;
+        },
 
-                /**
-                 * The function to be invoked after successful action execution (function(entity)).
-                 */
-                postActionSuccess: null,
-
-                /**
-                 * The function to be invoked after unsuccessful action execution (function(resultWithError)).
-                 */
-                postActionError: null,
-            },
-
-            /**
-             * Initialisation block.
-             */
-            ready: function () {
-                var self = this;
-                self.super();
-
-                self.$.actionExecutor.addEventListener('core-response', function (e) {
-                    if (e.detail.xhr.status === 200) {
-                        self._onExecuted(self.$.serialiser.deserialise(e.detail.response));
-                    }
-                });
-            },            
-
-            /**
-             * Executes the action.
-             */
-            run: function() {
-            	this.super();
-
-                var functionalEntity = this.preAction();
-
-                var ser = this.$.serialiser.serialise(functionalEntity);
-                this.$.actionExecutor.body = JSON.stringify(ser);
-                this.$.actionExecutor.generateRequest();
-            },
-
-            /**
-             * Analyzes and processes the result of executor response.
-             */
-            _onExecuted: function(result) {
-                var savedFunctionalEntity = result.instance;
-                if (this.$.reflector.isError(result)) {
-                  	this.postActionError(result);
-                } else {
-                  	this.postActionSuccess(savedFunctionalEntity);
-                }
-
-                this._afterExecution();
-            },
-        });
-    </script>
-</polymer-element>
+        /**
+         * The component for entity serialisation.
+         */
+        _serialiser: function () {
+        	return this.$.serialiser;
+        },
+        
+        /**
+         * The reflector component.
+         */
+        _reflector: function () {
+        	return this._abstractActionDom()._reflector();
+        },
+        
+        _abstractActionDom: function () {
+        	return this.$.abstractActionDom;
+        }
+    });
+</script>

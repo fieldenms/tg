@@ -274,7 +274,7 @@
                 
                 self._processError = (function(e, name) {
         			var errorObject = e.detail.error;
-                	console.log(name, ": iron-error: e.detail.error = ", errorObject);
+                	console.warn(name, ": iron-error: e.detail.error = ", errorObject);
                 	
             		// throw the toast message about the error (unhandled server error, connection problem, 403 authorisation error etc.)
                     var msg = this._toastMsgForErrorObject(errorObject);

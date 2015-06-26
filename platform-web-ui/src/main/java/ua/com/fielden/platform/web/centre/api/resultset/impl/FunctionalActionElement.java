@@ -83,9 +83,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                 functionalActionKind == FunctionalActionKind.PRIMARY_RESULT_SET ? "primaryAction" :
                         functionalActionKind == FunctionalActionKind.SECONDARY_RESULT_SET ? "secondaryActions" :
                                 "propActions";
-        attrs.put("preAction", "{{" + actionsHolderName + "[" + numberOfAction + "].preAction}}");
-        attrs.put("postActionSuccess", "{{" + actionsHolderName + "[" + numberOfAction + "].postActionSuccess}}");
-        attrs.put("postActionError", "{{" + actionsHolderName + "[" + numberOfAction + "].postActionError}}");
+        attrs.put("pre-action", "{{" + actionsHolderName + "[" + numberOfAction + "].preAction}}");
+        attrs.put("post-action", "{{" + actionsHolderName + "[" + numberOfAction + "].postActionSuccess}}");
+        attrs.put("post-action-error", "{{" + actionsHolderName + "[" + numberOfAction + "].postActionError}}");
         if (functionalActionKind == FunctionalActionKind.PROP) {
             attrs.put("chosenProperty", chosenProperty);
         }
