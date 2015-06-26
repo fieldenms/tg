@@ -1,111 +1,95 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-animated-pages/core-animated-pages.html">
-<link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-up.html">
-<link rel="import" href="/resources/polymer/core-animated-pages/transitions/slide-down.html">
-<link rel="import" href="/resources/polymer/core-animated-pages/transitions/scale-up.html">
+<link rel="import" href="/resources/polymer/neon-animated-pages.html">
+<link rel="import" href="/resources/polymer/neon-animations.html">
 <link rel="import" href="/resources/views/tg-app-menu.html">
 <link rel="import" href="/resources/views/tg-app-view.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/app/tg-view-manager.html">
 
-<polymer-element name="tg-app" layout vertical>
+<dom-module id="tg-app">
+    <style>
+        :host {
+            overflow: hidden;
+        }
+    </style>
     <template>
-        <style>
-            :host {
-                overflow: hidden;
-            }
-        </style>
         <tg-view-manager></tg-view-manager>
-        <core-animated-pages id="pages" selected="{{selected}}" on-core-animated-pages-transition-end="{{transitionend}}" transitions="hero-transition cross-fade scale-up slide-up slide-down" flex>
-
-            <tg-app-menu id="menu" name="menu" items="{{views.items}}" lastSelectedMenuItem="{{lastSelected}}" selectedMenuItem="{{selected}}" whenDesktop="{{views.whenDesktop}}" whenTablet="{{views.whenTablet}}" whenMobile="{{views.whenMobile}}" minCellHeight="{{views.minCellHeight}}" minCellWidth="{{views.minCellWidth}}" fit></tg-app-menu>
-
-            <template repeat="{{view, viewIndex in views.items}}">
-                <div fit name="{{view.title}}">
-                    <tg-app-view autoLoad?="{{viewIndex === 0}}" item="{{view}}" hero-id="{{'hero_' + view.title}}" hero?="{{selected === view.title || lastSelected === view.title}}" fit></tg-app-view>
-                </div>
+        <neon-animated-pages id="pages" attrForSelected="name">
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
+            <template is="dom-repeat" items="[[menuConfig.items]]">
+                <tg-app-view class="fit" menu-item="{{view}}" hero-id="hero"></tg-app-view>
             </template>
-
-        </core-animated-pages>
+        </neon-animated-pages>
     </template>
-    <script>
-        (function () {
-            var pushState = function (state) {
-                    if (state && Array.isArray(state) && state.length > 0) {
-                        postal.publish({
-                            channel: state[0],
-                            topic: "state.push",
-                            data: {
-                                state: state
-                            }
-                        });
-                    }
-                },
-                popState = function (state) {
-                    if (state && Array.isArray(state) && state.length > 0) {
-                        postal.publish({
-                            channel: state[0],
-                            topic: "state.pop",
-                            data: {
-                                state: state,
-                            }
-                        });
-                    }
-                },
-                updateHash = function(state) {
-                    location.hash = state.join("/");
-                };
-            Polymer({
-                eventDelegates: {
-                    'main-menu': 'showMainMenu',
-                    'menu-item-selected': 'showView'
-                },
-                showMainMenu: function (e) {
-                    this.setSelected("menu");
-                },
-                showView: function (e) {
-                    pushState([e.detail]);
-                },
-                setSelected: function (selected) {
-                    this.lastSelected = this.selected;
-                    this.selected = selected;
-                },
-                transitionend: function () {
-                    if (this.lastSelected) {
-                        this.lastSelected = null;
-                    }
-                },
-                ready: function () {
-                    var self = this;
-                    this.views = @menuConfig;
-                    postal.subscribe({
-                        channel: "app",
-                        topic: "state.pushed",
-                        callback: function (data, envelope) {
-                            self.setSelected(data.state[0]);
-                            //updateHash(data.state);
+</dom-module>
+
+<script>
+    (function () {
+        var pushState = function (state) {
+                if (state && Array.isArray(state) && state.length > 0) {
+                    postal.publish({
+                        channel: state[0],
+                        topic: "state.push",
+                        data: {
+                            state: state
                         }
                     });
-                    postal.subscribe({
-                        channel: "app",
-                        topic: "state.poped",
-                        callback: function (data, envelope) {
-                            self.setSelected(data.state[0]);
-                        }
-                    });
-                    //Set up listener for history events
-                    window.onpopstate = function (e) {
-                        popState(e.state);
-                    };
-                    //Set up listener for hash change events
-                    window.onhashchange = function(e) {
-                        console.log(location.hash);
-                    }
-                    //Selectes the first view 
-                    self.setSelected("menu");
-                    history.pushState(["menu"], "");
                 }
-            });
-        })();
-    </script>
-</polymer-element>
+            },
+            popState = function (state) {
+                if (state && Array.isArray(state) && state.length > 0) {
+                    postal.publish({
+                        channel: state[0],
+                        topic: "state.pop",
+                        data: {
+                            state: state,
+                        }
+                    });
+                }
+            };
+        Polymer({
+            
+            is: "tg-app",
+            
+            listeners: {
+                "main-menu": "_showMainMenu",
+                "menu-item-selected": "_showView"
+            },
+            _showMainMenu: function (e) {
+                this._setSelected("menu");
+            },
+            _showView: function (e) {
+                pushState([e.detail]);
+            },
+            _setSelected: function (selected) {
+                this.$.pages.selected = selected;
+            },
+            ready: function () {
+                var self = this;
+                this.menuConfig = @menuConfig;
+                postal.subscribe({
+                    channel: "app",
+                    topic: "state.pushed",
+                    callback: function (data, envelope) {
+                        self._setSelected(data.state[0]);
+                        //updateHash(data.state);
+                    }
+                });
+                postal.subscribe({
+                    channel: "app",
+                    topic: "state.poped",
+                    callback: function (data, envelope) {
+                        self._setSelected(data.state[0]);
+                    }
+                });
+                //Set up listener for history events
+                window.onpopstate = function (e) {
+                    popState(e.state);
+                };
+                //Selectes the first view 
+                self._setSelected("menu");
+                history.pushState(["menu"], "");
+            }
+        });
+    })();
+</script>

@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/views/tg-app-animation-behavior.html">
 
 <dom-module id="tg-app-menu">
     <style>
@@ -50,15 +51,15 @@
 
     <template>
 
-        <paper-toolbar>
+        <paper-toolbar id="toolbar">
             <!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
         </paper-toolbar>
 
         <div class="items">
-            <tg-tile-layout class="fit" when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]" min-cell-height="[[menuConfig.minCellHeight]]" min-cell-width="[[menuConfig.minCellWidth]]">
+            <tg-tile-layout class="fit" when-desktop="[[menuConfig.whenDesktop]]" when-tablet="[[menuConfig.whenTablet]]" when-mobile="[[menuConfig.whenMobile]]" min-cell-height="[[menuConfig.minCellHeight]]" min-cell-width="[[menuConfig.minCellWidth]]">
                 <template is="dom-repeat" items="[[menuConfig.items]]">
                     <div class="tile layout vertical">
-                        <div class="item fit" name$="[[item.title]]" style$="[[_calcStyleForItem(item)]]" on-tap="_itemSelected"></div>
+                        <div class="hero-animatable item fit" name$="[[item.title]]" style$="[[_calcStyleForItem(item)]]" on-tap="_itemSelected"></div>
                     </div>
                     <div class="item relative layout vertical flex-auto" name$="[[item.title]]" on-tap="_itemSelected">
                         <div class="flex-auto relative">
@@ -69,8 +70,8 @@
                             </div>
                         </div>
 
-                        <div class="item-name" style="[[_calcCaptionStyleForItem(item)]]" horizontal center layout>
-                            <div flex>
+                        <div class="item-name layout horizontal center" style="[[_calcCaptionStyleForItem(item)]]">
+                            <div class="flex">
                                 <span>[[item.title]]</span>
                             </div>
                             <iron-icon icon="av:play-arrow"></iron-icon>
@@ -94,8 +95,18 @@
             },
 
             properties: {
-                menuConfig: Object
+                menuConfig: Object,
+                animationConfig: {
+                    value: function () {
+                        return {};
+                    }
+                }
             },
+
+            behaviors: [
+                Polymer.NeonAnimatableBehavior,
+                Polymer.TgBehaviors.TgAppAnimationBehavior
+            ],
 
             ready: function () {
                 postal.subscribe({
@@ -110,17 +121,47 @@
                     }
                 });
             },
+            /**
+             * Is called before moving on to page that implements this behavior. Prev - the name of previously selected page.
+             */
+            configureEntryAnimation: function (prev) {
+                var nodeList;
+                if (prev) {
+                    this.animationConfig['entry'] = [
+                        {
+                            name: 'hero-animation',
+                            id: 'hero',
+                            toPage: this
+                        }];
+                    this.sharedElements = {
+                        'hero': Polymer.dom(this.root).querySelector('.hero-animatable[name="' + prev +'"]')
+                    };
+                } else {
+                    nodeList = Polymer.dom(this.root).querySelectorAll('.tile');
+                    this.animationConfig['entry'] = [
+                        {
+                            name: 'slide-down-animation',
+                            node: this.$.toolbar
+                        }, {
+                            name: 'cascaded-animation',
+                            animation: 'transform-animation',
+                            nodes: Array.prototype.slice.call(nodeList),
+                            transformFrom: 'translateY(100%)',
+                            transformTo: 'none',
+                            timing: {
+                                delay: 50
+                            }
+                        }];
+                }
+            },
+
+            /**
+             * Is called before moving out of the page that implements this behavior. Next - the name of next selected page.
+             */
+            configureExitAnimation: function (next) {},
+
             _itemSelected: function (e, detail, source) {
                 this.fire("menu-item-selected", source.getAttribute("name"));
-            },
-            _whenDesktop: function () {
-                return this.menuConfig.whenDesktop;
-            },
-            _whenTablet: function () {
-                return this.menuConfig.whenTablet;
-            },
-            _whenMobile: function () {
-                return this.menuConfig.whenMobile;
             },
             _calcStyleForItem: function (item) {
                 return "background-color: " + item.bgColor + ";";
