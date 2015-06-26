@@ -51,7 +51,7 @@
             
             self._processExecutorResponse = function (e) {
                 if (e.detail.xhr.status === 200) {
-                    self._onExecuted(self.$.serialiser.deserialise(e.detail.response));
+                    self._onExecuted(self._serialiser().deserialise(e.detail.response));
                 }
             };
             
@@ -61,11 +61,13 @@
             };
             
             self.run = (function() {
-            	Polymer.TgBehaviors.TgAbstractActionBehavior.run.call(this);
+            	var parentFunction = Polymer.TgBehaviors.TgAbstractActionBehavior._createRun.call(this);
+            	console.log("parentFunction", parentFunction);
+            	parentFunction.call(this);
 
                 var functionalEntity = this.preAction();
 
-                var ser = this.$.serialiser.serialise(functionalEntity);
+                var ser = this._serialiser().serialise(functionalEntity);
                 this._actionExecutor().body = JSON.stringify(ser);
                 this._actionExecutor().generateRequest();
             }).bind(self);
@@ -79,7 +81,7 @@
             if (this._reflector().isError(result)) {
               	this.postActionError(result);
             } else {
-              	this.postActionSuccess(savedFunctionalEntity);
+              	this.postAction(savedFunctionalEntity);
             }
 
             this._afterExecution();

@@ -5,7 +5,8 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input-char-counter.html">
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 <link rel="import" href="/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html">
-<!-- link rel="import" href="/resources/master/actions/tg-property-action.html" -->
+<link rel="import" href="/resources/master/actions/tg-property-action.html">
+
 <!-- link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html" -->
 <link rel="import" href="/tg-reflector">
 
@@ -43,8 +44,8 @@
 				<content select=".custom-icon-buttons"></content>
                 
                 <div id="icon" hidden$="[[_actionDoesNotExist(action)]]">
-                	<p>ICON</p>
-                    <!-- <tg-property-action entity-type="[[action.entitytype]]" pre-action="[[action.preAction]]" post-action="[[action.postActionSuccess]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action> -->
+                	<p>TEST</p>
+                    <tg-property-action entity-type="[[action.entityType]]" pre-action="[[action.preAction]]" post-action="[[action.postAction]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action>
                 </div>
             </div>
             

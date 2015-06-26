@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 public abstract class AbstractFunctionalAction extends AbstractAction implements IExecutable {
     private final Class<? extends AbstractEntity<?>> functionalEntityType;
     private IPreAction preAction;
-    private IPostAction postActionSuccess, postActionError;
+    private IPostAction postAction, postActionError;
 
     /**
      * Creates {@link AbstractFunctionalAction} from <code>functionalEntityType</code> type and other parameters.
@@ -45,7 +45,7 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     }
 
     public void setPostActionSuccess(final IPostAction postActionSuccess) {
-        this.postActionSuccess = postActionSuccess;
+        this.postAction = postActionSuccess;
     }
 
     public void setPostActionError(final IPostAction postActionError) {
@@ -56,7 +56,7 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     public JsCode code() {
         final String code =
                 wrap0("self._actions['%s'] = {", name(), () -> name()) + //
-                wrap0("    entitytype: '%s',", functionalEntityType(), () -> functionalEntityType().getName()) + //
+                wrap0("    entityType: '%s',", functionalEntityType(), () -> functionalEntityType().getName()) + //
                 wrap0("    shortDesc: '%s',", shortDesc()) + //
                 wrap1("    longDesc: '%s',", longDesc()) + //
                 wrap1("    icon: '%s',", icon()) + //
@@ -65,28 +65,29 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
 
                 wrap0("        var functionalEntity = {id:null, version:0};") + //
 
-                wrap0("        var reflector = self.$.reflector;") + //
+                wrap0("        var reflector = self._reflector();") + //
                 wrap0("        var savingInfoHolder = reflector.newEntity('ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder');") + //
                 wrap0("        savingInfoHolder.id = null;") + //
                 wrap0("        savingInfoHolder['modifHolder'] = functionalEntity;") + //
 
-                wrap0("        var masterEntity = self.currEntity;") + //
+                wrap0("        var masterEntity = self._currEntity;") + //
                 wrap0("        functionalEntity.key = { val: 'NoMatter', origVal: null };") + //
                 wrap0("        // THE PLACE FOR CUSTOM LOGIC:") + //
                 wrap1("        %s", preAction, () -> preAction.build().toString()) + //
                 //             TODO provide convenient API for setting values during preAction building
-                //    "        functionalEntity.parentEntity = { val: self.currEntity.get('key'), origVal: null };") + //
+                //    "        functionalEntity.parentEntity = { val: self._currEntity.get('key'), origVal: null };") + //
                 wrap0("        return savingInfoHolder;") + //
                 wrap0("    },") + //
-                wrap0("    postActionSuccess: function(entity) {") + //
-                wrap0("        console.log('postActionSuccess entity', entity);") + //
-                wrap1("        %s", postActionSuccess, () -> this.postActionSuccess.build().toString()) + //
+                wrap0("    postAction: function(entity) {") + //
+                wrap0("        console.log('postAction entity', entity);") + //
+                wrap1("        %s", postAction, () -> this.postAction.build().toString()) + //
                 wrap0("    },") + //
                 wrap0("    postActionError: function(resultWithError) {") + //
                 wrap0("        console.log('postActionError resultWithError', resultWithError);") + //
                 wrap1("        %s", postActionError, () -> postActionError.build().toString()) + //
                 wrap0("    }") + //
-                wrap0("};");//
+                wrap0("};" + //
+                "\n" + indent() + String.format("self.notifyPath('_actions.%s', self._actions['%s']);", name(), name()) + "\n");//
 
         return new JsCode(code);
     }
@@ -95,11 +96,11 @@ public abstract class AbstractFunctionalAction extends AbstractAction implements
     protected Map<String, Object> createCustomAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
-        final String actionSelector = "_actions['" + this.name() + "']";
+        final String actionSelector = "_actions." + this.name();
 
-        attrs.put("preAction", "{{" + actionSelector + ".preAction}}");
-        attrs.put("postActionSuccess", "{{" + actionSelector + ".postActionSuccess}}");
-        attrs.put("postActionError", "{{" + actionSelector + ".postActionError}}");
+        attrs.put("pre-action", "[[" + actionSelector + ".preAction]]");
+        attrs.put("post-action", "[[" + actionSelector + ".postAction]]");
+        attrs.put("post-action-error", "[[" + actionSelector + ".postActionError]]");
 
         return attrs;
     }

@@ -180,4 +180,8 @@ public abstract class AbstractAction implements IImportable {
     private String wrap_1(final String code, final String insertionCode) {
         return StringUtils.isEmpty(insertionCode) ? "" : indent + format(code, insertionCode) + "\n";
     }
+
+    protected String indent() {
+        return indent;
+    }
 }

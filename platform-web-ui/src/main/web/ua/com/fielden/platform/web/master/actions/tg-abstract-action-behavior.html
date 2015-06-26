@@ -91,9 +91,13 @@
         },
         
         ready: function () {
+        	this.run = this._createRun();
+        },
+        
+        _createRun: function () {
         	var self = this;
         	
-        	self.run = (function () {
+        	return (function () {
 	            this._innerEnabled = false;
 	            console.log(this.shortDesc + ": execute");
 	        }).bind(self);       	

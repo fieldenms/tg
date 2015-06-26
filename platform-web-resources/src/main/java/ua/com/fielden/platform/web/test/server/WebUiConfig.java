@@ -63,6 +63,7 @@ import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.matchers.SearchAlsoByDescMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
+import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
@@ -458,14 +459,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //*      */.longDesc("Export bigDecimal property")
                 .also()
                 .addProp("stringProp").asSinglelineText().skipValidation()
-                //*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
-                //*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                //*      */.postActionSuccess(new PostActionSuccess(""))
-                //*      */.postActionError(new PostActionError(""))
-                //*      */.enabledWhen(EnabledState.VIEW)
-                //*      */.icon("trending-up")
-                //*      */.shortDesc("Export string prop")
-                //*      */.longDesc("Export string property")
+                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export string prop")
+                /*      */.longDesc("Export string property")
                 .also()
                 .addProp("stringProp").asMultilineText()
                 //*      */.withAction("#exportMultiStringProp", TgExportFunctionalEntity.class)
