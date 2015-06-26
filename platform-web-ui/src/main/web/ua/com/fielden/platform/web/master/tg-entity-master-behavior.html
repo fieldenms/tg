@@ -327,7 +327,14 @@
              * The tg-entity-validator component for entity validation.
              */
             _validator: function () {
-                return this.$.validator;
+            	throw "_validator: not implemented";
+            },
+            
+            /**
+             * The ajax-saver component.
+             */
+            _ajaxSaver: function () {
+            	throw "_ajaxSaver: not implemented";
             },
 
             /** 
@@ -337,7 +344,7 @@
 
             //////////////////////////////////////// SAVING ////////////////////////////////////////
             _savingInProgress: function () {
-                return this.$.ajaxSaver.loading;
+                return this._ajaxSaver().loading;
             },
 
             /**
@@ -355,8 +362,8 @@
                     savingInfoHolder["centreContextHolder"] = this.savingContext;
             	}
             	
-                this.$.ajaxSaver.body = JSON.stringify(this._serialiser().serialise(savingInfoHolder));
-                this.$.ajaxSaver.generateRequest();
+                this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(savingInfoHolder));
+                this._ajaxSaver().generateRequest();
             },
 
             /**
