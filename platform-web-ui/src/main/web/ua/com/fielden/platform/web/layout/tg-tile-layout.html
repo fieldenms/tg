@@ -5,7 +5,7 @@
 <dom-module id="tg-tile-layout">
 
     <style>
-        :host ::content .tile {
+        :host::content .tile {
             position: absolute;
         }
     </style>
@@ -268,45 +268,68 @@
                     type: Boolean,
                     readOnly: true,
                     observer: "_handleMobileScreen"
+                },
+                contentLoaded: {
+                    type: Boolean,
+                    readOnly: true,
+                    observer: "_handleContentLoading",
+                    value: false
                 }
             },
 
-            _mobileChanged: function(e, detail) {
+            attached: function () {
+                var self = this;
+                this.async(function () {
+                    this._setContentLoaded(true);
+                }, 1);
+            },
+            _mobileChanged: function (e, detail) {
                 this._setMobileScreen(detail.value);
             },
-            _tabletChanged: function(e, detail) {
+            _tabletChanged: function (e, detail) {
                 this._setTabletScreen(detail.value);
             },
-            _desktopChanged: function(e, detail) {
+            _desktopChanged: function (e, detail) {
                 this._setDesktopScreen(detail.value);
             },
             _handleMobileScreen: function (newValue, oldValue) {
-                if (newValue && this.whenMobile) {
+                if (newValue && this.whenMobile && this.contentLoaded) {
                     setLayout.bind(this)(this.whenMobile);
                 }
             },
             _handleTabletScreen: function (newValue, oldValue) {
-                if (newValue && this.whenTablet) {
+                if (newValue && this.whenTablet && this.contentLoaded) {
                     setLayout.bind(this)(this.whenTablet);
                 }
             },
             _handleDesktopScreen: function (newValue, oldValue) {
-                if (newValue && this.whenDesktop) {
+                if (newValue && this.whenDesktop && this.contentLoaded) {
                     setLayout.bind(this)(this.whenDesktop);
                 }
             },
+            _handleContentLoading: function(newValue, oldValue) {
+                if (newValue) {
+                    if (this.desktopScreen && this.whenDesktop) {
+                        setLayout.bind(this)(this.whenDesktop);
+                    } else if (this.tabletScreen && this.whenTablet) {
+                        setLayout.bind(this)(this.whenTablet);
+                    } else if (this.mobileScreen && this.whenMobile) {
+                        setLayout.bind(this)(this.whenMobile);
+                    }
+                }
+            },
             _whenMobileChanged: function (newValue, oldValue) {
-                if (this.mobileScreen && newValue) {
+                if (this.mobileScreen && newValue && this.contentLoaded) {
                     setLayout.bind(this)(this.whenMobile);
                 }
             },
             _whenTabletChanged: function (newValue, oldValue) {
-                if (this.tabletScreen && newValue) {
+                if (this.tabletScreen && newValue && this.contentLoaded) {
                     setLayout.bind(this)(this.whenTablet);
                 }
             },
             _whenDesktopChanged: function (newValue, oldValue) {
-                if (this.desktopScreen && newValue) {
+                if (this.desktopScreen && newValue && this.contentLoaded) {
                     setLayout.bind(this)(this.whenDesktop);
                 }
             },
@@ -316,13 +339,13 @@
             _minCellWidthChanged: function (newValue, oldValue) {
                 setMinDimensions.bind(this)();
             },
-            _calcMobileQuery: function() {
+            _calcMobileQuery: function () {
                 return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
             },
-            _calcTabletQuery: function() {
+            _calcTabletQuery: function () {
                 return "(min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 1) + "px)";
             },
-            _calcDesktopQuery: function() {
+            _calcDesktopQuery: function () {
                 return "min-width: " + this.$.appConfig.minDesktopWidth + "px";
             }
         });

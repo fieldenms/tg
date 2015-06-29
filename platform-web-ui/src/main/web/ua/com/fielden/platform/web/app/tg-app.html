@@ -1,6 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/neon-animated-pages.html">
-<link rel="import" href="/resources/polymer/neon-animations.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
 <link rel="import" href="/resources/views/tg-app-menu.html">
 <link rel="import" href="/resources/views/tg-app-view.html">
 <link rel="import" href="/resources/components/postal-lib.html">
@@ -14,10 +13,11 @@
     </style>
     <template>
         <tg-view-manager></tg-view-manager>
-        <neon-animated-pages id="pages" attrForSelected="name">
+        <neon-animated-pages id="pages" class="fit" attr-for-selected="name">
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.items]]">
-                <tg-app-view class="fit" menu-item="{{view}}" hero-id="hero"></tg-app-view>
+                <span name$="[[item.title]]">[[item.title]]</span>
+                <tg-app-view class="fit" name$="[[item.title]]" menu-item="[[item]]" hero-id="hero"></tg-app-view>
             </template>
         </neon-animated-pages>
     </template>

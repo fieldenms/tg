@@ -2,7 +2,7 @@
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="/resources/views/tg-view.html">
-<link rel="import" href="/resources/views/tg-view-with-menu.html">
+<!--<link rel="import" href="/resources/views/tg-view-with-menu.html">-->
 
 <dom-module id="tg-app-view">
     <style>
@@ -17,17 +17,17 @@
         }
     </style>
     <template>
-        <div class="fit layout vertical center-center" style="[[_calcStyleForThisItem()]]">
+        <div class="fit layout vertical center-center" style="[[_calcStyleForThisItem(menuItem)]]">
             <div class="item-bg relative">
                 <iron-icon class="fit" style="[[_calcSvgStyleForThisItem()]]" src="[[menuItem.detailIcon]]"></iron-icon>
             </div>
         </div>
         <div class="flex layout vertical"> <!-- cross-fade animation here -->
             <template is="dom-if" if="[[!menuItem.menu]]">
-                <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[_getMenuItem()]]"></tg-view>
+                <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]"></tg-view>
             </template>
             <template is="dom-if" if="[[menuItem.menu]]">
-                <tg-view-with-menu class="fit" id="view" menu-item="[[_getMenuItem()]]"></tg-view-with-menu>
+                <!--<tg-view-with-menu class="fit" id="view" menu-item="[[_getMenuItem(menuItem)]]"></tg-view-with-menu>-->
             </template>
         </div>
 
@@ -52,14 +52,11 @@
             load: function () {
                 this.$$("#view").load();
             },
-            _calcStyleForThisItem: function () {
+            _calcStyleForItem: function (menuItem) {
                 return "background-color: " + menuItem.bgColor + ";";
             },
-            _calcSvgStyleForThisItem: function () {
+            _calcSvgStyleForThisItem: function (menuItem) {
                 return "color: " + menuItem.bgColor + "; opacity:0.5;";
-            },
-            _getMenuItem: function() {
-                return this.menuItem;
             }
         });
     })();
