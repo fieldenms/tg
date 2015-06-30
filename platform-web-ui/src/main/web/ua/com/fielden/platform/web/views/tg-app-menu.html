@@ -16,7 +16,8 @@
             --paper-toolbar: {
                 height: 100px;
                 font-size: 18px;
-            };
+            }
+            ;
         }
         .item-name {
             height: 48px;
@@ -144,11 +145,12 @@
                             name: 'cascaded-animation',
                             animation: 'transform-animation',
                             nodes: Array.prototype.slice.call(nodeList),
-                            transformFrom: 'translateY(100%)',
-                            transformTo: 'none',
-                            timing: {
-                                delay: 50
-                            }
+                            transformFrom: 'translateY(50%)',
+                            transformTo: 'none'
+                        }, {
+                            name: 'cascaded-animation',
+                            animation: 'fade-in-animation',
+                            nodes: Array.prototype.slice.call(nodeList)
                         }];
                 }
             },
@@ -156,10 +158,21 @@
             /**
              * Is called before moving out of the page that implements this behavior. Next - the name of next selected page.
              */
-            configureExitAnimation: function (next) {},
+            configureExitAnimation: function (next) {
+                this.animationConfig['exit'] = [
+                    {
+                        name: 'hero-animation',
+                        id: 'hero',
+                        fromPage: this
+                        }];
+                this.sharedElements = {
+                    'hero': Polymer.dom(this.root).querySelector('.hero-animatable[name="' + next + '"]')
+                };
+            },
 
-            _itemSelected: function (e, detail, source) {
-                this.fire("menu-item-selected", source.getAttribute("name"));
+            _itemSelected: function (e, detail) {
+                var model = e.model;
+                this.fire("menu-item-selected", model.item.title);
             },
             _calcStyleForItem: function (item) {
                 return "background-color: " + item.bgColor + ";";

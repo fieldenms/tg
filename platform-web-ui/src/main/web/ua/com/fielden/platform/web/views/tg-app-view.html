@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="/resources/views/tg-view.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 <!--<link rel="import" href="/resources/views/tg-view-with-menu.html">-->
 
 <dom-module id="tg-app-view">
@@ -17,18 +18,19 @@
         }
     </style>
     <template>
-        <div class="fit layout vertical center-center" style="[[_calcStyleForThisItem(menuItem)]]">
+        <div class="fit layout vertical center-center" style$="[[_calcStyleForItem(menuItem)]]">
             <div class="item-bg relative">
-                <iron-icon class="fit" style="[[_calcSvgStyleForThisItem()]]" src="[[menuItem.detailIcon]]"></iron-icon>
+                <iron-icon class="fit" style$="[[_calcSvgStyleForItem(menuItem)]]" src="[[menuItem.detailIcon]]"></iron-icon>
             </div>
         </div>
-        <div class="flex layout vertical"> <!-- cross-fade animation here -->
+        <div class="flex layout vertical">
+            <!--cross-fade animation here-->
             <template is="dom-if" if="[[!menuItem.menu]]">
                 <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]"></tg-view>
             </template>
-            <template is="dom-if" if="[[menuItem.menu]]">
-                <!--<tg-view-with-menu class="fit" id="view" menu-item="[[_getMenuItem(menuItem)]]"></tg-view-with-menu>-->
-            </template>
+            <!--<template is="dom-if" if="[[menuItem.menu]]">
+                <tg-view-with-menu class="fit" id="view" menu-item="[[_getMenuItem(menuItem)]]"></tg-view-with-menu>
+            </template>-->
         </div>
 
 
@@ -46,6 +48,72 @@
                     type: Boolean,
                     value: false,
                     reflectToAttribute: true
+                },
+                animationConfig: {
+                    value: function () {
+                        return {};
+                    }
+                }
+            },
+
+            behaviors: [
+                Polymer.NeonAnimatableBehavior,
+                Polymer.TgBehaviors.TgAppAnimationBehavior
+            ],
+
+            /**
+             * Is called before moving on to page that implements this behavior. Prev - the name of previously selected page.
+             */
+            configureEntryAnimation: function (prev) {
+                this.animationConfig = {
+                    'entry': [{
+                        animatable: this.$$("#view"),
+                        type: 'entry'
+                    }]
+                };
+                this.sharedElements = {};
+                if (prev === "menu") {
+                    this.animationConfig['entry'].push({
+                        name: 'hero-animation',
+                        id: 'hero',
+                        toPage: this
+                    });
+                    this.sharedElements = {
+                        'hero': this
+                    };
+                } else {
+                    this.animationConfig['entry'].push({
+                        name: 'fade-in-animation',
+                        node: this
+                    });
+                }
+            },
+
+            /**
+             * Is called before moving out of the page that implements this behavior. Next - the name of next selected page.
+             */
+            configureExitAnimation: function (next) {
+                this.animationConfig = {
+                    'exit': [{
+                        animatable: this.$$("#view"),
+                        type: 'exit'
+                    }]
+                };
+                this.sharedElements = {};
+                if (next === "menu") {
+                    this.animationConfig['exit'].push({
+                        name: 'hero-animation',
+                        id: 'hero',
+                        fromPage: this
+                    });
+                    this.sharedElements = {
+                        'hero': this
+                    };
+                } else {
+                    this.animationConfig['exit'].push({
+                        name: 'fade-out-animation',
+                        node: this
+                    });
                 }
             },
 
@@ -55,7 +123,7 @@
             _calcStyleForItem: function (menuItem) {
                 return "background-color: " + menuItem.bgColor + ";";
             },
-            _calcSvgStyleForThisItem: function (menuItem) {
+            _calcSvgStyleForItem: function (menuItem) {
                 return "color: " + menuItem.bgColor + "; opacity:0.5;";
             }
         });

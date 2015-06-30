@@ -13,11 +13,10 @@
     </style>
     <template>
         <tg-view-manager></tg-view-manager>
-        <neon-animated-pages id="pages" class="fit" attr-for-selected="name">
+        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.items]]">
-                <span name$="[[item.title]]">[[item.title]]</span>
-                <tg-app-view class="fit" name$="[[item.title]]" menu-item="[[item]]" hero-id="hero"></tg-app-view>
+                <tg-app-view class="fit hero-animatable" name$="[[item.title]]" menu-item="[[item]]"></tg-app-view>
             </template>
         </neon-animated-pages>
     </template>
@@ -62,119 +61,18 @@
                 pushState([e.detail]);
             },
             _setSelected: function (selected) {
+                var currentlySelected = this.$.pages.selected
+                if (currentlySelected) {
+                    this.$$("[name='" + currentlySelected + "']").configureExitAnimation(selected);
+                }
+                if (selected) {
+                    this.$$("[name='" + selected + "']").configureEntryAnimation(currentlySelected);
+                }
                 this.$.pages.selected = selected;
             },
-            ready: function () {
+            attached: function () {
                 var self = this;
-                this.menuConfig = {
-                    whenDesktop: [[[{
-                        rowspan: 2,
-                        colspan: 2
-                    }], [], [], [{
-                        colspan: 2
-                    }]], [[{
-                        rowspan: 2,
-                        colspan: 2
-                    }], [], []], [[], [], [{
-                        colspan: 2
-                    }]]],
-                    whenTablet: [[[{
-                        rowspan: 2,
-                        colspan: 2
-                    }], [], []], [[{
-                        rowspan: 2,
-                        colspan: 2
-                    }]], [[], []], [[{
-                        rowspan: 2,
-                        colspan: 2
-                    }], [], []], [[{
-                        colspan: 2
-                    }]]],
-                    whenMobile: [[[], []], [[], []], [[], []], [[], []], [[], []]],
-                    minCellWidth: '100px',
-                    minCellHeight: '148px',
-                    items: [{
-                        title: "Fleet",
-                        descritpion: "Fleet",
-                        bgColor: "#00D4AA",
-                        captionBgColor: "#00AA88",
-                        icon: "/resources/images/fleet.svg",
-                        detailIcon: "/resources/images/detailed/fleet.svg",
-                        view: null
-                    }, {
-                        title: "Import utilities",
-                        descritpion: "Import utilities",
-                        bgColor: "#5FBCD3",
-                        captionBgColor: "#2C89A0",
-                        icon: "/resources/images/importUtilities.svg",
-                        detailIcon: "/resources/images/detailed/importUtilities.svg",
-                        view: null
-                    }, {
-                        title: "Division daily management",
-                        descritpion: "Division daily management",
-                        bgColor: "#CFD8DC",
-                        captionBgColor: "#78909C",
-                        icon: "/resources/images/divisionalDailyManagment.svg",
-                        detailIcon: "/resources/images/detailed/divisionalDailyManagment.svg",
-                        view: null
-                    }, {
-                        title: "Accidents",
-                        descritpion: "Accidents",
-                        bgColor: "#FF9943",
-                        captionBgColor: "#C87137",
-                        icon: "/resources/images/accidents.svg",
-                        detailIcon: "/resources/images/detailed/accidents.svg",
-                        view: null
-                    }, {
-                        title: "Maintenance",
-                        descritpion: "Maintenance",
-                        bgColor: "#00AAD4",
-                        captionBgColor: "#0088AA",
-                        icon: "/resources/images/maintanance.svg",
-                        detailIcon: "/resources/images/detailed/maintanance.svg",
-                        view: null
-                    }, {
-                        title: "User",
-                        descritpion: "User",
-                        bgColor: "#FFE680",
-                        captionBgColor: "#FFD42A",
-                        icon: "/resources/images/user.svg",
-                        detailIcon: "/resources/images/detailed/user.svg",
-                        view: null
-                    }, {
-                        title: "Online reports",
-                        descritpion: "Online reports",
-                        bgColor: "#00D4AA",
-                        captionBgColor: "#00AA88",
-                        icon: "/resources/images/onlineReports.svg",
-                        detailIcon: "/resources/images/detailed/onlineReports.svg",
-                        view: null
-                    }, {
-                        title: "Fuel",
-                        descritpion: "Fuel",
-                        bgColor: "#FFE680",
-                        captionBgColor: "#FFD42A",
-                        icon: "/resources/images/fuel.svg",
-                        detailIcon: "/resources/images/detailed/fuel.svg",
-                        view: null
-                    }, {
-                        title: "Organisational",
-                        descritpion: "Organisational",
-                        bgColor: "#2AD4F6",
-                        captionBgColor: "#00AAD4",
-                        icon: "/resources/images/organisational.svg",
-                        detailIcon: "/resources/images/detailed/organisational.svg",
-                        view: null
-                    }, {
-                        title: "Preventive maintenance",
-                        descritpion: "Preventive maintenance",
-                        bgColor: "#F6899A",
-                        captionBgColor: "#D35F5F",
-                        icon: "/resources/images/preventiveMaintenence.svg",
-                        detailIcon: "/resources/images/detailed/preventiveMaintenence.svg",
-                        view: null
-                    }]
-                };
+                this.menuConfig = @menuConfig;
                 postal.subscribe({
                     channel: "app",
                     topic: "state.pushed",
@@ -194,9 +92,11 @@
                 window.onpopstate = function (e) {
                     popState(e.state);
                 };
-                //Selectes the first view 
-                self._setSelected("menu");
-                history.pushState(["menu"], "");
+                //Selectes the first view
+                this.async(function () {
+                    self._setSelected("menu");
+                    history.pushState(["menu"], "");
+                }, 1);
             }
         });
     })();

@@ -40,7 +40,7 @@
             },
 
             ready: function () {
-                if (this.menuItem.view) {
+                if (this.menuItem && this.menuItem.view) {
                     this.menuItem.view.attrs.uuid = this.uuid;
                     this.menuItem.view.attrs.moduleId = this.moduleId;
                 }

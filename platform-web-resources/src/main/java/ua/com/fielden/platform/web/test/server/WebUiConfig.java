@@ -654,14 +654,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 detailIcon("/resources/images/detailed/importUtilities.svg").
                 bgColor("#5FBCD3").
                 captionBgColor("#2C89A0").
-                menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done().done().
+                view(null)/*menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done()*/.done().
                 addModule("Division daily management").
                 description("Division daily management").
                 icon("/resources/images/divisionalDailyManagment.svg").
                 detailIcon("/resources/images/detailed/divisionalDailyManagment.svg").
                 bgColor("#CFD8DC").
                 captionBgColor("#78909C").
-                menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done().done().
+                view(null)/*menu().addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done().done()*/.done().
                 addModule("Accidents").
                 description("Accidents").
                 icon("/resources/images/accidents.svg").
