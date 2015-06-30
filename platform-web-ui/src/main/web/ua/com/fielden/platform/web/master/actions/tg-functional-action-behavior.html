@@ -59,19 +59,24 @@
     			var errorObject = e.detail.error;
             	console.warn(name, ": iron-error: e.detail.error = ", errorObject);
             };
-            
-            self.run = (function() {
-            	var parentFunction = Polymer.TgBehaviors.TgAbstractActionBehavior._createRun.call(this);
-            	console.log("parentFunction", parentFunction);
-            	parentFunction.call(this);
+        },
+        
+        /**
+         * Creates the 'Run' function. Overridden (with necessary 'super' call!) in order to initiate '_actionExecutor' ajax call with appropriately serialised functional entity (from 'preAction').
+         */
+        _createRun: function () {
+		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior._createRun.call(this);
+
+    		return (function () {
+    			runFunction.call(this);
 
                 var functionalEntity = this.preAction();
 
                 var ser = this._serialiser().serialise(functionalEntity);
                 this._actionExecutor().body = JSON.stringify(ser);
                 this._actionExecutor().generateRequest();
-            }).bind(self);
-        },            
+            }).bind(this);
+        },
 
         /**
          * Analyzes and processes the result of executor response.

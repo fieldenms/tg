@@ -70,27 +70,32 @@
 	         * Executes the action.
 	         */
 	        run: {
-            	type: Function,
-            	value: function () {
-            		return (function () {
-            		    var parentFunction = Polymer.TgBehaviors.TgAbstractActionBehavior.properties.run.value.call(this);
-            		    parentFunction.call(this);
-
-                        if (this._startSpinnerTimer) {
-                            clearTimeout(this._startSpinnerTimer);
-                        }
-                        this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
-
-                        // start the action
-                        this._working = true;
-                        this.action();
-                    }).bind(this);
-            	}
+            	type: Function
             }
         },
 
         ready: function () {
 			this._working = false;     	
+        },
+        
+        /**
+         * Creates the 'Run' function. Overridden (with necessary 'super' call!) in order to invoke 'action' and to handle spinner appropriately.
+         */
+        _createRun: function () {
+		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior._createRun.call(this);
+
+    		return (function () {
+    			runFunction.call(this);
+
+                if (this._startSpinnerTimer) {
+                    clearTimeout(this._startSpinnerTimer);
+                }
+                this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
+
+                // start the action
+                this._working = true;
+                this.action();
+            }).bind(this);
         },
 
         /* Timer callback that performs spinner activation. */
