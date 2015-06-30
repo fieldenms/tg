@@ -152,16 +152,18 @@
                     // TODO why is this needed??? reflectToAttribute: true
                 },
                 
-                ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
-                
                 /**
                  * The action object that represents an action to be embedded as an icon button inside this editor.
                  *
-                 * If the action attribute is not specified -- no action button should be displayed.
+                 * If the action attribute is 'null' -- no action button should be displayed.
+                 *
+                 * Action object and 'null' are the only permitted values.
                  */
                 action: {
                 	type: Object
                 },
+
+                ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
                 
                 /**
                  * The switch, that turns on refresh cycle.
