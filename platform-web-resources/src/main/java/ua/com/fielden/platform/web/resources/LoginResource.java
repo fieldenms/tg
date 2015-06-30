@@ -143,7 +143,7 @@ public class LoginResource extends ServerResource {
     }
 
     /**
-     * This is just a convenint wrapper for JSON login package.
+     * This is just a convenient wrapper for JSON login package.
      *
      */
     static class Credentials {
