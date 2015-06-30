@@ -37,12 +37,34 @@
 
     <template id="egi_example" is="auto-binding">
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <core-ajax id="data_retriever" url="/test/egi" handleas="json" on-core-response="{{onDataRetrieved}}" auto></core-ajax>
+        <core-ajax id="data_retriever" url="/test/egi" handleas="json" on-core-response="{{onDataRetrieved}}"></core-ajax>
         <tg-entity-grid-inspector entityType="{{entityType}}" entities="{{entities}}">
-            <tg-property-column property="desc" width="400px" type="String" columnTitle="Description" columnDesc="Description tooltip"></tg-property-column>
-            <tg-property-column property="integerProp" width="150px" type="Integer" columnTitle="Integer property" columnDesc="Integer property tooltip"></tg-property-column>
-            <tg-property-column property="stringProp" width="200px" type="String" columnTitle="String property" columnDesc="String property tooltip"></tg-property-column>
-            <tg-property-column property="bigDecimalProp" width="150px" type="BigDecimal" columnTitle="Big decimal property" columnDesc="Big decimal property tooltip"></tg-property-column>
+            <tg-property-column property="" width="60px" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" columnTitle="Key" columnDesc="Some key description"></tg-property-column>
+            <tg-property-column property="desc" width="200px" type="String" columnTitle="Desc" columnDesc="Some desc description">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" columnTitle="Integer prop" columnDesc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" columnTitle="Integer prop" columnDesc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" columnTitle="Integer prop" columnDesc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" columnTitle="Integer prop" columnDesc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" columnTitle="Integer prop" columnDesc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" columnTitle="Integer prop" columnDesc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="bigDecimalProp" width="68px" type="BigDecimal" columnTitle="BigDecimal prop" columnDesc="BigDecimal prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" columnTitle="Integer prop" columnDesc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" columnTitle="Integer prop" columnDesc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="bigDecimalProp" width="68px" type="BigDecimal" columnTitle="BigDecimal prop" columnDesc="BigDecimal prop desc">
+            </tg-property-column>
+            <tg-property-column property="bigDecimalProp" width="68px" type="BigDecimal" columnTitle="BigDecimal prop" columnDesc="BigDecimal prop desc">
+            </tg-property-column>
+            <tg-property-column property="stringProp" width="50px" type="String" columnTitle="String prop" columnDesc="String prop desc"></tg-property-column>
             <core-tooltip class="delayed entity-specific-action">
                 <core-icon-button icon="add-circle-outline"></core-icon-button>
                 <span class="span-tooltip" tip>Create new entity</span>
@@ -76,7 +98,7 @@
                 <span class="span-tooltip" tip>Last page</span>
             </core-tooltip>
             <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="refresh"></core-icon-button>
+                <core-icon-button icon="refresh" on-tap="{{loadData}}"></core-icon-button>
                 <span class="span-tooltip" tip>Refresh</span>
             </core-tooltip>
             <tg-primary-instance-action actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>
@@ -90,6 +112,9 @@
                 entity = null;
             egiExample.entityType = "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties";
             egiExample.entities = [];
+            egiExample.loadData = function(e, detail, source) {
+                egiExample.$.data_retriever.go();
+            };
             egiExample.onDataRetrieved = function (e, detail, source) {
                 egiExample.entities = egiExample.$.serialiser.deserialise(e.detail.response).instance;
             };

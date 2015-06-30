@@ -50,7 +50,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
 
         assertNotNull(cat4.getProperty(ACTIVE).getFirstFailure());
         assertEquals(format("Entity %s has a reference to already inactive entity %s (type %s)", cat4, cat4.getParent(), cat4.getParent().getType()),
-                     cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
+                cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
     }
 
     @Test
@@ -65,7 +65,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
         } catch (final Result ex) {
             final TgCategory cat4Full = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
             assertEquals(format("Entity %s has a reference to already inactive entity %s (type %s)", cat4Full, cat4Full.getParent(), cat4Full.getParent().getType()),
-                         ex.getMessage());
+                    ex.getMessage());
         }
     }
 
@@ -118,8 +118,8 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
         assertTrue(savedCat3.isActive());
         assertEquals("RefCount should not change", cat3.getRefCount(), savedCat3.getRefCount());
         assertEquals("RefCount of the de-referenced non-dirty activatable should have not changed.",
-                     oldParent.getRefCount(),
-                     ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1").getRefCount());
+                oldParent.getRefCount(),
+                ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1").getRefCount());
     }
 
     @Test
@@ -204,7 +204,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
             save(sys3);
             fail("An attempt to save successfully associated, but alread inactive activatable should fail.");
         } catch (final Result ex) {
-            assertEquals("EntityExists validator: Could not find entity Cat7 (ua.com.fielden.platform.sample.domain.TgCategory)", ex.getMessage());
+            assertEquals("Tg Category Cat7 exists, but is not active.", ex.getMessage());
         }
     }
 

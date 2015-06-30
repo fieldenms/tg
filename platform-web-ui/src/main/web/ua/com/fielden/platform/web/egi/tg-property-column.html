@@ -13,8 +13,10 @@
                     action: null
                 },
                 ready: function () {
-                    this.summary = [];
                     Array.prototype.forEach.call(this.$.summary_selection.getDistributedNodes(), function (item) {
+                        if (!this.summary) {
+                            this.summary = [];
+                        }
                         this.summary.push(item);
                     }.bind(this));
                     this.runAction = this.runAction.bind(this);

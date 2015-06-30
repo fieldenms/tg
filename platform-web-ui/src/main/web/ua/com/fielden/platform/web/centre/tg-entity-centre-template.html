@@ -65,6 +65,12 @@
                 right: 0px;
                 bottom: 0px;
             }
+            core-icon-button,
+            tg-ui-action::shadow core-icon-button,
+            tg-page-action::shadow core-icon-button {
+                padding: 4px;
+                margin: 0px;
+            }
         </style>
         <core-animated-pages selected="{{selectedPage}}" on-scroll="{{handleScroll}}">
             <div>
@@ -162,7 +168,7 @@
                 postRetrieved: function (entity, newBindingEntity, customObject) {
                     console.log("centre postRetrieved");
                 },
-                handleScroll: function(e) {
+                handleScroll: function (e) {
                     this.fire("scroll-container", e.target);
                 }
             });

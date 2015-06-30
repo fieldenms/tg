@@ -2,7 +2,7 @@ package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -38,6 +38,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -176,7 +177,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public T lazyLoad(final Long id) {
-        final List<T> result = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getLazyEntitiesOnPage(from(select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model()).model(), 0, 1);
+        QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants);
+        
+        final List<T> result = new EntityFetcher(queryExecutionContext).getLazyEntitiesOnPage(from(select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model()).model(), 0, 1);
 
         return !result.isEmpty() ? result.get(0) : null;
     }
@@ -239,7 +242,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
         final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
-        final List<EntityAggregates> ids = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants).getEntities(from(model).model());
+        QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants);
+        final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).model());
         final int count = ids.size();
         if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
             throw Result.failure(
@@ -714,7 +718,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        return new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+        QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
+        return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
     }
 
     @Override
@@ -814,9 +819,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected int evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
         final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ? select((EntityResultQueryModel<T>) model).yield().countAll().as("count").modelAsAggregate()
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
-        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetch(EntityAggregates.class).with("count")).lightweight(true).model();
-        final List<EntityAggregates> counts = new EntityFetcher(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants). //
-        getEntities(countModel);
+        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchAggregates().with("count")).lightweight(true).model();
+        QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
+        final List<EntityAggregates> counts = new EntityFetcher(queryExecutionContext).getEntities(countModel);
+
         final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
         return resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;

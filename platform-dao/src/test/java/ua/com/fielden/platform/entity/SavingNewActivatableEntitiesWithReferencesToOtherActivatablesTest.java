@@ -81,7 +81,7 @@ public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest e
             save(newCat1);
             fail("Should have failed due to unsuccessful revalidation of property parent.");
         } catch (final Result ex) {
-            assertEquals("EntityExists validator: Could not find entity Cat1 (ua.com.fielden.platform.sample.domain.TgCategory)", ex.getMessage());
+            assertEquals("Tg Category Cat1 exists, but is not active.", ex.getMessage());
         }
     }
 
@@ -89,7 +89,7 @@ public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest e
     @Override
     protected void populateDomain() {
         save(new_(TgCategory.class, "Cat1").setActive(true));
-       }
+    }
 
     @Override
     protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {

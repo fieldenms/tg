@@ -12,10 +12,10 @@ public final class QueryModelResult<T extends AbstractEntity<?>> {
     private String sql;
     private Map<String, Object> paramValues;
     private final SortedSet<ResultQueryYieldDetails> yieldedPropsInfo;
-    private final FetchModel<T> fetchModel;
+    private final IRetrievalModel<T> fetchModel;
 
 
-    public QueryModelResult(final Class<T> resultType, final String sql, final SortedSet<ResultQueryYieldDetails> yieldedPropsInfo, final Map<String, Object> paramValues, final FetchModel<T> fetchModel) {
+    public QueryModelResult(final Class<T> resultType, final String sql, final SortedSet<ResultQueryYieldDetails> yieldedPropsInfo, final Map<String, Object> paramValues, final IRetrievalModel<T> fetchModel) {
         this.resultType = resultType;
         this.sql = sql;
         this.paramValues = paramValues;
@@ -39,7 +39,7 @@ public final class QueryModelResult<T extends AbstractEntity<?>> {
         return yieldedPropsInfo;
     }
     
-    public FetchModel<T> getFetchModel() {
+    public IRetrievalModel<T> getFetchModel() {
         return fetchModel;
     }
 

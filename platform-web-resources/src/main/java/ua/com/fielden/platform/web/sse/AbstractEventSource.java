@@ -2,24 +2,29 @@ package ua.com.fielden.platform.web.sse;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
+import ua.com.fielden.platform.rx.IObservableKind;
 
 /**
- * A base class for custom event sources that are subscribed to the specified data streams and emit respective values to the client.
+ * A base class for custom event sources that are subscribed to the specified data streams (aka observable) and emit respective values to the client.
+ * Instances of derived classes should not have a singleton scope (!) as they should be instantiated on per subscription request basis.
  * <p>
  * Values that are received from the data stream are of type <code>T</code>.
- * Each such value should be converted to a string message in accordance with EventSourcing <a href="https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events#Event_stream_format">rules</a> in order to be sent to the client.
+ * Each such value should be converted to a string message in accordance with EventSourcing <a href="https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events#Event_stream_format">spec</a> in order to be sent to the client.
  * For this, abstract method {@link #eventToData(Object)} needs to be implemented by descendants.
  * <p>
- * Also, method {@link #getStream()} can be overridden in order to apply any necessary transformations to the stream before subscribing to it.
+ * Also, method {@link #getStream()} can be overridden if required in order to apply any necessary transformations to the stream before subscribing to it.
  *
  * @author TG Team
  *
- * @param <T>
+ * @param <T> -- event type.
+ * @param <OK> -- observable kind type that produces an observable to be subscribed to for receiving events from.
  */
-public abstract class AbstractEventSource<T> implements IEventSource {
+public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> implements IEventSource {
 
     /**
      * The emitter that is used for sending messages back to the client.
@@ -36,21 +41,23 @@ public abstract class AbstractEventSource<T> implements IEventSource {
      */
     private Observable<T> stream;
 
-    public final AbstractEventSource<T> setStream(final Observable<T> stream) {
+    private final Logger logger = Logger.getLogger(this.getClass());
+
+    protected AbstractEventSource(final OK observableKind) {
+        this.stream = observableKind.asObservable();
         if (stream == null) {
             throw new IllegalArgumentException("Event stream is required.");
         }
-        this.stream = stream;
-        return this;
     }
 
     @Override
     public final void onOpen(final IEmitter emitter) throws IOException {
-        System.out.println("Connection established.");
+        logger.debug("client subscription in progress...");
         this.emitter = emitter;
         subscription = getStream().subscribe(new EventObserver());
 
         this.emitter.event("connection", "established");
+        logger.debug("client subscribed successfully");
     }
 
     /**
@@ -83,7 +90,7 @@ public abstract class AbstractEventSource<T> implements IEventSource {
 
     @Override
     public void onClose() {
-        System.out.println("Connection has been closed.");
+        logger.debug("client subscription connection has been closed");
         if (subscription != null) {
             subscription.unsubscribe();
         }
@@ -92,14 +99,14 @@ public abstract class AbstractEventSource<T> implements IEventSource {
     /**
      * A convenience implementation for an observer to receive events from the subscribed to data stream with immediate dispatch of received events to the client.
      */
-    private class EventObserver implements Observer<T> {
+    private final class EventObserver implements Observer<T> {
 
         @Override
         public void onCompleted() {
             try {
                 emitter.event("completed", "The server-side data stream has completed.");
-            } catch (final IOException e) {
-                e.printStackTrace();
+            } catch (final IOException ex) {
+                logger.error(ex);
             } finally {
                 emitter.close();
             }
@@ -110,7 +117,7 @@ public abstract class AbstractEventSource<T> implements IEventSource {
             try {
                 emitter.event("exception", e.getMessage());
             } catch (final IOException ex) {
-                ex.printStackTrace();
+                logger.error(ex);
             } finally {
                 emitter.close();
             }
@@ -120,8 +127,8 @@ public abstract class AbstractEventSource<T> implements IEventSource {
         public void onNext(final T value) {
             try {
                 emitter.data(eventToData(value));
-            } catch (final IOException e) {
-                e.printStackTrace();
+            } catch (final IOException ex) {
+                logger.error(ex);
             }
         }
     }

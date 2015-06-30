@@ -10,8 +10,7 @@ import java.io.IOException;
  * {@link IEventSource} allows applications to be notified of events happening on the connection; two events are being notified: the opening of the event source connection, where
  * method {@link IEventSource#onOpen(IEmitter)} is invoked, and the closing of the event source connection, where method {@link IEventSource#onClose()} is invoked.
  */
-public interface IEventSource
-{
+public interface IEventSource {
     /**
      * Callback method invoked when an event source connection is opened.
      * <p>

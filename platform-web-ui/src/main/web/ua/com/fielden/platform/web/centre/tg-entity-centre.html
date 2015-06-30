@@ -69,22 +69,22 @@
                     self.$.ajaxSaver.addEventListener('core-response', function (e) {
                     	self.$.selection_criteria._processResponse(e, "save", function (okString) {
                             console.log("CENTRE SAVED", okString);
-                            
+
                             self.retrieve();
-                    	}, function (errorResult) {
+                        }, function (errorResult) {
                     		self._postSavedDefaultError(errorResult);
-                    	});
+                        });
                     });
                     self.$.ajaxDiscarder.addEventListener('core-response', function (e) {
                     	self.$.selection_criteria._processResponse(e, "discard", function (okString) {
                             console.log("CENTRE DISCARDED", okString);
-                            
+
                             self.retrieve();
-                    	}, function (errorResult) {
-                    		self.onDiscardedDefaultError(errorResult);
-                    	});
+                        }, function (errorResult) {
+                            self.onDiscardedDefaultError(errorResult);
+                        });
                     });
-                    
+
                     self.editAction = self.editAction.bind(self);
                     self.newAction = self.newAction.bind(self);
                     self.showMaster = self.showMaster.bind(self);
@@ -92,31 +92,31 @@
                     self.onFunctionalEntitySaved = self.onFunctionalEntitySaved.bind(self);
                     self.createContextHolder = self.createContextHolder.bind(self);
                 },
-                
+
                 /**
                  * Default implementation for unsuccessful onSave callback.
                  */
                 _postSavedDefaultError: function (errorResult) {
-                	// This function will be invoked after server-side error appear.
-                	console.warn("SERVER ERROR: ", errorResult);
+                    // This function will be invoked after server-side error appear.
+                    console.warn("SERVER ERROR: ", errorResult);
                 },
-                
+
                 /**
                  * Default implementation for unsuccessful onDiscard callback.
                  */
                 onDiscardedDefaultError: function (errorResult) {
-                	// This function will be invoked after server-side error appear.
-                	console.warn("SERVER ERROR: ", errorResult);
+                    // This function will be invoked after server-side error appear.
+                    console.warn("SERVER ERROR: ", errorResult);
                 },
 
-                selectPage: function(e, detail, source) {
-                    this.selectedPage = this.selectedView; 
+                selectPage: function (e, detail, source) {
+                    this.selectedPage = this.selectedView;
                 },
-                
+
                 attached: function () {
                     var self = this;
                     ///////////////////////Edit Listeners/////////////////////////////////////
-                     this.masterCreatedListener = postal.subscribe({
+                    this.masterCreatedListener = postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "edit.finish.created",
                         callback: function (data, envelope) {
@@ -138,18 +138,18 @@
                             console.log("-------- Masters New UUID: " + data.item.view.attrs.uuid + " ------------");
                         }
                     });
-                    
+
                     ///////////////////////// Detail postSaved listener //////////////////////////////////////
                     postal.subscribe({
                         channel: "centre_" + self.$.selection_criteria.uuid,
                         topic: "detail.saved",
                         callback: function (data, envelope) {
-                        	self.onFunctionalEntitySaved(data.entity, data.selectedEntitiesInContext);
+                            self.onFunctionalEntitySaved(data.entity, data.selectedEntitiesInContext);
                         }
                     });
                 },
-                
-                detached: function() {
+
+                detached: function () {
                     this.masterCreatedListener.unsubscribe();
                     this.masterShowListener.unsubscribe();
                     this.masterNewListener.unsubscribe();
@@ -192,7 +192,7 @@
                         }
                     });
                 },
-                deleteAction: function() {
+                deleteAction: function () {
                     console.log("The selected entities must be deleted here!");
                 },
                 getContext: function () {
@@ -200,12 +200,12 @@
                         return this.$.egi.getSelectedEntities()[0];
                     }
                     return null;
-                }, 
-                
+                },
+
                 getSelectedEntities: function () {
                     return this.$.egi.getSelectedEntities();
-                }, 
-                
+                },
+
                 /**
                  * Returns simple entity type name.
                  */
@@ -227,10 +227,10 @@
                 run: function () {
                     this.$.egi.clearSelection();
                     this.$.egi.collapseAllCards();
-                    this.$.selection_criteria.run(); 
+                    this.$.selection_criteria.run();
                     this.triggerRun = true;
                 },
-                
+
                 /**
                  * Starts the process of refreshing the current page (only after run() has been already performed).
                  */
@@ -265,23 +265,23 @@
                 prevPage: function () {
                     this.$.selection_criteria.prevPage();
                 },
-                
+
                 entitiesThatShouldBeUpdated: null,
-                
+
                 /**
                  * Starts the process of refreshing the specified 'entities'.
                  *
                  * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
-                 *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed 
-				 *     from the result-set if they became unmatchable to the selection criteria after modification).
+                 *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed
+                 *     from the result-set if they became unmatchable to the selection criteria after modification).
                  */
-                refreshEntities: function(entities) {
-                	if (entities !== null && entities.length > 0) {
-                		this.entitiesThatShouldBeUpdated = entities;
-                		this.$.selection_criteria.refreshEntities(this.entitiesThatShouldBeUpdated);
-                	} else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
-                		this.currentPage();
-                	}
+                refreshEntities: function (entities) {
+                    if (entities !== null && entities.length > 0) {
+                        this.entitiesThatShouldBeUpdated = entities;
+                        this.$.selection_criteria.refreshEntities(this.entitiesThatShouldBeUpdated);
+                    } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
+                        this.currentPage();
+                    }
                 },
 
                 canNotPrev: function (pageNumber) {
@@ -303,22 +303,22 @@
                 onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
                     // console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
                     if (criteriaEntity.isValid()) {
-	                    if (isRefreshingConcreteEntities) {
-	                    	this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this.entitiesThatShouldBeUpdated);
-	                    } else {
-		                    this.$.egi.entities = resultEntities;
-	    	                this.$.egi.renderingHints = renderingHints;
-                            if (typeof summary !== 'undefined') {
-                                this.$.egi.totals = summary;
+                        if (typeof summary !== 'undefined') {
+                            this.$.egi.totals = summary;
+                        }
+                        if (isRefreshingConcreteEntities) {
+                            this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this.entitiesThatShouldBeUpdated);
+                        } else {
+                            this.$.egi.entities = resultEntities;
+                            this.$.egi.renderingHints = renderingHints;
+                            if (this.triggerRun && this.selectedView === 0) {
+                                this.async(function () {
+                                    this.selectedView = 1;
+                                    this.selectedPage = 1;
+                                }, null, 100);
+                                this.triggerRun = false;
                             }
-	                        if (this.triggerRun && this.selectedView === 0) {
-	                            this.async(function() {
-	                                this.selectedView = 1;
-	                                this.selectedPage = 1;
-	                            }, null, 100);
-	                            this.triggerRun = false;
-	                        }
-	                    }
+                        }
                     }
                 },
 
@@ -353,15 +353,15 @@
                 canManageCentreConfig: function (isCentreChanged) {
                     return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true;
                 },
-                
+
                 onFunctionalEntitySaved: function (potentiallySavedEntity, selectedEntitiesInContext) {
-                	if (potentiallySavedEntity.isValid()) {
-                		// old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
-                		this.refreshEntities(selectedEntitiesInContext);	
-                	}
+                    if (potentiallySavedEntity.isValid()) {
+                        // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
+                        this.refreshEntities(selectedEntitiesInContext);
+                    }
                 },
-                
-                createContextHolder: function(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+
+                createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
                     return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
                 }
             });

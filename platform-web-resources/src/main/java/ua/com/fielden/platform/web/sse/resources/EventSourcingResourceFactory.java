@@ -1,6 +1,4 @@
-package ua.com.fielden.platform.web.sse;
-
-import javax.servlet.http.HttpServletRequest;
+package ua.com.fielden.platform.web.sse.resources;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -8,6 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import rx.Observable;
+import ua.com.fielden.platform.web.sse.AbstractEventSource;
 
 import com.google.inject.Injector;
 
@@ -19,15 +18,13 @@ import com.google.inject.Injector;
  *
  * @param <T>
  */
-public class EventSourcingResourceFactory<T, S extends AbstractEventSource<T>> extends Restlet {
+public class EventSourcingResourceFactory extends Restlet {
 
     private final Injector injector;
-    private final Observable<T> stream;
-    private final Class<S> eventSourceType;
+    private final Class<? extends AbstractEventSource<?, ?>> eventSourceType;
 
-    public EventSourcingResourceFactory(final Injector injector, final Observable<T> stream, final Class<S> eventSourceType) {
+    public EventSourcingResourceFactory(final Injector injector, final Class<? extends AbstractEventSource<?, ?>> eventSourceType) {
         this.injector = injector;
-        this.stream = stream;
         this.eventSourceType = eventSourceType;
     }
 
@@ -35,14 +32,7 @@ public class EventSourcingResourceFactory<T, S extends AbstractEventSource<T>> e
     public void handle(final Request request, final Response response) {
 
         if (Method.GET == request.getMethod()) {
-            new EventSourcingResource(getContext(), request, response) {
-
-                @Override
-                public IEventSource newEventSource(final HttpServletRequest request) {
-                    return injector.getInstance(eventSourceType).setStream(stream);
-                }
-
-            }.handle();
+            new EventSourcingResource(injector.getInstance(eventSourceType), getContext(), request, response).handle();
         }
     }
 

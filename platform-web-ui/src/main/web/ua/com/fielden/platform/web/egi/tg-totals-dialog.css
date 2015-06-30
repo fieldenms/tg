@@ -1,7 +1,7 @@
 html /deep/ .summary-dialog::shadow #scroller {
     padding: 30px;
 }
-html /deep/ .summary-dialog .data-column {
+html /deep/ .summary-dialog .data-entry {
     padding: 0.75em 1.5em;
 }
 html /deep/ .summary-dialog .data-label {

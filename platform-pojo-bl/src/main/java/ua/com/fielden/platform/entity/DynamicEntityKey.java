@@ -136,13 +136,12 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
                 if (thisValue != null && thatValue == null) {
                     return 1;
                 }
-                if (thisValue == null && thatValue == null) {
-                    return 0;
-                }
-                // there are no nulls, so need to perform comparison
-                final int partialCmpResult = thisValue.compareTo(thatValue);
-                if (partialCmpResult != 0) {
-                    return partialCmpResult;
+                if (thisValue != null && thatValue != null) {
+                    // there are no nulls, so need to perform comparison
+                    final int partialCmpResult = thisValue.compareTo(thatValue);
+                    if (partialCmpResult != 0) {
+                        return partialCmpResult;
+                    }
                 }
             }
         }

@@ -44,7 +44,7 @@
         <paper-action-dialog id="summaryDialog" class="summary-dialog" backdrop>
             <tg-flex-layout whenDesktop="{{summaryDesktopLayout}}" whenTablet="{{summaryTabletLayout}}" whenMobile="{{summaryMobileLayout}}">
                 <template repeat="{{summary in cardSummary}}">
-                    <div class="data-column" property="{{summary.property === '' ? 'this' : summary.property}}" layout vertical>
+                    <div class="data-entry" property="{{summary.property === '' ? 'this' : summary.property}}" layout vertical>
                         <core-tooltip position="bottom" class="delayed" style="width:100%">
                             <div class="data-label truncate">{{summary.columnTitle}}</div>
                             <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
@@ -67,131 +67,134 @@
         </paper-action-dialog>
 
         <!--Toolbar template-->
-        <div layout horizontal?="{{!cardLayout}}" vertical?="{{cardLayout}}" justified?="{{!cardLayout}}" start-justified?="{{cardLayout}}" style="background-color:white; {{cardLayout ? 'padding: 0 30px;' : ''}}">
-            <div layout horizontal>
-                <content select=".entity-specific-action"></content>
-            </div>
-            <div layout horizontal start-justified center>
-                <div class="selection-column" hidden?="{{!cardLayout}}">
-                    <core-tooltip position="bottom" class="delayed">
-                        <paper-checkbox checked="{{selectAll}}" on-core-change="{{onAllSelectionChanged}}"></paper-checkbox>
-                        <span class="span-tooltip" tip>{{selectAll ? 'Unselect': 'Select'}} all entities</span>
-                    </core-tooltip>
+        <div style="{{cardLayout ? '' : 'padding: 0 30px;'}}">
+            <div layout horizontal?="{{!cardLayout}}" vertical?="{{cardLayout}}" justified?="{{!cardLayout}}" start-justified?="{{cardLayout}}" style="background-color:white; {{cardLayout ? 'padding: 0 34px;' : 'padding-left:2px'}}">
+                <div layout horizontal>
+                    <content select=".entity-specific-action"></content>
                 </div>
-                <core-tooltip class="delayed" tabIndex="-1" hidden?="{{!cardLayout}}" disabled?="{{!totals}}">
-                    <core-icon-button icon="editor:functions" on-tap="{{showSummary}}"></core-icon-button>
-                    <span class="span-tooltip" tip>Show summary</span>
-                </core-tooltip>
-                <content select=".standart-action"></content>
+                <div layout horizontal start-justified center>
+                    <div class="selection-column" hidden?="{{!cardLayout}}">
+                        <core-tooltip position="bottom" class="delayed">
+                            <paper-checkbox checked="{{selectAll}}" on-core-change="{{onAllSelectionChanged}}"></paper-checkbox>
+                            <span class="span-tooltip" tip>{{selectAll ? 'Unselect': 'Select'}} all entities</span>
+                        </core-tooltip>
+                    </div>
+                    <core-tooltip class="delayed" tabIndex="-1" hidden?="{{!cardLayout}}" disabled?="{{!totals}}">
+                        <core-icon-button icon="editor:functions" on-tap="{{showSummary}}"></core-icon-button>
+                        <span class="span-tooltip" tip>Show summary</span>
+                    </core-tooltip>
+                    <content select=".standart-action"></content>
+                </div>
             </div>
-        </div>
 
-        <div hidden?="{{cardLayout}}" style="background-color:white;">
+            <div hidden?="{{cardLayout}}" style="margin-top:8px">
 
-            <table>
-                <thead>
-                    <tr class="header">
-                        <th class="selection-column">
-                            <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                <paper-checkbox checked="{{selectAll}}" on-core-change="{{onAllSelectionChanged}}"></paper-checkbox>
-                                <span class="span-tooltip" tip>{{selectAll ? 'Unselect': 'Select'}} all entities</span>
-                            </core-tooltip>
-                        </th>
-                        <template if="{{primaryAction}}">
-                            <th class="action-column"></th>
-                        </template>
-                        <template repeat="{{column, columnIndex in columns}}">
-                            <th class="data-column" style="{{columnIndex===0?'padding-left:10px;' : ''}}{{columnIndex===columns.length-1?'padding-right:10px;' : ''}}width: {{column.width}}" align="left">
+                <table>
+                    <thead>
+                        <tr class="header">
+                            <th class="selection-column">
                                 <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                    {{column.columnTitle}}
-                                    <span class="span-tooltip" tip>{{column.columnDesc}}</span>
+                                    <paper-checkbox checked="{{selectAll}}" on-core-change="{{onAllSelectionChanged}}"></paper-checkbox>
+                                    <span class="span-tooltip" tip>{{selectAll ? 'Unselect': 'Select'}} all entities</span>
                                 </core-tooltip>
                             </th>
-                        </template>
-                        <template if="{{secondaryActions.length > 0 }}">
-                            <th class="action-column"></th>
-                        </template>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template repeat="{{entity, entityIndex in entities}}">
-                        <tr class="{{entityIndex % 2 === 0 ? 'regular_color':'alternate-color'}}" selected?="{{selectionModel[entityIndex]}}">
-
-                            <td class="selection-column">
-                                <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                    <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
-                                    <span class="span-tooltip" tip>{{selectionModel[entityIndex] ? 'Unselect': 'Select'}} this entity</span>
-                                </core-tooltip>
-                            </td>
                             <template if="{{primaryAction}}">
-                                <td class="action-column">
-                                    <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}" hidden?="{{!primaryAction.action}}"></tg-page-action>
-                                    <tg-ui-action currentEntity="{{entity}}" hidden?="{{primaryAction.action}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" createContextHolder="{{primaryAction.createContextHolder}}" requireSelectionCriteria="{{primaryAction.requireSelectionCriteria}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
-                                </td>
+                                <th class="action-column"></th>
                             </template>
                             <template repeat="{{column, columnIndex in columns}}">
-                                <td class="data-column" style="{{columnIndex===0?'padding-left:10px;' : ''}}{{columnIndex===columns.length-1?'padding-right:10px;' : ''}}width: {{column.width}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}" relative>
-                                    <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
-                                    </div>
+                                <th class="data-column" style="width: {{column.width}}" align="left">
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                        <template if="{{column.type === 'Boolean' && get(entity, column) !== null}}">
-                                            <core-icon icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
-                                        </template>
-                                        <template if="{{column.type !== 'Boolean'}}">
-                                            <div class="truncate" style="width: {{column.width}}">{{getValue(entity, column)}}</div>
-                                        </template>
-                                        <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
+                                        {{column.columnTitle}}
+                                        <span class="span-tooltip" tip>{{column.columnDesc}}</span>
                                     </core-tooltip>
-                                </td>
+                                </th>
                             </template>
-                            <template if="{{secondaryActions.length > 0}}">
-                                <td class="action-column" style="position: relative">
-                                    <template if="{{secondaryActions.length === 1}}">
-                                        <tg-page-action icon="{{secondaryActions[0].icon}}" action="{{secondaryActions[0].action}}" context="{{entity}}" hidden?="{{!secondaryActions[0].action}}"></tg-page-action>
-                                        <tg-ui-action hidden?="{{secondaryActions[0].action}}" currentEntity="{{entity}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" createContextHolder="{{secondaryActions[0].createContextHolder}}" requireSelectionCriteria="{{secondaryActions[0].requireSelectionCriteria}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}"></tg-ui-action>
-                                    </template>
-                                    <template if="{{secondaryActions.length > 1}}">
-                                        <tg-secondary-action-button currentEntity="{{entity}}" actions="{{secondaryActions}}"></tg-secondary-action-button>
-                                    </template>
-                                </td>
+                            <template if="{{secondaryActions.length > 0 }}">
+                                <th class="action-column"></th>
                             </template>
                         </tr>
-                    </template>
-                    <template repeat="{{summaryRow, summaryIndex in gridSummary}}">
-                        <tr class="{{ (entities.length + summaryIndex) % 2 === 0 ? 'regular_color':'alternate-color'}}" hidden?="{{!totals}}">
-                            <td>
-                                <!--This is dummy column that is under selection column-->
-                            </td>
-                            <template if="{{primaryAction}}">
-                                <td>
-                                    <!--This is dummy column that is under primary action column-->
-                                </td>
-                            </template>
-                            <template repeat="{{summary, summaryIndex in summaryRow}}">
-                                <td hidden?="{{!summary}}" class="data-column" style="{{summaryIndex===0?'padding-left:10px;' : ''}}{{summaryIndex===summaryRow.length-1?'padding-right:10px;' : ''}}width: {{summary.width}}">
+                    </thead>
+                    <tbody>
+                        <template repeat="{{entity, entityIndex in entities}}">
+                            <tr class="{{entityIndex % 2 === 0 ? 'regular-color':'alternate-color'}}" selected?="{{selectionModel[entityIndex]}}">
+
+                                <td class="selection-column">
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                        <template if="{{summary.type === 'Boolean' && get(totals, summary) !== null}}">
-                                            <core-icon icon="{{get(totals, summary) ? 'check' : 'clear'}}"></core-icon>
-                                        </template>
-                                        <template if="{{summary.type !== 'Boolean'}}">
-                                            <div class="truncate" style="width: {{summary.width}}">{{getValue(totals, summary)}}</div>
-                                        </template>
-                                        <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
+                                        <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
+                                        <span class="span-tooltip" tip>{{selectionModel[entityIndex] ? 'Unselect': 'Select'}} this entity</span>
                                     </core-tooltip>
                                 </td>
-                                <td hidden?="{{summary}}">
-                                    <!--This is dummy column that is represents empty summary cell-->
+                                <template if="{{primaryAction}}">
+                                    <td class="action-column">
+                                        <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}" hidden?="{{!primaryAction.action}}"></tg-page-action>
+                                        <tg-ui-action currentEntity="{{entity}}" hidden?="{{primaryAction.action}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" createContextHolder="{{primaryAction.createContextHolder}}" requireSelectionCriteria="{{primaryAction.requireSelectionCriteria}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
+                                    </td>
+                                </template>
+                                <template repeat="{{column, columnIndex in columns}}">
+                                    <td class="data-column" style="width: {{column.width}}" entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}" relative>
+                                        <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
+                                        </div>
+                                        <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                            <template if="{{column.type === 'Boolean' && get(entity, column) !== null}}">
+                                                <core-icon icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
+                                            </template>
+                                            <template if="{{column.type !== 'Boolean'}}">
+                                                <div class="truncate" style="width: {{column.width}}">{{getValue(entity, column)}}</div>
+                                            </template>
+                                            <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
+                                        </core-tooltip>
+                                    </td>
+                                </template>
+                                <template if="{{secondaryActions.length > 0}}">
+                                    <td class="action-column" style="position: relative">
+                                        <template if="{{secondaryActions.length === 1}}">
+                                            <tg-page-action icon="{{secondaryActions[0].icon}}" action="{{secondaryActions[0].action}}" context="{{entity}}" hidden?="{{!secondaryActions[0].action}}"></tg-page-action>
+                                            <tg-ui-action hidden?="{{secondaryActions[0].action}}" currentEntity="{{entity}}" shortDesc="{{secondaryActions[0].shortDesc}}" longDesc="{{secondaryActions[0].longDesc}}" icon="{{secondaryActions[0].icon}}" componentUri="{{secondaryActions[0].componentUri}}" elementName="{{secondaryActions[0].elementName}}" attrs="{{secondaryActions[0].attrs}}" createContextHolder="{{secondaryActions[0].createContextHolder}}" requireSelectionCriteria="{{secondaryActions[0].requireSelectionCriteria}}" requireSelectedEntities="{{secondaryActions[0].requireSelectedEntities}}" requireMasterEntity="{{secondaryActions[0].requireMasterEntity}}" preAction="{{secondaryActions[0].preAction}}" postActionSuccess="{{secondaryActions[0].postActionSuccess}}" postActionError="{{secondaryActions[0].postActionError}}"></tg-ui-action>
+                                        </template>
+                                        <template if="{{secondaryActions.length > 1}}">
+                                            <tg-secondary-action-button currentEntity="{{entity}}" actions="{{secondaryActions}}"></tg-secondary-action-button>
+                                        </template>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                        <tr hidden?="{{!totals}}" style="height:5px"></tr>
+                        <template repeat="{{summaryRow, summaryRowIndex in gridSummary}}">
+                            <tr class="summary" hidden?="{{!totals}}" style="font-weight:bold">
+                                <td class="column-transparent {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}">
+                                    <!--This is dummy column that is under selection column-->
                                 </td>
-                            </template>
-                            <template if="{{secondaryActions.length > 0}}">
-                                <td>
-                                    <!--This is dummy column that is under secondary action column-->
-                                </td>
-                            </template>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
+                                <template if="{{primaryAction}}">
+                                    <td class="column-transparent {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}">
+                                        <!--This is dummy column that is under primary action column-->
+                                    </td>
+                                </template>
+                                <template repeat="{{summary, summaryIndex in summaryRow}}">
+                                    <td hidden?="{{!summary}}" class="data-column {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}" style="width: {{summary.width}}">
+                                        <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                            <template if="{{summary.type === 'Boolean' && get(totals, summary) !== null}}">
+                                                <core-icon icon="{{get(totals, summary) ? 'check' : 'clear'}}"></core-icon>
+                                            </template>
+                                            <template if="{{summary.type !== 'Boolean'}}">
+                                                <div class="truncate" style="width: {{summary.width}}">{{getValue(totals, summary)}}</div>
+                                            </template>
+                                            <span class="span-tooltip" tip>{{summary.columnDesc}}</span>
+                                        </core-tooltip>
+                                    </td>
+                                    <td hidden?="{{summary}}" class="{{columns[summaryIndex].summary ? '': 'column-transparent'}} {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}">
+                                        <!--This is dummy column that is represents empty summary cell-->
+                                    </td>
+                                </template>
+                                <template if="{{secondaryActions.length > 0}}">
+                                    <td class="column-transparent {{summaryRowIndex % 2 === 0 ? 'regular-color':'alternate-color'}}">
+                                        <!--This is dummy column that is under secondary action column-->
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <div hidden?="{{!cardLayout}}">
             <template repeat="{{entity, entityIndex in entities}}">
@@ -220,7 +223,7 @@
                     <div style="position:relative; background-color: white; {{collapsePanelVisible ? 'padding-bottom:24px':''}}">
                         <tg-flex-layout whenDesktop="{{desktopLayoutShort}}" whenTablet="{{tabletLayoutShort}}" whenMobile="{{mobileLayoutShort}}">
                             <template repeat="{{column, columnIndex in columns}}">
-                                <div class="data-column" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
+                                <div class="data-entry" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
                                     <core-tooltip position="bottom" class="delayed" style="width:100%">
                                         <div class="data-label truncate">{{column.columnTitle}}</div>
                                         <span class="span-tooltip" tip>{{column.columnDesc}}</span>
@@ -244,7 +247,7 @@
                         <core-collapse opened?="{{openModel[entityIndex]}}" allowOverflow hidden?="{{!collapsePanelVisible}}">
                             <tg-flex-layout whenDesktop="{{desktopLayoutLong}}" whenTablet="{{tabletLayoutLong}}" whenMobile="{{mobileLayoutLong}}">
                                 <template repeat="{{column, columnIndex in columns}}">
-                                    <div class="data-column" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
+                                    <div class="data-entry" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
                                         <core-tooltip position="bottom" class="delayed" style="width:100%">
                                             <div class="data-label truncate">{{column.columnTitle}}</div>
                                             <span class="span-tooltip" tip>{{column.columnDesc}}</span>
@@ -430,7 +433,7 @@
                     return entity && entity.get(column.property);
                 },
                 getValue: function (entity, column) {
-                    if (!entity || !column || !this.get(entity, column)) {
+                    if (!entity || !column || this.get(entity, column) === null) {
                         return "";
                     } else if (this.$.reflector.findTypeByName(column.type)) {
                         return this.$.reflector.convert(this.get(entity, column));

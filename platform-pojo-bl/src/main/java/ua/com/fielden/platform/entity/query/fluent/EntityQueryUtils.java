@@ -68,4 +68,8 @@ public class EntityQueryUtils {
     public static <T extends AbstractEntity<?>> fetch<T> fetchKeyAndDescOnly(final Class<T> entityType) {
         return new fetch<T>(entityType, FetchCategory.KEY_AND_DESC);
     }
+    
+    public static fetch<EntityAggregates> fetchAggregates() {
+        return new fetch<EntityAggregates>(EntityAggregates.class, FetchCategory.NONE);
+    }
 }

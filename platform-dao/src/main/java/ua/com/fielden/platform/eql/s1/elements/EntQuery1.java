@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.s1.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
@@ -26,7 +26,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     private final Class resultType;
     private final QueryCategory category;
-    private final FetchModel fetchModel;
+    private final IRetrievalModel fetchModel;
 
     private final boolean filterable;
 
@@ -87,7 +87,7 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
     }
 
     public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class resultType, final QueryCategory category, //
-            final FetchModel fetchModel, final boolean filterable) {
+            final IRetrievalModel fetchModel, final boolean filterable) {
         super();
         this.filterable = filterable;
         this.category = category;

@@ -6,8 +6,8 @@ import java.util.Map;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -35,7 +35,7 @@ public class EntQueryGenerator {
         this.universalConstants = universalConstants;
     }
 
-    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery generateEntQueryAsResultQuery(final Q query, final OrderingModel orderModel, final Class<T> resultType, final FetchModel<T> fetchModel, final Map<String, Object> paramValues) {
+    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery generateEntQueryAsResultQuery(final Q query, final OrderingModel orderModel, final Class<T> resultType, final IRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
         if (universalConstants.now() != null) {
         	paramValues.put(NOW, universalConstants.now().toDate());	
         }
@@ -99,7 +99,7 @@ public class EntQueryGenerator {
     private EntQuery generateEntQuery(final QueryModel<?> qryModel, //
             final OrderingModel orderModel, //
             final Class resultType, //
-            final FetchModel fetchModel, //
+            final IRetrievalModel fetchModel, //
             final Map<String, Object> paramValues, //
             final QueryCategory category, //
             final IFilter filter, //

@@ -50,7 +50,7 @@ public class EntityProxyFactory<T extends AbstractEntity<?>> extends ProxyFactor
      * @return
      */
     public T create(
-            final long id, 
+            final Long id, 
             final AbstractEntity<?> owner, 
             final String propertyName,
             final IEntityDao<?> coForProxy, 
