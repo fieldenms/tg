@@ -37,7 +37,7 @@ public class LoginResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
-        if (Method.GET.equals(request.getMethod()) || Method.PUT.equals(request.getMethod())) {
+        if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
             final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
 
             if (StringUtils.isEmpty(webUiConfig.getDomainName()) || StringUtils.isEmpty(webUiConfig.getPath())) {

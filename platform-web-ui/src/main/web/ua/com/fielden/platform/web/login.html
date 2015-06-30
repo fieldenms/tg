@@ -5,21 +5,28 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
-    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
-    <link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
-    <link rel="import" href="/resources/polymer/core-input/core-input.html">
-    <link rel="import" href="/resources/polymer/ajax-form/ajax-form.html">
-    <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/polymer/polymer.html">
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
+    <link rel="import" href="/resources/polymer/iron-form/iron-form.html">
+    <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
+    <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
     <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
     <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 
-    <style>
+    <style is="custom-style">
         * {
             box-sizing: border-box;
         }
         
+        .vertical-section {
+            @apply(--paper-font-body1);
+            line-height: 25px;
+            margin-bottom: 25px;
+        }
+        
         body {
-            font-family: "RobotoDraft";
+            font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
             font-size: 10pt;
             background: #eee;
             -webkit-font-smoothing: antialiased;
@@ -52,18 +59,12 @@
             box-shadow: rgba(0, 0, 0, 0.14902) 0px 1px 1px 0px, rgba(0, 0, 0, 0.09804) 0px 1px 2px 0px;
         }
         
-        .group {
-            position: relative;
-            margin-bottom: 45px;
-        }
-        
         paper-checkbox {
             margin: 1em 0px 0px 0px;
-        }
-        
-        paper-checkbox::shadow #checkbox.checked {
-            background-color: #4285f4;
-            border-color: #4285f4;
+            /* Checked state colors. */
+            
+            --paper-checkbox-checked-color: #4285f4;
+            --paper-checkbox-checked-ink-color: #4285f4;
         }
         
         .submit-normal {
@@ -76,68 +77,52 @@
             color: white;
         }
         
-        input[type=number]::-webkit-outer-spin-button,
-        input[type=number]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        
-        input[type=number] {
-            -moz-appearance: textfield;
+        input[is="iron-input"] {
+            font: inherit;
+            outline: none;
+            box-shadow: none;
+            border: none;
+            width: 100%;
         }
     </style>
 
 </head>
 
-<body unresolved fullbleed>
+<body unresolved class="fullbleed">
 
     <hgroup>
         <h1>Application Login</h1>
         <h3>Please provide valid credentials.</h3>
     </hgroup>
 
-    <form is="ajax-form" action="login" method="put">
-        <div class="group">
-            <paper-input-decorator id="decorator" label="User Name" floatingLabel>
-                <div layout horizontal>
-                    <div flex>
-                        <input id="in-username" is="core-input" type="text" name="username" required>
-                    </div>
-                </div>
-            </paper-input-decorator>
+    <form id="form" is="iron-form" action="login" method="post">
+        <div class="vertical-section">
+            <paper-input-container id="decorator">
+                <label>User name</label>
+                <input id="in-username" is="iron-input" type="text" name="username" required prevent-invalid-input/>
+            </paper-input-container>
 
+            <paper-input-container id="decorator">
+                <label>Password</label>
+                <input id="in-passwd" is="iron-input" type="password" name="passwd" required prevent-invalid-input/>
+            </paper-input-container>
 
-            <paper-input-decorator id="decorator" label="Password" floatingLabel>
-                <div layout horizontal>
-                    <div flex>
-                        <input id="in-passwd" is="core-input" type="password" name="passwd" required>
-                    </div>
-                </div>
-            </paper-input-decorator>
-
-            <paper-checkbox id="in-trusted-device-mock" label="Trusted device?"></paper-checkbox>
-            <input id="in-trusted-device" type="hidden" name="trusted-device">
-            <!--paper-input-decorator id="decorator" label="Pin Code" floatingLabel>
-                <div layout horizontal>
-                    <div flex>
-                        <input id="in-pin-code" is="core-input" type="number" step="1" preventInvalidInput name="pin-code">
-                    </div>
-                </div>
-            </paper-input-decorator-->
+            <paper-checkbox id="in-trusted-device-mock">Trusted device?</paper-checkbox>
+            <input id="in-trusted-device" type="hidden" name="trustedDevice">
         </div>
 
-        <paper-button id="submitButton" roll="button" style="width:100%" class="submit-normal">
-            Login
+        <paper-button id="submitButton" style="width:100%" class="submit-normal" raised>
+            <span id="submitLabel">Login</span>
         </paper-button>
-
-        <!--input type="submit"-->
     </form>
+
     <script>
         (function () {
-            var form = document.querySelectorAll('form')[0];
+            var form = document.getElementById('form');
             form.reset();
 
-            var submit = document.querySelector('#submitButton');
+            var submit = document.getElementById('submitButton');
+            var submitLabel = document.getElementById('submitLabel');
             var trustedDevice = document.querySelector('#in-trusted-device');
             var trustedDeviceMock = document.querySelector('#in-trusted-device-mock');
 
@@ -145,32 +130,40 @@
                 // need to transfer value from a paper-checkbox that does not get submitted in the from
                 // to a hidden input that does
                 trustedDevice.value = trustedDeviceMock.checked;
-
+                console.log("about to start submitting...");
+                submit.disabled = true;
                 form.submit();
             }
 
 
-            form.addEventListener('submitting', function () {
-                submit.disabled = true;
+            form.addEventListener('iron-form-submit', function (event) {
+                console.log("submitting...");
             });
 
-            form.addEventListener('submitted',
+            form.addEventListener('iron-form-response',
                 function (event) {
+                    console.log('RESPONSE event: ', event);
                     console.log('Login response code: ', event.detail.status);
                     console.log('\tresponse: ', event.detail);
 
-                    if (event.detail.status === 200) {
-                        submit.classList.remove("submit-error");
-                        submit.innerHTML = "Success";
-                        window.location.href = event.detail.response;
-                    } else {
-                        submit.classList.add("submit-error");
-                        submit.innerHTML = "Try Again"
-                        submit.disabled = false;
-                    }
+                    submit.classList.remove("submit-error");
+                    submitLabel.innerHTML = "Success";
+                    window.location.href = "/"
                 }
             );
 
+
+            form.addEventListener('iron-form-error',
+                function (event) {
+                    console.log('ERROR event: ', event);
+                    console.log('Login response code: ', event.detail.status);
+                    console.log('\tresponse: ', event.detail);
+
+                    submit.classList.add("submit-error");
+                    submitLabel.innerHTML = "Try Again"
+                    submit.disabled = false;
+                }
+            );
 
         })();
     </script>
