@@ -525,14 +525,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.longDesc("REFRESH2 action")
 
                 // ENTITY CUSTOM ACTIONS
-                //.addAction("#export", TgExportFunctionalEntity.class)
-                //*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                //*      */.postActionSuccess(new PostActionSuccess(""))
-                //*      */.postActionError(new PostActionError(""))
-                //*      */.enabledWhen(EnabledState.EDIT)
-                ///      */.icon("trending-up") SHORT-CUT
-                //*      */.shortDesc("Export")
-                //*      */.longDesc("Export action")
+                .addAction("#export", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.EDIT)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("Export")
+                /*      */.longDesc("Export action")
 
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
