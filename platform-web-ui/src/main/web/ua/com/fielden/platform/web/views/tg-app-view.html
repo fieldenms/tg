@@ -3,7 +3,7 @@
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="/resources/views/tg-view.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
-<!--<link rel="import" href="/resources/views/tg-view-with-menu.html">-->
+<link rel="import" href="/resources/views/tg-view-with-menu.html">
 
 <dom-module id="tg-app-view">
     <style>
@@ -28,9 +28,9 @@
             <template is="dom-if" if="[[!menuItem.menu]]">
                 <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]"></tg-view>
             </template>
-            <!--<template is="dom-if" if="[[menuItem.menu]]">
-                <tg-view-with-menu class="fit" id="view" menu-item="[[_getMenuItem(menuItem)]]"></tg-view-with-menu>
-            </template>-->
+            <template is="dom-if" if="[[menuItem.menu]]">
+                <tg-view-with-menu class="fit" id="view" menu-item="[[menuItem]]"></tg-view-with-menu>
+            </template>
         </div>
 
 
