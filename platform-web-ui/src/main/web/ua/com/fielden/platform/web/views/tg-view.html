@@ -1,5 +1,4 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
 <link rel="import" href="/resources/components/postal-lib.html">
@@ -9,34 +8,29 @@
 <dom-module id="tg-view">
     <style>
         :host {
-            --paper-toolbar-background: #0288D1;
-            --paper-toolbar-color: white;
             --paper-fab-background: #fcfcfc;
-            --paper-toolbar: {
-                height: 100px;
-                font-size: 18px;
-            }
-            ;
             --paper-fab: {
                 color: #666464;
-                position: absolute;
-                right: 16px;
-                top: 22px;
-                z-index: 1;
-            }
-            ;
+            };
+        }
+        .tool-bar {
+            padding: 0 16px;
+            height: 100px;
+            font-size: 18px;
+            color: white;
+            background-color: #0288D1
         }
         .view {
             background-color: white;
         }
     </style>
     <template>
-        <paper-toolbar id="toolbar">
+        <div id="toolbar" class="tool-bar layout horizontal center">
             <!-- slide-down animation -->
-            <div class="flex self-start bottom">[[menuItem.title]]</div>
+            <div class="flex">[[menuItem.title]]</div>
             <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
             <!-- scale-up animation -->
-        </paper-toolbar>
+        </div>
         <div id="viewContainer">
             <tg-menu-item-view id="menuItemView" auto-load?="[[autoLoad]]" menu-item="[[menuItem]]" on-menu-item-view-loaded="_menuItemLoaded"></tg-menu-item-view>
         </div>

@@ -1,5 +1,4 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 <link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -16,31 +15,25 @@
 <dom-module id="tg-view-with-menu">
     <style>
         :host {
-            --paper-toolbar-background: #0288D1;
-            --paper-toolbar-color: white;
             --paper-fab-background: #fcfcfc;
             --paper-menu-color: #01579b;
-            --paper-toolbar: {
-                height: 100px;
-                font-size: 18px;
-            };
+            --paper-item-min-height: 40px;
             --paper-fab: {
                 color: #666464;
-                position: absolute;
-                right: 16px;
-                top: 22px;
-                z-index: 1;
-            };
+            }
+            ;
             --paper-menu: {
                 padding: 0;
                 margin: 0;
-            };
+            }
+            ;
             --paper-item: {
                 padding-left: 22px;
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
-            };
+            }
+            ;
         }
         neon-animated-pages {
             position: absolute;
@@ -49,25 +42,32 @@
             right: 0;
             top: 100px;
         }
+        .tool-bar {
+            padding: 0 16px;
+            height: 100px;
+            font-size: 18px;
+            color: white;
+            background-color: #0288D1
+        }
         #drawerPanel:not([narrow]) #menuButton {
             display: none;
         }
         #drawerPanel:not([narrow]) paper-menu {
             border-right: 1px solid #CBCDCE;
         }
-        /*core-menu > core-item,
-        core-menu > core-submenu::shadow > core-item,
-        core-menu > core-submenu > core-item {
-            transition: all 300ms ease-in-out;
-        }*/
+        #menuButton {
+            margin-right: 24px;
+        }
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
-        <paper-drawer-panel id="drawerPanel" disableSwipe responsiveWidth="{{_calcResponsiveWidth()}}">
+        <paper-drawer-panel id="drawerPanel" disableSwipe responsive-width="[[_calcResponsiveWidth()]]">
 
             <div class="layout vertical" drawer>
 
-                <paper-toolbar id="menuToolBar">[[menuItem.title]]</paper-toolbar>
+                <div id="menuToolBar" class="tool-bar layout horizontal center">
+                    <div class="flex">[[menuItem.title]]</div>
+                </div>
 
                 <paper-menu id="menu" class="flex" on-selected-changed="_menuItemSelected" attr-for-selected="name">
                     <template is="dom-repeat" items="[[menuItem.menu]]">
@@ -79,11 +79,13 @@
 
             <div class="layout vertical" main>
 
-                <paper-toolbar id="viewToolBar">
-                    <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
-                    <div flex>[[_calcSelectedPageTitle(pageSelected)]]</div>
+                <div id="viewToolBar" class="tool-bar layout horizontal center">
+                    <div class="layout horizontal center flex">
+                        <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
+                        <div class="flex">[[_calcSelectedPageTitle(pageSelected)]]</div>
+                    </div>
                     <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
-                </paper-toolbar>
+                </div>
 
                 <neon-animated-pages id="pages" selected=[[pageSelected]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-selected-changed="_pageSelectedChanged" on-neon-animation-finish="_animationFinished">
                     <div name="__empty__"></div>

@@ -109,12 +109,11 @@
                     this.sharedElements = {
                         'hero': this
                     };
-                } else {
-                    this.animationConfig['exit'].push({
-                        name: 'fade-out-animation',
-                        node: this
-                    });
                 }
+                this.animationConfig['exit'].push({
+                    name: 'fade-out-animation',
+                    node: this
+                });
             },
 
             load: function () {
