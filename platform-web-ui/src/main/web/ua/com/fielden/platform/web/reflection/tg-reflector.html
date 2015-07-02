@@ -802,7 +802,8 @@
          */
         stackTraceForErrorObjectStack: function (stack) {
         	console.log("STACK", stack);
-        	throw "NOT IMPLEMENTED!";
+        	// TODO still "NOT IMPLEMENTED!";
+        	return stack.toString();
         },        
         
         //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////
@@ -1006,7 +1007,9 @@
         discardAllRequests: function (ajaxElement) {
         	if (ajaxElement.loading) {
         		// get oldest request and discard it
-        		ajaxElement.discardRequest(ajaxElement.activeRequests[0]);
+        		var oldestRequest = ajaxElement.activeRequests[0];
+        		oldestRequest.abort();
+        		ajaxElement._discardRequest(oldestRequest);
         		this.discardAllRequests(ajaxElement);
         	}
         }
