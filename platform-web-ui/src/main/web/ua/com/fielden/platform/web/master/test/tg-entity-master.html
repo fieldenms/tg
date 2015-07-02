@@ -31,7 +31,7 @@
 	</test-fixture>
 
 	<script>
-		suite('<tg-entity-master>', function() {
+		suite('retrieval', function() {
 		    var master, reflector;
 		
 		    setup(function() {
@@ -39,7 +39,7 @@
 		      	reflector = document.querySelector('#reflector');
 		    });
 		
-		    test('can retrieve new entity', function(done) {
+		    test('works for new entity', function(done) {
 				master.postRetrieved = function(entity, bindingEntity, customObject) {
 				    assert.strictEqual(entity.type().fullClassName(), "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "The type of entity response is not correct.");
 				    assert.strictEqual(entity.id, null, "The id of entity is not correct.");
@@ -130,7 +130,7 @@
 				master.retrieve();
 		    });
 		    
-		    test('can retrieve new persisted entity', function(done) {
+		    test('works for new persisted entity', function(done) {
 		    	master.entityId = '4';
 		    	
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
@@ -186,6 +186,570 @@
 
 	            master.retrieve();
 		    });
+		});
+		
+		suite('validation', function() {
+		    var master, reflector;
+		
+		    setup(function() {
+				master = fixture('MasterFixture');
+		      	reflector = document.querySelector('#reflector');
+		    });
+		
+		    test('works for property', function(done) {
+		    	master.entityId = '4';
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(validatedEntity.get("integerProp"), "Property value should be initialised.");
+	                assert.strictEqual(validatedEntity.get("integerProp"), 43, "Property value remain the same (validation did not succeed).");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("integerProp").isChangedFromOriginal(), false, "Instance meta-prop should be NOT changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.ok(validatedEntity.prop("integerProp").validationResult(), "Instance meta-prop should have non-empty (unsuccessful) validation result.");
+	                assert.strictEqual(validatedEntity.prop("integerProp").validationResult().message, "Value '10000' is greater than the maximum limit of 9999.", "Property has incorrect validation result message.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("integerProp"), "Binding property should be initialised.");
+	                assert.strictEqual(bindingEntity.get("integerProp"), 10000, "Binding property should be correct number.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("integerProp"), "Property value should be initialised.");
+	                assert.strictEqual(entity.get("integerProp"), 43, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("integerProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("integerProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("integerProp"), "Binding property should be initialised.");
+	                assert.strictEqual(bindingEntity.get("integerProp"), 43, "Binding property should be string entity representation.");
+
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("integerProp", 10000);
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for integer property', function (done) {
+		    	master.entityId = '4';
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(validatedEntity.get("integerProp"), "Property value should be initialised.");
+	                assert.strictEqual(validatedEntity.get("integerProp"), 98, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("integerProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("integerProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("integerProp"), "Binding property should be initialised.");
+	                assert.strictEqual(bindingEntity.get("integerProp"), 98, "Binding property should be correct number.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("integerProp"), "Property value should be initialised.");
+	                assert.strictEqual(entity.get("integerProp"), 43, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("integerProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("integerProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("integerProp"), "Binding property should be initialised.");
+	                assert.strictEqual(bindingEntity.get("integerProp"), 43, "Binding property should be string entity representation.");
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("integerProp", 98);
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for bigDecimal property', function (done) {
+		    	master.entityId = '8';
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
+	                // value ok?
+	                assert.ok(validatedEntity.get("bigDecimalProp"), "Property value should be initialised.");                
+	                assert.strictEqual(validatedEntity.get("bigDecimalProp"), 46.5, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("bigDecimalProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("bigDecimalProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("bigDecimalProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("bigDecimalProp"), 46.5, "Property value should be correct.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("bigDecimalProp"), "Property value should be initialised.");                
+	                assert.strictEqual(entity.get("bigDecimalProp"), 23.0, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("bigDecimalProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("bigDecimalProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("bigDecimalProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("bigDecimalProp"), 23.0, "Property value should be correct.");
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("bigDecimalProp", 46.5);
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for boolean property', function (done) {
+		    	master.entityId = '10';
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
+	                // value ok?
+	                assert.strictEqual(validatedEntity.get("booleanProp"), false, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("booleanProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("booleanProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.strictEqual(bindingEntity.get("booleanProp"), false, "Binding property should be correct number.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("booleanProp"), "Property value should be initialised.");                
+	                assert.strictEqual(entity.get("booleanProp"), true, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("booleanProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("booleanProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("booleanProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("booleanProp"), true, "Binding property should be string entity representation.");
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("booleanProp", false);
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for date property', function (done) {
+		    	master.entityId = '11';
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
+	                // value ok?
+	                assert.ok(validatedEntity.get("dateProp"), "Property value should be initialised.");                
+	                assert.strictEqual(validatedEntity.get("dateProp"), 10000, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("dateProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("dateProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("dateProp"), 10000, "Binding property should be correct number.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("dateProp"), "Property value should be initialised.");                
+	                assert.strictEqual(entity.get("dateProp"), 9999, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("dateProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("dateProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding property should be string entity representation.");
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("dateProp", 10000);
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for entity property', function (done) {
+		    	master.entityId = '5';
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
+	                // value ok?
+	                assert.ok(validatedEntity.get("entityProp"), "The property should be initialised.");                
+	                assert.instanceOf(validatedEntity.get("entityProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
+	                assert.strictEqual(validatedEntity.get("entityProp").get("key"), "KEY1", "The entity response property should be entity instance with appropriate key.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("entityProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("entityProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("entityProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("entityProp"), "KEY1", "Binding property should be string entity representation.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("entityProp"), "The property should be initialised.");                
+	                assert.instanceOf(entity.get("entityProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
+	                assert.strictEqual(entity.get("entityProp").get("key"), "KEY3", "The entity response property should be entity instance with appropriate key.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("entityProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("entityProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("entityProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("entityProp"), "KEY3", "Binding property should be string entity representation.");
+
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("entityProp", "KEY1");
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for money property', function (done) {
+		    	master.entityId = '7';
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
+	                // value ok?
+	                assert.ok(validatedEntity.get("moneyProp"), "Property value should be initialised.");                
+	                assert.strictEqual(validatedEntity.get("moneyProp").amount, 46.0, "Property value amount should be correct.");
+	                assert.strictEqual(validatedEntity.get("moneyProp").currency, "USD", "Property value currency should be correct.");
+	                assert.strictEqual(validatedEntity.get("moneyProp").taxPercent, 20, "Property value taxPercent should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("moneyProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("moneyProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("moneyProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("moneyProp").amount, 46.0, "Property value amount should be correct.");
+	                assert.strictEqual(bindingEntity.get("moneyProp").currency, "USD", "Property value currency should be correct.");
+	                assert.strictEqual(bindingEntity.get("moneyProp").taxPercent, 20, "Property value taxPercent should be correct.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("moneyProp"), "Property value should be initialised.");                
+	                assert.strictEqual(entity.get("moneyProp").amount, 23.0, "Property value amount should be correct.");
+	                assert.strictEqual(entity.get("moneyProp").currency, "USD", "Property value currency should be correct.");
+	                assert.strictEqual(entity.get("moneyProp").taxPercent, null, "Property value taxPercent should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("moneyProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("moneyProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("moneyProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("moneyProp").amount, 23.0, "Property value amount should be correct.");
+	                assert.strictEqual(bindingEntity.get("moneyProp").currency, "USD", "Property value currency should be correct.");
+	                assert.strictEqual(bindingEntity.get("moneyProp").taxPercent, null, "Property value taxPercent should be correct.");
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("moneyProp", { "amount" : 46.0, "currency" : "USD", "taxPercent" : 20 });
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for string property', function (done) {
+		    	master.entityId = '9';
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
+	                // value ok?
+	                assert.ok(validatedEntity.get("stringProp"), "Property value should be initialised.");                
+	                assert.strictEqual(validatedEntity.get("stringProp"), "okok", "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("stringProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("stringProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("stringProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("stringProp"), "okok", "Binding property should be correct number.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("stringProp"), "Property value should be initialised.");                
+	                assert.strictEqual(entity.get("stringProp"), "ok", "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("stringProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("stringProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("stringProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("stringProp"), "ok", "Binding property should be string entity representation.");
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("stringProp", "okok");
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for any property for new entity', function (done) {
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
+	                assert.strictEqual(validatedEntity.id, null, "The id of entity is not correct.");
+	                // value ok?
+	                assert.ok(validatedEntity.get("stringProp"), "Property value should be initialised.");                
+	                assert.strictEqual(validatedEntity.get("stringProp"), "okok", "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("stringProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("stringProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("stringProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("stringProp"), "okok", "Binding property should be correct number.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                assert.strictEqual(entity.id, null, "The id of entity is not correct.");
+
+	                // value ok?
+	                assert.strictEqual(entity.get("stringProp"), null, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("stringProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("stringProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.strictEqual(bindingEntity.get("stringProp"), null, "Binding property should be string entity representation.");
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("stringProp", "okok");
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for any property into missing value', function (done) {
+		    	master.entityId = '11';
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {                
+	                // value ok?
+	                assert.strictEqual(validatedEntity.get("dateProp"), null, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("dateProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("dateProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.strictEqual(bindingEntity.get("dateProp"), null, "Binding property should be correct number.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("dateProp"), "Property value should be initialised.");                
+	                assert.strictEqual(entity.get("dateProp"), 9999, "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("dateProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("dateProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding property should be string entity representation.");
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("dateProp", null);
+
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for any property simultaneously', function (done) {
+		    	master.entityId = '9';
+		    	
+	            var postValidatedCount = 0;
+
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+	                postValidatedCount = postValidatedCount + 1;
+	                if (postValidatedCount > 1) {
+	                    assert.fail("", "", "The validation should occur only once.")
+	                }
+
+	                // value ok?
+	                assert.ok(validatedEntity.get("stringProp"), "Property value should be initialised.");                
+	                assert.strictEqual(validatedEntity.get("stringProp"), "6", "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(validatedEntity.prop("stringProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(validatedEntity.prop("stringProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("stringProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("stringProp"), "6", "Binding property should be correct number.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("stringProp"), "Property value should be initialised.");                
+	                assert.strictEqual(entity.get("stringProp"), "ok", "Property value should be correct.");
+
+	                // value is changed?
+	                assert.strictEqual(entity.prop("stringProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+
+	                // value validationresult?
+	                assert.strictEqual(entity.prop("stringProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("stringProp"), "Binding property should be initialised.");                
+	                assert.strictEqual(bindingEntity.get("stringProp"), "ok", "Binding property should be string entity representation.");
+	                
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("stringProp", "1");
+	                master.validate(); 
+
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("stringProp", "2");
+	                master.validate(); 
+
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("stringProp", "3");
+	                master.validate(); 
+
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("stringProp", "4");
+	                master.validate(); 
+
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("stringProp", "5");
+	                master.validate(); 
+
+	                // ACTUAL PROPERTY CHANGE                
+	                bindingEntity.set("stringProp", "6");
+	                master.validate(); 
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for [] property', function (done) {
+		    	master.entityId = '4';
+		    	
+		    	done();
+		    });
+		    test('works for [] property', function (done) {
+		    	master.entityId = '4';
+		    	
+		    	done();
+		    });
+		    test('works for [] property', function (done) {
+		    	master.entityId = '4';
+		    	
+		    	done();
+		    });
+		    test('works for [] property', function (done) {
+		    	master.entityId = '4';
+		    	
+		    	done();
+		    });
+		    test('works for [] property', function (done) {
+		    	master.entityId = '4';
+		    	
+		    	done();
+		    });
+		    
 		});
 	</script>
 </body>
