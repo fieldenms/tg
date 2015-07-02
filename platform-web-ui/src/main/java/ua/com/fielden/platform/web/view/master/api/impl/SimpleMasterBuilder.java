@@ -140,7 +140,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     public ISimpleMasterConfig<T> done() {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
-        importPaths.add("master/tg-entity-master");
 
         final StringBuilder propertyActionsStr = new StringBuilder();
         final DomElement editorContainer = layout.render();
