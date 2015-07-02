@@ -10,7 +10,7 @@
     	<tg-entity-binder id="binderDom">
     	</tg-entity-binder>
     
-        <tg-entity-validator id="validator" entity-type="[[entityType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]"></tg-entity-validator>
+        <tg-entity-validator id="validator" entity-type="[[entityType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-entity-validator>
 
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
@@ -36,6 +36,7 @@
     		_postValidatedDefault: Function,
     		_postValidatedDefaultError: Function,
     		_processResponse: Function,
+    		_processError: Function,
     		
     		_processRetrieverResponse: Function,
     		_processRetrieverError: Function,
