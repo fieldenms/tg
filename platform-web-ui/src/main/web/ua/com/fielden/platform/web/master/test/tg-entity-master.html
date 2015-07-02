@@ -40,16 +40,14 @@
 		    });
 		
 		    test('can retrieve new entity', function(done) {
-		    	
 				master.postRetrieved = function(entity, bindingEntity, customObject) {
 				    assert.strictEqual(entity.type().fullClassName(), "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "The type of entity response is not correct.");
 				    assert.strictEqual(entity.id, null, "The id of entity is not correct.");
 				    assert.strictEqual(entity.version, 0, "The version of entity is not correct.");
 				
 				    // properties:
-				    assert.strictEqual(typeof entity.get("integerProp"), "object", "The entity response property is not correct.");                
-				    assert.strictEqual(entity.get("integerProp"), null, "The entity response property is not correct.");                
-				
+				    assert.strictEqual(typeof entity.get("integerProp"), "object", "The entity response property is not correct.");
+				    assert.strictEqual(entity.get("integerProp"), null, "The entity response property is not correct.");
 				
 				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
 				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
@@ -60,24 +58,24 @@
 				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
 				    // try {
 				    //     entity.get("desc");
-				    //     assert.fail("", "", "The unfetched property for entity should throw an exception.");                    
+				    //     assert.fail("", "", "The unfetched property for entity should throw an exception.");
 				    // }
-				    // catch (ex) {                   
+				    // catch (ex) {
 				    //     if (ex instanceof chai.AssertionError) {
 				    //         throw ex;
 				    //     }
-				    //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");                       
+				    //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
 				    // }
 				
 				    // try {
 				    //     entity.get("key");
-				    //     assert.fail("", "", "The unfetched property for entity should throw an exception.");                    
+				    //     assert.fail("", "", "The unfetched property for entity should throw an exception.");
 				    // }
-				    // catch (ex) {                   
+				    // catch (ex) {
 				    //     if (ex instanceof chai.AssertionError) {
 				    //         throw ex;
 				    //     }
-				    //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");                       
+				    //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
 				    // }
 				
 				    // instance meta-properties
@@ -88,14 +86,14 @@
 				    assert.strictEqual(entity.prop("integerProp").isVisible(), true, "The entity response instance prop should be visible.");
 				
 				    // binding value ok?
-				    assert.strictEqual(typeof bindingEntity.get("integerProp"), "object", "Binding property should be initialised.");                
+				    assert.strictEqual(typeof bindingEntity.get("integerProp"), "object", "Binding property should be initialised.");
 				    assert.strictEqual(bindingEntity.get("integerProp"), null, "Binding property should be string entity representation.");
 				
 				    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				    ///////////////////////////////// CHECK THE VALUES INITIALISED BY ENTITY PRODUCER: /////////////////////////////////
 				    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				    // value ok?
-				    assert.ok(entity.get("producerInitProp"), "The property should be initialised.");                
+				    assert.ok(entity.get("producerInitProp"), "The property should be initialised.");
 				    assert.instanceOf(entity.get("producerInitProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
 				    assert.strictEqual(entity.get("producerInitProp").get("key"), "DEFAULT_KEY", "The entity response property should be entity instance with appropriate key.");
 				
@@ -106,14 +104,14 @@
 				    assert.strictEqual(entity.prop("producerInitProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
 				
 				    // binding value ok?
-				    assert.ok(bindingEntity.get("producerInitProp"), "Binding property should be initialised.");                
+				    assert.ok(bindingEntity.get("producerInitProp"), "Binding property should be initialised.");
 				    assert.strictEqual(bindingEntity.get("producerInitProp"), "DEFAULT_KEY", "Binding property should be string entity representation.");
 				
 				    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				    ///////////////////////////////// CHECK THE VALUES INITIALISED BY ENTITY CLASS DEFINITION: /////////////////////////
 				    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				    // value ok?
-				    assert.ok(entity.get("domainInitProp"), "The property should be initialised.");                
+				    assert.ok(entity.get("domainInitProp"), "The property should be initialised.");
 				    assert.strictEqual(entity.get("domainInitProp"), "ok", "The entity response property should be correct.");
 				
 				    // value is changed?
@@ -123,13 +121,70 @@
 				    assert.strictEqual(entity.prop("domainInitProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
 				
 				    // binding value ok?
-				    assert.ok(bindingEntity.get("domainInitProp"), "Binding property should be initialised.");                
+				    assert.ok(bindingEntity.get("domainInitProp"), "Binding property should be initialised.");
 				    assert.strictEqual(bindingEntity.get("domainInitProp"), "ok", "Binding property should be string entity representation.");
 				
 				    done();
 				};
 				
 				master.retrieve();
+		    });
+		    
+		    test('can retrieve new persisted entity', function(done) {
+		    	master.entityId = '4';
+		    	
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                assert.strictEqual(entity.type().fullClassName(), "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "The type of entity response is not correct.");
+	                assert.strictEqual(entity.id, 4, "The id of entity response is not correct.");
+	                assert.strictEqual(entity.version, 0, "The version of entity response is not correct.");
+
+	                // properties:
+	                assert.strictEqual(entity.get("integerProp"), 43, "The entity response property is not correct.");
+
+	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
+	                // try {
+	                //     entity.get("desc");
+	                //     assert.fail("", "", "The unfetched property for entity should throw an exception.");
+	                // }
+	                // catch (ex) {
+	                //     if (ex instanceof chai.AssertionError) {
+	                //         throw ex;
+	                //     }
+	                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
+	                // }
+
+	                // try {
+	                //     entity.get("key");
+	                //     assert.fail("", "", "The unfetched property for entity should throw an exception.");
+	                // }
+	                // catch (ex) {
+	                //     if (ex instanceof chai.AssertionError) {
+	                //         throw ex;
+	                //     }
+	                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
+	                // }
+
+	                // instance meta-properties
+	                assert.strictEqual(entity.prop("integerProp").isChangedFromOriginal(), false, "The entity response instance prop should be not changedFromOriginal.");
+	                assert.strictEqual(entity.prop("integerProp").validationResult(), null, "The entity response instance prop should have empty validation result.");
+	                assert.strictEqual(entity.prop("integerProp").isRequired(), false, "The entity response instance prop should be not required.");
+	                assert.strictEqual(entity.prop("integerProp").isEditable(), true, "The entity response instance prop should be editable.");
+	                assert.strictEqual(entity.prop("integerProp").isVisible(), true, "The entity response instance prop should be visible.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("integerProp"), "Binding property should be initialised.");
+	                assert.strictEqual(bindingEntity.get("integerProp"), 43, "Binding property should be string entity representation.");
+
+	                done();
+	            };
+
+	            master.retrieve();
 		    });
 		});
 	</script>
