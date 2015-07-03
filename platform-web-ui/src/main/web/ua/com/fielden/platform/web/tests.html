@@ -1,49 +1,31 @@
-<!--
-Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-<link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+  </head>
+  <body>
+    <script>
+      WCT.loadSuites([
+        'master/test/tg-entity-master.html'
+      ]);
+      
+      /* TODO mocha.setup({ui: 'tdd', slow: 1000, timeout: 5000, htmlbase: ''});
 
-<script src="/resources/polymer/polymer-test-tools/mocha-htmltest.js"></script>
+      TODO the following tests should be migrated:
+      htmlSuite('serialisation-tests', function() {
+        htmlTest('/resources/serialisation/tg-serialiser-test.html');
+        htmlTest('/resources/serialisation/serialisation-integration-test.html');
+      });
+      
+      htmlSuite('entity-centre-tests', function() {
+    	    htmlTest('/resources/centre/tg-entity-centre-test-custom-fetch-provider-usage-centres.html');
+    	    htmlTest('/resources/centre/tg-entity-centre-test-autocompletion-of-props-that-do-not-exist-in-fetch-provider.html');
+    	  });
+      */
+    </script>
+  </body>
+</html>
 
-<script>
-
-  mocha.setup({ui: 'tdd', slow: 1000, timeout: 5000, htmlbase: ''});
-
-  htmlSuite('serialisation-tests', function() {
-    htmlTest('/resources/serialisation/tg-serialiser-test.html');
-    htmlTest('/resources/serialisation/serialisation-integration-test.html');
-  });
-
-  htmlSuite('entity-master-tests', function() {
-    htmlTest('/resources/master/tg-entity-master-test-retrieve-new-entity.html');
-    htmlTest('/resources/master/tg-entity-master-test-retrieve-new-persisted-entity.html');
-    htmlTest('/resources/master/tg-entity-master-test-change-any-prop-for-new-entity.html');
-    htmlTest('/resources/master/tg-entity-master-test-change-entity-prop.html');
-    htmlTest('/resources/master/tg-entity-master-test-change-integer-prop.html');
-    htmlTest('/resources/master/tg-entity-master-test-change-money-prop.html');
-    htmlTest('/resources/master/tg-entity-master-test-change-string-prop.html');
-    htmlTest('/resources/master/tg-entity-master-test-change-boolean-prop.html');
-    htmlTest('/resources/master/tg-entity-master-test-change-date-prop.html');
-    htmlTest('/resources/master/tg-entity-master-test-change-any-prop-into-missing-value.html');
-    htmlTest('/resources/master/tg-entity-master-test-validate-prop.html');
-    htmlTest('/resources/master/tg-entity-master-test-stale-entity-merge.html');
-    htmlTest('/resources/master/tg-entity-master-test-stale-entity-merge-with-conflict.html');
-    htmlTest('/resources/master/tg-entity-master-test-change-any-prop-simultaneously.html');
-    htmlTest('/resources/master/tg-entity-master-test-save-existing-entity.html');
-    htmlTest('/resources/master/tg-entity-master-test-save-existing-entity-after-validation.html');
-    htmlTest('/resources/master/tg-entity-master-test-save-new-entity.html');
-  });
-  
-  htmlSuite('entity-centre-tests', function() {
-    htmlTest('/resources/centre/tg-entity-centre-test-custom-fetch-provider-usage-centres.html');
-    htmlTest('/resources/centre/tg-entity-centre-test-autocompletion-of-props-that-do-not-exist-in-fetch-provider.html');
-  });
- 
-  mocha.run();
-
-</script>
+	
