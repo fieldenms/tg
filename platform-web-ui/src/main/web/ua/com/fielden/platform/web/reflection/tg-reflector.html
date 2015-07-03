@@ -1008,8 +1008,16 @@
         	if (ajaxElement.loading) {
         		// get oldest request and discard it
         		var oldestRequest = ajaxElement.activeRequests[0];
+        		// there is a need to explicitly abort iron-request instance since _discardRequest() does not perform that action:
         		oldestRequest.abort();
+        		
+        		// discards oldest request in terms of 'iron-ajax' element -- after that the request is not 'active' 
+        		//   and is removed from consideration (for e.g., 'loading' property could be recalculated) -- but this
+        		//   request is not aborted!
+        		// TODO maybe, the private API usage should be removed, and 'debouncing' should be used instead -- please, consider
         		ajaxElement._discardRequest(oldestRequest);
+        		
+        		// discard all other requests if there are any:
         		this.discardAllRequests(ajaxElement);
         	}
         }
