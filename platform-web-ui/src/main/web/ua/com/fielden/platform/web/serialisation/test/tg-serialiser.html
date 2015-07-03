@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>tg-serialiser basic tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="/resources/polymer/web-component-tester/browser.js"></script>
+	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+	
+	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+  
+    <link rel="import" href="/tg-reflector">
+    <link rel="import" href="/master_ui/Test_TgPersistentEntityWithProperties"> <!-- ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties -->
+</head>
+
+<body>
+	<tg-reflector id="reflector"></tg-reflector>
+	<test-fixture id="MasterFixture">
+    	<template>
+   		    <tg-TgPersistentEntityWithProperties-master 
+		    	id="master" 
+		    	entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" 
+		    	entity-id="new" 
+		    	current-state="EDIT">
+    		</tg-TgPersistentEntityWithProperties-master>
+    	</template>
+	</test-fixture>
+
+	<script>
+		suite('retrieval', function() {
+		    var master, reflector;
+		
+		    setup(function() {
+				master = fixture('MasterFixture');
+		      	reflector = document.querySelector('#reflector');
+		    });
+		
+		    test('works for new entity', function(done) {
+				master.retrieve();
+				
+				done();
+		    });
+		});
+	</script>
+</body>
+
+</html>
