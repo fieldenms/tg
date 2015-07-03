@@ -134,6 +134,21 @@
                  */
                 save: {
                 	type: Function
+                },
+                
+                /**
+                 * The callback to strictly use for testing -- invokes after _ajaxSaver() has finished loading ('loading' property becomes 'false').
+                 */
+                _postSaverLoadingFinished: {
+                	type: Function
+                },
+                
+                /**
+                 * Indicates whether the saver is loading.
+                 */
+                _saverLoading: {
+                	type: Boolean,
+                	observer: '_saverLoadingChanged'
                 }
         	},
 
@@ -210,6 +225,10 @@
                     // } else {
                     //     this._validator().validate(this._reset(holder));
                     // }
+                }).bind(self);
+                
+                self._postSaverLoadingFinished = (function () {
+                	console.log("_postSaverLoadingFinished");
                 }).bind(self);
             },
             
@@ -380,6 +399,13 @@
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             _getSimultaneousSaveExceptionType: function () {
                 return SimultaneousSaveException;
+            },
+            
+            _saverLoadingChanged: function (newValue, oldValue) {
+            	console.log("_saverLoadingChanged:", newValue, oldValue);
+            	if (oldValue === true && newValue === false) {
+            		this._postSaverLoadingFinished();
+            	}
             }
         };
     	

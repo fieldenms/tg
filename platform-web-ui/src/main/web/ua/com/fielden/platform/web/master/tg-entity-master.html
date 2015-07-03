@@ -13,7 +13,7 @@
         <tg-entity-validator id="validator" entity-type="[[entityType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-entity-validator>
 
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
-        <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
+        <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError" loading="{{_saverLoading}}"></iron-ajax>
         
         <content></content>
     </template>
@@ -42,7 +42,11 @@
     		_processRetrieverError: Function,
     		_processSaverResponse: Function,
     		_processSaverError: Function,
-    		
+
+    		_saverLoading: { 
+    			type: Boolean,
+    			notify: true
+    		},
          	/////////////////////////////////////////////////////////////////////////////////////////////////////////
          	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
          	/////////////////////////////////////////////////////////////////////////////////////////////////////////
