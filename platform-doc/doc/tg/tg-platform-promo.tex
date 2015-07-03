@@ -1,5 +1,6 @@
 \documentclass[a4paper,12pt,twocolumn,oneside,openright,final]{memoir}
 \usepackage[english]{babel}
+\usepackage{etex}
 \usepackage{times}
 \usepackage{setspace}
 \usepackage{inputenc}
@@ -12,82 +13,156 @@
 %for more info on hyperref package see http://en.wikibooks.org/wiki/LaTeX/Packages/Hyperref
 \usepackage[pdftex,colorlinks=true,linkcolor=blue]{hyperref}
 \usepackage{eso-pic}
+\usepackage{transparent}
 \setlength{\columnsep}{3em}
+
+\usepackage{wrapfig}
+\usepackage{subfig}
+\usepackage{alltt}
+\usepackage{moreverb}
+% tikz related packages to provide scalable graphics 
+\usepackage{tikz}
+\usetikzlibrary{calc,mindmap,backgrounds,positioning,arrows,shapes,shapes.arrows,shapes.misc,automata,petri,patterns,scopes,chains,matrix,decorations.pathmorphing,shadows,calc}
+
 
 \usepackage{geometry}
 %\geometry{hmargin={30mm,15mm},vmargin={26mm,26mm}}
 %\geometry{total={14cm,20.5cm},includehead}
 \geometry{hmargin={15mm,15mm},vmargin={20mm,20mm}}
-\geometry{mag=1414}
 
-\newcommand\BackgroundPic{
-\put(-15,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\centering
-  \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{images/00-background.png}%
-\vfill
-}}}
+\usepackage[pages=some]{background}
+
+\backgroundsetup{
+  scale=1.2,
+  angle=0,
+  opacity=0.4,
+  contents={
+    \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{images/00-background.png}} 
+}
+
+
+%\AddToShipoutPicture{
+%\put(0,0){
+%	\parbox[b][\paperheight]{\paperwidth}{%
+%		\vfill
+%		\centering
+%		{\transparent{0.1}\includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{images/00-background.png}}%
+%		\vfill
+%		}
+%	}
+%}
 
 \begin{document}
-\AddToShipoutPicture{\BackgroundPic}
+\BgThispage
 \subsection*{What is TG?}
-  Trident Genesis is a pure Java software platform for agile development of information systems in a domain-centric way.
-  It addresses all aspects of application development: data tier, logic tier and presentation tier.
+  Trident Genesis (TG) is an opinionated software development platform for development of information systems in a domain driven way.
+  It lifts up the level of abstraction to the modelling of the business domain, while automatically handling low level technical details.
+  
+  \vspace{5 mm}
+  \noindent The architecture of the business domain is often unique. 
+  This what makes companies competitive.
+  Modelling the business domain as a software information systems that facilitate the business lifecycle is the core value for customers.
+  
+  \vspace{5 mm}
+  \noindent The TG platform incorporates over 30 years of experience in delivering Enterprise grade software solutions at a software architecture level.
+  It encapsulates the complexity of the low technical details for efficient database communication, concurrent data processing, HTML5 client construction to enable software developers concentrate on the business domain architecture.
 
-\subsubsection*{Domain Driven Design}
-  Software architecture can be reused. 
-  Domain architecture is very often unique (customer specific).
-  Modeling of the business domain is the core value for customers.
-  TG Platform encapsulates the complexity of the software architecture and emphasises the domain architecture.
-  \\ \\
-  \noindent The typical development workflow includes: modeling of business domain (ontological aspect), implement core business rules and configure the user interface.
-  These steps are facilitated by high level abstractions provided by the platform, which handles the low level technical details automatically.
-  Thus, the platform enables developers to concentrate on the modeling of the business domain ensuring higher productivity and quality of the final product.
+
+  \begin{figure}[!h]
+    \vspace{0pt}
+    \centering   
+    \begin{tikzpicture}[>=latex']
+      \tikzset{
+	  outercore/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=2.3cm},
+	  core/.style={circle, shade, ball color=green!50!white, inner sep=0em, minimum size=1.3cm},
+      }      
+      \begin{scope}[opacity=0.8]
+	\node (o) at (0, 0) [outercore, opacity=0.3] {};	
+	\node (c) at (0, 0) [core] {};
+	\node at (0, -1.8cm) [text=blue!50!black] {Domain Entity Model};
+      \end{scope}
+
+      \node (ot) at (1.3, 1.5) [text=green!50!black,scale=0.8] {Entity Type};	
+      \fill [green!50!black,->,out=220,in=80] (ot.south) edge (c.north);
+      \node (ct) at (-1.3, 2) [text=blue!50!black,scale=0.8] {Metadata};	
+      \fill [blue!50!black,->,out=-100,in=150] (ct.south) edge (o.west);      
+    \end{tikzpicture} 
+    \vspace{-10pt}
+  \end{figure}
+
+  \noindent The typical development workflow includes: modelling of the business domain (declarative ontological aspect), implementing core business rules (imperative aspect) and configure the user interface.
+  These steps are facilitated by high level abstractions provided by the platform.
+  The platform enables developers to concentrate on the modelling of the business domain. 
+  This ensures higher productivity, quality and value of the final software system to the business.
+
+    \begin{figure}[!h]
+    \vspace{0pt}
+    \centering    
+    \begin{tikzpicture}[>=latex']
+      \tikzset{
+	  outercore/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=0.6cm},
+	  core/.style={circle, shade, ball color=green!50!white, inner sep=0em, minimum size=0.3cm},
+	  score/.style={circle, fill=green!50!black, inner sep=0em, minimum size=0.3cm},
+	  outer/.style={circle, fill=blue!50!white, inner sep=0em, minimum size=2.3cm},
+      }
+      \begin{scope}[opacity=0.8]
+	\node (o) at (0, -0.25) [outer, opacity=0.3] {};      
+	\fill[circle, color=green!50!white] (0, -0.25) circle (0.7cm) node [below,text=blue!50!black,yshift=1.1cm] {Synthesised Domain Entity Model};
+      \end{scope}
+      
+      \begin{scope}[scale=0.3,opacity=0.8]
+	\node (t) at (0,0) [outercore, opacity=0.5] {};	
+	\node at (0,0) [core, opacity=0.5] {};
+
+	\node (r) at (1,-1.2) [outercore, opacity=0.5] {};	
+	\node at (1,-1.2) [core, opacity=0.5] {};
+
+	\node (l) at (-1,-1.2) [outercore, opacity=0.5] {};	
+	\node at (-1,-1.2) [score] {};
+      \end{scope}
+      
+      \node (pe) at (1.3, 1.5) [text=green!50!black,scale=0.8] {Persistent Entities};      
+      \fill [green!50!black,->,out=-100, in=80] (pe.south) edge (t.north);
+      \fill [green!50!black,->,out=-100,in=80] (pe.south) edge (r.north);
+      
+      \node (se) at (-1.3, 2) [text=blue!50!black,scale=0.8] {Synthesised Entities};
+      \fill [blue!50!black,->,out=-60,in=160] (se.south) edge (l.west);
+      \fill [blue!50!black,->,out=-80,in=160] (se.south) edge (o.west);      
+    \end{tikzpicture} 
+    \vspace{-75pt}
+  \end{figure}
 
 
- \subsection*{Core features and principles}
-  TG is designed to ensure that the application is easy to use and incorporates the following principles and technologies:
+ \subsection*{Core Principles and Advantages}
+  TG is designed to ensure that the application facilitates communication between different business stakeholders and is easy to use by incorporates the following principles and approaches:
 
   \begin{itemize}
-    \item Domain centric application development with a life cycle revolving around business entities and logic.
-    \item Fully resource oriented architecture (ROA).
-    \item Excellent performance scalability (both horizontally and vertically).
-    \item TG-based applications are automatically Rich Internet applications (RIA)
-    \item Secure -- utilises Amazon S3 like approach to authentication.
-    \item Pluggable authorisation model (e.g. LDAP, DB-based), declarative security.
-    \item High level degree of configuration.
-    \item Intensive utilisation of declarative and meta programming.    
-    \item Ease of user interface (UI) construction in a domain centric way while provisioning ways for high interactivity.
-    \item Domain Query API (provides object-oriented means to query persisted domain entities) with built-in visual composer (Snappy).
-    \item RDBMS independent.
-    \item Data auditing and role-based data visibility control.
-    \item Support for separation of development roles (domain logic and UI can be developed concurrently).
-  \end{itemize}
+    \item Unique object-oriented architectural style to uniform modelling of the business domain.
+    \item Optimised for relational databases.
+    \item Direct interaction and manipulation of the business model from UI for data interrogation, analysis and reporting.
+    \item Automated business model verification through domain driven testing.
+    \item Continuous validation of the business models during the system lifecycle.
+    \item Two-factor authentication (SMS, emails).
+    \item Declarative authorisation with pluggable backends (e.g. LDAP). 
+    \item Secure HTTPS communication as a standard.
+    \item Responsive HTML5 client side, which follows Google Material Design principles.
+    \item Complete application development lifecycle (from business model to database to UI).
+    \item Cloud ready.
+    \item Single programming language (Java).
+   \end{itemize}
 
   \begin{figure}[!h]
   \centering
   \includegraphics[scale=0.22]{images/01-rulesarea-suggestionmenu.png}  
   \end{figure}
 
-\subsection*{Main advantages}
-  \begin{itemize}
-    \item Pure Java, which reduces the learning curve (no need to know HTML, CSS, JavaScript and other browser-related technologies).
-    \item Entry level development skills requirement.
-    \item Improves application maintainability: code is limited mostly to domain definition and business logic.
-    \item Increases speed of development.
-    \item Applications are RIA/ROA.
-    \item Covers a complete development life cycle -- from DB to UI.
-    \item OS and RDBMS independent.
-    \item Ensures data integrity automatically.
-    \item Ready to be extended by 3rd party developers if required.
-  \end{itemize}
-
 \subsection*{Designed for ease of use and learning by end-users and developers alike}
 
 \subsubsection*{Development Model}
   Platform ensures that all TG-based applications follow exactly the same development model leading to structural and behavioural uniformity.
   This protects developers from multitude of programming errors provisioning for getting a working solution in short terms, which can be easily supported by the original or new developers.
+
+\BgThispage
  
 \subsubsection*{Intuitive}
   From constant communication with customers, Fielden understands how their applications are utilised. 
@@ -122,7 +197,7 @@
 
   \begin{figure}[!h]
   \centering
-  \includegraphics[scale=0.18]{images/02-workspace-custom-layout.png}
+ \includegraphics[scale=0.18]{images/02-workspace-custom-layout.png}
   \end{figure}
 
 \subsubsection*{Cloud \& Scalability}
