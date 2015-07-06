@@ -1,7 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-<link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 
 <dom-module id="tg-entity-validator"> <!-- TODO hidden -->
@@ -55,7 +54,7 @@
                 };
                 
                 self._processValidatorError = function (e) {
-                	self.processError(e, "retrieve");
+                	self.processError(e, "validate");
                 };
             },
 

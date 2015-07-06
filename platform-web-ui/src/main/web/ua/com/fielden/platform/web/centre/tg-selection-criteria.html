@@ -8,7 +8,7 @@
 <polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype onRun onRunComplete getSelectedEntities getMasterEntity requireSelectedEntities requireMasterEntity">
     <template>
         <shadow></shadow>
-        <tg-criteria-validator id="validator" mitype="{{mitype}}" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]"></tg-criteria-validator>
+        <tg-criteria-validator id="validator" mi-type="[[miType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-criteria-validator>
         <core-ajax id="ajaxRetriever" url="/criteria/{{mitype}}" method="GET" handleas="json"></core-ajax>
         <core-ajax id="ajaxRunner" url="/criteria/{{mitype}}" method="PUT" handleas="json"></core-ajax>
     </template>
