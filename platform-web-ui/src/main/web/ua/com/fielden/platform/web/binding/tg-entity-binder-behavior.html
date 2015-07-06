@@ -284,15 +284,28 @@
                 
              	// calbacks, that will be bound by editor child elements:
                 self.validate = (function () {
-                    console.log("validate");
+                	var slf = this;
+                	
+                	// it is extremely important to create 'holder' outside of the debouncing construction to create immutable data 
+                	//   and pass it to debouncing function. The main reson for that is the following:
+                	//     'slf._currBindingEntity' instance inside the debounced function can be altered by the results
+                	//     of previous validations!
+	                var holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
+                	
+                	// After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
+                	//   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and 
+                	//   again will start waiting for 50 millis and so on).
+                	this.debounce('invoke-validation', function () {
+	                    console.log("validate");
+            	        // cancel the 'invoke-validation' debouncer if there is any active one:
+            	        this.cancelDebouncer('invoke-validation');
+                	    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
+                    	slf._validator().abortValidationIfAny();
 
-                    var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-                    // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
-                    // (if the entity was not modified -- _validate(holder) will start the error recovery process)
-
-                    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
-                    this._validator().abortValidationIfAny();
-                    this._validator().validate(this._reset(holder));
+        	            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
+            	        // (if the entity was not modified -- _validate(holder) will start the error recovery process)
+                    	slf._validator().validate(slf._reset(holder));
+                	}, 50);
                 }).bind(self);
              	
                 self.doNotValidate = (function () {
