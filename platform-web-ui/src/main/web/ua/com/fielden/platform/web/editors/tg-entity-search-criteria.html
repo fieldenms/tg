@@ -573,7 +573,8 @@
                  */
                 abortSearch: function () {
                 	var reflector = this.$.serialiser.$.reflector;
-                	reflector.discardAllRequests(this.$.ajaxSearcher);
+                	var numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSearcher);
+                	console.warn("abortSearch: number of aborted requests =", numberOfAbortedRequests);
                 },
 
                 /* A function responsible for determining tooltip text, alternating between property and value descriptions. */

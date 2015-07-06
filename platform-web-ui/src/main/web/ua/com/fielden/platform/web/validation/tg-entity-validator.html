@@ -77,7 +77,8 @@
              */
             abortValidationIfAny: function() {
             	var reflector = this.$.serialiser.$.reflector;
-            	reflector.discardAllRequests(this.$.ajaxSender);
+            	var numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSender);
+            	console.warn("abortValidationIfAny: number of aborted requests =", numberOfAbortedRequests);
             },
             
         	/**
