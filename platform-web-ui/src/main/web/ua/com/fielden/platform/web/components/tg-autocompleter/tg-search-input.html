@@ -5,7 +5,9 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/components/tg-autocompleter/tg-search-result.html">
 
 <dom-module id="tg-search-input">
 
@@ -29,12 +31,9 @@
         }
         
         paper-spinner {
-            width: 16px;
+            width: 17px;
             height: 16px;
-            padding-left: 4px;
             padding-right: 2px;
-            padding-top: 2px;
-            padding-bottom: 2px;
             margin: 0px;
             --paper-spinner-layer-1-color: var(--paper-blue-500);
             --paper-spinner-layer-2-color: var(--paper-blue-500);
@@ -53,6 +52,7 @@
                 <paper-spinner active hidden$="{{!searching}}" tabIndex="-1" alt="searching..."></paper-spinner>
             </div>
         </paper-input-container>
+        <tg-search-result id="result"></tg-search-result>
     </template>
 
 </dom-module>
@@ -70,12 +70,25 @@
             },
             _search: function () {
                 this.async((function () {
+                    this.$.result.close();
                     this.searching = true;
-                    this.$.input.focus();
+                    //this.$.input.focus();
                 }).bind(this), 3);
 
                 this.async((function () {
                     this.searching = false;
+                    var result = this.$.result;
+                    result.values = [{
+                        key: 'KEY 1',
+                        desc: "some description for key 1"
+                    }, {
+                        key: 'KEY 2',
+                        desc: "some description for key 2"
+                    }];
+                    this.async(function () {
+                        result.open();
+                    });
+
                 }).bind(this), 3000);
             }
         });
