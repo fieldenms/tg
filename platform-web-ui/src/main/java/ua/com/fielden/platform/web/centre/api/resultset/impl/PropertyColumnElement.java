@@ -109,7 +109,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         attrs.put("property", this.propertyName()); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
         attrs.put("width", width + "px");
         if (this.action.isPresent() && this.action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && this.action.get().isMasterInvocationAction()) {
-            attrs.put("action", "{{showMaster}}");
+            attrs.put("action", "[[_showMaster]]");
         }
         attrs.put("type", egiRepresentationFor(DynamicEntityClassLoader.getOriginalType(this.propertyType)));
         attrs.put("columnTitle", this.titleDesc.getKey());

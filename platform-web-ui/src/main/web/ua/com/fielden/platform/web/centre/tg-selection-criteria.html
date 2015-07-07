@@ -5,7 +5,7 @@
 <link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
 <link rel="import" href="/resources/centre/tg-criteria-validator.html">
 
-<polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype onRun onRunComplete getSelectedEntities getMasterEntity requireSelectedEntities requireMasterEntity">
+<polymer-element name="tg-selection-criteria" extends="tg-entity-binder" attributes="mitype postRun postRunComplete getSelectedEntities getMasterEntity requireSelectedEntities requireMasterEntity">
     <template>
         <shadow></shadow>
         <tg-criteria-validator id="validator" mi-type="[[miType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-criteria-validator>
@@ -84,9 +84,9 @@
                 var self = this;
                 self.super();
 
-                self.onRunDefault = self.onRunDefault.bind(self);
+                self.postRunDefault = self.postRunDefault.bind(self);
                 self.createContextHolder = self.createContextHolder.bind(self);
-                self.onRunDefaultError = self.onRunDefaultError.bind(self);
+                self.postRunDefaultError = self.postRunDefaultError.bind(self);
 
                 self.$.ajaxRunner.addEventListener('core-response', function (e) {
                 	self._processResponse(e, "run", function (entityAndCustomObject) {
@@ -100,16 +100,10 @@
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
                         var summary = customObject.summary;
 
-                        self.onRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities, summary);
+                        self.postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities, summary);
                 	}, function (errorResult) {
-                		self.onRunDefaultError(errorResult);
+                		self.postRunDefaultError(errorResult);
                 	});
-                });
-
-                self.$.ajaxRunner.addEventListener('core-complete', function (e) {
-                    if (e.detail.xhr.status === 200) {
-                        self.onRunComplete();
-                    }
                 });
             },
 
@@ -205,11 +199,6 @@
             },
 
             /////////////////////////////// RUN ACTION ///////////////////////////////
-            /**
-             * Default implementation for onRunComplete callback.
-             */
-            onRunComplete: function () {},
-
             _validatePageCount: function () {
                 if (this.pageCount === null) {
                     throw "Do not execute methods firstPage(), nextPage() etc. before the method run().";
@@ -332,7 +321,7 @@
                 self._validator().abortValidationIfAny();
 
                 // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                //            This check will be done on server -- and appropriate onRunDefault callback will be triggered.
+                //            This check will be done on server -- and appropriate postRunDefault callback will be triggered.
                 self._runModifiedProperties(
                 	self._createContextHolderForRunning(function() {
                 			return self._reset(self.persistedModifiedPropertiesHolder);
@@ -377,9 +366,9 @@
             },
 
             /**
-             * Default implementation for onRun callback.
+             * Default implementation for postRun callback.
              */
-            onRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities, summary) {
+            postRunDefault: function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities, summary) {
                 this.propertyModel = this.createPropertyModel(metaValues);
                 this._isCentreChanged = isCentreChanged;
 
@@ -390,16 +379,16 @@
 
                 this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                 // custom external action
-                this.onRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
 
                 this.pageNumberUpdated = this.pageNumber;
                 this.pageCountUpdated = this.pageCount;
             },
             
             /**
-             * Default implementation for unsuccessful onRun callback.
+             * Default implementation for unsuccessful postRun callback.
              */
-            onRunDefaultError: function (errorResult) {
+            postRunDefaultError: function (errorResult) {
             	// This function will be invoked after server-side error appear.
             	console.warn("SERVER ERROR: ", errorResult);
             },

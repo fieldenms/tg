@@ -4,75 +4,276 @@
     (function () {
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
     	Polymer.TgBehaviors.TgEntityCentreBehaviorImpl = {
-            publish: {
-            	// TODO PUBLIC API attributes="entityType mitype uuid getMasterEntity postRetrieved moduleId"
+            properties: {
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These mandatory properties must be specified in attributes, when constructing the element instance. //
+            	// No default values are allowed in this case.														   //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	
                 /**
                  * The entity type for which this entity centre is created.
                  */
-                entityType: null
+                entityType: {
+                	type: String
+                },
+                
+                /**
+                 * The menu item type, that identifies this entity centre.
+                 */
+                miType: {
+                	type: String
+                },
+                
+                /**
+                 * Universal identifier of this element instance (used for pub / sub communication).
+                 *
+                 * Should be given from the outside of the element.
+                 */
+                uuid: {
+                	type: String
+                },
+                
+                /**
+                 * The function to return 'master' entity (if this entity centre is dependent, i.e. the part of some compound master).
+                 */
+                getMasterEntity: {
+                	type: Function
+                },
+                
+                /**
+                 * Custom callback that will be invoked after successfull retrieval of selection criteria entity.
+                 *
+                 * arguments: entity, bindingEntity, customObject
+                 */
+                postRetrieved: {
+                	type: Function
+                },
+                
+				/**
+				 * The module where the centre is located.
+				 *
+				 * This parameter is populated during dynamic loading of the centre.
+				 */
+                moduleId: {
+            		type: String
+            	},
+            	
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
+            	//   alternatively, computing function needs to be specified). 									       //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
+            	/**
+            	 * The holder of EGI entities that 'should be updated'.
+            	 */
+                _entitiesThatShouldBeUpdated: {
+                	type: Array,
+                	value: null
+                },
+                
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            	//   prefix. 																				           //
+            	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+            	//   populate their default values in ready callback (to have these values populated in children)!     //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
+            	_saverDisabled: {
+            		type: Boolean,
+            		computed: '_computeSaverDisabled()' // TODO complete this property!
+            	},
+            	_discarderDisabled: {
+            		type: Boolean,
+            		computed: '_computeDiscarderDisabled()' // TODO complete this property!
+            	},
+            	
+            	_url: {
+             		type: String,
+             		computed: '_computeUrl(miType)'
+             	},
+            	
+            	/**
+            	 * TODO provide documentation
+            	 */
+                _selectedView: {
+                	type: Number
+                },
+                
+            	/**
+            	 * TODO provide documentation
+            	 */
+                _selectedPage: {
+                	type: Number
+                },
+                
+                /**
+                 * The function that is invoked after 'Run' action has been completed.
+                 */
+                _postRun: {
+                	type: Function
+                },
+                
+                /**
+                 * The action to be invoked on EGI's 'edit' button.
+                 */
+                _editAction: {
+                	type: Function
+                },
+                
+                /**
+                 * The action to be invoked on EGI's 'new' button.
+                 */
+                _newAction: {
+                	type: Function
+                },
+                
+                /**
+                 * The action to be bound to 'tg-primary-instance-action'.
+                 */
+                _showMaster: {
+                	type: Function
+                }
             },
-
-            selectedView: 0,
-            selectedPage: 0,
-
+            
+            _computeSaverDisabled: function () {
+            	return !this.canSave($.selection_criteria._isCentreChanged);
+            },
+            
+            computeDiscarderDisabled: function () {
+            	return !this.canDiscard($.selection_criteria._isCentreChanged);
+            },
+            
             /**
              * Initialisation block. It has all children web components already initialised.
              */
             ready: function () {
                 var self = this;
-                self.super();
+                
+                self._selectedView = 0;
+                self._selectedPage = 0;
 
-                self.onRun = self.onRun.bind(self);
-                self.getSelectedEntities = self.getSelectedEntities.bind(self);
-                self._postSavedDefaultError = self._postSavedDefaultError.bind(self);
-                self.onDiscardedDefaultError = self.onDiscardedDefaultError.bind(self);
-
-                self.$.ajaxSaver.addEventListener('core-response', function (e) {
+                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
+                    // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+                    if (criteriaEntity.isValid()) {
+                        if (typeof summary !== 'undefined') {
+                            this.$.egi.totals = summary;
+                        }
+                        if (isRefreshingConcreteEntities) {
+                            this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this._entitiesThatShouldBeUpdated);
+                        } else {
+                            this.$.egi.entities = resultEntities;
+                            this.$.egi.renderingHints = renderingHints;
+                            if (this._triggerRun && this._selectedView === 0) {
+                                this.async(function () {
+                                    this._selectedView = 1;
+                                    this._selectedPage = 1;
+                                }, null, 100);
+                                this._triggerRun = false;
+                            }
+                        }
+                    }
+                }).bind(self);
+                
+                self._getSelectedEntities = (function () {
+                    return this.$.egi.getSelectedEntities();
+                }).bind(self);
+                
+                self._processSaverResponse = function (e) {
                 	self.$.selection_criteria._processResponse(e, "save", function (okString) {
                         console.log("CENTRE SAVED", okString);
 
                         self.retrieve();
                     }, function (errorResult) {
-                		self._postSavedDefaultError(errorResult);
+                        // This function will be invoked after server-side error appear.
+                        console.warn("SERVER ERROR: ", errorResult);
                     });
-                });
-                self.$.ajaxDiscarder.addEventListener('core-response', function (e) {
+                };
+                self._processSaverError = function (e) {
+                	self.$.selection_criteria._processError(e, "save");
+                };
+                
+                self._processDiscarderResponse = function (e) {
                 	self.$.selection_criteria._processResponse(e, "discard", function (okString) {
                         console.log("CENTRE DISCARDED", okString);
 
                         self.retrieve();
                     }, function (errorResult) {
-                        self.onDiscardedDefaultError(errorResult);
+                        // This function will be invoked after server-side error appear.
+                        console.warn("SERVER ERROR: ", errorResult);
                     });
-                });
-
-                self.editAction = self.editAction.bind(self);
-                self.newAction = self.newAction.bind(self);
-                self.showMaster = self.showMaster.bind(self);
-                self.getContext = self.getContext.bind(self);
-                self.onFunctionalEntitySaved = self.onFunctionalEntitySaved.bind(self);
-                self.createContextHolder = self.createContextHolder.bind(self);
+                };
+                self._processDiscarderError = function (e) {
+                	self.$.selection_criteria._processError(e, "discard");
+                };
+                
+                self._editAction = (function () {
+                    var self = this;
+                    postal.publish({
+                        channel: "centre",
+                        topic: "edit.start",
+                        data: {
+                            entity: self._getContext(),
+                            uuid: self.$.selection_criteria.uuid,
+                            moduleId: self.moduleId
+                        }
+                    });
+                }).bind(self);
+                
+                self._newAction = (function () {
+                    var self = this;
+                    postal.publish({
+                        channel: "centre",
+                        topic: "new.start",
+                        data: {
+                            entityType: self.entityType,
+                            simpleEntityType: self._simpleEntityType(),
+                            uuid: self.$.selection_criteria.uuid,
+                            moduleId: self.moduleId
+                        }
+                    });
+                }).bind(self);
+                
+                self._showMaster = (function (entity) {
+                    var self = this;
+                    postal.publish({
+                        channel: "centre",
+                        topic: "edit.start",
+                        data: {
+                            entity: entity,
+                            uuid: self.$.selection_criteria.uuid,
+                            moduleId: self.moduleId
+                        }
+                    });
+                }).bind(self);
+                
+                self._getContext = (function () {
+                    if (this._getSelectedEntities().length > 0) {
+                        return this._getSelectedEntities()[0];
+                    }
+                    return null;
+                }).bind(self);
+                
+                self._postFunctionalEntitySaved = (function (potentiallySavedEntity, selectedEntitiesInContext) {
+                    if (potentiallySavedEntity.isValid()) {
+                        // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
+                        this.refreshEntities(selectedEntitiesInContext);
+                    }
+                }).bind(self);
+                
+                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+                    return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
+                }).bind(self);
             },
 
-            /**
-             * Default implementation for unsuccessful onSave callback.
-             */
-            _postSavedDefaultError: function (errorResult) {
-                // This function will be invoked after server-side error appear.
-                console.warn("SERVER ERROR: ", errorResult);
-            },
-
-            /**
-             * Default implementation for unsuccessful onDiscard callback.
-             */
-            onDiscardedDefaultError: function (errorResult) {
-                // This function will be invoked after server-side error appear.
-                console.warn("SERVER ERROR: ", errorResult);
-            },
-
-            selectPage: function (e, detail, source) {
-                this.selectedPage = this.selectedView;
+            _selectPage: function (e, detail, source) {
+                this._selectedPage = this._selectedView;
             },
 
             attached: function () {
@@ -106,7 +307,7 @@
                     channel: "centre_" + self.$.selection_criteria.uuid,
                     topic: "detail.saved",
                     callback: function (data, envelope) {
-                        self.onFunctionalEntitySaved(data.entity, data.selectedEntitiesInContext);
+                        self._postFunctionalEntitySaved(data.entity, data.selectedEntitiesInContext);
                     }
                 });
             },
@@ -117,61 +318,14 @@
                 this.masterNewListener.unsubscribe();
             },
 
-            showMaster: function (entity) {
-                var self = this;
-                postal.publish({
-                    channel: "centre",
-                    topic: "edit.start",
-                    data: {
-                        entity: entity,
-                        uuid: self.$.selection_criteria.uuid,
-                        moduleId: self.moduleId
-                    }
-                });
-            },
-            newAction: function () {
-                var self = this;
-                postal.publish({
-                    channel: "centre",
-                    topic: "new.start",
-                    data: {
-                        entityType: self.entityType,
-                        simpleEntityType: self.simpleEntityType(),
-                        uuid: self.$.selection_criteria.uuid,
-                        moduleId: self.moduleId
-                    }
-                });
-            },
-            editAction: function () {
-                var self = this;
-                postal.publish({
-                    channel: "centre",
-                    topic: "edit.start",
-                    data: {
-                        entity: self.getContext(),
-                        uuid: self.$.selection_criteria.uuid,
-                        moduleId: self.moduleId
-                    }
-                });
-            },
             deleteAction: function () {
                 console.log("The selected entities must be deleted here!");
             },
-            getContext: function () {
-                if (this.$.egi.getSelectedEntities().length > 0) {
-                    return this.$.egi.getSelectedEntities()[0];
-                }
-                return null;
-            },
-
-            getSelectedEntities: function () {
-                return this.$.egi.getSelectedEntities();
-            },
-
+            
             /**
              * Returns simple entity type name.
              */
-            simpleEntityType: function () {
+            _simpleEntityType: function () {
                 var ind = this.entityType.lastIndexOf(".") + 1;
                 return this.entityType.substring(ind);
             },
@@ -190,7 +344,7 @@
                 this.$.egi.clearSelection();
                 this.$.egi.collapseAllCards();
                 this.$.selection_criteria.run();
-                this.triggerRun = true;
+                this._triggerRun = true;
             },
 
             /**
@@ -228,8 +382,6 @@
                 this.$.selection_criteria.prevPage();
             },
 
-            entitiesThatShouldBeUpdated: null,
-
             /**
              * Starts the process of refreshing the specified 'entities'.
              *
@@ -239,8 +391,8 @@
              */
             refreshEntities: function (entities) {
                 if (entities !== null && entities.length > 0) {
-                    this.entitiesThatShouldBeUpdated = entities;
-                    this.$.selection_criteria.refreshEntities(this.entitiesThatShouldBeUpdated);
+                    this._entitiesThatShouldBeUpdated = entities;
+                    this.$.selection_criteria.refreshEntities(this._entitiesThatShouldBeUpdated);
                 } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
                     this.currentPage();
                 }
@@ -260,28 +412,6 @@
             },
             canNotCurrent: function (pageNumber, pageCount) {
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canCurrent(pageNumber, pageCount);
-            },
-
-            onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
-                // console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                if (criteriaEntity.isValid()) {
-                    if (typeof summary !== 'undefined') {
-                        this.$.egi.totals = summary;
-                    }
-                    if (isRefreshingConcreteEntities) {
-                        this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this.entitiesThatShouldBeUpdated);
-                    } else {
-                        this.$.egi.entities = resultEntities;
-                        this.$.egi.renderingHints = renderingHints;
-                        if (this.triggerRun && this.selectedView === 0) {
-                            this.async(function () {
-                                this.selectedView = 1;
-                                this.selectedPage = 1;
-                            }, null, 100);
-                            this.triggerRun = false;
-                        }
-                    }
-                }
             },
 
             /**
@@ -316,16 +446,12 @@
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true;
             },
 
-            onFunctionalEntitySaved: function (potentiallySavedEntity, selectedEntitiesInContext) {
-                if (potentiallySavedEntity.isValid()) {
-                    // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
-                    this.refreshEntities(selectedEntitiesInContext);
-                }
-            },
-
-            createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
-                return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
-            }
+        	/**
+        	 * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
+        	 */
+        	_computeUrl: function (miType) {
+        		return "/centre/" + miType;
+        	}
         };
         
 		Polymer.TgBehaviors.TgEntityCentreBehavior = [
