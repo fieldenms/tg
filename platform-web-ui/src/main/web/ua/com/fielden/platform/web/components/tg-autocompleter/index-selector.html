@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<html>
+
+<head>
+
+    <title>iron-selector</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
+    <link rel="import" href="/resources/polymer/paper-styles/demo-pages.html">
+
+    <link rel="import" href="/resources/polymer/iron-selector/iron-selector.html">
+
+    <style is="custom-style">
+        iron-selector > * {
+            padding: 8px;
+        }
+        
+        .horizontal-section {
+            padding: 0;
+        }
+        
+        .iron-selected {
+            background-color: var(--google-blue-500);
+            color: white;
+        }
+    </style>
+
+</head>
+
+<body unresolved>
+
+    <template is="dom-bind">
+        <div class="horizontal center-justified layout">
+            <div>
+                <h3>Basic</h3>
+                <div class="horizontal-section">
+                    <iron-selector selected="0" id="singleSelector">
+                        <div>Item 0</div>
+                        <div>Item 1</div>
+                        <div>Item 2</div>
+                        <div>Item 3</div>
+                        <div>Item 4</div>
+                    </iron-selector>
+                </div>
+            </div>
+
+            <div>
+                <h3>Multi-select</h3>
+                <div class="horizontal-section">
+                    <iron-selector multi id='multiSelector' attr-for-selected="value">
+                        <div value="v1">Item 0</div>
+                        <div value="v2">Item 1</div>
+                        <div value="v3">Item 2</div>
+                        <div value="v4">Item 3</div>
+                        <div value="v5">Item 4</div>
+                    </iron-selector>
+                </div>
+            </div>
+        </div>
+    </template>
+</body>
+<script>
+    var t = document.querySelector('template');
+
+    // The dom-change event signifies when the template has stamped its DOM.
+    t.addEventListener('dom-change', function () {
+        console.log("dom changed");
+        // auto-binding template is ready.
+        var s = document.getElementById('singleSelector');
+        s.addEventListener("iron-activate", function (event) {
+            console.log("event: ", event);
+        });
+
+        var ms = document.getElementById('multiSelector');
+        ms.addEventListener("iron-select", function (event) {
+            var key = event.detail.item.getAttribute("value");
+            console.log('multi selector selected item: ', key);
+        });
+        ms.addEventListener("iron-deselect", function (event) {
+            var key = event.detail.item.getAttribute("value");
+            console.log('multi selector unselected item: ', key);
+        });
+        ms.addEventListener("iron-activate", function (event) {
+            var key = event.detail.item.getAttribute("value");
+            console.log("multi selector activate event: ", key);
+        });
+
+    });
+</script>
+
+</html>
