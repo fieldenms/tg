@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.meta;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.fielden.platform.eql.s1.elements.Expression1;
 
 public class ComponentTypePropInfo extends AbstractPropInfo {
@@ -20,8 +23,18 @@ public class ComponentTypePropInfo extends AbstractPropInfo {
     }
 
     @Override
-    public AbstractPropInfo resolve(final String dotNotatedSubPropName) {
-        return dotNotatedSubPropName != null ? getPropEntityInfo().resolve(dotNotatedSubPropName) : this;
+    public ResolutionPath resolve(final String dotNotatedSubPropName) {
+        ResolutionPath result = new ResolutionPath();
+
+        if (dotNotatedSubPropName != null) {
+            result.add(getPropEntityInfo().resolve(dotNotatedSubPropName));
+        } else {
+            result.add(this);
+        }
+
+        //return dotNotatedSubPropName != null ? getPropEntityInfo().resolve(dotNotatedSubPropName) : this;
+
+        return result;
     }
 
     @Override

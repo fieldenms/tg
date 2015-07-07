@@ -7,7 +7,7 @@ public class EntityTypePropInfo extends AbstractPropInfo {
 
     @Override
     public String toString() {
-        return super.toString() + ": " + propEntityInfo.javaType().getSimpleName();
+        return super.toString() + propEntityInfo.javaType().getSimpleName();
     }
 
     public EntityTypePropInfo(final String name, final EntityInfo parent, final EntityInfo propEntityInfo, final Expression1 expression) {
@@ -20,8 +20,16 @@ public class EntityTypePropInfo extends AbstractPropInfo {
     }
 
     @Override
-    public AbstractPropInfo resolve(final String dotNotatedSubPropName) {
-        return dotNotatedSubPropName != null ? getPropEntityInfo().resolve(dotNotatedSubPropName) : this;
+    public ResolutionPath resolve(final String dotNotatedSubPropName) {
+        ResolutionPath result = new ResolutionPath();
+        
+        if (dotNotatedSubPropName != null) {
+            result.add(getPropEntityInfo().resolve(dotNotatedSubPropName));
+        } else {
+            result.add(this);
+        }
+
+        return result;
     }
 
     @Override

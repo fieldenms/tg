@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.eql.s2.elements;
 
-import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.ResolutionPath;
 
 public class EntProp2 implements ISingleOperand2 {
     private final String name;
     private final ISource2 source;
-    private final AbstractPropInfo resolution;
+    private final ResolutionPath resolution;
     private final Expression2 expression;
 
-    public EntProp2(final String name, final ISource2 source, final AbstractPropInfo resolution, final Expression2 expression) {
+    public EntProp2(final String name, final ISource2 source, final ResolutionPath resolution, final Expression2 expression) {
         this.name = name;
         this.source = source;
         this.resolution = resolution;
@@ -18,7 +18,7 @@ public class EntProp2 implements ISingleOperand2 {
 
     @Override
     public String toString() {
-        return " name = " + name + ";\n source = " + source + ";\n resolution = " + resolution;
+        return "\n\n name = " + name + ";\n source = " + source + ";\n resolution = " + resolution;
     }
 
     @Override

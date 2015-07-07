@@ -9,7 +9,7 @@ public abstract class AbstractPropInfo implements IResolvable {
 
     @Override
     public String toString() {
-        return parent + "." + name + (expression == null ? "; no expr " : " has expr ");
+        return String.format("%-32s%-12s", parent + "." + name, (expression == null ? "no expr" : "has expr"));
     }
 
     public AbstractPropInfo(final String name, final EntityInfo parent, final Expression1 expression) {

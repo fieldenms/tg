@@ -76,11 +76,11 @@ public class EntQuery1 implements ISingleOperand1<EntQuery2> {
         final TransformatorToS2 localResolver = resolver.produceBasedOn();
 
         for (final ISource1<? extends ISource2> source : sources.getAllSources()) {
-            localResolver.addSource(source);
+            localResolver.transformAndAccumulateSource(source);
         }
 
-        final Conditions1 enhancedConditions = enhanceConditions(conditions, resolver.getFilter(), resolver.getUsername(), sources.getMain(), resolver.getEntQueryGenerator1());
-        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), enhancedConditions.transform(localResolver), //
+        //final Conditions1 enhancedConditions = enhanceConditions(conditions, resolver.getFilter(), resolver.getUsername(), sources.getMain(), resolver.getEntQueryGenerator1());
+        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources.transform(localResolver), conditions/*enhancedConditions*/.transform(localResolver), //
         yields.transform(localResolver), groups.transform(localResolver), orderings.transform(localResolver));
 
         return new EntQuery2(entQueryBlocks, resultType, category, fetchModel);
