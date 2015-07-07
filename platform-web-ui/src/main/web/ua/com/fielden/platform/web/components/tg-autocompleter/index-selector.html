@@ -49,12 +49,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <div>
                 <h3>Basic</h3>
                 <div class="horizontal-section">
-                    <iron-selector selected="0" id="singleSelector">
-                        <div>Item 0</div>
-                        <div>Item 1</div>
-                        <div>Item 2</div>
-                        <div>Item 3</div>
-                        <div>Item 4</div>
+                    <iron-selector selected="v2" id="singleSelector" attr-for-selected="value">
+                        <div value="v1">Item 0</div>
+                        <div value="v2">Item 1</div>
+                        <div value="v3">Item 2</div>
+                        <div value="v4">Item 3</div>
+                        <div value="v5">Item 4</div>
                     </iron-selector>
                 </div>
             </div>
@@ -82,8 +82,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         console.log("dom changed");
         // auto-binding template is ready.
         var s = document.getElementById('singleSelector');
+        s.addEventListener("iron-select", function (event) {
+            var key = event.detail.item.getAttribute("value");
+            console.log('single selector selected item: ', key);
+        });
+        s.addEventListener("iron-deselect", function (event) {
+            var key = event.detail.item.getAttribute("value");
+            console.log('single selector unselected item: ', key);
+        });
         s.addEventListener("iron-activate", function (event) {
-            console.log("event: ", event);
+            console.log("multi selector activate event: ", event);
         });
 
         var ms = document.getElementById('multiSelector');
@@ -96,8 +104,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             console.log('multi selector unselected item: ', key);
         });
         ms.addEventListener("iron-activate", function (event) {
-            var key = event.detail.item.getAttribute("value");
-            console.log("multi selector activate event: ", key);
+            console.log("multi selector activate event: ", event);
         });
 
     });
