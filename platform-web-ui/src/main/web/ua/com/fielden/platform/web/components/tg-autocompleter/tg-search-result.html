@@ -1,0 +1,48 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+
+<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/resources/polymer/iron-fit-behavior/iron-fit-behavior.html">
+
+<dom-module id="tg-search-result">
+
+    <style>
+        :host {
+            background: white;
+            color: black;
+            padding: 24px;
+            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+        }
+    </style>
+
+    <template>
+        <template is="dom-repeat" items="{{values}}">
+            <div>
+                <div>Key: <span>{{item.key}}</span>
+                </div>
+                <div>Desc: <span>{{item.desc}}</span>
+                </div>
+            </div>
+        </template>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+            is: 'tg-search-result',
+            behaviors: [Polymer.IronOverlayBehavior, Polymer.IronFitBehavior],
+            properties: {
+                values: {
+                    type: Array,
+                    value: function () {
+                        value: function () {
+                            return [];
+                        }
+                    }
+                }
+            }
+        });
+    })();
+</script>

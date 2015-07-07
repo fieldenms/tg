@@ -1,0 +1,85 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+
+<dom-module id="tg-search-input">
+
+    <style>
+        .input-layout {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+        }
+        
+        .search-button {
+            align-self: flex-end;
+            --iron-icon-height: 16px;
+            --iron-icon-width: 16px;
+            padding-left: 4px;
+            padding-right: 2px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            height: 20px;
+            width: 20px;
+            margin: 0px;
+        }
+        
+        paper-spinner {
+            width: 16px;
+            height: 16px;
+            padding-left: 4px;
+            padding-right: 2px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            margin: 0px;
+            --paper-spinner-layer-1-color: var(--paper-blue-500);
+            --paper-spinner-layer-2-color: var(--paper-blue-500);
+            --paper-spinner-layer-3-color: var(--paper-blue-500);
+            --paper-spinner-layer-4-color: var(--paper-blue-500);
+        }
+    </style>
+
+    <template>
+
+        <paper-input-container id="decorator">
+            <label>search</label>
+            <div class="input-layout">
+                <input id="input" is="iron-input" type="text" />
+                <div>
+                    <paper-icon-button hidden$="{{searching}}" on-tap="_search" icon="search" class="search-button" tabIndex="-1"></paper-icon-button>
+                    <paper-spinner active hidden$="{{!searching}}" tabIndex="-1" alt="searching..."></paper-spinner>
+                </div>
+            </div>
+        </paper-input-container>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+            is: 'tg-search-input',
+            properties: {
+                searching: {
+                    type: Boolean,
+                    value: false,
+                    notify: false
+                }
+            },
+            _search: function () {
+                this.async((function () {
+                    this.searching = true;
+                    this.$.input.focus();
+                }).bind(this), 3);
+
+                this.async((function () {
+                    this.searching = false;
+                }).bind(this), 3000);
+            }
+        });
+    })();
+</script>
