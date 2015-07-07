@@ -23,7 +23,6 @@ import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Injector;
