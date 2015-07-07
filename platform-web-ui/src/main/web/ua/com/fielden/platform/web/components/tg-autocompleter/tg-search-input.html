@@ -49,10 +49,8 @@
             <label>search</label>
             <div class="input-layout">
                 <input id="input" is="iron-input" type="text" />
-                <div>
-                    <paper-icon-button hidden$="{{searching}}" on-tap="_search" icon="search" class="search-button" tabIndex="-1"></paper-icon-button>
-                    <paper-spinner active hidden$="{{!searching}}" tabIndex="-1" alt="searching..."></paper-spinner>
-                </div>
+                <paper-icon-button hidden$="{{searching}}" on-tap="_search" icon="search" class="search-button" tabIndex="-1"></paper-icon-button>
+                <paper-spinner active hidden$="{{!searching}}" tabIndex="-1" alt="searching..."></paper-spinner>
             </div>
         </paper-input-container>
     </template>
