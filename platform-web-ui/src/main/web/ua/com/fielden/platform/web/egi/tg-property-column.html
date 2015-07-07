@@ -1,36 +1,45 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/actions/tg-ui-action.html">
+<!--<link rel="import" href="/resources/actions/tg-ui-action.html">-->
 
-<polymer-element name="tg-property-column" attributes="property type width columnTitle columnDesc action" hidden>
+<dom-module id="tg-property-column">
     <template>
         <content id="action_selector" select="tg-ui-action" hidden></content>
         <content id="summary_selection" select="tg-summary-property" hidden></content>
     </template>
-    <script>
-        (function () {
-            Polymer({
-                publish: {
-                    action: null
-                },
-                ready: function () {
-                    Array.prototype.forEach.call(this.$.summary_selection.getDistributedNodes(), function (item) {
-                        if (!this.summary) {
-                            this.summary = [];
-                        }
-                        this.summary.push(item);
-                    }.bind(this));
-                    this.runAction = this.runAction.bind(this);
-                    this.customAction = this.$.action_selector.getDistributedNodes().length > 0 ? this.$.action_selector.getDistributedNodes()[0] : null;
-                },
-                runAction: function (entity) {
-                    if (this.action) {
-                        this.action(entity);
-                    } else if (this.customAction) {
-                        this.customAction.currentEntity = entity;
-                        this.customAction.run();
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-property-column",
+
+            properties: {
+                property: String,
+                type: String,
+                width: String,
+                columnTitle: String,
+                columnDesc: String,
+                action: Object
+            },
+
+            ready: function () {
+                Array.prototype.forEach.call(Polymer.dom(this.$.summary_selection).getDistributedNodes(), function (item) {
+                    if (!this.summary) {
+                        this.summary = [];
                     }
+                    this.summary.push(item);
+                }.bind(this));
+                this.customAction = Polymer.dom(this.$.action_selector).getDistributedNodes().length > 0 ? Polymer.dom(this.$.action_selector).getDistributedNodes()[0] : null;
+            },
+
+            runAction: function (entity) {
+                if (this.action) {
+                    this.action(entity);
+                } else if (this.customAction) {
+                    this.customAction.currentEntity = entity;
+                    this.customAction.run();
                 }
-            });
-        })();
-    </script>
-</polymer-element>
+            }
+        });
+    })();
+</script>

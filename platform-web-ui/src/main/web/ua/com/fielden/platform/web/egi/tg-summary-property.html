@@ -1,4 +1,15 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<polymer-element name="tg-summary-property" attributes="property type width columnTitle columnDesc" noscript hidden>
-</polymer-element>
+<script>
+    Polymer({
+        is: "tg-summary-property",
+
+        properties: {
+            property: String,
+            type: String,
+            width: String,
+            columnTitle: String,
+            columnDesc: String
+        }
+    });
+</script>
