@@ -672,10 +672,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .detailIcon("/resources/images/detailed/divisionalDailyManagment.svg")
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
-                .view(null)
-                /*.menu()
-                    .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()*/
-                .done()
+                .menu()
+                    .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
                 .icon("/resources/images/accidents.svg")
