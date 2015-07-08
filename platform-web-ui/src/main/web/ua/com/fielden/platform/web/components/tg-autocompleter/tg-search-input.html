@@ -72,12 +72,15 @@
                 this.async((function () {
                     this.$.result.close();
                     this.searching = true;
-                    //this.$.input.focus();
+                    this.$.input.focus();
                 }).bind(this), 3);
 
                 this.async((function () {
                     this.searching = false;
                     var result = this.$.result;
+                    var decorator = this.$.decorator;
+                    var input = this.$.input;
+
                     result.values = [{
                         key: 'KEY 1',
                         desc: "some description for key 1"
@@ -86,10 +89,13 @@
                         desc: "some description for key 2"
                     }];
                     this.async(function () {
+                        result.style.position = 'absolute';
+                        result.style.top = (decorator.offsetHeight + input.offsetHeight) + 'px';
+                        result.style.width = decorator.offsetWidth + 'px';
                         result.open();
                     });
 
-                }).bind(this), 3000);
+                }).bind(this), 1000);
             }
         });
     })();
