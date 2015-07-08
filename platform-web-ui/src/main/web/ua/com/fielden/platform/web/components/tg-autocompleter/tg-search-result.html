@@ -1,8 +1,12 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/resources/polymer/iron-selector/iron-selector.html">
 <link rel="import" href="/resources/polymer/iron-fit-behavior/iron-fit-behavior.html">
+
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 
 <dom-module id="tg-search-result">
 
@@ -10,20 +14,132 @@
         :host {
             background: white;
             color: black;
-            padding: 24px;
+            padding: 0px;
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+        }
+        
+        .horizontal-wrap {
+            @apply(--layout-horizontal);
+            @apply(--layout-wrap);
+            padding: 0px;
+        }
+        
+        .tg-item {
+            font-size: small;
+            overflow: visible;
+            padding: 6px;
+            margin: 0px;
+        }
+        
+        .tg-item:hover {
+            cursor: pointer;
+            background: var(--paper-blue-50);
+            color: var(--paper-blue-500);
+        }
+        
+        .tg-item.iron-selected {
+            background: var(--paper-blue-500);
+            color: var(--paper-blue-50);
+        }
+        /*.iron-selected {
+            background-color: var(--paper-blue-500);
+            color: white;
+        }*/
+        
+        .key-value {
+            font-size: small;
+            min-width: 100px;
+        }
+        
+        paper-item:not(.iron-selected) .key-value-highlighted {
+            background-color: #ffff46;
+        }
+        
+        .additional-prop {
+            font-size: x-small;
+            min-width: 150px;
+            white-space: normal;
+            padding-left: 1em;
+            padding-top: 0.5em;
+            line-height: 15px;
+        }
+        
+        .prop-name {
+            font-weight: bold;
+            padding-right: 0.5em;
+        }
+        
+        .tg-snatchback-button {
+            color: #03A9F4;
+        }
+        
+        .tg-snatchback {
+            background-color: #FFFFFF;
+            color: #000;
+            min-width: 250px;
+            /*border: 1px solid #ccc;*/
+            /*border-radius: 3px;*/
+            
+            padding: 0px;
+            /*min-width: 150px;*/
+            
+            overflow: visible;
+        }
+        
+        #toolbar {
+            background: white;
         }
     </style>
 
     <template>
-        <template is="dom-repeat" items="{{values}}">
-            <div>
-                <div>Key: <span>{{item.key}}</span>
-                </div>
-                <div>Desc: <span>{{item.desc}}</span>
-                </div>
-            </div>
-        </template>
+        <iron-selector id="overlay" class="tg-snatchback" attr-for-selected="value">
+            <!-- begin of dom-repeat -->
+            <template is="dom-repeat" items="{{values}}" as="v">
+                <paper-item class="tg-item" value="{{v.key}}" noink>
+                    <div class="horizontal-wrap">
+                        <div style="font-size: 0;white-space: nowrap;">
+                            <template is="dom-repeat" items="{{_matchedParts(v.key, searchQuery)}}" as="s">
+                                <span hidden$="{{!s.matched}}" class="key-value key-value-highlighted">{{s.part}}</span>
+                                <span hidden$="{{s.matched}}" class="key-value">{{s.part}}</span>
+                            </template>
+                        </div>
+                        <div class="additional-prop">
+                            <span class="prop-name">{{_propTitleByName(v, "desc")}}:</span>
+                            <span hidden$="{{hightlightDesc}}" class="key-value">{{v.desc}}</span>
+
+                            <!-- TODO to be converted -->
+                            <!--template if="{{hightlightDesc}}">
+                            <div style="font-size: 0">
+                                <template repeat="{{d in _matchedParts(v.desc)}}">
+                                    <template if="{{d.matched}}">
+                                        <span class="key-value key-value-highlighted">{{d.part}}</span>
+                                    </template>
+                                    <template if="{{!d.matched}}">
+                                        <template repeat="{{sp in spaces(d.part)}}">
+                                            <span class="key-value">&nbsp;</span>
+                                        </template>
+                                        <span class="key-value">{{d.part}}</span>
+                                    </template>
+                                </template>
+                            </div>
+                        </template-->
+                        </div>
+                        <!--template if="{{isComposite(v)}}">
+                        <template repeat="{{p in keyMembers(v)}}">
+                            <div class="additional-prop">
+                                <span class="prop-name">{{_propTitleByName(v, p)}}:</span>
+                                <span>{{_propValueByName(v, p)}}</span>
+                            </div>
+                        </template>
+                    </template-->
+
+                    </div>
+                </paper-item>
+
+
+            </template>
+            <!-- end of dom-repeat -->
+        </iron-selector>
     </template>
 
 </dom-module>
@@ -33,15 +149,105 @@
         Polymer({
             is: 'tg-search-result',
             behaviors: [Polymer.IronOverlayBehavior, Polymer.IronFitBehavior],
+
             properties: {
+                /* Contains values to be displayed */
                 values: {
                     type: Array,
                     value: function () {
 
                         return [];
                     }
+                },
+                /* Represents the search query string that was used to find resultant values to be displayed */
+                searchQuery: {
+                    type: String,
+                    value: ''
+                },
+                /* 
+                 * This should be an attribute, which determines whether value description should hightlight the matchied parts.
+                 * It is used in cases where entity search happens by key and description (or just by description).
+                 */
+                hightlightDesc: {
+                    type: Boolean,
+                    value: false
                 }
+            },
+            /* 
+             * Method that identifies matching parts in the str for the searchQuery.
+             * Returns an array of objects representing matched and non-matched parts of the str in sequential order.
+             * It is used to identify those parts that needs to be highlighted during rendering.
+             */
+            _matchedParts: function (str, searchQuery) {
+                var parts = [];
+                var text = str.toUpperCase();
+                // if all is matched then return a single value
+                if ("\\w*" == searchQuery) {
+                    parts.push({
+                        part: str,
+                        matched: false
+                    });
+                    return parts;
+                } else if ('' == this.searchQuery) {
+                    return parts;
+                }
+
+
+                // otherwise split 
+                var searchExp = new RegExp(this.searchQuery, 'gi');
+                var match;
+                var startIndex = 0;
+                while ((match = searchExp.exec(text)) !== null) {
+                    if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
+                        var part = {
+                            part: str.substring(startIndex, match.index),
+                            matched: false
+                        };
+                        parts.push(part);
+                    }
+
+                    // record the matched part
+                    var part = {
+                        part: str.substring(match.index, searchExp.lastIndex),
+                        matched: true
+                    };
+                    parts.push(part);
+
+                    startIndex = searchExp.lastIndex;
+
+                }
+                // check if there is an unmatched part at the end
+                if (startIndex < str.length) {
+                    var part = {
+                        part: str.substring(startIndex, text.length),
+                        matched: false
+                    };
+                    parts.push(part);
+                }
+                // return the result
+                return parts;
+
+            },
+            /*
+             * Determines a title of the specified entity.propName.
+             */
+            _propTitleByName: function (entity, propName) {
+                return propName;
+
+                // TODO makes sense only in TG context
+                /*if (entity.type().prop(propName)) {
+                    return entity.type().prop(propName).title();
+                } else {
+                    return propName;
+                }*/
+            },
+            /*
+             * Obtains a value of the specified by name property for the passed in entity.
+             */
+            _propValueByName: function (entity, propName) {
+                return this.$.reflector.convert(entity.get(propName));
             }
+
         });
     })();
 </script>

@@ -204,13 +204,13 @@
                     var self = this;
 
                     self.$.ajaxSearcher.addEventListener('core-response', function (e) {
-                    	self.processResponse(e, "search", function (foundEntities) {
+                        self.processResponse(e, "search", function (foundEntities) {
                             // TODO: Need to convert matched entities to a more suiteable representation
                             self.onFound(foundEntities);
-                    	}, function (errorResult) {
-                    		self.postSearchedDefaultError(errorResult);
-                    		self.isSearching = false;
-                    	});
+                        }, function (errorResult) {
+                            self.postSearchedDefaultError(errorResult);
+                            self.isSearching = false;
+                        });
                     });
 
                     self.$.ajaxSearcher.addEventListener('core-error', function (e) {
@@ -473,14 +473,14 @@
                             // need to handle the situation with autocompletion as part of dialogs differently
                             // for this need to identify whether there is a currently open dialog
                             // in where autocompleter is part fo the dialog positioning is handled slightly differently
-                            var dialogs = document.querySelectorAll('body /deep/ paper-action-dialog');
-                            var isPartOfDialog = false;
-                            for (var index = 0; index < dialogs.length; index++) {
-                                if (dialogs[index].opened) {
-                                    isPartOfDialog = true;
-                                    break;
-                                }
-                            }
+                            //var dialogs = document.querySelectorAll('body /deep/ paper-action-dialog');
+                            //var isPartOfDialog = false;
+                            //for (var index = 0; index < dialogs.length; index++) {
+                            //    if (dialogs[index].opened) {
+                            //        isPartOfDialog = true;
+                            //        break;
+                            //    }
+                            //}
 
                             //if (isPartOfDialog === false) {
                             this.$.overlay.style.position = 'absolute';
@@ -583,9 +583,9 @@
                  * Cancels any active search request.
                  */
                 abortSearch: function () {
-                	var reflector = this.$.serialiser.$.reflector;
-                	var numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSearcher);
-                	console.warn("abortSearch: number of aborted requests =", numberOfAbortedRequests);
+                    var reflector = this.$.serialiser.$.reflector;
+                    var numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSearcher);
+                    console.warn("abortSearch: number of aborted requests =", numberOfAbortedRequests);
                 },
 
                 /* A function responsible for determining tooltip text, alternating between property and value descriptions. */

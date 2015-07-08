@@ -1,12 +1,15 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
-<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+
 <link rel="import" href="/resources/components/tg-autocompleter/tg-search-result.html">
 
 <dom-module id="tg-search-input">
@@ -60,6 +63,17 @@
 
 <script>
     (function () {
+        /* several helper functions for string manipulation */
+        function escapeRegExp(str) {
+            return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+        }
+
+        function replaceAll(find, replace, str) {
+            // 'g' is the flag for global match,
+            // 'i' is the flag to ignore the case during matching
+            return str.replace(new RegExp(escapeRegExp(find), 'g', 'i'), replace);
+        }
+
         Polymer({
             is: 'tg-search-input',
             properties: {
@@ -67,38 +81,88 @@
                     type: Boolean,
                     value: false,
                     notify: false
+                },
+                _searchQuery: {
+                    type: Boolean,
+                    value: ''
                 }
             },
+            /**
+             * Cleans input text.
+             */
+            _prepInput: function (str) {
+                if (str) {
+                    return str.replace(/\*\*/g, "*");
+                }
+                return str;
+            },
+
             _search: function () {
+                // need to implement the actuall search 
+                // what is the query string?
+                var inputText = this._prepInput(this.$.input.value);
+
+                // prep this.searchQuery for highlighting of the matching parts in the search result
+                if (!inputText) {
+                    this._searchQuery = "";
+                    this.searching = false;
+                } else {
+                    this._searchQuery = replaceAll('*', '\\w*', inputText.toUpperCase());
+                }
+
+                // clear selection in the overlay, which could have been left there from last search
+                //this.$.suggestions.selected = null;
+
+                // also need to remove matched values from the last search
+                // in preparation for new search result
+                //while (this.matchedValues.length > 0) {
+                //    this.matchedValues.pop();
+                //}
+
+                // collect new matching values
                 var self = this;
-                self.async((function () {
-                    self.$.result.close();
-                    self.searching = true;
-                    self.$.input.focus();
-                }).bind(self), 3);
+                var result = self.$.result;
+                result.searchQuery = self._searchQuery;
+                var container = self.$.container;
+                var decorator = self.$.decorator;
 
-                this.async((function () {
-                    self.searching = false;
-                    var result = self.$.result;
-                    var container = self.$.container;
-                    var decorator = self.$.decorator;
+                if (this._searchQuery /*&& this.hasFocus === true*/ ) {
+                    this.searching = true;
 
-                    result.values = [{
-                        key: 'KEY 1',
-                        desc: "some description for key 1"
-                    }, {
-                        key: 'KEY 2',
-                        desc: "some description for key 2"
-                    }];
-                    self.async(function () {
-                        result.style.position = 'absolute';
-                        result.style.top = (container.offsetTop + decorator.offsetHeight) + 'px';
-                        result.style.width = container.offsetWidth + 'px';
-                        result.open();
-                    });
+                    // TODO need to convert in the context of TG
+                    // prepare the AJAX request based on the raw search string
+                    //var serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
+                    //this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
+                    //this.$.ajaxSearcher.generateRequest();
 
-                }).bind(self), 1000);
-            }
+                    // TODO Demo only, remove when moving to the TG context
+
+                    self.async((function () {
+                        result.close();
+                    }).bind(self), 1);
+
+                    this.async((function () {
+                        self.searching = false;
+                        result.values = [{
+                            key: 'KEY 1',
+                            desc: "some description for key 1"
+                        }, {
+                            key: 'KEY 2',
+                            desc: "some description for key 2"
+                        }];
+                        self.async(function () {
+                            result.style.position = 'absolute';
+                            result.style.top = (container.offsetTop + decorator.offsetHeight) + 'px';
+                            result.style.width = container.offsetWidth + 'px';
+                            result.open();
+                        });
+
+                    }).bind(self), 600); // some delay to mimic the search time
+
+                } else if (result.opened) { // make sure overlay is closed is no search is performed
+                    result.close();
+                }
+            },
         });
     })();
 </script>
