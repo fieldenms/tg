@@ -28,7 +28,7 @@
         <!-- The dialog for summary when egi is in card layout -->
         <!-- Toolbar template if it will be needed any longer-->
 
-        <temaplte is="dom-if" if="[[!cardLayout]]">
+        <template is="dom-if" if="[[!cardLayout]]">
             <div class="layout vertical">
                 <!-- Table header -->
                 <div class="layout horizontal">
@@ -41,7 +41,7 @@
                         </div>
                     </template>
                     <template is="dom-repeat" items="[[columns]]">
-                        <div clss="truncate" style="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
+                        <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
                     </template>
                     <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                         <div>
@@ -50,7 +50,7 @@
                     </template>
                 </div>
                 <!-- Table body -->
-                <temaplte is="dom-repeat" items="[[entities]]" as="entity" index-as="entityIndex">
+                <template is="dom-repeat" items="[[entities]]" as="entity" index-as="entityIndex">
                     <div class="layout horizontal">
                         <div>
                             <paper-checkbox checked="[[selectionModel.entityIndex]]" on-iron-change="_selectionChanged"></paper-checkbox>
@@ -61,13 +61,13 @@
                             </div>
                         </template>
                         <template is="dom-repeat" items="[[columns]]" as="column">
-                            <div class="relative" style="[[_calcColumnStyle()]]" on-tap="_tapAction">
-                                <div class="fit" style="[[_calcRenderingHintsStyle(entityIndex, column.property)]]"></div>
+                            <div class="relative" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
+                                <div class="fit" style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]"></div>
                                 <template is="dom-if" if="[[_isBooleanProp(entity, column)]]">
                                     <iron-icon icon="[[_getBooleanIcon(entity, column)]]"></iron-icon>
                                 </template>
-                                <template if="[[_isNotBooleanProp(entity, column)]]">
-                                    <div class="truncate" style="[[_calcColumnStyle()]]">{{getValue(entity, column)}}</div>
+                                <template is="dom-if" if="[[_isNotBooleanProp(entity, column)]]">
+                                    <div class="truncate" style$="[[_calcColumnStyle(column)]]">[[_getValue(entity, column)]]</div>
                                 </template>
                             </div>
                         </template>
@@ -77,13 +77,13 @@
                             </div>
                         </template>
                     </div>
-                </temaplte>
+                </template>
                 <!-- Table footer -->
                 <div class="layout vertical">
                     <!-- Totals go here -->
                 </div>
             </div>
-        </temaplte>
+        </template>
 
     </template>
 </dom-module>
@@ -97,7 +97,10 @@
 
             properties: {
                 entityType: String,
-                entities: Array,
+                entities: {
+                    type: Array,
+                    value: []
+                },
                 totals: Object,
                 renderingHints: Array,
                 shortLayout: Object,
@@ -117,7 +120,8 @@
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
             ready: function () {
-                var summaryRowsCount, summaryRowCounter, totalsRow;
+                var summaryRowsCount, summaryRowCounter, totalsRow, 
+                    primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
 
                 //Initialising the selection model.
                 this.selectionModel = [];
@@ -157,7 +161,7 @@
 
                 //Initialising the primary action.
                 this.primaryAction = null;
-                this.primaryAction = Polymer.dom(this.$.primary_action_selector).getDistributedNodes().length > 0 ? Polymer.dom(this.$.primary_action_selector).getDistributedNodes()[0] : null;
+                this.primaryAction = primaryActions > 0 ? primaryActions[0] : null;
 
                 //Initialising the secondary actions' list.
                 this.secondaryActions = [];
@@ -168,33 +172,33 @@
             //The following nine functions determine whenther EGI is in card layout or grid and whether callapsible panel of card is visible or not.////////
             _mobileChanged: function (e, detail) {
                 if (detail.value) {
-                    this.cardLayout = !!this.shortLayout.mobile;
-                    this.collapsePanelVisible = this.cardLayout && this.longLayout.mobile;
+                    this.cardLayout = !!(this.shortLayout && this.shortLayout.mobile);
+                    this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.mobile;
                 }
             },
             _tabletChanged: function (e, detail) {
                 if (detail.value) {
-                    this.cardLayout = !!this.shortLayout.tablet;
-                    this.collapsePanelVisible = this.cardLayout && this.longLayout.tablet;
+                    this.cardLayout = !!(this.shortLayout && this.shortLayout.tablet);
+                    this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.tablet;
                 }
             },
             _desktopChanged: function (e, detail) {
                 if (detail.value) {
-                    this.cardLayout = !!this.shortLayout.desktop;
-                    this.collapsePanelVisible = this.cardLayout && this.longLayout.desktop;
+                    this.cardLayout = !!!!(this.shortLayout && this.shortLayout.desktop);
+                    this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.desktop;
                 }
             },
             _desktopShortLayoutChanged: function (layout) {
                 this.cardLayout = this.$.desktopQuery.queryMatches && layout;
-                this.collapsePanelVisible = this.cardLayout && this.longLayout.desktop;
+                this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.desktop;
             },
             _tabletShortLayoutChanged: function (layout) {
                 this.cardLayout = this.$.tabletQuery.queryMatches && layout;
-                this.collapsePanelVisible = this.cardLayout && this.longLayout.tablet;
+                this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.tablet;
             },
             _mobileShortLayoutChanged: function (layout) {
                 this.cardLayout = this.$.mobileQuery.queryMatches && layout;
-                this.collapsePanelVisible = this.cardLayout && this.longLayout.mobile;
+                this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.mobile;
             },
             _desktopLongLayoutChanged: function (layout) {
                 _checkCollapsiblePanelVisibility.bind(this)(layout);
@@ -219,18 +223,20 @@
             /**
              * Event handler for selecting concrete entity
              */
-            _selectionChanged: function (e) {
-                var index = e.model.index;
-                //TODO need to know whether it was selected or not.
-                if (source.checked) {
-                    if ( /*!hasEntity(this.entities[index], this.selectedEntities)*/ this.selectedEntities.indexOf(this.entities[index]) < 0) {
-                        this.selectedEntities.push(this.entities[index]);
-                        this.selectionModel[index] = true;
-                    }
-                } else {
-                    if ( /*hasEntity(this.entities[index], this.selectedEntities)*/ this.selectedEntities.indexOf(this.entities[index]) >= 0) {
-                        this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
-                        this.selectionModel[index] = false;
+            _selectionChanged: function (e, detail, source) {
+                var index;
+                if (this.selctionModel) {
+                    //TODO need to know whether it was selected or not.
+                    if (source.checked) {
+                        if ( /*!hasEntity(this.entities[index], this.selectedEntities)*/ this.selectedEntities.indexOf(this.entities[index]) < 0) {
+                            this.selectedEntities.push(this.entities[index]);
+                            this.selectionModel[index] = true;
+                        }
+                    } else {
+                        if ( /*hasEntity(this.entities[index], this.selectedEntities)*/ this.selectedEntities.indexOf(this.entities[index]) >= 0) {
+                            this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
+                            this.selectionModel[index] = false;
+                        }
                     }
                 }
             },
@@ -257,7 +263,7 @@
              */
             _calcRenderingHintsStyle: function (entityIndex, property) {
                 var style = "opacity: 0.3;",
-                    rendHints = this.renderingHints[entityIndex][property];
+                    rendHints = (this.renderingHints && this.renderingHints[entityIndex][property]) || [];
                 for (var property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
@@ -268,17 +274,17 @@
             /**
              * Returns the property value of the specified entity.
              */
-            get: function (entity, column) {
+            _get: function (entity, column) {
                 return entity && entity.get(column.property);
             },
             /**
              * Returns the property value of the specified entity and converts it to string.
              */
-            getValue: function (entity, column) {
-                if (!entity || !column || this.get(entity, column) === null) {
+            _getValue: function (entity, column) {
+                if (!entity || !column || this._get(entity, column) === null) {
                     return "";
                 } else if (this.$.reflector.findTypeByName(column.type)) {
-                    return this.$.reflector.convert(this.get(entity, column));
+                    return this.$.reflector.convert(this._get(entity, column));
                 } else if (column.type === 'Date') {
                     return moment(entity.get(column.property)).format("L LT");
                 } else if (typeof entity.get(column.property) === 'number') {
@@ -291,7 +297,7 @@
              * Determines whether property is boolean or not.
              */
             _isBooleanProp: function (entity, column) {
-                return column.type === 'Boolean' && get(entity, column) !== null
+                return column.type === 'Boolean' && _get(entity, column) !== null
             },
             /**
              * Determines whether property is not boolean property or is.
@@ -303,7 +309,7 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, column) {
-                return "icons:" + (get(entity, column) ? "check" : "clear");
+                return "icons:" + (_get(entity, column) ? "check" : "clear");
             },
             /**
              * Tap action on data column. TODO: implement this.
