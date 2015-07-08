@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.s2.elements.ComparisonTest2;
 import ua.com.fielden.platform.eql.s2.elements.CompoundSource2;
 import ua.com.fielden.platform.eql.s2.elements.Conditions2;
+import ua.com.fielden.platform.eql.s2.elements.EntParam2;
 import ua.com.fielden.platform.eql.s2.elements.EntProp2;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.EntQueryBlocks2;
@@ -49,18 +50,18 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     private EntQuery2 transform(final EntityResultQueryModel qry) {
-        return entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+        return entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     private EntQuery2 transform(final AggregatedResultQueryModel qry) {
-        return entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+        return entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
     @Test
     @Ignore
     public void test_q1() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().or().prop("surname").eq().iVal(null).model();
-        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 
         final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -92,7 +93,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_q2() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().model();
-        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 
         final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -111,7 +112,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_q3() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).as("a").where().prop("a.surname").isNotNull().model();
-        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 
         final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -130,7 +131,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     @Test
     public void test_q4() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null).model();
-        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 
         final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -147,9 +148,10 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     }
 
     @Test
+    @Ignore
     public void test_q5() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param").model();
-        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 
         final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -170,13 +172,13 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").eq().param("param").model();
         final Map<String, Object> params = new HashMap<>();
         params.put("param", 1);
-        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, params, DOMAIN_METADATA));
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 
         final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<ICondition2>> allConditions = new ArrayList<>();
         final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("surname", source, metadata.get(TgAuthor.class).resolve("surname"), null), ComparisonOperator.EQ, new EntValue2(1)));
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2("surname", source, metadata.get(TgAuthor.class).resolve("surname"), null), ComparisonOperator.EQ, new EntParam2("param")));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -190,7 +192,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     public void test_q7() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("surname").eq().val(1).model();
-        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 
         final TypeBasedSource2 source = new TypeBasedSource2(TgAuthor.class);
         final TypeBasedSource2 source2 = new TypeBasedSource2(TgPersonName.class);
@@ -221,7 +223,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     public void test_q8() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("lastRoyalty").eq().val(1).model();
-        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata, Collections.EMPTY_MAP, DOMAIN_METADATA));
+        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 
         final TypeBasedSource2 sourceAuthor = new TypeBasedSource2(TgAuthor.class);
 
@@ -265,12 +267,14 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     @Test
     public void test_00() {
-        transform(select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model());
+        EntQuery2 a = transform(select(TgAuthor.class).where().prop("lastRoyalty").isNotNull().model());
+        System.out.println(a.getSources().getMain().props());
     }
 
     @Test
     public void test_01() {
-        transform(select(TgAuthor.class).as("aa").where().prop("lastRoyalty").isNotNull().and().prop("aa.surname").isNull().model());
+        EntQuery2 a = transform(select(TgAuthor.class).as("aa").where().prop("lastRoyalty").isNotNull().and().prop("aa.surname").isNull().model());
+        System.out.println(a.getSources().getMain().props());
     }
 
     @Test

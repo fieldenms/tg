@@ -28,10 +28,11 @@ public class EntityInfo implements IResolvable {
         final AbstractPropInfo foundPart = props.get(parts.getKey());
         if (foundPart != null) {
             result.add(foundPart);
-            result.add(foundPart.resolve(parts.getValue()));
+            if (parts.getValue() != null) {
+                result.add(foundPart.resolve(parts.getValue()));
+            }
         }
         return result;
-        //return foundPart == null ? null : foundPart.resolve(parts.getValue());
     }
 
     protected SortedMap<String, AbstractPropInfo> getProps() {

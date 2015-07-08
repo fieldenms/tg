@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
+import ua.com.fielden.platform.eql.s2.elements.EntParam2;
 import ua.com.fielden.platform.eql.s2.elements.EntValue2;
 
-public class EntParam1 implements ISingleOperand1<EntValue2> {
+public class EntParam1 implements ISingleOperand1<EntParam2> {
     private String name;
     private boolean ignoreNull;
 
@@ -21,7 +22,7 @@ public class EntParam1 implements ISingleOperand1<EntValue2> {
         return name;
     }
 
-    public EntValue2 transform(final TransformatorToS2 resolver) {
+    public EntParam2 transform(final TransformatorToS2 resolver) {
         return resolver.getTransformedParamToValue(this);
     }
 

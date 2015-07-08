@@ -57,6 +57,7 @@ import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgMakeCount;
+import ua.com.fielden.platform.sample.domain.ITgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.ITgPersonName;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
@@ -117,7 +118,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgMakeCount makeCountDao = getInstance(ITgMakeCount.class);
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
-
+    private final ITgOrgUnit1 orgUnit1Dao = getInstance(ITgOrgUnit1.class);
 
     @Test
     public void test_h2_deficiency() {
@@ -132,7 +133,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals("Incorrect count", 1, values.size());
         assertEquals("Incorrect vehicle", "CAR2", values.get(0).getKey());
     }
-    
+
     /////////////////////////////////////// WITHOUT ASSERTIONS /////////////////////////////////////////
 
     @Test
@@ -1538,6 +1539,22 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         final List<EntityAggregates> models = aggregateDao.getAllEntities(from(model).model());
         final EntityAggregates item = models.get(0);
         assertEquals("Incorrect key", new BigDecimal("120.00"), item.get("lq"));
+    }
+
+    @Test
+    public void test_nested_aliases_subqueries() {
+        EntityResultQueryModel<TgOrgUnit1> query = select(TgOrgUnit1.class).as("L1").where().exists( //
+        select(TgOrgUnit2.class).as("L2").where().prop("L2.parent").eq().extProp("L1.id").and().exists( //
+        select(TgOrgUnit3.class).as("L3").where().prop("L3.parent").eq().extProp("L2.id").and().exists( // 
+        select(TgOrgUnit4.class).as("L4").where().prop("L4.parent").eq().extProp("L3.id").and().exists( //
+        select(TgOrgUnit5.class).as("L5").where().prop("L5.parent").eq().extProp("L4").and().prop("L5.key").isNotNull(). //
+        model()). //
+        model()). //
+        model()). //
+        model()). //
+        model();
+        final List<TgOrgUnit1> models = orgUnit1Dao.getAllEntities(from(query).model());
+
     }
 
     @Override

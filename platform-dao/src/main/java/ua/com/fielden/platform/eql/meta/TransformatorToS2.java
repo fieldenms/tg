@@ -1,14 +1,12 @@
 package ua.com.fielden.platform.eql.meta;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.s1.elements.EntParam1;
@@ -18,6 +16,7 @@ import ua.com.fielden.platform.eql.s1.elements.EntValue1;
 import ua.com.fielden.platform.eql.s1.elements.ISource1;
 import ua.com.fielden.platform.eql.s1.elements.QueryBasedSource1;
 import ua.com.fielden.platform.eql.s1.elements.TypeBasedSource1;
+import ua.com.fielden.platform.eql.s2.elements.EntParam2;
 import ua.com.fielden.platform.eql.s2.elements.EntProp2;
 import ua.com.fielden.platform.eql.s2.elements.EntQuery2;
 import ua.com.fielden.platform.eql.s2.elements.EntValue2;
@@ -29,48 +28,10 @@ import ua.com.fielden.platform.eql.s2.elements.Yield2;
 
 public class TransformatorToS2 {
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata;
-    private final Map<String, Object> paramValues = new HashMap<>();
-    private final DomainMetadata domainData;
     private final SourcesStack sourcesStack = new SourcesStack();
 
-    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata, final Map<String, Object> paramValues, final DomainMetadata domainData) {
+    public TransformatorToS2(final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata) {
         this.metadata = metadata;
-        this.paramValues.putAll(paramValues);
-        this.domainData = domainData;
-    }
-
-    protected Object getParamValue(final String paramName) {
-        if (paramValues.containsKey(paramName)) {
-            return preprocessValue(paramValues.get(paramName));
-        } else {
-            return null; //TODO think through
-            //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");
-        }
-    }
-
-    private Object preprocessValue(final Object value) {
-        if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
-            final List<Object> values = new ArrayList<Object>();
-            for (final Object object : (Iterable) value) {
-                final Object furtherPreprocessed = preprocessValue(object);
-                if (furtherPreprocessed instanceof List) {
-                    values.addAll((List) furtherPreprocessed);
-                } else {
-                    values.add(furtherPreprocessed);
-                }
-            }
-            return values;
-        } else {
-            return convertValue(value);
-        }
-    }
-
-    /** Ensures that values of boolean types are converted properly. */
-    private Object convertValue(final Object value) {
-        if (value instanceof Boolean) {
-            return domainData.getBooleanValue((Boolean) value);
-        }
-        return value;
     }
 
     public void transformAndAccumulateSource(final ISource1<? extends ISource2> source) {
@@ -94,18 +55,17 @@ public class TransformatorToS2 {
     }
 
     public TransformatorToS2 produceBasedOn() {
-        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData);
+        final TransformatorToS2 result = new TransformatorToS2(metadata);
         result.sourcesStack.getSourcesList().addAll(sourcesStack.getSourcesList());
-
         return result;
     }
 
     public TransformatorToS2 produceNewOne() {
-        return new TransformatorToS2(metadata, paramValues, domainData);
+        return new TransformatorToS2(metadata);
     }
 
     public TransformatorToS2 produceOneForCalcPropExpression(final ISource2 source) {
-        final TransformatorToS2 result = new TransformatorToS2(metadata, paramValues, domainData);
+        final TransformatorToS2 result = new TransformatorToS2(metadata);
         for (final Map<ISource1<? extends ISource2>, SourceInfo> item : sourcesStack.getSourcesList()) {
             for (final Entry<ISource1<? extends ISource2>, SourceInfo> mapItem : item.entrySet()) {
                 if (mapItem.getValue().getSource().equals(source)) {
@@ -124,7 +84,7 @@ public class TransformatorToS2 {
     private ISource2 transformSource(final ISource1<? extends ISource2> originalSource) {
         if (originalSource instanceof TypeBasedSource1) {
             final TypeBasedSource1 source = (TypeBasedSource1) originalSource;
-            return new TypeBasedSource2(source.sourceType()/*, originalSource.getAlias(), source.getDomainMetadataAnalyser()*/);
+            return new TypeBasedSource2(source.sourceType());
         } else {
             final QueryBasedSource1 source = (QueryBasedSource1) originalSource;
             final List<EntQuery2> transformed = new ArrayList<>();
@@ -157,18 +117,18 @@ public class TransformatorToS2 {
         throw new IllegalStateException("Can't resolve property [" + originalProp.getName() + "].");
     }
 
-    public EntValue2 getTransformedParamToValue(final EntParam1 originalParam) {
-        return new EntValue2(getParamValue(originalParam.getName()), originalParam.isIgnoreNull());
+    public EntParam2 getTransformedParamToValue(final EntParam1 originalParam) {
+        return new EntParam2(originalParam.getName(), originalParam.isIgnoreNull());
     }
 
     public EntValue2 getTransformedValue(final EntValue1 originalValue) {
-        return new EntValue2(preprocessValue(originalValue.getValue()), originalValue.isIgnoreNull());
+        return new EntValue2(originalValue.getValue(), originalValue.isIgnoreNull());
     }
 
     private EntProp2 generateTransformedProp(final PropResolution resolution) {
         ResolutionPath resolutionPath = resolution.getResolution();
         final AbstractPropInfo propInfo = resolutionPath.getFinalMember();
         final Expression2 expr = propInfo.getExpression() != null ? propInfo.getExpression().transform(this.produceOneForCalcPropExpression(resolution.getSource())) : null;
-        return new EntProp2(resolution.getEntProp().getName(), resolution.getSource(), resolution.getResolution(), expr);
+        return new EntProp2(resolution.getEntProp().getName(), resolution.getSource(), resolutionPath, expr);
     }
 }
