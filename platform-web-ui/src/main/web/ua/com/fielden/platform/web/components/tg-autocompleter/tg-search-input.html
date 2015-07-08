@@ -43,16 +43,17 @@
     </style>
 
     <template>
-
-        <paper-input-container id="decorator">
-            <label>search</label>
-            <div class="input-layout">
-                <input id="input" is="iron-input" type="text" />
-                <paper-icon-button hidden$="{{searching}}" on-tap="_search" icon="search" class="search-button" tabIndex="-1"></paper-icon-button>
-                <paper-spinner active hidden$="{{!searching}}" tabIndex="-1" alt="searching..."></paper-spinner>
-            </div>
-        </paper-input-container>
-        <tg-search-result id="result"></tg-search-result>
+        <div id="container">
+            <paper-input-container id="decorator">
+                <label>search</label>
+                <div class="input-layout">
+                    <input id="input" is="iron-input" type="text" />
+                    <paper-icon-button hidden$="{{searching}}" on-tap="_search" icon="search" class="search-button" tabIndex="-1"></paper-icon-button>
+                    <paper-spinner active hidden$="{{!searching}}" tabIndex="-1" alt="searching..."></paper-spinner>
+                </div>
+            </paper-input-container>
+            <tg-search-result id="result"></tg-search-result>
+        </div>
     </template>
 
 </dom-module>
@@ -69,17 +70,18 @@
                 }
             },
             _search: function () {
-                this.async((function () {
-                    this.$.result.close();
-                    this.searching = true;
-                    this.$.input.focus();
-                }).bind(this), 3);
+                var self = this;
+                self.async((function () {
+                    self.$.result.close();
+                    self.searching = true;
+                    self.$.input.focus();
+                }).bind(self), 3);
 
                 this.async((function () {
-                    this.searching = false;
-                    var result = this.$.result;
-                    var decorator = this.$.decorator;
-                    var input = this.$.input;
+                    self.searching = false;
+                    var result = self.$.result;
+                    var container = self.$.container;
+                    var decorator = self.$.decorator;
 
                     result.values = [{
                         key: 'KEY 1',
@@ -88,14 +90,14 @@
                         key: 'KEY 2',
                         desc: "some description for key 2"
                     }];
-                    this.async(function () {
+                    self.async(function () {
                         result.style.position = 'absolute';
-                        result.style.top = (decorator.offsetHeight + input.offsetHeight) + 'px';
-                        result.style.width = decorator.offsetWidth + 'px';
+                        result.style.top = (container.offsetTop + decorator.offsetHeight) + 'px';
+                        result.style.width = container.offsetWidth + 'px';
                         result.open();
                     });
 
-                }).bind(this), 1000);
+                }).bind(self), 1000);
             }
         });
     })();
