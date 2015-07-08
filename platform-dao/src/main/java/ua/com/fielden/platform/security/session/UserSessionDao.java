@@ -67,7 +67,6 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         this.trustedDurationMins = trustedDurationMins;
         this.untrustedDurationMins = untrustedDurationMins;
         this.crypto = crypto;
-
         this.cache = cache;
     }
 
@@ -210,6 +209,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                 logger.debug(format("Removed %s session(s) for series ID %s", count, auth.seriesId));
                 return Optional.empty();
             }
+
         } catch (final SignatureException ex) {
             throw new IllegalStateException(ex);
         }
@@ -237,7 +237,6 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             logger.warn(format("A seemingly correct authenticator %s did not have a corresponding sesssion record. An authenticator theft is suspected. An adversary might have had access to the system as user %s", auth, user.getKey()));
             // in this case, sessions are removed based on user name and series ID, which is required taking into consideration that series ID could have been already regenerated
             final int count = clearAll(user) + removeSessionsForUsersBy(auth.seriesId);
-            ;
             logger.debug(format("Removed %s session(s) for series ID %s", count, auth.seriesId));
             return Optional.empty();
         }
@@ -266,19 +265,31 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         session.setLastAccess(constants.now().toDate());
         final Date expiryTime = calcExpiryTime(session.isTrusted());
         session.setExpiryTime(expiryTime);
-        final UserSession updated = save(session);
-        // assign authenticator, but in way not to disturb the entity meta-state
-        updated.beginInitialising();
-        updated.setAuthenticator(mkAuthenticator(user, seriesId, expiryTime));
-        updated.endInitialising();
 
-        // in order to support concurrent request from the same user it is necessary to
-        // associate the presented and verified authenticator as well as the new authenticator with an updated session in the session cache
-        final String newAuthenticator = updated.getAuthenticator().get().toString();
-        cache.put(authenticator, updated);
-        cache.put(newAuthenticator, updated);
+        // due to potentially highly concurrent requests from the same web client upon a refresh after some stale period where cache has already been evicted
+        // saving of the newly created session may fail due to concurrent update
+        // therefore, in case the save call fails, we hope that an updated session has already been placed into the cache by a concurrent process
+        try {
+            final UserSession updated = save(session);
+            // assign authenticator, but in way not to disturb the entity meta-state
+            updated.beginInitialising();
+            updated.setAuthenticator(mkAuthenticator(user, seriesId, expiryTime));
+            updated.endInitialising();
 
-        return Optional.of(updated);
+            // in order to support concurrent request from the same user it is necessary to
+            // associate the presented and verified authenticator as well as the new authenticator with an updated session in the session cache
+            final String newAuthenticator = updated.getAuthenticator().get().toString();
+            cache.put(authenticator, updated);
+            cache.put(newAuthenticator, updated);
+
+            return Optional.of(updated);
+        } catch (final Exception e) {
+            logger.warn(e);
+            logger.debug(format("Saving of a new session for user %s has failed due to concurrent update. Trying to recover a session from cache...", user.getKey()));
+            final UserSession us = cache.getIfPresent(authenticator);
+            logger.debug(format("Session recovery for user %s was successful: %s", user.getKey(), (us != null)));
+            return Optional.ofNullable(us);
+        }
     }
 
     @Override

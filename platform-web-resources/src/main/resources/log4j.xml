@@ -35,6 +35,11 @@
 	<!--
 		Logger of top level category 'ua.com.fielden.platform.web'. Additional logger can be added any time if required.
 	-->
+	
+	<logger name="ua.com.fielden.platform.security.session" additivity="false">
+		<level value="debug" />
+		<appender-ref ref="stdout" />
+	</logger>
 	<logger name="ua.com.fielden.platform.web" additivity="false">
 		<level value="info" />
 		<appender-ref ref="stdout" />
