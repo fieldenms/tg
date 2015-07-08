@@ -57,7 +57,7 @@
             
             _afterLoadListener: function (e, detail, view) {
                 var self = this;
-                if (e.target === this.$.elementToLoad) {
+                if (e.target === this.$$("#elementToLoad")) {
                     if (this.menuItem.view.type === 'centre') {
                         detail.postRetrieved = function (entity, bindingEntity, customObject) {
                             self.fire("menu-item-view-loaded", self.menuItem);
@@ -113,13 +113,15 @@
                 }
             },
             load: function () {
-                if (this.$.elementToLoad && !this.$.elementToLoad.wasLoaded) {
-                    this.$.elementToLoad.load();
+            	var elementToLoad = this.$$("#elementToLoad");
+                if (elementToLoad && !elementToLoad.wasLoaded) {
+                	elementToLoad.load();
                 }
             },
             wasLoaded: function () {
-                if (this.$.elementToLoad) {
-                    return this.$.elementToLoad.wasLoaded;
+            	var elementToLoad = this.$$("#elementToLoad");
+                if (elementToLoad) {
+                    return elementToLoad.wasLoaded;
                 }
                 return true;
             }
