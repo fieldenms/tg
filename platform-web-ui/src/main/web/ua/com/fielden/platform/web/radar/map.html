@@ -63,7 +63,7 @@
          </style>
 
          <script src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=geometry"></script>
-         <!--<script src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/maplabel/src/maplabel.js"></script>-->
+         <script src="https://google-maps-utility-library-v3.googlecode.com/svn/trunk/maplabel/src/maplabel.js"></script>
 
          <script>
                   var radars = [
@@ -552,13 +552,6 @@
                                     icon: iconNext,
                                     title: "Next broken radar"
                            });
-                           new google.maps.Marker({
-                                    position: new google.maps.LatLng(radar[1], radar[2] + 0.5),
-                                    map: map,
-                                    //icon: iconNext,
-                                    title: "Next broken radar"
-                           });
-
 
                            google.maps.event.addListener(markerNext, 'click', function () {
                                     if (brokenNumber < radarsBroken.length) {
