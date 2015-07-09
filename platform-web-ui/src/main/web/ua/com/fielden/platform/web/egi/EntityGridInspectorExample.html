@@ -12,24 +12,26 @@
 
     <link rel="import" href="/resources/serialisation/tg-serialiser.html">
     <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-    <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+    <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
     <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
     <link rel="import" href="/resources/egi/tg-property-column.html">
 
     <style>
         body {
             font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            background-color: #EEEEEE;
         }
     </style>
 
 </head>
 
-<body unresolved class="fullbleed layout vertical center ">
+<body unresolved class="fullbleed layout vertical center">
 
     <template id="egi_example" is="dom-bind">
         <tg-serialiser id="serialiser"></tg-serialiser>
         <iron-ajax id="data_retriever" auto url="/test/egi" handle-as="json" on-response="_dataRetrieved"></iron-ajax>
-        <tg-entity-grid-inspector entity-type="[[entityType]]" entities="[[entities]]">
+        <tg-entity-grid-inspector entity-type="[[entityType]]" entities="[[entities]]" style="margin-top: 10px;">
             <tg-property-column property="" width="60px" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" column-title="Key" column-desc="Some key description"></tg-property-column>
             <tg-property-column property="desc" width="200px" type="String" column-title="Desc" column-desc="Some desc description">
             </tg-property-column>
@@ -56,43 +58,16 @@
             <tg-property-column property="bigDecimalProp" width="68px" type="BigDecimal" column-title="BigDecimal prop" column-desc="BigDecimal prop desc">
             </tg-property-column>
             <tg-property-column property="stringProp" width="50px" type="String" column-title="String prop" column-desc="String prop desc"></tg-property-column>
-            <!--<core-tooltip class="delayed entity-specific-action">
-                <core-icon-button icon="add-circle-outline"></core-icon-button>
-                <span class="span-tooltip" tip>Create new entity</span>
-            </core-tooltip>
-            <core-tooltip class="delayed entity-specific-action">
-                <core-icon-button icon="editor:mode-edit"></core-icon-button>
-                <span class="span-tooltip" tip>Edit selected entity</span>
-            </core-tooltip>
-            <core-tooltip class="delayed entity-specific-action">
-                <core-icon-button icon="remove-circle-outline"></core-icon-button>
-                <span class="span-tooltip" tip>Delete selected entity</span>
-            </core-tooltip>
-            <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="file-download"></core-icon-button>
-                <span class="span-tooltip" tip>Export to Excel</span>
-            </core-tooltip>
-            <core-tooltip class="delayed standart-action">
-                <core-icon-button class="revers" icon="hardware:keyboard-tab"></core-icon-button>
-                <span class="span-tooltip" tip>First page</span>
-            </core-tooltip>
-            <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="hardware:keyboard-backspace"></core-icon-button>
-                <span class="span-tooltip" tip>Previous page</span>
-            </core-tooltip>
-            <core-tooltip class="delayed standart-action">
-                <core-icon-button class="revers" icon="hardware:keyboard-backspace"></core-icon-button>
-                <span class="span-tooltip" tip>Next page</span>
-            </core-tooltip>
-            <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="hardware:keyboard-tab"></core-icon-button>
-                <span class="span-tooltip" tip>Last page</span>
-            </core-tooltip>
-            <core-tooltip class="delayed standart-action">
-                <core-icon-button icon="refresh" on-tap="{{loadData}}"></core-icon-button>
-                <span class="span-tooltip" tip>Refresh</span>
-            </core-tooltip>
-            <tg-primary-instance-action actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>-->
+            <!--<paper-icon-button class="entity-specific-action" icon="add-circle-outline"></paper-icon-button>
+            <paper-icon-button class="entity-specific-action" icon="editor:mode-edit"></paper-icon-button>
+            <paper-icon-button class="entity-specific-action" icon="remove-circle-outline"></paper-icon-button>
+            <paper-icon-button class="standart-action" icon="file-download"></paper-icon-button>
+            <paper-icon-button class="standart-action revers" icon="hardware:keyboard-tab"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-backspace"></paper-icon-button>
+            <paper-icon-button class="revers" icon="hardware:keyboard-backspace"></paper-icon-button>
+            <paper-icon-button icon="hardware:keyboard-tab"></paper-icon-button>
+            <paper-icon-button icon="refresh" on-tap="loadData"></paper-icon-button>-->
+            <!--<tg-primary-instance-action actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>-->
         </tg-entity-grid-inspector>
     </template>
 
@@ -102,7 +77,7 @@
             egiExample.entityType = "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties";
             egiExample.entities = [];
             egiExample.loadData = function (e, detail, source) {
-                egiExample.$.data_retriever.go();
+                egiExample.$.data_retriever.generateRequest();
             };
             egiExample._dataRetrieved = function (e, detail, source) {
                 egiExample.entities = egiExample.$.serialiser.deserialise(e.detail.response).instance;

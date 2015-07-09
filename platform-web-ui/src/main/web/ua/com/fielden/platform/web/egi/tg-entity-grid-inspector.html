@@ -3,8 +3,10 @@
 <link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
 <dom-module id="tg-entity-grid-inspector">
     <style>
@@ -12,6 +14,46 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .data-table {
+            background-color: white;
+        }
+        .table-header-row {
+            font-size: 0.9rem;
+            color: #757575;
+            height: 3.5rem;
+            cursor: default;
+        }
+        .table-data-row {
+            font-size: 1rem;
+            color: #212121;
+            height: 3rem;
+            border-top: 1px solid #e3e3e3;
+            cursor: default;
+        }
+        .table-data-row[selected] {
+            background-color: #F5F5F5;
+        }
+        .table-data-row:hover {
+            background-color: #EEEEEE;
+        }
+        .table-cell {
+            margin-right: 1.2rem;
+        }
+        .table-cell:first-child {
+            margin-left: 1.2rem;
+        }
+        paper-checkbox.blue {
+            --paper-checkbox-checked-color: #0288D1;
+            --paper-checkbox-checked-ink-color: #0288D1;
+        }
+        paper-checkbox.header {
+            --paper-checkbox-unchecked-color: #757575;
+            --paper-checkbox-unchecked-ink-color: #757575;
+        }
+        paper-checkbox.body {
+            --paper-checkbox-unchecked-color: #212121;
+            --paper-checkbox-unchecked-ink-color: #212121;
         }
     </style>
     <template>
@@ -29,60 +71,75 @@
         <!-- Toolbar template if it will be needed any longer-->
 
         <template is="dom-if" if="[[!cardLayout]]">
-            <div class="layout vertical">
-                <!-- Table header -->
-                <div class="layout horizontal">
-                    <div>
-                        <paper-checkbox on-iron-change="_allSelectionChanged"></paper-checkbox>
+            <paper-material elevation="1">
+                <div class="layout vertical data-table">
+                    <!--Table toolbar-->
+<!--
+                    <div class="layout horizontal justified">
+                        <div class="layout horizontal center">
+                            <content select=".entity-specific-action"></content>
+                        </div>
+                        <div class="layout horizontal center">
+                            <content select=".standart-action"></content>
+                        </div>
                     </div>
-                    <template is="dom-if" if="[[primaryAction]]">
-                        <div>
-                            <!--Primary action header goes here-->
-                        </div>
-                    </template>
-                    <template is="dom-repeat" items="[[columns]]">
-                        <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
-                    </template>
-                    <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                        <div>
-                            <!--Secondary actions header goes here-->
-                        </div>
-                    </template>
-                </div>
-                <!-- Table body -->
-                <template is="dom-repeat" items="[[entities]]" as="entity" index-as="entityIndex">
-                    <div class="layout horizontal">
-                        <div>
-                            <paper-checkbox checked="[[selectionModel.entityIndex]]" on-iron-change="_selectionChanged"></paper-checkbox>
+-->
+                    <!-- Table header -->
+                    <div class="layout horizontal table-header-row">
+                        <div class="table-cell layout horizontal center">
+                            <paper-checkbox class="blue header" on-iron-change="_allSelectionChanged"></paper-checkbox>
                         </div>
                         <template is="dom-if" if="[[primaryAction]]">
-                            <div>
+                            <div class="table-cell layout horizontal center">
                                 <!--Primary action header goes here-->
                             </div>
                         </template>
-                        <template is="dom-repeat" items="[[columns]]" as="column">
-                            <div class="relative" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
-                                <div class="fit" style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]"></div>
-                                <template is="dom-if" if="[[_isBooleanProp(entity, column)]]">
-                                    <iron-icon icon="[[_getBooleanIcon(entity, column)]]"></iron-icon>
-                                </template>
-                                <template is="dom-if" if="[[_isNotBooleanProp(entity, column)]]">
-                                    <div class="truncate" style$="[[_calcColumnStyle(column)]]">[[_getValue(entity, column)]]</div>
-                                </template>
+                        <template is="dom-repeat" items="[[columns]]">
+                            <div class="table-cell layout horizontal center" style$="[[_calcColumnHeaderStyle(item)]]">
+                                <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
                             </div>
                         </template>
                         <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                            <div>
+                            <div class="table-cell layout horizontal center">
                                 <!--Secondary actions header goes here-->
                             </div>
                         </template>
                     </div>
-                </template>
-                <!-- Table footer -->
-                <div class="layout vertical">
-                    <!-- Totals go here -->
+                    <!-- Table body -->
+                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+                        <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
+                            <div class="table-cell layout horizontal center">
+                                <paper-checkbox class="blue body" checked="{{egiEntity.selected}}" on-iron-change="_selectionChanged"></paper-checkbox>
+                            </div>
+                            <template is="dom-if" if="[[primaryAction]]">
+                                <div class="table-cell layout horizontal center">
+                                    <!--Primary action header goes here-->
+                                </div>
+                            </template>
+                            <template is="dom-repeat" items="[[columns]]" as="column">
+                                <div class="table-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
+                                    <div class="fit" style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]"></div>
+                                    <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
+                                        <iron-icon icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
+                                    </template>
+                                    <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
+                                        <div class="truncate" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column)]]</div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
+                                <div class="table-cell">
+                                    <!--Secondary actions header goes here-->
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <!-- Table footer -->
+                    <div class="layout vertical">
+                        <!-- Totals go here -->
+                    </div>
                 </div>
-            </div>
+            </paper-material>
         </template>
 
     </template>
@@ -90,8 +147,29 @@
 <script>
     (function () {
         var _checkCollapsiblePanelVisibility = function (layout) {
-            this.collapsePanelVisible = this.cardLayout && layout;
-        };
+                this.collapsePanelVisible = this.cardLayout && layout;
+            },
+            _areEqual = function (a, b) {
+                return a.id === b.id;
+            },
+            _hasEntity = function (entity, entities) {
+                var i = 0;
+                for (i = 0; i < entities.length; i += 1) {
+                    if (areEqual(entity, entities[i])) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            _findEntity = function (entity, entities) {
+                var i = 0;
+                for (i = 0; i < entities.length; i += 1) {
+                    if (areEqual(entity, entities[i])) {
+                        return i;
+                    }
+                }
+                return -1;
+            };
         Polymer({
             is: "tg-entity-grid-inspector",
 
@@ -99,7 +177,7 @@
                 entityType: String,
                 entities: {
                     type: Array,
-                    value: []
+                    observer: "_entitiesChanged"
                 },
                 totals: Object,
                 renderingHints: Array,
@@ -120,15 +198,17 @@
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
             ready: function () {
-                var summaryRowsCount, summaryRowCounter, totalsRow, 
+                var summaryRowsCount, summaryRowCounter, totalsRow,
                     primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
 
-                //Initialising the selection model.
-                this.selectionModel = [];
-                this.selectedEntities = [];
+                //Initialising entities.
+                this.entities = [];
 
-                //Initialising the collapsible model.
-                this.openModel = [];
+                //Initialising the egi model .
+                this.egiModel = [];
+
+                //initialising the arrays for selected entites and entities those were opened.
+                this.selectedEntities = [];
                 this.openedEntities = [];
 
                 //Initialising columns (property column mappings)
@@ -210,32 +290,55 @@
                 _checkCollapsiblePanelVisibility.bind(this)(layout);
             },
             /**
+             * Observs the changes to entities property.
+             */
+            _entitiesChanged: function (newValue, oldValue) {
+                var egiEntity;
+                newValue.forEach(function (entity) {
+                    var selectEntInd = _findEntity(entity, this.selectedEntities),
+                        openedEntInd = _findEntity(entity, this.openedEntities);
+                    if (selectEntInd >= 0) {
+                        this.selectedEntities[selectEntInd] = entity;
+                    }
+                    if (openedEntInd >= 0) {
+                        this.openedEntities[openedEntInd] = entity;
+                    }
+                }.bind(this));
+                this.egiModel = [];
+                newValue.forEach(function (entity) {
+                    egiEntity = {
+                        selected: this.selectedEntities.indexOf(entity) > -1,
+                        opened: this.openedEntities.indexOf(entity) > -1,
+                        entity: entity
+                    }
+                    this.push('egiModel', egiEntity);
+                }.bind(this));
+            },
+            /**
              * Event handler for select all checkbox
              */
-            _allSelectionChanged: function (e, detail, source) {
+            _allSelectionChanged: function (e) {
                 var i;
-                if (this.selectionModel) {
-                    for (i = 0; i < this.selectionModel.length; i += 1) {
-                        this.selectionModel[i] = detail.value;
+                if (this.egiModel) {
+                    for (i = 0; i < this.egiModel.length; i += 1) {
+                        this.set("egiModel." + i + ".selected", e.srcElement.checked);
                     }
                 }
             },
             /**
              * Event handler for selecting concrete entity
              */
-            _selectionChanged: function (e, detail, source) {
+            _selectionChanged: function (e) {
                 var index;
-                if (this.selctionModel) {
-                    //TODO need to know whether it was selected or not.
-                    if (source.checked) {
-                        if ( /*!hasEntity(this.entities[index], this.selectedEntities)*/ this.selectedEntities.indexOf(this.entities[index]) < 0) {
+                if (this.egiModel) {
+                    index = e.model.entityIndex;
+                    if (e.srcElement.checked) {
+                        if (this.selectedEntities.indexOf(this.entities[index]) < 0) {
                             this.selectedEntities.push(this.entities[index]);
-                            this.selectionModel[index] = true;
                         }
                     } else {
-                        if ( /*hasEntity(this.entities[index], this.selectedEntities)*/ this.selectedEntities.indexOf(this.entities[index]) >= 0) {
+                        if (this.selectedEntities.indexOf(this.entities[index]) >= 0) {
                             this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
-                            this.selectionModel[index] = false;
                         }
                     }
                 }
@@ -270,6 +373,12 @@
                     }
                 }
                 return style;
+            },
+            _calcChecked: function (model, index) {
+                if (model && typeof model[index] !== undefined) {
+                    return model[index];
+                }
+                return false;
             },
             /**
              * Returns the property value of the specified entity.
@@ -326,6 +435,45 @@
             },
             _calcDesktopQuery: function () {
                 return "min-width: " + this.$.appConfig.minDesktopWidth + "px";
+            },
+            /**
+             * Returns the list entitles selected on the current page.
+             */
+            getSelectedEntities: function () {
+                var currentSelectedEntities = [];
+                this.egiModel.forEach(function (elem) {
+                    if (elem.selected) {
+                        currentSelectedEntities.push(elem.entity);
+                    }
+                }.bind(this));
+                return currentSelectedEntities;
+            },
+            /**
+             * Returns the list of all selected entites.
+             */
+            getAllSelectedEntities: function () {
+                return this.selectedEntities;
+            },
+            /**
+             * Returns the indexes of entites selected on current page.
+             */
+            getSelectedRows: function () {
+                var selectedRows = [];
+                this.egiModel.forEach(function (elem, elemIndex) {
+                    if (elem.selected) {
+                        selectedRows.push(elemIndex);
+                    }
+                }.bind(this));
+                return selectedRows;
+            },
+            /**
+             * Clears selection.
+             */
+            clearSelection: function () {
+                this.egiModel.forEach(function (elem) {
+                    elem.selected = false;
+                }.bind(this));
+                this.selectedEntities = [];
             }
         })
     })()
