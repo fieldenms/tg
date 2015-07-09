@@ -76,7 +76,9 @@
 
         Polymer({
             is: 'tg-search-input',
+
             behaviors: [Polymer.IronResizableBehavior],
+
             listeners: {
                 'iron-resize': '_onIronResize'
             },
@@ -146,15 +148,6 @@
                     this._searchQuery = replaceAll('*', '\\w*', inputText.toUpperCase());
                 }
 
-                // clear selection in the overlay, which could have been left there from last search
-                //this.$.suggestions.selected = null;
-
-                // also need to remove matched values from the last search
-                // in preparation for new search result
-                //while (this.matchedValues.length > 0) {
-                //    this.matchedValues.pop();
-                //}
-
                 // collect new matching values
                 var self = this;
                 var result = self.$.result;
@@ -177,6 +170,7 @@
                     }).bind(self), 1);
 
                     this.async((function () {
+                        result.clearSelection();
                         self.searching = false;
                         result.values = [{
                             key: 'KEY 1',

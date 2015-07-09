@@ -86,7 +86,7 @@
     </style>
 
     <template>
-        <iron-selector id="overlay" class="tg-snatchback" attr-for-selected="value">
+        <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="{{values}}" as="v">
                 <paper-item class="tg-item" value="{{v.key}}" noink>
@@ -167,6 +167,11 @@
                     value: false
                 }
             },
+
+            clearSelection: function () {
+                this.$.selector.selected = '';
+            },
+
             /* 
              * Method that identifies matching parts in the str for the searchQuery.
              * Returns an array of objects representing matched and non-matched parts of the str in sequential order.
