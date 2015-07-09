@@ -7,20 +7,29 @@
 <link rel="import" href="/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html">
 <link rel="import" href="/resources/master/actions/tg-property-action.html">
 
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+
 <!-- link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html" -->
 <link rel="import" href="/tg-reflector">
 
 <dom-module id="tg-editor">
     <style>
+        .main-container {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+        }
+        #input-container {
+            @apply(--layout-flex);
+        }
       	/* TODO styles */
 
     </style>
 
     <template>
-        <paper-input-container id="decorator" attr-for-value="editing-value" disabled$="[[_disabled]]"> <!-- no-label-float --> <!-- flex auto  for textarea! -->
+        <paper-input-container id="decorator" attr-for-value="editing-value" disabled$="[[_disabled]]" always-float-label> <!-- flex auto  for textarea! -->
         	<label>[[propTitle]]</label>
-            <div> <!-- TODO layout horizontal  -->
-                <div id="input-container"> <!-- flex -->
+            <div class="main-container">
+                <div id="input-container">
  		            <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
                 
                 	<!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
@@ -44,14 +53,11 @@
 				<content select=".custom-icon-buttons"></content>
                 
                 <div id="icon" hidden$="[[_actionDoesNotExist(action)]]">
-                	<p>TEST</p>
                     <tg-property-action entity-type="[[action.entityType]]" pre-action="[[action.preAction]]" post-action="[[action.postAction]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action>
                 </div>
             </div>
             
-	        <template is="dom-if" if="[[_error]]">
-	  	    	<paper-input-error>[[_error]]</paper-input-error>
-	    	</template>
+  	    	<paper-input-error hidden$="[[!_error]]">[[_error]]</paper-input-error>
 	    	
 	    	<paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]"></paper-input-char-counter>
         </paper-input-container>
@@ -77,7 +83,7 @@
             	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
             	// No default values are allowed in this case.														   //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	
+            	propTitle: String,
         		_disabled: Boolean,
         		_editingValue: {
         			type: String,
