@@ -26,9 +26,10 @@
         
         .tg-item {
             font-size: small;
-            overflow: visible;
             padding: 6px;
             margin: 0px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .tg-item:hover {
@@ -41,10 +42,6 @@
             background: var(--paper-blue-500);
             color: var(--paper-blue-50);
         }
-        /*.iron-selected {
-            background-color: var(--paper-blue-500);
-            color: white;
-        }*/
         
         .key-value {
             font-size: small;
@@ -64,6 +61,11 @@
             line-height: 15px;
         }
         
+        .desc-style {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
         .prop-name {
             font-weight: bold;
             padding-right: 0.5em;
@@ -77,17 +79,9 @@
             background-color: #FFFFFF;
             color: #000;
             min-width: 250px;
-            /*border: 1px solid #ccc;*/
-            /*border-radius: 3px;*/
-            
             padding: 0px;
-            /*min-width: 150px;*/
-            
-            overflow: visible;
-        }
-        
-        #toolbar {
-            background: white;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 
@@ -105,7 +99,7 @@
                         </div>
                         <div class="additional-prop">
                             <span class="prop-name">{{_propTitleByName(v, "desc")}}:</span>
-                            <span hidden$="{{hightlightDesc}}" class="key-value">{{v.desc}}</span>
+                            <span hidden$="{{hightlightDesc}}" class="desc-style">{{v.desc}}</span>
 
                             <!-- TODO to be converted -->
                             <!--template if="{{hightlightDesc}}">
@@ -148,7 +142,7 @@
     (function () {
         Polymer({
             is: 'tg-search-result',
-            behaviors: [Polymer.IronOverlayBehavior, Polymer.IronFitBehavior],
+            behaviors: [Polymer.IronOverlayBehavior],
 
             properties: {
                 /* Contains values to be displayed */

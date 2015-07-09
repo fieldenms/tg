@@ -55,8 +55,8 @@
                     <paper-spinner active hidden$="{{!searching}}" tabIndex="-1" alt="searching..."></paper-spinner>
                 </div>
             </paper-input-container>
-            <tg-search-result id="result"></tg-search-result>
         </div>
+        <tg-search-result id="result"></tg-search-result>
     </template>
 
 </dom-module>
@@ -76,6 +76,41 @@
 
         Polymer({
             is: 'tg-search-input',
+            behaviors: [Polymer.IronResizableBehavior],
+            listeners: {
+                'iron-resize': '_onIronResize'
+            },
+
+            attached: function () {
+                this.async(this.notifyResize, 1);
+            },
+
+            get parent() {
+                if (this.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+                    return this.parentNode.host;
+                }
+                return this.parentNode;
+            },
+
+            _onIronResize: function () {
+                var container = this.$.container;
+                console.log('resize event captured:', (container.offsetTop + container.clientHeight));
+                var result = this.$.result;
+                if (result.opened) {
+                    this.async(function () {
+                        var rects = container.getClientRects();
+                        var rect = rects[0];
+                        result.style.position = 'absolute';
+                        var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                        var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+                        result.style.top = (rect.bottom + scrollTop) + 'px';
+                        result.style.left = (rect.left + scrollLeft) + 'px';
+                        result.style.width = rect.width + 'px';
+                    });
+                }
+            },
+
+
             properties: {
                 searching: {
                     type: Boolean,
@@ -87,6 +122,7 @@
                     value: ''
                 }
             },
+
             /**
              * Cleans input text.
              */
@@ -124,7 +160,6 @@
                 var result = self.$.result;
                 result.searchQuery = self._searchQuery;
                 var container = self.$.container;
-                var decorator = self.$.decorator;
 
                 if (this._searchQuery /*&& this.hasFocus === true*/ ) {
                     this.searching = true;
@@ -152,7 +187,7 @@
                         }];
                         self.async(function () {
                             result.style.position = 'absolute';
-                            result.style.top = (container.offsetTop + decorator.offsetHeight) + 'px';
+                            result.style.top = (container.offsetTop + container.clientHeight) + 'px';
                             result.style.width = container.offsetWidth + 'px';
                             result.open();
                         });
