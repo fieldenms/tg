@@ -1,12 +1,14 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/tg-web-app/tg-app-config.html">
 <link rel="import" href="/tg-reflector">
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
-<link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
+<link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
 
 <dom-module id="tg-entity-grid-inspector">
     <style>
@@ -64,6 +66,36 @@
         .card-header {
             padding: 4px;
             border-bottom: 1px solid #e5e5e5;
+        }
+        .card-header-background[selected] {
+            background-color: #F5F5F5;
+            opacity: none;
+        }
+        .card-header-background:not([selected]) {
+            background-color: white;
+            opacity: 0.7;
+        }
+        .data-entry {
+            padding: 0.75em 1.5em;
+        }
+        .data-label {
+            font-size: 0.75em;
+            background: transparent;
+            color: #757575;
+            cursor: default;
+        }
+        .data-value {
+            height: 1.4em;
+            margin: 0.5em 0 0.25em;
+            border-bottom: 1px solid black;
+            cursor: pointer;
+            color: #607D8B;
+        }
+        .expand-button {
+            position: absolute;
+            bottom: 0;
+            left: calc(50% - 14px);
+            padding: 0;
         }
     </style>
     <template>
@@ -155,76 +187,64 @@
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                 <paper-material elevation="1" class="card layout vertical">
                     <div class="card-header layout horizontal center justified relative">
-                        <div selected?="{{selectionModel[entityIndex]}}" class="card-header-background" fit></div>
-                        <div layout horizontal center relative>
-                            <div class="selection-column">
-                                <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                    <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
-                                    <span class="span-tooltip" tip>{{selectionModel[entityIndex] ? 'Unselect': 'Select'}} this entity</span>
-                                </core-tooltip>
+                        <div selected$="[[egiEntity.selected]]" class="card-header-background fit"></div>
+                        <div class="layout horizontal center relative">
+                            <div>
+                                <!-- this div might not be needed-->
+                                <paper-checkbox checked="[[egiEntity.selected]]" on-iron-change="_selectionChanged"></paper-checkbox>
                             </div>
-                            <div hidden?="{{!primaryAction}}">
-                                <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}" hidden?="{{!primaryAction.action}}"></tg-page-action>
-                                <tg-ui-action currentEntity="{{entity}}" hidden?="{{primaryAction.action}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" createContextHolder="{{primaryAction.createContextHolder}}" requireSelectionCriteria="{{primaryAction.requireSelectionCriteria}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
-                            </div>
+                            <template is="dom-if" if="[[primaryAction]]">
+                                <!--Primary actions goes here-->
+                            </template>
                         </div>
-                        <div hidden?="{{secondaryActions.length === 0}}" layout horizontal center relative>
-                            <template repeat="{{action in secondaryActions}}">
-                                <tg-page-action icon="{{action.icon}}" action="{{action.action}}" context="{{entity}}" hidden?="{{!action.action}}"></tg-page-action>
-                                <tg-ui-action hidden?="{{action.action}}" currentEntity="{{entity}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectionCriteria="{{action.requireSelectionCriteria}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
+                        <div class="layout horizontal center relative">
+                            <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
+                                <!--Secondary actions goes here-->
                             </template>
                         </div>
                     </div>
-                    <div style="position:relative; background-color: white; {{collapsePanelVisible ? 'padding-bottom:24px':''}}">
-                        <tg-flex-layout whenDesktop="{{desktopLayoutShort}}" whenTablet="{{tabletLayoutShort}}" whenMobile="{{mobileLayoutShort}}">
-                            <template repeat="{{column, columnIndex in columns}}">
-                                <div class="data-entry" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
-                                    <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                        <div class="data-label truncate">{{column.columnTitle}}</div>
-                                        <span class="span-tooltip" tip>{{column.columnDesc}}</span>
-                                    </core-tooltip>
-                                    <div class="data-value" relative entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
-                                        <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
+                    <div style$="[[_calcCardStyle(collapsePanelVisible)]]">
+                        <tg-flex-layout when-desktop="[[shortLayout.desktop]]" when-tablet="[[shortLayout.tablet]]" when-mobile="[[shortLayout.mobile]]">
+                            <template is="dom-repeat" items="[[columns]]" as="column">
+                                <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(column)]]">
+                                    <div class="data-label truncate">[[column.columnTitle]]</div>
+                                    <div class="data-value relative" on-tap="_tapAction">
+                                        <div style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]" class="fit">
                                         </div>
-                                        <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                            <div hidden?="{{column.type !== 'Boolean' || get(entity, column) === null}}">
-                                                <core-icon style="height:1.1em" icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
-                                            </div>
-                                            <div hidden?="{{column.type === 'Boolean'}}">
-                                                <div class="truncate">{{getValue(entity, column)}}</div>
-                                            </div>
-                                            <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
-                                        </core-tooltip>
+                                        <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
+                                            <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
+                                        </template>
+                                        <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
+                                            <div class="truncate">[[_getValue(egiEntity.entity, column)]]</div>
+                                        </template>
                                     </div>
                                 </div>
                             </template>
                         </tg-flex-layout>
-                        <core-collapse opened?="{{openModel[entityIndex]}}" allowOverflow hidden?="{{!collapsePanelVisible}}">
-                            <tg-flex-layout whenDesktop="{{desktopLayoutLong}}" whenTablet="{{tabletLayoutLong}}" whenMobile="{{mobileLayoutLong}}">
-                                <template repeat="{{column, columnIndex in columns}}">
-                                    <div class="data-entry" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
-                                        <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                            <div class="data-label truncate">{{column.columnTitle}}</div>
-                                            <span class="span-tooltip" tip>{{column.columnDesc}}</span>
-                                        </core-tooltip>
-                                        <div class="data-value" relative entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
-                                            <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
+                        <!--Collapse panel that contains other components those weren't included into main view of card-->
+                        <template is="dom-if" if="[[collapsePanelVisible]]">
+                            <iron-collapse opened="[[egiEntity.opened]]">
+
+                                <tg-flex-layout when-desktop="[[longLayout.desktop]]" when-tablet="[[longLayout.tablet]]" when-mobile="[[longLayout.mobile]]">
+                                    <template is="dom-repeat" items="[[columns]]" as="column">
+                                        <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(column)]]">
+                                            <div class="data-label truncate">[[column.columnTitle]]</div>
+                                            <div class="data-value relative" on-tap="_tapAction">
+                                                <div style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]" class="fit">
+                                                </div>
+                                                <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
+                                                    <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
+                                                </template>
+                                                <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
+                                                    <div class="truncate">[[_getValue(egiEntity.entity, column)]]</div>
+                                                </template>
                                             </div>
-                                            <core-tooltip position="bottom" class="delayed" style="width:100%">
-                                                <div hidden?="{{column.type !== 'Boolean' || get(entity, column) === null}}">
-                                                    <core-icon style="height:1.1em" icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
-                                                </div>
-                                                <div hidden?="{{column.type === 'Boolean'}}">
-                                                    <div class="truncate">{{getValue(entity, column)}}</div>
-                                                </div>
-                                                <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
-                                            </core-tooltip>
                                         </div>
-                                    </div>
-                                </template>
-                            </tg-flex-layout>
-                        </core-collapse>
-                        <core-icon-button hidden?="{{!collapsePanelVisible}}" class="expand-button" id="actionButton" index="{{entityIndex}}" icon="{{openModel[entityIndex] ? 'expand-less':'expand-more'}}" on-tap="{{toggleCollapsePanel}}"></core-icon-button>
+                                    </template>
+                                </tg-flex-layout>
+                            </iron-collapse>
+                        </template>
+                        <paper-icon-button hidden$="[[!collapsePanelVisible]]" class="expand-button" icon="[[_calcCollapseIcon(egiEntity.opened)]]" on-tap="_toggleCollapsePanel"></paper-icon-button>
                     </div>
                 </paper-material>
             </template>
@@ -234,7 +254,7 @@
 <script>
     (function () {
         var _checkCollapsiblePanelVisibility = function (layout) {
-                this.collapsePanelVisible = this.cardLayout && layout;
+                this.collapsePanelVisible = !!(this.cardLayout && layout);
             },
             _areEqual = function (a, b) {
                 return a.id === b.id;
@@ -270,7 +290,12 @@
                 renderingHints: Array,
                 shortLayout: Object,
                 longLayout: Object,
-                summaryLayout: Object
+                summaryLayout: Object,
+                cardLayout: {
+                    type: Boolean,
+                    readOnly: true,
+                    observer: "_cardLayoutChanged"
+                }
             },
 
             observers: [
@@ -339,33 +364,39 @@
             //The following nine functions determine whenther EGI is in card layout or grid and whether callapsible panel of card is visible or not.////////
             _mobileChanged: function (e, detail) {
                 if (detail.value) {
-                    this.cardLayout = !!(this.shortLayout && this.shortLayout.mobile);
-                    this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.mobile;
+                    this._setCardLayout(!!(this.shortLayout && this.shortLayout.mobile));
+                    this.collapsePanelVisible = !!(this.cardLayout && this.longLayout && this.longLayout.mobile);
                 }
             },
             _tabletChanged: function (e, detail) {
                 if (detail.value) {
-                    this.cardLayout = !!(this.shortLayout && this.shortLayout.tablet);
-                    this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.tablet;
+                    this._setCardLayout(!!(this.shortLayout && this.shortLayout.tablet));
+                    this.collapsePanelVisible = !!(this.cardLayout && this.longLayout && this.longLayout.tablet);
                 }
             },
             _desktopChanged: function (e, detail) {
                 if (detail.value) {
-                    this.cardLayout = !!!!(this.shortLayout && this.shortLayout.desktop);
-                    this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.desktop;
+                    this._setCardLayout(!!(this.shortLayout && this.shortLayout.desktop));
+                    this.collapsePanelVisible = !!(this.cardLayout && this.longLayout && this.longLayout.desktop);
                 }
             },
             _desktopShortLayoutChanged: function (layout) {
-                this.cardLayout = this.$.desktopQuery.queryMatches && layout;
-                this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.desktop;
+                if (this.$.desktopQuery.queryMatches) {
+                    this._setCardLayout(!!layout);
+                    this.collapsePanelVisible = !!(this.cardLayout && this.longLayout && this.longLayout.desktop);
+                }
             },
             _tabletShortLayoutChanged: function (layout) {
-                this.cardLayout = this.$.tabletQuery.queryMatches && layout;
-                this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.tablet;
+                if (this.$.tabletQuery.queryMatches) {
+                    this._setCardLayout(!!layout);
+                    this.collapsePanelVisible = !!(this.cardLayout && this.longLayout && this.longLayout.tablet);
+                }
             },
             _mobileShortLayoutChanged: function (layout) {
-                this.cardLayout = this.$.mobileQuery.queryMatches && layout;
-                this.collapsePanelVisible = this.cardLayout && this.longLayout && this.longLayout.mobile;
+                if (this.$.mobileQuery.queryMatches) {
+                    this._setCardLayout(!!layout);
+                    this.collapsePanelVisible = !!(this.cardLayout && this.longLayout && this.longLayout.mobile);
+                }
             },
             _desktopLongLayoutChanged: function (layout) {
                 _checkCollapsiblePanelVisibility.bind(this)(layout);
@@ -375,6 +406,16 @@
             },
             _mobileLongLayoutChanged: function (layout) {
                 _checkCollapsiblePanelVisibility.bind(this)(layout);
+            },
+            /**
+             * Listener for cardLayout.
+             */
+            _cardLayoutChanged: function (newValue, oldValue) {
+                if (newValue) {
+                    this.style.width = "100%";
+                } else {
+                    this.style.removeProperty("width");
+                }
             },
             /**
              * Observs the changes to entities property.
@@ -431,6 +472,23 @@
                 }
             },
             /**
+             * Toggles the card's collapse panel for the specified entity.
+             */
+            _toggleCollapsePanel: function (e) {
+                var index = e.model.entityIndex;
+                if (this.egiModel[index].opened) {
+                    if (this.openedEntities.indexOf(this.entities[index]) >= 0) {
+                        this.openedEntities.splice(this.openedEntities.indexOf(this.entities[index]), 1);
+                        this.set("egiModel." + index + ".opened", false);
+                    }
+                } else {
+                    if (this.openedEntities.indexOf(this.entities[index]) < 0) {
+                        this.openedEntities.push(this.entities[index]);
+                        this.set("egiModel." + index + ".opened", true);
+                    }
+                }
+            },
+            /**
              * Determines whether secondary actions are present.
              */
             _isSecondaryActionsPresent: function (secondaryActions) {
@@ -460,6 +518,25 @@
                     }
                 }
                 return style;
+            },
+            /**
+             * Calculates the style of the card.
+             */
+            _calcCardStyle: function (collapsePanelVisible) {
+                return "position: relative; background-color: white;" + (collapsePanelVisible ? " padding-bottom:24px;" : '');
+            },
+            /**
+             * Calculates the property name to select in card layout.
+             */
+            _calcPropertyToSelect: function (column) {
+                return column.property === '' ? 'this' : column.property
+            },
+            /**
+             * Returns the icon name according to entityOpened parameter. If entityOpened is true then it returns icon that says that this card can be
+             * collapsed otherwise it can be expanded.
+             */
+            _calcCollapseIcon: function (entityOpened) {
+                return entityOpened ? 'expand-less' : 'expand-more';
             },
             /**
              * Returns the property value of the specified entity.
@@ -551,11 +628,22 @@
              * Clears selection.
              */
             clearSelection: function () {
-                this.egiModel.forEach(function (elem) {
-                    elem.selected = false;
-                }.bind(this));
+                var i;
+                for (i = 0; i < egiModel.length; i++) {
+                    this.set("egiModel." + i + ".selected", false);
+                }
                 this.selectedEntities = [];
-            }
+            },
+            /**
+             * Collapses all opened entities (has sens in card layout.)
+             */
+            collapseAllCards: function () {
+                var i;
+                for (i = 0; i < egiModel.length; i++) {
+                    this.set("egiModel." + i + ".opened", false);
+                }
+                this.openedEntities = [];
+            },
         })
     })()
 </script>

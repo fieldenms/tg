@@ -31,7 +31,7 @@
     <template id="egi_example" is="dom-bind">
         <tg-serialiser id="serialiser"></tg-serialiser>
         <iron-ajax id="data_retriever" auto url="/test/egi" handle-as="json" on-response="_dataRetrieved"></iron-ajax>
-        <tg-entity-grid-inspector entity-type="[[entityType]]" entities="[[entities]]" style="margin-top: 10px;">
+        <tg-entity-grid-inspector entity-type="[[entityType]]" entities="[[entities]]" short-layout="[[shortLayout]]" long-layout="[[longLayout]]" style="margin-top: 10px;">
             <tg-property-column property="" width="60px" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" column-title="Key" column-desc="Some key description"></tg-property-column>
             <tg-property-column property="desc" width="200px" type="String" column-title="Desc" column-desc="Some desc description">
             </tg-property-column>
@@ -58,6 +58,8 @@
             <tg-property-column property="bigDecimalProp" width="68px" type="BigDecimal" column-title="BigDecimal prop" column-desc="BigDecimal prop desc">
             </tg-property-column>
             <tg-property-column property="stringProp" width="50px" type="String" column-title="String prop" column-desc="String prop desc"></tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
             <!--<paper-icon-button class="entity-specific-action" icon="add-circle-outline"></paper-icon-button>
             <paper-icon-button class="entity-specific-action" icon="editor:mode-edit"></paper-icon-button>
             <paper-icon-button class="entity-specific-action" icon="remove-circle-outline"></paper-icon-button>
@@ -78,6 +80,38 @@
             egiExample.entities = [];
             egiExample.loadData = function (e, detail, source) {
                 egiExample.$.data_retriever.generateRequest();
+            };
+            egiExample.shortLayout = {
+                /*desktop: [
+                    [['flex', 'select:property=this'], ['flex', 'select:property=desc'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=integerProp']]
+                ],*/
+                tablet: [
+                    [['flex', 'select:property=this'], ['flex', 'select:property=desc'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]
+                ],
+                mobile: [
+                    [['flex', 'select:property=this'], ['flex', 'select:property=desc']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=integerProp']]
+                ]
+            };
+            egiExample.longLayout = {
+                /*desktop: [
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=stringProp'], ['flex', 'select:property=integerProp']]
+                ],*/
+                tablet: [
+                    [['flex', 'select:property=integerProp'],['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],
+                    [['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=stringProp'], ['flex', 'select:property=integerProp']]
+                ],
+                mobile: [
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],
+                    [['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=stringProp']],
+                    [['flex', 'select:property=integerProp']]
+                ]
             };
             egiExample._dataRetrieved = function (e, detail, source) {
                 egiExample.entities = egiExample.$.serialiser.deserialise(e.detail.response).instance;
