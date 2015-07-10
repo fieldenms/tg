@@ -10,11 +10,13 @@
 
 <dom-module id="tg-entity-grid-inspector">
     <style>
+        /*miscellanea styles*/
         .truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        /*Table related styles*/
         .data-table {
             background-color: white;
         }
@@ -55,6 +57,14 @@
             --paper-checkbox-unchecked-color: #212121;
             --paper-checkbox-unchecked-ink-color: #212121;
         }
+        /*Card related styles*/
+        .card {
+            margin: 20px 30px;
+        }
+        .card-header {
+            padding: 4px;
+            border-bottom: 1px solid #e5e5e5;
+        }
     </style>
     <template>
         <content id="column_selector" select="tg-property-column" hidden></content>
@@ -74,7 +84,7 @@
             <paper-material elevation="1">
                 <div class="layout vertical data-table">
                     <!--Table toolbar-->
-<!--
+                    <!--
                     <div class="layout horizontal justified">
                         <div class="layout horizontal center">
                             <content select=".entity-specific-action"></content>
@@ -141,7 +151,84 @@
                 </div>
             </paper-material>
         </template>
-
+        <template is="dom-if" if="[[cardLayout]]">
+            <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+                <paper-material elevation="1" class="card layout vertical">
+                    <div class="card-header layout horizontal center justified relative">
+                        <div selected?="{{selectionModel[entityIndex]}}" class="card-header-background" fit></div>
+                        <div layout horizontal center relative>
+                            <div class="selection-column">
+                                <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                    <paper-checkbox index="{{entityIndex}}" checked?="{{selectionModel[entityIndex]}}" on-core-change="{{onSelectionChanged}}"></paper-checkbox>
+                                    <span class="span-tooltip" tip>{{selectionModel[entityIndex] ? 'Unselect': 'Select'}} this entity</span>
+                                </core-tooltip>
+                            </div>
+                            <div hidden?="{{!primaryAction}}">
+                                <tg-page-action icon="{{primaryAction.icon}}" action="{{primaryAction.action}}" context="{{entity}}" hidden?="{{!primaryAction.action}}"></tg-page-action>
+                                <tg-ui-action currentEntity="{{entity}}" hidden?="{{primaryAction.action}}" shortDesc="{{primaryAction.shortDesc}}" longDesc="{{primaryAction.longDesc}}" icon="{{primaryAction.icon}}" componentUri="{{primaryAction.componentUri}}" elementName="{{primaryAction.elementName}}" attrs="{{primaryAction.attrs}}" createContextHolder="{{primaryAction.createContextHolder}}" requireSelectionCriteria="{{primaryAction.requireSelectionCriteria}}" requireSelectedEntities="{{primaryAction.requireSelectedEntities}}" requireMasterEntity="{{primaryAction.requireMasterEntity}}" preAction="{{primaryAction.preAction}}" postActionSuccess="{{primaryAction.postActionSuccess}}" postActionError="{{primaryAction.postActionError}}"></tg-ui-action>
+                            </div>
+                        </div>
+                        <div hidden?="{{secondaryActions.length === 0}}" layout horizontal center relative>
+                            <template repeat="{{action in secondaryActions}}">
+                                <tg-page-action icon="{{action.icon}}" action="{{action.action}}" context="{{entity}}" hidden?="{{!action.action}}"></tg-page-action>
+                                <tg-ui-action hidden?="{{action.action}}" currentEntity="{{entity}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectionCriteria="{{action.requireSelectionCriteria}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
+                            </template>
+                        </div>
+                    </div>
+                    <div style="position:relative; background-color: white; {{collapsePanelVisible ? 'padding-bottom:24px':''}}">
+                        <tg-flex-layout whenDesktop="{{desktopLayoutShort}}" whenTablet="{{tabletLayoutShort}}" whenMobile="{{mobileLayoutShort}}">
+                            <template repeat="{{column, columnIndex in columns}}">
+                                <div class="data-entry" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
+                                    <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                        <div class="data-label truncate">{{column.columnTitle}}</div>
+                                        <span class="span-tooltip" tip>{{column.columnDesc}}</span>
+                                    </core-tooltip>
+                                    <div class="data-value" relative entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
+                                        <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
+                                        </div>
+                                        <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                            <div hidden?="{{column.type !== 'Boolean' || get(entity, column) === null}}">
+                                                <core-icon style="height:1.1em" icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
+                                            </div>
+                                            <div hidden?="{{column.type === 'Boolean'}}">
+                                                <div class="truncate">{{getValue(entity, column)}}</div>
+                                            </div>
+                                            <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
+                                        </core-tooltip>
+                                    </div>
+                                </div>
+                            </template>
+                        </tg-flex-layout>
+                        <core-collapse opened?="{{openModel[entityIndex]}}" allowOverflow hidden?="{{!collapsePanelVisible}}">
+                            <tg-flex-layout whenDesktop="{{desktopLayoutLong}}" whenTablet="{{tabletLayoutLong}}" whenMobile="{{mobileLayoutLong}}">
+                                <template repeat="{{column, columnIndex in columns}}">
+                                    <div class="data-entry" property="{{column.property === '' ? 'this' : column.property}}" layout vertical>
+                                        <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                            <div class="data-label truncate">{{column.columnTitle}}</div>
+                                            <span class="span-tooltip" tip>{{column.columnDesc}}</span>
+                                        </core-tooltip>
+                                        <div class="data-value" relative entityInd="{{entityIndex}}" columnInd="{{columnIndex}}" on-tap="{{tapAction}}">
+                                            <div style="opacity: 0.3; {{renderingHints[entityIndex][column.property] | styleObject}}" fit>
+                                            </div>
+                                            <core-tooltip position="bottom" class="delayed" style="width:100%">
+                                                <div hidden?="{{column.type !== 'Boolean' || get(entity, column) === null}}">
+                                                    <core-icon style="height:1.1em" icon="{{get(entity, column) ? 'check' : 'clear'}}"></core-icon>
+                                                </div>
+                                                <div hidden?="{{column.type === 'Boolean'}}">
+                                                    <div class="truncate">{{getValue(entity, column)}}</div>
+                                                </div>
+                                                <span class="span-tooltip" tip>{{getTooltip(entity, column)}}</span>
+                                            </core-tooltip>
+                                        </div>
+                                    </div>
+                                </template>
+                            </tg-flex-layout>
+                        </core-collapse>
+                        <core-icon-button hidden?="{{!collapsePanelVisible}}" class="expand-button" id="actionButton" index="{{entityIndex}}" icon="{{openModel[entityIndex] ? 'expand-less':'expand-more'}}" on-tap="{{toggleCollapsePanel}}"></core-icon-button>
+                    </div>
+                </paper-material>
+            </template>
+        </template>
     </template>
 </dom-module>
 <script>

@@ -44,7 +44,7 @@ public class EgiExampleResource extends ServerResource {
 
     private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory) {
         final List<AbstractEntity<?>> data = new ArrayList<AbstractEntity<?>>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             data.add(entityFactory.newByKey(TgPersistentEntityWithProperties.class, "KEY" + i).setIntegerProp(i * 10 + 3).setStringProp("String prop value " + i).setBigDecimalProp(BigDecimal.valueOf(i * 1.0 + 3.1))
                     .setDesc("Description for entity with key " + i + "."));
         }
