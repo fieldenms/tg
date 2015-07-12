@@ -109,12 +109,21 @@ public class LoginResource extends ServerResource {
             }
 
             // otherwise just load the login page for user to login in explicitly
+            return loginPage();
+        } catch (final Exception ex) {
+            // in case of an exception try try return a login page.
+            logger.fatal(ex);
+            return loginPage();
+        }
+    }
+
+    public Representation loginPage() {
+        try {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login.html").replaceAll("@title", "Login").getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
-        } catch (final UnsupportedEncodingException ex) {
+        } catch (final Exception ex) {
             logger.fatal(ex);
-            getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-            return restUtil.errorJSONRepresentation(ex);
+            throw new IllegalStateException(ex);
         }
     }
 
