@@ -70,8 +70,12 @@
         .card {
             margin: 20px 30px;
         }
+        .card-toolbar {
+            background-color: white;
+            margin: 0 30px;
+        }
         .card-header {
-            padding: 4px;
+            padding: 10px;
             border-bottom: 1px solid #e5e5e5;
         }
         .card-header-background[selected] {
@@ -117,7 +121,7 @@
 
         <!-- The dialog for tg-ui-action -->
         <!-- The dialog for summary when egi is in card layout -->
-        <paper-dialog id="modal" modal entry-animation="slide-down-animation" exit-animation="slide-up-animation">
+        <paper-dialog id="summaryDialog" modal entry-animation="slide-down-animation" exit-animation="slide-up-animation">
             <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
                 <template is="dom-repeat" items="[[cardSummary]]">
                     <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(item)]]">
@@ -138,22 +142,20 @@
             </div>
         </paper-dialog>
 
-        <!-- Toolbar template if it will be needed any longer-->
-
         <template is="dom-if" if="[[!cardLayout]]">
-            <paper-material elevation="1">
+            <paper-material elevation="1" style="margin: 10px 30px;">
                 <div class="layout vertical data-table">
                     <!--Table toolbar-->
-
-                    <div class="grid-toolbar layout horizontal justified">
-                        <div class="layout horizontal center">
-                            <content select=".entity-specific-action"></content>
+                    <template is="dom-if" if="[[!cardLayout]]" restamp>
+                        <div class="grid-toolbar layout horizontal justified">
+                            <div class="layout horizontal center">
+                                <content select=".entity-specific-action"></content>
+                            </div>
+                            <div class="layout horizontal center">
+                                <content select=".standart-action"></content>
+                            </div>
                         </div>
-                        <div class="layout horizontal center">
-                            <content select=".standart-action"></content>
-                        </div>
-                    </div>
-
+                    </template>
                     <!-- Table header -->
                     <div class="layout horizontal table-header-row">
                         <div class="table-cell layout horizontal center">
@@ -239,6 +241,18 @@
             </paper-material>
         </template>
         <template is="dom-if" if="[[cardLayout]]">
+            <template is="dom-if" if="[[cardLayout]]" restamp>
+                <div class="card-toolbar layout vertical">
+                    <div class="layout horizontal center">
+                        <content select=".entity-specific-action"></content>
+                    </div>
+                    <div class="layout horizontal center">
+                        <paper-checkbox style="margin-left:10px;" class="blue" on-iron-change="_allSelectionChanged"></paper-checkbox>
+                        <paper-icon-button icon="editor:functions" on-tap="_showSummary" disabled$="[[!_isSummaryEnabled(egiModel, cardLayout)]]"></paper-icon-button>
+                        <content select=".standart-action"></content>
+                    </div>
+                </div>
+            </template>
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                 <paper-material elevation="1" class="card layout vertical">
                     <div class="card-header layout horizontal center justified relative">
@@ -246,7 +260,7 @@
                         <div class="layout horizontal center relative">
                             <div>
                                 <!-- this div might not be needed-->
-                                <paper-checkbox checked="[[egiEntity.selected]]" on-iron-change="_selectionChanged"></paper-checkbox>
+                                <paper-checkbox class="blue" checked="[[egiEntity.selected]]" on-iron-change="_selectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <!--Primary actions goes here-->
@@ -600,6 +614,12 @@
                 return "width: " + columns[summaryIndex].width + ";";
             },
             /**
+             * Determines whether totals button is enable or disabled (only in card layout mode).
+             */
+            _isSummaryEnabled: function(entities, cardLayout) {
+                return !!this.totals;
+            },
+            /**
              * Returns the property value of the specified entity.
              */
             _get: function (entity, column) {
@@ -644,6 +664,14 @@
              */
             _tapAction: function (e, detail, source) {
                 console.log(e, detail, source);
+            },
+            /**
+             * Shows the summary dialog if the EGI is in card layout and there were totals defined.
+             */
+            _showSummary: function (e, detail, source) {
+                if (this.cardLayout && this.totals) {
+                    this.$.summaryDialog.open();
+                }
             },
             ///////////////////Next three functions are responsible for calculating media queries expressions for mobile tablet and desktop screens/////////
             _calcMobileQuery: function () {
