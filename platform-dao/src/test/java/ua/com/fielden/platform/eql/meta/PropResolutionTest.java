@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
@@ -57,6 +60,19 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         return entResultQry2(qry, new TransformatorToS2(metadata));
     }
 
+    @Test
+    @Ignore
+    public void test_proper_resolution_of_props_in_two_sources_joining_conditionon() {
+        final AggregatedResultQueryModel qry= select(TgAuthorship.class).as("as1").join(TgAuthor.class).as("a1").on().prop("author").eq().prop("a2.id").
+                join(TgAuthor.class).as("a2").on().prop("a1.id").eq().prop("a2.id").
+                modelAsAggregate();
+        try {
+            entResultQry2(qry, new TransformatorToS2(metadata));
+            fail("Should have failed to resolve prop a2.id");
+        } catch (final Exception e) {
+        }
+    }
+    
     @Test
     @Ignore
     public void test_q1() {

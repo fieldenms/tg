@@ -23,6 +23,10 @@ public class SourcesStack {
         sourcesList.add(sources);
     }
 
+    public void add(SourcesStack sourcesStack) {
+        sourcesList.addAll(sourcesStack.sourcesList);
+    }
+
     public void accumulateTransformedSource(final ISource1<? extends ISource2> originalSource, SourceInfo sourceInfo) {
         sourcesList.get(0).put(originalSource, sourceInfo);
     }

@@ -13,7 +13,6 @@ public class Sources1 implements IElement1<Sources2> {
     private final List<CompoundSource1> compounds;
 
     public Sources1(final ISource1<? extends ISource2> main, final List<CompoundSource1> compounds) {
-        super();
         this.main = main;
         this.compounds = compounds;
     }
@@ -26,16 +25,6 @@ public class Sources1 implements IElement1<Sources2> {
             compoundSource.getJoinConditions().transform(resolver)));
         }
         return new Sources2(main.transform(resolver), transformed);
-    }
-
-    @Override
-    public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(main);
-        for (final CompoundSource1 compound : compounds) {
-            sb.append(" " + compound);
-        }
-        return sb.toString();
     }
 
     public ISource1<? extends ISource2> getMain() {

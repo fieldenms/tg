@@ -56,7 +56,7 @@ public class TransformatorToS2 {
 
     public TransformatorToS2 produceBasedOn() {
         final TransformatorToS2 result = new TransformatorToS2(metadata);
-        result.sourcesStack.getSourcesList().addAll(sourcesStack.getSourcesList());
+        result.sourcesStack.add(sourcesStack);
         return result;
     }
 
@@ -65,7 +65,7 @@ public class TransformatorToS2 {
     }
 
     public TransformatorToS2 produceOneForCalcPropExpression(final ISource2 source) {
-        final TransformatorToS2 result = new TransformatorToS2(metadata);
+        final TransformatorToS2 result = produceNewOne();
         for (final Map<ISource1<? extends ISource2>, SourceInfo> item : sourcesStack.getSourcesList()) {
             for (final Entry<ISource1<? extends ISource2>, SourceInfo> mapItem : item.entrySet()) {
                 if (mapItem.getValue().getSource().equals(source)) {

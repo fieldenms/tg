@@ -116,15 +116,10 @@ public class BaseEntQueryTCase1 {
         }
 
     }
-    //private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery1 entSourceQry(final QueryModel qryModel) {
         return qb.generateEntQueryAsSourceQuery(qryModel, null);
     }
-
-    //    protected static EntQuery1 entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-    //	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);
-    //    }
 
     protected static Expression1 entQryExpression(final ExpressionModel exprModel) {
         return (Expression1) new StandAloneExpressionBuilder1(qb, exprModel).getResult().getValue();
@@ -167,16 +162,6 @@ public class BaseEntQueryTCase1 {
         return qb.generateEntQueryAsSubquery(qryModel);
     }
 
-    //    protected static EntQuery1 entResultQryWithUserFilter(final QueryModel qryModel) {
-    //	if (qryModel instanceof EntityResultQueryModel) {
-    //	    return qbwf.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model());
-    //	} else if (qryModel instanceof AggregatedResultQueryModel) {
-    //	    return qbwf.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel)qryModel).model());
-    //	} else {
-    //	    throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
-    //	}
-    //    }
-
     protected static EntProp1 prop(final String propName) {
         return new EntProp1(propName);
     }
@@ -201,37 +186,6 @@ public class BaseEntQueryTCase1 {
         return new OperandsBasedSet1(Arrays.asList(operands));
     }
 
-    //    protected static PurePropInfo ppi(final String name, final Class type, final Object hibType, final boolean nullable) {
-    //	return new PurePropInfo(name, type, hibType, nullable);
-    //    }
-    //
-    //    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final PurePropInfo propPart, final PurePropInfo explicitPropPart) {
-    //	return new PropResolutionInfo(prop(propName), aliasPart, propPart, explicitPropPart);
-    //    }
-    //
-    //    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final PurePropInfo propPart) {
-    //	return new PropResolutionInfo(prop(propName), aliasPart, propPart, propPart);
-    //    }
-    //
-    //    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final PurePropInfo propPart, final PurePropInfo explicitPropPart) {
-    //	return new PropResolutionInfo(prop(propName), aliasPart, propPart, explicitPropPart, true);
-    //    }
-    //
-    //    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final PurePropInfo propPart) {
-    //	return new PropResolutionInfo(prop(propName), aliasPart, propPart, propPart, true);
-    //    }
-    //
-    //    protected List<List<PropResolutionInfo>> getSourcesReferencingProps(final EntQuery entQry) {
-    //	final List<List<PropResolutionInfo>> result = new ArrayList<List<PropResolutionInfo>>();
-    //	for (final ISource source : entQry.getSources().getAllSources()) {
-    //	    if (!source.generated()) {
-    //		result.add(source.getReferencingProps());
-    //	    }
-    //	}
-    //
-    //	return result;
-    //    }
-
     protected final List<PropResolutionInfo> prepare(final PropResolutionInfo... infos) {
         return Arrays.asList(infos);
     }
@@ -252,29 +206,11 @@ public class BaseEntQueryTCase1 {
         assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
 
-    //    public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
-    //	shortcutModel.setFilterable(true);
-    //	final EntQuery1 shortcutQry = entResultQryWithUserFilter(shortcutModel);
-    //	final EntQuery1 explicitQry = entResultQry(explicitModel);
-    //	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
-    //    }
-
     public static void assertModelsDifferent(final QueryModel shortcutModel, final QueryModel explicitModel) {
         final EntQuery1 shortcutQry = entResultQry(shortcutModel);
         final EntQuery1 explicitQry = entResultQry(explicitModel);
         assertFalse(("Query models are equal! exp: " + shortcutQry.toString() + " act: " + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
-
-    //    public static void assertPropInfoEquals(final QueryModel qryModel, final String propName, final PropResolutionInfo propResInfo) {
-    //	final PropResolutionInfo act = entResultQry(qryModel).getSources().getMain().containsProperty(prop(propName));
-    //	assertEquals(("Prop resolution infos are different! exp: " + propResInfo.toString() + " act: " + act.toString()), propResInfo, act);
-    //    }
-    //
-    //    public static void assertPropInfoDifferent(final QueryModel qryModel, final String propName, final PropResolutionInfo propResInfo) {
-    //	final PropResolutionInfo act = entResultQry(qryModel).getSources().getMain().containsProperty(prop(propName));
-    //	assertFalse(("Prop resolution infos are equal! exp: " + propResInfo.toString() + " act: " + act.toString()), propResInfo.equals(act));
-    //    }
-
     public static Type hibType(final String name) {
         return typeResolver.basic(name);
     }
