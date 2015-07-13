@@ -9,6 +9,9 @@
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animations.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
 <dom-module id="tg-entity-grid-inspector">
     <style>
@@ -47,6 +50,10 @@
         .table-cell:first-child {
             margin-left: 1.2rem;
         }
+        .grid-toolbar {
+            height: 4rem;
+            margin: 0 0.6rem;
+        }
         paper-checkbox.blue {
             --paper-checkbox-checked-color: #0288D1;
             --paper-checkbox-checked-ink-color: #0288D1;
@@ -76,17 +83,17 @@
             opacity: 0.7;
         }
         .data-entry {
-            padding: 0.75em 1.5em;
+            padding: 0.75rem 1.5rem;
         }
         .data-label {
-            font-size: 0.75em;
+            font-size: 0.75rem;
             background: transparent;
             color: #757575;
             cursor: default;
         }
         .data-value {
-            height: 1.4em;
-            margin: 0.5em 0 0.25em;
+            height: 1.4rem;
+            margin: 0.5rem 0 0.25rem;
             border-bottom: 1px solid black;
             cursor: pointer;
             color: #607D8B;
@@ -110,14 +117,35 @@
 
         <!-- The dialog for tg-ui-action -->
         <!-- The dialog for summary when egi is in card layout -->
+        <paper-dialog id="modal" modal entry-animation="slide-down-animation" exit-animation="slide-up-animation">
+            <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
+                <template is="dom-repeat" items="[[cardSummary]]">
+                    <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(item)]]">
+                        <div class="data-label truncate">[[item.columnTitle]]</div>
+                        <div class="data-value relative">
+                            <template is="dom-if" if="[[_isBooleanProp(totals, item)]]">
+                                <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(totals, item)]]"></iron-icon>
+                            </template>
+                            <template is="dom-if" if="[[_isNotBooleanProp(totals, item)]]">
+                                <div class="truncate">[[_getValue(totals, item)]]</div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </tg-flex-layout>
+            <div class="buttons">
+                <paper-button dialog-confirm autofocus>Close</paper-button>
+            </div>
+        </paper-dialog>
+
         <!-- Toolbar template if it will be needed any longer-->
 
         <template is="dom-if" if="[[!cardLayout]]">
             <paper-material elevation="1">
                 <div class="layout vertical data-table">
                     <!--Table toolbar-->
-                    <!--
-                    <div class="layout horizontal justified">
+
+                    <div class="grid-toolbar layout horizontal justified">
                         <div class="layout horizontal center">
                             <content select=".entity-specific-action"></content>
                         </div>
@@ -125,7 +153,7 @@
                             <content select=".standart-action"></content>
                         </div>
                     </div>
--->
+
                     <!-- Table header -->
                     <div class="layout horizontal table-header-row">
                         <div class="table-cell layout horizontal center">
@@ -177,9 +205,36 @@
                         </div>
                     </template>
                     <!-- Table footer -->
-                    <div class="layout vertical">
-                        <!-- Totals go here -->
-                    </div>
+                    <temaplet is="dom-if" if="[[totals]]">
+                        <template is="dom-repeat" items="[[gridSummary]]" as="summaryRow" index-as="summaryRowIndex">
+                            <template is="dom-if" if="[[primaryAction]]">
+                                <div class="table-cell layout horizontal center">
+                                    <!--Primary action header goes here-->
+                                </div>
+                            </template>
+                            <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
+                                <template is="dom-if" if="[[summary]]">
+                                    <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
+                                        <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
+                                            <iron-icon icon="[[_getBooleanIcon(totals, summary)]]"></iron-icon>
+                                        </template>
+                                        <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                            <div class="truncate" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary)]]</div>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template is="dom-if" if="[[!summary]]">
+                                    <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns)]]">
+                                    </div>
+                                </template>
+                            </template>
+                            <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
+                                <div class="table-cell">
+                                    <!--Secondary actions header goes here-->
+                                </div>
+                            </template>
+                        </template>
+                    </temaplet>
                 </div>
             </paper-material>
         </template>
@@ -537,6 +592,12 @@
              */
             _calcCollapseIcon: function (entityOpened) {
                 return entityOpened ? 'expand-less' : 'expand-more';
+            },
+            /**
+             * Calculates the style for empty total's cell.
+             */
+            _calcEmptyTotalStyle: function (summaryIndex, columns) {
+                return "width: " + columns[summaryIndex].width + ";";
             },
             /**
              * Returns the property value of the specified entity.

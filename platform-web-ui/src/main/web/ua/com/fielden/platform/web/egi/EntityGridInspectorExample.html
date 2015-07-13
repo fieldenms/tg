@@ -12,15 +12,26 @@
 
     <link rel="import" href="/resources/serialisation/tg-serialiser.html">
     <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+    <link rel="import" href="/resources/polymer/iron-icons/hardware-icons.html">
+    <link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
+    <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
     <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
     <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
     <link rel="import" href="/resources/egi/tg-property-column.html">
 
-    <style>
+    <style is="custom-style">
+        html {
+            font-size: 12pt;
+        }
         body {
             font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
             background-color: #EEEEEE;
+        }
+        paper-icon-button.revers {
+            --paper-icon-button: {
+                transform: scale(-1, 1);
+            }
+            ;
         }
     </style>
 
@@ -60,15 +71,15 @@
             <tg-property-column property="stringProp" width="50px" type="String" column-title="String prop" column-desc="String prop desc"></tg-property-column>
             <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
             </tg-property-column>
-            <!--<paper-icon-button class="entity-specific-action" icon="add-circle-outline"></paper-icon-button>
+            <paper-icon-button class="entity-specific-action" icon="add-circle-outline"></paper-icon-button>
             <paper-icon-button class="entity-specific-action" icon="editor:mode-edit"></paper-icon-button>
             <paper-icon-button class="entity-specific-action" icon="remove-circle-outline"></paper-icon-button>
             <paper-icon-button class="standart-action" icon="file-download"></paper-icon-button>
             <paper-icon-button class="standart-action revers" icon="hardware:keyboard-tab"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-backspace"></paper-icon-button>
-            <paper-icon-button class="revers" icon="hardware:keyboard-backspace"></paper-icon-button>
-            <paper-icon-button icon="hardware:keyboard-tab"></paper-icon-button>
-            <paper-icon-button icon="refresh" on-tap="loadData"></paper-icon-button>-->
+            <paper-icon-button class="standart-action" icon="hardware:keyboard-backspace"></paper-icon-button>
+            <paper-icon-button class="standart-action revers" icon="hardware:keyboard-backspace"></paper-icon-button>
+            <paper-icon-button class="standart-action" icon="hardware:keyboard-tab"></paper-icon-button>
+            <paper-icon-button class="standart-action" icon="refresh" on-tap="loadData"></paper-icon-button>
             <!--<tg-primary-instance-action actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>-->
         </tg-entity-grid-inspector>
     </template>
@@ -104,7 +115,7 @@
                     [['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=stringProp'], ['flex', 'select:property=integerProp']]
                 ],*/
                 tablet: [
-                    [['flex', 'select:property=integerProp'],['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],
                     [['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=stringProp'], ['flex', 'select:property=integerProp']]
                 ],
                 mobile: [
