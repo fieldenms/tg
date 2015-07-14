@@ -1,3 +1,12 @@
+:host {
+	@apply(--layout-horizontal);
+	@apply(--layout-end);
+}
+
+.dialog-configs {
+	@apply(--layout-vertical);
+}
+
 html /deep/ .meta-value-editor paper-checkbox::shadow #checkbox.checked {
     background-color: #0288D1;
     border-color: #0288D1;

@@ -35,6 +35,16 @@
         		processError: {
         			type: Function,
         			notify: true
+        		},
+        		
+        		orNull: {
+        			type: Boolean,
+        			notify: true
+        		},
+        		
+        		not: {
+        			type: Boolean,
+        			notify: true
         		}
         	},
         	
@@ -53,6 +63,9 @@
         		this.processError = function (event) {
     				console.log("ERROR =", event, event.detail.error); // event.detail is { error: 'error', request: 'iron-request' }
     			};
+    			
+    			this.orNull = true;
+    			this.not = false;
         	},
         	
         	createBindingEntity: function () {

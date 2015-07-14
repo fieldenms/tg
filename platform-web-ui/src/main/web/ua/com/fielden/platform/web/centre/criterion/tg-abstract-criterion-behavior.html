@@ -1,0 +1,152 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
+
+<script>
+	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+	Polymer.TgBehaviors.TgAbstractCriterionBehavior = {
+    	
+        properties: {
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+        	// No default values are allowed in this case.														   //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	
+            /**
+             * This callback should be used for custom validation action after some meta-value has been changed.
+             */
+            validationCallback: {
+            	type: Object
+            },
+            
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
+        	//   alternatively, computing function needs to be specified). 									       //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            _whenDesktop: {
+            	type: Array,
+            	value: function () {
+            		return this._createWhenDesktopConfig();
+            	}
+            },
+            
+            _whenTablet: {
+            	type: Array,
+            	computed: '_computeTabletRepresentation(_whenDesktop)'
+            },
+            
+            _whenMobile: {
+            	type: Array,
+            	computed: '_computeMobileRepresentation(_whenDesktop)'
+            },
+            
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        	//   prefix. 																				           //
+        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+        	//   populate their default values in ready callback (to have these values populated in children)!     //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            _showMetaValuesEditor: Function,
+            _acceptMetaValuesForBinding: Function,
+            _cancelMetaValuesForBinding: Function,
+            _computeIconButtonStyleForBinding: Function
+        },
+        
+        attached: function() {
+           this.async(function() {
+              // code that formerly resided in `domReady`
+           });
+        },
+        
+        observers: [
+        	'_updateIconButtonStyle(orNull, not)'
+        ],
+
+        ready: function() {
+        	// var smth = Polymer.dom(this).querySelectorAll('.criterion-editors');
+        	// console.log("smth", smth);
+        	
+            var flexElement = document.createElement('tg-flex-layout');
+            flexElement.whenDesktop = this._whenDesktop;
+            flexElement.whenTablet = this._whenTablet;
+            flexElement.whenMobile = this._whenMobile;
+
+            // var content = Polymer.dom(this.root).querySelector('content'); // this._dom().components;
+            // Polymer.dom(content).getDistributedNodes()
+            Array.prototype.forEach.call(Polymer.dom(this).querySelectorAll('.criterion-editors'), function (item) {
+            	Polymer.dom(flexElement).appendChild(item);
+            }.bind(this));
+            Polymer.dom(this._dom()).appendChild(flexElement);
+            // Polymer.dom.flush();
+            
+            this._showMetaValuesEditor = (function (e) {
+            	this._dom().$.metaValueEditor.opened = true;
+            }).bind(this);
+            
+            this._acceptMetaValuesForBinding = this._acceptMetaValues.bind(this);
+            this._cancelMetaValuesForBinding = this._cancelMetaValues.bind(this);
+            this._computeIconButtonStyleForBinding = this._computeIconButtonStyle.bind(this);
+        },
+        
+        _createWhenDesktopConfig: function () {
+        	throw "not implemented";
+        	// return ['horizontal', 'justified', 'flex', ['flex'], ['flex']];
+        },
+        
+        _computeTabletRepresentation: function (_whenDesktop) {
+        	return _whenDesktop; // the same as in 'desktop'
+        },
+        _computeMobileRepresentation: function (_whenDesktop) {
+        	return _whenDesktop; // the same as in 'desktop'
+        },
+
+        /**
+         * Accepts all new meta-values. Should be overridden to provide acceptance in specific descendants.
+         */
+        _acceptMetaValues: function() {
+            this.validationCallback();
+        },
+
+        /**
+         * Cancels all new meta-values. Should be overridden to provide cancellation in specific descendants.
+         */
+        _cancelMetaValues: function() {
+        },
+
+        /**
+         * Returns 'true' if criterion has no meta values assigned, 'false' otherwise. Should be overridden to provide functionality in specific descendants.
+         */
+        _hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        	return true;
+        },
+        
+        _updateIconButtonStyle: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        	Polymer.dom(this._dom().$.iconButton).setAttribute("style", this._computeIconButtonStyle(this.orNull, this.not, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore));
+        },
+        
+        _computeIconButtonStyle: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        	return "visibility:" + (!this._iconButtonVisible() ? 'hidden' : 'inherit') + "; color:" + (this._hasNoMetaValues(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) ? '#757575' : '#0288D1') + ";";
+        },
+        
+        /**
+         * Returns 'true' if the icon button of this criterion editor should be visible, 'false' otherwise.
+         */
+        _iconButtonVisible: function () {
+        	return true;
+        },
+        
+        /**
+         * Returns the reference to main 'dom' element (of type 'tg-abstract-criterion').
+         */
+	    _dom: function () {
+    		throw "not implemented";
+    	}
+    };
+</script>

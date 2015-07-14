@@ -1,0 +1,41 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/centre/criterion/tg-abstract-criterion-behavior.html">
+<link rel="import" href="/resources/centre/criterion/tg-abstract-criterion.html">
+
+<dom-module id="tg-single-criterion">
+	<template>
+		<tg-abstract-criterion 
+			id="dom1"
+			_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
+			_accept-meta-values="[[_acceptMetaValuesForBinding]]"
+			_show-meta-values-editor="[[_showMetaValuesEditor]]"
+			_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]">
+			<content select=".criterion-editors"></content>
+		</tg-abstract-criterion>
+	</template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-single-criterion',
+    	
+    	behaviors: [ Polymer.TgBehaviors.TgAbstractCriterionBehavior ],
+    	
+        ready: function () {
+        	this._updateIconButtonStyle();
+        },
+    	
+    	_iconButtonVisible: function () {
+    		return false;
+    	},
+    	
+        _createWhenDesktopConfig: function () {
+        	return ['horizontal', 'justified', 'flex', ['flex']];
+        },
+        
+        _dom: function () {
+        	return this.$.dom1;
+        }
+    });
+</script>
