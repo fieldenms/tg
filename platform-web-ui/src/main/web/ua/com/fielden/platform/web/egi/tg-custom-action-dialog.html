@@ -1,0 +1,72 @@
+<link rel="import" href="/resources/element-loader/tg-element-loader.html">
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+
+<dom-module id="tg-custom-action-dialog">
+    <template>
+        <!--The template of dialog for tg-ui-action-->
+        <paper-dialog id="entityMaster" modal on-iron-overlay-opened="_dialogOpened" entry-animation="slide-down-animation" exit-animation="slide-up-animation">
+            <tg-element-loader id="loadMaster" on-after-load="_afterMasterLoad"></tg-element-loader>
+            <div class="buttons">
+                <paper-button dialog-confirm autofocus>Close</paper-button>
+            </div>
+        </paper-dialog>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-custom-action-dialog",
+
+            prperties: {
+                isRunning: {
+                    type: Boolean,
+                    readOnly: true,
+                    reflectToAttribute: true
+                }
+            },
+
+            listeners: {
+                'layout-finished': '_showMaster'
+            },
+
+            ready: function () {
+                //Initialising the action runner
+                this.currentActionRunning = null;
+            },
+
+            showDialog: function (customAction) {
+                if (!this.currentRunningAction) {
+                    this._setIsRunning(true);
+                    this.currentRunningAction = customAction;
+                    this.$.loadMaster.import = this.currentRunningAction.componentUri;
+                    this.$.loadMaster.elementName = this.currentRunningAction.elementName;
+                    this.$.loadMaster.attrs = this.currentRunningAction.attrs;
+                    this.$.loadMaster.reload();
+                }
+            },
+
+            _afterMasterLoad: function (e, detail, soource) {
+                if (this.currentRunningAction) {
+                    this.currentRunningAction._onExecuted(e, detail, source);
+                    if (this.currentRunningAction.masterComponent.noUI === true) {
+                        this.currentRunningAction = null;
+                    }
+                }
+            },
+
+            _showMaster: function (e) {
+                if (this.currentRunningAction && this.currentRunningAction.masterComponent.noUI === false) {
+                    this.$.entityMaster.open();
+                }
+            },
+
+            _dialogOpened: function (e, detail, source) {
+                this.currentRunningAction = null;
+                this._setIsRunning(false);
+            },
+        });
+    })();
+</script>

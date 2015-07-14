@@ -2,6 +2,7 @@
 <link rel="import" href="/tg-web-app/tg-app-config.html">
 <link rel="import" href="/tg-reflector">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -12,6 +13,7 @@
 <link rel="import" href="/resources/polymer/neon-animation/neon-animations.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-ripple/paper-ripple.html">
 
 <dom-module id="tg-entity-grid-inspector">
     <style>
@@ -44,11 +46,16 @@
         .table-data-row:hover {
             background-color: #EEEEEE;
         }
-        .table-cell {
+        .table-cell,
+        .table-data-cell {
             margin-right: 1.2rem;
         }
-        .table-cell:first-child {
+        .table-cell:first-child,
+        .table-data-cell:first-child {
             margin-left: 1.2rem;
+        }
+        .table-data-cell {
+            cursor: pointer;
         }
         .grid-toolbar {
             height: 4rem;
@@ -101,6 +108,7 @@
             border-bottom: 1px solid black;
             cursor: pointer;
             color: #607D8B;
+            cursor: pointer;
         }
         .expand-button {
             position: absolute;
@@ -120,6 +128,8 @@
         <iron-media-query id="desktopQuery" query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>
 
         <!-- The dialog for tg-ui-action -->
+        <tg-custom-action-dialog id="actionDialog"></tg-custom-action-dialog>
+
         <!-- The dialog for summary when egi is in card layout -->
         <paper-dialog id="summaryDialog" modal entry-animation="slide-down-animation" exit-animation="slide-up-animation">
             <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
@@ -142,20 +152,18 @@
             </div>
         </paper-dialog>
 
-        <template is="dom-if" if="[[!cardLayout]]">
+        <template is="dom-if" if="[[!cardLayout]]" restamp>
             <paper-material elevation="1" style="margin: 10px 30px;">
                 <div class="layout vertical data-table">
                     <!--Table toolbar-->
-                    <template is="dom-if" if="[[!cardLayout]]" restamp>
-                        <div class="grid-toolbar layout horizontal justified">
-                            <div class="layout horizontal center">
-                                <content select=".entity-specific-action"></content>
-                            </div>
-                            <div class="layout horizontal center">
-                                <content select=".standart-action"></content>
-                            </div>
+                    <div class="grid-toolbar layout horizontal justified">
+                        <div class="layout horizontal center">
+                            <content select=".entity-specific-action"></content>
                         </div>
-                    </template>
+                        <div class="layout horizontal center">
+                            <content select=".standart-action"></content>
+                        </div>
+                    </div>
                     <!-- Table header -->
                     <div class="layout horizontal table-header-row">
                         <div class="table-cell layout horizontal center">
@@ -189,8 +197,10 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <div class="table-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
-                                    <div class="fit" style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]"></div>
+                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
+                                    <div class="fit" style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]">
+                                        <paper-ripple style="pointer-events: none"></paper-ripple>
+                                    </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                         <iron-icon icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
                                     </template>
@@ -240,19 +250,17 @@
                 </div>
             </paper-material>
         </template>
-        <template is="dom-if" if="[[cardLayout]]">
-            <template is="dom-if" if="[[cardLayout]]" restamp>
-                <div class="card-toolbar layout vertical">
-                    <div class="layout horizontal center">
-                        <content select=".entity-specific-action"></content>
-                    </div>
-                    <div class="layout horizontal center">
-                        <paper-checkbox style="margin-left:10px;" class="blue" on-iron-change="_allSelectionChanged"></paper-checkbox>
-                        <paper-icon-button icon="editor:functions" on-tap="_showSummary" disabled$="[[!_isSummaryEnabled(egiModel, cardLayout)]]"></paper-icon-button>
-                        <content select=".standart-action"></content>
-                    </div>
+        <template is="dom-if" if="[[cardLayout]]" restamp>
+            <div class="card-toolbar layout vertical">
+                <div class="layout horizontal center">
+                    <content select=".entity-specific-action"></content>
                 </div>
-            </template>
+                <div class="layout horizontal center">
+                    <paper-checkbox style="margin-left:10px;" class="blue" on-iron-change="_allSelectionChanged"></paper-checkbox>
+                    <paper-icon-button icon="editor:functions" on-tap="_showSummary" disabled$="[[!_isSummaryEnabled(egiModel, cardLayout)]]"></paper-icon-button>
+                    <content select=".standart-action"></content>
+                </div>
+            </div>
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                 <paper-material elevation="1" class="card layout vertical">
                     <div class="card-header layout horizontal center justified relative">
@@ -279,6 +287,7 @@
                                     <div class="data-label truncate">[[column.columnTitle]]</div>
                                     <div class="data-value relative" on-tap="_tapAction">
                                         <div style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]" class="fit">
+                                            <paper-ripple style="pointer-events: none"></paper-ripple>
                                         </div>
                                         <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                             <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
@@ -300,6 +309,7 @@
                                             <div class="data-label truncate">[[column.columnTitle]]</div>
                                             <div class="data-value relative" on-tap="_tapAction">
                                                 <div style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]" class="fit">
+                                                    <paper-ripple style="pointer-events: none"></paper-ripple>
                                                 </div>
                                                 <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                                     <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
@@ -616,7 +626,7 @@
             /**
              * Determines whether totals button is enable or disabled (only in card layout mode).
              */
-            _isSummaryEnabled: function(entities, cardLayout) {
+            _isSummaryEnabled: function (entities, cardLayout) {
                 return !!this.totals;
             },
             /**
@@ -642,6 +652,42 @@
                 }
             },
             /**
+             * Replaces the entitiesThatShouldBeUpdated with the updated ones (and their rendering hints).
+             *
+             * Please note, that if some entity from entitiesThatShouldBeUpdated does not exists in updatedEntities list
+             *   -- it will be removed from result-set.
+             */
+            replaceUpdatedEntities: function (updatedEntities, updatedRenderingHints, entitiesThatShouldBeUpdated) {
+                var newEntities = this.entities.slice(); // array copy (shallow)
+                var newRenderingHints = this.renderingHints.slice(); // array copy (shallow)
+                for (var i = 0; i < updatedEntities.length; i = i + 1) {
+                    var updatedEntity = updatedEntities[i];
+                    var updatedEntityRenderingHints = updatedRenderingHints[i];
+                    // console.log("updated", updatedEntity, updatedEntityRenderingHints);
+                    var entityIndex = findEntity(updatedEntity, newEntities);
+                    if (entityIndex !== -1) {
+                        newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
+                        newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
+                    } else {
+                        // this is the case when the updateEntity was not present in result-set, but should become present. Adds it into the beginning of the list
+                        newEntities.unshift(updatedEntity);
+                        newRenderingHints.unshift(updatedEntityRenderingHints);
+                    }
+                }
+                // need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
+                for (var j = 0; j < entitiesThatShouldBeUpdated.length; j = j + 1) {
+                    var entityThatShouldBeUpdated = entitiesThatShouldBeUpdated[j];
+                    if (!hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
+                        var index = findEntity(entityThatShouldBeUpdated, newEntities);
+
+                        newEntities.splice(index, 1); // remove the entity
+                        newRenderingHints.splice(index, 1); // and its rendering hints
+                    }
+                }
+                this.entities = newEntities;
+                this.renderingHints = newRenderingHints;
+            },
+            /**
              * Determines whether property is boolean or not.
              */
             _isBooleanProp: function (entity, column) {
@@ -662,8 +708,19 @@
             /**
              * Tap action on data column. TODO: implement this.
              */
-            _tapAction: function (e, detail, source) {
-                console.log(e, detail, source);
+            _tapAction: function (e, detail) {
+                this.tap(this.entities[e.model.entityIndex], this.columns[e.model.index].property, this.columns[e.model.index]);
+            },
+
+            tap: function (entity, property, column) {
+                var value = entity.get(property);
+                if (this.$.reflector.isEntity(value)) {
+                    column.runAction(value);
+                } else if (property.indexOf(".") > -1) {
+                    this.tap(entity, property.substring(0, property.lastIndexOf(".")), column);
+                } else {
+                    column.runAction(entity);
+                }
             },
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.
