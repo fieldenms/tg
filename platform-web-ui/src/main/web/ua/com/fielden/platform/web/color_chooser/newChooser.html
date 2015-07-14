@@ -5,7 +5,8 @@
          <title>Color Chooser</title>
          <meta charset="utf-8">
          <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-         <!--	<script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>-->
+         <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+
 
          <link rel="import" href="/resources/polymer/font-roboro/roboto.html">
          <link rel="import" href="/resources/polymer/paper-header-panel/paper-header-panel.html">
@@ -20,6 +21,8 @@
          <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
          <link rel="import" href="/resources/polymer/paper-radio-group/paper-radio-group.html">
          <link rel="import" href="/resources/polymer/paper-radio-button/paper-radio-button.html">
+
+         <link rel="import" href="chooserElement.html">
 
          <style>
                   html,
@@ -85,43 +88,46 @@
                   }
                   
                   .list > * {
-                           height: 30px;
+                           height: 50px;
                            line-height: 40px;
                            padding: 0 20px;
-                           border-bottom: 1px solid #ccc;
+                           border-bottom: 3px solid #ccc;
                   }
          </style>
 </head>
 
-<body unresolved>
+<body>
+         <chooser-color-element></chooser-color-element>
          <template is="dom-bind">
+                  <paper-toolbar class="medium-tall" name="toolbar">
 
-                  <paper-toolbar class="medium-tall" name="toolbar" style="background:{{color}}">
-
+                           <!--
                            <paper-icon-button icon="editor:format-color-fill" onclick="document.getElementById('collapse').toggle()"></paper-icon-button>
 
                            <iron-collapse id="collapse">
                                     <iron-selector class="list">
                                              <paper-radio-group name="items">
 
-                                                      <paper-radio-button name="small">Small</paper-radio-button>
-                                                      <paper-radio-button name="medium">Medium</paper-radio-button>
-                                                      <paper-radio-button name="large">Large</paper-radio-button>
-                                                      <!--
+                                                      <paper-radio-button name="small">Green</paper-radio-button>
+                                                      <paper-radio-button name="medium">Blue</paper-radio-button>
+                                                      <paper-radio-button name="large">Red</paper-radio-button>
+                                                      
                                                       <paper-checkbox class="green" for>#66BB6A </paper-checkbox>
                                                       <paper-checkbox class="brown" for>#795548 </paper-checkbox>
                                                       <paper-checkbox class="purple" for>#BA68C8 </paper-checkbox>
                                                       <paper-checkbox class="grey" for> #607D8B</paper-checkbox>
                                                       <paper-checkbox class="blue" for>#2196F3</paper-checkbox>
--->
+
                                              </paper-radio-group>
                                     </iron-selector>
                            </iron-collapse>
+-->
 
                   </paper-toolbar>
 
 
          </template>
+
          <!--
          <script>
 </script>
