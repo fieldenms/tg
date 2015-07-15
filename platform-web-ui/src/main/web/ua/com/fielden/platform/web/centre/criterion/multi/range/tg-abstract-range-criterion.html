@@ -14,8 +14,8 @@
 			_or-null="{{_orNull}}"
 			_not="{{_not}}"
 			>
-            <paper-checkbox class="range-criterion-config" label="Exclusive Left" checked="{{_exclusive}}"></paper-checkbox>
-            <paper-checkbox class="range-criterion-config" label="Exclusive Right" checked="{{_exclusive2}}"></paper-checkbox>
+            <paper-checkbox class="range-criterion-config" checked="{{_exclusive}}">Exclusive Left</paper-checkbox>
+            <paper-checkbox class="range-criterion-config" checked="{{_exclusive2}}">Exclusive Right</paper-checkbox>
 			<content select=".criterion-editors"></content>
 		</tg-abstract-multi-criterion>
 	</template>
@@ -42,7 +42,7 @@
         		type: Boolean,
         		notify: true
         	},
-        	_exclusive: {
+        	_exclusive2: {
         		type: Boolean,
         		notify: true
         	}

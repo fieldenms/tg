@@ -53,13 +53,13 @@
             this.exclusive = this._exclusive;
             this.exclusive2 = this._exclusive2;
 
-            Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior._acceptMetaValues.call(this);
+            Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior[1]._acceptMetaValues.call(this);
         },
         _cancelMetaValues: function() {
             this._exclusive = this.exclusive;
             this._exclusive2 = this.exclusive2;
             
-            Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior._cancelMetaValues.call(this);
+            Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior[1]._cancelMetaValues.call(this);
         },
         
         _exclusiveChanged: function (newValue, oldValue) {
