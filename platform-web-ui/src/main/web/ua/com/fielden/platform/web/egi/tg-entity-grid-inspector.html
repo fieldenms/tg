@@ -167,7 +167,7 @@
                     <!-- Table header -->
                     <div class="layout horizontal table-header-row">
                         <div class="table-cell layout horizontal center">
-                            <paper-checkbox class="blue header" on-iron-change="_allSelectionChanged"></paper-checkbox>
+                            <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                         </div>
                         <template is="dom-if" if="[[primaryAction]]">
                             <div class="table-cell layout horizontal center">
@@ -189,7 +189,7 @@
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
                             <div class="table-cell layout horizontal center">
-                                <paper-checkbox class="blue body" checked="{{egiEntity.selected}}" on-iron-change="_selectionChanged"></paper-checkbox>
+                                <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <div class="table-cell layout horizontal center">
@@ -256,7 +256,7 @@
                     <content select=".entity-specific-action"></content>
                 </div>
                 <div class="layout horizontal center">
-                    <paper-checkbox style="margin-left:10px;" class="blue" on-iron-change="_allSelectionChanged"></paper-checkbox>
+                    <paper-checkbox style="margin-left:10px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                     <paper-icon-button icon="editor:functions" on-tap="_showSummary" disabled$="[[!_isSummaryEnabled(egiModel, cardLayout)]]"></paper-icon-button>
                     <content select=".standart-action"></content>
                 </div>
@@ -268,7 +268,7 @@
                         <div class="layout horizontal center relative">
                             <div>
                                 <!-- this div might not be needed-->
-                                <paper-checkbox class="blue" checked="[[egiEntity.selected]]" on-iron-change="_selectionChanged"></paper-checkbox>
+                                <paper-checkbox class="blue" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <!--Primary actions goes here-->
@@ -341,7 +341,7 @@
             _hasEntity = function (entity, entities) {
                 var i = 0;
                 for (i = 0; i < entities.length; i += 1) {
-                    if (areEqual(entity, entities[i])) {
+                    if (_areEqual(entity, entities[i])) {
                         return true;
                     }
                 }
@@ -350,11 +350,23 @@
             _findEntity = function (entity, entities) {
                 var i = 0;
                 for (i = 0; i < entities.length; i += 1) {
-                    if (areEqual(entity, entities[i])) {
+                    if (_areEqual(entity, entities[i])) {
                         return i;
                     }
                 }
                 return -1;
+            },
+            _processEntitySelection = function (selectedEntities, entity, select) {
+                var selectedIndex = selectedEntities.indexOf(entity);
+                if (select) {
+                    if (selectedIndex < 0) {
+                        selectedEntities.push(entity);
+                    }
+                } else {
+                    if (selectedIndex >= 0) {
+                        selectedEntities.splice(selectedIndex, 1);
+                    }
+                }
             };
         Polymer({
             is: "tg-entity-grid-inspector",
@@ -399,6 +411,7 @@
                 this.egiModel = [];
 
                 //initialising the arrays for selected entites and entities those were opened.
+                this.selectedAll = false;
                 this.selectedEntities = [];
                 this.openedEntities = [];
 
@@ -500,26 +513,26 @@
              * Observs the changes to entities property.
              */
             _entitiesChanged: function (newValue, oldValue) {
-                var egiEntity;
-                newValue.forEach(function (entity) {
-                    var selectEntInd = _findEntity(entity, this.selectedEntities),
-                        openedEntInd = _findEntity(entity, this.openedEntities);
+                var self = this;
+                newValue.forEach(function (newEntity) {
+                    var selectEntInd = _findEntity(newEntity, self.selectedEntities),
+                        openedEntInd = _findEntity(newEntity, self.openedEntities);
                     if (selectEntInd >= 0) {
-                        this.selectedEntities[selectEntInd] = entity;
+                        self.selectedEntities[selectEntInd] = newEntity;
                     }
                     if (openedEntInd >= 0) {
-                        this.openedEntities[openedEntInd] = entity;
+                        self.openedEntities[openedEntInd] = newEntity;
                     }
-                }.bind(this));
-                this.egiModel = [];
-                newValue.forEach(function (entity) {
-                    egiEntity = {
-                        selected: this.selectedEntities.indexOf(entity) > -1,
-                        opened: this.openedEntities.indexOf(entity) > -1,
-                        entity: entity
+                });
+                self.egiModel = [];
+                newValue.forEach(function (newEntity) {
+                    var egiEntity = {
+                        selected: self.selectedEntities.indexOf(newEntity) > -1,
+                        opened: self.openedEntities.indexOf(newEntity) > -1,
+                        entity: newEntity
                     }
-                    this.push('egiModel', egiEntity);
-                }.bind(this));
+                    self.push('egiModel', egiEntity);
+                });
             },
             /**
              * Event handler for select all checkbox
@@ -529,7 +542,10 @@
                 if (this.egiModel) {
                     for (i = 0; i < this.egiModel.length; i += 1) {
                         this.set("egiModel." + i + ".selected", e.srcElement.checked);
+                        _processEntitySelection(this.selectedEntities, this.entities[i], e.srcElement.checked);
                     }
+                    this.selectedAll = e.srcElement.checked;
+                    console.log("all ", this.getSelectedRows());
                 }
             },
             /**
@@ -539,33 +555,19 @@
                 var index;
                 if (this.egiModel) {
                     index = e.model.entityIndex;
-                    if (e.srcElement.checked) {
-                        if (this.selectedEntities.indexOf(this.entities[index]) < 0) {
-                            this.selectedEntities.push(this.entities[index]);
-                        }
-                    } else {
-                        if (this.selectedEntities.indexOf(this.entities[index]) >= 0) {
-                            this.selectedEntities.splice(this.selectedEntities.indexOf(this.entities[index]), 1);
-                        }
-                    }
+                    this.set("egiModel." + index + ".selected", e.srcElement.checked);
+                    _processEntitySelection(this.selectedEntities, this.entities[index], e.srcElement.checked);
                 }
+                console.log("single checkbox: " + index, this.getSelectedRows());
             },
             /**
              * Toggles the card's collapse panel for the specified entity.
              */
             _toggleCollapsePanel: function (e) {
-                var index = e.model.entityIndex;
-                if (this.egiModel[index].opened) {
-                    if (this.openedEntities.indexOf(this.entities[index]) >= 0) {
-                        this.openedEntities.splice(this.openedEntities.indexOf(this.entities[index]), 1);
-                        this.set("egiModel." + index + ".opened", false);
-                    }
-                } else {
-                    if (this.openedEntities.indexOf(this.entities[index]) < 0) {
-                        this.openedEntities.push(this.entities[index]);
-                        this.set("egiModel." + index + ".opened", true);
-                    }
-                }
+                var index = e.model.entityIndex,
+                    opened = this.egiModel[index].opened;
+                this.set("egiModel." + index + ".opened", !opened);
+                _processEntitySelection(this.openedEntities, this.entities[index], !opened);
             },
             /**
              * Determines whether secondary actions are present.
