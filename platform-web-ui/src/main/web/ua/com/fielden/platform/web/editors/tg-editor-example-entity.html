@@ -35,16 +35,6 @@
         		processError: {
         			type: Function,
         			notify: true
-        		},
-        		
-        		orNull: {
-        			type: Boolean,
-        			notify: true
-        		},
-        		
-        		not: {
-        			type: Boolean,
-        			notify: true
         		}
         	},
         	
@@ -63,9 +53,6 @@
         		this.processError = function (event) {
     				console.log("ERROR =", event, event.detail.error); // event.detail is { error: 'error', request: 'iron-request' }
     			};
-    			
-    			this.orNull = true;
-    			this.not = false;
         	},
         	
         	createBindingEntity: function () {
@@ -76,18 +63,18 @@
                 bindingView["@@origin"] = null;
                 
                 // integer
-                bindingView['integerProp'] = 23;                
+                bindingView['integerProp'] = 23;
                 bindingView['@integerProp_editable'] = true;
                 
                 bindingView.prop('integerProp');
                 bindingView.type().prop('integerProp');
 
                 // string
-                bindingView['stringProp'] = 'OK';                
+                bindingView['stringProp'] = 'OK';
                 bindingView['@stringProp_editable'] = true;
                 
                 // date
-                bindingView['dateProp'] = 2000000000;                
+                bindingView['dateProp'] = 2000000000;
                 bindingView['@dateProp_editable'] = true;
         		
         		console.log("this.bindingEntity", bindingView);
