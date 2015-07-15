@@ -1,10 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/centre/criterion/tg-abstract-criterion-behavior.html">
+<link rel="import" href="/resources/centre/criterion/multi/tg-abstract-multi-criterion-behavior.html">
 
 <script>
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-	Polymer.TgBehaviors.TgAbstractMultiCriterionBehaviorImpl = {
+	Polymer.TgBehaviors.TgAbstractRangeCriterionBehaviorImpl = {
     	
         properties: {
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,21 +15,21 @@
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	
             /**
-             * This published property specifies whether 'missing value' will be also considered in search queries.
+             * This published property specifies whether left operand of 'range' criterion should be 'exclusive'.
              */
-            orNull: {
+            exclusive: {
             	type: Boolean,
             	notify: true, // TODO val: false
-            	observer: '_orNullChanged'
+            	observer: '_exclusiveChanged'
             },
 
             /**
-             * This published property specifies whether the criterion should be negated.
+             * This published property specifies whether right operand of 'range' criterion should be 'exclusive'.
              */
-            not: {
+            exclusive2: {
             	type: Boolean,
             	notify: true, // TODO val: false
-            	observer: '_notChanged'
+            	observer: '_exclusive2Changed'
             },
             
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -39,51 +39,47 @@
         	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
         	//   alternatively, computing function needs to be specified). 									       //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            _orNull: {
+            _exclusive: {
             	type: Boolean,
             	value: false
             },
-            _not: {
+            _exclusive2: {
             	type: Boolean,
             	value: false
             }
         },
 
-        // _range: false,
-        // _single: false,
-        // _dateRange: false, 
-
         _acceptMetaValues: function() {
-            this.orNull = this._orNull;
-            this.not = this._not;
+            this.exclusive = this._exclusive;
+            this.exclusive2 = this._exclusive2;
 
-            Polymer.TgBehaviors.TgAbstractCriterionBehavior._acceptMetaValues.call(this);
+            Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior._acceptMetaValues.call(this);
         },
         _cancelMetaValues: function() {
-            this._orNull = this.orNull;
-            this._not = this.not;
+            this._exclusive = this.exclusive;
+            this._exclusive2 = this.exclusive2;
             
-            Polymer.TgBehaviors.TgAbstractCriterionBehavior._cancelMetaValues.call(this);
+            Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior._cancelMetaValues.call(this);
         },
         
-        _orNullChanged: function (newValue, oldValue) {
-            this._orNull = newValue;
+        _exclusiveChanged: function (newValue, oldValue) {
+            this._exclusive = newValue;
         },
-        _notChanged: function (newValue, oldValue) {
-            this._not = newValue;
+        _exclusive2Changed: function (newValue, oldValue) {
+            this._exclusive2 = newValue;
         },
         
         /**
          * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
          */
         _hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        	return Polymer.TgBehaviors.TgAbstractCriterionBehavior._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) && 
-        		orNull === false && not === false;
+        	return Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) && 
+        		exclusive === false && exclusive2 === false;
         }
     };
 	
-	Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior = [
-		Polymer.TgBehaviors.TgAbstractCriterionBehavior,
-		Polymer.TgBehaviors.TgAbstractMultiCriterionBehaviorImpl
+	Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior = [
+		Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior,
+		Polymer.TgBehaviors.TgAbstractRangeCriterionBehaviorImpl
 	];
 </script>
