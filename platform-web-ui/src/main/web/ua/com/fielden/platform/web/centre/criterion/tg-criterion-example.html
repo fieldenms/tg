@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+    <title>tg-criterion example</title>
+    
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+    
+    <link rel="import" href="/resources/centre/criterion/tg-criterion-example-supplements.html">
+
+    <link rel="import" href="/resources/editors/tg-integer-editor.html">
+    <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
+    <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
+    <link rel="import" href="/resources/editors/tg-datetime-picker.html">
+
+    <link rel="import" href="/resources/centre/criterion/single/tg-single-criterion.html">
+    <link rel="import" href="/resources/centre/criterion/multi/tg-multi-criterion.html">
+</head>
+
+<body unresolved>
+  	<template is="dom-bind">
+  		<iron-ajax
+  			auto
+  			url='/entity/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties/new'
+  			method="POST"
+  			handle-as="json"
+  			on-response="processResponse"
+  			on-error="processError"
+  			>
+  		</iron-ajax>
+  		
+  		<tg-criterion-example-supplements binding-entity="{{entity}}" validation-callback="{{validationCallback}}" process-response="{{processResponse}}" process-error="{{processError}}" or-null="{{orNull}}" not="{{not}}">
+  		</tg-criterion-example-supplements>
+  	    
+  	    <tg-multi-criterion
+  	    	or-null="{{orNull}}"
+  	    	not="{{not}}"
+  	    	validation-callback="[[validationCallback]]" 
+  	    	>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				debug 
+				prop-title="Integer property title" 
+				prop-desc="Integer property desc"
+				action="null" 
+				externalRefreshCycle="null"
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+			<tg-singleline-text-editor 
+				class="criterion-editors"
+				entity="[[entity]]" 
+				property-name="stringProp" 
+				current-state="EDIT" 
+				debug 
+				prop-title="String property title" 
+				prop-desc="String property desc"
+				action="null" 
+				externalRefreshCycle="null"
+				validation-callback="[[validationCallback]]">
+			</tg-singleline-text-editor>
+  	    </tg-multi-criterion>
+  	    
+  	    <tg-single-criterion
+  	    	validation-callback="[[validationCallback]]" 
+  	    	>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				debug 
+				prop-title="Integer property title" 
+				prop-desc="Integer property desc"
+				action="null" 
+				externalRefreshCycle="null"
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+  	    </tg-single-criterion>
+
+  	</template>
+</body>
+
+</html>
