@@ -234,6 +234,17 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // then, when a legitimate user is trying to access the system by presenting the stolen authenticator, which was already used by an adversary (this leads to series ID regeneration), then there would be no session associated with it!!!
         // this means all sessions for this particular user should be invalidated (removed) to stop an adversary from accessing the system
         if (session == null) {
+            // before failing authentication need to check once again into the cache
+            // to prevent false negative from occurring during concurrent requests from the same client
+            try {
+                Thread.sleep(200);
+            } catch (final InterruptedException e) {
+            }
+            final UserSession us = cache.getIfPresent(authenticator);
+            if (us != null) {
+                return Optional.ofNullable(us);
+            }
+            // if the session was not found in the cache then proceed with the theft story...
             logger.warn(format("A seemingly correct authenticator %s did not have a corresponding sesssion record. An authenticator theft is suspected. An adversary might have had access to the system as user %s", auth, user.getKey()));
             // in this case, sessions are removed based on user name and series ID, which is required taking into consideration that series ID could have been already regenerated
             final int count = clearAll(user) + removeSessionsForUsersBy(auth.seriesId);
