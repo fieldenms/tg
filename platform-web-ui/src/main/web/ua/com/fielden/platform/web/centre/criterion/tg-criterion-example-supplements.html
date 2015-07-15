@@ -47,6 +47,18 @@
         			type: Boolean,
         			notify: true,
         			observer: '_notChanged'
+        		},
+        		
+        		exclusive: {
+        			type: Boolean,
+        			notify: true,
+        			observer: '_exclusiveChanged'
+        		},
+        		
+        		exclusive2: {
+        			type: Boolean,
+        			notify: true,
+        			observer: '_exclusive2Changed'
         		}
         	},
         	
@@ -68,6 +80,9 @@
     			
     			this.orNull = true;
     			this.not = false;
+    			
+    			this.exclusive = true;
+    			this.exclusive2 = false;
         	},
         	
         	createBindingEntity: function () {
@@ -102,6 +117,14 @@
         	
         	_notChanged: function (newValue, oldValue) {
         		console.log("_notChanged:", newValue, oldValue);
+        	},
+        	
+        	_exclusiveChanged: function (newValue, oldValue) {
+        		console.log("_exclusiveChanged:", newValue, oldValue);
+        	},
+        	
+        	_exclusive2Changed: function (newValue, oldValue) {
+        		console.log("_exclusive2Changed:", newValue, oldValue);
         	}
         });
     </script>

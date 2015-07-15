@@ -18,6 +18,7 @@
 
     <link rel="import" href="/resources/centre/criterion/single/tg-single-criterion.html">
     <link rel="import" href="/resources/centre/criterion/multi/tg-multi-criterion.html">
+    <link rel="import" href="/resources/centre/criterion/multi/range/tg-range-criterion.html">
 </head>
 
 <body unresolved>
@@ -51,18 +52,38 @@
 				externalRefreshCycle="null"
 				validation-callback="[[validationCallback]]">
 			</tg-integer-editor>
-			<tg-singleline-text-editor 
-				class="criterion-editors"
+  	    </tg-multi-criterion>
+  	    
+  	    <tg-range-criterion
+  	    	exclusive="{{exclusive}}"
+  	    	exclusive2="{{exclusive2}}"
+  	    	or-null="{{orNull}}"
+  	    	not="{{not}}"
+  	    	validation-callback="[[validationCallback]]" 
+  	    	>
+			<tg-integer-editor 
 				entity="[[entity]]" 
-				property-name="stringProp" 
+				class="criterion-editors"
+				property-name="integerProp" 
 				current-state="EDIT" 
-				prop-title="String property title" 
-				prop-desc="String property desc"
+				prop-title="Integer from" 
+				prop-desc="Integer from desc"
 				action="null" 
 				externalRefreshCycle="null"
 				validation-callback="[[validationCallback]]">
-			</tg-singleline-text-editor>
-  	    </tg-multi-criterion>
+			</tg-integer-editor>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				prop-title="Integer to" 
+				prop-desc="Integer to desc"
+				action="null" 
+				externalRefreshCycle="null"
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+  	    </tg-range-criterion>
   	    
   	    <tg-single-criterion
   	    	validation-callback="[[validationCallback]]" 

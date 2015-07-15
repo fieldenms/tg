@@ -1,0 +1,42 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion.html">
+<link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html">
+
+<dom-module id="tg-range-criterion">
+	<template>
+		<tg-abstract-range-criterion 
+			id="dom"
+			_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
+			_accept-meta-values="[[_acceptMetaValuesForBinding]]"
+			_show-meta-values-editor="[[_showMetaValuesEditor]]"
+			_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]"
+			_or-null="{{_orNull}}"
+			_not="{{_not}}"
+			_exclusive="{{_exclusive}}"
+			_exclusive2="{{_exclusive2}}"
+			>
+			<content select=".criterion-editors"></content>
+		</tg-abstract-range-criterion>
+	</template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-range-criterion',
+    	
+        observers: [
+	       	'_updateIconButtonStyle(orNull, not, exclusive, exclusive2)'
+        ],
+    	
+    	behaviors: [ Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior ],
+    	
+        _createWhenDesktopConfig: function () {
+        	return ['horizontal', 'justified', 'flex', ['margin-right: 20px', 'flex'], ['flex']];
+        },
+    
+	    _dom: function () {
+    		return this.$.dom.$.dom.$.dom2;
+    	}
+    });
+</script>
