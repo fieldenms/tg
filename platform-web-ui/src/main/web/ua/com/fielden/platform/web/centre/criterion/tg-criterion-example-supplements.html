@@ -39,12 +39,14 @@
         		
         		orNull: {
         			type: Boolean,
-        			notify: true
+        			notify: true,
+        			observer: '_orNullChanged'
         		},
         		
         		not: {
         			type: Boolean,
-        			notify: true
+        			notify: true,
+        			observer: '_notChanged'
         		}
         	},
         	
@@ -92,6 +94,14 @@
         		
         		console.log("this.bindingEntity", bindingView);
 				return bindingView;
+        	},
+        	
+        	_orNullChanged: function (newValue, oldValue) {
+        		console.log("_orNullChanged:", newValue, oldValue);
+        	},
+        	
+        	_notChanged: function (newValue, oldValue) {
+        		console.log("_notChanged:", newValue, oldValue);
         	}
         });
     </script>
