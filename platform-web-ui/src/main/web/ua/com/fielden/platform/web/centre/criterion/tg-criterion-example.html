@@ -18,6 +18,7 @@
 
     <link rel="import" href="/resources/centre/criterion/single/tg-single-criterion.html">
     <link rel="import" href="/resources/centre/criterion/multi/tg-multi-criterion.html">
+    <link rel="import" href="/resources/centre/criterion/multi/tg-boolean-criterion.html">
     <link rel="import" href="/resources/centre/criterion/multi/range/tg-range-criterion.html">
 </head>
 
@@ -53,6 +54,35 @@
 				validation-callback="[[validationCallback]]">
 			</tg-integer-editor>
   	    </tg-multi-criterion>
+  	    
+  	    <tg-boolean-criterion
+  	    	or-null="{{orNull}}"
+  	    	not="{{not}}"
+  	    	validation-callback="[[validationCallback]]" 
+  	    	>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				prop-title="Bool IS title" 
+				prop-desc="Bool IS desc"
+				action="null" 
+				externalRefreshCycle="null"
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				prop-title="Bool IS NOT" 
+				prop-desc="Bool IS NOT desc"
+				action="null" 
+				externalRefreshCycle="null"
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+  	    </tg-boolean-criterion>
   	    
   	    <tg-range-criterion
   	    	exclusive="{{exclusive}}"
