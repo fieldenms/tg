@@ -1,150 +1,172 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 <link rel="import" href="/resources/components/moment-component.html">
 
-<polymer-element name="tg-time" attributes="hour minute showMeridian">
+<dom-module id="tg-time">
+    <style>
+        .time {
+            font-size: 64px;
+            height: 64px;
+        }
+        .time-portion {
+            margin: 10px;
+        }
+        .meridian {
+            font-size: 24px;
+            height: 64px;
+        }
+        paper-icon-button {
+            padding: 0px;
+            margin: 0px;
+        }
+        paper-icon-button[icon="expand-more"] {
+            margin-top: 2px;
+        }
+    </style>
     <template>
-        <style>
-            .time {
-                font-size: 64px;
-                height: 64px;
-            }
-            .time-portion {
-                margin: 10px;
-            }
-            .meridian {
-                font-size: 24px;
-                height: 64px;
-            }
-            core-icon-button {
-                padding: 0px;
-                margin: 0px;
-            }
-            core-icon-button[icon="expand-more"] {
-                margin-top: 2px;
-            }
-        </style>
-        <div layout horizontal center center-justified>
-            <div class="time-portion" layout vertical center justified>
-                <core-icon-button icon="expand-less" on-down="{{incrementHour}}" on-holdpulse="{{pulsIncrementHour}}"></core-icon-button>
-                <div class="time">{{hour | formatHours}}</div>
-                <core-icon-button icon="expand-more" on-down="{{decrementHour}}" on-holdpulse="{{pulsDecrementHour}}"></core-icon-button>
+        <div class="layout horizontal center-center">
+            <div class="time-portion layout vertical center justified">
+                <paper-icon-button icon="expand-less" on-down="_incrementHour" on-holdpulse="_pulsIncrementHour"></paper-icon-button>
+                <div class="time">[[_formatHours(hour)]]</div>
+                <paper-icon-button icon="expand-more" on-down="_decrementHour" on-holdpulse="_pulsDecrementHour"></paper-icon-button>
             </div>
             <div class="time time-portion">:</div>
-            <div class="time-portion" layout vertical center justified>
-                <core-icon-button icon="expand-less" on-down="{{incrementMinute}}" on-holdpulse="{{pulsIncrementMinute}}"></core-icon-button>
-                <div class="time">{{minute | fomatMinute}}</div>
-                <core-icon-button icon="expand-more" on-down="{{decrementMinute}}" on-holdpulse="{{pulsDecrementMinute}}"></core-icon-button>
+            <div class="time-portion layout vertical center justified">
+                <paper-icon-button icon="expand-less" on-down="_incrementMinute" on-holdpulse="_pulsIncrementMinute"></paper-icon-button>
+                <div class="time">[[_formatMinute(minute)]]</div>
+                <paper-icon-button icon="expand-more" on-down="_decrementMinute" on-holdpulse="_pulsDecrementMinute"></paper-icon-button>
             </div>
-            <template if="{{showMeridian}}">
-                <div class="time-portion" layout vertical center justified>
-                    <core-icon-button icon="expand-less" on-down="{{incrementMeridian}}" on-holdpulse="{{incrementMeridian}}"></core-icon-button>
-                    <div class="meridian" layout vertical center center-justified>{{meridian}}</div>
-                    <core-icon-button icon="expand-more" on-down="{{decrementMeridian}}" on-holdpulse="{{decrementMeridian}}"></core-icon-button>
+
+            <template is="dom-if" if="[[showMeridian]]">
+                <div class="time-portion layout vertical center justified">
+                    <paper-icon-button icon="expand-less" on-down="_incrementMeridian" on-holdpulse="_incrementMeridian"></paper-icon-button>
+                    <div class="meridian layout vertical center-center">[[meridian]]</div>
+                    <paper-icon-button icon="expand-more" on-down="_decrementMeridian" on-holdpulse="_decrementMeridian"></paper-icon-button>
                 </div>
             </template>
         </div>
     </template>
-    <script>
-        (function () {
-            var meridians = ["AM", "PM"],
-                zeroPad = function (str, num) {
-                    str = (str && str.toString()) || "";
-                    return str.length < num ? zeroPad("0" + str, num) : str;
-                };
+</dom-module>
+<script>
+    (function () {
+        var meridians = ["AM", "PM"],
+            zeroPad = function (str, num) {
+                str = (str && str.toString()) || "";
+                return str.length < num ? zeroPad("0" + str, num) : str;
+            };
 
-            Polymer({
-                deltaMinute: 1,
-                deltaHour: 1,
-                publish: {
-                    hour: 0,
-                    minute: 0,
-                    showMeridian: {
-                        value: moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a") >= 0,
-                        reflect: true
-                    },
-                    meridian: "AM"
+        Polymer({
+            
+            is: "tg-time",
+            
+            properties: {
+                hour: {
+                    type: Number,
+                    notify: true,
+                    value: 0
                 },
-                incrementHour: function () {
-                    this.deltaHour = 1;
-                    this.goHour(this.deltaHour);
+                minute: {
+                    type: Number,
+                    notify: true,
+                    value: 0
                 },
-                pulsIncrementHour: function () {
-                    if (this.deltaHour < 2 && !this.showMeridian) {
-                        this.deltaHour += 1;
-                    }
-                    this.goHour(this.deltaHour);
+                meridian: {
+                    type: String,
+                    notify: true,
+                    value: "AM"
                 },
-                decrementHour: function () {
-                    this.deltaHour = -1;
-                    this.goHour(this.deltaHour);
-                },
-                pulsDecrementHour: function () {
-                    if (this.deltaHour > -2 && !this.showMeridian) {
-                        this.deltaHour -= 1;
-                    }
-                    this.goHour(this.deltaHour);
-                },
-                incrementMinute: function () {
-                    this.deltaMinute = 1;
-                    this.goMinute(this.deltaMinute);
-                },
-                pulsIncrementMinute: function() {
-                    if (this.deltaMinute < 5) {
-                        this.deltaMinute += 1;
-                    }
-                    this.goMinute(this.deltaMinute);
-                },
-                decrementMinute: function () {
-                    this.deltaMinute = -1;
-                    this.goMinute(this.deltaMinute);
-                },
-                pulsDecrementMinute: function() {
-                    if (this.deltaMinute > -5) {
-                        this.deltaMinute -= 1 
-                    }
-                    this.goMinute(this.deltaMinute);
-                },
-                incrementMeridian: function () {
-                    this.goMeridian(1);
-                },
-                decrementMeridian: function () {
-                    this.goMeridian(-1);
-                },
-                formatHours: function (value) {
-                    if (this.showMeridian) {
-                        return zeroPad(value % 12 === 0 ? 12 : value % 12, 2);
-                    } else {
-                        return zeroPad(value, 2);
-                    }
-                },
-                fomatMinute: function (value) {
-                    return zeroPad(value, 2);
-                },
-                goMinute: function (step) {
-                    var minuteNumber = Number(this.minute),
-                        remainMinutes = (minuteNumber + step) % 60;
-                    if (remainMinutes >= 0) {
-                        this.minute = remainMinutes;
-                    } else {
-                        this.minute = 60 + remainMinutes;
-                    }
-                    this.goHour(Math.floor((minuteNumber + step) / 60));
-                },
-                goMeridian: function (step) {
-                    this.goHour(12 * step);
-                },
-                goHour: function (step) {
-                    var hourNumber = Number(this.hour),
-                        remainHours = (hourNumber + step) % 24;
-                    if (remainHours >= 0) {
-                        this.hour = remainHours;
-                    } else {
-                        this.hour = 24 + remainHours;
-                    }
-                    this.meridian = meridians[Math.floor(Number(this.hour) / 12)];
+                showMeridian: {
+                    type: Bolean,
+                    value: moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a") >= 0,
+                    reflectToAttribute: true
                 }
-            });
-        })();
-    </script>
-</polymer-element>
+            },
+            
+            ready: function() {
+                this.deltaMinute = 1;
+                this.deltaHour = 1;
+            },
+            
+            _incrementHour: function (e, detail) {
+                this.deltaHour = 1;
+                this.goHour(this.deltaHour);
+            },
+            _pulsIncrementHour: function (e, detail) {
+                if (this.deltaHour < 2 && !this.showMeridian) {
+                    this.deltaHour += 1;
+                }
+                this.goHour(this.deltaHour);
+            },
+            _decrementHour: function (e, detail) {
+                this.deltaHour = -1;
+                this.goHour(this.deltaHour);
+            },
+            _pulsDecrementHour: function (e, detail) {
+                if (this.deltaHour > -2 && !this.showMeridian) {
+                    this.deltaHour -= 1;
+                }
+                this.goHour(this.deltaHour);
+            },
+            _incrementMinute: function (e, detail) {
+                this.deltaMinute = 1;
+                this.goMinute(this.deltaMinute);
+            },
+            _pulsIncrementMinute: function (e, detail) {
+                if (this.deltaMinute < 5) {
+                    this.deltaMinute += 1;
+                }
+                this.goMinute(this.deltaMinute);
+            },
+            _decrementMinute: function (e, detail) {
+                this.deltaMinute = -1;
+                this.goMinute(this.deltaMinute);
+            },
+            _pulsDecrementMinute: function (e, detail) {
+                if (this.deltaMinute > -5) {
+                    this.deltaMinute -= 1
+                }
+                this.goMinute(this.deltaMinute);
+            },
+            _incrementMeridian: function (e, detail) {
+                this.goMeridian(1);
+            },
+            _decrementMeridian: function (e, detail) {
+                this.goMeridian(-1);
+            },
+            _formatHours: function (value) {
+                if (this.showMeridian) {
+                    return zeroPad(value % 12 === 0 ? 12 : value % 12, 2);
+                } else {
+                    return zeroPad(value, 2);
+                }
+            },
+            _fomatMinute: function (value) {
+                return zeroPad(value, 2);
+            },
+            goMinute: function (step) {
+                var minuteNumber = Number(this.minute),
+                    remainMinutes = (minuteNumber + step) % 60;
+                if (remainMinutes >= 0) {
+                    this.minute = remainMinutes;
+                } else {
+                    this.minute = 60 + remainMinutes;
+                }
+                this.goHour(Math.floor((minuteNumber + step) / 60));
+            },
+            goMeridian: function (step) {
+                this.goHour(12 * step);
+            },
+            goHour: function (step) {
+                var hourNumber = Number(this.hour),
+                    remainHours = (hourNumber + step) % 24;
+                if (remainHours >= 0) {
+                    this.hour = remainHours;
+                } else {
+                    this.hour = 24 + remainHours;
+                }
+                this.meridian = meridians[Math.floor(Number(this.hour) / 12)];
+            }
+        });
+    })();
+</script>
