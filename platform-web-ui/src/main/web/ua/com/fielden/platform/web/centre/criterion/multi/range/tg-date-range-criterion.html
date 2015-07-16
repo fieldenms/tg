@@ -1,0 +1,149 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion.html">
+<link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html">
+
+<link rel="import" href="/resources/polymer/paper-radio-button/paper-radio-button.html">
+
+<link rel="import" href="/resources/components/tg-accordion.html">
+<link rel="import" href="/resources/components/tg-accordion-group.html">
+
+<dom-module id="tg-date-range-criterion">
+	<template>
+		<tg-abstract-range-criterion 
+			id="dom"
+			_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
+			_accept-meta-values="[[_acceptMetaValuesForBinding]]"
+			_show-meta-values-editor="[[_showMetaValuesEditor]]"
+			_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]"
+			_or-null="{{_orNull}}"
+			_not="{{_not}}"
+			_exclusive="{{_exclusive}}"
+			_exclusive2="{{_exclusive2}}"
+			>
+            <tg-accordion-group singleOpen class="date-range-criterion-config">
+                <template repeat="{{prefix, pIndex in _datePrefixes}}">
+                    <tg-accordion opened?="{{(_datePrefix===null && pIndex===0) || _datePrefix===prefix}}" heading="{{_prefixTitles[pIndex]}}">
+                        <div layout horizontal>
+                            <template repeat="{{before, bIndex in _andBefores}}">
+                                <div layout vertical>
+                                    <template repeat="{{mnemonic, mIndex in _dateMnemonics}}">
+                                        <paper-radio-button prefix="{{prefix}}" mnemonic="{{mnemonic}}" andbefore="{{before}}" toggles label="{{_mnemonicTitles[mIndex] + _andBeforeTitles[bIndex]}}" on-change="_dateMetaValueChanged" checked?="{{_datePrefix===prefix && _dateMnemonic===mnemonic && ((_andBefore===null && before==='THIS')||(_andBefore===true && before==='BEFORE')||(_andBefore===false && before==='AFTER'))}}"></paper-radio-button> 
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </tg-accordion>
+                </template>
+            </tg-accordion-group>
+			<content select=".criterion-editors"></content>
+		</tg-abstract-range-criterion>
+	</template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-date-range-criterion',
+    	
+        observers: [
+	       	'_updateIconButtonStyle(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore)'
+        ],
+    	
+    	behaviors: [ Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior ],
+    	
+	    _dom: function () {
+    		return ___this.$.dom.$.dom.$.dom2;
+    	},
+    	
+        properties: {
+            /**
+             * This published property specifies the 'date prefix' for this date criterion.
+             */
+            datePrefix: null, // values 'PREV', 'CURR', 'NEXT'. (see DateRangePrefixEnum.java)
+
+            /**
+             * This published property specifies the 'date mnemonic' for this date criterion.
+             */
+            dateMnemonic: null, // values 'DAY', 'MONTH', 'WEEK', 'YEAR' etc. (see MnemonicEnum.java)
+
+            /**
+             * This published property specifies the 'and before' for this date criterion.
+             */
+            andBefore: null // values 'null', 'true', 'false'
+            
+            
+            _datePrefix: null,
+            _dateMnemonic: null,
+            _andBefore: null,
+            
+            _datePrefixes
+            _dateMnemonics
+            _andBefores
+            _prefixTitles
+            _mnemonicTitles
+            _andBeforeTitles
+        },
+
+		ready: function () {
+			// TODO maybe in 'created' callback?
+            this._datePrefixes = ["PREV", "CURR", "NEXT"];
+            this._dateMnemonics = ["DAY", "WEEK", "MONTH", "QRT1", "QRT2", "QRT3", "QRT4", "YEAR", "OZ_FIN_YEAR"];
+            this._andBefores = ["THIS", "BEFORE", "AFTER"];
+            this._prefixTitles = ["Previous", "Current", "Next"];
+            this._mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];
+            this._andBeforeTitles = ["", " and before", " and after"];
+		},
+		
+        _dateMetaValueChanged: function (e, detail, source) {
+            if (source.checked) {
+                this._datePrefix = source.getAttribute("prefix");
+                this._dateMnemonic = source.getAttribute("mnemonic");
+                switch (source.getAttribute("andbefore")) {
+                    case "THIS": this._andBefore = null; break;
+                    case "BEFORE": this._andBefore = true; break;
+                    case "AFTER": this._andBefore = false; break;
+                }
+            } else {
+                this._datePrefix = null;
+                this._dateMnemonic = null;
+                this._andBefore = null;
+            }
+        },
+        
+        _acceptMetaValues: function() {
+            this.datePrefix = this._datePrefix;
+            this.dateMnemonic = this._dateMnemonic;
+            this.andBefore = this._andBefore;
+
+            Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._acceptMetaValues.call(this);
+        },
+
+        _cancelMetaValues: function() {
+            this._datePrefix = this.datePrefix;
+            this._dateMnemonic = this.dateMnemonic;
+            this._andBefore = this.andBefore;
+
+            Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._cancelMetaValues.call(this);
+        },
+        
+        _datePrefixChanged: function (newValue, oldValue) {
+            this._datePrefix = newValue;
+        },
+        
+        _dateMnemonicChanged: function (newValue, oldValue) {
+            this._dateMnemonic = newValue;
+        },
+        
+        _andBeforeChanged: function (newValue, oldValue) {
+            this._andBefore = newValue;
+        },
+        
+        /**
+         * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
+         */
+        _hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        	return Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) && 
+        		datePrefix === null && dateMnemonic === null && andBefore === null;
+        }
+    });
+</script>
