@@ -13,7 +13,6 @@
 <link rel="import" href="/resources/polymer/neon-animation/neon-animations.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/polymer/paper-ripple/paper-ripple.html">
 
 <dom-module id="tg-entity-grid-inspector">
     <style>
@@ -199,7 +198,6 @@
                             <template is="dom-repeat" items="[[columns]]" as="column">
                                 <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]">
-                                        <paper-ripple style="pointer-events: none"></paper-ripple>
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                         <iron-icon icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
@@ -287,7 +285,6 @@
                                     <div class="data-label truncate">[[column.columnTitle]]</div>
                                     <div class="data-value relative" on-tap="_tapAction">
                                         <div style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]" class="fit">
-                                            <paper-ripple style="pointer-events: none"></paper-ripple>
                                         </div>
                                         <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                             <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
@@ -309,7 +306,6 @@
                                             <div class="data-label truncate">[[column.columnTitle]]</div>
                                             <div class="data-value relative" on-tap="_tapAction">
                                                 <div style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]" class="fit">
-                                                    <paper-ripple style="pointer-events: none"></paper-ripple>
                                                 </div>
                                                 <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                                     <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
@@ -557,6 +553,9 @@
                     index = e.model.entityIndex;
                     this.set("egiModel." + index + ".selected", e.srcElement.checked);
                     _processEntitySelection(this.selectedEntities, this.entities[index], e.srcElement.checked);
+                    if (this.selectedAll && !e.srcElement.checked) {
+                        this.selectedAll = false;
+                    }
                 }
                 console.log("single checkbox: " + index, this.getSelectedRows());
             },
