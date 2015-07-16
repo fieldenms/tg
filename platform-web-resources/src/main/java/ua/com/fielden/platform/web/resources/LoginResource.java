@@ -98,7 +98,7 @@ public class LoginResource extends ServerResource {
             if (oAuth.isPresent()) {
                 final Authenticator auth = oAuth.get();
                 userProvider.setUsername(auth.username, coUserEx);
-                final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString());
+                final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
                     assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
