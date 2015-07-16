@@ -33,20 +33,24 @@
             },
             
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
-        	//   alternatively, computing function needs to be specified). 									       //
+        	//   prefix. 																				           //
+        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+        	//   populate their default values in ready callback (to have these values populated in children)!     //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             _exclusive: {
-            	type: Boolean,
-            	value: false
+            	type: Boolean
             },
             _exclusive2: {
-            	type: Boolean,
-            	value: false
+            	type: Boolean
             }
+        },
+        
+        ready: function () {
+        	this._exclusive = false;
+        	this._exclusive2 = false;
         },
 
         _acceptMetaValues: function() {

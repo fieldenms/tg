@@ -33,25 +33,25 @@
             },
             
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
-        	//   alternatively, computing function needs to be specified). 									       //
+        	//   prefix. 																				           //
+        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+        	//   populate their default values in ready callback (to have these values populated in children)!     //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             _orNull: {
-            	type: Boolean,
-            	value: false
+            	type: Boolean
             },
             _not: {
-            	type: Boolean,
-            	value: false
+            	type: Boolean
             }
         },
-
-        // _range: false,
-        // _single: false,
-        // _dateRange: false, 
+        
+        ready: function () {
+        	this._orNull = false;
+        	this._not = false;
+        },
 
         _acceptMetaValues: function() {
             this.orNull = this._orNull;
