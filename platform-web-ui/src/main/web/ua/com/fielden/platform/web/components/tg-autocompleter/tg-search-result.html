@@ -15,12 +15,12 @@
             background: white;
             color: black;
             padding: 0px;
+            overflow: auto; /* this is to make host scorable when needed */
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
         }
         
-        .horizontal-wrap {
-            @apply(--layout-horizontal);
-            @apply(--layout-wrap);
+        .vertical-layout {
+            @apply(--layout-vertical);
             padding: 0px;
         }
         
@@ -28,8 +28,9 @@
             font-size: small;
             padding: 6px;
             margin: 0px;
-            overflow: hidden;
+            overflow: auto;
             text-overflow: ellipsis;
+            border-top: 1px solid #e3e3e3;
         }
         
         .tg-item:hover {
@@ -61,11 +62,6 @@
             line-height: 15px;
         }
         
-        .desc-style {
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
         .prop-name {
             font-weight: bold;
             padding-right: 0.5em;
@@ -80,7 +76,7 @@
             color: #000;
             min-width: 250px;
             padding: 0px;
-            overflow: hidden;
+            overflow: auto;
             text-overflow: ellipsis;
         }
     </style>
@@ -90,7 +86,7 @@
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="{{values}}" as="v">
                 <paper-item class="tg-item" value="{{v.key}}" noink>
-                    <div class="horizontal-wrap">
+                    <div class="vertical-layout">
                         <div style="font-size: 0;white-space: nowrap;">
                             <template is="dom-repeat" items="{{_matchedParts(v.key, searchQuery)}}" as="s">
                                 <span hidden$="{{!s.matched}}" class="key-value key-value-highlighted">{{s.part}}</span>
@@ -99,7 +95,7 @@
                         </div>
                         <div class="additional-prop">
                             <span class="prop-name">{{_propTitleByName(v, "desc")}}:</span>
-                            <span hidden$="{{hightlightDesc}}" class="desc-style">{{v.desc}}</span>
+                            <span hidden$="{{hightlightDesc}}">{{v.desc}}</span>
 
                             <!-- TODO to be converted -->
                             <!--template if="{{hightlightDesc}}">
