@@ -64,19 +64,37 @@
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             /**
              * This published property specifies the 'date prefix' for this date criterion.
+             * 
+             * values: 'PREV', 'CURR', 'NEXT'. (see DateRangePrefixEnum.java)
              */
-            datePrefix: null, // values 'PREV', 'CURR', 'NEXT'. (see DateRangePrefixEnum.java)
+            datePrefix: {
+            	type: String,
+            	notify: true, // TODO val: null
+            	observer: '_datePrefixChanged'
+            },
 
             /**
              * This published property specifies the 'date mnemonic' for this date criterion.
+             *
+             * values: 'DAY', 'MONTH', 'WEEK', 'YEAR' etc. (see MnemonicEnum.java)
              */
-            dateMnemonic: null, // values 'DAY', 'MONTH', 'WEEK', 'YEAR' etc. (see MnemonicEnum.java)
+            dateMnemonic: {
+            	type: String,
+            	notify: true, // TODO val: null
+            	observer: '_dateMnemonicChanged'
+            },
 
             /**
              * This published property specifies the 'and before' for this date criterion.
+             *
+             * values: 'null', 'true', 'false'
              */
-            andBefore: null // values 'null', 'true', 'false'
-            
+            andBefore: {
+            	// please, note that specifying Boolean as a type is slightly dangerous -- 'null' value serialisation in that case can give us unpredictable results.
+            	type: Object,
+            	notify: true, // TODO val: null
+            	observer: '_andBeforeChanged'
+            },
             
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
@@ -86,16 +104,16 @@
         	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
         	//   populate their default values in ready callback (to have these values populated in children)!     //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            _datePrefix: null,
-            _dateMnemonic: null,
-            _andBefore: null,
+            _datePrefix: String,
+            _dateMnemonic: String,
+            _andBefore: Object,
             
-            _datePrefixes
-            _dateMnemonics
-            _andBefores
-            _prefixTitles
-            _mnemonicTitles
-            _andBeforeTitles
+            _datePrefixes: Array,
+            _dateMnemonics: Array,
+            _andBefores: Array,
+            _prefixTitles: Array,
+            _mnemonicTitles: Array,
+            _andBeforeTitles: Array
         },
 
 		ready: function () {
@@ -106,6 +124,10 @@
             this._prefixTitles = ["Previous", "Current", "Next"];
             this._mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];
             this._andBeforeTitles = ["", " and before", " and after"];
+            
+            this._datePrefix = null;
+            this._dateMnemonic = null;
+            this._andBefore = null;
 		},
 		
         _dateMetaValueChanged: function (e, detail, source) {
