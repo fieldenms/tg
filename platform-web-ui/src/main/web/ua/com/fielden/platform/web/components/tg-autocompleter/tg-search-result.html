@@ -19,12 +19,9 @@
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
         }
         
-        .vertical-layout {
-            @apply(--layout-vertical);
-            padding: 0px;
-        }
-        
         .tg-item {
+        	@apply(--layout-vertical);
+        	@apply(--layout-start);
             font-size: small;
             padding: 6px;
             margin: 0px;
@@ -85,8 +82,7 @@
         <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="{{values}}" as="v">
-                <paper-item class="tg-item" value="{{v.key}}" noink>
-                    <div class="vertical-layout">
+                <paper-item class="tg-item vertical-layout" value="{{v.key}}" noink>
                         <div style="font-size: 0;white-space: nowrap;">
                             <template is="dom-repeat" items="{{_matchedParts(v.key, searchQuery)}}" as="s">
                                 <span hidden$="{{!s.matched}}" class="key-value key-value-highlighted">{{s.part}}</span>
@@ -122,11 +118,7 @@
                             </div>
                         </template>
                     </template-->
-
-                    </div>
                 </paper-item>
-
-
             </template>
             <!-- end of dom-repeat -->
         </iron-selector>
