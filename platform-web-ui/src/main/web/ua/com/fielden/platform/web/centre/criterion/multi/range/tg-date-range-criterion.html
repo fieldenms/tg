@@ -9,6 +9,15 @@
 <link rel="import" href="/resources/components/tg-accordion-group.html">
 
 <dom-module id="tg-date-range-criterion">
+	<style>
+		.under-accordion: {
+			@apply(--layout-horizontal);
+		};
+		
+		.date-meta-column: {
+			@apply(--layout-vertical);
+		};
+	</style>
 	<template>
 		<tg-abstract-range-criterion 
 			id="dom"
@@ -21,14 +30,15 @@
 			_exclusive="{{_exclusive}}"
 			_exclusive2="{{_exclusive2}}"
 			>
-            <tg-accordion-group singleOpen class="date-range-criterion-config">
-                <template repeat="{{prefix, pIndex in _datePrefixes}}">
-                    <tg-accordion opened?="{{(_datePrefix===null && pIndex===0) || _datePrefix===prefix}}" heading="{{_prefixTitles[pIndex]}}">
-                        <div layout horizontal>
-                            <template repeat="{{before, bIndex in _andBefores}}">
-                                <div layout vertical>
-                                    <template repeat="{{mnemonic, mIndex in _dateMnemonics}}">
-                                        <paper-radio-button prefix="{{prefix}}" mnemonic="{{mnemonic}}" andbefore="{{before}}" toggles label="{{_mnemonicTitles[mIndex] + _andBeforeTitles[bIndex]}}" on-change="_dateMetaValueChanged" checked?="{{_datePrefix===prefix && _dateMnemonic===mnemonic && ((_andBefore===null && before==='THIS')||(_andBefore===true && before==='BEFORE')||(_andBefore===false && before==='AFTER'))}}"></paper-radio-button> 
+            <tg-accordion-group single-open class="date-range-criterion-config">
+                <template is="dom-repeat" items="{{_datePrefixes}}" as="prefix" index-as="pIndex">
+                    <tg-accordion opened="[[_shouldAccordionBeOpened(_datePrefix, prefix, pIndex)]]" heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]">
+                        <div class="under-accordion">
+                            <template is="dom-repeat" items="{{_andBefores}}" as="before" index-as="bIndex">
+                                <div class="date-meta-column">
+                                    <template is="dom-repeat" items="{{_dateMnemonics}}" as="mnemonic" index-as="mIndex">
+                                        <p>TEST</p>
+                                        <!-- <paper-radio-button prefix="{{prefix}}" mnemonic="{{mnemonic}}" andbefore="{{before}}" toggles label="{{_mnemonicTitles[mIndex] + _andBeforeTitles[bIndex]}}" on-change="_dateMetaValueChanged" checked?="{{_datePrefix===prefix && _dateMnemonic===mnemonic && ((_andBefore===null && before==='THIS')||(_andBefore===true && before==='BEFORE')||(_andBefore===false && before==='AFTER'))}}"></paper-radio-button> --> 
                                     </template>
                                 </div>
                             </template>
@@ -52,8 +62,12 @@
     	behaviors: [ Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior ],
     	
 	    _dom: function () {
-    		return ___this.$.dom.$.dom.$.dom2;
+    		return this.$.dom.$.dom.$.dom2;
     	},
+    	
+        _createWhenDesktopConfig: function () {
+        	return ['horizontal', 'justified', 'flex', ['margin-right: 20px', 'flex'], ['flex']];
+        },
     	
         properties: {
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,6 +194,17 @@
         _hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
         	return Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) && 
         		datePrefix === null && dateMnemonic === null && andBefore === null;
+        },
+
+        /**
+         * Returns 'true' when accordion of date mnemonics should be opened, 'false' otherwise.
+         */
+        _shouldAccordionBeOpened: function (_datePrefix, prefix, pIndex) {
+        	return (_datePrefix === null && pIndex === 0) || _datePrefix === prefix;
+        },
+        
+        _getPrefixTitle: function (_prefixTitles, pIndex) {
+	        return _prefixTitles[pIndex];
         }
     });
 </script>

@@ -59,6 +59,24 @@
         			type: Boolean,
         			notify: true,
         			observer: '_exclusive2Changed'
+        		},
+        		
+        		datePrefix: {
+        			type: String,
+        			notify: true,
+        			observer: '_datePrefixChanged'
+        		},
+        		
+        		dateMnemonic: {
+        			type: String,
+        			notify: true,
+        			observer: '_dateMnemonicChanged'
+        		},
+        		
+        		andBefore: {
+        			type: Object,
+        			notify: true,
+        			observer: '_andBeforeChanged'
         		}
         	},
         	
@@ -125,6 +143,18 @@
         	
         	_exclusive2Changed: function (newValue, oldValue) {
         		console.log("_exclusive2Changed:", newValue, oldValue);
+        	},
+        	
+        	_datePrefixChanged: function (newValue, oldValue) {
+        		console.log("_datePrefixChanged:", newValue, oldValue);
+        	},
+        	
+        	_dateMnemonicChanged: function (newValue, oldValue) {
+        		console.log("_dateMnemonicChanged:", newValue, oldValue);
+        	},
+        	
+        	_andBeforeChanged: function (newValue, oldValue) {
+        		console.log("_andBeforeChanged:", newValue, oldValue);
         	}
         });
     </script>
