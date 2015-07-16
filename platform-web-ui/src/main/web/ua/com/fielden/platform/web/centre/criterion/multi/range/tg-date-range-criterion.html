@@ -37,8 +37,14 @@
                             <template is="dom-repeat" items="{{_andBefores}}" as="before" index-as="bIndex">
                                 <div class="date-meta-column">
                                     <template is="dom-repeat" items="{{_dateMnemonics}}" as="mnemonic" index-as="mIndex">
-                                        <p>TEST</p>
-                                        <!-- <paper-radio-button prefix="{{prefix}}" mnemonic="{{mnemonic}}" andbefore="{{before}}" toggles label="{{_mnemonicTitles[mIndex] + _andBeforeTitles[bIndex]}}" on-change="_dateMetaValueChanged" checked?="{{_datePrefix===prefix && _dateMnemonic===mnemonic && ((_andBefore===null && before==='THIS')||(_andBefore===true && before==='BEFORE')||(_andBefore===false && before==='AFTER'))}}"></paper-radio-button> --> 
+                                        <paper-radio-button
+                                        	dateprefix="[[prefix]]"
+                                        	datemnemonic="[[mnemonic]]"
+                                        	dateandbefore="[[before]]"
+                                        	toggles
+                                        	on-change="_dateMetaValueChanged"
+                                        	checked="[[_checked(_datePrefix, _dateMnemonic, _andBefore, prefix, mnemonic, before)]]"
+                                        	>[[_radioTitle(_mnemonicTitles, _andBeforeTitles, mIndex, bIndex)]]</paper-radio-button>
                                     </template>
                                 </div>
                             </template>
@@ -144,11 +150,12 @@
             this._andBefore = null;
 		},
 		
-        _dateMetaValueChanged: function (e, detail, source) {
+        _dateMetaValueChanged: function (e, detail) {
+        	var source = e.srcElement;
             if (source.checked) {
-                this._datePrefix = source.getAttribute("prefix");
-                this._dateMnemonic = source.getAttribute("mnemonic");
-                switch (source.getAttribute("andbefore")) {
+                this._datePrefix = source.dateprefix;
+                this._dateMnemonic = source.datemnemonic;
+                switch (source.dateandbefore) {
                     case "THIS": this._andBefore = null; break;
                     case "BEFORE": this._andBefore = true; break;
                     case "AFTER": this._andBefore = false; break;
@@ -205,6 +212,14 @@
         
         _getPrefixTitle: function (_prefixTitles, pIndex) {
 	        return _prefixTitles[pIndex];
+        },
+        
+        _radioTitle: function (_mnemonicTitles, _andBeforeTitles, mIndex, bIndex) {
+        	return _mnemonicTitles[mIndex] + _andBeforeTitles[bIndex];
+        },
+        
+        _checked: function (_datePrefix, _dateMnemonic, _andBefore, prefix, mnemonic, before) {
+        	return _datePrefix === prefix && _dateMnemonic === mnemonic && ((_andBefore === null && before === 'THIS') || (_andBefore === true && before === 'BEFORE') || (_andBefore === false && before === 'AFTER'))
         }
     });
 </script>

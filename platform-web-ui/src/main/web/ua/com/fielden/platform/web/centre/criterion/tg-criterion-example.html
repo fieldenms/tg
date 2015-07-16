@@ -35,8 +35,21 @@
   			>
   		</iron-ajax>
   		
-  		<tg-criterion-example-supplements binding-entity="{{entity}}" validation-callback="{{validationCallback}}" process-response="{{processResponse}}" process-error="{{processError}}" or-null="{{orNull}}" not="{{not}}" exclusive="{{exclusive}}" exclusive2="{{exclusive2}}">
+  		<tg-criterion-example-supplements
+  			binding-entity="{{entity}}"
+  			validation-callback="{{validationCallback}}"
+  			process-response="{{processResponse}}"
+  			process-error="{{processError}}"
+  			or-null="{{orNull}}"
+  			not="{{not}}"
+  			exclusive="{{exclusive}}"
+  			exclusive2="{{exclusive2}}"
+  			date-prefix="{{datePrefix}}"
+  			date-mnemonic="{{dateMnemonic}}"
+  			and-before="{{andBefore}}"
+  			>
   		</tg-criterion-example-supplements>
+  		
   	    
   	    <tg-multi-criterion
   	    	or-null="{{orNull}}"
