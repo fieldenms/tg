@@ -108,14 +108,14 @@
 	                            </div>
                         	</template>
                         </div>
-                        <!--template if="{{isComposite(v)}}">
-                        <template repeat="{{p in keyMembers(v)}}">
-                            <div class="additional-prop">
-                                <span class="prop-name">{{_propTitleByName(v, p)}}:</span>
-                                <span>{{_propValueByName(v, p)}}</span>
-                            </div>
-                        </template>
-                    </template-->
+                        <template is="dom-if" if="[[displayAdditionalProperties]]">
+	                        <template is="dom-repeat" items="[[additionalProperties]]" as="p">
+	                            <div class="additional-prop">
+	                                <span class="prop-name">[[_propTitleByName(v, p)]]:</span>
+	                                <span>[[_propValueByName(v, p)]]</span>
+	                            </div>
+	                        </template>
+                    </template>
                 </paper-item>
             </template>
             <!-- end of dom-repeat -->
@@ -135,7 +135,6 @@
                 values: {
                     type: Array,
                     value: function () {
-
                         return [];
                     }
                 },
@@ -151,6 +150,19 @@
                 highlightDesc: {
                     type: Boolean,
                     value: false
+                },
+                
+                /* Should contains the names of additional properties to be displayed. */
+                additionalProperties: {
+                	type: Array,
+                	value: function () {
+                		return [];
+                	}
+                },
+                
+                displayAdditionalProperties: {
+                	type: Boolean,
+                	computed: 'hasAdditionalProperties(additionalProperties)'
                 }
             },
 
@@ -176,7 +188,6 @@
                 } else if ('' == this.searchQuery) {
                     return parts;
                 }
-
 
                 // otherwise split 
                 var searchExp = new RegExp(this.searchQuery, 'gi');
@@ -230,7 +241,8 @@
              * Obtains a value of the specified by name property for the passed in entity.
              */
             _propValueByName: function (entity, propName) {
-                return this.$.reflector.convert(entity.get(propName));
+            	return entity[propName];
+                //return this.$.reflector.convert(entity.get(propName));
             },
             
             /**
@@ -247,7 +259,9 @@
                 return parts;
             },
 
-
+            hasAdditionalProperties: function (additionalProperties) {
+            	return additionalProperties.length > 0;
+            }
         });
     })();
 </script>

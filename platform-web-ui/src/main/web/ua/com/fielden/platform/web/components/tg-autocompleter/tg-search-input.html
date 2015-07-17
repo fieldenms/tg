@@ -89,6 +89,9 @@
 
             ready: function() {
             	this.$.result.highlightDesc = this.highlightDesc;
+                if (this.additionalProperties) {
+            		this.$.result.additionalProperties = this.additionalProperties.split(',');
+                }
             },
             
             attached: function () {
@@ -116,7 +119,15 @@
                 highlightDesc:  {
                     type: Boolean,
                     value: false
-                }                
+                },
+                
+                /*
+                 * A sting with comma separated property names that shoould be displayed in addition to key and desc.
+                 */
+                additionalProperties: {
+                	type: String,
+                	value: ''
+                }
             },
 
             /**
@@ -168,22 +179,34 @@
                         self.searching = false;
                         result.values = [{
                             key: 'KEY 1',
-                            desc: "some description for key 1"
+                            desc: "some description for key 1",
+                            prop1: "value of prop 1",
+                          	prop2: "value of prop 2"
                         }, {
                             key: 'KEY 2',
-                            desc: "some description for key 2"
+                            desc: "some description for key 2",
+                            prop1: "value of prop 1",
+                          	prop2: "value of prop 2"
                         }, {
                             key: 'KEY 3',
-                            desc: "some description for key 3 some description for key 3 some description for key 3 some description for key 3"
+                            desc: "some description for key 3 some description for key 3 some description for key 3 some description for key 3",
+                            prop1: "value of prop 1",
+                          	prop2: "value of prop 2"
                         }, {
                             key: 'KEY 4',
-                            desc: "some description for key 4"
+                            desc: "some description for key 4",
+                            prop1: "value of prop 1",
+                          	prop2: "value of prop 2"
                         }, {
                             key: 'KEY 5',
-                            desc: "some new word for key 5"
+                            desc: "some new word for key 5",
+                            prop1: "value of prop 1",
+                          	prop2: "value of prop 2"
                         }, {
                             key: 'KEY 6',
-                            desc: "some description for key 6"
+                            desc: "some description for key 6",
+                            prop1: "value of prop 1",
+                          	prop2: "value of prop 2"
                         }];
                         self.async(function () {
                             result.style.position = 'absolute';
