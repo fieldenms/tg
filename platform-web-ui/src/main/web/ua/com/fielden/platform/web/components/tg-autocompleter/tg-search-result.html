@@ -51,6 +51,7 @@
         }
         
         .additional-prop {
+        	@apply(--layout-horizontal);
             font-size: x-small;
             min-width: 150px;
             white-space: normal;
@@ -90,28 +91,27 @@
                             </template>
                         </div>
                         <div class="additional-prop">
-                            <span class="prop-name">[[_propTitleByName(v, "desc")]]:</span>
+                            <span class="prop-name"><span>[[_propTitleByName(v, "desc")]]</span>:</span>
                             <span hidden$="[[highlightDesc]]">[[v.desc]]</span>
-
-                            <!-- TODO to be converted -->
                             <template is="dom-if" if="[[highlightDesc]]">
 	                            <div style="font-size: 0">
 	                                <template is="dom-repeat" items="[[_matchedParts(v.desc)]]" as="d">
-	                                    <span hidden$="[[!d.matched]]" class="key-value key-value-highlighted">[[d.part]]</span>
+	                                    <span hidden$="[[!d.matched]]" style="font-size: x-small;" class="key-value key-value-highlighted">[[d.part]]</span>
 	                                    <template is="dom-if" if="[[!d.matched]]">
 	                                        <template is="dom-repeat" items="[[_spaces(d.part)]]" as="sp">
 	                                            <span class="key-value">&nbsp;</span>
 	                                        </template>
-	                                        <span class="key-value">[[d.part]]</span>
+	                                        <span style="font-size: x-small;" class="key-value">[[d.part]]</span>
 	                                    </template>
 	                                </template>
 	                            </div>
                         	</template>
                         </div>
+                        
                         <template is="dom-if" if="[[displayAdditionalProperties]]">
 	                        <template is="dom-repeat" items="[[additionalProperties]]" as="p">
 	                            <div class="additional-prop">
-	                                <span class="prop-name">[[_propTitleByName(v, p)]]:</span>
+	                                <span class="prop-name"><span>[[_propTitleByName(v, p)]]</span>:</span>
 	                                <span>[[_propValueByName(v, p)]]</span>
 	                            </div>
 	                        </template>
