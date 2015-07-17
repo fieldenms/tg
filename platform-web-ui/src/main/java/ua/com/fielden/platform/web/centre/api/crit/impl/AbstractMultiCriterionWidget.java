@@ -25,8 +25,8 @@ public abstract class AbstractMultiCriterionWidget extends AbstractCriterionWidg
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
-        attrs.put("orNull", "{{propertyModel['" + this.propertyName() + "'].orNull}}");
-        attrs.put("not", "{{propertyModel['" + this.propertyName() + "'].not}}");
+        attrs.put("or-null", "[[propertyModel." + this.propertyName() + ".orNull]]");
+        attrs.put("not", "[[propertyModel." + this.propertyName() + ".not]]");
         return attrs;
     }
 }

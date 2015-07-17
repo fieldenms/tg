@@ -17,7 +17,7 @@ public class IntegerCriterionWidget extends AbstractRangeCriterionWidget {
      * @param propertyName
      */
     public IntegerCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        super("centre/criterion/tg-range-criterion", propertyName,
+        super("centre/criterion/multi/range/tg-range-criterion", propertyName,
                 new SpinnerWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey()

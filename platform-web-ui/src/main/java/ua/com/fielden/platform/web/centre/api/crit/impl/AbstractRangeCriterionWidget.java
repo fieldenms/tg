@@ -25,8 +25,8 @@ public abstract class AbstractRangeCriterionWidget extends AbstractMultiCriterio
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
-        attrs.put("exclusive", "{{propertyModel['" + this.propertyName() + "'].exclusive}}");
-        attrs.put("exclusive2", "{{propertyModel['" + this.propertyName() + "'].exclusive2}}");
+        attrs.put("exclusive", "[[propertyModel." + this.propertyName() + ".exclusive]]");
+        attrs.put("exclusive2", "[[propertyModel." + this.propertyName() + ".exclusive2]]");
         return attrs;
     }
 }
