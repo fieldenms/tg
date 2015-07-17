@@ -14,7 +14,7 @@
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<dom-module id="tg-entity-grid-inspector">
+<dom-module id="tg-entity-grid-spike">
     <style>
         /*miscellanea styles*/
         .truncate {
@@ -187,15 +187,62 @@
                     <!-- Table body -->
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
+<!--
                             <div class="table-cell layout horizontal center">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                             </div>
+-->
                             <template is="dom-if" if="[[primaryAction]]">
                                 <div class="table-cell layout horizontal center">
-                                    <!--Primary action header goes here-->
+                                    Primary action header goes here
                                 </div>
                             </template>
-                            <template is="dom-repeat" items="[[columns]]" as="column">
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.0)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:60px">[[_getValue(egiEntity.entity, columns.0)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.1)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:200px">[[_getValue(egiEntity.entity, columns.1)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.2)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.2)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.3)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.3)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.4)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.4)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.5)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.5)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.6)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.6)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.7)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.7)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.8)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:68px">[[_getValue(egiEntity.entity, columns.8)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.9)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.9)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.10)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.10)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.11)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:68px">[[_getValue(egiEntity.entity, columns.11)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.12)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:68px">[[_getValue(egiEntity.entity, columns.12)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.13)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:50px">[[_getValue(egiEntity.entity, columns.13)]]</div>
+                            </div>
+                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.14)]]" on-tap="_tapAction">
+                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.14)]]</div>
+                            </div>
+                            <!--<template is="dom-repeat" items="[[columns]]" as="column">
                                 <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]">
                                     </div>
@@ -206,10 +253,10 @@
                                         <div class="truncate" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column)]]</div>
                                     </template>
                                 </div>
-                            </template>
+                            </template>-->
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                                 <div class="table-cell">
-                                    <!--Secondary actions header goes here-->
+                                    Secondary actions header goes here
                                 </div>
                             </template>
                         </div>
@@ -365,7 +412,7 @@
                 }
             };
         Polymer({
-            is: "tg-entity-grid-inspector",
+            is: "tg-entity-grid-spike",
 
             properties: {
                 entityType: String,
@@ -589,9 +636,9 @@
             /**
              * Calculates the style for cell that represents rendering hints.
              */
-            _calcRenderingHintsStyle: function (entityIndex, property) {
-                var style = "opacity: 0.3;",
-                    rendHints = (this.renderingHints && this.renderingHints[entityIndex][property]) || [];
+            _calcRenderingHintsStyle: function (entityIndex, column) {
+                var style = "width: " + column.width + ";",
+                    rendHints = (this.renderingHints && this.renderingHints[entityIndex][column.property]) || [];
                 for (var property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
