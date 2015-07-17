@@ -2,137 +2,66 @@
 <html>
 
 <head>
-         <title>Color Chooser</title>
-         <meta charset="utf-8">
-         <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-         <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+	<title>Color Chooser</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+	<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
+	<link rel="import" href="tg-chooser.html">
 
-         <link rel="import" href="/resources/polymer/font-roboro/roboto.html">
-         <link rel="import" href="/resources/polymer/paper-header-panel/paper-header-panel.html">
-         <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
-         <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
-         <link rel="import" href="/resources/pilymer/iron-selector/iron-selector.html">
-         <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
-         <link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
-         <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
-         <link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
-         <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
-         <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
-         <link rel="import" href="/resources/polymer/paper-radio-group/paper-radio-group.html">
-         <link rel="import" href="/resources/polymer/paper-radio-button/paper-radio-button.html">
-
-         <link rel="import" href="chooserElement.html">
-
-         <style>
-                  html,
-                  body {
-                           height: 100%;
-                           margin: 0;
-                           background-color: #E5E5E5;
-                           font-family: 'RobotoDraft', sans-serif;
-                  }
-                  
-                  paper-toolbar {
-                           background: #03a9f4;
-                           color: white;
-                  }
-                  
-                  paper-radio-button {
-                           unchecked-color: green;
-                           unchecked-ink-color: green;
-                           checked-color: green;
-                           label-color: green;
-                  }
-                  /*
-                  paper-checkbox.blue::shadow #checkbox {
-                           border-color: #2196F3;
-                           background-color: #2196F3;
-                  }
-                  
-                  paper-checkbox.grey::shadow #checkbox {
-                           border-color: #607D8B;
-                           background-color: #607D8B;
-                  }
-                  
-                  paper-checkbox.purple::shadow #checkbox {
-                           border-color: #BA68C8;
-                           background-color: #BA68C8;
-                  }
-                  
-                  paper-checkbox.brown::shadow #checkbox {
-                           border-color: #795548;
-                           background-color: #795548;
-                  }
-                  
-                  paper-checkbox.green::shadow #checkbox {
-                           border-color: #66BB6A;
-                           background-color: #66BB6A;
-                  }
-*/
-                  
-                  .collapse-content {
-                           padding: 15px;
-                           border: 1px solid #dedede;
-                  }
-                  
-                  .list {
-                           display: table-row-group;
-                           border: 1px solid #ccc;
-                           border-bottom: none;
-                           background: #FAFAFA;
-                           color: #FAFAFA;
-                           list-style: none;
-                           margin: 0;
-                           padding: 0;
-                  }
-                  
-                  .list > * {
-                           height: 50px;
-                           line-height: 40px;
-                           padding: 0 20px;
-                           border-bottom: 3px solid #ccc;
-                  }
-         </style>
+	<style>
+		body {
+			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+			font-size: 10pt;
+		}
+		
+		paper-toolbar {
+			background: #03a9f4;
+			color: white;
+		}
+		
+		paper-radio-button {
+			unchecked-color: green;
+			unchecked-ink-color: green;
+			checked-color: green;
+			label-color: green;
+		}
+		
+		.collapse-content {
+			padding: 15px;
+			border: 1px solid #d6dede;
+		}
+		
+		.list {
+			display: table-row-group;
+			border: 1px solid #acc;
+			border-bottom: none;
+			background: #F4AAFA;
+			color: #B6F1A9;
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		}
+		
+		.list > * {
+			height: 50px;
+			line-height: 40px;
+			padding: 0 20px;
+			border-bottom: 3px solid #ccc;
+		}
+		
+		tg-chooser {
+			display: inline;
+		}
+	</style>
 </head>
 
 <body>
-         <chooser-color-element></chooser-color-element>
-         <template is="dom-bind">
-                  <paper-toolbar class="medium-tall" name="toolbar">
-
-                           <!--
-                           <paper-icon-button icon="editor:format-color-fill" onclick="document.getElementById('collapse').toggle()"></paper-icon-button>
-
-                           <iron-collapse id="collapse">
-                                    <iron-selector class="list">
-                                             <paper-radio-group name="items">
-
-                                                      <paper-radio-button name="small">Green</paper-radio-button>
-                                                      <paper-radio-button name="medium">Blue</paper-radio-button>
-                                                      <paper-radio-button name="large">Red</paper-radio-button>
-                                                      
-                                                      <paper-checkbox class="green" for>#66BB6A </paper-checkbox>
-                                                      <paper-checkbox class="brown" for>#795548 </paper-checkbox>
-                                                      <paper-checkbox class="purple" for>#BA68C8 </paper-checkbox>
-                                                      <paper-checkbox class="grey" for> #607D8B</paper-checkbox>
-                                                      <paper-checkbox class="blue" for>#2196F3</paper-checkbox>
-
-                                             </paper-radio-group>
-                                    </iron-selector>
-                           </iron-collapse>
--->
-
-                  </paper-toolbar>
-
-
-         </template>
-
-         <!--
-         <script>
-</script>
--->
-
+<!--	<paper-toolbar id="toolbar">-->
+		<tg-chooser></tg-chooser>
+<!--	</paper-toolbar>-->
 </body>
 
 </html>
