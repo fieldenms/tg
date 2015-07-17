@@ -1,116 +1,45 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
-<link rel="import" href="/resources/polymer/iron-selector/iron-selector.html">
+<link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
-<link rel="import" href="/resources/polymer/paper-radio-group/paper-radio-group.html">
-<link rel="import" href="/resources/polymer/paper-radio-button/paper-radio-button.html">
-<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 
 <dom-module id="tg-chooser">
 	<style>
-		paper-checkbox {
-			padding: 40px 30px 30px 0;
-		}
-		
-		paper-checkbox.blue::shadow #checkbox {
-			border-color: #2196F3;
-			background-color: #2196F3;
-			checked-color: #2196F3;
-		}
-		
-		paper-checkbox.grey::shadow #checkbox {
-			border-color: #607D8B;
-			background-color: #607D8B;
-			checked-color: #607D8B;
-		}
-		
-		paper-checkbox.purple::shadow #checkbox {
-			border-color: #BA68C8;
-			background-color: #BA68C8;
-			checked-color: #BA68C8;
-		}
-		
-		paper-checkbox.brown::shadow #checkbox {
-			border-color: #795548;
-			background-color: #795548;
-			checked-color: #795548;
-		}
-		
-		paper-checkbox.green::shadow #checkbox {
-			border-color: #66BB6A;
-			background-color: #66BB6A;
-			checked-color: #66BB6A;
-		}
-		
-		paper-toolbar {
-			background: #03a9f4;
-			color: white;
-		}
-		
-		paper-radio-button {
-			unchecked-color: green;
-			unchecked-ink-color: green;
-			checked-color: green;
-			label-color: green;
-		}
-		
-		.collapse-content {
+		collapse-content {
 			padding: 15px;
 			border: 1px solid #dedede;
-		}
-		
-		.list {
-			display: table-row-group;
-			border: 1px solid #acc;
-			border-bottom: none;
-			background: #FAFFAA;
-			color: #B6F1A9;
-			list-style: none;
-			margin: 0;
-			padding: 0;
-		}
-		
-		.list > * {
-			height: auto;
-			line-height: 40px;
-			padding: 0 20px;
-			border-bottom: 3px solid #ccc;
-		}
 	</style>
 	<template>
-		<paper-toolbar class="medium-tall" id="toolbar" style="background:{{color}}">
-			<paper-icon-button icon="editor:format-color-fill" onclick="document.getElementById('collapse').toggle()"></paper-icon-button>
-			<iron-collapse id="collapse">
-				<iron-selector class="list">
-					<paper-radio-group selected="{{selectedIndex}}">
-						<paper-checkbox class="green" checked? bind-value="{{color}}" value="#66BB6A"></paper-checkbox>
-						<paper-checkbox class="brown" checked? bind-value="{{color}}" value="#795548"></paper-checkbox>
-						<paper-checkbox class="purple" checked? bind-value="{{color}}" value="#BA68C8"></paper-checkbox>
-						<paper-checkbox class="grey" checked? bind-value="{{color}}" value="#607D8B"></paper-checkbox>
-						<paper-checkbox class="blue" checked? bind-value="{{color}}" value="#2196F3"></paper-checkbox>
-						<!--
-						<paper-radio-button name="small" label="green">Green</paper-radio-button>
-						<paper-radio-button name="medium" label="blue">Blue</paper-radio-button>
-						<paper-radio-button name="large" label="red">Red</paper-radio-button>
+		<paper-icon-button icon="editor:format-color-fill" onclick="{{toggle}}"></paper-icon-button>
+		<iron-collapse>
+			<div class="collapse-content" id="collapse">
+				<div>Content goes here...</div>
+			</div>
+		</iron-collapse>
+		<!--
+		<iron-collapse id="collapse">
+
+			<div class="layout horizontal center-justified"> Hello!
+			</div>
+		</iron-collapse>
 -->
-					</paper-radio-group>
-				</iron-selector>
-			</iron-collapse>
-		</paper-toolbar>
+
 	</template>
 </dom-module>
 <script>
+	toggle = function () {
+		this.$.collapse.toggle();
+	}
+	var onTab = function () {
+
+	}
 	Polymer({
 		is: "tg-chooser",
 
 		properties: {
-			color: {
-				type: String,
-				value: "#03a9f4"
-			}
+
 		}
 	});
 </script>
