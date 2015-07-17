@@ -81,34 +81,32 @@
     <template>
         <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value">
             <!-- begin of dom-repeat -->
-            <template is="dom-repeat" items="{{values}}" as="v">
-                <paper-item class="tg-item vertical-layout" value="{{v.key}}" noink>
+            <template is="dom-repeat" items="[[values]]" as="v">
+                <paper-item class="tg-item vertical-layout" value="[[v.key]]" noink>
                         <div style="font-size: 0;white-space: nowrap;">
-                            <template is="dom-repeat" items="{{_matchedParts(v.key, searchQuery)}}" as="s">
-                                <span hidden$="{{!s.matched}}" class="key-value key-value-highlighted">{{s.part}}</span>
-                                <span hidden$="{{s.matched}}" class="key-value">{{s.part}}</span>
+                            <template is="dom-repeat" items="[[_matchedParts(v.key, searchQuery)]]" as="s">
+                                <span hidden$="[[!s.matched]]" class="key-value key-value-highlighted">[[s.part]]</span>
+                                <span hidden$="[[s.matched]]" class="key-value">[[s.part]]</span>
                             </template>
                         </div>
                         <div class="additional-prop">
-                            <span class="prop-name">{{_propTitleByName(v, "desc")}}:</span>
-                            <span hidden$="{{hightlightDesc}}">{{v.desc}}</span>
+                            <span class="prop-name">[[_propTitleByName(v, "desc")]]:</span>
+                            <span hidden$="[[highlightDesc]]">[[v.desc]]</span>
 
                             <!-- TODO to be converted -->
-                            <!--template if="{{hightlightDesc}}">
-                            <div style="font-size: 0">
-                                <template repeat="{{d in _matchedParts(v.desc)}}">
-                                    <template if="{{d.matched}}">
-                                        <span class="key-value key-value-highlighted">{{d.part}}</span>
-                                    </template>
-                                    <template if="{{!d.matched}}">
-                                        <template repeat="{{sp in spaces(d.part)}}">
-                                            <span class="key-value">&nbsp;</span>
-                                        </template>
-                                        <span class="key-value">{{d.part}}</span>
-                                    </template>
-                                </template>
-                            </div>
-                        </template-->
+                            <template is="dom-if" if="[[highlightDesc]]">
+	                            <div style="font-size: 0">
+	                                <template is="dom-repeat" items="[[_matchedParts(v.desc)]]" as="d">
+	                                    <span hidden$="[[!d.matched]]" class="key-value key-value-highlighted">[[d.part]]</span>
+	                                    <template is="dom-if" if="[[!d.matched]]">
+	                                        <template is="dom-repeat" items="[[_spaces(d.part)]]" as="sp">
+	                                            <span class="key-value">&nbsp;</span>
+	                                        </template>
+	                                        <span class="key-value">[[d.part]]</span>
+	                                    </template>
+	                                </template>
+	                            </div>
+                        	</template>
                         </div>
                         <!--template if="{{isComposite(v)}}">
                         <template repeat="{{p in keyMembers(v)}}">
@@ -150,7 +148,7 @@
                  * This should be an attribute, which determines whether value description should hightlight the matchied parts.
                  * It is used in cases where entity search happens by key and description (or just by description).
                  */
-                hightlightDesc: {
+                highlightDesc: {
                     type: Boolean,
                     value: false
                 }
@@ -233,7 +231,22 @@
              */
             _propValueByName: function (entity, propName) {
                 return this.$.reflector.convert(entity.get(propName));
-            }
+            },
+            
+            /**
+             * Creates an array equal in size to the number of spacaes in the provided text.
+             * This function is used during rendering of found values in order to preserve spaces in the text when braking it to matching and non-matching parts.
+             */
+            _spaces: function (text) {
+                var parts = [];
+                var index = 0;
+                while (index < text.length && text.substring(index, index + 1) === ' ') {
+                    parts.push(index);
+                    index = index + 1;
+                }
+                return parts;
+            },
+
 
         });
     })();

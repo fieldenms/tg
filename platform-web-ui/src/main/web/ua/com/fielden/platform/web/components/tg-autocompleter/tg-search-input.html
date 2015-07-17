@@ -87,37 +87,13 @@
                 'iron-resize': '_onIronResize'
             },
 
+            ready: function() {
+            	this.$.result.highlightDesc = this.highlightDesc;
+            },
+            
             attached: function () {
                 this.async(this.notifyResize, 1);
             },
-
-            get parent() {
-                if (this.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-                    return this.parentNode.host;
-                }
-                return this.parentNode;
-            },
-
-            _onIronResize: function () {
-                var container = this.$.container;
-                console.log('resize event captured:', (container.offsetTop + container.clientHeight));
-                var result = this.$.result;
-                if (result.opened) {
-                    this.async(function () {
-                        var rects = container.getClientRects();
-                        var rect = rects[0];
-                        result.style.position = 'absolute';
-                        var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-                        var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
-                        result.style.top = (rect.bottom + scrollTop) + 'px';
-                        result.style.left = (rect.left + scrollLeft) + 'px';
-                        result.style.width = rect.width + 'px';
-                        result.style.height = '250px';
-                        result.style['min-height'] = '250px';
-                    });
-                }
-            },
-
 
             properties: {
                 searching: {
@@ -125,10 +101,22 @@
                     value: false,
                     notify: false
                 },
+                
                 _searchQuery: {
                     type: Boolean,
                     value: ''
-                }
+                },
+                
+                /*
+                 * This property should be used as attribute highlight-desc to specify whether search pattern should 
+                 * be used for highlighting desc property values in the search result.
+                 * This property value gets assigned to the property with the same name of the tg-search-result element
+                 * that is associated with this tg-search-input element.
+                 */
+                highlightDesc:  {
+                    type: Boolean,
+                    value: false
+                }                
             },
 
             /**
@@ -192,7 +180,7 @@
                             desc: "some description for key 4"
                         }, {
                             key: 'KEY 5',
-                            desc: "some description for key 5"
+                            desc: "some new word for key 5"
                         }, {
                             key: 'KEY 6',
                             desc: "some description for key 6"
@@ -212,6 +200,35 @@
                     result.close();
                 }
             },
+            
+            get parent() {
+                if (this.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+                    return this.parentNode.host;
+                }
+                return this.parentNode;
+            },
+
+            /* Iron reseze event listener for correct resizing and positioning of an open result overlay. */
+            _onIronResize: function () {
+                var container = this.$.container;
+                console.log('resize event captured:', (container.offsetTop + container.clientHeight));
+                var result = this.$.result;
+                if (result.opened) {
+                    this.async(function () {
+                        var rects = container.getClientRects();
+                        var rect = rects[0];
+                        result.style.position = 'absolute';
+                        var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                        var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+                        result.style.top = (rect.bottom + scrollTop) + 'px';
+                        result.style.left = (rect.left + scrollLeft) + 'px';
+                        result.style.width = rect.width + 'px';
+                        result.style.height = '250px';
+                        result.style['min-height'] = '250px';
+                    });
+                }
+            }
+
         });
     })();
 </script>
