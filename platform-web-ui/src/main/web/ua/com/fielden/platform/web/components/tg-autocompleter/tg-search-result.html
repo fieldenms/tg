@@ -46,7 +46,7 @@
             min-width: 100px;
         }
         
-        paper-item:not(.iron-selected) .key-value-highlighted {
+        paper-item:not(.iron-selected) span.key-value-highlighted {
             background-color: #ffff46;
         }
         
@@ -82,7 +82,7 @@
     <template>
         <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value">
             <!-- begin of dom-repeat -->
-            <template is="dom-repeat" items="[[values]]" as="v">
+            <template is="dom-repeat" items="[[values]]" as="v" index-as="item_index_no">
                 <paper-item class="tg-item vertical-layout" value="[[v.key]]" noink>
                         <div style="font-size: 0;white-space: nowrap;">
                             <template is="dom-repeat" items="[[_matchedParts(v.key, searchQuery)]]" as="s">
@@ -92,22 +92,8 @@
                         </div>
                         <div class="additional-prop">
                             <span class="prop-name"><span>[[_propTitleByName(v, "desc")]]</span>:</span>
-                            <span hidden$="[[highlightDesc]]">[[v.desc]]</span>
-                            <template is="dom-if" if="[[highlightDesc]]">
-	                            <div style="font-size: 0">
-	                                <template is="dom-repeat" items="[[_matchedParts(v.desc)]]" as="d">
-	                                    <span hidden$="[[!d.matched]]" style="font-size: x-small;" class="key-value key-value-highlighted">[[d.part]]</span>
-	                                    <template is="dom-if" if="[[!d.matched]]">
-	                                        <template is="dom-repeat" items="[[_spaces(d.part)]]" as="sp">
-	                                            <span class="key-value">&nbsp;</span>
-	                                        </template>
-	                                        <span style="font-size: x-small;" class="key-value">[[d.part]]</span>
-	                                    </template>
-	                                </template>
-	                            </div>
-                        	</template>
+                            <span id$="[[_idForDesc(item_index_no)]]"></span>
                         </div>
-                        
                         <template is="dom-if" if="[[displayAdditionalProperties]]">
 	                        <template is="dom-repeat" items="[[additionalProperties]]" as="p">
 	                            <div class="additional-prop">
@@ -165,6 +151,11 @@
                 	computed: 'hasAdditionalProperties(additionalProperties)'
                 }
             },
+
+            listeners: {
+            	'iron-overlay-opened': '_overlayOpened'
+            },
+
 
             clearSelection: function () {
                 this.$.selector.selected = '';
@@ -245,23 +236,50 @@
                 //return this.$.reflector.convert(entity.get(propName));
             },
             
-            /**
-             * Creates an array equal in size to the number of spacaes in the provided text.
-             * This function is used during rendering of found values in order to preserve spaces in the text when braking it to matching and non-matching parts.
-             */
-            _spaces: function (text) {
-                var parts = [];
-                var index = 0;
-                while (index < text.length && text.substring(index, index + 1) === ' ') {
-                    parts.push(index);
-                    index = index + 1;
-                }
-                return parts;
+            _idForDesc: function(id) {
+            	return "id" + id;
             },
+            
+            /* Highlights matched parts of autocompleted values.
+             * Handles all properties that were specified as to be highlighted. */
+            _overlayOpened: function (e) {
+				this.async(function() {
+					// TODO Need to convert highlighting of all properties to be handled here.
+					for (var index = 0; index < this.values.length; index++) {
+						if (this.highlightDesc) {
+							this._addHighlightedValue(index, this.values[index], "desc");
+						} else {
+							var divId = this._idForDesc(index);
+							var div = Polymer.dom(this.root).querySelector("#" + divId);
+							div.innerHTML = this.values[index].desc;
+						}
+					}
+					Polymer.dom.flush();
+				}.bind(this));
 
-            hasAdditionalProperties: function (additionalProperties) {
-            	return additionalProperties.length > 0;
-            }
-        });
-    })();
+			},
+
+			_addHighlightedValue : function(id, v, propName) {
+				var spanId = this._idForDesc(id);
+				var span = Polymer.dom(this.root).querySelector("#" + spanId);
+				var matchedParts = this._matchedParts(v[propName]);
+				var html = '';
+				for (var index = 0; index < matchedParts.length; index++) {
+					var part = matchedParts[index];
+					if (part.matched) {
+						// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+						html = html + '<span class="style-scope ' + this.is + ' key-value-highlighted">' + part.part + '</span>';	
+					} else {
+						html = html + part.part;
+					}
+				}
+
+				span.innerHTML = html;
+			},
+
+			hasAdditionalProperties : function(additionalProperties) {
+				return additionalProperties.length > 0;
+			}
+		});
+	})();
 </script>

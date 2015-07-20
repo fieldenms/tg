@@ -147,7 +147,10 @@
             },
 
             _search: function () {
-                // need to implement the actuall search 
+                // TODO need to implement the actuall search
+                
+                this.$.input.focus();
+                
                 // what is the query string?
                 var inputText = this._prepInput(this.$.input.value);
 
@@ -240,7 +243,7 @@
             /* Iron reseze event listener for correct resizing and positioning of an open result overlay. */
             _onIronResize: function () {
                 var container = this.$.container;
-                console.log('resize event captured:', (container.offsetTop + container.clientHeight));
+                //console.log('resize event captured:', (container.offsetTop + container.clientHeight));
                 var result = this.$.result;
                 if (result.opened) {
                     this.async(function () {
