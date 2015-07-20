@@ -90,7 +90,7 @@
             ready: function() {
             	this.$.result.highlightDesc = this.highlightDesc;
                 if (this.additionalProperties) {
-            		this.$.result.additionalProperties = this.additionalProperties.split(',');
+            		this.$.result.additionalProperties = JSON.parse(this.additionalProperties);
                 }
             },
             

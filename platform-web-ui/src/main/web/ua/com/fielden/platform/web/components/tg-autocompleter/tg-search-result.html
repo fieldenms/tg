@@ -83,25 +83,7 @@
         <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[values]]" as="v" index-as="item_index_no">
-                <paper-item class="tg-item vertical-layout" value="[[v.key]]" noink>
-                        <div style="font-size: 0;white-space: nowrap;">
-                            <template is="dom-repeat" items="[[_matchedParts(v.key, searchQuery)]]" as="s">
-                                <span hidden$="[[!s.matched]]" class="key-value key-value-highlighted">[[s.part]]</span>
-                                <span hidden$="[[s.matched]]" class="key-value">[[s.part]]</span>
-                            </template>
-                        </div>
-                        <div class="additional-prop">
-                            <span class="prop-name"><span>[[_propTitleByName(v, "desc")]]</span>:</span>
-                            <span id$="[[_idForDesc(item_index_no)]]"></span>
-                        </div>
-                        <template is="dom-if" if="[[displayAdditionalProperties]]">
-	                        <template is="dom-repeat" items="[[additionalProperties]]" as="p">
-	                            <div class="additional-prop">
-	                                <span class="prop-name"><span>[[_propTitleByName(v, p)]]</span>:</span>
-	                                <span>[[_propValueByName(v, p)]]</span>
-	                            </div>
-	                        </template>
-                    </template>
+                <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value="[[v.key]]" noink>
                 </paper-item>
             </template>
             <!-- end of dom-repeat -->
@@ -129,20 +111,12 @@
                     type: String,
                     value: ''
                 },
-                /* 
-                 * This should be an attribute, which determines whether value description should hightlight the matchied parts.
-                 * It is used in cases where entity search happens by key and description (or just by description).
-                 */
-                highlightDesc: {
-                    type: Boolean,
-                    value: false
-                },
                 
                 /* Should contains the names of additional properties to be displayed. */
                 additionalProperties: {
-                	type: Array,
+                	type: Object,
                 	value: function () {
-                		return [];
+                		return {};
                 	}
                 },
                 
@@ -236,7 +210,7 @@
                 //return this.$.reflector.convert(entity.get(propName));
             },
             
-            _idForDesc: function(id) {
+            _makeId: function(id) {
             	return "id" + id;
             },
             
@@ -244,37 +218,79 @@
              * Handles all properties that were specified as to be highlighted. */
             _overlayOpened: function (e) {
 				this.async(function() {
-					// TODO Need to convert highlighting of all properties to be handled here.
 					for (var index = 0; index < this.values.length; index++) {
-						if (this.highlightDesc) {
-							this._addHighlightedValue(index, this.values[index], "desc");
-						} else {
-							var divId = this._idForDesc(index);
-							var div = Polymer.dom(this.root).querySelector("#" + divId);
-							div.innerHTML = this.values[index].desc;
+						var html = '';                	
+						var v = this.values[index];
+						
+						// add key value with highlighting of matching parts
+						html = html + this._addHighlightedKeyProp(v)
+		
+						// add values for additional properties with highlighting of matching parts if required
+						for (var propName in this.additionalProperties) {
+							// interested only in the object's direct properties
+							if (this.additionalProperties.hasOwnProperty(propName)) {
+								// should highlight?
+								var highlight = this.additionalProperties[propName];
+								html = html + this._addHighlightedPropByName(v, propName, highlight);
+							}
 						}
+						
+						// put the composed for the current item HTML into the content of paper-item
+						var id = this._makeId(index);
+						var paperItem = Polymer.dom(this.root).querySelector("#" + id);
+						paperItem.innerHTML = html;
 					}
+
 					Polymer.dom.flush();
 				}.bind(this));
-
 			},
 
-			_addHighlightedValue : function(id, v, propName) {
-				var spanId = this._idForDesc(id);
-				var span = Polymer.dom(this.root).querySelector("#" + spanId);
-				var matchedParts = this._matchedParts(v[propName]);
-				var html = '';
+			_addHighlightedKeyProp : function(v) {
+				var html = '<div style="white-space: nowrap;">';
+				var matchedParts = this._matchedParts(v.key);
 				for (var index = 0; index < matchedParts.length; index++) {
 					var part = matchedParts[index];
 					if (part.matched) {
 						// addition style-scope and this.is (element name) styles is required to enformse custom style processing
-						html = html + '<span class="style-scope ' + this.is + ' key-value-highlighted">' + part.part + '</span>';	
+						html = html
+								+ '<span class="style-scope ' + this.is + ' key-value key-value-highlighted">'
+								+ part.part + '</span>';
 					} else {
 						html = html + part.part;
 					}
 				}
+				return html + '</div>';
+			},
 
-				span.innerHTML = html;
+			_addHighlightedPropByName : function(v, propName, highlight) {
+				var html = '<div class="style-scope ' + this.is + ' additional-prop">';
+				// add prop title				
+				html = html + '<span class="style-scope ' + this.is + ' prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
+
+				
+				// add prop value
+				if (highlight === false) {
+					html = html + v[propName];
+				} else {
+					console.log(propName, ': ', highlight);
+					// matched parts should be in a separate div
+					html = html + '<div style="white-space: nowrap;">';
+
+					var matchedParts = this._matchedParts(v[propName]);
+					for (var index = 0; index < matchedParts.length; index++) {
+						var part = matchedParts[index];
+						if (part.matched) {
+							// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+							html = html
+									+ '<span class="style-scope ' + this.is + ' key-value-highlighted">' + part.part + '</span>';
+						} else {
+							html = html + part.part;
+						}
+					}
+					html = html + '</div>';
+				}
+
+				return html + '</div>';
 			},
 
 			hasAdditionalProperties : function(additionalProperties) {
