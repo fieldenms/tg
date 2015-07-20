@@ -54,7 +54,7 @@
             <paper-input-container id="decorator">
                 <label>search</label>
                 <div class="input-layout">
-                    <input id="input" is="iron-input" type="text" />
+                    <input id="input" is="iron-input" type="text" on-input="_inputEventHandler"/>
                     <paper-icon-button hidden$="[[searching]]" on-tap="_search" icon="search" class="search-button" tabIndex="-1"></paper-icon-button>
                     <paper-spinner active hidden$="[[!searching]]" tabIndex="-1" alt="searching..."></paper-spinner>
                 </div>
@@ -133,6 +133,11 @@
                 additionalProperties: {
                 	type: String,
                 	value: ''
+                },
+                
+                _searchAsyncSearchHandle: {
+                	type: Object,
+                	value: null
                 }
             },
 
@@ -226,11 +231,25 @@
                             result.open();
                         });
 
-                    }).bind(self), 600); // some delay to mimic the search time
+                    }).bind(self), 700); // some delay to mimic the search time
 
                 } else if (result.opened) { // make sure overlay is closed is no search is performed
                     result.close();
                 }
+            },
+            
+            _inputEventHandler: function(e) {
+            	// clear any search request in already in progress
+                this._cancelSearch();
+                this._searchAsyncSearchHandle = this.async(this._search.bind(this), 500);            	
+            },
+            
+            _cancelSearch: function() {
+            	if (this._searchAsyncSearchHandle) {
+            		console.warn("Aboring async search...");
+            		this.cancelAsync(this._searchAsyncSearchHandle);
+            		this._searchAsyncSearchHanle = null;
+            	}
             },
             
             get parent() {
