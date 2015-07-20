@@ -272,10 +272,8 @@
 				if (highlight === false) {
 					html = html + v[propName];
 				} else {
-					console.log(propName, ': ', highlight);
 					// matched parts should be in a separate div
 					html = html + '<div style="white-space: nowrap;">';
-
 					var matchedParts = this._matchedParts(v[propName]);
 					for (var index = 0; index < matchedParts.length; index++) {
 						var part = matchedParts[index];
