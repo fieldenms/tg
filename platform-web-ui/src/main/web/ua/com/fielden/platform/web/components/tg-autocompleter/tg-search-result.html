@@ -7,6 +7,7 @@
 
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+<link rel="import" href="/resources/components/lodash-lib.html">
 
 <dom-module id="tg-search-result">
 
@@ -80,10 +81,10 @@
     </style>
 
     <template>
-        <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value">
+        <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[values]]" as="v" index-as="item_index_no">
-                <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value="[[v.key]]" noink>
+                <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value$="[[v]]" noink>
                 </paper-item>
             </template>
             <!-- end of dom-repeat -->
@@ -106,6 +107,17 @@
                         return [];
                     }
                 },
+                /* Contains only selected valueі. 
+                 * Can be empty. Should contain at most one element in case of single selection mode.
+                 * The selected values are JSON string representations of the actual values that need to be parsed before using.
+                 */
+                selectedValues: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+                
                 /* Represents the search query string that was used to find resultant values to be displayed */
                 searchQuery: {
                     type: String,
@@ -118,20 +130,12 @@
                 	value: function () {
                 		return {};
                 	}
-                },
-                
-                displayAdditionalProperties: {
-                	type: Boolean,
-                	computed: 'hasAdditionalProperties(additionalProperties)'
                 }
+                
             },
-
-            listeners: {
-            	'iron-overlay-opened': '_overlayOpened'
-            },
-
 
             clearSelection: function () {
+            	this.selectedValues.length = 0;
                 this.$.selector.selected = '';
             },
 
@@ -216,7 +220,7 @@
             
             /* Highlights matched parts of autocompleted values.
              * Handles all properties that were specified as to be highlighted. */
-            _overlayOpened: function (e) {
+            highlightMatchedParts: function () {
 				this.async(function() {
 					for (var index = 0; index < this.values.length; index++) {
 						var html = '';                	
@@ -291,9 +295,26 @@
 				return html + '</div>';
 			},
 
-			hasAdditionalProperties : function(additionalProperties) {
-				return additionalProperties.length > 0;
+			
+			/*********************************************************
+			 ****************** SELECTION HANDLERS *******************
+			 *********************************************************/
+			_itemSelected : function(event) {
+				var value = event.detail.item.getAttribute("value");
+				
+				this.selectedValues.push(value);
+				
+				console.log('selected item: ', value, ' size:', this.selectedValues.length);
+			},
+
+			_itemDeselected : function(event) {
+				var value = event.detail.item.getAttribute("value");
+
+				_.pull(this.selectedValues, value);
+
+				console.log('unselected item: ', value, ' size:', this.selectedValues.length);
 			}
+
 		});
 	})();
 </script>

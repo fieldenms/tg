@@ -54,13 +54,14 @@
             <paper-input-container id="decorator">
                 <label>search</label>
                 <div class="input-layout">
-                    <input id="input" is="iron-input" type="text" on-input="_inputEventHandler"/>
-                    <paper-icon-button hidden$="[[searching]]" on-tap="_search" icon="search" class="search-button" tabIndex="-1"></paper-icon-button>
+                    <input id="input" is="iron-input" type="text" on-input="_inputEventHandler" on-blur="_blurEventHandler"/>
+                    <paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_search" icon="search" class="search-button" tabIndex="-1"></paper-icon-button>
+                    <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button" tabIndex="-1"></paper-icon-button>
                     <paper-spinner active hidden$="[[!searching]]" tabIndex="-1" alt="searching..."></paper-spinner>
                 </div>
             </paper-input-container>
         </div>
-        <tg-search-result id="result"></tg-search-result>
+        <tg-search-result id="result" on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed"></tg-search-result>
     </template>
 
 </dom-module>
@@ -138,9 +139,32 @@
                 _asyncSearchHandle: {
                 	type: Object,
                 	value: null
+                },
+                
+                opened: {
+                	type: Boolean,
+                	value: false
+                },
+                
+                searchingOrOpen: {
+                	type: Boolean,
+                	computed: '_computeSearchingOrOpened(searching, opened)'
+                },
+                
+                searchingOrClosed: {
+                	type: Boolean,
+                	computed: '_computeSearchingOrClosed(searching, opened)'
                 }
             },
 
+            _computeSearchingOrOpened: function(searching, opened) {
+            	return searching === true || opened == true;
+            },
+            
+            _computeSearchingOrClosed: function(searching, opened) {
+            	return searching === true || opened == false;
+            },
+            
             /**
              * Cleans input text.
              */
@@ -244,11 +268,52 @@
                 this._asyncSearchHandle = this.async(this._search.bind(this), 500);            	
             },
             
+            _blurEventHandler: function(e) {
+            	// There is no need to proceed with search if user moved out of the search field
+            	this._cancelSearch();
+            	
+            	// However, if user typed in a new value it may need to be validated...
+            	// TODO implement logic to enforce validation of the typed rather than selected value
+            },
+            
             _cancelSearch: function() {
             	if (this._asyncSearchHandle) {
             		console.warn("Aboring async search...");
             		this.cancelAsync(this._asyncSearchHandle);
             		this._asyncSearchHandle = null;
+            	}
+            },
+            
+            _resultOpened: function(e) {
+            	this.opened = true;
+            	this.$.result.highlightMatchedParts();
+            },
+            
+            _resultClosed: function(e) {
+            	console.log('result got closed.');
+            	this.opened = false;
+            },
+            
+            /* This method handles an explicit user action for accepting selected values from an autocompleted list.
+             * However, there is no guarantee that there are actually selected values. 
+             */
+            _done: function() {
+            	var result = this.$.result;
+            	var hasValuesToProcess = result.selectedValues.length > 0;
+            	console.log('accepting result: ', hasValuesToProcess, ' number of selected values: ', result.selectedValues.length);
+            	// should close automatcially, but just in case let's make sure the result overlay gets closed
+            	result.close();
+            	
+            	// TODO implemente value accpetance logic...
+            	if (hasValuesToProcess) {
+            		// do stuff
+            		console.log('need to do some work...');
+            		if (result.selectedValues.length === 1) {
+            			var obj = JSON.parse(result.selectedValues[0]);
+            			this.$.input.value = obj.key;
+            		} else {
+            			
+            		}
             	}
             },
             
