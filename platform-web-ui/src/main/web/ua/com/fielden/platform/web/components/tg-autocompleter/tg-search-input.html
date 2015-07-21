@@ -135,7 +135,7 @@
                 	value: ''
                 },
                 
-                _searchAsyncSearchHandle: {
+                _asyncSearchHandle: {
                 	type: Object,
                 	value: null
                 }
@@ -241,14 +241,14 @@
             _inputEventHandler: function(e) {
             	// clear any search request in already in progress
                 this._cancelSearch();
-                this._searchAsyncSearchHandle = this.async(this._search.bind(this), 500);            	
+                this._asyncSearchHandle = this.async(this._search.bind(this), 500);            	
             },
             
             _cancelSearch: function() {
-            	if (this._searchAsyncSearchHandle) {
+            	if (this._asyncSearchHandle) {
             		console.warn("Aboring async search...");
-            		this.cancelAsync(this._searchAsyncSearchHandle);
-            		this._searchAsyncSearchHandle = null;
+            		this.cancelAsync(this._asyncSearchHandle);
+            		this._asyncSearchHandle = null;
             	}
             },
             
