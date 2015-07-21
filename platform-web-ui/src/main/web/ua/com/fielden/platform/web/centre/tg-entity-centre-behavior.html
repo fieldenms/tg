@@ -139,6 +139,13 @@
                  */
                 _showMaster: {
                 	type: Function
+                },
+                
+                /**
+                 * The function which selects page ('Selection Criteria' or 'Details') after ripple effect on button clicking has been finished.
+                 */
+                _selectPage: {
+                	type: Function
                 }
             },
             
@@ -270,10 +277,10 @@
                 self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
                     return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
                 }).bind(self);
-            },
-
-            _selectPage: function (e, detail, source) {
-                this._selectedPage = this._selectedView;
+                
+                self._selectPage = (function (e, detail, source) {
+                    this._selectedPage = this._selectedView;
+                }).bind(self);
             },
 
             attached: function () {
@@ -411,19 +418,19 @@
             },
 
             canNotPrev: function (pageNumber) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canPrev(pageNumber);
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canPrev(pageNumber);
             },
             canNotNext: function (pageNumber, pageCount) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canNext(pageNumber, pageCount);
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canNext(pageNumber, pageCount);
             },
             canNotFirst: function (pageNumber, pageCount) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canFirst(pageNumber, pageCount);
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canFirst(pageNumber, pageCount);
             },
             canNotLast: function (pageNumber, pageCount) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canLast(pageNumber, pageCount);
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canLast(pageNumber, pageCount);
             },
             canNotCurrent: function (pageNumber, pageCount) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canCurrent(pageNumber, pageCount);
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canCurrent(pageNumber, pageCount);
             },
 
             /**

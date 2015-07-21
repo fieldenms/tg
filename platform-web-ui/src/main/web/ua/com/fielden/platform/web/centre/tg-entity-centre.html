@@ -9,12 +9,20 @@
 
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
 
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+
 <dom-module id="tg-entity-centre">
 	<style>
     	.tabs {
     		background-color: #0288D1;
     		color: #fff;
+    		@apply(--layout-horizontal);
+    		@apply(--layout-center-justified);
     	}
+    	
+    	/* .selection-criteria {
+    		@apply(--layout-vertical);
+    	} */
     	
     	iron-pages {
             overflow: auto;
@@ -28,8 +36,8 @@
 
     <template>
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <div class="tabs layout horizontal center-justified">
-            <paper-tabs selected="[[_selectedView]]" style="max-width:600px" flex [on-core-transitionend]="_selectPage">
+        <div class="tabs">
+            <paper-tabs selected="[[_selectedView]]" style="max-width:600px" class="flex" on-transitionend="_selectPage">
                 <paper-tab>Selection</paper-tab>
                 <paper-tab>Details</paper-tab>
             </paper-tabs>
