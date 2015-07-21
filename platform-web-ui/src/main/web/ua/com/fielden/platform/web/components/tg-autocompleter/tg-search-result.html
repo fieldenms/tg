@@ -80,7 +80,7 @@
     </style>
 
     <template>
-        <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value">
+        <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value" on-iron-deselect>
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[values]]" as="v" index-as="item_index_no">
                 <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value="[[v.key]]" noink>
