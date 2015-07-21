@@ -177,9 +177,6 @@
 
             _search: function () {
                 // TODO need to implement the actuall search
-                
-                this.$.input.focus();
-                
                 // what is the query string?
                 var inputText = this._prepInput(this.$.input.value);
 
@@ -265,7 +262,7 @@
             _inputEventHandler: function(e) {
             	// clear any search request in already in progress
                 this._cancelSearch();
-                this._asyncSearchHandle = this.async(this._search.bind(this), 500);            	
+                this._asyncSearchHandle = this.async(this._search.bind(this), 700);            	
             },
             
             _blurEventHandler: function(e) {
@@ -287,6 +284,7 @@
             _resultOpened: function(e) {
             	this.opened = true;
             	this.$.result.highlightMatchedParts();
+				this._focusInput();            	
             },
             
             _resultClosed: function(e) {
@@ -298,6 +296,7 @@
              * However, there is no guarantee that there are actually selected values. 
              */
             _done: function() {
+            	var input = this.$.input;
             	var result = this.$.result;
             	var hasValuesToProcess = result.selectedValues.length > 0;
             	console.log('accepting result: ', hasValuesToProcess, ' number of selected values: ', result.selectedValues.length);
@@ -310,11 +309,23 @@
             		console.log('need to do some work...');
             		if (result.selectedValues.length === 1) {
             			var obj = JSON.parse(result.selectedValues[0]);
-            			this.$.input.value = obj.key;
+            			input.value = obj.key;
             		} else {
             			
             		}
             	}
+            	
+            	// at the end let's focus the input...
+            	this._focusInput();
+            },
+            
+            /* This method is used to make sure the input is in focus */
+            _focusInput: function() {
+            	// at the end let's focus the input...
+            	var input = this.$.input;
+            	this.async(function() {
+            		input.focus();
+            	}, 1);
             },
             
             get parent() {
