@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-error.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-char-counter.html">
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 <link rel="import" href="/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html">
 <link rel="import" href="/resources/master/actions/tg-property-action.html">
@@ -20,105 +21,123 @@
         }
         #input-container {
             @apply(--layout-flex);
-        }
-      	/* TODO styles */
 
+        }
+        /* TODO styles */
     </style>
 
     <template>
-        <paper-input-container id="decorator" attr-for-value="editing-value" disabled$="[[_disabled]]" always-float-label> <!-- flex auto  for textarea! -->
-        	<label>[[propTitle]]</label>
+        <paper-input-container id="decorator" attr-for-value="editing-value" disabled$="[[_disabled]]" always-float-label>
+            <!-- flex auto  for textarea! -->
+            <label>[[propTitle]]</label>
             <div class="main-container">
                 <div id="input-container">
- 		            <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
-                
-                	<!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
-       				<input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
-                	<!-- </template> -->
-                	
-               		<input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
-                	
-                    <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]"> <!--  flex -->
+                    <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
+
+                    <!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
+                    <input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
+                    <!-- </template> -->
+
+                    <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
+
+                    <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
+                        <!--  flex -->
                         <textarea id="input" disabled$="[[_disabled]]"></textarea>
-                    </iron-autogrow-textarea>                	
-					
-					<!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}" -->
-						<!-- input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]" -->
-						<!-- span class="span-tooltip" tip>
+                    </iron-autogrow-textarea>
+
+                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange">[[propTitle]]</paper-checkbox>
+
+                    <!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}" -->
+                    <!-- input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]" -->
+                    <!-- span class="span-tooltip" tip>
                             {{tooltip(propDesc)}}
                         </span>
                     </core-tooltip> -->
                 </div>
                 <!-- CONTENT HERE: -->
-				<content select=".custom-icon-buttons"></content>
-                
+                <content select=".custom-icon-buttons"></content>
+
                 <div id="icon" hidden$="[[_actionDoesNotExist(action)]]">
                     <tg-property-action entity-type="[[action.entityType]]" pre-action="[[action.preAction]]" post-action="[[action.postAction]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action>
                 </div>
             </div>
-            
-  	    	<paper-input-error hidden$="[[!_error]]">[[_error]]</paper-input-error>
-	    	
-	    	<paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]"></paper-input-char-counter>
+
+            <paper-input-error hidden$="[[!_error]]">[[_error]]</paper-input-error>
+
+            <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]"></paper-input-char-counter>
         </paper-input-container>
-        
+
         <tg-reflector id="reflector"></tg-reflector>
 
         <template is="dom-if" if="[[debug]]">
-            <p>_editingValue: <i>[[_editingValue]]</i></p>
-            <p>_commValue: <i>[[_commValue]]</i></p>
-            <p>_acceptedValue: <i>[[_acceptedValue]]</i></p>
+            <p>_editingValue: <i>[[_editingValue]]</i>
+            </p>
+            <p>_commValue: <i>[[_commValue]]</i>
+            </p>
+            <p>_acceptedValue: <i>[[_acceptedValue]]</i>
+            </p>
         </template>
     </template>
 </dom-module>
 
-    <script>
-        Polymer({
-        	is: 'tg-editor',
-        	
-        	properties: {
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
-            	// No default values are allowed in this case.														   //
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	propTitle: String,
-        		_disabled: Boolean,
-        		_editingValue: {
-        			type: String,
-        			notify: true
-        		},
-        		action: Object,
-        		_error: String,
-        		_commValue: String,
-        		_acceptedValue: String,
-        		debug: Boolean,
-        		_editorKind: String,
-        		_onChange: Function,
-        		_onKeypress: Function,
-        		_maxLength: Number
-        	},
-        	
-        	_isInteger: function (_editorKind) {
-        		return 'INTEGER' === _editorKind;
-        	},
-        	
-        	_isSinglelineTextOrDate: function (_editorKind) {
-        		return 'SINGLELINE_TEXT' === _editorKind || 'DATE' === _editorKind;
-        	},
-        	
-        	_isMultilineText: function (_editorKind) {
-        		return 'MULTILINE_TEXT' === _editorKind;
-        	},
-        	
-            /**
-             * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
-             *
-             * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
-             */
-            _actionDoesNotExist: function (action) {
-            	return action === null;
-            }
-        });
-    </script>
+<script>
+    Polymer({
+        is: 'tg-editor',
+
+        properties: {
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            propTitle: String,
+            _disabled: Boolean,
+            _editingValue: {
+                type: String,
+                notify: true
+            },
+            action: Object,
+            _error: String,
+            _commValue: String,
+            _acceptedValue: String,
+            debug: Boolean,
+            _editorKind: String,
+            _onChange: Function,
+            _onKeypress: Function,
+            _maxLength: Number
+        },
+
+        _isInteger: function (_editorKind) {
+            return 'INTEGER' === _editorKind;
+        },
+
+        _isSinglelineTextOrDate: function (_editorKind) {
+            return 'SINGLELINE_TEXT' === _editorKind || 'DATE' === _editorKind;
+        },
+
+        _isMultilineText: function (_editorKind) {
+            return 'MULTILINE_TEXT' === _editorKind;
+        },
+
+        _isBooleanEditor: function (editorKind) {
+            return "BOOLEAN" === editorKind;
+        },
+
+        /**
+         * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
+         *
+         * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
+         */
+        _actionDoesNotExist: function (action) {
+            return action === null;
+        },
+
+        /**
+         * Returns value that indicates whether boolean editor is checked or not.
+         */
+        _isBooleanChecked: function (editingValue) {
+            return editingValue === 'true';
+        }
+    });
+</script>

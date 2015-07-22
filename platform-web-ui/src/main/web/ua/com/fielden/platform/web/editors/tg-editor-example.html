@@ -15,6 +15,7 @@
     <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-datetime-picker.html">
+    <link rel="import" href="/resources/editors/tg-boolean-editor.html">
 </head>
 
 <body unresolved>
@@ -66,6 +67,17 @@
   	    	validation-callback="[[validationCallback]]"
   	    	max-length="[[maxTextAreaLength]]">
   	    </tg-multiline-text-editor>
+        <tg-boolean-editor 
+  	    	entity="[[entity]]" 
+  	    	property-name="booleanProp" 
+  	    	current-state="EDIT" 
+  	    	debug 
+  	    	prop-title="Boolean property title" 
+  	    	prop-desc="Boolean property desc"
+  	    	action="null" 
+  	    	externalRefreshCycle="null"  	    	
+  	    	validation-callback="[[validationCallback]]">
+  	    </tg-boolean-editor>
   	    
    	    <tg-datetime-picker 
   	    	entity="[[entity]]" 
