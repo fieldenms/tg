@@ -12,8 +12,8 @@
     	
         <tg-criteria-validator id="validator" mi-type="[[miType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-criteria-validator>
         
-        <iron-ajax id="ajaxRetriever" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
-        <iron-ajax id="ajaxRunner" url="[[_url]]" method="POST" handle-as="json" on-response="_processRunnerResponse" on-error="_processRunnerError"></iron-ajax>
+        <iron-ajax id="ajaxRetriever" url="[[_url]]" method="GET" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
+        <iron-ajax id="ajaxRunner" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRunnerResponse" on-error="_processRunnerError"></iron-ajax>
         
         <content></content>
     </template>
@@ -60,7 +60,7 @@
     	 * Computes URLs for 'ajaxRetriever' and 'ajaxRunner'.
     	 */
     	_computeUrl: function (miType) {
-    		return "/entity/" + miType;
+    		return "/criteria/" + miType;
     	},
 
         /**
