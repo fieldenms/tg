@@ -46,9 +46,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
-        this.editors = new Pair<>(editors[0], null);
+        this.editors = new Pair<>(editors[0].markAsCriterionEditor(), null);
         if (editors.length > 1) {
-            this.editors.setValue(editors[1]);
+            this.editors.setValue(editors[1].markAsCriterionEditor());
         }
     }
 

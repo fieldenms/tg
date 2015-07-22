@@ -17,7 +17,7 @@ public class EntitySingleCritAutocompletionWidget extends AbstractEntityAutocomp
     private boolean shouldSearchByDescOnly = false;
 
     public EntitySingleCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig, final boolean selectionCriteriaWidget) {
-        super("editors/tg-entity-editor", titleDesc, propertyName, centreContextConfig, selectionCriteriaWidget);
+        super("editors/tg-singleline-text-editor" /* TODO was tg-entity-editor */, titleDesc, propertyName, centreContextConfig, selectionCriteriaWidget);
     }
 
     @Override

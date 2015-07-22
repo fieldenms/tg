@@ -627,12 +627,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer egiColumns = new DomContainer();
         final StringBuilder propActionsObject = new StringBuilder();
         propertyColumns.forEach(column -> {
-            importPaths.add(column.importPath());
+            // TODO importPaths.add(column.importPath());
             if (column.hasSummary()) {
-                importPaths.add(column.getSummary(0).importPath());
+             // TODO importPaths.add(column.getSummary(0).importPath());
             }
             if (column.getAction().isPresent()) {
-                importPaths.add(column.getAction().get().importPath());
+             // TODO importPaths.add(column.getAction().get().importPath());
                 propActionsObject.append(prefix + createActionObject(column.getAction().get()));
             }
             egiColumns.add(column.render());
@@ -667,7 +667,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         for (final List<FunctionalActionElement> group : actionGroups) {
             final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
             for (final FunctionalActionElement el : group) {
-                importPaths.add(el.importPath());
+             // TODO importPaths.add(el.importPath());
                 groupElement.add(el.render());
                 functionalActionsObjects.append(prefix + createActionObject(el));
             }
@@ -683,7 +683,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
             final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
 
-            importPaths.add(el.importPath());
+         // TODO importPaths.add(el.importPath());
             primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
             primaryActionObject.append(prefix + createActionObject(el));
         }
@@ -703,7 +703,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer secondaryActionsDom = new DomContainer();
         final StringBuilder secondaryActionsObjects = new StringBuilder();
         for (final FunctionalActionElement el : secondaryActionElements) {
-            importPaths.add(el.importPath());
+         // TODO importPaths.add(el.importPath());
             secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
             secondaryActionsObjects.append(prefix + createActionObject(el));
         }

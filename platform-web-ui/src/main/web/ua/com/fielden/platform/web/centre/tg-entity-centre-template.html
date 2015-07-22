@@ -1,6 +1,8 @@
 <!--@imports-->
 
-<!-- <link rel="import" href="/resources/centre/tg-selection-criteria.html"> -->
+<link rel="import" href="/resources/centre/tg-selection-criteria.html">
+<link rel="import" href="/resources/centre/tg-selection-criteria-behavior.html">
+
 <link rel="import" href="/resources/centre/tg-entity-centre.html">
 <link rel="import" href="/resources/centre/tg-entity-centre-behavior.html">
 
@@ -17,18 +19,80 @@
 <link rel="import" href="/resources/polymer/core-icons/editor-icons.html">
 <link rel="import" href="/resources/polymer/core-icons/hardware-icons.html"> -->
 
-<!-- <polymer-element name="tg-@entity_type-selection-criteria" extends="tg-selection-criteria">
+<dom-module id="tg-@entity_type-selection-criteria">
     <template>
-        <shadow></shadow>
-        CRITERIA EDITORS DOM (GENERATED)
-        @criteria_editors
+    	<tg-selection-criteria
+    		id="dom"
+    		mi-type="[[miType]]" 
+    		_post-validated-default="[[_postValidatedDefault]]"
+    		_post-validated-default-error="[[_postValidatedDefaultError]]"
+    		_process-response="[[_processResponse]]"
+    		_process-error="[[_processError]]"
+    		_process-retriever-response="[[_processRetrieverResponse]]"
+    		_process-retriever-error="[[_processRetrieverError]]"
+    		_process-runner-response="[[_processRunnerResponse]]"
+    		_process-runner-error="[[_processRunnerError]]">
+   	        <!--CRITERIA EDITORS DOM (GENERATED)-->
+        	<!--@criteria_editors-->
+    	</tg-selection-criteria>
     </template>
-    <script>
-        (function () {
-            Polymer({});
-        })();
-    </script>
-</polymer-element> -->
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+        	is: 'tg-@entity_type-selection-criteria',
+        	
+        	behaviors: [ Polymer.TgBehaviors.TgSelectionCriteriaBehavior ],
+            
+            _dom: function () {
+            	return this.$.dom;
+            },
+            
+            /**
+             * The iron-ajax component for entity retrieval.
+             */
+            _ajaxRetriever: function () {
+                return this._dom()._ajaxRetriever();
+            },
+            
+            /**
+             * The iron-ajax component for query running.
+             */
+            _ajaxRunner: function () {
+                return this._dom()._ajaxRunner();
+            },
+            
+            /**
+             * The validator component.
+             */
+            _validator: function () {
+                return this._dom()._validator();
+            },
+            
+            /**
+             * The component for entity serialisation.
+             */
+            _serialiser: function () {
+            	return this._dom()._serialiser();
+            },
+            
+            /**
+             * The reflector component.
+             */
+            _reflector: function () {
+            	return this._dom()._reflector();
+            },
+            
+            /**
+             * The toast component.
+             */
+            _toastGreeting: function () {
+            	return this._dom()._toastGreeting();
+            }
+        });
+    })();
+</script>
 
 <dom-module id="tg-@entity_type-centre">
     <style>
@@ -80,8 +144,7 @@
         	discard="[[discard]]"
         	run="[[run]]"
         	>
-        	<h1 id="selection_criteria" class="custom-selection-criteria">SELECTION CRITERIA</h1>
-            <!-- <tg-@entity_type-selection-criteria id="selection_criteria" class="custom-selection-criteria" uuid="{{uuid}}" mi-type="@mi_type" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" post-retrieved="[[postRetrieved]]" @queryEnhancerContextConfig></tg-@entity_type-selection-criteria> -->
+            <tg-@entity_type-selection-criteria id="selection_criteria" class="custom-selection-criteria" uuid="[[uuid]]" mi-type="@mi_type" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" post-retrieved="[[postRetrieved]]" @queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
 
 	        <h1 id="egi" class="entity-grid-inspector custom-egi">EGI</h1>
             <!-- <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entityType="@full_entity_type" @gridLayout>
