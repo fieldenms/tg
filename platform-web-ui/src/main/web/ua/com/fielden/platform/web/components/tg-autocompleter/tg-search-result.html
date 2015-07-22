@@ -253,13 +253,13 @@
 						// put the composed for the current item HTML into the content of paper-item
 						var id = this._makeId(index);
 						var paperItem = Polymer.dom(this.root).querySelector("#" + id);
-						paperItem.innerHTML = html;
+						Polymer.dom(paperItem).innerHTML = html;
 					}
 
 					Polymer.dom.flush();
 				}.bind(this));
 			},
-
+			
 			_addHighlightedKeyProp : function(v) {
 				var html = '<div style="white-space: nowrap;">';
 				var matchedParts = this._matchedParts(v.key);
@@ -268,7 +268,7 @@
 					if (part.matched) {
 						// addition style-scope and this.is (element name) styles is required to enformse custom style processing
 						html = html
-								+ '<span class="style-scope ' + this.is + ' key-value key-value-highlighted">'
+								+ '<span class="key-value key-value-highlighted">'
 								+ part.part + '</span>';
 					} else {
 						html = html + part.part;
@@ -278,9 +278,9 @@
 			},
 
 			_addHighlightedPropByName : function(v, propName, highlight) {
-				var html = '<div class="style-scope ' + this.is + ' additional-prop">';
+				var html = '<div class="additional-prop">';
 				// add prop title				
-				html = html + '<span class="style-scope ' + this.is + ' prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
+				html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
 
 				
 				// add prop value
@@ -295,7 +295,7 @@
 						if (part.matched) {
 							// addition style-scope and this.is (element name) styles is required to enformse custom style processing
 							html = html
-									+ '<span class="style-scope ' + this.is + ' key-value-highlighted">' + part.part + '</span>';
+									+ '<span class="key-value-highlighted">' + part.part + '</span>';
 						} else {
 							html = html + part.part;
 						}
