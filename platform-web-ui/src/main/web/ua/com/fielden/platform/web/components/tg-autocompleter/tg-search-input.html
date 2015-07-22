@@ -296,11 +296,7 @@
                           	prop2: "value of prop 2"
                         }];
                         self.async(function () {
-                            result.style.position = 'absolute';
-                            result.style.top = (container.offsetTop + container.clientHeight) + 'px';
-                            result.style.width = container.offsetWidth + 'px';
-	                       	result.style.height = '250px';
-	                       	result.style['min-height'] = '250px';
+                        	this.async(this.notifyResize, 1);
                             result.open();
                         });
 
@@ -430,17 +426,25 @@
                 //console.log('resize event captured:', (container.offsetTop + container.clientHeight));
                 var result = this.$.result;
                 if (result.opened) {
-                    this.async(function () {
-                        var rects = container.getClientRects();
-                        var rect = rects[0];
-                        result.style.position = 'absolute';
+                    this.async(function () {         
+                    	
+                        var rect = container.getClientRects()[0];
                         var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
                         var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
-                        result.style.top = (rect.bottom + scrollTop) + 'px';
-                        result.style.left = (rect.left + scrollLeft) + 'px';
-                        result.style.width = rect.width + 'px';
-                        result.style.height = '250px';
-                        result.style['min-height'] = '250px';
+                        var top = rect.bottom + scrollTop;
+                        var left = rect.left + scrollLeft;
+                        var width = rect.width;
+                        
+                        result.style.position = 'absolute';
+                        result.style.top = top + 'px';
+                        result.style.left = left + 'px';
+                        result.style.width = width + 'px';
+                        
+                        // let's try to specify the best height depending on the window height and 
+                        // the current vertical location of the element
+                        var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+                        result.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment
+                        result.style['min-height'] = '50px'; 
                     });
                 }
             }
