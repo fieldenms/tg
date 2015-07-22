@@ -668,24 +668,8 @@
          * Registers new entity type inside the type table.
          */
         registerEntityType: function (newType) {
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	// TODO
-        	var Entity = this.getEntityPrototype();
-            var registeredType = new Entity(newType);
+        	var EntityType = this._getEntityTypePrototype();
+            var registeredType = new EntityType(newType);
             _typeTable[newType['_number']] = registeredType;
             console.log("Registering new type with number ", newType['_number'], registeredType);
             return registeredType;
@@ -722,6 +706,15 @@
          */
         getEntityPrototype: function () {
             return _EPrototype;
+        },
+        
+        /**
+         * Returns the prototype for 'EntityType'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        _getEntityTypePrototype: function () {
+            return _ETPrototype;
         },
 
         /**
