@@ -402,7 +402,7 @@
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
             _entityChanged: function (newValue, oldValue) {
-                console.log("_entityChanged", newValue, oldValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
+                // console.log("_entityChanged", newValue, oldValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
                 if (this.reflector().isEntity(newValue)) {
                 	var propValue = this.getBindingValue(newValue, this.propertyName);
                     var newEditingValue = this.convertToString(propValue);
@@ -499,7 +499,7 @@
             },
 
             _bindMessages: function (entity, property, _editorValidationMsg) {
-            	console.log("_bindMessages: ", entity, property, _editorValidationMsg);
+            	// console.log("_bindMessages: ", entity, property, _editorValidationMsg);
                 if (_editorValidationMsg !== null) {
                     this._bindError(_editorValidationMsg);
                 } else if (this.reflector().isEntity(entity)) {

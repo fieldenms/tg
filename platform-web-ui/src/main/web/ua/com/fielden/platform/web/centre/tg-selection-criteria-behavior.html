@@ -185,9 +185,7 @@
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 
                 self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities, summary) {
-	                this.propertyModel = this._createPropertyModel(metaValues);
-	                // TODO sub-properties of 'this.propertyModel' should be notified!
-	                
+	                this._setPropertyModel(metaValues);
 	                this._isCentreChanged = isCentreChanged;
 
 	                var msg = this._toastMsg("Running", criteriaEntity);
@@ -214,9 +212,7 @@
                 }).bind(self);
                 
                 self.postValidated = (function (validatedEntity, bindingEntity, customObject) {
-                    this.propertyModel = this._createPropertyModel(customObject.metaValues);
-	                // TODO sub-properties of 'this.propertyModel' should be notified!
-                    
+                    this._setPropertyModel(customObject.metaValues);
                     this._isCentreChanged = customObject.isCentreChanged;
 
                     console.log("postValidated", customObject);
@@ -229,8 +225,7 @@
             _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
             	Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
 
-            	this.propertyModel = this._createPropertyModel(customObject.metaValues);
-            	// TODO sub-properties of 'this.propertyModel' should be notified!
+            	this._setPropertyModel(customObject.metaValues);
                 this._isCentreChanged = customObject.isCentreChanged;
             },
 
@@ -432,6 +427,25 @@
             },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
+            /**
+             * Creates and sets the property model from supplied 'metaValues'. Notifies the binding system of 'propertyModel' paths changes.
+             */
+            _setPropertyModel: function (metaValues) {
+                this.propertyModel = this._createPropertyModel(metaValues);
+                
+                for (var property in metaValues) {
+                    if (metaValues.hasOwnProperty(property)) {
+                    	var prop = this.propertyModel[property];
+                    	this.notifyPath('propertyModel.' + property + '.orNull', prop.orNull);
+                    	this.notifyPath('propertyModel.' + property + '.not', prop.not);
+                    	this.notifyPath('propertyModel.' + property + '.exclusive', prop.exclusive);
+                    	this.notifyPath('propertyModel.' + property + '.exclusive2', prop.exclusive2);
+                    	this.notifyPath('propertyModel.' + property + '.datePrefix', prop.datePrefix);
+                    	this.notifyPath('propertyModel.' + property + '.dateMnemonic', prop.dateMnemonic);
+                    	this.notifyPath('propertyModel.' + property + '.andBefore', prop.andBefore);
+                    }
+                }
+            },
 
             /**
              * Creates full property model, which can be binded to metaValue editors, from metaValues that have been arrived from the server.
