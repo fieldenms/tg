@@ -7,39 +7,44 @@
 
 <dom-module id="tg-chooser">
 	<style>
-		collapse-content {
+		.collapse {
+			width: auto;
+			height: auto;
+			background-color: gray;
+			color: white;
+		}
+		
+		.collapse-content {
 			padding: 15px;
 			border: 1px solid #dedede;
+			background-color: gray;
+			color: white;
+			width: auto;
+			height: auto;
+		}
 	</style>
 	<template>
 		<paper-icon-button icon="editor:format-color-fill" onclick="{{toggle}}"></paper-icon-button>
-		<iron-collapse>
+		<iron-collapse id="collapse" class="collapse-content">
 			<div class="collapse-content" id="collapse">
-				<div>Content goes here...</div>
+				<div>Content goes here.</div>
 			</div>
 		</iron-collapse>
-		<!--
-		<iron-collapse id="collapse">
-
-			<div class="layout horizontal center-justified"> Hello!
-			</div>
-		</iron-collapse>
--->
-
 	</template>
 </dom-module>
 <script>
 	toggle = function () {
-		this.$.collapse.toggle();
+		this.$.collapse.show();
 	}
-	var onTab = function () {
-
+	var openContent = function () {
+		if (collapse.opened) {
+			this.collapse.opened = false;
+		} else if (!collapse.opened) {
+			this.collapse.opened = true;
+		}
 	}
 	Polymer({
 		is: "tg-chooser",
-
-		properties: {
-
-		}
+		properties: {}
 	});
 </script>

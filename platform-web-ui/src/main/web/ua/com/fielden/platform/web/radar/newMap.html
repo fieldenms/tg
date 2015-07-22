@@ -3,69 +3,96 @@
 <html>
 
 <head>
-	<title>Radars</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-	<link rel="import" href="/resources/polymer/polymer/polymer.html">
-	<link rel="import" href="/resources/polymer/font-roboto/roboto.html">
-	<link rel="import" href="/resources/polymer/paper-header-panel/paper-header-panel.html">
-	<link rel="import" href="/resources/polymer/core-draver-panel/core-draver-panel.html">
-	<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
-	<link rel="import" href="/resources/polymer/paper-tabs/paper-tabs.html">
-	<link rel="import" href="/resources/polymer/paper-tab/paper-tab.html">
-	<link rel="import" href="/resources/polymer/core-range/core-range.html">
-	<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
-	<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
-	<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
-	<link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
-	<style>
-		html,
-		body {
-			height: 100%;
-			margin: 0;
-			background-color: #E5E5E5;
-			font-family: 'RobotoDraft', sans-serif;
-		}
-		
-		google-map {
-			display: block;
-			height: 600px;
-		}
-		
-		#controlsToggle {
-			position: absolute;
-			left: 10 bottom: 10%;
-		}
-		
-		#map-canvas {
-			width: device-width;
-			height: 100%;
-		}
-		
-		paper-header-panel {
-			height: 100%;
-			overflow: auto;
-			-webkit-overflow-scrolling: touch;
-			background-color: #03A9F4;
-		}
-		
-		core-range {
-			width: auto;
-			height: 100%;
-			overflow: auto;
-			background: green;
-			-webkit-overflow-scrolling: touch;
-		}
-		
-		paper-toolbar {
-			background-color: #03A9F4;
-			color: white;
-		}
-	</style>
-	<script src="https://maps.googleapis.com/maps/api/js"></script>
-	<script src="https://google-maps-utility-library-v3.googlecode.com/svn/trunk/maplabel/src/maplabel.js"></script>
-	<script>
-		var radars = [
+         <title>Radars</title>
+         <meta charset="utf-8">
+         <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+         <link rel="import" href="/resources/polymer/polymer/polymer.html">
+         <link rel="import" href="/resources/polymer/font-roboto/roboto.html">
+         <link rel="import" href="/resources/polymer/paper-header-panel/paper-header-panel.html">
+         <link rel="import" href="/resources/polymer/core-draver-panel/core-draver-panel.html">
+         <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+         <link rel="import" href="/resources/polymer/paper-tabs/paper-tabs.html">
+         <link rel="import" href="/resources/polymer/paper-tab/paper-tab.html">
+         <link rel="import" href="/resources/polymer/core-range/core-range.html">
+         <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
+         <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+         <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+         <link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
+         <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+         <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+         <link rel="import" href="/resources/polymer/paper-action-dialog/paper-action-dialog.html">
+         <link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
+         <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+
+         <style>
+                  html,
+                  body {
+                           height: 100%;
+                           margin: 0;
+                           background-color: #E5E5E5;
+                           font-family: 'RobotoDraft', sans-serif;
+                  }
+                  
+                  google-map {
+                           display: block;
+                           height: 600px;
+                  }
+                  
+                  #controlsToggle {
+                           position: absolute;
+                           left: 10%;
+                           bottom: 10%;
+                  }
+                  
+                  #map-canvas {
+                           width: device-width;
+                           height: 100%;
+                  }
+                  
+                  paper-header-panel {
+                           height: 100%;
+                           overflow: auto;
+                           -webkit-overflow-scrolling: touch;
+                  }
+                  
+                  paper-toolbar {
+                           background: #03a9f4;
+                           color: white;
+                  }
+                  
+                  section {
+                           padding: 20px 0;
+                  }
+                  
+                  section > div {
+                           padding: 14px;
+                           font-size: 16px;
+                  }
+                  
+                  button {
+                           margin: 8px 4px;
+                  }
+                  
+                  html /deep/ [autofocus] {
+                           color: #03a9f4;
+                  }
+                  
+                  html /deep/ .size-position {
+                           position: fixed;
+                           top: 16px;
+                           right: 16px;
+                           autoCloseDisabled layered: "false";
+                  }
+                  
+                  html /deep/ .size-position::shadow #scroller {
+                           width: 300px;
+                           height: 300px;
+                  }
+         </style>
+         <script src="https://maps.googleapis.com/maps/api/js"></script>
+         <script src="https://google-maps-utility-library-v3.googlecode.com/svn/trunk/maplabel/src/maplabel.js"></script>
+         <script>
+                  var radars = [
                            ['A', -45.67548, 168.70605, 'on', 80, 100],
                            ['B', -44.02442, 171.29883, 'broken', 50, 10],
                            ['C', -39.53794, 174.68262, 'off', 100, 100],
@@ -74,7 +101,7 @@
                            ['D', -35.69299, 174.06738, 'on', 70, 100]
   ];
 
-		var NZCoords = [
+                  var NZCoords = [
                                     new google.maps.LatLng(-34.32622, 172.97974),
                                     new google.maps.LatLng(-35.20972, 174.72656),
                                     new google.maps.LatLng(-36.17336, 175.8252),
@@ -159,100 +186,105 @@
                                     new google.maps.LatLng(-34.32622, 172.97974)
                                                ];
 
-		var map;
-		var geocoder;
-		var circle;
-		var redOptions;
-		var blueOptions;
-		var greyOptions;
-		var circles = [];
-		var center = new google.maps.LatLng(-41.65, 170.73);
-		var bounds = new google.maps.LatLngBounds();
+                  var map;
+                  var geocoder;
+                  var circle;
+                  var redOptions;
+                  var blueOptions;
+                  var greyOptions;
+                  var circles = [];
+                  var center = new google.maps.LatLng(-41.65, 170.73);
+                  var bounds = new google.maps.LatLngBounds();
 
-		function initialize() {
+                  function initialize() {
 
-			var bounds = new google.maps.LatLngBounds();
-			var infowindow = new google.maps.InfoWindow();
-			var mapCanvas = document.getElementById('map-canvas');
-			var mapOptions = {
-				center: center,
-				zoom: 6,
-				mapTypeId: google.maps.MapTypeId.ROADMAP
-			}
+                           var bounds = new google.maps.LatLngBounds();
+                           var infowindow = new google.maps.InfoWindow();
+                           var mapCanvas = document.getElementById('map-canvas');
+                           var mapOptions = {
+                                    center: center,
+                                    zoom: 6,
+                                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                           }
 
-			map = new google.maps.Map(mapCanvas, mapOptions)
-			var imageOff = {
-				url: 'off.svg',
-			};
-			var brokenImage = {
-				url: 'broken.svg',
-			};
-			var imageOn = {
-				url: 'on.svg',
-			};
-
-
-			for (i = 0; i < radars.length; i++) {
-				var radar = radars[i];
-				var myLatLng = new google.maps.LatLng(radar[1], radar[2]);
-				bounds.extend(myLatLng);
-				if (radar[3] === 'broken') {
-					var marker = new google.maps.Marker({
-						position: myLatLng,
-						map: map,
-						icon: brokenImage,
-						title: radar[0],
-						info: 'Name: radar ' + radar[0] + "<br>" +
-							'Place (Latitude - Longitude): ' + radar[1] + '; ' + radar[2] + "<br>" +
-							'Range: ' + radar[4] + " miles" + "<br>" + 'Technical status: ' + radar[3]
-					});
-				} else if (radar[3] === 'off') {
-
-					var marker = new google.maps.Marker({
-						position: myLatLng,
-						map: map,
-						icon: imageOff,
-						title: radar[0],
-						info: 'Name: radar ' + radar[0] + "<br>" +
-							'Place (Latitude - Longitude): ' + radar[1] + '; ' + radar[2] + "<br>" +
-							'Range: ' + radar[4] + " miles" + "<br>" + 'Technical status: ' + radar[3]
-					});
-				} else if (radar[3] === 'on') {
-
-					var marker = new google.maps.Marker({
-						position: myLatLng,
-						map: map,
-						icon: imageOn,
-						title: radar[0],
-						info: 'Name: radar ' + radar[0] + "<br>" +
-							'Place (Latitude - Longitude): ' + radar[1] + '; ' + radar[2] + "<br>" +
-							'Range: ' + radar[4] + " miles" + "<br>" + 'Technical status: ' + radar[3]
-					});
-				}
-				if (radar[3] === 'on') {
-					var position = new google.maps.LatLng(radar[1] + 0.09, radar[2] - 0.05);
-					addAnimatedCircles(position);
-				}
-				google.maps.event.addListener(marker, 'click', function () {
-					infowindow.setContent(this.info);
-					infowindow.open(map, this);
-				});
-
-			}
-
-		}
+                           map = new google.maps.Map(mapCanvas, mapOptions)
+                           var imageOff = {
+                                    url: 'off.svg',
+                           };
+                           var brokenImage = {
+                                    url: 'broken.svg',
+                           };
+                           var imageOn = {
+                                    url: 'on.svg',
+                           };
 
 
+                           for (i = 0; i < radars.length; i++) {
+                                    var radar = radars[i];
+                                    var myLatLng = new google.maps.LatLng(radar[1], radar[2]);
+                                    bounds.extend(myLatLng);
+                                    if (radar[3] === 'broken') {
+                                             var marker = new google.maps.Marker({
+                                                      position: myLatLng,
+                                                      map: map,
+                                                      icon: brokenImage,
+                                                      title: radar[0],
+                                                      info: 'Name: radar ' + radar[0] + "<br>" +
+                                                               'Place (Latitude - Longitude): ' + radar[1] + '; ' + radar[2] + "<br>" +
+                                                               'Range: ' + radar[4] + " miles" + "<br>" + 'Technical status: ' + radar[3]
+                                             });
+                                    } else if (radar[3] === 'off') {
 
-		function showProgressBar() {
-			geocoder = new google.maps.Geocoder();
-			for (var i = 0; i < radars.length; i++) {
-				var radar = radars[i];
-				if (radar[3] === "broken") {
-					var shadow;
-					var x = radar[1] + 0.47;
-					var y = radar[2] + 0.55;
-					var shadowCoords = [
+                                             var marker = new google.maps.Marker({
+                                                      position: myLatLng,
+                                                      map: map,
+                                                      icon: imageOff,
+                                                      title: radar[0],
+                                                      info: 'Name: radar ' + radar[0] + "<br>" +
+                                                               'Place (Latitude - Longitude): ' + radar[1] + '; ' + radar[2] + "<br>" +
+                                                               'Range: ' + radar[4] + " miles" + "<br>" + 'Technical status: ' + radar[3]
+                                             });
+                                    } else if (radar[3] === 'on') {
+
+                                             var marker = new google.maps.Marker({
+                                                      position: myLatLng,
+                                                      map: map,
+                                                      icon: imageOn,
+                                                      title: radar[0],
+                                                      info: 'Name: radar ' + radar[0] + "<br>" +
+                                                               'Place (Latitude - Longitude): ' + radar[1] + '; ' + radar[2] + "<br>" +
+                                                               'Range: ' + radar[4] + " miles" + "<br>" + 'Technical status: ' + radar[3]
+                                             });
+                                    }
+                                    if (radar[3] === 'on') {
+                                             var position = new google.maps.LatLng(radar[1] + 0.09, radar[2] - 0.05);
+                                             addAnimatedCircles(position);
+                                    }
+                                    google.maps.event.addListener(marker, 'click', function () {
+                                             infowindow.setContent(this.info);
+                                             infowindow.open(map, this);
+                                    });
+
+                                    google.maps.event.addListener(marker, 'dblclick', function () {
+                                             //this.dialog.toggle();
+                                             document.getElementById('dialog').toggle()
+                                    });
+
+                           }
+
+                  }
+
+
+
+                  function showProgressBar() {
+                           geocoder = new google.maps.Geocoder();
+                           for (var i = 0; i < radars.length; i++) {
+                                    var radar = radars[i];
+                                    if (radar[3] === "broken") {
+                                             var shadow;
+                                             var x = radar[1] + 0.47;
+                                             var y = radar[2] + 0.55;
+                                             var shadowCoords = [
                                                       new google.maps.LatLng(x, y),
                                                       new google.maps.LatLng(x, y + 5),
                                                       new google.maps.LatLng(x + 0.6, y + 5),
@@ -261,21 +293,21 @@
 
                                                         ];
 
-					shadow = new google.maps.Polygon({
-						paths: shadowCoords,
-						strokeColor: '#CFD8DC',
-						strokeOpacity: 0.8,
-						strokeWeight: 0,
-						fillColor: '#90A4AE',
-						fillOpacity: 0.5
-					});
+                                             shadow = new google.maps.Polygon({
+                                                      paths: shadowCoords,
+                                                      strokeColor: '#CFD8DC',
+                                                      strokeOpacity: 0.8,
+                                                      strokeWeight: 0,
+                                                      fillColor: '#90A4AE',
+                                                      fillOpacity: 0.5
+                                             });
 
-					shadow.setMap(map);
+                                             shadow.setMap(map);
 
-					var reсt1;
-					var x1 = radar[1] + 0.5;
-					var y1 = radar[2] + 0.5;
-					var rect1Coords = [
+                                             var reсt1;
+                                             var x1 = radar[1] + 0.5;
+                                             var y1 = radar[2] + 0.5;
+                                             var rect1Coords = [
                                                       new google.maps.LatLng(x1, y1),
                                                       new google.maps.LatLng(x1, y1 + 5),
                                                       new google.maps.LatLng(x1 + 0.6, y1 + 5),
@@ -284,21 +316,21 @@
 
                                                         ];
 
-					reсt1 = new google.maps.Polygon({
-						paths: rect1Coords,
-						strokeColor: '#CFD8DC',
-						strokeOpacity: 0.8,
-						strokeWeight: 1,
-						fillColor: '#FFFDE7',
-						fillOpacity: 1
-					});
+                                             reсt1 = new google.maps.Polygon({
+                                                      paths: rect1Coords,
+                                                      strokeColor: '#CFD8DC',
+                                                      strokeOpacity: 0.8,
+                                                      strokeWeight: 1,
+                                                      fillColor: '#FFFDE7',
+                                                      fillOpacity: 1
+                                             });
 
-					reсt1.setMap(map);
+                                             reсt1.setMap(map);
 
-					var reсt2;
-					var x2 = radar[1] + 0.7;
-					var y2 = radar[2] + 0.7;
-					var rect2Coords = [
+                                             var reсt2;
+                                             var x2 = radar[1] + 0.7;
+                                             var y2 = radar[2] + 0.7;
+                                             var rect2Coords = [
                                                       new google.maps.LatLng(x2, y2),
                                                       new google.maps.LatLng(x2, y2 + 4.5),
                                                       new google.maps.LatLng(x2 + 0.2, y2 + 4.5),
@@ -307,21 +339,21 @@
 
                                                                         ];
 
-					reсt2 = new google.maps.Polygon({
-						paths: rect2Coords,
-						strokeColor: '#CFD8DC',
-						strokeOpacity: 0.8,
-						strokeWeight: 1,
-						fillColor: '#B0BEC5',
-						fillOpacity: 1
-					});
+                                             reсt2 = new google.maps.Polygon({
+                                                      paths: rect2Coords,
+                                                      strokeColor: '#CFD8DC',
+                                                      strokeOpacity: 0.8,
+                                                      strokeWeight: 1,
+                                                      fillColor: '#B0BEC5',
+                                                      fillOpacity: 1
+                                             });
 
-					reсt2.setMap(map);
+                                             reсt2.setMap(map);
 
-					var reсt3;
-					var x3 = radar[1] + 0.7;
-					var y3 = radar[2] + 0.7;
-					var rect3Coords = [
+                                             var reсt3;
+                                             var x3 = radar[1] + 0.7;
+                                             var y3 = radar[2] + 0.7;
+                                             var rect3Coords = [
                                                       new google.maps.LatLng(x3, y3),
                                                       new google.maps.LatLng(x3, y3 + (4.5 * (radar[5] / 100))),
                                                       new google.maps.LatLng(x3 + 0.2, y3 + (4.5 * (radar[5] / 100))),
@@ -330,323 +362,336 @@
 
                                                       ];
 
-					reсt3 = new google.maps.Polygon({
-						paths: rect3Coords,
-						strokeColor: '#80CBC4',
-						strokeOpacity: 0.8,
-						strokeWeight: 1,
-						fillColor: '#00BCD4',
-						fillOpacity: 1
+                                             reсt3 = new google.maps.Polygon({
+                                                      paths: rect3Coords,
+                                                      strokeColor: '#80CBC4',
+                                                      strokeOpacity: 0.8,
+                                                      strokeWeight: 1,
+                                                      fillColor: '#00BCD4',
+                                                      fillOpacity: 1
 
-					});
+                                             });
 
-					reсt3.setMap(map);
-					var mapLabel = new MapLabel({
-						text: 'Repair status - ' + radar[5] + ' %.',
-						position: new google.maps.LatLng(x3 + 0.7, y3 + 1),
-						map: map,
-						fontSize: map.zoom * 3.5,
-						strokeWeight: 0,
-						fontFamily: 'RobotoDraft',
-						align: 'left',
-						fontColor: "#006064"
-					});
+                                             reсt3.setMap(map);
+                                             var mapLabel = new MapLabel({
+                                                      text: 'Repair status - ' + radar[5] + ' %.',
+                                                      position: new google.maps.LatLng(x3 + 0.7, y3 + 1),
+                                                      map: map,
+                                                      fontSize: map.zoom * 3.5,
+                                                      strokeWeight: 0,
+                                                      fontFamily: 'RobotoDraft',
+                                                      align: 'left',
+                                                      fontColor: "#006064"
+                                             });
 
-				}
-			}
-		}
+                                    }
+                           }
+                  }
 
-		function addAnimatedCircles(position) {
-			var smallCircle = new google.maps.Circle({
-				center: position,
-				radius: 1000,
-				strokeColor: "#009688",
-				strokeOpacity: 1,
-				strokeWeight: 1,
-				fillColor: "#009688",
-				fillOpacity: 0
-			});
-			var bigCircle = new google.maps.Circle({
-				center: position,
-				radius: 4000,
-				strokeColor: "#40C4FF",
-				strokeOpacity: 1,
-				strokeWeight: 1,
-				fillColor: "#40C4FF",
-				fillOpacity: 0
-			});
-			var newCircle = new google.maps.Circle({
-				center: position,
-				radius: 8000,
-				strokeColor: "#B3E5FC",
-				strokeOpacity: 1,
-				strokeWeight: 1,
-				fillColor: "#B3E5FC",
-				fillOpacity: 0
-			});
-			smallCircle.setMap(map);
-			bigCircle.setMap(map);
-			newCircle.setMap(map);
-			var direction = 1;
-			var rMax = 90000;
-			setInterval(function () {
-				var radius1 = bigCircle.getRadius();
-				var radius2 = smallCircle.getRadius();
-				var radius3 = newCircle.getRadius();
+                  function addAnimatedCircles(position) {
+                           var smallCircle = new google.maps.Circle({
+                                    center: position,
+                                    radius: 1000,
+                                    strokeColor: "#009688",
+                                    strokeOpacity: 1,
+                                    strokeWeight: 1,
+                                    fillColor: "#009688",
+                                    fillOpacity: 0
+                           });
+                           var bigCircle = new google.maps.Circle({
+                                    center: position,
+                                    radius: 4000,
+                                    strokeColor: "#40C4FF",
+                                    strokeOpacity: 1,
+                                    strokeWeight: 1,
+                                    fillColor: "#40C4FF",
+                                    fillOpacity: 0
+                           });
+                           var newCircle = new google.maps.Circle({
+                                    center: position,
+                                    radius: 8000,
+                                    strokeColor: "#B3E5FC",
+                                    strokeOpacity: 1,
+                                    strokeWeight: 1,
+                                    fillColor: "#B3E5FC",
+                                    fillOpacity: 0
+                           });
+                           smallCircle.setMap(map);
+                           bigCircle.setMap(map);
+                           newCircle.setMap(map);
+                           var direction = 1;
+                           var rMax = 90000;
+                           setInterval(function () {
+                                    var radius1 = bigCircle.getRadius();
+                                    var radius2 = smallCircle.getRadius();
+                                    var radius3 = newCircle.getRadius();
 
-				if (radius1 > rMax) {
-					radius1 = 1000;
-				}
-				if (radius2 > rMax) {
-					radius2 = 4000;
-				}
-				if (radius3 > rMax) {
-					radius3 = 8000;
-				}
-				smallCircle.setRadius(radius2 + direction * 3000);
-				bigCircle.setRadius(radius1 + direction * 3000);
-				newCircle.setRadius(radius3 + direction * 3000);
-			}, 50);
-		}
+                                    if (radius1 > rMax) {
+                                             radius1 = 1000;
+                                    }
+                                    if (radius2 > rMax) {
+                                             radius2 = 4000;
+                                    }
+                                    if (radius3 > rMax) {
+                                             radius3 = 8000;
+                                    }
+                                    smallCircle.setRadius(radius2 + direction * 3000);
+                                    bigCircle.setRadius(radius1 + direction * 3000);
+                                    newCircle.setRadius(radius3 + direction * 3000);
+                           }, 50);
+                  }
 
-		function drawCircle(point, radius, dir) {
-			var d2r = Math.PI / 180;
-			var r2d = 180 / Math.PI;
-			var earthsradius = 3963;
-			var points = 32;
+                  function drawCircle(point, radius, dir) {
+                           var d2r = Math.PI / 180;
+                           var r2d = 180 / Math.PI;
+                           var earthsradius = 3963;
+                           var points = 32;
 
 
-			var rlat = (radius / earthsradius) * r2d;
-			var rlng = rlat / Math.cos(point.lat() * d2r);
+                           var rlat = (radius / earthsradius) * r2d;
+                           var rlng = rlat / Math.cos(point.lat() * d2r);
 
-			var extp = new Array();
-			if (dir == 1) {
-				var start = 0;
-				var end = points + 1
-			} else {
-				var start = points + 1;
-				var end = 0
-			}
-			for (var i = start;
-				(dir == 1 ? i < end : i > end); i = i + dir) {
-				var theta = Math.PI * (i / (points / 2));
-				ey = point.lng() + (rlng * Math.cos(theta));
-				ex = point.lat() + (rlat * Math.sin(theta));
-				extp.push(new google.maps.LatLng(ex, ey));
-				bounds.extend(extp[extp.length - 1]);
-			}
-			return extp;
-		}
+                           var extp = new Array();
+                           if (dir == 1) {
+                                    var start = 0;
+                                    var end = points + 1
+                           } else {
+                                    var start = points + 1;
+                                    var end = 0
+                           }
+                           for (var i = start;
+                                    (dir == 1 ? i < end : i > end); i = i + dir) {
+                                    var theta = Math.PI * (i / (points / 2));
+                                    ey = point.lng() + (rlng * Math.cos(theta));
+                                    ex = point.lat() + (rlat * Math.sin(theta));
+                                    extp.push(new google.maps.LatLng(ex, ey));
+                                    bounds.extend(extp[extp.length - 1]);
+                           }
+                           return extp;
+                  }
 
-		function seeNoVisibility() {
+                  function seeNoVisibility() {
 
-			var info = [];
-			for (var i = 0; i < radars.length; i++) {
-				var radar = radars[i];
-				if (radar[3] === 'on') {
-					info.push(radar)
-				}
-			}
+                           var info = [];
+                           for (var i = 0; i < radars.length; i++) {
+                                    var radar = radars[i];
+                                    if (radar[3] === 'on') {
+                                             info.push(radar)
+                                    }
+                           }
 
-			var options = {
-				strokeColor: '#FF0000',
-				strokeOpacity: 0.8,
-				strokeWeight: 0,
-				fillColor: '#FF0000',
-				fillOpacity: 0.35,
-				map: map,
-				paths: [
+                           var options = {
+                                    strokeColor: '#FF0000',
+                                    strokeOpacity: 0.8,
+                                    strokeWeight: 0,
+                                    fillColor: '#FF0000',
+                                    fillOpacity: 0.35,
+                                    map: map,
+                                    paths: [
                                              NZCoords, drawCircle(new google.maps.LatLng(info[1][1], info[1][2]), info[1][4], 1),
                                              drawCircle(new google.maps.LatLng(info[2][1], info[2][2]), info[2][4], 1),
                                              drawCircle(new google.maps.LatLng(info[0][1], info[0][2]), info[0][4], 1),
 
 
                                     ]
-			}
-			circle = new google.maps.Polygon(options);
-			map.fitBounds(bounds);
+                           }
+                           circle = new google.maps.Polygon(options);
+                           map.fitBounds(bounds);
 
-		}
-
-
-		function addAllCircles() {
-
-			for (var i = 0; i < radars.length; i++) {
-				var radar = radars[i];
-				redOptions = {
-					strokeColor: '#FF0000',
-					fillColor: '#FF0000',
-					strokeOpacity: 0.6,
-					strokeWeight: 2,
-					fillOpacity: 0.25,
-					map: map,
-					paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
-				};
-
-				blueOptions = {
-					strokeColor: '#2196F3',
-					fillColor: '#2196F3',
-					strokeOpacity: 0.6,
-					strokeWeight: 2,
-					fillOpacity: 0.25,
-					map: map,
-					paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
-				};
-				greyOptions = {
-					strokeColor: '#90A4AE',
-					fillColor: '#90A4AE',
-					strokeOpacity: 0.6,
-					strokeWeight: 2,
-					fillOpacity: 0.25,
-					map: map,
-					paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
-				};
-				if (radar[3] === 'on') {
-					circle = new google.maps.Polygon(blueOptions);
-					map.fitBounds(bounds);
-				} else if (radar[3] === 'broken') {
-					circle = new google.maps.Polygon(redOptions);
-					map.fitBounds(bounds);
-				} else if (radar[3] === 'off') {
-					circle = new google.maps.Polygon(greyOptions);
-					map.fitBounds(bounds);
-				}
-			}
-			options1 = {
-				strokeColor: '#FF0000',
-				fillColor: '#FF0000',
-				strokeOpacity: 0.6,
-				strokeWeight: 2,
-				fillOpacity: 0.35,
-				map: map,
-				paths: [drawCircle(new google.maps.LatLng(-36.52, 185.49), 15, -1)]
-			};
-			circle = new google.maps.Polygon(options1);
-			map.fitBounds(bounds);
-			options2 = {
-				strokeColor: '#2196F3',
-				fillColor: '#2196F3',
-				strokeOpacity: 0.6,
-				strokeWeight: 2,
-				fillOpacity: 0.35,
-				map: map,
-				paths: [drawCircle(new google.maps.LatLng(-37.52, 185.49), 15, -1)]
-			};
-			circle = new google.maps.Polygon(options2);
-			map.fitBounds(bounds);
-			options3 = {
-				strokeColor: '#90A4AE',
-				fillColor: '#90A4AE',
-				strokeOpacity: 0.6,
-				strokeWeight: 2,
-				fillOpacity: 0.35,
-				map: map,
-				paths: [drawCircle(new google.maps.LatLng(-38.52, 185.49), 15, -1)]
-			};
-			circle = new google.maps.Polygon(options3);
-			map.fitBounds(bounds);
-			var mapLabel = new MapLabel({
-				text: 'Technical status of radar',
-				position: new google.maps.LatLng(-35.7, 185.49),
-				map: map,
-				fontSize: map.zoom * 3.5,
-				strokeWeight: 0,
-				fontFamily: 'RobotoDraft',
-				align: 'left',
-				fontColor: "#0277BD"
-			});
-			var mapLabelBroken = new MapLabel({
-				text: 'broken',
-				position: new google.maps.LatLng(-36.4, 186),
-				map: map,
-				fontSize: map.zoom * 3.4,
-				strokeWeight: 0,
-				fontFamily: 'RobotoDraft',
-				align: 'left',
-				fontColor: "#0277BD"
-			});
-			var mapLabelOn = new MapLabel({
-				text: 'on',
-				position: new google.maps.LatLng(-37.4, 186),
-				map: map,
-				fontSize: map.zoom * 3.4,
-				strokeWeight: 0,
-				fontFamily: 'RobotoDraft',
-				align: 'left',
-				fontColor: "#0277BD"
-			});
-			var mapLabelOff = new MapLabel({
-				text: 'off',
-				position: new google.maps.LatLng(-38.4, 186),
-				map: map,
-				fontSize: map.zoom * 3.4,
-				strokeWeight: 0,
-				fontFamily: 'RobotoDraft',
-				align: 'left',
-				fontColor: "#0277BD"
-			});
-
-		}
-
-		function addWorkingCircles() {
-
-			for (var i = 0; i < radars.length; i++) {
-				var radar = radars[i];
-
-				blueOptions = {
-					strokeColor: '#2196F3',
-					fillColor: '#2196F3',
-					strokeOpacity: 0.6,
-					strokeWeight: 2,
-					fillOpacity: 0.25,
-					map: map,
-					paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
-				};
-				if (radar[3] === 'on') {
-					circle = new google.maps.Polygon(blueOptions);
-					map.fitBounds(bounds);
-					circles.push(circle);
-				}
-			}
-		}
-		google.maps.event.addDomListener(window, 'load', initialize);
-	</script>
-
-	<body fullbleed unresolved>
-		<paper-header-panel main rightDrawer>
-			<paper-toolbar style="background-color: #03A9F4">
-
-				<paper-tooltip label="See the range of all radars">
-					<paper-icon-button id="addCircles" onclick="addAllCircles()" icon="cloud">
-					</paper-icon-button>
-				</paper-tooltip>
-				<paper-tooltip label="See the range of working radars">
-					<paper-icon-button id="addCircles" onclick="addWorkingCircles()" icon="cloud-done">
-					</paper-icon-button>
-				</paper-tooltip>
-
-				<paper-tooltip label="Area with no visibility">
-					<paper-icon-button id="addCircles" onclick="seeNoVisibility()" icon="visibility-off">
-					</paper-icon-button>
-				</paper-tooltip>
-				<paper-tooltip label="The progress of repair">
-					<paper-icon-button id="addCircles" onclick="showProgressBar()" icon="settings">
-				</paper-tooltip>
-				<paper-tooltip label="Close all">
-					<paper-icon-button id="addCircles" onclick="initialize()" icon="close">
-					</paper-icon-button>
-				</paper-tooltip>
+                  }
 
 
-			</paper-toolbar>
+                  function addAllCircles() {
+
+                           for (var i = 0; i < radars.length; i++) {
+                                    var radar = radars[i];
+                                    redOptions = {
+                                             strokeColor: '#FF0000',
+                                             fillColor: '#FF0000',
+                                             strokeOpacity: 0.6,
+                                             strokeWeight: 2,
+                                             fillOpacity: 0.25,
+                                             map: map,
+                                             paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
+                                    };
+
+                                    blueOptions = {
+                                             strokeColor: '#2196F3',
+                                             fillColor: '#2196F3',
+                                             strokeOpacity: 0.6,
+                                             strokeWeight: 2,
+                                             fillOpacity: 0.25,
+                                             map: map,
+                                             paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
+                                    };
+                                    greyOptions = {
+                                             strokeColor: '#90A4AE',
+                                             fillColor: '#90A4AE',
+                                             strokeOpacity: 0.6,
+                                             strokeWeight: 2,
+                                             fillOpacity: 0.25,
+                                             map: map,
+                                             paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
+                                    };
+                                    if (radar[3] === 'on') {
+                                             circle = new google.maps.Polygon(blueOptions);
+                                             map.fitBounds(bounds);
+                                    } else if (radar[3] === 'broken') {
+                                             circle = new google.maps.Polygon(redOptions);
+                                             map.fitBounds(bounds);
+                                    } else if (radar[3] === 'off') {
+                                             circle = new google.maps.Polygon(greyOptions);
+                                             map.fitBounds(bounds);
+                                    }
+                           }
+                           options1 = {
+                                    strokeColor: '#FF0000',
+                                    fillColor: '#FF0000',
+                                    strokeOpacity: 0.6,
+                                    strokeWeight: 2,
+                                    fillOpacity: 0.35,
+                                    map: map,
+                                    paths: [drawCircle(new google.maps.LatLng(-36.52, 185.49), 15, -1)]
+                           };
+                           circle = new google.maps.Polygon(options1);
+                           map.fitBounds(bounds);
+                           options2 = {
+                                    strokeColor: '#2196F3',
+                                    fillColor: '#2196F3',
+                                    strokeOpacity: 0.6,
+                                    strokeWeight: 2,
+                                    fillOpacity: 0.35,
+                                    map: map,
+                                    paths: [drawCircle(new google.maps.LatLng(-37.52, 185.49), 15, -1)]
+                           };
+                           circle = new google.maps.Polygon(options2);
+                           map.fitBounds(bounds);
+                           options3 = {
+                                    strokeColor: '#90A4AE',
+                                    fillColor: '#90A4AE',
+                                    strokeOpacity: 0.6,
+                                    strokeWeight: 2,
+                                    fillOpacity: 0.35,
+                                    map: map,
+                                    paths: [drawCircle(new google.maps.LatLng(-38.52, 185.49), 15, -1)]
+                           };
+                           circle = new google.maps.Polygon(options3);
+                           map.fitBounds(bounds);
+                           var mapLabel = new MapLabel({
+                                    text: 'Technical status of radar',
+                                    position: new google.maps.LatLng(-35.7, 185.49),
+                                    map: map,
+                                    fontSize: map.zoom * 3.5,
+                                    strokeWeight: 0,
+                                    fontFamily: 'RobotoDraft',
+                                    align: 'left',
+                                    fontColor: "#0277BD"
+                           });
+                           var mapLabelBroken = new MapLabel({
+                                    text: 'broken',
+                                    position: new google.maps.LatLng(-36.4, 186),
+                                    map: map,
+                                    fontSize: map.zoom * 3.4,
+                                    strokeWeight: 0,
+                                    fontFamily: 'RobotoDraft',
+                                    align: 'left',
+                                    fontColor: "#0277BD"
+                           });
+                           var mapLabelOn = new MapLabel({
+                                    text: 'on',
+                                    position: new google.maps.LatLng(-37.4, 186),
+                                    map: map,
+                                    fontSize: map.zoom * 3.4,
+                                    strokeWeight: 0,
+                                    fontFamily: 'RobotoDraft',
+                                    align: 'left',
+                                    fontColor: "#0277BD"
+                           });
+                           var mapLabelOff = new MapLabel({
+                                    text: 'off',
+                                    position: new google.maps.LatLng(-38.4, 186),
+                                    map: map,
+                                    fontSize: map.zoom * 3.4,
+                                    strokeWeight: 0,
+                                    fontFamily: 'RobotoDraft',
+                                    align: 'left',
+                                    fontColor: "#0277BD"
+                           });
+
+                  }
+
+                  function addWorkingCircles() {
+
+                           for (var i = 0; i < radars.length; i++) {
+                                    var radar = radars[i];
+
+                                    blueOptions = {
+                                             strokeColor: '#2196F3',
+                                             fillColor: '#2196F3',
+                                             strokeOpacity: 0.6,
+                                             strokeWeight: 2,
+                                             fillOpacity: 0.25,
+                                             map: map,
+                                             paths: [drawCircle(new google.maps.LatLng(radar[1], radar[2]), radar[4], -1)]
+                                    };
+                                    if (radar[3] === 'on') {
+                                             circle = new google.maps.Polygon(blueOptions);
+                                             map.fitBounds(bounds);
+                                             circles.push(circle);
+                                    }
+                           }
+                  }
+                  google.maps.event.addDomListener(window, 'load', initialize);
+         </script>
+
+         <body fullbleed unresolved>
+                  <paper-header-panel main rightDrawer>
+                           <paper-toolbar style="background-color: #03A9F4">
+                                    <paper-tooltip label="See the range of all radars">
+                                             <paper-icon-button id="addCircles" onclick="addAllCircles()" icon="cloud">
+                                             </paper-icon-button>
+                                    </paper-tooltip>
+                                    <paper-tooltip label="See the range of working radars">
+                                             <paper-icon-button id="addCircles" onclick="addWorkingCircles()" icon="cloud-done">
+                                             </paper-icon-button>
+                                    </paper-tooltip>
+
+                                    <paper-tooltip label="Area with no visibility">
+                                             <paper-icon-button id="addCircles" onclick="seeNoVisibility()" icon="visibility-off">
+                                             </paper-icon-button>
+                                    </paper-tooltip>
+                                    <paper-tooltip label="The progress of repair">
+                                             <paper-icon-button id="addCircles" onclick="showProgressBar()" icon="settings">
+                                    </paper-tooltip>
+                                    <paper-tooltip label="Close all">
+                                             <paper-icon-button id="addCircles" onclick="initialize()" icon="close">
+                                             </paper-icon-button>
+                                    </paper-tooltip>
+                                    <!--
+                                    <button onclick="{{dialog.toggle()}}">
+                                             Dialog
+                                    </button>
+-->
+
+                                    <paper-dialog id="dialog" entry-animation="scale-up-animation" exit-animation="fade-out-animation" class="size-position" with-backdrop no-cancel-on-outside-click>
+                                             <h2>Information about radar</h2>
+                                             <paper-dialog-scrollable>
+                                                      Content is here.
+                                             </paper-dialog-scrollable>
+                                             <div class="buttons">
+
+                                                      <paper-button dialog-confirm>Close</paper-button>
+                                             </div>
+                                    </paper-dialog>
+
+                           </paper-toolbar>
 
 
-			<div id="map-canvas"></div>
+                           <div id="map-canvas"></div>
 
-		</paper-header-panel>
+                  </paper-header-panel>
 
-
-	</body>
+         </body>
 </head>
 
 </html>
