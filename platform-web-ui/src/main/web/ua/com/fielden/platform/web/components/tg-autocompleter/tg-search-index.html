@@ -37,15 +37,15 @@
 
     <template is="dom-bind">
         <p>
-            Some text before the first search elements.
+            Single selection with additional properties where <b>desc</b> and <b>prop1</b> should get processed for highlighting the matched parts.
 
             <tg-search-input id="searchButton" additional-properties='{"desc":true, "prop2":false, "prop1":true}'></tg-search-input>
         </p>
         <br/>
         <p>
-            Some text in between the search elements.
+            Multi selection with additional property <b>prop1</b> that does not get processed for highlighting the matched parts.
 
-            <tg-search-input id="searchButton1" additional-properties='{"prop1":false}'></tg-search-input>
+            <tg-search-input id="searchButton1" multi additional-properties='{"prop1":false}'></tg-search-input>
         </p>
     </template>
 

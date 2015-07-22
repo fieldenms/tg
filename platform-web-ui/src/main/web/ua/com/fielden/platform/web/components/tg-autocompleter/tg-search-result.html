@@ -81,7 +81,7 @@
     </style>
 
     <template>
-        <iron-selector id="selector" class="tg-snatchback" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
+        <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[values]]" as="v" index-as="item_index_no">
                 <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value$="[[v]]" noink>
@@ -100,6 +100,12 @@
             behaviors: [Polymer.IronOverlayBehavior],
 
             properties: {
+                /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
+                multi: {
+                	type: Boolean,
+                	value: false
+                },
+
                 /* Contains values to be displayed */
                 values: {
                     type: Array,
@@ -107,6 +113,7 @@
                         return [];
                     }
                 },
+                
                 /* Contains only selected valueі. 
                  * Can be empty. Should contain at most one element in case of single selection mode.
                  * The selected values are JSON string representations of the actual values that need to be parsed before using.
@@ -136,7 +143,11 @@
 
             clearSelection: function () {
             	this.selectedValues.length = 0;
-                this.$.selector.selected = '';
+                if (this.multi) {
+                	this.$.selector.selectedValues = [];
+                } else {
+                	this.$.selector.selected = '';
+                }
             },
 
             /* 

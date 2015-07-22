@@ -84,21 +84,6 @@
 
             behaviors: [Polymer.IronResizableBehavior],
 
-            listeners: {
-                'iron-resize': '_onIronResize'
-            },
-
-            ready: function() {
-            	this.$.result.highlightDesc = this.highlightDesc;
-                if (this.additionalProperties) {
-            		this.$.result.additionalProperties = JSON.parse(this.additionalProperties);
-                }
-            },
-            
-            attached: function () {
-                this.async(this.notifyResize, 1);
-            },
-
             /********************************************************
              ********************************************************
              *********************** PROPERTIES *********************
@@ -154,7 +139,45 @@
                 searchingOrClosed: {
                 	type: Boolean,
                 	computed: '_computeSearchingOrClosed(searching, opened)'
+                },
+                
+                /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
+                multi: {
+                	type: Boolean,
+                	value: false
+                },
+                
+                replaceFromIndex: {
+                	type: Number,
+                	value: 0
+                },
+                
+                replaceToIndex: {
+                	type: Number,
+                	value: 0
+                },
+                
+               	separator: {
+               		type: String,
+               		value: ","
+               	}
+            },
+
+            listeners: {
+                'iron-resize': '_onIronResize'
+            },
+
+            ready: function() {
+            	var result = this.$.result;
+            	result.highlightDesc = this.highlightDesc;
+            	result.multi = this.multi;
+                if (this.additionalProperties) {
+            		result.additionalProperties = JSON.parse(this.additionalProperties);
                 }
+            },
+            
+            attached: function () {
+                this.async(this.notifyResize, 1);
             },
 
             _computeSearchingOrOpened: function(searching, opened) {
@@ -177,9 +200,38 @@
 
             _search: function () {
                 // TODO need to implement the actuall search
-                // what is the query string?
-                var inputText = this._prepInput(this.$.input.value);
+                
+                // What is the query string?
+                var inputText = ''; // default value
+                if (this.multi === false) {
+                	// assign the actual search string
+                	inputText = this._prepInput(this.$.input.value);
+                } else {
+                    // The following manipulations with indexes are required in case of multi selection
+                    // in order to detremine what part of the input text should be used for search and
+                    // also for later insertion of selected values (this.replaceFromIndex and this.replaceToIndex govern this).
 
+                	var text = this.$.input.value;
+                	var caretPos = this.$.input.selectionStart;
+                	var toIndex = text.indexOf(this.separator, caretPos);
+                
+                	if (toIndex < 0) {
+                		toIndex = text.length;
+                	}
+                	var startOfText = text.substring(0, caretPos);
+                	var fromIndex = startOfText.lastIndexOf(this.separator);
+                
+                	if (fromIndex < 0) {
+                		fromIndex = -1; // just to make sure that it is -1
+                	}
+
+                	this.replaceFromIndex = fromIndex;
+                	this.replaceToIndex = toIndex;
+                	
+                	// assign the actual search string
+                	inputText = this._prepInput(text.substring(fromIndex + 1, toIndex).trim());
+                }                
+               	
                 // prep this.searchQuery for highlighting of the matching parts in the search result
                 if (!inputText) {
                     this._searchQuery = "";
@@ -305,12 +357,49 @@
             	
             	// TODO implemente value accpetance logic...
             	if (hasValuesToProcess) {
-            		// do stuff
-            		console.log('need to do some work...');
-            		if (result.selectedValues.length === 1) {
+            		// if this is a single selection config then need to assign it to the input field
+            		if(!this.multi) {
             			var obj = JSON.parse(result.selectedValues[0]);
             			input.value = obj.key;
-            		} else {
+            		} else { 
+            			// in case of multi selection config things get a little more interesting
+            			// as we need to compose a collective string value out of the selected items and 
+            			// insert then in the right positin of an existing text in the input field
+                        var selectedValuesAsStr = _.map(result.selectedValues, function (str) {
+                        	var obj = JSON.parse(str);
+                            return obj.key
+                        }).toString();
+
+                        
+                        var before = input.value.substring(0, this.replaceFromIndex + 1);
+                        var after = input.value.substr(this.replaceToIndex);
+                        var newEditingValue = before + selectedValuesAsStr + after;
+
+                        // TODO the following is relevant in TG binding context and
+                        //      needs to be adjusted when integrating with tg-editor
+                        //      For now simply assign the value to the input field
+                        input.value = newEditingValue;
+                        /*if (!this.$.reflector.equalsEx(newEditingValue, this.editingValue)) {
+                        	this.isAcceptingValueFromSuggestions = true;
+                            this.editingValue = newEditingValue;
+                        } else {
+                                // EDGE-CASE: when the editing value has been already populated
+                                //   and this value equals to the value that was selected from the list -- 
+                                //   changing of 'this.editingValue' will not have any effect.
+                                // Such situation happens if the user edits to, for e.g., 'A10184' and then
+                                //   choses the entity 'A10184' from the list.
+                                // TechNote: in such case, before clicking on OK button, the chain reaction 
+                                //   'editingValueChanged->commValueChanged->acceptedValueChanged' has been already
+                                //   performed. So there is a need to start validation only ('this.onAcceptedValueChanged()' method).
+                        	if (this.isAcceptingValueFromSuggestions) {
+                            	this.isAcceptingValueFromSuggestions = false;
+                            }
+                            this.onAcceptedValueChanged();
+                        }*/
+
+                        // let's highlight the inseted values
+                        input.selectionStart = this.replaceFromIndex;
+                        input.selectionEnd = input.selectionStart + selectedValuesAsStr.length + 1;
             			
             		}
             	}
