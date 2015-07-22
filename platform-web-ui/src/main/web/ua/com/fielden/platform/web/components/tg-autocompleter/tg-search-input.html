@@ -147,12 +147,12 @@
                 	value: false
                 },
                 
-                replaceFromIndex: {
+                _replaceFromIndex: {
                 	type: Number,
                 	value: 0
                 },
                 
-                replaceToIndex: {
+                _replaceToIndex: {
                 	type: Number,
                 	value: 0
                 },
@@ -209,7 +209,7 @@
                 } else {
                     // The following manipulations with indexes are required in case of multi selection
                     // in order to detremine what part of the input text should be used for search and
-                    // also for later insertion of selected values (this.replaceFromIndex and this.replaceToIndex govern this).
+                    // also for later insertion of selected values (this._replaceFromIndex and this._replaceToIndex govern this).
 
                 	var text = this.$.input.value;
                 	var caretPos = this.$.input.selectionStart;
@@ -225,8 +225,8 @@
                 		fromIndex = -1; // just to make sure that it is -1
                 	}
 
-                	this.replaceFromIndex = fromIndex;
-                	this.replaceToIndex = toIndex;
+                	this._replaceFromIndex = fromIndex;
+                	this._replaceToIndex = toIndex;
                 	
                 	// assign the actual search string
                 	inputText = this._prepInput(text.substring(fromIndex + 1, toIndex).trim());
@@ -371,8 +371,8 @@
                         }).toString();
 
                         
-                        var before = input.value.substring(0, this.replaceFromIndex + 1);
-                        var after = input.value.substr(this.replaceToIndex);
+                        var before = input.value.substring(0, this._replaceFromIndex + 1);
+                        var after = input.value.substr(this._replaceToIndex);
                         var newEditingValue = before + selectedValuesAsStr + after;
 
                         // TODO the following is relevant in TG binding context and
@@ -398,7 +398,7 @@
                         }*/
 
                         // let's highlight the inseted values
-                        input.selectionStart = this.replaceFromIndex;
+                        input.selectionStart = this._replaceFromIndex;
                         input.selectionEnd = input.selectionStart + selectedValuesAsStr.length + 1;
             			
             		}
