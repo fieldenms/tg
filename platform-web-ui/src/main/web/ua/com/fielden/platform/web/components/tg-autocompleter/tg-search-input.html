@@ -427,20 +427,44 @@
                 var result = this.$.result;
                 if (result.opened) {
                     this.async(function () {         
-                    	
                         var rect = container.getClientRects()[0];
                         var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
                         var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
                         var top = rect.bottom + scrollTop;
-                        var left = rect.left + scrollLeft;
+                        var left = rect.left;// + scrollLeft;
+                        var right = rect.right;
                         var width = rect.width;
                         
                         result.style.position = 'absolute';
                         result.style.top = top + 'px';
-                        result.style.left = left + 'px';
-                        result.style.width = width + 'px';
                         
-                        // let's try to specify the best height depending on the window height and 
+                        // let's try to accomodate the width of the overlay so that in case 
+                        // the input field is narrow, but there is additional window width available to the
+                        // left or right of the input, it would be used.
+                        var minWidth = 200;
+                        result.style['min-width'] = minWidth + 'px'; // set mid-width, which is important for shifting overlay to the left
+                        var visibleWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+                        var spaceToRightWindowSide = (visibleWidth - right) + width;                        
+                        result.style['max-width'] = spaceToRightWindowSide + 'px';
+                        // is there sufficient space to the right?
+                        if (spaceToRightWindowSide >= minWidth) {
+                        	result.style.left = left + 'px';
+                        	// ideally the overlay width should be the same as the intput's
+                        	// but, if it gets too narrow the min-widht would fix it
+	                    	result.style.width = width + 'px';
+                        } else { 
+                        	// otherwise, move the overlay to the left side, but not beyond
+                        	var resultRect = result.getClientRects()[0];
+                        	var adjustment = 5; // minor adjustment to make the overlay fully visible
+                        	var newLeft = (visibleWidth - (minWidth + adjustment));
+                        	if (newLeft > 0) {
+                        		result.style.left = newLeft + 'px'; 
+                        	} else {
+                        		result.style.left = adjustment + 'px';
+                        	}
+                        }
+
+                        // let's try also to determine the best height depending on the window height and 
                         // the current vertical location of the element
                         var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                         result.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment
