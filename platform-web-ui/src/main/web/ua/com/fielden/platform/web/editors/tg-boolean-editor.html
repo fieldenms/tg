@@ -46,6 +46,17 @@
     			parentFunction.call(this, event);
             }).bind(this);
         },
+        
+        /**
+         * This method returns a default value for '_editingValue', which is used 
+         *  for representing the value when no entity was bound to this editor yet.
+         *
+         * Overriden to return 'false' as the value that will be used when no entity is bound to this editor yet.
+         */
+        _defaultEditingValue: function () {
+        	return 'false';
+        },
+        
         /**
          * Converts the value into string representation (which is used in edititing / comm values).
          */

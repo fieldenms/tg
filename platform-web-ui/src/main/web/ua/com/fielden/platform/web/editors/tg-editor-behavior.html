@@ -112,7 +112,7 @@
                  * The description for this editor.
                  */
                 propDesc: {
-                	type: String                	
+                	type: String
                 },
 
                 /**
@@ -197,7 +197,7 @@
                  * The message about the editor-specific validation. If 'null' -- the validation was successfull.
                  */
                 _editorValidationMsg: {
-                	type: String,                	
+                	type: String,
                 	value: null
                 },
                 
@@ -321,8 +321,20 @@
                 this.decorator().labelVisible = false;
                 
                 //////////// INNER PROPERTIES, THAT GOVERN CHILDREN: default values population ////////////
-				this._editingValue = '';
-				// this._commValue = '';
+				this._editingValue = this._defaultEditingValue();
+                // The following 'commit' call synchronises '_commValue' with '_editingValue' after default editing value population.
+                //  Please, also note that this call also triggers '_acceptedValue' population, as per '_commValueChanged' method.
+                this.commit();
+            },
+            
+            /**
+             * This method returns a default value for '_editingValue', which is used 
+             *  for representing the value when no entity was bound to this editor yet.
+             *
+             * Please, override this method in case when empty string is not applicable (for example in boolean editor 'true' or 'false' values are applicable only).
+             */
+            _defaultEditingValue: function () {
+            	return '';
             },
             
             decorator: function () {
