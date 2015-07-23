@@ -15,6 +15,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/components/moment-component.html">
+<link rel="import" href="/resources/components/tg-calendar.html">
 
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
@@ -82,10 +83,10 @@
         	no-cancel-on-outside-click 
         	opened="[[_calendarVisible]]" 
         	entry-animation="scale-up-animation"
-        	exit-animation="fade-out-animation">
+        	exit-animation="fade-out-animation"
+            auto-fit-on-attach>
         	
-        	<p>TEST</p>
-            <!-- <tg-calendar id="datePicker" auto-vertical pick-time></tg-calendar> -->
+            <tg-calendar id="datePicker" auto-vertical pick-time></tg-calendar>
             <paper-button dialog-dismiss affirmative on-tap="_cancelDate">Cancel</paper-button>
             <paper-button dialog-confirm affirmative autofocus on-tap="_acceptDate">Ok</paper-button>
         </paper-dialog>
