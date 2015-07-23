@@ -146,6 +146,27 @@
                  */
                 _selectPage: {
                 	type: Function
+                },
+                
+                /**
+                 * Starts the process of centre saving.
+                 */
+                save: {
+                	type: Function
+                },
+                
+                /**
+                 * Starts the process of centre discarding.
+                 */
+                discard: {
+                	type: Function
+                },
+                
+                /**
+                 * Starts the process of centre run.
+                 */
+                run: {
+                	type: Function
                 }
             },
             
@@ -281,6 +302,29 @@
                 self._selectPage = (function (e, detail, source) {
                     this._selectedPage = this._selectedView;
                 }).bind(self);
+                
+                self.save = (function () {
+                    if (!this.canSave(this.$.selection_criteria._isCentreChanged)) {
+                        throw "Cannot save the not modified centre.";
+                    }
+                    console.log("CENTRE SAVE");
+                    this.$.ajaxSaver.generateRequest();
+                }).bind(self);
+                
+                self.discard = (function () {
+                    if (!this.canDiscard(this.$.selection_criteria._isCentreChanged)) {
+                        throw "Cannot discard the not modified centre.";
+                    }
+                    console.log("CENTRE DISCARD");
+                    this.$.ajaxDiscarder.generateRequest();
+                }).bind(self);
+                
+                self.run = (function () {
+                    this.$.egi.clearSelection();
+                    this.$.egi.collapseAllCards();
+                    this.$.selection_criteria.run();
+                    this._triggerRun = true;
+                }).bind(self);
             },
 
             attached: function () {
@@ -343,16 +387,6 @@
             retrieve: function () {
             	console.log("entity centre behavior: retrieve:");
                 this.$.selection_criteria.retrieve();
-            },
-
-            /**
-             * Starts the process of centre run.
-             */
-            run: function () {
-                this.$.egi.clearSelection();
-                this.$.egi.collapseAllCards();
-                this.$.selection_criteria.run();
-                this._triggerRun = true;
             },
 
             /**
@@ -422,30 +456,10 @@
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canCurrent(pageNumber, pageCount);
             },
 
-            /**
-             * Starts the process of centre saving.
-             */
-            save: function () {
-                if (!this.canSave(this.$.selection_criteria._isCentreChanged)) {
-                    throw "Cannot save the not modified centre.";
-                }
-                console.log("CENTRE SAVE");
-                this.$.ajaxSaver.generateRequest();
-            },
             canSave: function (isCentreChanged) {
                 return this.canManageCentreConfig(isCentreChanged);
             },
 
-            /**
-             * Starts the process of centre discarding.
-             */
-            discard: function () {
-                if (!this.canDiscard(this.$.selection_criteria._isCentreChanged)) {
-                    throw "Cannot discard the not modified centre.";
-                }
-                console.log("CENTRE DISCARD");
-                this.$.ajaxDiscarder.generateRequest();
-            },
             canDiscard: function (isCentreChanged) {
                 return this.canManageCentreConfig(isCentreChanged);
             },
