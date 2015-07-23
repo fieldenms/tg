@@ -98,23 +98,12 @@
                 },
                 
                 _searchQuery: {
-                    type: Boolean,
+                    type: String,
                     value: ''
                 },
                 
                 /*
-                 * This property should be used as attribute highlight-desc to specify whether search pattern should 
-                 * be used for highlighting desc property values in the search result.
-                 * This property value gets assigned to the property with the same name of the tg-search-result element
-                 * that is associated with this tg-search-input element.
-                 */
-                highlightDesc:  {
-                    type: Boolean,
-                    value: false
-                },
-                
-                /*
-                 * A sting with comma separated property names that shoould be displayed in addition to key and desc.
+                 * A string with comma separated property names that shoould be displayed in addition to key and desc.
                  */
                 additionalProperties: {
                 	type: String,
@@ -169,7 +158,6 @@
 
             ready: function() {
             	var result = this.$.result;
-            	result.highlightDesc = this.highlightDesc;
             	result.multi = this.multi;
                 if (this.additionalProperties) {
             		result.additionalProperties = JSON.parse(this.additionalProperties);
@@ -323,7 +311,6 @@
             
             _cancelSearch: function() {
             	if (this._asyncSearchHandle) {
-            		console.warn("Aboring async search...");
             		this.cancelAsync(this._asyncSearchHandle);
             		this._asyncSearchHandle = null;
             	}
@@ -336,7 +323,6 @@
             },
             
             _resultClosed: function(e) {
-            	console.log('result got closed.');
             	this.opened = false;
             },
             
@@ -347,7 +333,6 @@
             	var input = this.$.input;
             	var result = this.$.result;
             	var hasValuesToProcess = result.selectedValues.length > 0;
-            	console.log('accepting result: ', hasValuesToProcess, ' number of selected values: ', result.selectedValues.length);
             	// should close automatcially, but just in case let's make sure the result overlay gets closed
             	result.close();
             	
@@ -363,7 +348,7 @@
             			// insert then in the right positin of an existing text in the input field
                         var selectedValuesAsStr = _.map(result.selectedValues, function (str) {
                         	var obj = JSON.parse(str);
-                            return obj.key
+                            return obj.key;
                         }).toString();
 
                         
