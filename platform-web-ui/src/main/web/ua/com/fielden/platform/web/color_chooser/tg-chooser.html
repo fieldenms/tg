@@ -4,45 +4,84 @@
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
 <dom-module id="tg-chooser">
 	<style>
-		.collapse {
-			width: auto;
-			height: auto;
-			background-color: gray;
-			color: white;
+		paper-dialog.size-position {
+			position: fixed;
+			top: 20px;
+			right: 1160px;
 		}
 		
-		.collapse-content {
-			padding: 15px;
-			border: 1px solid #dedede;
-			background-color: gray;
-			color: white;
-			width: auto;
-			height: auto;
+		paper-dialog.size-position {
+			width: 340px;
+			height: 100px;
+		}
+		
+		paper-icon-button.for-colors {
+			width: 10px;
+			height: 10px;
+			border-bottom-color: red;
+		}
+		
+		.input-color {
+			position: relative;
+		}
+		
+		.input-color input {
+			/*
+			padding-left: 15px;
+			padding-top: 10px;
+*/
+		}
+		
+		.input-color .color-box {
+			width: 40px;
+			height: 30px;
+			display: inline-block;
+			background-color: #ccc;
+			position: absolute;
+			left: 10px;
+			top: 10px;
 		}
 	</style>
 	<template>
-		<paper-icon-button icon="editor:format-color-fill" onclick="{{toggle}}"></paper-icon-button>
-		<iron-collapse id="collapse" class="collapse-content">
-			<div class="collapse-content" id="collapse">
-				<div>Content goes here.</div>
+		<paper-icon-button icon="editor:format-color-fill" onclick="dialog.toggle()"></paper-icon-button>
+		<paper-dialog id="dialog" heading="Custom Size &amp; Position" class="size-position">
+			<!--
+			<div class="input-color">
+				<input type="text" value="Orange" />
+				<div class="color-box" style="background-color: #FF850A;"></div>
 			</div>
-		</iron-collapse>
+-->
+			<div class="input-color">
+				<div class="color-box" style="background-color: #F44336;"></div>
+				<div class="color-box" style="background-color: #FF9800; left: 50px"></div>
+				<div class="color-box" style="background-color: #FFEB3B; left: 90px"></div>
+				<div class="color-box" style="background-color: #4CAF50; left: 130px"></div>
+				<div class="color-box" style="background-color: #009688; left: 170px"></div>
+				<div class="color-box" style="background-color: #00BCD4; left: 210px"></div>
+				<div class="color-box" style="background-color: #3F51B5; left: 250px"></div>
+				<div class="color-box" style="background-color: #9C27B0; left: 290px"></div>
+
+				<div class="color-box" style="background-color: #EF9A9A; top: 40px;"></div>
+				<div class="color-box" style="background-color: #FFCC80; top: 40px; left: 50px"></div>
+				<div class="color-box" style="background-color: #FFF59D; top: 40px;left: 90px"></div>
+				<div class="color-box" style="background-color: #A5D6A7; top: 40px;left: 130px"></div>
+				<div class="color-box" style="background-color: #80CBC4; top: 40px;left: 170px"></div>
+				<div class="color-box" style="background-color: #80DEEA; top: 40px;left: 210px"></div>
+				<div class="color-box" style="background-color: #9FA8DA; top: 40px;left: 250px"></div>
+				<div class="color-box" style="background-color: #CE93D8; top: 40px;left: 290px"></div>
+			</div>
+
+		</paper-dialog>
 	</template>
 </dom-module>
 <script>
-	toggle = function () {
-		this.$.collapse.show();
-	}
-	var openContent = function () {
-		if (collapse.opened) {
-			this.collapse.opened = false;
-		} else if (!collapse.opened) {
-			this.collapse.opened = true;
-		}
-	}
 	Polymer({
 		is: "tg-chooser",
 		properties: {}
