@@ -801,8 +801,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (centreContextConfig.withSelectionCrit) {
             // disregarded -- sends every time, because the selection criteria is needed for running the centre query
         }
-        sb.append("requireSelectedEntities=\"" + (centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE")) + "\" ");
-        sb.append("requireMasterEntity=\"" + (centreContextConfig.withMasterEntity ? "true" : "false") + "\"");
+        sb.append("require-selected-entities=\"" + (centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE")) + "\" ");
+        sb.append("require-master-entity=\"" + (centreContextConfig.withMasterEntity ? "true" : "false") + "\"");
 
         return sb.toString();
     }

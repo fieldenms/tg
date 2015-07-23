@@ -173,9 +173,9 @@
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
                         var summary = customObject.summary;
 
-                        self.postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities, summary);
+                        self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities, summary);
                 	}, function (errorResult) {
-                		self.postRunDefaultError(errorResult);
+                		self._postRunDefaultError(errorResult);
                 	});
                 };
                 
@@ -391,7 +391,7 @@
                 self._validator().abortValidationIfAny();
 
                 // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                //            This check will be done on server -- and appropriate postRunDefault callback will be triggered.
+                //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
                 self._runModifiedProperties(
                 	self._createContextHolderForRunning(function() {
                 			return self._reset(self._persistedModifiedPropertiesHolder);
@@ -422,8 +422,8 @@
              * @param contextHolder -- the holder of the centre context, which contains the criteria entity's modif props holder
              */
             _runModifiedProperties: function (contextHolder) {
-                this.$.ajaxRunner.body = JSON.stringify(this._serialiser().serialise(contextHolder));
-                this.$.ajaxRunner.generateRequest();
+                this._ajaxRunner().body = JSON.stringify(this._serialiser().serialise(contextHolder));
+                this._ajaxRunner().generateRequest();
             },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
