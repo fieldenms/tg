@@ -21,7 +21,17 @@
         }
         #input-container {
             @apply(--layout-flex);
-
+        }
+        paper-checkbox {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -o-user-select: none;
+            font-family: 'Roboto', 'Noto', sans-serif;
+            --paper-checkbox-checked-color: #0288D1;
+            --paper-checkbox-checked-ink-color: #0288D1;
+            height: 24px;
         }
         /* TODO styles */
     </style>
@@ -29,7 +39,7 @@
     <template>
         <paper-input-container id="decorator" attr-for-value="editing-value" disabled$="[[_disabled]]" always-float-label>
             <!-- flex auto  for textarea! -->
-            <label>[[propTitle]]</label>
+            <label style$="[[_calcLabelStyle(_editorKind)]]">[[propTitle]]</label>
             <div class="main-container">
                 <div id="input-container">
                     <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
@@ -138,6 +148,17 @@
          */
         _actionDoesNotExist: function (action) {
             return action === null;
+        },
+
+        /**
+         * Calculates the style for container's label
+         */
+        _calcLabelStyle: function (editorKind) {
+            var style = "";
+            if ("BOOLEAN" === editorKind) {
+                style += "visibility: hidden;"
+            }
+            return style;
         },
 
         /**
