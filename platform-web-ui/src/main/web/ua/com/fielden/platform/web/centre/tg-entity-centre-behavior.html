@@ -210,7 +210,8 @@
                 }).bind(self);
                 
                 self._getSelectedEntities = (function () {
-                    return this.$.egi.getSelectedEntities();
+                	// TODO uncomment return this.$.egi.getSelectedEntities();
+                	return [];
                 }).bind(self);
                 
                 self._processSaverResponse = function (e) {
@@ -320,8 +321,8 @@
                 }).bind(self);
                 
                 self.run = (function () {
-                    this.$.egi.clearSelection();
-                    this.$.egi.collapseAllCards();
+                    // TODO uncomment this.$.egi.clearSelection();
+                    // TODO uncomment this.$.egi.collapseAllCards();
                     this.$.selection_criteria.run();
                     this._triggerRun = true;
                 }).bind(self);
