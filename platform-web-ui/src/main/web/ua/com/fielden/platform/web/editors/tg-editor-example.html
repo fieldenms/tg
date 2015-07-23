@@ -16,6 +16,7 @@
     <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-datetime-picker.html">
     <link rel="import" href="/resources/editors/tg-boolean-editor.html">
+    <link rel="import" href="/resources/editors/tg-entity-editor.html">
 </head>
 
 <body unresolved>
@@ -90,6 +91,18 @@
   	    	externalRefreshCycle="null"  	    	
   	    	validation-callback="[[validationCallback]]">
   	    </tg-datetime-picker>
+  	    
+  	    <tg-entity-editor 
+  	    	entity="[[entity]]" 
+  	    	property-name="entityProp" 
+  	    	current-state="EDIT" 
+  	    	debug 
+  	    	prop-title="Entity property title" 
+  	    	prop-desc="Entity property desc"
+  	    	action="null" 
+  	    	externalRefreshCycle="null"
+  	    	validation-callback="[[validationCallback]]">
+  	    </tg-entity-editor>
   	</template>
 </body>
 

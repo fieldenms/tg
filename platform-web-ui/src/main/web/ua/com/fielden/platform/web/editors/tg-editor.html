@@ -46,6 +46,8 @@
                     </iron-autogrow-textarea>
 
                     <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange">[[propTitle]]</paper-checkbox>
+                    
+                    <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]"/>
 
                     <!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}" -->
                     <!-- input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]" -->
@@ -105,7 +107,8 @@
             _editorKind: String,
             _onChange: Function,
             _onKeypress: Function,
-            _maxLength: Number
+            _maxLength: Number,
+            _autocompleterBlurEventHandler: Function
         },
 
         _isInteger: function (_editorKind) {
@@ -122,6 +125,10 @@
 
         _isBooleanEditor: function (editorKind) {
             return "BOOLEAN" === editorKind;
+        },
+        
+        _isAutocompleter: function (editorKind) {
+            return "AUTOCOMPLETER" === editorKind;
         },
 
         /**
