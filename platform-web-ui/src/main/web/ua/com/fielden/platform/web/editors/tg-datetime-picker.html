@@ -29,34 +29,20 @@
 <link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
-<!-- <core-style id="datetime-icon-decorator">
-
-    core-icon-button /deep/ core-icon[role="img"] {fill: {{g.paperInput.labelColor}};}
-   
-    #decorator:not(.invalid) core-icon-button:hover /deep/ core-icon, #decorator[focused]:not(.invalid) core-icon-button /deep/ core-icon {fill: {{g.paperInput.focusedColor}};}
-   
-    #decorator.invalid core-icon-button /deep/ core-icon { fill : {{g.paperInput.invalidColor}}; }
-   
-</core-style> -->
-
 <dom-module id="tg-datetime-picker">
     <style>
-    		/* <core-style ref="datetime-icon-decorator"></core-style>
-            core-icon-button /deep/ core-icon[role="img"] {
-                height: 1.1em;
-                width: 1.1em;
-                padding: 0px;
-                margin: 0px;
-                vertical-align: top;
-            }
-            
-            core-icon-button {
-                padding: 0px;
-                margin: 0px;
-                height: 1.1em;
-                width: 1.1em;
-                font: inherit;
-            } */
+        .picker-button {
+            align-self: flex-end;
+            --iron-icon-height: 16px;
+            --iron-icon-width: 16px;
+            padding-left: 4px;
+            padding-right: 2px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            height: 20px;
+            width: 20px;
+            margin: 0px;
+        }
     </style>
 
     <template>
@@ -73,9 +59,7 @@
     		_on-change="[[_onChange]]" 
     		_on-keypress="[[_onKeypress]]"
     		>
-   		    <div id="icon" class="custom-icon-buttons">
-                <paper-icon-button on-tap="showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
-            </div>
+            <paper-icon-button class="custom-icon-buttons picker-button" on-tap="showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
     	</tg-editor>
         <paper-dialog 
         	class="date-time-picker" 
