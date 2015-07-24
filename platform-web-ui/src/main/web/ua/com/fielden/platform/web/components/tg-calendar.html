@@ -20,6 +20,7 @@
         .dead-day {
             cursor: auto !important;
             pointer-events: none;
+            color: #CDCDCD;
         }
         .day-short-name {
             color: #757575;
@@ -123,7 +124,7 @@
                     <template is="dom-repeat" items="[[weeks]]" as="week">
                         <div class="layout horizontal center-justified">
                             <template is="dom-repeat" items="[[week]]" as="day">
-                                <div on-tap="_selectDay" class$="[[_calcDayClass(day, selectedDay)]]"><span hidden$="[[_isDeadDay(day)]]">[[day]]</span></div>
+                                <div on-tap="_selectDay" class$="[[_calcDayClass(day, selectedDay)]]"><span>[[_absolute(day)]]</span></div>
                             </template>
                         </div>
                     </template>
@@ -153,10 +154,12 @@
                 var week = [],
                     firstDay = new Date(year, month, day).getDay(),
                     days = getDaysInMonth(year, month),
+                    previousMonthDays = getDaysInMonth(year, month - 1),
+                    nextMonthDay = -1,
                     _i = 0;
                 // In case when the first day of the month is not a sanday then add 0 to the first days of the week.
                 for (; _i < firstDay; _i++) {
-                    week.push(0);
+                    week.push(-1 * (previousMonthDays - (firstDay - (_i + 1))));
                 }
                 // Add day numbers to the week.
                 for (; _i < 7 && day <= days; _i++) {
@@ -165,7 +168,8 @@
                 }
                 // In case when the last day of the month is not saturday then add 0 to the last days of the week. 
                 for (; _i < 7; _i++) {
-                    week.push(0);
+                    week.push(nextMonthDay);
+                    nextMonthDay -= 1;
                 }
                 return week;
             };
@@ -301,7 +305,7 @@
              */
             _calcDayClass: function(day, selectedDay) {
                 var dayClasses = "day layout vertical center-center";
-                if (day === 0) {
+                if (day < 0) {
                     dayClasses += " dead-day";
                 }
                 if (day === this.todayDay && this.shownMonth === this.todayMonth && this.shownYear === this.todayYear) {
@@ -314,10 +318,10 @@
             },
             
             /**
-             * Determines whether specifed day is dead or not (i.e. whether the day equql to 0).
+             * Returns the absolute value of the day
              */
-            _isDeadDay: function(day) {
-                return day === 0;
+            _absolute: function(day) {
+                return Math.abs(day);
             }
         });
     })();
