@@ -699,7 +699,7 @@
              * Determines whether property is boolean or not.
              */
             _isBooleanProp: function (entity, column) {
-                return column.type === 'Boolean' && _get(entity, column) !== null
+                return column.type === 'Boolean' && this._get(entity, column) !== null
             },
             /**
              * Determines whether property is not boolean property or is.
@@ -711,7 +711,7 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, column) {
-                return "icons:" + (_get(entity, column) ? "check" : "clear");
+                return "icons:" + (this._get(entity, column) ? "check" : "clear");
             },
             /**
              * Tap action on data column. TODO: implement this.
@@ -783,7 +783,7 @@
              */
             clearSelection: function () {
                 var i;
-                for (i = 0; i < egiModel.length; i++) {
+                for (i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".selected", false);
                 }
                 this.selectedEntities = [];
@@ -793,7 +793,7 @@
              */
             collapseAllCards: function () {
                 var i;
-                for (i = 0; i < egiModel.length; i++) {
+                for (i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".opened", false);
                 }
                 this.openedEntities = [];
