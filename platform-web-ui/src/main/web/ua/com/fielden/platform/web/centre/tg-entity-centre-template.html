@@ -9,9 +9,9 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
 <!-- EGI imports -->
-<!-- <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
+<link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
 
-<link rel="import" href="/resources/actions/tg-page-action.html">
+<!-- <link rel="import" href="/resources/actions/tg-page-action.html">
 
 <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
 <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
@@ -147,12 +147,11 @@
         	>
             <tg-@entity_type-selection-criteria id="selection_criteria" class="custom-selection-criteria" _centre-changed="{{_centreChanged}}" uuid="[[uuid]]" mi-type="@mi_type" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" post-retrieved="[[postRetrieved]]" @queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
 
-	        <h1 id="egi" class="entity-grid-inspector custom-egi">EGI</h1>
-            <!-- <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entityType="@full_entity_type" @gridLayout>
-                EGI COLUMNS DOM (GENERATED)
-                @egi_columns
+            <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entity-type="@full_entity_type" @gridLayout>
+                <!-- EGI COLUMNS DOM (GENERATED) -->
+                <!--@egi_columns-->
 
-                <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
+                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
                     <core-icon-button icon="add-circle-outline"></core-icon-button>
                     <tg-page-action icon="add-circle-outline" action="[[_newAction]]"></tg-page-action>
                     <span class="span-tooltip" tip>Create new entity</span>
@@ -166,7 +165,7 @@
                     <span class="span-tooltip" tip>Delete selected entities</span>
                 </core-tooltip> -->
                 <!-- GENERATED FUNCTIONAL ACTIONS: -->
-                <!--@functional_actions-->
+                <!--@functional1_actions-->
 
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1">
                     <core-icon-button icon="file-download"></core-icon-button>
@@ -192,11 +191,11 @@
                 <core-tooltip class="delayed standart-action" tabIndex="-1">
                     <core-icon-button icon="refresh" on-tap="{{currentPage}}" disabled?="{{canNotCurrent($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
                     <span class="span-tooltip" tip>Refresh</span>
-                </core-tooltip>
-                @primary_action
-                tg-primary-instance-action action="[[_showMaster]]" actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action> 
-                @secondary_actions
-            </tg-entity-grid-inspector> -->
+                </core-tooltip> -->
+                <!--@primary1_action-->
+                <!-- <tg-primary-instance-action action="[[_showMaster]]" actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action> --> 
+                <!--@secondary1_actions-->
+            </tg-entity-grid-inspector>
         </tg-entity-centre>
     </template>
 </dom-module>

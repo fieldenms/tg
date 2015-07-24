@@ -593,7 +593,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<ListMultimap<String, SummaryPropDef>> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
-            int actionIndex = 0;
+            final int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
                 //                if (!resultProp.propName.isPresent()) {
                 //                    throw new IllegalStateException("The result property must have a name");
@@ -606,12 +606,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
                 final Optional<FunctionalActionElement> action;
-                if (resultProp.propAction.isPresent()) {
-                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, resultPropName));
-                    actionIndex += 1;
-                } else {
+// TODO uncomment               if (resultProp.propAction.isPresent()) {
+//                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, resultPropName));
+//                    actionIndex += 1;
+//                } else {
                     action = Optional.empty();
-                }
+//                }
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
@@ -627,12 +627,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer egiColumns = new DomContainer();
         final StringBuilder propActionsObject = new StringBuilder();
         propertyColumns.forEach(column -> {
-            // TODO importPaths.add(column.importPath());
+            importPaths.add(column.importPath());
             if (column.hasSummary()) {
-             // TODO importPaths.add(column.getSummary(0).importPath());
+                importPaths.add(column.getSummary(0).importPath());
             }
             if (column.getAction().isPresent()) {
-             // TODO importPaths.add(column.getAction().get().importPath());
+                importPaths.add(column.getAction().get().importPath());
                 propActionsObject.append(prefix + createActionObject(column.getAction().get()));
             }
             egiColumns.add(column.render());
@@ -778,7 +778,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (summaryLayout.hasLayoutFor(Device.MOBILE, null)) {
             resultsetLayout.append("summaryMobileLayout=\"{{" + summaryLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
         }
-        return resultsetLayout.toString();
+        // TODO uncomment return resultsetLayout.toString();
+        return "";
     }
 
     /**

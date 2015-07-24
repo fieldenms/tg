@@ -112,8 +112,8 @@ public class PropertyColumnElement implements IRenderable, IImportable {
             attrs.put("action", "[[_showMaster]]");
         }
         attrs.put("type", egiRepresentationFor(DynamicEntityClassLoader.getOriginalType(this.propertyType)));
-        attrs.put("columnTitle", this.titleDesc.getKey());
-        attrs.put("columnDesc", this.titleDesc.getValue());
+        attrs.put("column-title", this.titleDesc.getKey());
+        attrs.put("column-desc", this.titleDesc.getValue());
         return attrs;
     }
 
@@ -140,7 +140,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     public final DomElement render() {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && !this.action.get().isMasterInvocationAction()) {
-            columnElement.add(action.get().render());
+            // TODO uncomment columnElement.add(action.get().render());
         }
         if (hasSummary()) {
             summary.forEach(summary -> columnElement.add(summary.render()));
@@ -151,6 +151,12 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     @Override
     public String importPath() {
         return widgetPath;
+
+        // TODO 'action' needs an import of 'tg-ui-action'!
+     // TODO 'action' needs an import of 'tg-ui-action'!
+     // TODO 'action' needs an import of 'tg-ui-action'!
+     // TODO 'action' needs an import of 'tg-ui-action'!
+     // TODO 'action' needs an import of 'tg-ui-action'!
     }
 
     public boolean isDebug() {
