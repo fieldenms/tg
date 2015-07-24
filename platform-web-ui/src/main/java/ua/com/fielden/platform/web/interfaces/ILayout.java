@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.interfaces;
 
-import org.apache.commons.lang.StringUtils;
 
 public interface ILayout<T extends ILayoutSetter<?>> {
 
@@ -35,7 +34,7 @@ public interface ILayout<T extends ILayoutSetter<?>> {
         PRINT;
         @Override
         public String toString() {
-            return StringUtils.capitalize(name().toLowerCase());
+            return name().toLowerCase();
         };
     }
 

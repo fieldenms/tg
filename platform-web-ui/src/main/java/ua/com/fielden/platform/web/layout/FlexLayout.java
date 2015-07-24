@@ -18,7 +18,11 @@ public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>>
         final DomElement flexElement = new DomElement("tg-flex-layout");
         for (final Pair<Device, Orientation> layout : layouts.keySet()) {
             if (layout.getValue() == null) {
-                flexElement.attr("when" + layout.getKey().toString(), "{{" + layouts.get(layout).get() + "}}");
+                // TODO provide separate property, to which 'when-desktop' (or others) should be bound
+             // TODO provide separate property, to which 'when-desktop' (or others) should be bound
+             // TODO provide separate property, to which 'when-desktop' (or others) should be bound
+             // TODO provide separate property, to which 'when-desktop' (or others) should be bound
+                flexElement.attr("when-" + layout.getKey().toString(), "[[" + layouts.get(layout).get() + "]]");
             }
         }
         return flexElement;
