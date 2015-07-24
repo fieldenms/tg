@@ -23,8 +23,7 @@ public class EntitySingleCritAutocompletionWidget extends AbstractEntityAutocomp
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
-        attrs.put("asPartOfEntityMaster", false);
-        // attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
+        attrs.put("as-part-of-entity-master", false);
         return attrs;
     };
 

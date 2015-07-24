@@ -34,15 +34,21 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = new LinkedHashMap<>();
 
-        attrs.put("autocompletionType", "{{" + (selectionCriteriaWidget ? "mitype" : "entitytype") + "}}");
-        attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
+        attrs.put("autocompletion-type", "[[" + (selectionCriteriaWidget ? "miType" : "entityType") + "]]");
+
+        // TODO please implement StringBuilder that aggregates all composite key members into 'additionalProperties' (and incorporate 'desc' as below).
+//        if (shouldSearchByDesc) { // FIXME JSON should be generated in single quotes
+//            attrs.put("additional-properties", "{desc:true}");
+//        } else {
+//            attrs.put("additional-properties", "{desc:false}");
+//        }
         if (centreContextConfig != null) {
             attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
-            attrs.put("requireSelectionCriteria", centreContextConfig.withSelectionCrit ? "true" : "false");
+            attrs.put("require-selection-criteria", centreContextConfig.withSelectionCrit ? "true" : "false");
             attrs.put("get-selected-entities", "[[_getSelectedEntities]]");
-            attrs.put("requireSelectedEntities", centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE"));
+            attrs.put("require-selected-entities", centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE"));
             attrs.put("get-master-entity", "[[getMasterEntity]]");
-            attrs.put("requireMasterEntity", centreContextConfig.withMasterEntity ? "true" : "false");
+            attrs.put("require-master-entity", centreContextConfig.withMasterEntity ? "true" : "false");
         }
         attrs.put("process-response", "[[_processResponse]]");
         attrs.put("process-error", "[[_processError]]");

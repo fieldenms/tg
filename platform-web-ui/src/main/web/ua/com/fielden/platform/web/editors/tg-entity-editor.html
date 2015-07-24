@@ -3,12 +3,15 @@
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
 
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
+
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
 
 <link rel="import" href="/resources/editors/tg-entity-editor-result.html">
 
@@ -71,19 +74,10 @@
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
     	</tg-editor>
-    
-        <!-- <div id="container">
-            <paper-input-container id="decorator">
-                <label>search</label>
-                <div class="input-layout">
-                    <input id="input" is="iron-input" type="text" on-input="_inputEventHandler" on-blur="_blurEventHandler"/>
-                    <paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_search" icon="search" class="search-button" tabIndex="-1"></paper-icon-button>
-                    <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button" tabIndex="-1"></paper-icon-button>
-                    <paper-spinner active hidden$="[[!searching]]" tabIndex="-1" alt="searching..."></paper-spinner>
-                </div>
-            </paper-input-container>
-        </div> -->
         <tg-entity-editor-result id="result" on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed"></tg-entity-editor-result>
+        
+        <iron-ajax id="ajaxSearcher" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
+        <tg-serialiser id="serialiser"></tg-serialiser>
     </template>
 
 </dom-module>
@@ -158,6 +152,82 @@
                 	value: false
                 },
                 
+                /**
+                 * The type that identifies the master (entity type) or centre (miType).
+                 */
+                autocompletionType: {
+                	type: String
+                },
+                
+                /**
+                 * Returns 'true' if this editor is a part of Entity Master, 'false' in case if it is a part of Entity Centre.
+                 *
+                 * Should not be null, should be initialised using generation logic.
+                 */
+                asPartOfEntityMaster: {
+                	type: Boolean
+                },
+                
+                /**
+                 * Default implementation for unsuccessful postSearched callback (external property from tg-entity-binder).
+                 */
+            	postSearchedDefaultError: {
+            		type: Function
+            	},
+            	
+            	/**
+            	 * External utility function for processing responses (from tg-entity-binder).
+            	 */
+            	processResponse: {
+            		type: Function
+            	},
+            	
+            	/**
+            	 * External utility function for processing unsuccessful responses (from tg-entity-binder).
+            	 */
+            	processError: {
+            		type: Function
+            	},
+            	
+            	/**
+            	 * The function which creates 'modifiedPropertiesHolder' for the autocompletion context.
+            	 */
+            	createModifiedPropertiesHolder: {
+            		type: Function
+            	},
+            	
+                /**
+                 * Determines whether the selection criteria entity are required to be send inside the centre context.
+                 *
+                 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectionCrit' as relevant for context.
+                 */
+                requireSelectionCriteria: {
+            		type: String
+            	},
+                /**
+                 * Determines whether the selected entities are required to be send inside the centre context.
+                 *
+                 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
+                 */
+                requireSelectedEntities: {
+            		type: String
+            	},
+                /**
+                 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context.
+                 *
+                 * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
+                 */
+                requireMasterEntity: {
+            		type: String
+            	},
+
+                getSelectedEntities: {
+            		type: Function
+            	},
+                getMasterEntity: {
+            		type: Function
+            	},
+                
                 _replaceFromIndex: {
                 	type: Number,
                 	value: 0
@@ -192,7 +262,12 @@
                 			this._inputEventHandler();
                     	}).bind(this);
                 	}
-                }
+                },
+                
+             	_url: {
+             		type: String,
+             		computed: '_computeUrl(autocompletionType, propertyName)'
+             	}
             },
 
             listeners: {
@@ -215,6 +290,13 @@
                 
                 this.$.editorDom._editorKind = "AUTOCOMPLETER";
             },
+            
+        	/**
+        	 * Computes URL for 'ajaxSearcher'.
+        	 */
+        	_computeUrl: function (autocompletionType, propertyName) {
+        		return "/autocompletion/" + autocompletionType + "/" + propertyName;
+        	},
             
             attached: function () {
                 this.async(this.notifyResize, 1);
@@ -289,62 +371,62 @@
                 if (this._searchQuery /*&& this.hasFocus === true*/ ) {
                     this.searching = true;
 
-                    // TODO need to convert in the context of TG
-                    // prepare the AJAX request based on the raw search string
-                    //var serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
-                    //this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
-                    //this.$.ajaxSearcher.generateRequest();
-
-                    // TODO Demo only, remove when moving to the TG context
-
                     self.async((function () {
                         result.close();
                     }).bind(self), 1);
 
-                    this.async((function () {
-                        result.clearSelection();
-                        self.searching = false;
-                        result.values = [{
-                            key: 'KEY 1',
-                            desc: "some description for key 1",
-                            prop1: "value of prop 1",
-                          	prop2: "value of prop 2"
-                        }, {
-                            key: 'KEY 2',
-                            desc: "some description for key 2",
-                            prop1: "value of prop 1",
-                          	prop2: "value of prop 2"
-                        }, {
-                            key: 'KEY 3',
-                            desc: "some description for key 3 some description for key 3 some description for key 3 some description for key 3",
-                            prop1: "value of prop 1",
-                          	prop2: "value of prop 2"
-                        }, {
-                            key: 'KEY 4',
-                            desc: "some description for key 4",
-                            prop1: "value of prop 1",
-                          	prop2: "value of prop 2"
-                        }, {
-                            key: 'KEY 5',
-                            desc: "some new word for key 5",
-                            prop1: "value of prop 1",
-                          	prop2: "value of prop 2"
-                        }, {
-                            key: 'KEY 6',
-                            desc: "some description for key 6",
-                            prop1: "value of prop 1",
-                          	prop2: "value of prop 2"
-                        }];
-                        self.async(function () {
-                        	this.async(this.notifyResize, 1);
-                            result.open();
-                        });
-
-                    }).bind(self), 700); // some delay to mimic the search time
-
+                    // prepare the AJAX request based on the raw search string
+                    var serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
+                    this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
+                    this.$.ajaxSearcher.generateRequest();
                 } else if (result.opened) { // make sure overlay is closed is no search is performed
                     result.close();
                 }
+            },
+            
+            /*
+             * Displays the search result.
+             */
+            _onFound: function (entities) {
+                var self = this;
+                var result = self.$.result;
+
+                result.clearSelection();
+                self.searching = false;
+                result.values = [];
+            	
+                for (var index = 0; index < entities.length; index++) {
+                    // Entity is converted to a string representation of its key.
+                    // This includes correct conversion of simple and composite entities
+                    var key = this.reflector().convert(entities[index]);
+                    entities[index].key = key;
+                    result.values.push(entities[index]);
+                }
+                
+                self.async(function () {
+                	this.async(this.notifyResize, 1);
+                    result.open();
+                });
+            },
+            
+            /**
+             * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
+             */
+            createContextHolder: function (inputText) {
+            	if (this.multi === false) {
+	                if (this.asPartOfEntityMaster) {
+	                    var contextHolder = this.reflector().createContextHolder(
+	                        "true", null, null,
+	                        this.createModifiedPropertiesHolder, null, null
+	                    );
+	                    this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
+	                    return contextHolder;
+	                } else {
+	                	return Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
+	                }
+            	} else {
+                	return Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
+            	}
             },
             
             _inputEventHandler: function() {
@@ -504,20 +586,54 @@
             },
             
             /**
-             * The bound to this editor property of the bound entity should be of String type.
-             * Therefore, it is expected that the passed in value is either a null or a String.
+             * The bound to this editor property of the bound entity should be of String type (if not multi) or of String array type (if multi).
+             *
+             * Therefore, it is expected that the passed in value is either a null or a String (if not multi) 
+             * or an empty array [] or an array of Strings (if multi).
              */
             convertToString: function (value) {
-                return value === null ? "" : "" + value;
+            	if (this.multi === true) {
+            		return value.join(this.separator); // for empty array it will return "". 'value' should never be 'null'!
+            	} else {
+                	return value === null ? "" : "" + value;
+            	}
             },
 
             /**
-             * The bound to this editor property of the bound entity should be of String type.
-             * Therefore, the string value from the editor should either be taken as is if it is not empty,
+             * The bound to this editor property of the bound entity should be of String type (if not multi) or of String array type (if multi).
+             *
+             * Multi: the string value from the editor should be split by separator and the resulting Strig array returned.
+             *
+             * Single: the string value from the editor should either be taken as is if it is not empty,
              * or converted to null due to the fact that there should be no empty string representing an entity key.
              */
             convertFromString: function (strValue) {
-                return strValue === '' ? null : strValue;
+            	if (this.multi === true) {
+            		if (strValue === '') {
+                        return []; // missing value for multi autocompliter is empty array []!
+                    } else {
+                        var arr = strValue.split(this.separator);
+                        return arr;
+                    }
+            	} else {
+                	return strValue === '' ? null : strValue;
+            	}
+            },
+            
+            _processSearcherResponse: function (e) {
+            	var self = this;
+                self.processResponse(e, "search", function (foundEntities) {
+                    self._onFound(foundEntities);
+                }, function (errorResult) {
+                    self.postSearchedDefaultError(errorResult);
+                    self.searching = false;
+                });
+            },
+            
+            _processSearcherError: function (e) {
+                this.searching = false;
+                this.$.result.close();
+                this.processError(e, "search");
             }
         });
     })();

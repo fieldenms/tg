@@ -15,14 +15,13 @@ public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidg
     private boolean shouldSearchByDescOnly = false;
 
     public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean selectionCriteriaWidget) {
-        super("editors/tg-singleline-text-editor" /* TODO was tg-entity-editor */, titleDesc, propertyName, null, selectionCriteriaWidget);
+        super("editors/tg-entity-editor", titleDesc, propertyName, null, selectionCriteriaWidget);
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
-        // attrs.put("hightlightDesc", Boolean.toString(shouldSearchByDesc));
-        attrs.put("asPartOfEntityMaster", true);
+        attrs.put("as-part-of-entity-master", true);
         attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
         return attrs;
     };
