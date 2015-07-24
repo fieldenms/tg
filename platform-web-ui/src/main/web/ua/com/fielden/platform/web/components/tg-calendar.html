@@ -84,8 +84,8 @@
     </style>
     <template>
         <tg-app-config id="appConfig"></tg-app-config>
-        <iron-media-query query="[[_calcMobileQuery()]]" query-matches="{{phoneScreen}}"></iron-media-query>
-        <div class$="[[_calcCalendarLayout(phoneScreen)]]">
+        <iron-media-query query="[[_calcMobileQuery()]]" query-matches="{{_phoneScreen}}"></iron-media-query>
+        <div class$="[[_calcCalendarLayout(_phoneScreen)]]">
             <div class="col layout vertical">
                 <div class="header day-name layout vertical center-center">[[dayName]]</div>
                 <div class="selected-date layout vertical center justified" style="padding: 10px;">
