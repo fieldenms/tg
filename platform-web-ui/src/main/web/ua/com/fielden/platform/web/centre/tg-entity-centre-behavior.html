@@ -85,13 +85,20 @@
             	//   populate their default values in ready callback (to have these values populated in children)!     //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	
+            	/**
+            	 * The property which indicates whether the centre has been changed (should be bound from tg-selection-criteria).
+            	 */
+            	_centreChanged: {
+            		type: Boolean
+            	},
+            	
             	_saverDisabled: {
             		type: Boolean,
-            		computed: '_computeSaverDisabled()' // TODO complete this property!
+            		computed: '_computeSaverDisabled(_centreChanged)'
             	},
             	_discarderDisabled: {
             		type: Boolean,
-            		computed: '_computeDiscarderDisabled()' // TODO complete this property!
+            		computed: '_computeDiscarderDisabled(_centreChanged)'
             	},
             	
             	_url: {
@@ -170,12 +177,12 @@
                 }
             },
             
-            _computeSaverDisabled: function () {
-            	return !this.canSave($.selection_criteria._isCentreChanged);
+            _computeSaverDisabled: function (_centreChanged) {
+            	return !this.canSave(_centreChanged);
             },
             
-            computeDiscarderDisabled: function () {
-            	return !this.canDiscard($.selection_criteria._isCentreChanged);
+            _computeDiscarderDisabled: function (_centreChanged) {
+            	return !this.canDiscard(_centreChanged);
             },
             
             /**
@@ -305,19 +312,19 @@
                 }).bind(self);
                 
                 self.save = (function () {
-                    if (!this.canSave(this.$.selection_criteria._isCentreChanged)) {
+                    if (!this.canSave(this._centreChanged)) {
                         throw "Cannot save the not modified centre.";
                     }
                     console.log("CENTRE SAVE");
-                    this.$.ajaxSaver.generateRequest();
+                    this._ajaxSaver().generateRequest();
                 }).bind(self);
                 
                 self.discard = (function () {
-                    if (!this.canDiscard(this.$.selection_criteria._isCentreChanged)) {
+                    if (!this.canDiscard(this._centreChanged)) {
                         throw "Cannot discard the not modified centre.";
                     }
                     console.log("CENTRE DISCARD");
-                    this.$.ajaxDiscarder.generateRequest();
+                    this._ajaxDiscarder().generateRequest();
                 }).bind(self);
                 
                 self.run = (function () {
@@ -457,16 +464,16 @@
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canCurrent(pageNumber, pageCount);
             },
 
-            canSave: function (isCentreChanged) {
-                return this.canManageCentreConfig(isCentreChanged);
+            canSave: function (centreChanged) {
+                return this.canManageCentreConfig(centreChanged);
             },
 
-            canDiscard: function (isCentreChanged) {
-                return this.canManageCentreConfig(isCentreChanged);
+            canDiscard: function (centreChanged) {
+                return this.canManageCentreConfig(centreChanged);
             },
 
-            canManageCentreConfig: function (isCentreChanged) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true;
+            canManageCentreConfig: function (centreChanged) {
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : centreChanged === true;
             },
 
         	/**

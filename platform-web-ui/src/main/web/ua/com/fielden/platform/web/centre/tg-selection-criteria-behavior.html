@@ -82,9 +82,10 @@
                 	value: 10
                 },
                 
-                _isCentreChanged: {
+                _centreChanged: {
                 	type: Boolean,
-                	value: false
+                	value: false,
+                	notify: true
                 },
                 
                 /**
@@ -168,12 +169,12 @@
                         var resultEntities = customObject.resultEntities || [];
                         var pageCount = customObject.pageCount || null;
                         var metaValues = customObject.metaValues;
-                        var isCentreChanged = customObject.isCentreChanged;
+                        var centreChanged = customObject.isCentreChanged;
                         var renderingHints = customObject.renderingHints || [];
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
                         var summary = customObject.summary;
 
-                        self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities, summary);
+                        self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary);
                 	}, function (errorResult) {
                 		self._postRunDefaultError(errorResult);
                 	});
@@ -184,9 +185,9 @@
                 };
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 
-                self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, isCentreChanged, renderingHints, isRefreshingConcreteEntities, summary) {
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary) {
 	                this._setPropertyModel(metaValues);
-	                this._isCentreChanged = isCentreChanged;
+	                this._centreChanged = centreChanged;
 
 	                var msg = this._toastMsg("Running", criteriaEntity);
 	                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
@@ -213,7 +214,7 @@
                 
                 self.postValidated = (function (validatedEntity, bindingEntity, customObject) {
                     this._setPropertyModel(customObject.metaValues);
-                    this._isCentreChanged = customObject.isCentreChanged;
+                    this._centreChanged = customObject.isCentreChanged;
 
                     console.log("postValidated", customObject);
                 }).bind(self);
@@ -226,7 +227,7 @@
             	Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
 
             	this._setPropertyModel(customObject.metaValues);
-                this._isCentreChanged = customObject.isCentreChanged;
+                this._centreChanged = customObject.isCentreChanged;
             },
 
             _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
