@@ -54,16 +54,16 @@
             margin: 0;
             padding: 0;
         }
-       /* paper-dialog > paper-dialog-scrollable {
+        paper-dialog > paper-dialog-scrollable {
             margin: 0;
             padding: 0;
-        }*/
-        /*paper-dialog-scrollable {
+        }
+        paper-dialog-scrollable {
             --divider-color: white;
             --paper-dialog-scrollable: {
                 padding: 0px;
             };
-        }*/
+        }
         paper-dialog {
             line-height: normal;
         }
@@ -75,10 +75,10 @@
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-change="[[_onChange]]" _on-keypress="[[_onKeypress]]">
             <paper-icon-button class="custom-icon-buttons picker-button" on-tap="showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
         </tg-editor>
-        <paper-dialog class="layout vertical" with-backdrop no-cancel-on-outside-click opened="[[_calendarVisible]]" entry-animation="scale-up-animation" exit-animation="fade-out-animation"><!--on-iron-overlay-opened="_fixDialog"-->
-<!--            <paper-dialog-scrollable>-->
+        <paper-dialog id="dateDialog" class="layout vertical" with-backdrop no-cancel-on-outside-click opened="{{_calendarVisible}}" entry-animation="scale-up-animation" exit-animation="fade-out-animation" auto-fit-on-attach on-iron-resize="_windowResized"><!--on-iron-overlay-opened="_fixDialog"-->
+            <paper-dialog-scrollable>
                 <tg-calendar id="datePicker" auto-vertical pick-time></tg-calendar>
-<!--            </paper-dialog-scrollable>-->
+            </paper-dialog-scrollable>
             <div class="buttons">
                 <paper-button dialog-dismiss affirmative on-tap="_cancelDate">Cancel</paper-button>
                 <paper-button dialog-confirm affirmative autofocus on-tap="_acceptDate">Ok</paper-button>
@@ -122,16 +122,6 @@
 
                 _calendarVisible: {
                     type: Boolean
-                }
-            },
-
-            /**
-             * Listens the dialog open event and fixes it's size.
-             */
-            _fixDialog: function (e, detail) {
-                var dialog = (typeof e.tagName != 'undefined') ? e : e.target;
-                if (dialog.tagName == 'PAPER-DIALOG') {
-                    dialog.fit();
                 }
             },
 
@@ -199,6 +189,22 @@
 
             _cancelDate: function () {
                 this.decoratedInput().focus();
+            },
+            
+            /**
+             * Listens the dialog open event and fixes it's size.
+             */
+            _fixDialog: function (e, detail) {
+                this.$.dateDialog.fit();
+            },
+            
+            /**
+             * Listens when the window was resized and fits the dialog.
+             */
+            _windowResized: function() {
+                if (this.$.dateDialog.opened) {
+                    this.$.dateDialog.fit();
+                }
             }
         });
     })();
