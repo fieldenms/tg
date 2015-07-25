@@ -105,6 +105,7 @@ public class DomainMetadata {
     private final Map<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataMap = new HashMap<Class<? extends AbstractEntity<?>>, EntityMetadata>();
     private Injector hibTypesInjector;
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
+    private final ExpressionExtractor expressionExtractor = new ExpressionExtractor();
 
     public DomainMetadata(final Map<Class, Class> hibTypesDefaults, final Injector hibTypesInjector, final List<Class<? extends AbstractEntity<?>>> entityTypes, final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
@@ -419,7 +420,7 @@ public class DomainMetadata {
     private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
         final CommonInfo commonInfo = determineCommonInfo(entityType, calculatedPropfield);
         final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(AnnotationReflector.getAnnotation(calculatedPropfield, Calculated.class).category());
-        final ExpressionModel expressionModel = dmeg.extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
+        final ExpressionModel expressionModel = expressionExtractor.extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
         final PropertyCategory propCat = commonInfo.hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : EXPRESSION;
         return new PropertyMetadata.Builder(commonInfo.propName, commonInfo.javaType, true).expression(expressionModel).hibType(commonInfo.hibernateType).type(propCat).aggregatedExpression(aggregatedExpression).build();
     }

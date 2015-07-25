@@ -11,14 +11,11 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionWith;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -60,34 +57,6 @@ public class DomainMetadataExpressionsGenerator {
         }
     }
 
-    public ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-        final Calculated calcAnnotation = AnnotationReflector.getAnnotation(calculatedPropfield, Calculated.class);
-        if (!"".equals(calcAnnotation.value())) {
-            return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
-        } else {
-            try {
-                final Field exprField = Finder.getFieldByName(entityType, calculatedPropfield.getName() + "_");
-                exprField.setAccessible(true);
-                return (ExpressionModel) exprField.get(null);
-            } catch (final Exception e) {
-                throw new IllegalStateException("Hard-coded expression model for prop [" + calculatedPropfield.getName() + "] is missing! ---" + e);
-            }
-        }
-    }
-
-    private ExpressionText2ModelConverter createExpressionText2ModelConverter(final Class<? extends AbstractEntity<?>> entityType, final Calculated calcAnnotation)
-            throws Exception {
-        if (AnnotationReflector.isContextual(calcAnnotation)) {
-            return new ExpressionText2ModelConverter(getRootType(calcAnnotation), calcAnnotation.contextPath(), calcAnnotation.value());
-        } else {
-            return new ExpressionText2ModelConverter(entityType, calcAnnotation.value());
-        }
-    }
-
-    public Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) throws ClassNotFoundException {
-        return (Class<? extends AbstractEntity<?>>) ClassLoader.getSystemClassLoader().loadClass(calcAnnotation.rootTypeName());
-    }
-
     private PrimitiveResultQueryModel getReferenceCountForSingleProp(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
         return select(entityType).where().prop(propName).eq().extProp("id").yield().countAll().modelAsPrimitive();
     }
@@ -106,5 +75,4 @@ public class DomainMetadataExpressionsGenerator {
         }
         return expressionModelInProgress.model();
     }
-
 }

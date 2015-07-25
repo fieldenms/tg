@@ -64,22 +64,22 @@ public class TransformatorToS2 {
         return new TransformatorToS2(metadata);
     }
 
-    public TransformatorToS2 produceOneForCalcPropExpression(final ISource2 source) {
-        final TransformatorToS2 result = produceNewOne();
-        for (final Map<ISource1<? extends ISource2>, SourceInfo> item : sourcesStack.getSourcesList()) {
-            for (final Entry<ISource1<? extends ISource2>, SourceInfo> mapItem : item.entrySet()) {
-                if (mapItem.getValue().getSource().equals(source)) {
-                    final Map<ISource1<? extends ISource2>, SourceInfo> newMap = new HashMap<>();
-                    newMap.put(mapItem.getKey(), mapItem.getValue().produceNewWithoutAliasing());
-                    result.sourcesStack.add(newMap);
-                    return result;
-                }
-            }
-
-        }
-
-        throw new IllegalStateException("Should not reach here!");
-    }
+//    public TransformatorToS2 produceOneForCalcPropExpression(final ISource2 source) {
+//        final TransformatorToS2 result = produceNewOne();
+//        for (final Map<ISource1<? extends ISource2>, SourceInfo> item : sourcesStack.getSourcesList()) {
+//            for (final Entry<ISource1<? extends ISource2>, SourceInfo> mapItem : item.entrySet()) {
+//                if (mapItem.getValue().getSource().equals(source)) {
+//                    final Map<ISource1<? extends ISource2>, SourceInfo> newMap = new HashMap<>();
+//                    newMap.put(mapItem.getKey(), mapItem.getValue().produceNewWithoutAliasing());
+//                    result.sourcesStack.add(newMap);
+//                    return result;
+//                }
+//            }
+//
+//        }
+//
+//        throw new IllegalStateException("Should not reach here!");
+//    }
 
     private ISource2 transformSource(final ISource1<? extends ISource2> originalSource) {
         if (originalSource instanceof TypeBasedSource1) {
@@ -128,7 +128,8 @@ public class TransformatorToS2 {
     private EntProp2 generateTransformedProp(final PropResolution resolution) {
         ResolutionPath resolutionPath = resolution.getResolution();
         final AbstractPropInfo propInfo = resolutionPath.getFinalMember();
-        final Expression2 expr = propInfo.getExpression() != null ? propInfo.getExpression().transform(this.produceOneForCalcPropExpression(resolution.getSource())) : null;
+        //final Expression2 expr = propInfo.getExpression() != null ? propInfo.getExpression().transform(this.produceOneForCalcPropExpression(resolution.getSource())) : null;
+        final Expression2 expr = propInfo.getExpression2();
         return new EntProp2(resolution.getEntProp().getName(), resolution.getSource(), resolutionPath, expr);
     }
 }

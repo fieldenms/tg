@@ -18,40 +18,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.dao.eql.DomainMetadataExpressionsGenerator;
+import ua.com.fielden.platform.dao.AbstractEntityMetadata;
+import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.dao.eql.EntityMetadata.EntityCategory;
+import ua.com.fielden.platform.dao.eql.ExpressionExtractor;
+import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.s1.elements.Expression1;
+import ua.com.fielden.platform.eql.s1.elements.TypeBasedSource1;
 import ua.com.fielden.platform.eql.s1.processing.EntQueryGenerator1;
 import ua.com.fielden.platform.eql.s1.processing.StandAloneExpressionBuilder1;
+import ua.com.fielden.platform.eql.s2.elements.Expression2;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class MetadataGenerator {
-//    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
-//    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
-//
-//    static {
-//        hibTypeDefaults.put(Date.class, DateTimeType.class);
-//        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-//    }
-//
-//    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
-//
-//    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
-//
-    protected final EntQueryGenerator1 qb;// = new EntQueryGenerator1(null); //DOMAIN_METADATA_ANALYSER
-//    
-    private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
-
+    protected final EntQueryGenerator1 qb;
+    private final ExpressionExtractor expressionExtractor = new ExpressionExtractor();
     
     public MetadataGenerator(final EntQueryGenerator1 qb) {
         this.qb = qb;
@@ -68,7 +60,29 @@ public class MetadataGenerator {
             addProps(entityInfo, result);
         }
 
+        for (final EntityInfo entityInfo : result.values()) {
+            resolveCalculatedProps(entityInfo, result);
+        }
+
         return result;
+    }
+
+    private void resolveCalculatedProps(EntityInfo entityInfo, Map<Class<? extends AbstractEntity<?>>, EntityInfo> result) {
+        TransformatorToS2 calcPropsResolver = new TransformatorToS2(result);
+        final AbstractEntityMetadata entityMetadata = new PersistedEntityMetadata<AbstractEntity<?>>("no-table", entityInfo.javaType(), new TreeMap<String, PropertyMetadata>()); 
+                //qb.getDomainMetadataAnalyser().getEntityMetadata(entityInfo.javaType());
+        if (entityMetadata instanceof PersistedEntityMetadata) {
+            calcPropsResolver.transformAndAccumulateSource(new TypeBasedSource1((PersistedEntityMetadata) entityMetadata, null));
+        }
+        
+        for (AbstractPropInfo propInfo : entityInfo.getProps().values()) {
+            if (propInfo.getExpression() != null) {
+                System.out.println("Resolving prop " + entityInfo.javaType().getSimpleName() + "." + propInfo.getName());    
+            }
+            
+            final Expression2 expr = propInfo.getExpression() != null ? propInfo.getExpression().transform(calcPropsResolver) : null;
+            propInfo.setExpression2(expr);
+        }
     }
 
     private <ET extends AbstractEntity<?>> EntityCategory determineCategory(final Class<ET> entityType) {
@@ -98,6 +112,7 @@ public class MetadataGenerator {
         final MapEntityTo mapEntityToAnnotation = AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
 
         final String providedTableName = mapEntityToAnnotation.value();
+        
         if (!StringUtils.isEmpty(providedTableName)) {
             return providedTableName;
         } else {
@@ -112,7 +127,6 @@ public class MetadataGenerator {
     private Expression1 entQryExpression(final ExpressionModel exprModel) {
         return (Expression1) new StandAloneExpressionBuilder1(qb, exprModel).getResult().getValue();
     }
-
     
     private PrimTypePropInfo generateIdPropertyMetadata(final Class<? extends AbstractEntity<?>> entityType, final EntityInfo entityInfo) {
         switch (entityInfo.getCategory()) {
@@ -133,13 +147,14 @@ public class MetadataGenerator {
     
     private Expression1 getExpression(final Class<? extends AbstractEntity<?>> entityType, final Field field) throws Exception {
         if (AnnotationReflector.isAnnotationPresent(field, Calculated.class)) {
-            return entQryExpression(dmeg.extractExpressionModelFromCalculatedProperty(entityType, field));
+            return entQryExpression(expressionExtractor.extractExpressionModelFromCalculatedProperty(entityType, field));
         }
         return null;
     }
     
     private void addProps(final EntityInfo entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo> allEntitiesInfo) throws Exception {
         final PrimTypePropInfo idProp = generateIdPropertyMetadata(entityInfo.javaType(), entityInfo);
+
         if (idProp != null) {
             entityInfo.getProps().put(idProp.getName(), idProp);
         }
@@ -152,21 +167,6 @@ public class MetadataGenerator {
             } else {
                 entityInfo.getProps().put(field.getName(), new PrimTypePropInfo(field.getName(), entityInfo, javaType/*field.getType()*/, getExpression(entityInfo.javaType(), field)));
             }
-            //	    if (!result.containsKey(field.getName())) {
-            //		if (Collection.class.isAssignableFrom(field.getType()) && Finder.hasLinkProperty(entityType, field.getName())) {
-            //		    safeMapAdd(result, getCollectionalPropInfo(entityType, field));
-            //		} else if (field.isAnnotationPresent(Calculated.class)) {
-            //		    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
-            //		} else if (field.isAnnotationPresent(MapTo.class)) {
-            //		    safeMapAdd(result, getCommonPropHibInfo(entityType, field));
-            //		} else if (Finder.isOne2One_association(entityType, field.getName())) {
-            //		    safeMapAdd(result, getOneToOnePropInfo(entityType, field));
-            //		} else if (!field.isAnnotationPresent(CritOnly.class)) {
-            //		    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
-            //		} else {
-            //		    //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
-            //		}
-            //	    }
         }
     }
 }

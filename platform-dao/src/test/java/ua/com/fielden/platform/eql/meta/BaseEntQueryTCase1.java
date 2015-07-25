@@ -31,6 +31,15 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.eql.entities.TgtDivision;
+import ua.com.fielden.platform.eql.entities.TgtFuelUsage;
+import ua.com.fielden.platform.eql.entities.TgtSector;
+import ua.com.fielden.platform.eql.entities.TgtStation;
+import ua.com.fielden.platform.eql.entities.TgtVehicle;
+import ua.com.fielden.platform.eql.entities.TgtVehicleMake;
+import ua.com.fielden.platform.eql.entities.TgtVehicleModel;
+import ua.com.fielden.platform.eql.entities.TgtWorkOrder;
+import ua.com.fielden.platform.eql.entities.TgtZone;
 import ua.com.fielden.platform.eql.s1.elements.EntParam1;
 import ua.com.fielden.platform.eql.s1.elements.EntProp1;
 import ua.com.fielden.platform.eql.s1.elements.EntQuery1;
@@ -46,39 +55,22 @@ import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test.PlatformTestDomainTypes2;
 import ua.com.fielden.platform.types.Money;
 
 import com.google.inject.Guice;
 
 public class BaseEntQueryTCase1 {
-    protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
-    protected static final Class<TgVehicle> VEHICLE = TgVehicle.class;
-    protected static final Class<TgVehicleFinDetails> VEHICLE_FIN_DETAILS = TgVehicleFinDetails.class;
-    protected static final Class<TgVehicleModel> MODEL = TgVehicleModel.class;
-    protected static final Class<TgVehicleMake> MAKE = TgVehicleMake.class;
-    protected static final Class<TgFuelUsage> FUEL_USAGE = TgFuelUsage.class;
-    protected static final Class<TgOrgUnit5> ORG5 = TgOrgUnit5.class;
-    protected static final Class<TgOrgUnit4> ORG4 = TgOrgUnit4.class;
-    protected static final Class<TgOrgUnit3> ORG3 = TgOrgUnit3.class;
-    protected static final Class<TgOrgUnit2> ORG2 = TgOrgUnit2.class;
-    protected static final Class<TgOrgUnit1> ORG1 = TgOrgUnit1.class;
-    protected static final Class<TgWagonSlot> WAGON_SLOT = TgWagonSlot.class;
-    protected static final Class<TgWorkshop> WORKSHOP = TgWorkshop.class;
+    protected static final Class<TgtVehicle> VEHICLE = TgtVehicle.class;
+    protected static final Class<TgtWorkOrder> WORK_ORDER = TgtWorkOrder.class;
+    protected static final Class<TgtVehicleModel> MODEL = TgtVehicleModel.class;
+    protected static final Class<TgtVehicleMake> MAKE = TgtVehicleMake.class;
+    protected static final Class<TgtFuelUsage> FUEL_USAGE = TgtFuelUsage.class;
+    protected static final Class<TgtStation> ORG4 = TgtStation.class;
+    protected static final Class<TgtZone> ORG3 = TgtZone.class;
+    protected static final Class<TgtSector> ORG2 = TgtSector.class;
+    protected static final Class<TgtDivision> ORG1 = TgtDivision.class;
     protected static final Class<String> STRING = String.class;
     protected static final Class<Date> DATE = Date.class;
     protected static final Class<Long> LONG = Long.class;
@@ -99,7 +91,7 @@ public class BaseEntQueryTCase1 {
         return typeResolver.basic(name);
     }
 
-    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
+    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes2.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
@@ -109,7 +101,7 @@ public class BaseEntQueryTCase1 {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
         try {
-            metadata.putAll((new MetadataGenerator(qb)).generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
+            metadata.putAll((new MetadataGenerator(qb)).generate(new HashSet<>(PlatformTestDomainTypes2.entityTypes)));
         } catch (final Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

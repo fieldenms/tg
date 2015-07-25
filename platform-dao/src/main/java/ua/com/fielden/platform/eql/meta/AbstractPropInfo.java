@@ -1,11 +1,21 @@
 package ua.com.fielden.platform.eql.meta;
 
 import ua.com.fielden.platform.eql.s1.elements.Expression1;
+import ua.com.fielden.platform.eql.s2.elements.Expression2;
 
 public abstract class AbstractPropInfo implements IResolvable {
     private final String name;
     private final EntityInfo parent;
     private final Expression1 expression;
+    private Expression2 expression2;
+
+    public Expression2 getExpression2() {
+        return expression2;
+    }
+
+    public void setExpression2(Expression2 expression2) {
+        this.expression2 = expression2;
+    }
 
     @Override
     public String toString() {
