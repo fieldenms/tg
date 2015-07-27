@@ -176,13 +176,17 @@ Custom property | Description | Default
       show: function() {
         this.$.tooltip.hidden = false;
         this._setPosition();
-        this._showing = true;
 
+        var self = this;
+        this.cancelAnimation();
+        this._showing = true;
         this.playAnimation('entry');
       },
 
       hide: function() {
+        var self = this;
         this._showing = false;
+        this.cancelAnimation();
         this.playAnimation('exit');
       },
 
@@ -199,7 +203,7 @@ Custom property | Description | Default
       },
 
       _onAnimationFinish: function() {
-        if (!this._showing) {
+        if (this._showing === false) {
           this.$.tooltip.hidden = true;
         }
       },
