@@ -83,8 +83,8 @@
     <template>
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
-            <template is="dom-repeat" items="[[values]]" as="v" index-as="item_index_no">
-                <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value$="[[v.key]]" noink>
+            <template is="dom-repeat" items="[[values]]" index-as="item_index_no">
+                <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value$="[[_paperItemValue(item_index_no)]]" noink>
                 </paper-item>
             </template>
             <!-- end of dom-repeat -->
@@ -148,6 +148,15 @@
                 	this.$.selector.selected = '';
                 }
             },
+
+            /**
+             * A helper function to get entity's key by its position in array values.
+             * For some reasion dom-repeate did not play well with both item and index...
+             */
+            _paperItemValue: function(index) {
+                console.log('get Key for ', index, ' is ', this.values[index]);
+                return this.values[index].key;
+              },
 
             /* 
              * Method that identifies matching parts in the str for the searchQuery.
@@ -311,21 +320,21 @@
 			 *********************************************************/
 			_itemSelected : function(event) {
 				var value = event.detail.item.getAttribute("value");
-				
+				console.log(value);
 				this.selectedValues[value] = _.find(this.values, function (obj) {
                     return obj.key === value;
                 });
 				
 				
-				console.log('selected item: ', value, ' size:', this.selectedValues.length);
+				console.log('selected item: ', value, ' size:', Object.keys(this.selectedValues).length);
 			},
 
 			_itemDeselected : function(event) {
 				var value = event.detail.item.getAttribute("value");
-
+				console.log(value);
 				delete this.selectedValues[value];
 
-				console.log('unselected item: ', value, ' size:', this.selectedValues.length);
+				console.log('unselected item: ', value, ' size:', Object.keys(this.selectedValues).length);
 			}
 
 		});
