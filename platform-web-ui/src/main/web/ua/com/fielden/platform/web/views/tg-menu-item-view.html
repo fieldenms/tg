@@ -45,10 +45,11 @@
             },
 
             attached: function () {
-            	this.async(function() {
-            		if (this.menuItem && this.menuItem.view) {
-                        this.menuItem.view.attrs.uuid = this.uuid;
-                        this.menuItem.view.attrs.moduleId = this.moduleId;
+            	var self = this;
+            	self.async(function() {
+            		if (self.menuItem && self.menuItem.view) {
+            			self.menuItem.view.attrs.uuid = self.uuid;
+            			self.menuItem.view.attrs.moduleId = self.moduleId;
                     }
             	}, 1);
             },
