@@ -44,11 +44,13 @@
                 "class": "layout vertical"
             },
 
-            ready: function () {
-                if (this.menuItem && this.menuItem.view) {
-                    this.menuItem.view.attrs.uuid = this.uuid;
-                    this.menuItem.view.attrs.moduleId = this.moduleId;
-                }
+            attached: function () {
+            	this.async(function() {
+            		if (this.menuItem && this.menuItem.view) {
+                        this.menuItem.view.attrs.uuid = this.uuid;
+                        this.menuItem.view.attrs.moduleId = this.moduleId;
+                    }
+            	}, 1);
             },
             
             _getMenuItemAttributes: function() {
