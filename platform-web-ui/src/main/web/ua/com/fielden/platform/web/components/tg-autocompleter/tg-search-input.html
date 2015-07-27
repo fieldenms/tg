@@ -9,6 +9,7 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-tooltip/paper-tooltip.html">
 
 <link rel="import" href="/resources/components/tg-autocompleter/tg-search-result.html">
 
@@ -47,6 +48,19 @@
             --paper-spinner-layer-3-color: var(--paper-blue-500);
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
+
+        paper-tooltip.custom img {
+            width: 40px;
+            padding-right: 10px;
+            padding-bottom: 10px;
+            float: left;
+        }
+
+        .custom {
+            --paper-tooltip-background: black;
+            --paper-tooltip-text-color: var(--paper-pink-100);
+            width: 160px;
+        }
     </style>
 
     <template>
@@ -59,6 +73,10 @@
                     <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button" tabIndex="-1"></paper-icon-button>
                     <paper-spinner active hidden$="[[!searching]]" tabIndex="-1" alt="searching..."></paper-spinner>
                 </div>
+                        <paper-tooltip for="input" class="custom">
+          <b>Description</b> with HTML.
+        </paper-tooltip>
+                
             </paper-input-container>
         </div>
         <tg-search-result id="result" on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed"></tg-search-result>
