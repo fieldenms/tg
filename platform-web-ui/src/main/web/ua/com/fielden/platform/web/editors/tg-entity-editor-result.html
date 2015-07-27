@@ -84,7 +84,7 @@
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[values]]" as="v" index-as="item_index_no">
-                <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value$="[[v]]" noink>
+                <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value$="[[v.key]]" noink>
                 </paper-item>
             </template>
             <!-- end of dom-repeat -->
@@ -106,7 +106,7 @@
                 	value: false
                 },
 
-                /* Contains values to be displayed */
+                /* An array of entities that match the search request */
                 values: {
                     type: Array,
                     value: function () {
@@ -114,14 +114,13 @@
                     }
                 },
                 
-                /* Contains only selected valueі. 
-                 * Can be empty. Should contain at most one element in case of single selection mode.
-                 * The selected values are JSON string representations of the actual values that need to be parsed before using.
+                /* Contains selected entities in a form of key:entity pairs. 
+                 * Can be empty. Should contain at most one entity in case of single selection mode.
                  */
                 selectedValues: {
-                    type: Array,
+                    type: Object,
                     value: function () {
-                        return [];
+                        return {};
                     }
                 },
                 
@@ -142,7 +141,7 @@
             },
 
             clearSelection: function () {
-            	this.selectedValues.length = 0;
+            	this.selectedValues = {};
                 if (this.multi) {
                 	this.$.selector.selectedValues = [];
                 } else {
@@ -313,7 +312,10 @@
 			_itemSelected : function(event) {
 				var value = event.detail.item.getAttribute("value");
 				
-				this.selectedValues.push(value);
+				this.selectedValues[value] = _.find(this.values, function (obj) {
+                    return obj.key === value;
+                });
+				
 				
 				console.log('selected item: ', value, ' size:', this.selectedValues.length);
 			},
@@ -321,7 +323,7 @@
 			_itemDeselected : function(event) {
 				var value = event.detail.item.getAttribute("value");
 
-				_.pull(this.selectedValues, value);
+				delete this.selectedValues[value];
 
 				console.log('unselected item: ', value, ' size:', this.selectedValues.length);
 			}

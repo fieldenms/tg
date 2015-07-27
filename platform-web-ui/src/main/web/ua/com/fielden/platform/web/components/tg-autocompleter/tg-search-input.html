@@ -332,26 +332,24 @@
             _done: function() {
             	var input = this.$.input;
             	var result = this.$.result;
-            	var hasValuesToProcess = result.selectedValues.length > 0;
+                var hasValuesToProcess = Object.keys(result.selectedValues).length > 0;
             	// should close automatcially, but just in case let's make sure the result overlay gets closed
             	result.close();
             	
             	// TODO implemente value accpetance logic...
             	if (hasValuesToProcess) {
-            		// if this is a single selection config then need to assign it to the input field
+            	    // compose a string value, which would be a comma separated string in case of multi
+                    var selectedValuesAsStr = _.map(result.selectedValues, function (obj) {
+                        console.log(obj.key);
+                        return obj.key;
+                    }).join(this.separator);
+            		
             		if(!this.multi) {
-            			var obj = JSON.parse(result.selectedValues[0]);
-            			input.value = obj.key;
-            		} else { 
-            			// in case of multi selection config things get a little more interesting
-            			// as we need to compose a collective string value out of the selected items and 
-            			// insert then in the right positin of an existing text in the input field
-                        var selectedValuesAsStr = _.map(result.selectedValues, function (str) {
-                        	var obj = JSON.parse(str);
-                            return obj.key;
-                        }).toString();
-
-                        
+                        // if this is a single selection config then need to simply assign the value to the input field
+                        input.value = selectedValuesAsStr;
+            		} else {
+                        // in case of multi selection config things get a little more interesting
+                        // as we need to insert the value into the right position of an existing text in the input field
                         var before = input.value.substring(0, this._replaceFromIndex + 1);
                         var after = input.value.substr(this._replaceToIndex);
                         var newEditingValue = before + selectedValuesAsStr + after;
