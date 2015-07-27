@@ -21,6 +21,7 @@
 <link rel="import" href="/resources/editors/tg-editor.html">
 
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
@@ -62,22 +63,24 @@
             --divider-color: white;
             --paper-dialog-scrollable: {
                 padding: 0px;
-            };
+            }
+            ;
         }
         paper-dialog {
             line-height: normal;
         }
-            margin: 0px;
-        }
+        margin:0px;
+    }
     </style>
 
     <template>
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-change="[[_onChange]]" _on-keypress="[[_onKeypress]]">
             <paper-icon-button class="custom-icon-buttons picker-button" on-tap="showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
         </tg-editor>
-        <paper-dialog id="dateDialog" class="layout vertical" with-backdrop no-cancel-on-outside-click opened="{{_calendarVisible}}" entry-animation="scale-up-animation" exit-animation="fade-out-animation" auto-fit-on-attach on-iron-resize="_windowResized"><!--on-iron-overlay-opened="_fixDialog"-->
+        <paper-dialog id="dateDialog" class="layout vertical" with-backdrop no-cancel-on-outside-click opened="{{_calendarVisible}}" entry-animation="scale-up-animation" exit-animation="fade-out-animation" auto-fit-on-attach>
+            <!--on-iron-overlay-opened="_fixDialog"-->
             <paper-dialog-scrollable>
-                <tg-calendar id="datePicker" auto-vertical pick-time></tg-calendar>
+                <tg-calendar id="datePicker" pick-time></tg-calendar>
             </paper-dialog-scrollable>
             <div class="buttons">
                 <paper-button dialog-dismiss affirmative on-tap="_cancelDate">Cancel</paper-button>
@@ -91,11 +94,20 @@
     (function () {
         Polymer({
             is: 'tg-datetime-picker',
-            behaviors: [Polymer.TgBehaviors.TgEditorBehavior],
+            behaviors: [Polymer.TgBehaviors.TgEditorBehavior, Polymer.IronResizableBehavior],
 
             ready: function () {
                 this._calendarVisible = false;
                 this.$.editorDom._editorKind = "DATE";
+                this._boundResizer = this._windowResized.bind(this);
+            },
+
+            attached: function () {
+                window.addEventListener('resize', this._boundResizer);
+            },
+
+            detached: function () {
+                window.removeEventListener('resize', this._boundResizer);
             },
 
             properties: {
@@ -123,6 +135,10 @@
                 _calendarVisible: {
                     type: Boolean
                 }
+            },
+
+            listeners: {
+                'iron-resize': '_fixDialog'
             },
 
             /**
@@ -190,19 +206,21 @@
             _cancelDate: function () {
                 this.decoratedInput().focus();
             },
-            
+
             /**
-             * Listens the dialog open event and fixes it's size.
+             * listener for resize event of dialog
              */
-            _fixDialog: function (e, detail) {
-                this.$.dateDialog.fit();
+            _fixDialog: function () {
+                if (this.$.dateDialog.opened) {
+                    this.$.dateDialog.fit();
+                }
             },
-            
+
             /**
              * Listens when the window was resized and fits the dialog.
              */
-            _windowResized: function() {
-                if (this.$.dateDialog.opened) {
+            _windowResized: function () {
+                if (this.$.dateDialog.opened && this._parentResizable) {
                     this.$.dateDialog.fit();
                 }
             }
