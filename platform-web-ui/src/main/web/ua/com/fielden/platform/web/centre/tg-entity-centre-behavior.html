@@ -142,6 +142,13 @@
                 },
                 
                 /**
+                 * The action to be invoked on EGI's 'delete' button.
+                 */
+                _deleteAction: {
+                	type: Function
+                },
+                
+                /**
                  * The action to be bound to 'tg-primary-instance-action'.
                  */
                 _showMaster: {
@@ -275,6 +282,10 @@
                     });
                 }).bind(self);
                 
+                self._deleteAction = (function () {
+                    console.log("The selected entities must be deleted here!");
+                }).bind(self);
+                
                 self._showMaster = (function (entity) {
                     var self = this;
                     postal.publish({
@@ -376,10 +387,6 @@
                 this.masterNewListener.unsubscribe();
             },
 
-            deleteAction: function () {
-                console.log("The selected entities must be deleted here!");
-            },
-            
             /**
              * Returns simple entity type name.
              */
