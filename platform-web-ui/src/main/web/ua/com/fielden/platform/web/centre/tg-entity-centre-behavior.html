@@ -107,16 +107,9 @@
              	},
             	
             	/**
-            	 * TODO provide documentation
+            	 * The currently selected view.
             	 */
                 _selectedView: {
-                	type: Number
-                },
-                
-            	/**
-            	 * TODO provide documentation
-            	 */
-                _selectedPage: {
                 	type: Number
                 },
                 
@@ -152,13 +145,6 @@
                  * The action to be bound to 'tg-primary-instance-action'.
                  */
                 _showMaster: {
-                	type: Function
-                },
-                
-                /**
-                 * The function which selects page ('Selection Criteria' or 'Details') after ripple effect on button clicking has been finished.
-                 */
-                _selectPage: {
                 	type: Function
                 },
                 
@@ -199,7 +185,6 @@
                 var self = this;
                 
                 self._selectedView = 0;
-                self._selectedPage = 0;
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
@@ -215,7 +200,6 @@
                             if (this._triggerRun && this._selectedView === 0) {
                                 this.async(function () {
                                     this._selectedView = 1;
-                                    this._selectedPage = 1;
                                 }, null, 100);
                                 this._triggerRun = false;
                             }
@@ -315,10 +299,6 @@
                 
                 self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
                     return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
-                }).bind(self);
-                
-                self._selectPage = (function (e, detail, source) {
-                    this._selectedPage = this._selectedView;
                 }).bind(self);
                 
                 self.save = (function () {
