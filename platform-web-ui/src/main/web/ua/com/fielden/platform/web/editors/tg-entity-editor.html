@@ -131,6 +131,9 @@
                 	value: null
                 },
                 
+                /**
+                 * Property that indicated whether the result overlay is open or closed.
+                 */
                 opened: {
                 	type: Boolean,
                 	value: false
@@ -388,9 +391,11 @@
                 if (this._searchQuery /*&& this.hasFocus === true*/ ) {
                     this.searching = true;
 
-                    /* self.async((function () {
+                    self.async((function () {
+                        // close the result overlay, but prevent on-change firing
+                        self.opened = false;
                         result.close();
-                    }).bind(self), 1); */
+                    }).bind(self), 1);
 
                     // prepare the AJAX request based on the raw search string
                     var serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
@@ -410,20 +415,19 @@
 
                 result.clearSelection();
                 self.searching = false;
-                result.values = [];
-            	
+                
                 for (var index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
                     // This includes correct conversion of simple and composite entities
                     var key = this.reflector().convert(entities[index]);
                     entities[index].key = key;
-                    result.values.push(entities[index]);
+                    result.pushValue(entities[index]);
                 }
                 
-                self.async(function () {
-                	this.async(this.notifyResize, 1);
+                if (entities.length > 0) {
+                    this.async(this.notifyResize, 1);
                     result.open();
-                });
+                }
             },
             
             /**
@@ -466,6 +470,8 @@
             },
             
             _resultClosed: function(e) {
+                // property this.opened controls whether overlay on-close event should 
+                // perfrom on-change event handler that does all the validation megic
             	if (this.opened === true) {
             		this.opened = false;
             		this._onChange();
@@ -656,6 +662,7 @@
             
             _processSearcherError: function (e) {
                 this.searching = false;
+                this.opened = true;
                 this.$.result.close();
                 this.processError(e, "search");
             }

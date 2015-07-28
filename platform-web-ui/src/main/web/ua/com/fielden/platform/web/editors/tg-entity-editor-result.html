@@ -83,8 +83,8 @@
     <template>
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
-            <template is="dom-repeat" items="[[values]]" index-as="item_index_no">
-                <paper-item id$="[[_makeId(item_index_no)]]" class="tg-item vertical-layout" value$="[[_paperItemValue(item_index_no)]]" noink>
+            <template is="dom-repeat" items="[[_values]]" as="v">
+                <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" noink class="tg-item vertical-layout">
                 </paper-item>
             </template>
             <!-- end of dom-repeat -->
@@ -106,8 +106,9 @@
                 	value: false
                 },
 
-                /* An array of entities that match the search request */
-                values: {
+                /* An array of entities that match the search request.
+                 * Should NOT be manipulated directly -- only via methods pushValue and clearSelection.*/
+                _values: {
                     type: Array,
                     value: function () {
                         return [];
@@ -142,22 +143,20 @@
 
             clearSelection: function () {
             	this.selectedValues = {};
+            	while(this.pop('_values')){}
+            	
                 if (this.multi) {
-                	this.$.selector.selectedValues = [];
+                    while(this.pop('$.selector.selectedValues')){}
                 } else {
                 	this.$.selector.selected = '';
                 }
             },
 
-            /**
-             * A helper function to get entity's key by its position in array values.
-             * For some reasion dom-repeate did not play well with both item and index...
-             */
-            _paperItemValue: function(index) {
-                console.log('get Key for ', index, ' is ', this.values[index]);
-                return this.values[index].key;
-              },
-
+            /* Pushes the specified value into the tail of attay _values */
+            pushValue: function(value) {
+                this.push('_values', value);
+            },
+            
             /* 
              * Method that identifies matching parts in the str for the searchQuery.
              * Returns an array of objects representing matched and non-matched parts of the str in sequential order.
@@ -241,9 +240,9 @@
              * Handles all properties that were specified as to be highlighted. */
             highlightMatchedParts: function () {
 				this.async(function() {
-					for (var index = 0; index < this.values.length; index++) {
+					for (var index = 0; index < this._values.length; index++) {
 						var html = '';                	
-						var v = this.values[index];
+						var v = this._values[index];
 						
 						// add key value with highlighting of matching parts
 						html = html + this._addHighlightedKeyProp(v)
@@ -321,7 +320,7 @@
 			_itemSelected : function(event) {
 				var value = event.detail.item.getAttribute("value");
 				console.log(value);
-				this.selectedValues[value] = _.find(this.values, function (obj) {
+				this.selectedValues[value] = _.find(this._values, function (obj) {
                     return obj.key === value;
                 });
 				
