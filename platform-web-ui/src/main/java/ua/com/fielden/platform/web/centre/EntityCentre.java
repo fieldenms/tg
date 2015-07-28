@@ -15,7 +15,6 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
-import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -592,35 +591,35 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
         final Optional<ListMultimap<String, SummaryPropDef>> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
-        if (resultProps.isPresent()) {
-            final int actionIndex = 0;
-            for (final ResultSetProp resultProp : resultProps.get()) {
-                //                if (!resultProp.propName.isPresent()) {
-                //                    throw new IllegalStateException("The result property must have a name");
-                //                }
-
-                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
-
-                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
-                final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
-                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
-
-                final Optional<FunctionalActionElement> action;
-// TODO uncomment               if (resultProp.propAction.isPresent()) {
+//        if (resultProps.isPresent()) {
+//            int actionIndex = 0;
+//            for (final ResultSetProp resultProp : resultProps.get()) {
+//                if (!resultProp.propName.isPresent()) {
+//                    throw new IllegalStateException("The result property must have a name");
+//                }
+//
+//                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
+//
+//                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
+//                final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
+//                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
+//
+//                final Optional<FunctionalActionElement> action;
+//               if (resultProp.propAction.isPresent()) {
 //                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, resultPropName));
 //                    actionIndex += 1;
 //                } else {
-                    action = Optional.empty();
+//                    action = Optional.empty();
 //                }
-
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
-                if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
-                    final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
-                    summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
-                }
-                propertyColumns.add(el);
-            }
-        }
+//
+//                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+//                if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
+//                    final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
+//                    summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
+//                }
+//                propertyColumns.add(el);
+//            }
+//        }
 
         logger.debug("Initiating prop actions...");
 
@@ -639,40 +638,37 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         });
 
         logger.debug("Initiating top-level actions...");
-        // final List<FunctionalActionElement> functionalActions = new ArrayList<>();
+        final List<FunctionalActionElement> functionalActions = new ArrayList<>();
         final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
 
         final List<List<FunctionalActionElement>> actionGroups = new ArrayList<>();
-        if (topLevelActions.isPresent()) {
-
-            final String currentGroup = null;
-            for (int i = 0; i < topLevelActions.get().size(); i++) {
-                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
-                final String cg = getGroup(topLevelAction.getValue());
-                if (!EntityUtils.equalsEx(cg, currentGroup)) {
-                    actionGroups.add(new ArrayList<>());
-                }
-                addToLastGroup(actionGroups, topLevelAction.getKey(), i);
-
-                // final FunctionalActionElement el = new FunctionalActionElement(topLevelAction.getKey(), i);
-                // functionalActions.add(el);
-            }
-        }
+//        if (topLevelActions.isPresent()) {
+//
+//            final String currentGroup = null;
+//            for (int i = 0; i < topLevelActions.get().size(); i++) {
+//                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
+//                final String cg = getGroup(topLevelAction.getValue());
+//                if (!EntityUtils.equalsEx(cg, currentGroup)) {
+//                    actionGroups.add(new ArrayList<>());
+//                }
+//                addToLastGroup(actionGroups, topLevelAction.getKey(), i);
+//            }
+//        }
 
         logger.debug("Initiating functional actions...");
         final StringBuilder functionalActionsObjects = new StringBuilder();
 
         final DomContainer functionalActionsDom = new DomContainer();
 
-        for (final List<FunctionalActionElement> group : actionGroups) {
-            final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
-            for (final FunctionalActionElement el : group) {
-             // TODO importPaths.add(el.importPath());
-                groupElement.add(el.render());
-                functionalActionsObjects.append(prefix + createActionObject(el));
-            }
-            functionalActionsDom.add(groupElement);
-        }
+//        for (final List<FunctionalActionElement> group : actionGroups) {
+//            final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
+//            for (final FunctionalActionElement el : group) {
+//                importPaths.add(el.importPath());
+//                groupElement.add(el.render());
+//                functionalActionsObjects.append(prefix + createActionObject(el));
+//            }
+//            functionalActionsDom.add(groupElement);
+//        }
 
         logger.debug("Initiating primary actions...");
         //////////////////// Primary result-set action ////////////////////
@@ -680,33 +676,33 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer primaryActionDom = new DomContainer();
         final StringBuilder primaryActionObject = new StringBuilder();
 
-        if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
-            final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
-
-         // TODO importPaths.add(el.importPath());
-            primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
-            primaryActionObject.append(prefix + createActionObject(el));
-        }
+//        if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
+//            final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
+//
+//            importPaths.add(el.importPath());
+//            primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
+//            primaryActionObject.append(prefix + createActionObject(el));
+//        }
 
         //////////////////// Primary result-set action [END] //////////////
         logger.debug("Initiating secondary actions...");
 
         final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
-        final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
-        if (resultSetSecondaryEntityActions.isPresent()) {
-            for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
-                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
-                secondaryActionElements.add(el);
-            }
-        }
-
+//        final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
+//        if (resultSetSecondaryEntityActions.isPresent()) {
+//            for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
+//                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
+//                secondaryActionElements.add(el);
+//            }
+//        }
+//
         final DomContainer secondaryActionsDom = new DomContainer();
         final StringBuilder secondaryActionsObjects = new StringBuilder();
-        for (final FunctionalActionElement el : secondaryActionElements) {
-         // TODO importPaths.add(el.importPath());
-            secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
-            secondaryActionsObjects.append(prefix + createActionObject(el));
-        }
+//        for (final FunctionalActionElement el : secondaryActionElements) {
+//            importPaths.add(el.importPath());
+//            secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
+//            secondaryActionsObjects.append(prefix + createActionObject(el));
+//        }
 
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();

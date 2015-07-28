@@ -505,6 +505,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         try {
             return representationCreator.get();
         } catch (final Exception undesiredEx) {
+            logger.error(undesiredEx.getMessage(), undesiredEx);
             return restUtil.errorJSONRepresentation(undesiredEx);
         }
     }

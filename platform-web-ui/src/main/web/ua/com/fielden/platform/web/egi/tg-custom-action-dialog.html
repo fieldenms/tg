@@ -51,14 +51,14 @@
             _afterMasterLoad: function (e, detail, soource) {
                 if (this.currentRunningAction) {
                     this.currentRunningAction._onExecuted(e, detail, source);
-                    if (this.currentRunningAction.masterComponent.noUI === true) {
+                    if (this.currentRunningAction._masterComponent.noUI === true) {
                         this.currentRunningAction = null;
                     }
                 }
             },
 
             _showMaster: function (e) {
-                if (this.currentRunningAction && this.currentRunningAction.masterComponent.noUI === false) {
+                if (this.currentRunningAction && this.currentRunningAction._masterComponent.noUI === false) {
                     this.$.entityMaster.open();
                 }
             },
