@@ -136,6 +136,13 @@
             	type: String
             },
             
+            /**
+             * Shows the dialog relative to this 'tg-ui-action'.
+             */
+            showDialog: {
+            	type: Function
+            },
+            
             ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
 			/**
 			 * The 'currentEntity' should contain the entity that was clicked (result-set actions)
@@ -201,10 +208,10 @@
 
                 if (this.preAction) {
                     if (this.preAction()) { // returns 'true' in case whether the action should proceed
-                        this.fire('load-dialog-view', this);
+                        this.showDialog(this);
                     }
                 } else {
-                    this.fire('load-dialog-view', this);
+                	this.showDialog(this);
                 }
             }).bind(self);
             
@@ -257,7 +264,7 @@
                     console.log("postSaved");
                 };
 
-                detail.entityid = context.id === null ? "new" : (+(context.id));
+                detail.entityId = context.id === null ? "new" : (+(context.id));
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
                 detail.retrieve(context);
 

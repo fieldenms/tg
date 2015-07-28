@@ -167,6 +167,13 @@
                  */
                 run: {
                 	type: Function
+                },
+                
+                /**
+                 * Shows the dialog relative to this centre's EGI ('tg-ui-action's).
+                 */
+                _showDialog: {
+                	type: Function
                 }
             },
             
@@ -322,6 +329,10 @@
                     this.$.egi.collapseAllCards();
                     this.$.selection_criteria.run();
                     this._triggerRun = true;
+                }).bind(self);
+                
+                self._showDialog = (function (action) {
+                	this.$.egi.$.actionDialog.showDialog(action);
                 }).bind(self);
             },
 

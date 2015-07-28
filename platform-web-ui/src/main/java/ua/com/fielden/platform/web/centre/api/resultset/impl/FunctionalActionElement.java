@@ -4,7 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
@@ -76,14 +75,14 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
         attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
+        attrs.put("show-dialog", "[[_showDialog]]");
         attrs.put("element-name", "tg-" + conf().functionalEntity.get().getSimpleName() + "-master");
-        // TODO ??
-        attrs.put("attrs", "[[ {entitytype:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid:uuid} ]]");
         attrs.put("create-context-holder", "[[_createContextHolder]]");
         final String actionsHolderName = functionalActionKind == FunctionalActionKind.TOP_LEVEL ? "topLevelActions" :
                 functionalActionKind == FunctionalActionKind.PRIMARY_RESULT_SET ? "primaryAction" :
                         functionalActionKind == FunctionalActionKind.SECONDARY_RESULT_SET ? "secondaryActions" :
                                 "propActions";
+        attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
         attrs.put("post-action", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
         attrs.put("post-action-error", "[[" + actionsHolderName + "." + numberOfAction + ".postActionError]]");
@@ -126,10 +125,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             return FunctionalActionKind.PROP != functionalActionKind ? new DomElement("tg-primary-instance-action").attr("action", "[[_showMaster]]").attr("actionDesc", "action description").attr("icon", "editor:mode-edit")
                     : null;
         } else if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
-            final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()
-                    : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
+            // final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()
+            //         : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
 
-            return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
+            // return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
+            return uiActionElement.attr("class", "entity-specific-action");
         } else {
             return uiActionElement;
         }
@@ -178,6 +178,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         if (conf().successPostAction.isPresent()) {
             sb.append(conf().successPostAction.get().build().toString());
         }
+        sb.append("},\n");
+
+        sb.append("attrs: {\n");
+        sb.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid\n");
         sb.append("},\n");
 
         sb.append("postActionError: function () {\n");

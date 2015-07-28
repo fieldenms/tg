@@ -163,7 +163,7 @@
                     <!-- <span class="span-tooltip" tip>Delete selected entities</span>
                 </core-tooltip> -->
                 <!-- GENERATED FUNCTIONAL ACTIONS: -->
-                <!--@functional1_actions-->
+                <!--@functional_actions-->
 
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1">
                     <core-icon-button icon="file-download"></core-icon-button>
@@ -221,30 +221,34 @@
             /**
              * Initialisation block. It has all children web components already initialised.
              */
-            ready: function () {
+            attached: function () {
                 var self = this;
                 
-                self.postRetrieved = (function (entity, newBindingEntity, customObject) {
-                    console.log("centre postRetrieved");
-                }).bind(self);
-                
-                self._handleScroll = (function (e) {
-                    this.fire("scroll-container", e.target);
-                }).bind(self);
-                
-                // TODO smth. like this should be generated here:
-                self.topLevelActions = [
-                    //generatedActionObjects
-                ];
-                self.secondaryActions = [
-                    //generatedSecondaryActions
-                ];
-                self.primaryAction = [
-                    //generatedPrimaryAction
-                ];
-                self.propActions = [
-                    //generatedPropActions
-                ];
+                self.async(function() {
+                	self.postRetrieved = (function (entity, newBindingEntity, customObject) {
+                        console.log("centre postRetrieved");
+                    }).bind(self);
+                    
+                    self._handleScroll = (function (e) {
+                        this.fire("scroll-container", e.target);
+                    }).bind(self);
+                    
+                    // TODO smth. like this should be generated here:
+                    self.topLevelActions = [
+                        //generatedActionObjects
+                    ];
+                    // TODO do we need to notify paths?
+               		// TODO do we need to notify paths?
+                    self.secondaryActions = [
+                        //generatedSecondaryActions
+                    ];
+                    self.primaryAction = [
+                        //generatedPrimaryAction
+                    ];
+                    self.propActions = [
+                        //generatedPropActions
+                    ];
+                }, 1);
             },
             
             _dom: function () {

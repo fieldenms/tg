@@ -595,10 +595,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (resultProps.isPresent()) {
             final int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
-                if (!resultProp.propName.isPresent()) {
-                    throw new IllegalStateException("The result property must have a name");
-                }
-
                 final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
 
                 final String resultPropName = propertyName.equals("this") ? "" : propertyName;
@@ -643,33 +639,33 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
 
         final List<List<FunctionalActionElement>> actionGroups = new ArrayList<>();
-//        if (topLevelActions.isPresent()) {
-//
-//            final String currentGroup = null;
-//            for (int i = 0; i < topLevelActions.get().size(); i++) {
-//                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
-//                final String cg = getGroup(topLevelAction.getValue());
-//                if (!EntityUtils.equalsEx(cg, currentGroup)) {
-//                    actionGroups.add(new ArrayList<>());
-//                }
-//                addToLastGroup(actionGroups, topLevelAction.getKey(), i);
-//            }
-//        }
+        if (topLevelActions.isPresent()) {
+
+            final String currentGroup = null;
+            for (int i = 0; i < topLevelActions.get().size(); i++) {
+                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
+                final String cg = getGroup(topLevelAction.getValue());
+                if (!EntityUtils.equalsEx(cg, currentGroup)) {
+                    actionGroups.add(new ArrayList<>());
+                }
+                addToLastGroup(actionGroups, topLevelAction.getKey(), i);
+            }
+        }
 
         logger.debug("Initiating functional actions...");
         final StringBuilder functionalActionsObjects = new StringBuilder();
 
         final DomContainer functionalActionsDom = new DomContainer();
 
-//        for (final List<FunctionalActionElement> group : actionGroups) {
-//            final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
-//            for (final FunctionalActionElement el : group) {
-//                importPaths.add(el.importPath());
-//                groupElement.add(el.render());
-//                functionalActionsObjects.append(prefix + createActionObject(el));
-//            }
-//            functionalActionsDom.add(groupElement);
-//        }
+        for (final List<FunctionalActionElement> group : actionGroups) {
+            final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
+            for (final FunctionalActionElement el : group) {
+                importPaths.add(el.importPath());
+                groupElement.add(el.render());
+                functionalActionsObjects.append(prefix + createActionObject(el));
+            }
+            functionalActionsDom.add(groupElement);
+        }
 
         logger.debug("Initiating primary actions...");
         //////////////////// Primary result-set action ////////////////////
