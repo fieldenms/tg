@@ -14,7 +14,7 @@ public class WebMenuItem implements IExecutable {
     private String description;
     private WebView view;
 
-    private List<WebSubMenuItem> subItems = new ArrayList<>();
+    private final List<WebSubMenuItem> subItems = new ArrayList<>();
 
     public WebMenuItem(final String title) {
         this.title = title;
@@ -37,7 +37,7 @@ public class WebMenuItem implements IExecutable {
     @Override
     public JsCode code() {
         final String code = "{ title: \"" + this.title + "\", " +
-                "descritpion: \"" + this.description + "\"" +
+                "description: \"" + this.description + "\"" +
                 (this.subItems.size() > 0 ? ", submenu: [" + StringUtils.join(subItems, ",") + "]" : "") +
                 (this.view != null ? ", view: " + view.code() : "") +
                 "}";

@@ -24,7 +24,7 @@ public class WebSubMenuItem implements IExecutable {
     @Override
     public JsCode code() {
         final String code = "{ title: \"" + this.title + "\", " +
-                "descritpion: \"" + this.description + "\"" +
+                "description: \"" + this.description + "\"" +
                 (this.view != null ? ", view: " + view.code() : "") +
                 "}";
         return new JsCode(code);

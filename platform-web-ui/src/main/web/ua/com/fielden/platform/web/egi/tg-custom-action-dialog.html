@@ -20,7 +20,7 @@
 
             is: "tg-custom-action-dialog",
 
-            prperties: {
+            properties: {
                 isRunning: {
                     type: Boolean,
                     readOnly: true,
@@ -48,7 +48,7 @@
                 }
             },
 
-            _afterMasterLoad: function (e, detail, soource) {
+            _afterMasterLoad: function (e, detail, source) {
                 if (this.currentRunningAction) {
                     this.currentRunningAction._onExecuted(e, detail, source);
                     if (this.currentRunningAction._masterComponent.noUI === true) {
