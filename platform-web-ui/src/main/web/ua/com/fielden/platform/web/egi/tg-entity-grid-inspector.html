@@ -672,7 +672,7 @@
                     var updatedEntity = updatedEntities[i];
                     var updatedEntityRenderingHints = updatedRenderingHints[i];
                     // console.log("updated", updatedEntity, updatedEntityRenderingHints);
-                    var entityIndex = findEntity(updatedEntity, newEntities);
+                    var entityIndex = _findEntity(updatedEntity, newEntities);
                     if (entityIndex !== -1) {
                         newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
                         newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
@@ -685,8 +685,8 @@
                 // need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
                 for (var j = 0; j < entitiesThatShouldBeUpdated.length; j = j + 1) {
                     var entityThatShouldBeUpdated = entitiesThatShouldBeUpdated[j];
-                    if (!hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
-                        var index = findEntity(entityThatShouldBeUpdated, newEntities);
+                    if (!_hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
+                        var index = _findEntity(entityThatShouldBeUpdated, newEntities);
 
                         newEntities.splice(index, 1); // remove the entity
                         newRenderingHints.splice(index, 1); // and its rendering hints
