@@ -725,6 +725,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         : primaryActionObjectString).
                 replace("//generatedPropActions", propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
                         : propActionsString).
+                replace("//@layoutConfig", layout.code().toString()).
                 replace("<!--@functional_actions-->", functionalActionsDom.toString()).
                 replace("<!--@primary_action-->", primaryActionDom.toString()).
                 replace("<!--@secondary_actions-->", secondaryActionsDom.toString());

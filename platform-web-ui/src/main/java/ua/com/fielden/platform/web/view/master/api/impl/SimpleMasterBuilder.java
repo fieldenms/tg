@@ -167,6 +167,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html").
                 replace("<!--@imports-->", createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
+                replace("//@layoutConfig", layout.code().toString()).
                 replace("<!--@editors_and_actions-->", editorContainer.toString()).
                 replace("//@entityActions", entityActionsStr.toString()).
                 replace("//@propertyActions", propertyActionsStr.toString());
