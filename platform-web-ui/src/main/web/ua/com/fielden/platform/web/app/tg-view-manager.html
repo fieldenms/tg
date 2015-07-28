@@ -44,7 +44,7 @@
                             elementName: "tg-" + simpleTypeName + "-master",
                             type: "master",
                             attrs: {
-                                entityid: data.entity.id,
+                                entityId: data.entity.id,
                                 entityType: fullTypeName,
                                 currentState: 'EDIT',
                                 centreUuid: data.uuid,
@@ -74,7 +74,7 @@
                 channel: "view",
                 topic: "master.edit.created",
                 callback: function (data, envelope) {
-                    mastersById["" + data.entityid] = data.item;
+                    mastersById["" + data.entityId] = data.item;
                     postal.publish({
                         channel: "centre_" + data.centreUuid,
                         topic: "edit.finish.created",
@@ -108,7 +108,7 @@
                             elementName: "tg-" + data.simpleEntityType + "-master",
                             type: "master",
                             attrs: {
-                                entityid: "new",
+                                entityId: "new",
                                 entityType: data.entityType,
                                 currentState: 'EDIT',
                                 centreUuid: data.uuid
