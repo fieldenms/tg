@@ -91,7 +91,7 @@
                     <div name="__empty__"></div>
                     <template is="dom-repeat" items="[[menuItem.menu]]">
                         <div name$="[[item.title]]">
-                            <tg-menu-item-view menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[item.title]]"></tg-menu-item-view>
+                            <tg-menu-item-view menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
                         </div>
                     </template>
                 </neon-animated-pages>
@@ -235,8 +235,10 @@
                     topic: "master.edit.create",
                     callback: function (data, envelope) {
                         var idArray = data.view.attrs.uuid.split('/');
-                        self.$.menu.selected = idArray[1];
-                        self.push(self.menuItem.menu, data);
+                        self.push("menuItem.menu", data);
+                        self.async(function(){
+                        	self.$.menu.selected = idArray[1];
+                        }, 1);
                     }
                 });
 
@@ -274,8 +276,10 @@
                         data.description = "New Master #" + masterCounter;
                         data.view.attrs.uuid = centreUuid.join('/');
                         masterCounter += 1;
-                        self.$.menu.selected = centreUuid[1];
-                        self.push(self.menuItem.menu, data);
+                        self.push("menuItem.menu", data);
+                        self.async(function(){
+                        	self.$.menu.selected = centreUuid[1];
+                        }, 1);
                     }
                 });
                 //////////////Master save acation////////////////////////////
