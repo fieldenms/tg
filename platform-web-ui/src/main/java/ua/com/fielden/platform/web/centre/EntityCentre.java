@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -591,35 +592,35 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
         final Optional<ListMultimap<String, SummaryPropDef>> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
-//        if (resultProps.isPresent()) {
-//            int actionIndex = 0;
-//            for (final ResultSetProp resultProp : resultProps.get()) {
-//                if (!resultProp.propName.isPresent()) {
-//                    throw new IllegalStateException("The result property must have a name");
-//                }
-//
-//                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
-//
-//                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
-//                final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
-//                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
-//
-//                final Optional<FunctionalActionElement> action;
+        if (resultProps.isPresent()) {
+            final int actionIndex = 0;
+            for (final ResultSetProp resultProp : resultProps.get()) {
+                if (!resultProp.propName.isPresent()) {
+                    throw new IllegalStateException("The result property must have a name");
+                }
+
+                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
+
+                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
+                final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
+                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
+
+                final Optional<FunctionalActionElement> action;
 //               if (resultProp.propAction.isPresent()) {
 //                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, resultPropName));
 //                    actionIndex += 1;
 //                } else {
-//                    action = Optional.empty();
+                    action = Optional.empty();
 //                }
-//
-//                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
-//                if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
-//                    final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
-//                    summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
-//                }
-//                propertyColumns.add(el);
-//            }
-//        }
+
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
+                    final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
+                    summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
+                }
+                propertyColumns.add(el);
+            }
+        }
 
         logger.debug("Initiating prop actions...");
 
