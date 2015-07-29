@@ -13,7 +13,9 @@
 			_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]"
 			_or-null="{{_orNull}}"
 			_not="{{_not}}"
-			>
+            _when-desktop="[[_whenDesktop]]"
+            _when-tablet="[[_whenTablet]]"
+            _when-mobile="[[_whenMobile]]">
 			<content select=".criterion-editors"></content>
 		</tg-abstract-multi-criterion>
 	</template>
@@ -30,7 +32,7 @@
     	behaviors: [ Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior ],
     	
         _createWhenDesktopConfig: function () {
-        	return ['horizontal', 'justified', 'flex', ['margin-right: 20px', 'flex'], ['flex']];
+        	return ['horizontal', 'justified', 'flex', 'end', ['margin-right: 20px', 'flex'], ['flex'], []];
         },
     
 	    _dom: function () {

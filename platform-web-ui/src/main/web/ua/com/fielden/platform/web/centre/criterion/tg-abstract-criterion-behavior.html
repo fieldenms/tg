@@ -1,7 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/layout/tg-flex-layout.html">
-
 <script>
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
 	Polymer.TgBehaviors.TgAbstractCriterionBehavior = {
@@ -29,10 +27,7 @@
         	//   alternatively, computing function needs to be specified). 									       //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             _whenDesktop: {
-            	type: Array,
-            	value: function () {
-            		return this._createWhenDesktopConfig();
-            	}
+            	type: Array
             },
             
             _whenTablet: {
@@ -73,7 +68,7 @@
         	// var smth = Polymer.dom(this).querySelectorAll('.criterion-editors');
         	// console.log("smth", smth);
         	
-            var flexElement = document.createElement('tg-flex-layout');
+            /*var flexElement = document.createElement('tg-flex-layout');
             flexElement.whenDesktop = this._whenDesktop;
             flexElement.whenTablet = this._whenTablet;
             flexElement.whenMobile = this._whenMobile;
@@ -84,7 +79,9 @@
             	Polymer.dom(flexElement).appendChild(item);
             }.bind(this));
             Polymer.dom(this._dom()).appendChild(flexElement);
-            // Polymer.dom.flush();
+            // Polymer.dom.flush();*/
+            
+            this._whenDesktop = this._createWhenDesktopConfig();
             
             this._showMetaValuesEditor = (function (e) {
             	this._dom().$.metaValueEditor.opened = true;

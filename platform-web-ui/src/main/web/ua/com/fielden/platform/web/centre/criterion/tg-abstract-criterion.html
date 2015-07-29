@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/tg-reflector">
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
 
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 
@@ -10,17 +11,11 @@
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
 <dom-module id="tg-abstract-criterion">
-	<link rel="import" type="css" href="/resources/centre/criterion/tg-abstract-criterion.css">
+    <link rel="import" type="css" href="/resources/centre/criterion/tg-abstract-criterion.css">
     <template>
-        <paper-dialog 
-        	class="meta-value-editor" 
-        	id="metaValueEditor" 
-        	with-backdrop 
-        	no-cancel-on-outside-click 
-        	entry-animation="scale-up-animation"
-        	exit-animation="fade-out-animation">
+        <paper-dialog class="meta-value-editor" id="metaValueEditor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation">
             <div class="dialog-configs">
-            	<content select=".multi-criterion-config"></content>
+                <content select=".multi-criterion-config"></content>
                 <content select=".range-criterion-config"></content>
                 <content select=".date-range-criterion-config"></content>
             </div>
@@ -28,20 +23,26 @@
             <paper-button dialog-confirm affirmative autofocus on-tap="_acceptMetaValues">Ok</paper-button>
         </paper-dialog>
         <tg-reflector id="reflector"></tg-reflector>
-        <content select=".criterion-editors" id="components"></content>
-        <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert"></paper-icon-buton> <!-- , exclusive, exclusive2, datePrefix, dateMnemonic, andBefore -->
+        <tg-flex-layout when-desktop="[[_whenDesktop]]" when-tablet="[[_whenTablet]]" when-mobile="[[_whenMobile]]">
+            <content select=".criterion-editors" id="components"></content>
+            <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert"></paper-icon-buton>
+        </tg-flex-layout>
+        <!-- , exclusive, exclusive2, datePrefix, dateMnemonic, andBefore -->
     </template>
 </dom-module>
 
 <script>
     Polymer({
-    	is: 'tg-abstract-criterion',
-    	
+        is: 'tg-abstract-criterion',
+
         properties: {
-        	_cancelMetaValues: Function,
-        	_acceptMetaValues: Function,
-        	_showMetaValuesEditor: Function,
-        	_computeIconButtonStyle: Function
+            _cancelMetaValues: Function,
+            _acceptMetaValues: Function,
+            _showMetaValuesEditor: Function,
+            _computeIconButtonStyle: Function,
+            _whenDesktop: Array,
+            _whenTablet: Array,
+            _whenMobile: Array
         }
     });
 </script>

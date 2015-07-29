@@ -13,6 +13,9 @@
 			_compute-icon-button-style="[[_computeIconButtonStyle]]"
 			_or-null="{{_orNull}}"
 			_not="{{_not}}"
+            _when-desktop="[[_whenDesktop]]"
+            _when-tablet="[[_whenTablet]]"
+            _when-mobile="[[_whenMobile]]"
 			>
             <paper-checkbox class="range-criterion-config" checked="{{_exclusive}}">Exclusive Left</paper-checkbox>
             <paper-checkbox class="range-criterion-config" checked="{{_exclusive2}}">Exclusive Right</paper-checkbox>
@@ -31,6 +34,10 @@
         	_acceptMetaValues: Function,
         	_showMetaValuesEditor: Function,
         	_computeIconButtonStyle: Function,
+            _whenDesktop: Array,
+            _whenTablet: Array,
+            _whenMobile: Array,
+            
         	_orNull: {
         		type: Boolean,
         		notify: true

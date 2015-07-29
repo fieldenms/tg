@@ -31,6 +31,9 @@
 			_not="{{_not}}"
 			_exclusive="{{_exclusive}}"
 			_exclusive2="{{_exclusive2}}"
+            _when-desktop="[[_whenDesktop]]"
+            _when-tablet="[[_whenTablet]]"
+            _when-mobile="[[_whenMobile]]"
 			>
             <tg-accordion-group single-open class="date-range-criterion-config">
                 <template is="dom-repeat" items="{{_datePrefixes}}" as="prefix" index-as="pIndex">
@@ -74,7 +77,7 @@
     	},
     	
         _createWhenDesktopConfig: function () {
-        	return ['horizontal', 'justified', 'flex', ['margin-right: 20px', 'flex'], ['flex']];
+        	return ['horizontal', 'justified', 'flex', 'end', ['margin-right: 20px', 'flex'], ['flex'], []];
         },
     	
         properties: {

@@ -10,7 +10,10 @@
 			_cancel-meta-values="[[_cancelMetaValues]]"
 			_accept-meta-values="[[_acceptMetaValues]]"
 			_show-meta-values-editor="[[_showMetaValuesEditor]]"
-			_compute-icon-button-style="[[_computeIconButtonStyle]]">
+			_compute-icon-button-style="[[_computeIconButtonStyle]]"
+            _when-desktop="[[_whenDesktop]]"
+            _when-tablet="[[_whenTablet]]"
+            _when-mobile="[[_whenMobile]]">
 			<tg-multi-criterion-config class="multi-criterion-config" _or-null="{{_orNull}}" _not="{{_not}}"></tg-multi-criterion-config>
 			<content select=".range-criterion-config"></content>
 			<content select=".date-range-criterion-config"></content>
@@ -28,6 +31,10 @@
         	_acceptMetaValues: Function,
         	_showMetaValuesEditor: Function,
         	_computeIconButtonStyle: Function,
+            _whenDesktop: Array,
+            _whenTablet: Array,
+            _whenMobile: Array,
+            
         	_orNull: {
         		type: Boolean,
         		notify: true
