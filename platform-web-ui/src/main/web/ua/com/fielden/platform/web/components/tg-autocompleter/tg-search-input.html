@@ -270,7 +270,7 @@
                     this.async((function () {
                         result.clearSelection();
                         self.searching = false;
-                        result.values = [{
+                        var values = [{
                             key: 'KEY 1',
                             desc: "some description for key 1",
                             prop1: "value of prop 1",
@@ -301,6 +301,11 @@
                             prop1: "value of prop 1",
                           	prop2: "value of prop 2"
                         }];
+                       
+                       for (var index = 0; index < values.length; index++) {
+                           result.pushValue(values[index]);
+                       }
+                       
                         self.async(function () {
                         	this.async(this.notifyResize, 1);
                             result.open();

@@ -146,7 +146,7 @@
             	while(this.pop('_values')){}
             	
                 if (this.multi) {
-                    while(this.pop('$.selector.selectedValues')){}
+                    this.$.selector.selectedValues = [];
                 } else {
                 	this.$.selector.selected = '';
                 }
