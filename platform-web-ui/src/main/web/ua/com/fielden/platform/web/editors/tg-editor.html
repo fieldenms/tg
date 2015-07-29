@@ -59,9 +59,9 @@
                     <input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
                     <!-- </template> -->
                     
-                    <input id="input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled}}">
+                    <input id="input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeydown" disabled$="[[_disabled}}">
 
-                    <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
+                    <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeydown" disabled$="[[_disabled]]">
 
                     <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
                         <!--  flex -->
