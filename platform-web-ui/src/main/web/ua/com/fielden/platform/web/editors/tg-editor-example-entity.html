@@ -68,6 +68,10 @@
                 
                 bindingView.prop('integerProp');
                 bindingView.type().prop('integerProp');
+                
+                // decimal
+                bindingView['bigDecimalProp'] = 2.3;
+                bindingView['@bigDecimalProp_editable'] = true;
 
                 // string
                 bindingView['stringProp'] = 'OK';

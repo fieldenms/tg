@@ -4,29 +4,6 @@
 <link rel="import" href="/resources/editors/tg-editor.html">
 
 <dom-module id="tg-integer-editor">
-    <style>
-      	/* TODO please, migrate the styles to new version: */
-    	/* TODO please, migrate the styles to new version: */
-    	/* TODO please, migrate the styles to new version: */
-    	/* TODO please, migrate the styles to new version: */
-    	/* TODO please, migrate the styles to new version: */
-    	/* TODO please, migrate the styles to new version: */
-    	/* TODO please, migrate the styles to new version: */
-    	/* TODO please, migrate the styles to new version: */
-    	/* TODO please, migrate the styles to new version: */
-    	/* TODO please, migrate the styles to new version: */
-
-        /* input[type=number]::-webkit-outer-spin-button,
-        input[type=number]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        
-        input[type=number] {
-            -moz-appearance: textfield;
-        } */
-    </style>
-
     <template>
     	<tg-editor 
     		id="editorDom" 
@@ -69,10 +46,7 @@
          * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
          */
         convertFromString: function (strValue) {
-        	if (strValue === '77') {
-        		throw 'The value is 77, not permitted.';
-        	}
-            return strValue === '' ? null : parseInt(strValue);
+        	return strValue === '' ? null : parseInt(strValue);
         }
     });
 </script>

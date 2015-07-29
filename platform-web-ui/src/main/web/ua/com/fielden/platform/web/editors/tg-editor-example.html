@@ -12,6 +12,7 @@
     <link rel="import" href="/resources/editors/tg-editor-example-entity.html">
 
     <link rel="import" href="/resources/editors/tg-integer-editor.html">
+    <link rel="import" href="/resources/editors/tg-decimal-editor.html">
     <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
     <link rel="import" href="/resources/editors/tg-datetime-picker.html">
@@ -31,6 +32,8 @@
             <div class="layout horizontal">
                 <tg-integer-editor style="margin-right: 20px" class="flex" entity="[[entity]]" property-name="integerProp" current-state="EDIT" debug prop-title="Integer property title" prop-desc="Integer property desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]">
                 </tg-integer-editor>
+                <tg-decimal-editor style="margin-right: 20px" class="flex" entity="[[entity]]" property-name="bigDecimalProp" current-state="EDIT" debug prop-title="Big decimal property title" prop-desc="Big decimal property desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]">
+                </tg-decimal-editor>
                 <tg-singleline-text-editor class="flex" entity="[[entity]]" property-name="stringProp" current-state="EDIT" debug prop-title="String property title" prop-desc="String property desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]">
                 </tg-singleline-text-editor>
             </div>

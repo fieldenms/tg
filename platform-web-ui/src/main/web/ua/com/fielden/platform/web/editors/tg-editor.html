@@ -15,6 +15,7 @@
 
 <dom-module id="tg-editor">
     <style>
+        /*  */
         .main-container {
             @apply(--layout-horizontal);
             @apply(--layout-center);
@@ -22,6 +23,7 @@
         #input-container {
             @apply(--layout-flex);
         }
+        /* Styles for boolean property editors. */
         paper-checkbox {
             -moz-user-select: none;
             -webkit-user-select: none;
@@ -33,6 +35,15 @@
             --paper-checkbox-checked-ink-color: #0288D1;
             height: 24px;
         }
+        /* Styles for integer and decimal property editors. */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        } 
         /* TODO styles */
     </style>
 
@@ -47,8 +58,10 @@
                     <!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
                     <input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
                     <!-- </template> -->
+                    
+                    <input id="input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled}}">
 
-                    <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+                    <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-keypress="_onKeypress" disabled$="[[_disabled]]">
 
                     <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
                         <!--  flex -->
@@ -59,12 +72,6 @@
                     
                     <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
 
-                    <!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}" -->
-                    <!-- input id="input" is="iron-input" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-keydown="_onKeydown" disabled$="[[_disabled]]" -->
-                    <!-- span class="span-tooltip" tip>
-                            {{tooltip(propDesc)}}
-                        </span>
-                    </core-tooltip> -->
                 </div>
                 <!-- CONTENT HERE: -->
                 <content select=".custom-icon-buttons"></content>
@@ -121,17 +128,21 @@
             _maxLength: Number,
             _autocompleterBlurEventHandler: Function
         },
-
-        _isInteger: function (_editorKind) {
-            return 'INTEGER' === _editorKind;
+        
+        _isDecimal: function(editorKind) {
+            return 'DECIMAL' === editorKind;
         },
 
-        _isSinglelineTextOrDate: function (_editorKind) {
-            return 'SINGLELINE_TEXT' === _editorKind || 'DATE' === _editorKind;
+        _isInteger: function (editorKind) {
+            return 'INTEGER' === editorKind;
         },
 
-        _isMultilineText: function (_editorKind) {
-            return 'MULTILINE_TEXT' === _editorKind;
+        _isSinglelineTextOrDate: function (editorKind) {
+            return 'SINGLELINE_TEXT' === editorKind || 'DATE' === editorKind;
+        },
+
+        _isMultilineText: function (editorKind) {
+            return 'MULTILINE_TEXT' === editorKind;
         },
 
         _isBooleanEditor: function (editorKind) {
