@@ -17,14 +17,16 @@ public class EntitySingleCritAutocompletionWidget extends AbstractEntityAutocomp
     private boolean shouldSearchByDescOnly = false;
     private final CentreContextConfig centreContextConfig;
 
-    public EntitySingleCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean selectionCriteriaWidget, final CentreContextConfig centreContextConfig) {
-        super("editors/tg-entity-editor", titleDesc, propertyName, selectionCriteriaWidget);
+    public EntitySingleCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig) {
+        super("editors/tg-entity-editor", titleDesc, propertyName);
         this.centreContextConfig = centreContextConfig;
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
+        attrs.put("autocompletion-type", "[[miType]]");
+
         attrs.put("as-part-of-entity-master", false);
         this.addCentreContextBindings(attrs, centreContextConfig);
         return attrs;

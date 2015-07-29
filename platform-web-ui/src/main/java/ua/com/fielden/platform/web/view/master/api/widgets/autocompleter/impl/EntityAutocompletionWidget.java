@@ -14,13 +14,16 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidget {
     private boolean shouldSearchByDescOnly = false;
 
-    public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean selectionCriteriaWidget) {
-        super("editors/tg-entity-editor", titleDesc, propertyName, selectionCriteriaWidget);
+    public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName) {
+        super("editors/tg-entity-editor", titleDesc, propertyName);
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
+
+        attrs.put("autocompletion-type", "[[entityType]]");
+
         attrs.put("as-part-of-entity-master", true);
         attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
         return attrs;

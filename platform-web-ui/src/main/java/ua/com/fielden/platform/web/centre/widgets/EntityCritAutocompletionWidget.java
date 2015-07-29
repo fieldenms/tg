@@ -16,14 +16,16 @@ import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.Ab
 public class EntityCritAutocompletionWidget extends AbstractEntityAutocompletionWidget {
     private final CentreContextConfig centreContextConfig;
 
-    public EntityCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean selectionCriteriaWidget, final CentreContextConfig centreContextConfig) {
-        super("editors/tg-entity-editor", titleDesc, propertyName, selectionCriteriaWidget);
+    public EntityCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig) {
+        super("editors/tg-entity-editor", titleDesc, propertyName);
         this.centreContextConfig = centreContextConfig;
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
+        attrs.put("autocompletion-type", "[[miType]]");
+
         attrs.put("multi", "true");
         this.addCentreContextBindings(attrs, centreContextConfig);
         return attrs;

@@ -23,18 +23,14 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     @SuppressWarnings("rawtypes")
     private Class<? extends IValueMatcher> matcherType;
     private boolean shouldSearchByDesc = false;
-    private final boolean selectionCriteriaWidget;
 
-    public AbstractEntityAutocompletionWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName, final boolean selectionCriteriaWidget) {
+    public AbstractEntityAutocompletionWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName) {
         super(widgetPath, titleDesc, propertyName);
-        this.selectionCriteriaWidget = selectionCriteriaWidget;
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = new LinkedHashMap<>();
-
-        attrs.put("autocompletion-type", "[[" + (selectionCriteriaWidget ? "miType" : "entityType") + "]]");
 
         // TODO please implement StringBuilder that aggregates all composite key members into 'additionalProperties' (and incorporate 'desc' as below).
 //        if (shouldSearchByDesc) { // FIXME JSON should be generated in single quotes
