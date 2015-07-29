@@ -24,14 +24,14 @@
 <script>
     (function(){
         Polymer({
-    	is: 'tg-decimal-editor',
-    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+	    	is: 'tg-decimal-editor',
+	    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+	    	
+	    	ready: function () {
+	    		this.$.editorDom._editorKind = "DECIMAL";
+	    	},
     	
-    	ready: function () {
-    		this.$.editorDom._editorKind = "DECIMAL";
-    	},
-    	
-        /**
+    	    /**
              * Converts the value into string representation (which is used in editing / comm values).
              */
             convertToString: function (value) {
@@ -51,6 +51,6 @@
                 }
                 return (+strValue);
             }
-    });
+	    });
     })()
 </script>
