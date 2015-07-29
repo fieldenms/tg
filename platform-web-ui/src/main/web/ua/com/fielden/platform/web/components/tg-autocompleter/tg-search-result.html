@@ -161,11 +161,11 @@
              * Returns an array of objects representing matched and non-matched parts of the str in sequential order.
              * It is used to identify those parts that needs to be highlighted during rendering.
              */
-            _matchedParts: function (str, searchQuery) {
+            _matchedParts: function (str) {
                 var parts = [];
                 var text = str.toUpperCase();
                 // if all is matched then return a single value
-                if ("\\w*" == searchQuery) {
+                if ("\\w*" == this.searchQuery) {
                     parts.push({
                         part: str,
                         matched: false

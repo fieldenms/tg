@@ -303,23 +303,29 @@
                 this._blurEventHandler = (function(e) {
                 	// There is no need to proceed with search if user moved out of the search field
                 	this._cancelSearch();
-                	
-                	// However, if user typed in a new value it may need to be validated...
-                	// TODO implement logic to enforce validation of the typed rather than selected value
                 }).bind(this);
                 
                 this.$.editorDom._editorKind = "AUTOCOMPLETER";
             },
             
-        	/**
-        	 * Computes URL for 'ajaxSearcher'.
-        	 */
-        	_computeUrl: function (autocompletionType, propertyName) {
-        		return "/autocompletion/" + autocompletionType + "/" + propertyName;
-        	},
-            
             attached: function () {
                 this.async(this.notifyResize, 1);
+                window.addEventListener('resize', this._notifyResize.bind(this));
+            },
+
+            detached: function () {
+                window.removeEventListener('resize', this._notifyResize.bind(this));
+            },
+            
+            _notifyResize: function() {
+                this.async(this.notifyResize, 1)
+            },
+
+            /**
+             * Computes URL for 'ajaxSearcher'.
+             */
+            _computeUrl: function (autocompletionType, propertyName) {
+                return "/autocompletion/" + autocompletionType + "/" + propertyName;
             },
 
             _computeSearchingOrOpened: function(searching, opened) {
@@ -543,16 +549,20 @@
 
             /* Iron reseze event listener for correct resizing and positioning of an open result overlay. */
             _onIronResize: function () {
+                console.log("Resizing");
             	// TODO should be assigned as tg-editor's decorator
                 var container = this.decorator();
                 //console.log('resize event captured:', (container.offsetTop + container.clientHeight));
                 var result = this.$.result;
                 if (result.opened) {
-                    this.async(function () {         
+                    //this.async(function () {         
                         var rect = container.getClientRects()[0];
                         var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
                         var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
-                        var top = rect.bottom + scrollTop;
+                        
+                        console.log('rect.bottom', rect.top, 'scrillTop', scrollTop);
+                        
+                        var top = rect.bottom    + scrollTop;
                         var left = rect.left;// + scrollLeft;
                         var right = rect.right;
                         var width = rect.width;
@@ -591,7 +601,7 @@
                         var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                         result.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment
                         result.style['min-height'] = '50px'; 
-                    });
+                    //},1);
                 }
             },
             
