@@ -67,7 +67,8 @@
     		_accepted-value="[[_acceptedValue]]" 
     		debug="[[debug]]" 
     		_on-change="[[_onChange]]" 
-    		_on-keypress="[[_onKeypress]]"
+    		_on-input="[[_onInput]]"
+    		_on-keydown="[[_onKeydown]]"
     		_autocompleter-blur-event-handler="[[_blurEventHandler]]"
     		>
 	    	<paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_search" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
@@ -255,14 +256,33 @@
             	 *
             	 * Designated to be bound to child elements.
             	 */
-                _onKeypress: {
+                _onInput: {
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
-                			var parentFunction = Polymer.TgBehaviors.TgEditorBehavior.properties._onKeypress.value.call(this);
-                			parentFunction.call(this, event);
-                			
+                			console.log("_onInput:", event, event.keyCode);
                 			this._inputEventHandler();
+                    	}).bind(this);
+                	}
+                },
+                
+            	/**
+            	 * OVERRIDDEN FROM TgEditorBehavior: this specific textArea's event is invoked after some key has been pressed.
+            	 *
+            	 * Designated to be bound to child elements.
+            	 */
+                _onKeydown: {
+                	type: Function,
+                	value: function () {
+                		return (function (event) {
+                			console.log("_onKeydown:", event, event.keyCode);
+                    		if (event.keyCode === 13) { // 'Enter' has been pressed
+                    			this._done();
+                    		} 
+                    		/* else if (event.keyCode === 27) { // 'ESC' has been pressed
+                    			this.opened = false;
+                    			this.$.result.close();
+                    		} */ 
                     	}).bind(this);
                 	}
                 },
@@ -490,6 +510,7 @@
              * However, there is no guarantee that there are actually selected values. 
              */
             _done: function() {
+            	console.log("_done:");
             	var input = this.decoratedInput();
             	var result = this.$.result;
             	var hasValuesToProcess = Object.keys(result.selectedValues).length > 0;

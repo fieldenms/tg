@@ -284,15 +284,29 @@
             	 *
             	 * Designated to be bound to child elements.
             	 */
-            	_onKeypress: {
+            	_onKeydown: {
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
-                    		console.log("_onKeypress:", event);
+                    		console.log("_onKeydown:", event);
                     		
                     		if (event.keyCode === 13 && !this.reflector().equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
                     			this.commit();
                     		}
+                    	}).bind(this);
+                	}
+                },
+                
+            	/**
+            	 * This event is invoked after some key has been pressed. We are interested in 'Enter' key to provide value commit behaviour.
+            	 *
+            	 * Designated to be bound to child elements.
+            	 */
+            	_onInput: {
+                	type: Function,
+                	value: function () {
+                		return (function (event) {
+                    		console.log("_onInput:", event);
                     	}).bind(this);
                 	}
                 }
