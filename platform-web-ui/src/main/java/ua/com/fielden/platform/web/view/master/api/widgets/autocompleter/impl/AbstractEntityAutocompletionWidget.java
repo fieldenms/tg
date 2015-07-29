@@ -6,6 +6,8 @@ import java.util.Map;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCritAutocompletionWidget;
+import ua.com.fielden.platform.web.centre.widgets.EntityCritAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
@@ -21,12 +23,10 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     @SuppressWarnings("rawtypes")
     private Class<? extends IValueMatcher> matcherType;
     private boolean shouldSearchByDesc = false;
-    private final CentreContextConfig centreContextConfig;
     private final boolean selectionCriteriaWidget;
 
-    public AbstractEntityAutocompletionWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig, final boolean selectionCriteriaWidget) {
+    public AbstractEntityAutocompletionWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName, final boolean selectionCriteriaWidget) {
         super(widgetPath, titleDesc, propertyName);
-        this.centreContextConfig = centreContextConfig;
         this.selectionCriteriaWidget = selectionCriteriaWidget;
     }
 
@@ -42,14 +42,6 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
 //        } else {
 //            attrs.put("additional-properties", "{desc:false}");
 //        }
-        if (centreContextConfig != null) {
-            attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
-            attrs.put("require-selection-criteria", centreContextConfig.withSelectionCrit ? "true" : "false");
-            attrs.put("get-selected-entities", "[[_getSelectedEntities]]");
-            attrs.put("require-selected-entities", centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE"));
-            attrs.put("get-master-entity", "[[getMasterEntity]]");
-            attrs.put("require-master-entity", centreContextConfig.withMasterEntity ? "true" : "false");
-        }
         attrs.put("process-response", "[[_processResponse]]");
         attrs.put("process-error", "[[_processError]]");
         attrs.put("post-searched-default-error", "[[_postSearchedDefaultError]]");
@@ -75,4 +67,22 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         this.shouldSearchByDesc = shouldSearchByDesc;
     }
 
+    /**
+     * Adds the bindings for centre context (if it is not empty).
+     *
+     * Applicable only for {@link EntityCritAutocompletionWidget} and {@link EntitySingleCritAutocompletionWidget}.
+     *
+     * @param attrs
+     * @param centreContextConfig
+     */
+    protected void addCentreContextBindings(final Map<String, Object> attrs, final CentreContextConfig centreContextConfig) {
+        if (centreContextConfig != null) {
+            attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
+            attrs.put("require-selection-criteria", centreContextConfig.withSelectionCrit ? "true" : "false");
+            attrs.put("get-selected-entities", "[[getSelectedEntities]]");
+            attrs.put("require-selected-entities", centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE"));
+            attrs.put("get-master-entity", "[[getMasterEntity]]");
+            attrs.put("require-master-entity", centreContextConfig.withMasterEntity ? "true" : "false");
+        }
+    }
 }

@@ -15,15 +15,18 @@ import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.Ab
  */
 public class EntitySingleCritAutocompletionWidget extends AbstractEntityAutocompletionWidget {
     private boolean shouldSearchByDescOnly = false;
+    private final CentreContextConfig centreContextConfig;
 
-    public EntitySingleCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig, final boolean selectionCriteriaWidget) {
-        super("editors/tg-singleline-text-editor" /* TODO was tg-entity-editor */, titleDesc, propertyName, centreContextConfig, selectionCriteriaWidget);
+    public EntitySingleCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean selectionCriteriaWidget, final CentreContextConfig centreContextConfig) {
+        super("editors/tg-entity-editor", titleDesc, propertyName, selectionCriteriaWidget);
+        this.centreContextConfig = centreContextConfig;
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
         attrs.put("as-part-of-entity-master", false);
+        this.addCentreContextBindings(attrs, centreContextConfig);
         return attrs;
     };
 

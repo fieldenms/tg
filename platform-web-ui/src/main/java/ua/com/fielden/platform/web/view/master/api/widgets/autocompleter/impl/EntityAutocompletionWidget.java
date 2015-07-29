@@ -15,7 +15,7 @@ public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidg
     private boolean shouldSearchByDescOnly = false;
 
     public EntityAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean selectionCriteriaWidget) {
-        super("editors/tg-entity-editor", titleDesc, propertyName, null, selectionCriteriaWidget);
+        super("editors/tg-entity-editor", titleDesc, propertyName, selectionCriteriaWidget);
     }
 
     @Override

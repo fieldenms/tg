@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.widgets;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
@@ -12,7 +14,18 @@ import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.Ab
  *
  */
 public class EntityCritAutocompletionWidget extends AbstractEntityAutocompletionWidget {
-    public EntityCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final CentreContextConfig centreContextConfig, final boolean selectionCriteriaWidget) {
-        super("editors/tg-singleline-text-editor" /* TODO was tg-entity-search-criteria */, titleDesc, propertyName, centreContextConfig, selectionCriteriaWidget);
+    private final CentreContextConfig centreContextConfig;
+
+    public EntityCritAutocompletionWidget(final Pair<String, String> titleDesc, final String propertyName, final boolean selectionCriteriaWidget, final CentreContextConfig centreContextConfig) {
+        super("editors/tg-entity-editor", titleDesc, propertyName, selectionCriteriaWidget);
+        this.centreContextConfig = centreContextConfig;
     }
+
+    @Override
+    protected Map<String, Object> createCustomAttributes() {
+        final Map<String, Object> attrs = super.createCustomAttributes();
+        attrs.put("multi", "true");
+        this.addCentreContextBindings(attrs, centreContextConfig);
+        return attrs;
+    };
 }
