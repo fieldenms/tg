@@ -13,8 +13,8 @@
 
 <link rel="import" href="/resources/actions/tg-page-action.html">
 
-<!-- <link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
-<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html"> -->
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<!-- <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html"> -->
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/hardware-icons.html">
@@ -170,31 +170,33 @@
                 <!-- GENERATED FUNCTIONAL ACTIONS: -->
                 <!--@functional_actions-->
 
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1">
-                    <core-icon-button icon="file-download"></core-icon-button>
-                    <span class="span-tooltip" tip>Export to Excel</span>
-                </core-tooltip>
-                <core-tooltip class="delayed standart-action" tabIndex="-1">
-                    <core-icon-button class="revers" icon="hardware:keyboard-tab" on-tap="{{firstPage}}" disabled?="{{canNotFirst($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
-                    <span class="span-tooltip" tip>First page</span>
-                </core-tooltip>
-                <core-tooltip class="delayed standart-action" tabIndex="-1">
-                    <core-icon-button icon="hardware:keyboard-backspace" on-tap="{{prevPage}}" disabled$="[[canNotPrev($.selection_criteria.pageNumber)]]"></core-icon-button>
-                    <span class="span-tooltip" tip>Previous page</span>
-                </core-tooltip>
-                <span class="standart-action">{{$.selection_criteria.pageNumberUpdated !== null ? ($.selection_criteria.pageNumberUpdated + 1) : 1}} / {{$.selection_criteria.pageCountUpdated !== null ? $.selection_criteria.pageCountUpdated : 1}}</span>
-                <core-tooltip class="delayed standart-action" tabIndex="-1">
-                    <core-icon-button class="revers" icon="hardware:keyboard-backspace" on-tap="{{nextPage}}" disabled?="{{canNotNext($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
-                    <span class="span-tooltip" tip>Next page</span>
-                </core-tooltip>
-                <core-tooltip class="delayed standart-action" tabIndex="-1">
-                    <core-icon-button icon="hardware:keyboard-tab" on-tap="{{lastPage}}" disabled?="{{canNotLast($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
-                    <span class="span-tooltip" tip>Last page</span>
-                </core-tooltip>
-                <core-tooltip class="delayed standart-action" tabIndex="-1">
-                    <core-icon-button icon="refresh" on-tap="{{currentPage}}" disabled?="{{canNotCurrent($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}"></core-icon-button>
-                    <span class="span-tooltip" tip>Refresh</span>
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                	<paper-icon-button icon="file-download" class="standart-action"></paper-icon-button>
+                	<!-- <span class="span-tooltip" tip>Export to Excel</span>
                 </core-tooltip> -->
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-tab" on-tap="firstPage"></paper-icon-button> <!-- disabled$="[[canNotFirst($.selection_criteria.pageNumber, $.selection_criteria.pageCount)]]" -->
+                    <!-- <span class="span-tooltip" tip>First page</span>
+                </core-tooltip> -->
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button icon="hardware:keyboard-backspace" class="standart-action" on-tap="prevPage"></paper-icon-button> <!-- disabled$="[[canNotPrev($.selection_criteria.pageNumber)]]" -->
+                    <!-- <span class="span-tooltip" tip>Previous page</span>
+                </core-tooltip> -->
+                <span class="standart-action">1 / 1</span>
+                <!-- <span class="standart-action">{{$.selection_criteria.pageNumberUpdated !== null ? ($.selection_criteria.pageNumberUpdated + 1) : 1}} / {{$.selection_criteria.pageCountUpdated !== null ? $.selection_criteria.pageCountUpdated : 1}}</span> -->
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-backspace" on-tap="nextPage"></paper-icon-button> <!--  disabled$="{{canNotNext($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}" -->
+                    <!-- <span class="span-tooltip" tip>Next page</span>
+                </core-tooltip> -->
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button icon="hardware:keyboard-tab" class="standart-action" on-tap="lastPage"></paper-icon-button> <!--  disabled$="{{canNotLast($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}" -->
+                    <!-- <span class="span-tooltip" tip>Last page</span>
+                </core-tooltip> -->
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button class="standart-action" icon="refresh" on-tap="currentPage"></paper-icon-button> <!--  disabled$="{{canNotCurrent($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}" -->
+                    <!-- <span class="span-tooltip" tip>Refresh</span>
+                </core-tooltip> -->
+                
                 <!--@primary1_action-->
                 <!-- <tg-primary-instance-action action="[[_showMaster]]" actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action> --> 
                 <!--@secondary1_actions-->
