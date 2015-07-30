@@ -988,7 +988,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             return annotations;
         } catch (final NoSuchMethodException e1) {
             // do nothing if setter does not exist
-            logger.debug(format("There is no setter for property [%s].", field.getName()), e1);
+            logger.debug(format("There is no setter for property [%s].", field.getName()));
         }
         return new HashSet<>();
     }
