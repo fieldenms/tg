@@ -673,13 +673,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer primaryActionDom = new DomContainer();
         final StringBuilder primaryActionObject = new StringBuilder();
 
-//        if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
-//            final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
-//
-//            importPaths.add(el.importPath());
-//            primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
-//            primaryActionObject.append(prefix + createActionObject(el));
-//        }
+        if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
+            final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
+
+            importPaths.add(el.importPath());
+            primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
+            primaryActionObject.append(prefix + createActionObject(el));
+        }
 
         //////////////////// Primary result-set action [END] //////////////
         logger.debug("Initiating secondary actions...");

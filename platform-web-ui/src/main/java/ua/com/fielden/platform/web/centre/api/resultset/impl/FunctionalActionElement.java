@@ -122,7 +122,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public final DomElement render() {
         final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (masterInvocationAction) {
-            return FunctionalActionKind.PROP != functionalActionKind ? new DomElement("tg-primary-instance-action").attr("action", "[[_showMaster]]").attr("actionDesc", "action description").attr("icon", "editor:mode-edit")
+            return FunctionalActionKind.PROP != functionalActionKind ? new DomElement("tg-page-action").attr("class", "primary-action").attr("action", "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit")
                     : null;
         } else if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
             // final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()
@@ -137,7 +137,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     @Override
     public String importPath() {
-        return masterInvocationAction ? "egi/tg-primary-instance-action" : widgetPath;
+        return masterInvocationAction ? "actions/tg-page-action" : widgetPath;
     }
 
     public FunctionalActionKind getFunctionalActionKind() {

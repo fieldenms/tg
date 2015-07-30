@@ -1,6 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/tg-web-app/tg-app-config.html">
 <link rel="import" href="/tg-reflector">
+<link rel="import" href="/resources/actions/tg-page-action.html">
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
@@ -169,8 +171,8 @@
                             <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                         </div>
                         <template is="dom-if" if="[[primaryAction]]">
-                            <div class="table-cell layout horizontal center">
-                                <!--Primary action header goes here-->
+                            <div class="table-cell layout horizontal center" style="width:40px">
+                                <!--Primary action stub header goes here-->
                             </div>
                         </template>
                         <template is="dom-repeat" items="[[columns]]">
@@ -192,7 +194,8 @@
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <div class="table-cell layout horizontal center">
-                                    <!--Primary action header goes here-->
+                                    <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" context="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]"></tg-page-action>
+                                    <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]"></tg-ui-action>
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]" as="column">
@@ -441,7 +444,7 @@
 
                 //Initialising the primary action.
                 this.primaryAction = null;
-                this.primaryAction = primaryActions > 0 ? primaryActions[0] : null;
+                this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
                 //Initialising the secondary actions' list.
                 this.secondaryActions = [];
