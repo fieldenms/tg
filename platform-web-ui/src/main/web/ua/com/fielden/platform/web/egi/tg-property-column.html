@@ -21,6 +21,10 @@
                 columnDesc: String,
                 action: Object
             },
+            
+            hostAttributes: {
+                hidden: true
+            },
 
             ready: function () {
                 Array.prototype.forEach.call(Polymer.dom(this.$.summary_selection).getDistributedNodes(), function (item) {
@@ -37,7 +41,7 @@
                     this.action(entity);
                 } else if (this.customAction) {
                     this.customAction.currentEntity = entity;
-                    this.customAction.run();
+                    this.customAction._run();
                 }
             }
         });

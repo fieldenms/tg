@@ -593,7 +593,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<ListMultimap<String, SummaryPropDef>> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
-            final int actionIndex = 0;
+            int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
                 final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
 
@@ -602,12 +602,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
                 final Optional<FunctionalActionElement> action;
-//               if (resultProp.propAction.isPresent()) {
-//                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, resultPropName));
-//                    actionIndex += 1;
-//                } else {
+                if (resultProp.propAction.isPresent()) {
+                    action = Optional.of(new FunctionalActionElement(resultProp.propAction.get(), actionIndex, resultPropName));
+                    actionIndex += 1;
+                } else {
                     action = Optional.empty();
-//                }
+                }
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
@@ -685,21 +685,21 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating secondary actions...");
 
         final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
-//        final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
-//        if (resultSetSecondaryEntityActions.isPresent()) {
-//            for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
-//                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
-//                secondaryActionElements.add(el);
-//            }
-//        }
-//
+        //        final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
+        //        if (resultSetSecondaryEntityActions.isPresent()) {
+        //            for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
+        //                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
+        //                secondaryActionElements.add(el);
+        //            }
+        //        }
+        //
         final DomContainer secondaryActionsDom = new DomContainer();
         final StringBuilder secondaryActionsObjects = new StringBuilder();
-//        for (final FunctionalActionElement el : secondaryActionElements) {
-//            importPaths.add(el.importPath());
-//            secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
-//            secondaryActionsObjects.append(prefix + createActionObject(el));
-//        }
+        //        for (final FunctionalActionElement el : secondaryActionElements) {
+        //            importPaths.add(el.importPath());
+        //            secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
+        //            secondaryActionsObjects.append(prefix + createActionObject(el));
+        //        }
 
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
