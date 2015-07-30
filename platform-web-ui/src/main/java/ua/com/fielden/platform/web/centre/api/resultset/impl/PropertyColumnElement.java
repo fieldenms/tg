@@ -140,7 +140,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     public final DomElement render() {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && !this.action.get().isMasterInvocationAction()) {
-            // TODO uncomment columnElement.add(action.get().render());
+            columnElement.add(action.get().render());
         }
         if (hasSummary()) {
             summary.forEach(summary -> columnElement.add(summary.render()));
@@ -153,10 +153,10 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return widgetPath;
 
         // TODO 'action' needs an import of 'tg-ui-action'!
-     // TODO 'action' needs an import of 'tg-ui-action'!
-     // TODO 'action' needs an import of 'tg-ui-action'!
-     // TODO 'action' needs an import of 'tg-ui-action'!
-     // TODO 'action' needs an import of 'tg-ui-action'!
+        // TODO 'action' needs an import of 'tg-ui-action'!
+        // TODO 'action' needs an import of 'tg-ui-action'!
+        // TODO 'action' needs an import of 'tg-ui-action'!
+        // TODO 'action' needs an import of 'tg-ui-action'!
     }
 
     public boolean isDebug() {

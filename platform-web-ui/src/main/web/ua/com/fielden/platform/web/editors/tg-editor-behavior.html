@@ -447,7 +447,7 @@
              * IMPORTANT: please do not override this method.
              */
             _commValueChanged: function (newValue, oldValue) {
-                console.log("_commValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
+                // console.log("_commValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
                 try {
                     this._acceptedValue = this.convertFromString(newValue);
                     this._editorValidationMsg = null;
@@ -464,7 +464,7 @@
              * _shouldInvokeValidation() and _skipValidationAction().
              */
             _acceptedValueChanged: function (newValue, oldValue) {
-                console.log("_acceptedValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
+                // console.log("_acceptedValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
 
                 if (this._refreshCycleStarted) {
                     this._refreshCycleStarted = false;
@@ -513,7 +513,7 @@
              * Commits editing value.
              */
             commit: function () {
-                console.log("commit [", this._editingValue, "] value.");
+                // console.log("commit [", this._editingValue, "] value.");
    	            this._commValue = this._editingValue;
             },
 

@@ -397,7 +397,8 @@
              * Starts the process of criteria entity retrieval.
              */
             retrieve: function () {
-            	console.log("entity centre behavior: retrieve:");
+            	console.warn("criteria-entity-retrieval");
+            	console.time("criteria-entity-retrieval");
                 this.$.selection_criteria.retrieve();
             },
 
@@ -466,6 +467,10 @@
             },
             canNotCurrent: function (pageNumber, pageCount) {
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canCurrent(pageNumber, pageCount);
+            },
+            
+            currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {
+            	return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
             },
 
             canSave: function (centreChanged) {

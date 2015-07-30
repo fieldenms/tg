@@ -247,7 +247,7 @@
                     topic: "master.show",
                     callback: function (data, envelope) {
                         var idArray = data.item.view.attrs.uuid.split('/');
-                        if (idArray[0] !== self.item.title) {
+                        if (idArray[0] !== self.menuItem.title) {
                             postal.publish({
                                 channel: idArray[0],
                                 topic: "state.select",

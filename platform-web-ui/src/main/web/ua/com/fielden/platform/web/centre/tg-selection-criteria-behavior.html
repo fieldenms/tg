@@ -118,22 +118,26 @@
                  * The current number of pages after the firstPage has been retrieved. To update this please invoke run() action one more time.
                  */
                 pageCount: {
-                	type: Number
-                }, // null,
+                	type: Number,
+                	notify: true
+                },
 
                 /**
                  * The current page number.
                  */
                 pageNumber: {
-                	type: Number
-                }, // null,
+                	type: Number,
+                	notify: true
+                },
 
                 pageCountUpdated: {
-                	type: Number
-                },// null,
+                	type: Number,
+                	notify: true
+                },
                 pageNumberUpdated: {
-                	type: Number
-                },// null,
+                	type: Number,
+                	notify: true
+                },
 
                 
                 /**

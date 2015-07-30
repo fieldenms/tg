@@ -15,7 +15,7 @@
 			font-size: 10pt;
 		}
 		
-		paper-toolbar {
+		paper-toolbar.myToolbar {
 			background-color: #03a9f4;
 			color: white;
 		}
@@ -23,10 +23,19 @@
 </head>
 
 <body>
-	<paper-toolbar id="toolbar" style="background-color:#03a9f4">
-		<tg-chooser></tg-chooser>
-	</paper-toolbar>
+	<template id="colorId" is="dom-bind">
+		<paper-toolbar class="myToolbar" id="toolbar" style$="[[calcColorStyle(color)]]">
+			<tg-chooser color="{{color}}"></tg-chooser>
+
+		</paper-toolbar>
+	</template>
 
 </body>
+<script>
+	var colorId = document.querySelector('#colorId');
+	colorId.calcColorStyle = function (color) {
+		return "background-color: " + color;
+	}
+</script>
 
 </html>
