@@ -5,6 +5,7 @@
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
+<link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -181,7 +182,7 @@
                             </div>
                         </template>
                         <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                            <div class="table-cell layout horizontal center">
+                            <div class="table-cell layout horizontal center" style="width:40px">
                                 <!--Secondary actions header goes here-->
                             </div>
                         </template>
@@ -212,7 +213,13 @@
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                                 <div class="table-cell">
-                                    <!--Secondary actions header goes here-->
+                                    <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
+                                        <tg-page-action icon="[[secondaryActions[0].icon]]" action="[[secondaryActions[0].action]]" context="[[egiEntity.entity]]" hidden$="[[!secondaryActions[0].action]]"></tg-page-action>
+                                        <tg-ui-action show-dialog="[[secondaryActions[0].showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions[0].action]]" short-desc="[[secondaryActions[0].shortDesc]]" long-desc="[[secondaryActions[0].longDesc]]" icon="[[secondaryActions[0].icon]]" component-uri="[[secondaryActions[0].componentUri]]" element-name="[[secondaryActions[0].elementName]]" attrs="[[secondaryActions[0].attrs]]" create-context-holder="[[secondaryActions[0].createContextHolder]]" require-selection-criteria="[[secondaryActions[0].requireSelectionCriteria]]" require-selected-entities="[[secondaryActions[0].requireSelectedEntities]]" require-master-entity="[[secondaryActions[0].requireMasterEntity]]" pre-action="[[secondaryActions[0].preAction]]" post-action-success="[[secondaryActions[0].postActionSuccess]]" post-action-error="[[secondaryActions[0].postActionError]]"></tg-ui-action>
+                                    </template>
+                                    <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
+                                        <tg-secondary-action-button current-entity="[[entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
+                                    </template>
                                 </div>
                             </template>
                         </div>
@@ -532,7 +539,9 @@
                     }
                     self.push('egiModel', egiEntity);
                 });
-                if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {return elem.selected})) {
+                if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
+                    return elem.selected
+                })) {
                     this.selectedAll = true;
                 } else {
                     this.selectedAll = false;
@@ -563,7 +572,9 @@
                     _processEntitySelection(this.selectedEntities, this.entities[index], e.srcElement.checked);
                     if (this.selectedAll && !e.srcElement.checked) {
                         this.selectedAll = false;
-                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {return elem.selected})) {
+                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
+                        return elem.selected
+                    })) {
                         this.selectedAll = true;
                     }
                 }
@@ -709,6 +720,12 @@
              */
             _isNotBooleanProp: function (entity, column) {
                 return column.type !== 'Boolean';
+            },
+            /**
+             * determines whether secondary actions is only one or not.
+             */
+            _isOnlyOneSecondaryActions: function(_secondaryActions) {
+                return _secondaryActions.length === 1;
             },
             /**
              * Returns icon that represents the boolean value.
