@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+<link rel="import" href="/resources/polymer/iron-a11y-keys/iron-a11y-keys.html">
 
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
@@ -79,6 +80,8 @@
         
         <iron-ajax id="ajaxSearcher" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
         <tg-serialiser id="serialiser"></tg-serialiser>
+        <iron-a11y-keys target="{{}}" keys="down" on-keys-pressed="_selectNext"></iron-a11y-keys>
+        <iron-a11y-keys target="{{}}" keys="up" on-keys-pressed="_selectPrev"></iron-a11y-keys>
     </template>
 
 </dom-module>
@@ -98,6 +101,24 @@
 
         Polymer({
             is: 'tg-entity-editor',
+            
+            _selectNext: function(e) {
+                e.stopPropagation();
+                if (this.$.result.opened) {
+                    console.log('select next');
+                    this.$.result.selectNext();
+                } else {
+                    this._searchOnTap();
+                }
+            },
+            
+            _selectPrev: function(e) {
+                e.stopPropagation();
+                if (this.$.result.opened) {
+                    console.log('select prev');
+                    this.$.result.selectPrev();
+                } 
+            },
 
             behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgEditorBehavior],
 

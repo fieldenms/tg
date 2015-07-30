@@ -98,6 +98,7 @@
     (function () {
         Polymer({
             is: 'tg-entity-editor-result',
+            
             behaviors: [Polymer.IronOverlayBehavior],
 
             properties: {
@@ -106,7 +107,7 @@
                 	type: Boolean,
                 	value: false
                 },
-
+                
                 /* An array of entities that match the search request.
                  * Should NOT be manipulated directly -- only via methods pushValue and clearSelection.*/
                 _values: {
@@ -143,6 +144,7 @@
             },
 
             clearSelection: function () {
+                this.$.selector.selectedItem = null;
             	this.selectedValues = {};
             	while(this.pop('_values')){}
             	
@@ -335,8 +337,30 @@
 				delete this.selectedValues[value];
 
 				console.log('unselected item: ', value, ' size:', Object.keys(this.selectedValues).length);
-			}
+			},
 
+			selectFirst: function () {
+			    if (this._values.length > 0) {
+			        this.$.selector.selected = this._values[0].key;
+			        console.log('first ', this._values[0].key, this.$.selector.selected);
+			    }
+			},
+			
+			selectNext: function () {
+			    if (!this.$.selector.selected) {
+                    this.selectFirst();
+                } else {
+                    this.$.selector.selectNext();
+                }
+            },
+            
+            selectPrev: function () {
+                if (!this.$.selector.selectedItem) {
+                    this.selectFirst();
+                } else {
+                    this.$.selector.selectPrevious();
+                }
+            }
 		});
 	})();
 </script>
