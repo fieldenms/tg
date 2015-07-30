@@ -33,11 +33,11 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         final Map<String, Object> attrs = new LinkedHashMap<>();
 
         // TODO please implement StringBuilder that aggregates all composite key members into 'additionalProperties' (and incorporate 'desc' as below).
-//        if (shouldSearchByDesc) { // FIXME JSON should be generated in single quotes
-//            attrs.put("additional-properties", "{desc:true}");
-//        } else {
-//            attrs.put("additional-properties", "{desc:false}");
-//        }
+        if (shouldSearchByDesc) {
+            attrs.put("additional-properties", "{\"desc\":true}");
+        } else {
+            attrs.put("additional-properties", "{\"desc\":false}");
+        }
         attrs.put("process-response", "[[_processResponse]]");
         attrs.put("process-error", "[[_processError]]");
         attrs.put("post-searched-default-error", "[[_postSearchedDefaultError]]");
