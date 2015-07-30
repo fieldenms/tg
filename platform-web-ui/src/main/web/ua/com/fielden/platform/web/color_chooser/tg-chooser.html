@@ -12,6 +12,8 @@
 <dom-module id="tg-chooser">
 	<style>
 		paper-dialog.size-position {
+			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+			font-size: 14pt;
 			position: fixed;
 			top: 20px;
 			right: 1160px;
@@ -19,29 +21,27 @@
 		
 		paper-dialog.size-position {
 			width: 340px;
-			height: 100px;
-		}
-		
-		paper-icon-button.for-colors {
-			width: 10px;
-			height: 10px;
-			border-bottom-color: red;
+			height: 145px;
+			max-width: 600;
 		}
 		
 		.input-color {
-			position: relative;
+			position: static;
 		}
-		
+		/*
 		.input-color input {
-			/*
+			width: auto;
+			height: auto;
+			
 			padding-left: 15px;
 			padding-top: 10px;
-*/
+
 		}
+*/
 		
 		.input-color .color-box {
 			width: 40px;
-			height: 30px;
+			height: 40px;
 			display: inline-block;
 			background-color: #ccc;
 			position: absolute;
@@ -51,39 +51,59 @@
 	</style>
 	<template>
 		<paper-icon-button icon="editor:format-color-fill" onclick="dialog.toggle()"></paper-icon-button>
-		<paper-dialog id="dialog" heading="Custom Size &amp; Position" class="size-position">
-			<!--
+		<paper-dialog id="dialog" class="size-position">
+
 			<div class="input-color">
-				<input type="text" value="Orange" />
-				<div class="color-box" style="background-color: #FF850A;"></div>
+				<!--				<div style=" left:55px">{{color}}</div>-->
+				<div class="color-box" style$="[[_calcColorBoxStyle(color)]]">
+					<div style=" left:55px">{{color}}</div>
+				</div>
+			</div>
+
+			<!--
+			<div class="input-color" style=" left: 45px;">
+				<div>{{color}}</div>
 			</div>
 -->
-			<div class="input-color">
-				<div class="color-box" style="background-color: #F44336;"></div>
-				<div class="color-box" style="background-color: #FF9800; left: 50px"></div>
-				<div class="color-box" style="background-color: #FFEB3B; left: 90px"></div>
-				<div class="color-box" style="background-color: #4CAF50; left: 130px"></div>
-				<div class="color-box" style="background-color: #009688; left: 170px"></div>
-				<div class="color-box" style="background-color: #00BCD4; left: 210px"></div>
-				<div class="color-box" style="background-color: #3F51B5; left: 250px"></div>
-				<div class="color-box" style="background-color: #9C27B0; left: 290px"></div>
 
-				<div class="color-box" style="background-color: #EF9A9A; top: 40px;"></div>
-				<div class="color-box" style="background-color: #FFCC80; top: 40px; left: 50px"></div>
-				<div class="color-box" style="background-color: #FFF59D; top: 40px;left: 90px"></div>
-				<div class="color-box" style="background-color: #A5D6A7; top: 40px;left: 130px"></div>
-				<div class="color-box" style="background-color: #80CBC4; top: 40px;left: 170px"></div>
-				<div class="color-box" style="background-color: #80DEEA; top: 40px;left: 210px"></div>
-				<div class="color-box" style="background-color: #9FA8DA; top: 40px;left: 250px"></div>
-				<div class="color-box" style="background-color: #CE93D8; top: 40px;left: 290px"></div>
+
+			<div class="input-color">
+				<div class="color-box" on-tap="colorSelected" style="background-color: #F44336; top: 60px; left 5px;"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #FF9800; top: 60px;left: 50px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #FFEB3B; top: 60px; left: 90px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #4CAF50; top: 60px; left: 130px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #009688; top: 60px;left: 170px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #00BCD4; top: 60px; left: 210px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #3F51B5; top: 60px;left: 250px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #9C27B0; top: 60px;left: 290px"></div>
+
+				<div class="color-box" on-tap="colorSelected" style="background-color: #EF9A9A; top: 100px; left 5px;"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #FFCC80; top: 100px; left: 50px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #FFF59D; top: 100px;left: 90px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #A5D6A7; top: 100px;left: 130px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #80CBC4; top: 100px;left: 170px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #80DEEA; top: 100px;left: 210px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #9FA8DA; top: 100px;left: 250px"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #CE93D8; top: 100px;left: 290px"></div>
 			</div>
 
 		</paper-dialog>
+
 	</template>
 </dom-module>
 <script>
 	Polymer({
 		is: "tg-chooser",
-		properties: {}
+		properties: {
+			color: String
+		},
+		colorSelected: function (e, detail) {
+			this.color = e.srcElement.style['background-color'];
+		},
+		_calcColorBoxStyle: function (color) {
+			return "background-color: " + color + "; left: 10px;top: 0px;";
+		},
+
+
 	});
 </script>
