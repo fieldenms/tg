@@ -28,16 +28,6 @@
 		.input-color {
 			position: static;
 		}
-		/*
-		.input-color input {
-			width: auto;
-			height: auto;
-			
-			padding-left: 15px;
-			padding-top: 10px;
-
-		}
-*/
 		
 		.input-color .color-box {
 			width: 40px;
@@ -54,21 +44,20 @@
 		<paper-dialog id="dialog" class="size-position">
 
 			<div class="input-color">
-				<!--				<div style=" left:55px">{{color}}</div>-->
-				<div class="color-box" style$="[[_calcColorBoxStyle(color)]]">
-					<div style=" left:55px">{{color}}</div>
-				</div>
+
+				<div class="color-box" style$="[[_calcColorBoxStyle(color)]]"> </div>
+				<!--				<div style$="[[_calcStyle()]]">[[color]]</div>-->
 			</div>
 
-			<!--
-			<div class="input-color" style=" left: 45px;">
-				<div>{{color}}</div>
+
+			<div class="input-color" style="top:5px; left: 50px; position: absolute">
+				<div>[[color]]</div>
 			</div>
--->
+
 
 
 			<div class="input-color">
-				<div class="color-box" on-tap="colorSelected" style="background-color: #F44336; top: 60px; left 5px;"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #F44336; top: 60px; left: 10px;"></div>
 				<div class="color-box" on-tap="colorSelected" style="background-color: #FF9800; top: 60px;left: 50px"></div>
 				<div class="color-box" on-tap="colorSelected" style="background-color: #FFEB3B; top: 60px; left: 90px"></div>
 				<div class="color-box" on-tap="colorSelected" style="background-color: #4CAF50; top: 60px; left: 130px"></div>
@@ -77,7 +66,7 @@
 				<div class="color-box" on-tap="colorSelected" style="background-color: #3F51B5; top: 60px;left: 250px"></div>
 				<div class="color-box" on-tap="colorSelected" style="background-color: #9C27B0; top: 60px;left: 290px"></div>
 
-				<div class="color-box" on-tap="colorSelected" style="background-color: #EF9A9A; top: 100px; left 5px;"></div>
+				<div class="color-box" on-tap="colorSelected" style="background-color: #EF9A9A; top: 100px; left: 10px;"></div>
 				<div class="color-box" on-tap="colorSelected" style="background-color: #FFCC80; top: 100px; left: 50px"></div>
 				<div class="color-box" on-tap="colorSelected" style="background-color: #FFF59D; top: 100px;left: 90px"></div>
 				<div class="color-box" on-tap="colorSelected" style="background-color: #A5D6A7; top: 100px;left: 130px"></div>
@@ -95,15 +84,38 @@
 	Polymer({
 		is: "tg-chooser",
 		properties: {
-			color: String
+			color: {
+
+				notify: true,
+
+			},
 		},
 		colorSelected: function (e, detail) {
-			this.color = e.srcElement.style['background-color'];
-		},
-		_calcColorBoxStyle: function (color) {
-			return "background-color: " + color + "; left: 10px;top: 0px;";
+			this.color = rgbToHex(e.srcElement.style['background-color']);
 		},
 
+
+		_calcColorBoxStyle: function (color) {
+			return "background-color: " + color + "; left: 10px;top: 10px;";
+		},
+		_calcStyle: function () {
+			return " left: 120px;top: 10px;";
+		},
 
 	});
+
+	function rgbToHex(color) {
+		if (color.substr(0, 1) === "#") {
+			return color;
+		}
+		var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(color),
+			r = parseInt(nums[2], 10).toString(16),
+			g = parseInt(nums[3], 10).toString(16),
+			b = parseInt(nums[4], 10).toString(16);
+		return "#" + (
+			(r.length == 1 ? "0" + r : r) +
+			(g.length == 1 ? "0" + g : g) +
+			(b.length == 1 ? "0" + b : b)
+		);
+	}
 </script>
