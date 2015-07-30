@@ -7,28 +7,31 @@
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 
 <dom-module id="tg-action">
-	<style>
-		/*
-		<core-style id="paper-button-progress">
-		    paper-spinner { position: absolute; top: 0px; padding: 2px; margin: 0px; width: 24px; height: 24px;}
-		    <!-- -->
-    		paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
-		</core-style>
-		<core-style ref="paper-button-progress"></core-style>		
-		*/
-		
-	</style>
+    <style>
+        paper-spinner {
+            position: absolute;
+            top: 0px;
+            padding: 2px;
+            margin: 0px;
+            width: 24px;
+            height: 24px;
+            --paper-spinner-layer-1-color: blue;
+            --paper-spinner-layer-2-color: blue;
+            --paper-spinner-layer-3-color: blue;
+            --paper-spinner-layer-4-color: blue;
+        }
+    </style>
     <template>
-		<tg-abstract-action id="abstractActionDom">
-		</tg-abstract-action>
+        <tg-abstract-action id="abstractActionDom">
+        </tg-abstract-action>
 
         <!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!longDesc}}"> -->
-            <paper-button id="actionButton" raised roll="button" on-tap="run" style="width:100%" disabled$="[[_disabled]]">
-                <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
-                </paper-spinner>
-                <span>[[shortDesc]]</span>
-            </paper-button>
-            <!-- <span class="span-tooltip" tip>
+        <paper-button id="actionButton" raised roll="button" on-tap="run" style="width:100%" disabled$="[[_disabled]]">
+            <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
+            </paper-spinner>
+            <span>[[shortDesc]]</span>
+        </paper-button>
+        <!-- <span class="span-tooltip" tip>
                 {{longDesc}}
             </span>
         </core-tooltip> -->
@@ -36,9 +39,9 @@
 </dom-module>
 
 <script>
-	Polymer({
-		is: "tg-action",
+    Polymer({
+        is: "tg-action",
 
-		behaviors: [ Polymer.TgBehaviors.TgActionBehavior ]
-	});
+        behaviors: [Polymer.TgBehaviors.TgActionBehavior]
+    });
 </script>
