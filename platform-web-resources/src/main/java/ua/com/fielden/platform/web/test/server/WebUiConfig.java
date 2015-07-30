@@ -361,7 +361,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
-                .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
+                // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
                 .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
