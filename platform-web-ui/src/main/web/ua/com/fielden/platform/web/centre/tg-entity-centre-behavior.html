@@ -467,6 +467,10 @@
             canNotCurrent: function (pageNumber, pageCount) {
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canCurrent(pageNumber, pageCount);
             },
+            
+            currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {
+            	return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
+            },
 
             canSave: function (centreChanged) {
                 return this.canManageCentreConfig(centreChanged);

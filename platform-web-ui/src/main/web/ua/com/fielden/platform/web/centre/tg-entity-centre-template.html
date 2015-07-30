@@ -101,14 +101,16 @@
 
 <dom-module id="tg-@entity_type-centre">
     <style>
+    	paper-icon-button.revers {
+            --paper-icon-button: {
+                transform: scale(-1, 1);
+            };
+        }
         /* * /deep/ core-tooltip::shadow #tooltip {
             white-space: normal;
         }
         * /deep/ core-tooltip .span-tooltip {
             line-height: 15px;
-        }
-        core-icon-button.revers::shadow core-icon {
-            transform: scale(-1, 1);
         }
         core-tooltip.delayed:hover::shadow .core-tooltip,
         core-tooltip.delayed:focus::shadow .core-tooltip {
@@ -148,7 +150,21 @@
         	discard="[[discard]]"
         	run="[[run]]"
         	>
-            <tg-@entity_type-selection-criteria id="selection_criteria" class="custom-selection-criteria" _centre-changed="{{_centreChanged}}" uuid="[[uuid]]" mi-type="@mi_type" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" @queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
+            <tg-@entity_type-selection-criteria
+            	id="selection_criteria"
+            	class="custom-selection-criteria"
+            	_centre-changed="{{_centreChanged}}"
+            	uuid="[[uuid]]"
+            	mi-type="@mi_type"
+            	post-run="[[_postRun]]"
+            	get-selected-entities="[[_getSelectedEntities]]"
+            	get-master-entity="[[getMasterEntity]]"
+            	post-retrieved="[[postRetrieved]]"
+            	page-number="{{pageNumber}}"
+            	page-count="{{pageCount}}"
+            	page-number-updated="{{pageNumberUpdated}}"
+            	page-count-updated="{{pageCountUpdated}}"
+            	@queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
 
             <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entity-type="@full_entity_type" @gridLayout>
                 <!-- EGI COLUMNS DOM (GENERATED) -->
@@ -175,25 +191,24 @@
                 	<!-- <span class="span-tooltip" tip>Export to Excel</span>
                 </core-tooltip> -->
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-tab" on-tap="firstPage"></paper-icon-button> <!-- disabled$="[[canNotFirst($.selection_criteria.pageNumber, $.selection_criteria.pageCount)]]" -->
+                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-tab" on-tap="firstPage" disabled$="[[canNotFirst(pageNumber, pageCount)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>First page</span>
                 </core-tooltip> -->
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button icon="hardware:keyboard-backspace" class="standart-action" on-tap="prevPage"></paper-icon-button> <!-- disabled$="[[canNotPrev($.selection_criteria.pageNumber)]]" -->
+                    <paper-icon-button icon="hardware:keyboard-backspace" class="standart-action" on-tap="prevPage" disabled$="[[canNotPrev(pageNumber)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>Previous page</span>
                 </core-tooltip> -->
-                <span class="standart-action">1 / 1</span>
-                <!-- <span class="standart-action">{{$.selection_criteria.pageNumberUpdated !== null ? ($.selection_criteria.pageNumberUpdated + 1) : 1}} / {{$.selection_criteria.pageCountUpdated !== null ? $.selection_criteria.pageCountUpdated : 1}}</span> -->
+                <span class="standart-action">[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]</span>
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-backspace" on-tap="nextPage"></paper-icon-button> <!--  disabled$="{{canNotNext($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}" -->
+                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-backspace" on-tap="nextPage" disabled$="[[canNotNext(pageNumber, pageCount)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>Next page</span>
                 </core-tooltip> -->
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button icon="hardware:keyboard-tab" class="standart-action" on-tap="lastPage"></paper-icon-button> <!--  disabled$="{{canNotLast($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}" -->
+                    <paper-icon-button icon="hardware:keyboard-tab" class="standart-action" on-tap="lastPage" disabled$="[[canNotLast(pageNumber, pageCount)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>Last page</span>
                 </core-tooltip> -->
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="standart-action" icon="refresh" on-tap="currentPage"></paper-icon-button> <!--  disabled$="{{canNotCurrent($.selection_criteria.pageNumber, $.selection_criteria.pageCount)}}" -->
+                    <paper-icon-button class="standart-action" icon="refresh" on-tap="currentPage" disabled$="[[canNotCurrent(pageNumber, pageCount)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>Refresh</span>
                 </core-tooltip> -->
                 
@@ -222,7 +237,11 @@
             properties: {
             	_handleScroll: {
             		type: Function
-            	}
+            	},
+            	pageNumber: Number,
+            	pageCount: Number,
+            	pageNumberUpdated: Number,
+            	pageCountUpdated: Number,
             },
         	
             /**
