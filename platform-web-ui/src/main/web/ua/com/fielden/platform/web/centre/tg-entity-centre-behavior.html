@@ -397,7 +397,8 @@
              * Starts the process of criteria entity retrieval.
              */
             retrieve: function () {
-            	console.log("entity centre behavior: retrieve:");
+            	console.warn("criteria-entity-retrieval");
+            	console.time("criteria-entity-retrieval");
                 this.$.selection_criteria.retrieve();
             },
 

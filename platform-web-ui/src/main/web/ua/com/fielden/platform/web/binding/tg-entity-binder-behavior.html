@@ -581,6 +581,8 @@
                 this._resetRefreshCycleModeForEditors();
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
+                console.timeEnd('criteria-entity-retrieval');
+                console.timeEnd('loading-all');
                 return self._currBindingEntity;
             },
 

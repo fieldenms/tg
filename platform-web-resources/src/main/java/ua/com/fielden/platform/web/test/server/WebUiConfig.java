@@ -662,6 +662,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .captionBgColor("#2C89A0")
                 .menu().addMenuItem("First view").description("First view description").view(null).done()
                 /*  */.addMenuItem("Second view").description("Second view description").view(null).done()
+                /*  */.addMenuItem("Entity Centre 1").description("Entity centre description").centre(entityCentre).done()
+                /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre).done()
+                /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre).done()
+                /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre).done()
                 /*  */.addMenuItem("Third view").description("Third view description").view(null).done().done()
                 /*.menu()
                     .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()*/
