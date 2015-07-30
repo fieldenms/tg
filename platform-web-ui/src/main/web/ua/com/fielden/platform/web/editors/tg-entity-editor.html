@@ -71,7 +71,7 @@
     		_on-keydown="[[_onKeydown]]"
     		_autocompleter-blur-event-handler="[[_blurEventHandler]]"
     		>
-	    	<paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_search" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
+	    	<paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
     	</tg-editor>
@@ -267,8 +267,9 @@
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
-                			console.log("_onInput:", event, event.keyCode);
-                			this._inputEventHandler();
+                            // clear any search request in already in progress
+                            this._cancelSearch();
+                            this._asyncSearchHandle = this.async(this._searchForOnInput, 700);
                     	}).bind(this);
                 	}
                 },
@@ -372,15 +373,25 @@
                 }
                 return str;
             },
-
-            _search: function () {
-                // TODO need to implement the actuall search
-                
+            
+            /* Invokes _search with '*' as the default search value, so than when nothing was typed, but 
+             * the search button has been pressed then the search happens as if wildcard has been typed. */
+            _searchOnTap: function (e) {
+                this._search('*');
+            },
+            
+            /* Invokes _search with an emply string as the default search value, which ensures what no search would happen
+             * if nothing was typed into the input field. */
+            _searchForOnInput: function () {
+                this._search('');
+            },
+            
+            _search: function (defaultSearchQuery) {
                 // What is the query string?
                 var inputText = ''; // default value
                 if (this.multi === false) {
                 	// assign the actual search string
-                	inputText = this._prepInput(this.decoratedInput().value);
+                	inputText = this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
                 } else {
                     // The following manipulations with indexes are required in case of multi selection
                     // in order to detremine what part of the input text should be used for search and
@@ -404,7 +415,7 @@
                 	this._replaceToIndex = toIndex;
                 	
                 	// assign the actual search string
-                	inputText = this._prepInput(text.substring(fromIndex + 1, toIndex).trim());
+                	inputText = this._prepInput(text.substring(fromIndex + 1, toIndex).trim()) || defaultSearchQuery;
                 }                
                	
                 // prep this.searchQuery for highlighting of the matching parts in the search result
@@ -482,12 +493,6 @@
             	} else {
                 	return Polymer.TgBehaviors.TgEditorBehavior.createContextHolder.call(this, inputText);
             	}
-            },
-            
-            _inputEventHandler: function() {
-            	// clear any search request in already in progress
-                this._cancelSearch();
-                this._asyncSearchHandle = this.async(this._search.bind(this), 700);
             },
             
             _cancelSearch: function() {
