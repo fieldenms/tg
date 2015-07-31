@@ -139,16 +139,22 @@
                 	value: function () {
                 		return {};
                 	}
+                },
+                
+                _selectedIndex: {
+                    type: Number,
+                    value: 0
                 }
                 
             },
 
             clearSelection: function () {
+                this._selectedIndex = 0;
                 this.$.selector.selectedItem = null;
             	this.selectedValues = {};
             	while(this.pop('_values')){}
             	
-                if (this.multi) {
+                if (this.multi === true) {
                     this.$.selector.selectedValues = [];
                 } else {
                 	this.$.selector.selected = '';
@@ -341,26 +347,46 @@
 
 			selectFirst: function () {
 			    if (this._values.length > 0) {
-			        this.$.selector.select(this.$.selector._indexToValue(0));
-			        console.log('first ', this._values[0].key, this.$.selector.selected);
+			        this._selectedIndex = 0;
+			        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
 			    }
 			},
 			
 			selectNext: function () {
-			    if (!this.$.selector.selected) {
+			    if ((!this.multi && !this.$.selector.selected) || (this.multi === true && this.$.selector.selectedValues.length === 0)) {
                     this.selectFirst();
                 } else {
-                    this.$.selector.selectNext();
+                    var length = this._values.length;
+                    if (this.multi == false) {
+                        this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                    } else {
+                        
+                        var index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        this.$.selector.select(this.$.selector._indexToValue(index));
+                        this._selectedIndex = index;
+                    }
                 }
             },
             
             selectPrev: function () {
-                if (!this.$.selector.selectedItem) {
+                if ((!this.multi && !this.$.selector.selected) || (this.multi === true && this.$.selector.selectedValues.length === 0)) {
                     this.selectFirst();
                 } else {
-                    this.$.selector.selectPrevious();
+                    var length = this._values.length;
+                    if (this.multi === false) {
+                        this._selectedIndex = (this._selectedIndex - 1) >= 0 ? (this._selectedIndex - 1) : length - 1;
+                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                    } else {
+                        var index = (this._selectedIndex - 1) >= 0 ? (this._selectedIndex - 1) : length - 1;
+                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        this.$.selector.select(this.$.selector._indexToValue(index));
+                        this._selectedIndex = index;
+                    }
                 }
             }
+            
 		});
 	})();
 </script>
