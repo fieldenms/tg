@@ -341,7 +341,7 @@
 
 			selectFirst: function () {
 			    if (this._values.length > 0) {
-			        this.$.selector.selected = this._values[0].key;
+			        this.$.selector.select(this.$.selector._indexToValue(0));
 			        console.log('first ', this._values[0].key, this.$.selector.selected);
 			    }
 			},

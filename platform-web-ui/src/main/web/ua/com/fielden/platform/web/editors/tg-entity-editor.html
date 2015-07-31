@@ -4,7 +4,6 @@
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-<link rel="import" href="/resources/polymer/iron-a11y-keys/iron-a11y-keys.html">
 
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
@@ -80,8 +79,6 @@
         
         <iron-ajax id="ajaxSearcher" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <iron-a11y-keys target="{{}}" keys="down" on-keys-pressed="_selectNext"></iron-a11y-keys>
-        <iron-a11y-keys target="{{}}" keys="up" on-keys-pressed="_selectPrev"></iron-a11y-keys>
     </template>
 
 </dom-module>
@@ -101,26 +98,11 @@
 
         Polymer({
             is: 'tg-entity-editor',
-            
-            _selectNext: function(e) {
-                e.stopPropagation();
-                if (this.$.result.opened) {
-                    console.log('select next');
-                    this.$.result.selectNext();
-                } else {
-                    this._searchOnTap();
-                }
-            },
-            
-            _selectPrev: function(e) {
-                e.stopPropagation();
-                if (this.$.result.opened) {
-                    console.log('select prev');
-                    this.$.result.selectPrev();
-                } 
-            },
 
-            behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgEditorBehavior],
+            behaviors: [
+                        Polymer.IronResizableBehavior, 
+                        Polymer.TgBehaviors.TgEditorBehavior
+                        ],
 
             /********************************************************
              ********************************************************
@@ -304,10 +286,28 @@
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
-                			console.log("_onKeydown:", event, event.keyCode);
+                			console.log("_onKeydown:", event.keyCode);
                     		if (event.keyCode === 13) { // 'Enter' has been pressed
                     			this._done();
-                    		} 
+                    		} else if (event.keyCode === 38 || event.keyCode === 40) { // up/down arrow keys
+                    		    // By devault up/down arrow keys work like home/end for and input field
+                    		    // That's why this event should be suppressed.
+                    		    event.stopPropagation();
+                    		    if(event.stopPropagation) event.stopPropagation();
+                    		    if(event.preventDefault) event.preventDefault();
+                    		    event.cancelBubble=true;
+                    		    event.returnValue=false;
+                    		    
+                    		    // Let's now handle the up/down logic that should perform search result list navigation
+                    		    if (event.keyCode === 38) {
+                    		        this._selectPrevOnKeyUp(event);
+                    		    } else if (event.keyCode === 40) {
+                                    this._selectNextOnKeyDown(event);
+                                }
+                    		    
+                    		    // return false as part of stopping the event from propagation
+                    		    return false;
+                    		}
                     		/* else if (event.keyCode === 27) { // 'ESC' has been pressed
                     			this.opened = false;
                     			this.$.result.close();
@@ -344,6 +344,8 @@
             },
 
             ready: function() {
+                this._target = this.decoratedInput();
+                
             	var result = this.$.result;
             	result.multi = this.multi;
                 if (this.additionalProperties) {
@@ -705,7 +707,24 @@
                 this.opened = true;
                 this.$.result.close();
                 this.processError(e, "search");
+            },
+            
+            _selectNextOnKeyDown: function(e) {
+                if (this.$.result.opened) {
+                    console.log('select next');
+                    this.$.result.selectNext();
+                } else {
+                    this._searchOnTap();
+                }
+            },
+            
+            _selectPrevOnKeyUp: function(e) {
+                if (this.$.result.opened) {
+                    console.log('select prev');
+                    this.$.result.selectPrev();
+                } 
             }
+
         });
     })();
 </script>
