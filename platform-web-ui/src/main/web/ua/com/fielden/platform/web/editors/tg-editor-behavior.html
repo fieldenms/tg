@@ -288,8 +288,6 @@
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
-                    		console.log("_onKeydown:", event);
-                    		
                     		if (event.keyCode === 13 && !this.reflector().equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
                     			this.commit();
                     		}
