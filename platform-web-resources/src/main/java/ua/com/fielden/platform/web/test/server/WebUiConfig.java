@@ -677,7 +677,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
                 .menu()
-                    .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
