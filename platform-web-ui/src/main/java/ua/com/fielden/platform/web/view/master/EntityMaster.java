@@ -140,7 +140,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
             return new IRenderable() {
                 @Override
                 public DomElement render() {
-                    return new InnerTextElement(smConfig.render().render().toString().replace("noUI: false", "noUI: true"));
+                    return new InnerTextElement(smConfig.render().render().toString().replace("noUI:{type: Boolean,value:false}", "noUI:{type: Boolean,value:true}"));
                 }
             };
         } else {

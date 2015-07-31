@@ -50,11 +50,11 @@
         }
         .table-cell,
         .table-data-cell {
-            margin-right: 1.2rem;
+            padding-right: 1.2rem;
         }
         .table-cell:first-child,
         .table-data-cell:first-child {
-            margin-left: 1.2rem;
+            padding-left: 1.2rem;
         }
         .table-data-cell {
             cursor: pointer;
@@ -201,7 +201,7 @@
                             </template>
                             <template is="dom-repeat" items="[[columns]]" as="column">
                                 <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
-                                    <div class="fit" style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]">
+                                    <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                         <iron-icon icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
@@ -294,7 +294,7 @@
                                 <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(column)]]">
                                     <div class="data-label truncate">[[column.columnTitle]]</div>
                                     <div class="data-value relative" on-tap="_tapAction">
-                                        <div style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]" class="fit">
+                                        <div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]" class="fit">
                                         </div>
                                         <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                             <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
@@ -315,7 +315,7 @@
                                         <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(column)]]">
                                             <div class="data-label truncate">[[column.columnTitle]]</div>
                                             <div class="data-value relative" on-tap="_tapAction">
-                                                <div style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]" class="fit">
+                                                <div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]" class="fit">
                                                 </div>
                                                 <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                                     <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
@@ -610,7 +610,7 @@
             /**
              * Calculates the style for cell that represents rendering hints.
              */
-            _calcRenderingHintsStyle: function (entityIndex, property) {
+            _calcRenderingHintsStyle: function (entity, entityIndex, property) {
                 var style = "opacity: 0.3;",
                     rendHints = (this.renderingHints && this.renderingHints[entityIndex][property]) || [];
                 for (var property in rendHints) {
