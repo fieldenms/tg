@@ -9,15 +9,15 @@
 	<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 	<link rel="import" href="tg-chooser.html">
 
-	<style>
+	<style is="custom-style">
 		body {
 			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 			font-size: 10pt;
 		}
 		
-		paper-toolbar.myToolbar {
-			background-color: #03a9f4;
-			color: white;
+		paper-toolbar {
+			--paper-toolbar-background: #03a9f4;
+			--paper-toolbar-color: white;
 		}
 	</style>
 </head>
@@ -29,7 +29,6 @@
 
 		</paper-toolbar>
 	</template>
-
 </body>
 <script>
 	var colorId = document.querySelector('#colorId');

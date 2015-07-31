@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
+<link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
@@ -11,69 +12,58 @@
 
 <dom-module id="tg-chooser">
 	<style>
-		paper-dialog.size-position {
+		paper-dialog {
 			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-			font-size: 14pt;
+			font-size: 15pt;
 			position: fixed;
 			top: 20px;
 			right: 1160px;
 		}
 		
-		paper-dialog.size-position {
-			width: 340px;
-			height: 145px;
-			max-width: 600;
+		paper-dialog > * {
+			margin: 0;
+			padding: 0;
 		}
 		
-		.input-color {
-			position: static;
-		}
-		
-		.input-color .color-box {
+		.color-box {
 			width: 40px;
 			height: 40px;
-			display: inline-block;
 			background-color: #ccc;
-			position: absolute;
-			left: 10px;
-			top: 10px;
 		}
 	</style>
 	<template>
 		<paper-icon-button icon="editor:format-color-fill" onclick="dialog.toggle()"></paper-icon-button>
-		<paper-dialog id="dialog" class="size-position">
+		<paper-dialog id="dialog">
 
-			<div class="input-color">
-
-				<div class="color-box" style$="[[_calcColorBoxStyle(color)]]"> </div>
-				<!--				<div style$="[[_calcStyle()]]">[[color]]</div>-->
+			<div class="layout horizontal center" style="margin-top: 10px;margin-left:10px">
+				<div class="color-box" style$="[[_calcColorBoxStyle(color)]]"></div>
+				<div style="margin-left:10px;">
+					<div>[[color]]</div>
+				</div>
 			</div>
 
 
-			<div class="input-color" style="top:5px; left: 50px; position: absolute">
-				<div>[[color]]</div>
-			</div>
-
-
-
-			<div class="input-color">
-				<div class="color-box" on-tap="colorSelected" style="background-color: #F44336; top: 60px; left: 10px;"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #FF9800; top: 60px;left: 50px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #FFEB3B; top: 60px; left: 90px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #4CAF50; top: 60px; left: 130px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #009688; top: 60px;left: 170px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #00BCD4; top: 60px; left: 210px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #3F51B5; top: 60px;left: 250px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #9C27B0; top: 60px;left: 290px"></div>
-
-				<div class="color-box" on-tap="colorSelected" style="background-color: #EF9A9A; top: 100px; left: 10px;"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #FFCC80; top: 100px; left: 50px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #FFF59D; top: 100px;left: 90px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #A5D6A7; top: 100px;left: 130px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #80CBC4; top: 100px;left: 170px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #80DEEA; top: 100px;left: 210px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #9FA8DA; top: 100px;left: 250px"></div>
-				<div class="color-box" on-tap="colorSelected" style="background-color: #CE93D8; top: 100px;left: 290px"></div>
+			<div class="layout vertical" style="margin:20px 10px 10px 10px;">
+				<div class="layout horizontal">
+					<div class="color-box" on-tap="colorSelected" style="background-color: #F44336;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #FF9800;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #FFEB3B;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #4CAF50;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #009688;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #00BCD4;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #3F51B5;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #9C27B0;"></div>
+				</div>
+				<div class="layout horizontal">
+					<div class="color-box" on-tap="colorSelected" style="background-color: #EF9A9A;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #FFCC80;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #FFF59D;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #A5D6A7;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #80CBC4;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #80DEEA;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #9FA8DA;"></div>
+					<div class="color-box" on-tap="colorSelected" style="background-color: #CE93D8;"></div>
+				</div>
 			</div>
 
 		</paper-dialog>
@@ -85,23 +75,16 @@
 		is: "tg-chooser",
 		properties: {
 			color: {
-
-				notify: true,
-
-			},
+				type: String,
+				notify: true
+			}
 		},
 		colorSelected: function (e, detail) {
 			this.color = rgbToHex(e.srcElement.style['background-color']);
 		},
-
-
 		_calcColorBoxStyle: function (color) {
-			return "background-color: " + color + "; left: 10px;top: 10px;";
+			return "background-color: " + color;
 		},
-		_calcStyle: function () {
-			return " left: 120px;top: 10px;";
-		},
-
 	});
 
 	function rgbToHex(color) {
