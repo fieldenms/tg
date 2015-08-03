@@ -705,7 +705,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String primaryActionObjectString = primaryActionObject.toString();
         final String propActionsString = propActionsObject.toString();
-        final String gridLayoutConfig = generateGridLayoutConfig();
+        final Pair<String, String> gridLayoutConfig = generateGridLayoutConfig();
         final int prefixLength = prefix.length();
         logger.debug("Initiating template...");
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html");
@@ -713,7 +713,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String entityCentreStr = text.
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
-                replace("@gridLayout", gridLayoutConfig).
+                replace("@gridLayout", gridLayoutConfig.getKey()).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getName()).
                 replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).
@@ -726,6 +726,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("//generatedPropActions", propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
                         : propActionsString).
                 replace("//@layoutConfig", layout.code().toString()).
+                replace("//gridLayoutConfig", gridLayoutConfig.getValue()).
                 replace("<!--@functional_actions-->", functionalActionsDom.toString()).
                 replace("<!--@primary_action-->", primaryActionDom.toString()).
                 replace("<!--@secondary_actions-->", secondaryActionsDom.toString());
@@ -740,40 +741,58 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
-    private String generateGridLayoutConfig() {
-        final StringBuilder resultsetLayout = new StringBuilder(" ");
+    private Pair<String, String> generateGridLayoutConfig() {
+        final StringBuilder resultsetLayoutJs = new StringBuilder();
+        final StringBuilder resultsetLayoutHtml = new StringBuilder();
         final FlexLayout collapseLayout = dslDefaultConfig.getResultsetCollapsedCardLayout();
         final FlexLayout expandLayout = dslDefaultConfig.getResultsetExpansionCardLayout();
         final FlexLayout summaryLayout = dslDefaultConfig.getResultsetSummaryCardLayout();
+
+        final StringBuilder shortLayout = new StringBuilder();
         if (collapseLayout.hasLayoutFor(Device.DESKTOP, null)) {
-            resultsetLayout.append("desktopLayoutShort=\"{{" + collapseLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
+            shortLayout.append("desktop: " + collapseLayout.getLayout(Device.DESKTOP, null).get());
         }
         if (collapseLayout.hasLayoutFor(Device.TABLET, null)) {
-            resultsetLayout.append("tabletLayoutShort=\"{{" + collapseLayout.getLayout(Device.TABLET, null).get() + "}}\" ");
+            shortLayout.append((shortLayout.length() > 0 ? ",\n" : "") + "tablet: " + collapseLayout.getLayout(Device.TABLET, null).get());
         }
         if (collapseLayout.hasLayoutFor(Device.MOBILE, null)) {
-            resultsetLayout.append("mobileLayoutShort=\"{{" + collapseLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
+            shortLayout.append((shortLayout.length() > 0 ? ",\n" : "") + "mobile: " + collapseLayout.getLayout(Device.MOBILE, null).get());
         }
+        if (shortLayout.length() > 0) {
+            resultsetLayoutJs.append("self.gridShortLayout={\n" + shortLayout.toString() + "\n};");
+            resultsetLayoutHtml.append("short-layout='[[gridShortLayout]]'");
+        }
+
+        final StringBuilder longLayout = new StringBuilder();
         if (expandLayout.hasLayoutFor(Device.DESKTOP, null)) {
-            resultsetLayout.append("desktopLayoutLong=\"{{" + expandLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
+            longLayout.append("desktop: " + expandLayout.getLayout(Device.DESKTOP, null).get());
         }
         if (expandLayout.hasLayoutFor(Device.TABLET, null)) {
-            resultsetLayout.append("tabletLayoutLong=\"{{" + expandLayout.getLayout(Device.TABLET, null).get() + "}}\" ");
+            longLayout.append((longLayout.length() > 0 ? ",\n" : "") + "tablet: " + expandLayout.getLayout(Device.TABLET, null).get());
         }
         if (expandLayout.hasLayoutFor(Device.MOBILE, null)) {
-            resultsetLayout.append("mobileLayoutLong=\"{{" + expandLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
+            longLayout.append((longLayout.length() > 0 ? ",\n" : "") + "mobile: " + expandLayout.getLayout(Device.MOBILE, null).get());
         }
+        if (longLayout.length() > 0) {
+            resultsetLayoutJs.append("self.gridLongLayout={\n" + longLayout.toString() + "\n};");
+            resultsetLayoutHtml.append(" long-layout='[[gridLongLayout]]'");
+        }
+
+        final StringBuilder gridSummaryLayout = new StringBuilder();
         if (summaryLayout.hasLayoutFor(Device.DESKTOP, null)) {
-            resultsetLayout.append("summaryDesktopLayout=\"{{" + summaryLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
+            gridSummaryLayout.append("desktop: " + summaryLayout.getLayout(Device.DESKTOP, null).get());
         }
         if (summaryLayout.hasLayoutFor(Device.TABLET, null)) {
-            resultsetLayout.append("summaryTabletLayout=\"{{" + summaryLayout.getLayout(Device.TABLET, null).get() + "}}\" ");
+            gridSummaryLayout.append((gridSummaryLayout.length() > 0 ? ",\n" : "") + "tablet: " + summaryLayout.getLayout(Device.TABLET, null).get());
         }
         if (summaryLayout.hasLayoutFor(Device.MOBILE, null)) {
-            resultsetLayout.append("summaryMobileLayout=\"{{" + summaryLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
+            gridSummaryLayout.append((gridSummaryLayout.length() > 0 ? ",\n" : "") + "mobile: " + summaryLayout.getLayout(Device.MOBILE, null).get());
         }
-        // TODO uncomment return resultsetLayout.toString();
-        return "";
+        if (gridSummaryLayout.length() > 0) {
+            resultsetLayoutJs.append("self.summaryLayout={\n" + gridSummaryLayout.toString() + "\n};");
+            resultsetLayoutHtml.append(" summary-layout='[[summaryLayout]]'");
+        }
+        return new Pair<>(resultsetLayoutHtml.toString(), resultsetLayoutJs.toString());
     }
 
     /**
