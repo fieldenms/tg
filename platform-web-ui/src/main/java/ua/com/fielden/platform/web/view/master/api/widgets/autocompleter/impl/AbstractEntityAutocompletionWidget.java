@@ -1,9 +1,21 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+
+import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCritAutocompletionWidget;
@@ -24,20 +36,41 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     private Class<? extends IValueMatcher> matcherType;
     private boolean shouldSearchByDesc = false;
 
-    public AbstractEntityAutocompletionWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName) {
-        super(widgetPath, titleDesc, propertyName);
+    private final Map<String, Boolean> additionalProps = new LinkedHashMap<>();
+
+    public AbstractEntityAutocompletionWidget(
+            final String widgetPath,
+            final Pair<String, String> titleAndDesc,
+            final String propName,
+            final Class<? extends AbstractEntity<?>> propType) {
+        super(widgetPath, titleAndDesc, propName);
+
+        // let's provide some sensible defaults for additional properties
+        // in most cases description is included, but not searched by
+        // whereas, in case of composite entities, all key members should be included and highlighted as they'are searched by
+        additionalProps.put(AbstractEntity.DESC, false);
+        if (EntityUtils.isCompositeEntity(propType)) {
+            final List<Field> members = Finder.getKeyMembers(propType);
+            for (final Field member: members) {
+                additionalProps.put(member.getName(), true);
+            }
+        }
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = new LinkedHashMap<>();
 
-        // TODO please implement StringBuilder that aggregates all composite key members into 'additionalProperties' (and incorporate 'desc' as below).
-        if (shouldSearchByDesc) {
-            attrs.put("additional-properties", "{\"desc\":true}");
-        } else {
-            attrs.put("additional-properties", "{\"desc\":false}");
+        // let's collect the value for attribute additional-properties as JSON...
+        final String additionalProperties = additionalProps.entrySet().stream()
+                                      .map(entry -> format("\"%s\": %s", entry.getKey(), entry.getValue()))
+                                      .collect(joining(",")).trim();
+        // ...and if it's not empty then associated it with additional-properties
+        if (!StringUtils.isEmpty(additionalProperties)) {
+            attrs.put("additional-properties", format("{%s}", additionalProperties));
         }
+
+        // assign other attributes...
         attrs.put("process-response", "[[_processResponse]]");
         attrs.put("process-error", "[[_processError]]");
         attrs.put("post-searched-default-error", "[[_postSearchedDefaultError]]");
@@ -60,6 +93,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     }
 
     public void setShouldSearchByDesc(final boolean shouldSearchByDesc) {
+        additionalProps.put(AbstractEntity.DESC, shouldSearchByDesc);
         this.shouldSearchByDesc = shouldSearchByDesc;
     }
 

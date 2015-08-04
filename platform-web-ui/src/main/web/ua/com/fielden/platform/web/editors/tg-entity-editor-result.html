@@ -144,6 +144,12 @@
                 _selectedIndex: {
                     type: Number,
                     value: 0
+                },
+                
+                /** A property to pass in an instance of tg-reflector, used for value conversion during rendering. */
+                reflector: {
+                    type: Object,
+                    value: null
                 }
                 
             },
@@ -300,12 +306,13 @@
 
 				
 				// add prop value
+				var propValueAsString = this.reflector.convert(v[propName]) + '';
 				if (highlight === false) {
-					html = html + v[propName];
+					html = html + propValueAsString;
 				} else {
 					// matched parts should be in a separate div
 					html = html + '<div style="white-space: nowrap;">';
-					var matchedParts = this._matchedParts(v[propName]);
+					var matchedParts = this._matchedParts(propValueAsString);
 					for (var index = 0; index < matchedParts.length; index++) {
 						var part = matchedParts[index];
 						if (part.matched) {

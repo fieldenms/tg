@@ -473,6 +473,8 @@
             _onFound: function (entities) {
                 var self = this;
                 var result = self.$.result;
+                // make sure to assign reflector to the result object
+                result.reflector = this.reflector();
 
                 result.clearSelection();
                 self.searching = false;
@@ -659,6 +661,7 @@
              */
             convertToString: function (value) {
             	if (this.multi === true) {
+            	    console.log('THE VALUE FOR VALUE IS', value);
             		return value.join(this.separator); // for empty array it will return "". 'value' should never be 'null'!
             	} else {
                 	return value === null ? "" : "" + value;

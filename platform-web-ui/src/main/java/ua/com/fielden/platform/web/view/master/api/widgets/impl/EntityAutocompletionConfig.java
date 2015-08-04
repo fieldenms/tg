@@ -42,12 +42,6 @@ public class EntityAutocompletionConfig<T extends AbstractEntity<?>>
         return this;
     }
 
-    @Override
-    public IAutocompleterConfig2<T> byDescOnly() {
-        assertMatcherForDescSearch();
-        widget().setShouldSearchByDescOnly(true);
-        return this;
-    }
 
     /**
      * Ensures that only appropriate matchers are used for search by desc.

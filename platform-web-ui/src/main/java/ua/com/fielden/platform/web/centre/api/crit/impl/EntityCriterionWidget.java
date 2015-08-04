@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import org.apache.commons.lang.StringUtils;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.widgets.EntityCritAutocompletionWidget;
 
@@ -22,7 +26,9 @@ public class EntityCriterionWidget extends AbstractMultiCriterionWidget {
                 new EntityCritAutocompletionWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),
+                        StringUtils.isEmpty(propertyName) ? (Class<? extends AbstractEntity<?>>) root : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType((Class<? extends AbstractEntity<?>>) root, propertyName),
                         centreContextConfig
                 ));
+
     }
 }

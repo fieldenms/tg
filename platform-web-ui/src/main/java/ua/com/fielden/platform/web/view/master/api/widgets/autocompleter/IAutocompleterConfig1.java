@@ -8,6 +8,4 @@ public interface IAutocompleterConfig1<T extends AbstractEntity<?>> extends IAls
     /** Indicates whether description should also be included as part of search. */
     IAutocompleterConfig2<T> byDesc();
 
-    /** Excludes key and searches by desc only. */
-    IAutocompleterConfig2<T> byDescOnly();
 }
