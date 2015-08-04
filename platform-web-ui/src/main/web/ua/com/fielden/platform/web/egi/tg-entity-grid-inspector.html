@@ -135,7 +135,7 @@
         <!-- The dialog for summary when egi is in card layout -->
         <paper-dialog id="summaryDialog" modal entry-animation="slide-down-animation" exit-animation="slide-up-animation">
             <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
-                <template is="dom-repeat" items="[[cardSummary]]">
+                <template is="dom-repeat" items="[[_calcCardSummary(columns)]]">
                     <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(item)]]">
                         <div class="data-label truncate">[[item.columnTitle]]</div>
                         <div class="data-value relative">
@@ -226,33 +226,35 @@
                     </template>
                     <!-- Table footer -->
                     <template is="dom-if" if="[[totals]]">
-                        <template is="dom-repeat" items="[[gridSummary]]" as="summaryRow" index-as="summaryRowIndex">
-                            <template is="dom-if" if="[[primaryAction]]">
-                                <div class="table-cell layout horizontal center">
-                                    <!--Primary action header goes here-->
-                                </div>
-                            </template>
-                            <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
-                                <template is="dom-if" if="[[summary]]">
-                                    <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
-                                        <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                            <iron-icon icon="[[_getBooleanIcon(totals, summary)]]"></iron-icon>
-                                        </template>
-                                        <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                            <div class="truncate" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary)]]</div>
-                                        </template>
+                        <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
+                            <div class="layout horizontal table-data-row">
+                                <template is="dom-if" if="[[primaryAction]]">
+                                    <div class="table-cell layout horizontal center" style="width:40px">
+                                        <!--Primary action footer goes here-->
                                     </div>
                                 </template>
-                                <template is="dom-if" if="[[!summary]]">
-                                    <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns)]]">
+                                <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
+                                    <template is="dom-if" if="[[summary]]">
+                                        <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
+                                            <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
+                                                <iron-icon icon="[[_getBooleanIcon(totals, summary)]]"></iron-icon>
+                                            </template>
+                                            <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                <div class="truncate" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary)]]</div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template is="dom-if" if="[[!summary]]">
+                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns)]]">
+                                        </div>
+                                    </template>
+                                </template>
+                                <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]" style="width:40px">
+                                    <div class="table-cell">
+                                        <!--Secondary actions header goes here-->
                                     </div>
                                 </template>
-                            </template>
-                            <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                <div class="table-cell">
-                                    <!--Secondary actions header goes here-->
-                                </div>
-                            </template>
+                            </div>
                         </template>
                     </template>
                 </div>
@@ -407,8 +409,7 @@
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
             ready: function () {
-                var summaryRowsCount, summaryRowCounter, totalsRow,
-                    primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
+                var tempColumns, primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
 
                 //Initialising entities.
                 this.entities = [];
@@ -422,32 +423,11 @@
                 this.openedEntities = [];
 
                 //Initialising columns (property column mappings)
-                this.columns = [];
-                summaryRowsCount = 0;
+                tempColumns = [];
                 Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), function (item) {
-                    if (item.summary && item.summary.length > summaryRowsCount) {
-                        summaryRowsCount = item.summary.length;
-                    }
-                    this.columns.push(item);
-                }.bind(this));
-
-                //Initialising totals.
-                if (summaryRowsCount > 0) {
-                    this.gridSummary = [];
-                    this.cardSummary = [];
-                    for (summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
-                        totalsRow = [];
-                        this.columns.forEach(function (item) {
-                            if (item.summary && item.summary[propertyCounter]) {
-                                rowTotals.push(item.summary[propertyCounter]);
-                                this.cardSummary.push(item.summary[propertyCounter]);
-                            } else {
-                                rowTotals.push(null);
-                            }
-                        }.bind(this));
-                        this.gridSummary.push(rowTotals);
-                    }
-                }
+                    tempColumns.push(item);
+                });
+                this.columns = tempColumns;
 
                 //Initialising the primary action.
                 this.primaryAction = null;
@@ -459,6 +439,56 @@
                     this.secondaryActions.push(item);
                 }.bind(this));
             },
+
+            /**
+             * Calcualtes the summary for grid.
+             */
+            _calcGridSummary: function (columns) {
+                var summaryRowsCount, summaryRowCounter, totalsRow, gridSummary;
+
+                summaryRowsCount = 0;
+                columns.forEach(function (item) {
+                    if (item.summary && item.summary.length > summaryRowsCount) {
+                        summaryRowsCount = item.summary.length;
+                    }
+                });
+
+                //Initialising totals.
+                if (summaryRowsCount > 0) {
+                    gridSummary = [];
+                    for (summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
+                        totalsRow = [];
+                        columns.forEach(function (item) {
+                            if (item.summary && item.summary[summaryRowCounter]) {
+                                totalsRow.push(item.summary[summaryRowCounter]);
+                            } else {
+                                totalsRow.push(null);
+                            }
+                        });
+                        gridSummary.push(totalsRow);
+                    }
+                }
+
+                return gridSummary;
+            },
+
+            /**
+             * Calcualtes the summary for card layout.
+             */
+            _calcCardSummary: function (columns) {
+                var cardSummary = [];
+
+                columns.forEach(function (item) {
+                    if (item.summary) {
+                        item.summary.forEach(function (summary) {
+                            cardSummary.push(summary);
+                        });
+                    }
+                });
+
+                return cardSummary;
+            },
+
             //The following nine functions determine whenther EGI is in card layout or grid and whether callapsible panel of card is visible or not.////////
             _mobileChanged: function (e, detail) {
                 if (detail.value) {
@@ -724,7 +754,7 @@
             /**
              * determines whether secondary actions is only one or not.
              */
-            _isOnlyOneSecondaryActions: function(_secondaryActions) {
+            _isOnlyOneSecondaryActions: function (_secondaryActions) {
                 return _secondaryActions.length === 1;
             },
             /**
