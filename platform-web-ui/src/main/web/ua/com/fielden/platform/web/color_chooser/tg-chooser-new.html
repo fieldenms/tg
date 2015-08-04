@@ -1,0 +1,150 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+<link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+
+<dom-module id="tg-chooser">
+	<style>
+		paper-dialog {
+			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+			font-size: 15pt;
+			position: fixed;
+			top: 20px;
+			right: 1160px;
+		}
+		
+		paper-dialog > * {
+			margin: 0;
+			padding: 0;
+		}
+		
+		.color-box {
+			width: 40px;
+			height: 40px;
+			background-color: #ccc;
+		}
+		
+		.small-box {
+			width: 30px;
+			height: 30px;
+			background-color: #ccc;
+		}
+		
+		paper-button {
+			display: block;
+			margin-bottom: auto;
+			background-color: white;
+			color: black;
+		}
+		
+		input {
+			color: var(--google-grey-700);
+			width: 90px;
+			box-sizing: border-box;
+			font-size: 18px;
+			padding: 0.2em;
+			border-width: 0px;
+		}
+		
+		iron-dropdown {
+			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+			font-size: 15pt;
+			background-color: #FAFAFA;
+			color: var(--google-grey-700);
+		}
+	</style>
+
+	<template>
+
+		<!--		<paper-icon-button icon="editor:format-color-fill" onclick="dialog.toggle()"></paper-icon-button>-->
+		<paper-button tabindex="0" noink id="button">
+			<div class="layout horizontal center">
+				<div class="small-box" style$="[[_calcColorBoxStyle(color)]]" on-tap="open"></div>
+
+				<input id="input" class="layout horizontal center" is="iron-input" allowed-pattern="[#0-9A-Fa-f]" style="margin-left:10px;" bind-value="[[color]]" value="[[color::input]]" prevent-invalid-input>
+
+			</div>
+		</paper-button>
+		<scope>[[color]]</scope>
+
+		<iron-dropdown positionTarget="button" id="dropdown">
+			<div class="dropdown-content">
+				<div class="layout horizontal center" style="margin-top: 10px;margin-left:10px">
+					<div class="color-box" style$="[[_calcColorBoxStyle(color)]]"></div>
+					<div style="margin-left:10px;">
+						<div>[[color]]</div>
+					</div>
+				</div>
+
+
+				<div class="layout vertical" style="margin:20px 10px 10px 10px;">
+					<div class="layout horizontal">
+						<div class="color-box" on-tap="colorSelected" style="background-color: #F44336;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #FF9800;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #FFEB3B;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #4CAF50;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #009688;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #00BCD4;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #3F51B5;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #9C27B0;"></div>
+					</div>
+					<div class="layout horizontal">
+						<div class="color-box" on-tap="colorSelected" style="background-color: #EF9A9A;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #FFCC80;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #FFF59D;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #A5D6A7;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #80CBC4;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #80DEEA;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #9FA8DA;"></div>
+						<div class="color-box" on-tap="colorSelected" style="background-color: #CE93D8;"></div>
+					</div>
+				</div>
+			</div>
+		</iron-dropdown>
+
+
+	</template>
+</dom-module>
+<script>
+	Polymer({
+		is: "tg-chooser",
+		properties: {
+			color: {
+				type: String,
+				notify: true
+			}
+		},
+
+		colorSelected: function (e, detail) {
+			this.color = rgbToHex(e.srcElement.style['background-color']);
+		},
+		_calcColorBoxStyle: function (color) {
+			return "background-color: " + color;
+		},
+		open: function () {
+			this.$.dropdown.open();
+		}
+	});
+
+	function rgbToHex(color) {
+		if (color.substr(0, 1) === "#") {
+			return color;
+		}
+		var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(color),
+			r = parseInt(nums[2], 10).toString(16),
+			g = parseInt(nums[3], 10).toString(16),
+			b = parseInt(nums[4], 10).toString(16);
+		return "#" + (
+			(r.length == 1 ? "0" + r : r) +
+			(g.length == 1 ? "0" + g : g) +
+			(b.length == 1 ? "0" + b : b)
+		);
+	}
+</script>
