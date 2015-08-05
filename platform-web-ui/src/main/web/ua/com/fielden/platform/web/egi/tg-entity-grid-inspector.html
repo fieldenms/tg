@@ -134,21 +134,23 @@
 
         <!-- The dialog for summary when egi is in card layout -->
         <paper-dialog id="summaryDialog" modal entry-animation="slide-down-animation" exit-animation="slide-up-animation">
-            <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
-                <template is="dom-repeat" items="[[_calcCardSummary(columns)]]">
-                    <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(item)]]">
-                        <div class="data-label truncate">[[item.columnTitle]]</div>
-                        <div class="data-value relative">
-                            <template is="dom-if" if="[[_isBooleanProp(totals, item)]]">
-                                <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(totals, item)]]"></iron-icon>
-                            </template>
-                            <template is="dom-if" if="[[_isNotBooleanProp(totals, item)]]">
-                                <div class="truncate">[[_getValue(totals, item)]]</div>
-                            </template>
+            <template is="dom-if" if="[[totals]]">
+                <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
+                    <template is="dom-repeat" items="[[_calcCardSummary(columns)]]">
+                        <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(item)]]">
+                            <div class="data-label truncate">[[item.columnTitle]]</div>
+                            <div class="data-value relative">
+                                <template is="dom-if" if="[[_isBooleanProp(totals, item)]]">
+                                    <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(totals, item)]]"></iron-icon>
+                                </template>
+                                <template is="dom-if" if="[[_isNotBooleanProp(totals, item)]]">
+                                    <div class="truncate">[[_getValue(totals, item)]]</div>
+                                </template>
+                            </div>
                         </div>
-                    </div>
-                </template>
-            </tg-flex-layout>
+                    </template>
+                </tg-flex-layout>
+            </template>
             <div class="buttons">
                 <paper-button dialog-confirm autofocus>Close</paper-button>
             </div>
@@ -228,6 +230,9 @@
                     <template is="dom-if" if="[[totals]]">
                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                             <div class="layout horizontal table-data-row">
+                                <div class="table-cell layout horizontal center" style="width:18px">
+                                    <!-- checkbox stub for table footer -->
+                                </div>
                                 <template is="dom-if" if="[[primaryAction]]">
                                     <div class="table-cell layout horizontal center" style="width:40px">
                                         <!--Primary action footer goes here-->
@@ -250,7 +255,7 @@
                                     </template>
                                 </template>
                                 <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]" style="width:40px">
-                                    <div class="table-cell">
+                                    <div class="table-cell layout horizontal center" style="width:40px">
                                         <!--Secondary actions header goes here-->
                                     </div>
                                 </template>
