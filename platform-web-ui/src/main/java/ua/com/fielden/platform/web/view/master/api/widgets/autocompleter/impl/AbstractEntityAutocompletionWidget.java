@@ -13,8 +13,6 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -34,7 +32,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget {
     @SuppressWarnings("rawtypes")
     private Class<? extends IValueMatcher> matcherType;
-    private boolean shouldSearchByDesc = false;
+    private boolean lightDesc = false;
 
     private final Map<String, Boolean> additionalProps = new LinkedHashMap<>();
 
@@ -54,6 +52,14 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
             for (final Field member: members) {
                 additionalProps.put(member.getName(), true);
             }
+        }
+    }
+
+    public void setAdditionalProps(final List<Pair<String, Boolean>> pairs) {
+        additionalProps.clear();
+        for (final Pair<String, Boolean> pair: pairs) {
+            // TODO potentially there could be a check whether the specified properties really belong to a corresponding entity type
+            additionalProps.put(pair.getKey(), pair.getValue());
         }
     }
 
@@ -88,13 +94,13 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         return matcherType;
     }
 
-    public boolean isShouldSearchByDesc() {
-        return shouldSearchByDesc;
+    public boolean isLightDesc() {
+        return lightDesc;
     }
 
-    public void setShouldSearchByDesc(final boolean shouldSearchByDesc) {
+    public void setLightDesc(final boolean shouldSearchByDesc) {
         additionalProps.put(AbstractEntity.DESC, shouldSearchByDesc);
-        this.shouldSearchByDesc = shouldSearchByDesc;
+        this.lightDesc = shouldSearchByDesc;
     }
 
     /**

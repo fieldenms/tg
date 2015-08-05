@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static ua.com.fielden.platform.utils.Pair.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -424,6 +425,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfig = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
+                    .withProps(pair("desc", true),
+                               pair("entityProp", false), // FIXME specifying compositeProp leads to failure at the client end... needs invesrigation!!!
+                               pair("booleanProp", false))
                 //*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 //*      */.enabledWhen(EnabledState.VIEW)
                 //*      */.icon("trending-up")
