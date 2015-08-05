@@ -37,21 +37,10 @@ public class EntityAutocompletionConfig<T extends AbstractEntity<?>>
 
     @Override
     public IAutocompleterConfig2<T> byDesc() {
-        assertMatcherForDescSearch();
         widget().setShouldSearchByDesc(true);
         return this;
     }
 
-
-    /**
-     * Ensures that only appropriate matchers are used for search by desc.
-     * This assertion serves as an early runtime check for validity of UI setup.
-     */
-    private void assertMatcherForDescSearch() {
-        if (widget().getMatcherType() == null || !IValueMatcherByDesc.class.isAssignableFrom(widget().getMatcherType())) {
-            throw new IllegalStateException("Search by description is permitted only if an appropriate value matcher is provided.");
-        }
-    }
 
     @Override
     public IAutocompleterConfig0<T> skipValidation() {
