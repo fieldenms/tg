@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.impl;
 
-import ua.com.fielden.platform.basic.IValueMatcherByDesc;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
@@ -36,7 +35,7 @@ public class EntityAutocompletionConfig<T extends AbstractEntity<?>>
     }
 
     @Override
-    public IAutocompleterConfig2<T> byDesc() {
+    public IAutocompleterConfig2<T> lightDesc() {
         widget().setShouldSearchByDesc(true);
         return this;
     }
