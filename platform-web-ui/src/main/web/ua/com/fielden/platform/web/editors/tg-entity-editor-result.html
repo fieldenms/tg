@@ -230,14 +230,11 @@
              * Determines a title of the specified entity.propName.
              */
             _propTitleByName: function (entity, propName) {
-                return propName;
-
-                // TODO makes sense only in TG context
-                /*if (entity.type().prop(propName)) {
+                if (entity.type().prop(propName)) {
                     return entity.type().prop(propName).title();
                 } else {
                     return propName;
-                }*/
+                }
             },
             /*
              * Obtains a value of the specified by name property for the passed in entity.
