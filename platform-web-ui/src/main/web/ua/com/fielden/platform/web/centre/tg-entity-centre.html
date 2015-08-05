@@ -47,7 +47,7 @@
         <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="DELETE" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
 
         <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll">
-            <div>
+            <div class="fit">
                 <div class="selection-criteria layout vertical" style="padding: 40px;">
                 	<content select=".custom-selection-criteria"></content>
                     <div class="layout horizontal justified" style="margin-top:40px;">
@@ -59,7 +59,7 @@
                     </div>
                 </div>
             </div>
-            <div>
+            <div class="fit">
                 <div class="layout vertical center">
                 	<content select=".custom-egi"></content>
                 </div>

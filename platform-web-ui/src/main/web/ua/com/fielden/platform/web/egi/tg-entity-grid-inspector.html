@@ -20,6 +20,9 @@
 <dom-module id="tg-entity-grid-inspector">
     <style>
         /*miscellanea styles*/
+        :host {
+            margin: 0 auto;
+        }
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -179,7 +182,7 @@
                             </div>
                         </template>
                         <template is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell layout horizontal center" style$="[[_calcColumnHeaderStyle(item)]]">
+                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
                                 <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
                             </div>
                         </template>
