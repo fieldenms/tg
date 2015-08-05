@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
@@ -8,6 +11,7 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.IMutliValueAutocompleterBuilder;
+import ua.com.fielden.platform.web.centre.api.crit.IMutliValueAutocompleterBuilder1;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
@@ -60,7 +64,7 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
     }
 
     @Override
-    public IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType) {
+    public IMutliValueAutocompleterBuilder1<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
@@ -75,7 +79,7 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
     }
 
     @Override
-    public IMultiStringDefaultValueAssigner<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context) {
+    public IMutliValueAutocompleterBuilder1<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
@@ -86,6 +90,21 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
 
         this.builder.valueMatchersForSelectionCriteria.put(builder.currSelectionCrit.get(), new Pair<>(matcherType, Optional.of(context)));
 
+        return this;
+    }
+
+    @Override
+    public IMultiStringDefaultValueAssigner<T> lightDesc() {
+        return withProps(new Pair<>(AbstractEntity.DESC, true));
+    }
+
+    @SafeVarargs
+    @Override
+    public final IMultiStringDefaultValueAssigner<T> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption) {
+        final List<Pair<String, Boolean>> props = new ArrayList<>();
+        props.add(propNameAndLightOption);
+        props.addAll(Arrays.asList(morePropNameAndLightOption));
+        this.builder.additionalPropsForAutocompleter.put(builder.currSelectionCrit.get(), props);
         return this;
     }
 

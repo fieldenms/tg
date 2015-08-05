@@ -111,6 +111,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
 
     /**
+     * A map between selection criteria properties that are associated with multi- or single-value autocompleter and the additional properties
+     * that should be set up for those autocompleters to be displayed as part of the autocompletion result list.
+     */
+    private final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
+
+    /**
      * Represents the layout settings for selection criteria.
      */
     private final FlexLayout selectionCriteriaLayout;
@@ -281,6 +287,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria,
 
             final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria,
+            final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
 
             final FlexLayout selectionCriteriaLayout,
             final FlexLayout resultsetCollapsedCardLayout,
@@ -327,6 +334,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.defaultSingleValuesForDateSelectionCriteria.putAll(defaultSingleValuesForDateSelectionCriteria);
 
         this.valueMatchersForSelectionCriteria.putAll(valueMatchersForSelectionCriteria);
+        this.additionalPropsForAutocompleter.putAll(additionalPropsForAutocompleter);
 
         this.selectionCriteriaLayout = selectionCriteriaLayout;
         this.resultsetCollapsedCardLayout = resultsetCollapsedCardLayout;
@@ -416,6 +424,15 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableMap(valueMatchersForSelectionCriteria));
+    }
+
+    public List<Pair<String, Boolean>> getAdditionalPropsForAutocompleter(final String critName) {
+        List<Pair<String, Boolean>> props = additionalPropsForAutocompleter.get(StringUtils.isEmpty(critName) ? "this" : critName);
+        if (props == null) {
+            props = new ArrayList<>();
+            props.add(Pair.pair(AbstractEntity.DESC, false));
+        }
+        return props;
     }
 
     public Optional<List<String>> getSelectionCriteria() {

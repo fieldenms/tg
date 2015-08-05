@@ -52,12 +52,13 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         }
     }
 
-    public void setAdditionalProps(final List<Pair<String, Boolean>> pairs) {
+    public AbstractEntityAutocompletionWidget setAdditionalProps(final List<Pair<String, Boolean>> pairs) {
         additionalProps.clear();
         for (final Pair<String, Boolean> pair: pairs) {
             // TODO potentially there could be a check whether the specified properties really belong to a corresponding entity type
             additionalProps.put(pair.getKey(), pair.getValue());
         }
+        return this;
     }
 
     @Override

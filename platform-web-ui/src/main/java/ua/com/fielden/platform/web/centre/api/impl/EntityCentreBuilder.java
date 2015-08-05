@@ -93,6 +93,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria = new HashMap<>();
 
     protected final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
+    protected final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
 
     protected final FlexLayout selectionCriteriaLayout = new FlexLayout();
     protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout();
@@ -164,6 +165,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 defaultSingleValuesForBigDecimalAndMoneySelectionCriteria,
                 defaultSingleValuesForDateSelectionCriteria,
                 valueMatchersForSelectionCriteria,
+                additionalPropsForAutocompleter,
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,
                 resultsetExpansionCardLayout,
