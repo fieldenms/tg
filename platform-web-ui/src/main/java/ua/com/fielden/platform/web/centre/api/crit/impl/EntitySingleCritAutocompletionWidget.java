@@ -5,7 +5,7 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityCritAutocompletionWidget;
 
 /**
  *
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.Ab
  * @author TG Team
  *
  */
-public class EntitySingleCritAutocompletionWidget extends AbstractEntityAutocompletionWidget {
+public class EntitySingleCritAutocompletionWidget extends AbstractEntityCritAutocompletionWidget {
     private boolean shouldSearchByDescOnly = false;
     private final CentreContextConfig centreContextConfig;
 
@@ -29,7 +29,7 @@ public class EntitySingleCritAutocompletionWidget extends AbstractEntityAutocomp
         attrs.put("autocompletion-type", "[[miType]]");
 
         attrs.put("as-part-of-entity-master", false);
-        this.addCentreContextBindings(attrs, centreContextConfig);
+        addCentreContextBindings(attrs, centreContextConfig);
         return attrs;
     };
 

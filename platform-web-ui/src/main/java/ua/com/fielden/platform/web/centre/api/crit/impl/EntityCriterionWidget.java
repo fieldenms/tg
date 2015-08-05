@@ -5,7 +5,7 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
-import ua.com.fielden.platform.web.centre.widgets.EntityCritAutocompletionWidget;
+import ua.com.fielden.platform.web.centre.widgets.EntityMultiCritAutocompletionWidget;
 
 /**
  * An implementation for entity multi criterion.
@@ -23,7 +23,7 @@ public class EntityCriterionWidget extends AbstractMultiCriterionWidget {
      */
     public EntityCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName, final CentreContextConfig centreContextConfig) {
         super("centre/criterion/multi/tg-multi-criterion", propertyName,
-                new EntityCritAutocompletionWidget(
+                new EntityMultiCritAutocompletionWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),
                         StringUtils.isEmpty(propertyName) ? (Class<? extends AbstractEntity<?>>) root : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType((Class<? extends AbstractEntity<?>>) root, propertyName),
