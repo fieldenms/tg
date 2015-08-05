@@ -2,22 +2,21 @@ package ua.com.fielden.platform.web.centre.api.crit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultValueAssigner;
+import ua.com.fielden.platform.web.centre.api.crit.defaults.ISingleEntityDefaultValueAssigner;
 
 
 /**
- *
- * A contract for specifying properties to be displayed as part of the autocompletion list of matching values.
- *
- * @author TG Team
- *
- * @param <T>
- */
-public interface IMutliValueAutocompleterBuilder1<T extends AbstractEntity<?>> extends IMultiStringDefaultValueAssigner<T> {
-
+*
+* A contract for specifying properties to be displayed as part of the autocompletion list of matching values.
+*
+* @author TG Team
+*
+* @param <T>
+*/
+public interface ISingleValueAutocompleterBuilder1<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends ISingleEntityDefaultValueAssigner<T, V> {
     /** Indicates whether description should also be used to highlighting the matched parts.
      *  This method does not effect whether or not the search actually involves matching be description. */
-    IMultiStringDefaultValueAssigner<T> lightDesc();
+    ISingleEntityDefaultValueAssigner<T, V> lightDesc();
 
     /**
      * Method to specify a complete set of properties to be displayed as part of the autocompled list of matched values.
@@ -32,5 +31,6 @@ public interface IMutliValueAutocompleterBuilder1<T extends AbstractEntity<?>> e
      * @return
      */
     @SuppressWarnings("unchecked")
-    IMultiStringDefaultValueAssigner<T> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption);
+    ISingleEntityDefaultValueAssigner<T, V> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption);
+
 }

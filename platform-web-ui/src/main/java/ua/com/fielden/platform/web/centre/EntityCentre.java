@@ -853,7 +853,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final AbstractCriterionWidget criterionWidget;
                 if (AbstractDomainTree.isCritOnlySingle(managedType, critProp)) {
                     if (EntityUtils.isEntityType(propertyType)) {
-                        criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
+                        final List<Pair<String, Boolean>> additionalProps = dslDefaultConfig.getAdditionalPropsForAutocompleter(critProp);
+                        criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, additionalProps, getCentreContextConfigFor(critProp));
                     } else if (EntityUtils.isString(propertyType)) {
                         criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isBoolean(propertyType)) {

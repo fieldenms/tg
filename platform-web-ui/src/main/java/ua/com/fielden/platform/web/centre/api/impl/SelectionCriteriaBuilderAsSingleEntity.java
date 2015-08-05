@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
@@ -12,6 +13,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.ISingleValueAutocompleterBuilder;
+import ua.com.fielden.platform.web.centre.api.crit.ISingleValueAutocompleterBuilder1;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.ISingleEntityDefaultValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
@@ -72,7 +74,7 @@ class SelectionCriteriaBuilderAsSingleEntity<T extends AbstractEntity<?>, V exte
     }
 
     @Override
-    public ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType) {
+    public ISingleValueAutocompleterBuilder1<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
@@ -83,13 +85,28 @@ class SelectionCriteriaBuilderAsSingleEntity<T extends AbstractEntity<?>, V exte
     }
 
     @Override
-    public ISingleEntityDefaultValueAssigner<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context) {
+    public ISingleValueAutocompleterBuilder1<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
 
         this.builder.valueMatchersForSelectionCriteria.put(builder.currSelectionCrit.get(), new Pair<>(matcherType, Optional.of(context)));
 
+        return this;
+    }
+
+    @Override
+    public ISingleEntityDefaultValueAssigner<T, V> lightDesc() {
+        return withProps(new Pair<>(AbstractEntity.DESC, true));
+    }
+
+    @SafeVarargs
+    @Override
+    public final ISingleEntityDefaultValueAssigner<T, V> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption) {
+        final List<Pair<String, Boolean>> props = new ArrayList<>();
+        props.add(propNameAndLightOption);
+        props.addAll(Arrays.asList(morePropNameAndLightOption));
+        this.builder.additionalPropsForAutocompleter.put(builder.currSelectionCrit.get(), props);
         return this;
     }
 
