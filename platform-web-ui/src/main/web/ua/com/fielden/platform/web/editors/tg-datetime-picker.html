@@ -17,6 +17,33 @@
 <link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
+<style is="custom-style">
+    .date-picker paper-button {
+        color: var(--paper-light-blue-500);
+        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+    .date-picker paper-button:hover {
+        background: var(--paper-light-blue-50);
+    }
+    .date-picker > tg-calendar {
+        margin: 0;
+        padding: 0;
+    }
+    .date-picker > paper-dialog-scrollable {
+        margin: 0;
+        padding: 0;
+    }
+    .date-picker > paper-dialog-scrollable {
+        --divider-color: white;
+        --paper-dialog-scrollable: {
+            padding: 0px;
+        }
+        ;
+    }
+    .date-picker {
+        line-height: normal;
+    }
+</style>
 <dom-module id="tg-datetime-picker">
     <style>
         .picker-button {
@@ -30,32 +57,33 @@
             height: 20px;
             width: 20px;
         }
-        paper-button {
+        /*
+        .date-picker paper-button {
             color: var(--paper-light-blue-500);
             --paper-button-flat-focus-color: var(--paper-light-blue-50);
         }
-        paper-button:hover {
+        .date-picker paper-button:hover {
             background: var(--paper-light-blue-50);
         }
-        paper-dialog > tg-calendar {
+        .date-picker > tg-calendar {
             margin: 0;
             padding: 0;
         }
-        paper-dialog > paper-dialog-scrollable {
+        .date-picker > paper-dialog-scrollable {
             margin: 0;
             padding: 0;
         }
-        paper-dialog-scrollable {
+        .date-picker > paper-dialog-scrollable {
             --divider-color: white;
             --paper-dialog-scrollable: {
                 padding: 0px;
             }
             ;
         }
-        paper-dialog {
+        .date-picker {
             line-height: normal;
         }
-        margin:0px;
+*/
     }
     </style>
 
@@ -63,11 +91,9 @@
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-change="[[_onChange]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]">
             <paper-icon-button class="custom-icon-buttons picker-button" on-tap="showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
         </tg-editor>
-        <paper-dialog id="dateDialog" class="layout vertical" with-backdrop no-cancel-on-outside-click opened="{{_calendarVisible}}" entry-animation="scale-up-animation" exit-animation="fade-out-animation" auto-fit-on-attach>
+        <paper-dialog id="dateDialog" class="date-picker layout vertical" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_dateDialogClosed">
             <!--on-iron-overlay-opened="_fixDialog"-->
-            <paper-dialog-scrollable>
-                <tg-calendar id="datePicker" pick-time></tg-calendar>
-            </paper-dialog-scrollable>
+            <tg-calendar id="datePicker" pick-time></tg-calendar>
             <div class="buttons">
                 <paper-button dialog-dismiss affirmative on-tap="_cancelDate">Cancel</paper-button>
                 <paper-button dialog-confirm affirmative autofocus on-tap="_acceptDate">Ok</paper-button>
@@ -83,17 +109,7 @@
             behaviors: [Polymer.TgBehaviors.TgEditorBehavior, Polymer.IronResizableBehavior],
 
             ready: function () {
-                this._calendarVisible = false;
-                this.$.editorDom._editorKind = "DATE";
-                this._boundResizer = this._windowResized.bind(this);
-            },
-
-            attached: function () {
-                window.addEventListener('resize', this._boundResizer);
-            },
-
-            detached: function () {
-                window.removeEventListener('resize', this._boundResizer);
+                this.$.editorDom._editorKind = 'DATE';
             },
 
             properties: {
@@ -117,10 +133,6 @@
                 // Also, these properties are designed to be bound to children element properties -- it is necessary to//
                 //   populate their default values in ready callback (to have these values populated in children)!     //
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                _calendarVisible: {
-                    type: Boolean
-                }
             },
 
             listeners: {
@@ -156,20 +168,26 @@
             },
 
             showCalendar: function (e) {
-                this._calendarVisible = !this._calendarVisible;
+                var dateDialog = this.$.dateDialog,
+                    datePicker = this.$.datePicker;
+                //Openening dialog
+                Polymer.dom(document.body).appendChild(dateDialog);
+                dateDialog.open();
+                //this.async(dateDialog.notifyResize, 1);
                 if (this._editingValue) { // TODO should this be "this._editingValue === ''"?
                     var selectedMoment = moment(this._editingValue.trim(), "L LT", true);
                     if (selectedMoment.isValid()) {
-                        this.$.datePicker.selectedDate = selectedMoment.valueOf();
-                        this.$.datePicker.selectedHour = selectedMoment.hour();
-                        this.$.datePicker.selectedMinute = selectedMoment.minute();
+                        datePicker.selectedDate = selectedMoment.valueOf();
+                        datePicker.selectedHour = selectedMoment.hour();
+                        datePicker.selectedMinute = selectedMoment.minute();
                         return;
                     }
                 }
-                this.$.datePicker.selectedDate = null;
-                this.$.datePicker.selectedHour = 0;
-                this.$.datePicker.selectedMinute = 0;
+                datePicker.selectedDate = null;
+                datePicker.selectedHour = 0;
+                datePicker.selectedMinute = 0;
             },
+
             _acceptDate: function () {
                 this._isAcceptingDateFromPicker = true;
                 this._editingValue = moment(this.$.datePicker.selectedDate)
@@ -203,12 +221,10 @@
             },
 
             /**
-             * Listens when the window was resized and fits the dialog.
+             * listens the event when dialog closes.
              */
-            _windowResized: function () {
-                if (this.$.dateDialog.opened && this._parentResizable) {
-                    this.$.dateDialog.fit();
-                }
+            _dateDialogClosed: function () {
+                Polymer.dom(document.body).removeChild(this.$.dateDialog);
             }
         });
     })();

@@ -43,7 +43,17 @@
         }
         input[type=number] {
             -moz-appearance: textfield;
-        } 
+        }
+        paper-checkbox::shadow #checkboxLabel{
+            white-space: nowrap;
+        }
+        paper-input-container {
+            --paper-input-container-label: {
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            };
+        }
         /* TODO styles */
     </style>
 
