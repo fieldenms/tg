@@ -2,16 +2,13 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
-<link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
-<link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
-<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
 <dom-module id="tg-chooser">
-	<style>
+	<style is="custom-style">
 		.color-box {
 			width: 40px;
 			height: 40px;
@@ -19,82 +16,39 @@
 		}
 		
 		.small-box {
-			width: 30px;
-			height: 30px;
+			width: 20px;
+			height: 20px;
 			background-color: #ccc;
 		}
 		
-		paper-button {
-			display: block;
-			margin-bottom: auto;
-			background-color: white;
-			color: black;
-			box-shadow: 0px 2px 6px #607D8B;
-		}
-		
-		input {
-			color: var(--google-grey-700);
-			width: 90px;
-			box-sizing: border-box;
-			font-size: 18px;
+		paper-input-container {
 			padding: 0.2em;
-			border-width: 0px;
-		}
-		
-		paper-input.short {
-			width: 80px;
 			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-			font-size: 15pt;
+			--paper-input-container-input-color: var(--google-grey-700);
 		}
 		
 		iron-dropdown {
 			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-			font-size: 15pt;
 			background-color: #FAFAFA;
 			color: var(--google-grey-700);
 			box-shadow: 0px 2px 6px #ccc;
-		}
-		
-		paper-fab.grey {
-			background-color: whitesmoke;
-			color: grey;
 		}
 	</style>
 
 	<template>
 
-		<!--		<paper-icon-button icon="editor:format-color-fill" onclick="dialog.toggle()"></paper-icon-button>-->
-		<!--
-		<paper-button tabindex="0" noink id="button">
+		<paper-input-container>
 			<div class="layout horizontal center">
-				<div class="small-box" style$="[[_calcColorBoxStyle(color)]]" on-tap="open"></div>
--->
-		<!--
-
-				<paper-input auto-validate pattern="[#0-9A-Fa-f]*" error-message="Hex code colour value only!" bind-value="{{color}}" value="{{color::input}}" style="margin-left:10px;"></paper-input>
--->
-		<!--				<input id="input" class="layout horizontal center" is="iron-input" allowed-pattern="[#0-9A-Fa-f]" style="margin-left:10px;" bind-value="{{color}}" value="{{color::input}}" prevent-invalid-input>-->
-
-		<!--
+				<div class="small-box" style$="[[_calcColorBoxStyle(color)]]"></div>
+				<label style="margin-left:30px;">Hex code colour value</label>
+				<input allowed-pattern="[#0-9A-Fa-f]*" bind-value="{{color}}" value="{{color::input}}" is="iron-input" style="margin-left:10px;">
+				<paper-icon-button icon="editor:format-color-fill" title="Colour editor" id="fab" on-tap="open" style="width: 16px;
+			height: 16px;"></paper-icon-button>
 			</div>
-		</paper-button>
--->
-		<paper-fab mini icon="editor:format-color-fill" title="Colour editor" id="fab" on-tap="open" class="grey"></paper-fab>
-
+		</paper-input-container>
 
 		<iron-dropdown positionTarget="fab" id="dropdown">
 			<div class="dropdown-content">
-				<div class="layout horizontal center" style="margin-top: 10px;margin-left:10px">
-					<div class="color-box" style$="[[_calcColorBoxStyle(color)]]"></div>
-					<paper-input auto-validate pattern="[#0-9A-Fa-f]*" error-message="Hex code colour value only!" bind-value="{{color}}" value="{{color::input}}" style="margin-left:10px;"></paper-input>
-
-					<!--
-					<div style="margin-left:10px;">
-						<div>[[color]]</div>
-					</div>
--->
-				</div>
-
 
 				<div class="layout vertical" style="margin:20px 10px 10px 10px;">
 					<div class="layout horizontal">

@@ -25,10 +25,13 @@
 <body>
 	<template id="colorId" is="dom-bind">
 		<paper-toolbar class="myToolbar" id="toolbar" style$="[[calcColorStyle(color)]]">
-			<tg-chooser color="{{color}}"></tg-chooser>
+			<!--			<tg-chooser color="{{color}}"></tg-chooser>-->
 
 		</paper-toolbar>
+		<tg-chooser color="{{color}}"></tg-chooser>
 	</template>
+
+
 </body>
 <script>
 	var colorId = document.querySelector('#colorId');
