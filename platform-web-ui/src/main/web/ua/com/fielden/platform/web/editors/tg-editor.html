@@ -44,10 +44,13 @@
         /*  */
         .main-container {
             @apply(--layout-horizontal);
-            @apply(--layout-center);
+
+@apply(--layout-center);
+
         }
         #input-container {
             @apply(--layout-flex);
+
         }
         /* Styles for boolean property editors. */
         paper-checkbox {
@@ -79,6 +82,9 @@
                 white-space: nowrap;
                 text-overflow: ellipsis;
             };
+        }
+        paper-input-error {
+            width: 100%;
         }
         /* TODO styles */
     </style>
