@@ -65,22 +65,6 @@
         ],
 
         ready: function() {
-        	// var smth = Polymer.dom(this).querySelectorAll('.criterion-editors');
-        	// console.log("smth", smth);
-        	
-            /*var flexElement = document.createElement('tg-flex-layout');
-            flexElement.whenDesktop = this._whenDesktop;
-            flexElement.whenTablet = this._whenTablet;
-            flexElement.whenMobile = this._whenMobile;
-
-            // var content = Polymer.dom(this.root).querySelector('content'); // this._dom().components;
-            // Polymer.dom(content).getDistributedNodes()
-            Array.prototype.forEach.call(Polymer.dom(this).querySelectorAll('.criterion-editors'), function (item) {
-            	Polymer.dom(flexElement).appendChild(item);
-            }.bind(this));
-            Polymer.dom(this._dom()).appendChild(flexElement);
-            // Polymer.dom.flush();*/
-            
             this._whenDesktop = this._createWhenDesktopConfig();
             
             this._showMetaValuesEditor = (function (e) {
