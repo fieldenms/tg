@@ -554,16 +554,19 @@
                 } else {
                     this.decoratedInput().classList.remove("upper-case");
                 }
+                this.updateStyles();
             },
 
             _resetMetaPropDecorations: function () {
                 this.decorator().classList.remove("required");
+                this.updateStyles();
             },
 
             _resetMessages: function () {
                 this.decorator().invalid = false;
                 this._error = null;
                 this.decorator().classList.remove("warning");
+                this.updateStyles();
             },
 
             _bindError: function (msg) {
@@ -572,6 +575,7 @@
                 this.decorator().classList.remove("warning");
                 this.decorator().invalid = true;
                 this._error = msg;
+                this.updateStyles();
             },
 
             _bindWarning: function (msg) {
@@ -580,6 +584,7 @@
                 this.decorator().classList.add("warning");
                 this.decorator().invalid = true;
                 this._error = "" + msg;
+                this.updateStyles();
             },
 
             _bindRequired: function (required) {
@@ -589,6 +594,7 @@
                 } else {
                     this.decorator().classList.remove("required");
                 }
+                this.updateStyles();
             },
 
             /**

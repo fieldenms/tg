@@ -15,6 +15,32 @@
 
 <dom-module id="tg-editor">
     <style>
+        /*Styles for tooltip*/
+        /*:host::shadow * /deep/ core-tooltip::shadow #tooltip {
+            white-space: normal;
+        }
+        :host::shadow * /deep/ core-tooltip .span-tooltip {
+            line-height: 15px;
+        }
+        :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
+        :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
+            opacity: 1;
+            -webkit-transition-delay: 1s;
+            transition-delay: 1s;
+            transform: translate3d(0px, 0px, 0px);
+        }*/
+        #input.upper-case {
+            text-transform: uppercase;
+        }
+        /* style requiredness */
+        paper-input-container:not([disabled]).required {
+            --paper-input-container-color: #03A9F4;
+            --paper-input-container-focus-color: #03A9F4;
+        }
+        /* style warning */
+        paper-input-container.warning {
+            --paper-input-container-invalid-color: #FFA000;
+        }
         /*  */
         .main-container {
             @apply(--layout-horizontal);
@@ -44,7 +70,7 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
-        paper-checkbox::shadow #checkboxLabel{
+        paper-checkbox::shadow #checkboxLabel {
             white-space: nowrap;
         }
         paper-input-container {
@@ -68,7 +94,7 @@
                     <!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
                     <input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
                     <!-- </template> -->
-                    
+
                     <input id="input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled}}">
 
                     <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
@@ -79,8 +105,8 @@
                     </iron-autogrow-textarea>
 
                     <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange">[[propTitle]]</paper-checkbox>
-                    
-                    <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
+
+                    <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
 
                 </div>
                 <!-- CONTENT HERE: -->
@@ -138,8 +164,8 @@
             _maxLength: Number,
             _autocompleterBlurEventHandler: Function
         },
-        
-        _isDecimal: function(editorKind) {
+
+        _isDecimal: function (editorKind) {
             return 'DECIMAL' === editorKind;
         },
 
@@ -158,7 +184,7 @@
         _isBooleanEditor: function (editorKind) {
             return "BOOLEAN" === editorKind;
         },
-        
+
         _isAutocompleter: function (editorKind) {
             return "AUTOCOMPLETER" === editorKind;
         },
