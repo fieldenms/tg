@@ -80,7 +80,10 @@
         	// No default values are allowed in this case.														   //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	
-        	_selectedView: Number,
+        	_selectedView: {
+        		type: Number,
+        		notify: true
+        	},
         	_url: Function,
         	_processSaverResponse: Function,
         	_processSaverError: Function,
