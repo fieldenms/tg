@@ -147,7 +147,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
                                             .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-                                            .withProps(pair("desc", true), pair("booleanProp", false))
+                                            .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
                 //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
                 .also()
                 .addCrit("desc").asMulti().text()
@@ -433,7 +433,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 // PROPERTY EDITORS
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
                     .withProps(pair("desc", true),
-                               pair("entityProp", false), // FIXME specifying compositeProp leads to failure at the client end... needs invesrigation!!!
+                               pair("compositeProp", false),
                                pair("booleanProp", false))
                 //*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 //*      */.enabledWhen(EnabledState.VIEW)

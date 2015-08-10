@@ -240,8 +240,7 @@
              * Obtains a value of the specified by name property for the passed in entity.
              */
             _propValueByName: function (entity, propName) {
-            	return entity[propName];
-                //return this.$.reflector.convert(entity.get(propName));
+                return this.reflector.convert(entity.get(propName)) + '';
             },
             
             _makeId: function(id) {
@@ -303,7 +302,7 @@
 
 				
 				// add prop value
-				var propValueAsString = this.reflector.convert(v[propName]) + '';
+				var propValueAsString = this._propValueByName(v, propName);
 				if (highlight === false) {
 					html = html + propValueAsString;
 				} else {
