@@ -11,9 +11,24 @@
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
 <dom-module id="tg-abstract-criterion">
-    <link rel="import" type="css" href="/resources/centre/criterion/tg-abstract-criterion.css">
+    <style>
+        :host {
+            @apply(--layout-horizontal);
+            @apply(--layout-end);
+        }
+        
+        .dialog-configs {
+            @apply(--layout-vertical);
+        }
+    </style>
     <template>
-        <paper-dialog class="meta-value-editor" id="metaValueEditor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+        <paper-dialog 
+            id="metaValueEditor" 
+            class="meta-value-editor" 
+            with-backdrop no-cancel-on-outside-click 
+            entry-animation="scale-up-animation" 
+            exit-animation="fade-out-animation"
+            on-iron-overlay-closed="_closed">
             <div class="dialog-configs">
                 <content select=".multi-criterion-config"></content>
                 <content select=".range-criterion-config"></content>
@@ -43,6 +58,11 @@
             _whenDesktop: Array,
             _whenTablet: Array,
             _whenMobile: Array
+        },
+        
+        _closed: function(e) {
+            document.body.removeChild(this.$.metaValueEditor);
         }
+
     });
 </script>

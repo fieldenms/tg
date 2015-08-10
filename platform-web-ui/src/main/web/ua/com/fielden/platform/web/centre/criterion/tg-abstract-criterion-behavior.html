@@ -84,7 +84,8 @@
             this._whenDesktop = this._createWhenDesktopConfig();
             
             this._showMetaValuesEditor = (function (e) {
-            	this._dom().$.metaValueEditor.opened = true;
+                document.body.appendChild(this._dom().$.metaValueEditor);
+            	this._dom().$.metaValueEditor.open();
             }).bind(this);
             
             this._acceptMetaValuesForBinding = this._acceptMetaValues.bind(this);
