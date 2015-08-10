@@ -10,32 +10,29 @@
 <link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
+<link rel="import" href="/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html">
+
 <dom-module id="tg-abstract-criterion">
-    <style>
-        :host {
-            @apply(--layout-horizontal);
-            @apply(--layout-end);
-        }
-        
-        .dialog-configs {
-            @apply(--layout-vertical);
-        }
-    </style>
+    <link rel="import" type="css" href="/resources/centre/criterion/tg-abstract-criterion.css">
     <template>
         <paper-dialog 
             id="metaValueEditor" 
-            class="meta-value-editor" 
+            class="meta-value-editor"
             with-backdrop no-cancel-on-outside-click 
             entry-animation="scale-up-animation" 
             exit-animation="fade-out-animation"
             on-iron-overlay-closed="_closed">
-            <div class="dialog-configs">
+            
+            <paper-dialog-scrollable class="dialog-configs">
                 <content select=".multi-criterion-config"></content>
                 <content select=".range-criterion-config"></content>
                 <content select=".date-range-criterion-config"></content>
+            </paper-dialog-scrollable>
+            
+            <div class="buttons">
+                <paper-button dialog-dismiss affirmative on-tap="_cancelMetaValues">Cancel</paper-button>
+                <paper-button dialog-confirm affirmative autofocus on-tap="_acceptMetaValues">Ok</paper-button>
             </div>
-            <paper-button dialog-dismiss affirmative on-tap="_cancelMetaValues">Cancel</paper-button>
-            <paper-button dialog-confirm affirmative autofocus on-tap="_acceptMetaValues">Ok</paper-button>
         </paper-dialog>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-flex-layout when-desktop="[[_whenDesktop]]" when-tablet="[[_whenTablet]]" when-mobile="[[_whenMobile]]">
