@@ -247,7 +247,8 @@
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
                         if (this.propertyModel.hasOwnProperty(property)) {
-                            modPropHolder["@@metaValues"][property] = this._extractModifiedMetaValuesHolder(this.propertyModel[property]);
+                        	var prop = 'THIS' === property ? '' : property;
+                            modPropHolder["@@metaValues"][prop] = this._extractModifiedMetaValuesHolder(this.propertyModel[property]);
                         }
                     }
                 }
@@ -446,14 +447,15 @@
                 
                 for (var property in metaValues) {
                     if (metaValues.hasOwnProperty(property)) {
-                    	var prop = this.propertyModel[property];
-                    	this.notifyPath('propertyModel.' + property + '.orNull', prop.orNull);
-                    	this.notifyPath('propertyModel.' + property + '.not', prop.not);
-                    	this.notifyPath('propertyModel.' + property + '.exclusive', prop.exclusive);
-                    	this.notifyPath('propertyModel.' + property + '.exclusive2', prop.exclusive2);
-                    	this.notifyPath('propertyModel.' + property + '.datePrefix', prop.datePrefix);
-                    	this.notifyPath('propertyModel.' + property + '.dateMnemonic', prop.dateMnemonic);
-                    	this.notifyPath('propertyModel.' + property + '.andBefore', prop.andBefore);
+                    	var propertyName = property === '' ? 'THIS' : property;
+                    	var prop = this.propertyModel[propertyName];
+                    	this.notifyPath('propertyModel.' + propertyName + '.orNull', prop.orNull);
+                    	this.notifyPath('propertyModel.' + propertyName + '.not', prop.not);
+                    	this.notifyPath('propertyModel.' + propertyName + '.exclusive', prop.exclusive);
+                    	this.notifyPath('propertyModel.' + propertyName + '.exclusive2', prop.exclusive2);
+                    	this.notifyPath('propertyModel.' + propertyName + '.datePrefix', prop.datePrefix);
+                    	this.notifyPath('propertyModel.' + propertyName + '.dateMnemonic', prop.dateMnemonic);
+                    	this.notifyPath('propertyModel.' + propertyName + '.andBefore', prop.andBefore);
                     }
                 }
             },
@@ -476,7 +478,8 @@
                         model["datePrefix"] = typeof meta["datePrefix"] === 'undefined' ? null : meta["datePrefix"];
                         model["dateMnemonic"] = typeof meta["dateMnemonic"] === 'undefined' ? null : meta["dateMnemonic"];
                         model["andBefore"] = typeof meta["andBefore"] === 'undefined' ? null : meta["andBefore"];
-                        propertyModel[property] = model;
+                        var propertyName = property === '' ? 'THIS' : property;
+                        propertyModel[propertyName] = model;
                     }
                 }
                 console.log("propertyModel", propertyModel);

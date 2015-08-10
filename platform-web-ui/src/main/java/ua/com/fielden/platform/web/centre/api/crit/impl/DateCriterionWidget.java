@@ -33,7 +33,6 @@ public class DateCriterionWidget extends AbstractRangeCriterionWidget {
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
-        // TODO: need to deal with '' -- empty property name, which is used for 'entity itself property'!
         attrs.put("date-prefix", "{{propertyModel." + this.propertyName() + ".datePrefix}}");
         attrs.put("date-mnemonic", "{{propertyModel." + this.propertyName() + ".dateMnemonic}}");
         attrs.put("and-before", "{{propertyModel." + this.propertyName() + ".andBefore}}");

@@ -67,10 +67,12 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     /**
      * The name of the property to which this editor will be bound.
      *
+     * Please, note that if the "property itself" is used -- the method returns "THIS".
+     *
      * @return
      */
     protected String propertyName() {
-        return propertyName;
+        return "".equals(propertyName) ? "THIS" : propertyName;
     }
 
     /**
