@@ -13,12 +13,11 @@
 <link rel="import" href="/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html">
 
 <dom-module id="tg-abstract-criterion">
-    <link rel="import" type="css" href="/resources/centre/criterion/tg-abstract-criterion.css">
     <template>
         <paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closed">
 
             <paper-dialog-scrollable>
-                <div class="layout vertical">
+                <div class="metavalue-editor layout vertical">
                     <content select=".multi-criterion-config"></content>
                     <content select=".range-criterion-config"></content>
                     <content select=".date-range-criterion-config"></content>

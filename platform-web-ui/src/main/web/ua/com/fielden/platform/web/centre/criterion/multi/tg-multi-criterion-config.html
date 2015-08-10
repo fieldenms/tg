@@ -8,6 +8,11 @@ The `tg-multi-criterion-config` contains just the DOM part of all non-single `tg
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 
 <dom-module id="tg-multi-criterion-config">
+    <style>
+        paper-checkbox {
+            margin-bottom: 20px;
+        }
+    </style>
 	<template>
 		<paper-checkbox checked="{{_orNull}}">Missing value</paper-checkbox>
 		<paper-checkbox checked="{{_not}}">Not</paper-checkbox>
