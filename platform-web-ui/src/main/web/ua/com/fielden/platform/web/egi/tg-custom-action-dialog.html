@@ -6,7 +6,7 @@
 <dom-module id="tg-custom-action-dialog">
     <template>
         <!--The template of dialog for tg-ui-action-->
-        <paper-dialog id="entityMaster" modal on-iron-overlay-opened="_dialogOpened" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+        <paper-dialog id="entityMaster" modal on-iron-overlay-opened="_dialogOpened" on-iron-overlay-closed="_dialogClosed" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
             <tg-element-loader id="loadMaster" on-after-load="_afterMasterLoad"></tg-element-loader>
             <div class="buttons">
                 <paper-button dialog-confirm autofocus>Close</paper-button>
@@ -28,9 +28,9 @@
                 }
             },
 
-            listeners: {
-                'layout-finished': '_showMaster'
-            },
+            //listeners: {
+            //    'layout-finished': '_showMaster'
+            //},
 
             ready: function () {
                 //Initialising the action runner
@@ -54,19 +54,31 @@
                     if (this.currentRunningAction._masterComponent.noUI === true) {
                         this.currentRunningAction = null;
                     }
+                    
+                    this._showMaster();
                 }
             },
 
             _showMaster: function (e) {
                 if (this.currentRunningAction && this.currentRunningAction._masterComponent.noUI === false) {
+                    Polymer.dom(Polymer.dom(this.$.entityMaster).parentNode).removeChild(this.$.entityMaster);
+                    Polymer.dom(document.body).appendChild(this.$.entityMaster);
                     this.$.entityMaster.open();
+                    Polymer.dom.flush();
+                    
                 }
             },
 
             _dialogOpened: function (e, detail, source) {
+                this.$.entityMaster.fit();
                 this.currentRunningAction = null;
                 this._setIsRunning(false);
             },
+            
+            _dialogClosed: function() {
+                Polymer.dom(document.body).removeChild(this.$.entityMaster);
+                Polymer.dom.flush();
+            }
         });
     })();
 </script>
