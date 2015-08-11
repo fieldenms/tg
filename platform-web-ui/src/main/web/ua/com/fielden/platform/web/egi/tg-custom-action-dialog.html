@@ -6,7 +6,7 @@
 <dom-module id="tg-custom-action-dialog">
     <template>
         <!--The template of dialog for tg-ui-action-->
-        <paper-dialog id="entityMaster" modal on-iron-overlay-opened="_dialogOpened" entry-animation="slide-down-animation" exit-animation="slide-up-animation">
+        <paper-dialog id="entityMaster" modal on-iron-overlay-opened="_dialogOpened" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
             <tg-element-loader id="loadMaster" on-after-load="_afterMasterLoad"></tg-element-loader>
             <div class="buttons">
                 <paper-button dialog-confirm autofocus>Close</paper-button>
