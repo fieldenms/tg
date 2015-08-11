@@ -7,7 +7,7 @@
 <link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<dom-module id="tg-chooser">
+<dom-module id="tg-colour-picker">
 	<style>
 		.color-box {
 			width: 40px;
@@ -16,15 +16,16 @@
 		}
 		
 		.small-box {
-			width: 18px;
+			min-width: 18px;
 			height: 18px;
 			background-color: #ccc;
+			box-shadow: 0px 2px 6px #ccc;
 		}
 		
 		paper-input-container {
 			padding: 0.2em;
 			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-			--paper-input-container-input-color: var(--google-grey-700);
+			--paper-input-container-input-color: #212121;
 		}
 		
 		iron-dropdown {
@@ -32,12 +33,14 @@
 			background-color: #FAFAFA;
 			color: var(--google-grey-700);
 			box-shadow: 0px 2px 6px #ccc;
+			margin-top: 53px;
+			margin-left: 5px;
 		}
 		
 		paper-icon-button {
 			align-self: flex-end;
-			--iron-icon-height: 16px;
-			--iron-icon-width: 16px;
+			--iron-icon-height: 1em;
+			--iron-icon-width: 1em;
 			padding-left: 4px;
 			padding-right: 2px;
 			padding-top: 2px;
@@ -49,19 +52,22 @@
 
 		<paper-input-container always-float-label>
 			<div class="layout horizontal center">
-				<div class="small-box" style$="[[_calcColorBoxStyle(color)]]"></div>
+				<!--				<paper-icon-button icon="editor:format-color-fill" title="Colour editor" id="fab" on-tap="open"></paper-icon-button>-->
+				<div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color)]]"></div>
 				<label>Hex code colour value</label>
-				<input bind-value="{{color}}" value="{{color::input}}" is="iron-input" style="margin-left:10px;">
-				<paper-icon-button icon="editor:format-color-fill" title="Colour editor" id="fab" on-tap="open"></paper-icon-button>
+				<input bind-value="{{color}}" value="{{color::input}}" is="iron-input" style="margin-left:10px;" prevent-invalid-input allowed-pattern="[0-9# A-F a-f]" maxlength="7">
+				<!--				<paper-input-error>Hex code colour value only(#,0-9,A-F)!</paper-input-error>-->
+
 			</div>
+
 		</paper-input-container>
 
 		<iron-dropdown positionTarget="fab" id="dropdown">
 			<div class="dropdown-content">
 
-				<div class="layout vertical" style="margin:20px 10px 10px 10px;">
+				<div class="layout vertical" style="margin:10px 10px 10px 10px;">
 					<div class="layout horizontal">
-						<div class="color-box" on-tap="colorSelected" style="background-color: #F44336;"></div>
+						<div class="color-box" on-tap="colorSelected" mouseover="" mouseleave="" style="background-color: #F44336; border-color: white; border-width: 2px; box-shadow: 0px 2px 4px #ccc;"></div>
 						<div class="color-box" on-tap="colorSelected" style="background-color: #FF9800;"></div>
 						<div class="color-box" on-tap="colorSelected" style="background-color: #FFEB3B;"></div>
 						<div class="color-box" on-tap="colorSelected" style="background-color: #4CAF50;"></div>
@@ -89,16 +95,20 @@
 </dom-module>
 <script>
 	Polymer({
-		is: "tg-chooser",
+		is: "tg-colour-picker",
 		properties: {
 			color: {
 				type: String,
 				notify: true
 			}
 		},
+		//		overFocuseColor: function (e, detail) {
+		//			e.srcElement.style['border-color'] =
+		//		}
 
 		colorSelected: function (e, detail) {
 			this.color = rgbToHex(e.srcElement.style['background-color']);
+			dropdown.close;
 		},
 		_calcColorBoxStyle: function (color) {
 			return "background-color: " + color;
