@@ -67,6 +67,13 @@
                 },
                 observer: "_openedChanged"
             },
+            dontCloseOnTap: {
+                type: Boolean,
+                reflectToAttribute: true,
+                value: function () {
+                    return false;
+                }
+            },
             heading: String
         },
 
@@ -75,7 +82,9 @@
         },
 
         _toggle: function (e, detail, source) {
-            this.$.collapse.toggle();
+            if ((this.opened && !this.dontCloseOnTap) || !this.opened) {
+                this.$.collapse.toggle();
+            }
         },
 
         _openedChanged: function (newValue, oldValue) {

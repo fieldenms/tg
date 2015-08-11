@@ -19,36 +19,16 @@
             margin: 10px;
         }
     </style>
-	<template>
-		<tg-abstract-range-criterion 
-			id="dom"
-			_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
-			_accept-meta-values="[[_acceptMetaValuesForBinding]]"
-			_show-meta-values-editor="[[_showMetaValuesEditor]]"
-			_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]"
-			_or-null="{{_orNull}}"
-			_not="{{_not}}"
-			_exclusive="{{_exclusive}}"
-			_exclusive2="{{_exclusive2}}"
-            _when-desktop="[[_whenDesktop]]"
-            _when-tablet="[[_whenTablet]]"
-            _when-mobile="[[_whenMobile]]"
-			>
+    <template>
+        <tg-abstract-range-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}" _exclusive="{{_exclusive}}" _exclusive2="{{_exclusive2}}" _when-desktop="[[_whenDesktop]]" _when-tablet="[[_whenTablet]]" _when-mobile="[[_whenMobile]]">
             <tg-accordion-group single-open class="date-range-criterion-config">
                 <template is="dom-repeat" items="{{_datePrefixes}}" as="prefix" index-as="pIndex">
-                    <tg-accordion opened="[[_shouldAccordionBeOpened(_datePrefix, prefix, pIndex)]]" heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]">
+                    <tg-accordion dont-close-on-tap opened="[[_shouldAccordionBeOpened(_datePrefix, prefix, pIndex)]]" heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]">
                         <div class="layout horizontal">
                             <template is="dom-repeat" items="{{_andBefores}}" as="before" index-as="bIndex">
                                 <div class="layout vertical">
                                     <template is="dom-repeat" items="{{_dateMnemonics}}" as="mnemonic" index-as="mIndex">
-                                        <paper-radio-button
-                                        	dateprefix="[[prefix]]"
-                                        	datemnemonic="[[mnemonic]]"
-                                        	dateandbefore="[[before]]"
-                                        	toggles
-                                        	on-change="_dateMetaValueChanged"
-                                        	checked="[[_checked(_datePrefix, _dateMnemonic, _andBefore, prefix, mnemonic, before)]]"
-                                        	>[[_radioTitle(_mnemonicTitles, _andBeforeTitles, mIndex, bIndex)]]</paper-radio-button>
+                                        <paper-radio-button dateprefix="[[prefix]]" datemnemonic="[[mnemonic]]" dateandbefore="[[before]]" toggles on-change="_dateMetaValueChanged" checked="[[_checked(_datePrefix, _dateMnemonic, _andBefore, prefix, mnemonic, before)]]">[[_radioTitle(_mnemonicTitles, _andBeforeTitles, mIndex, bIndex)]]</paper-radio-button>
                                     </template>
                                 </div>
                             </template>
@@ -56,45 +36,45 @@
                     </tg-accordion>
                 </template>
             </tg-accordion-group>
-			<content select=".criterion-editors"></content>
-		</tg-abstract-range-criterion>
-	</template>
+            <content select=".criterion-editors"></content>
+        </tg-abstract-range-criterion>
+    </template>
 </dom-module>
 
 <script>
     Polymer({
-    	is: 'tg-date-range-criterion',
-    	
+        is: 'tg-date-range-criterion',
+
         observers: [
-	       	'_updateIconButtonStyle(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore)'
+         '_updateIconButtonStyle(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore)'
         ],
-    	
-    	behaviors: [ Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior ],
-    	
-	    _dom: function () {
-    		return this.$.dom.$.dom.$.dom2;
-    	},
-    	
-        _createWhenDesktopConfig: function () {
-        	return ['horizontal', 'justified', 'flex', 'end', ['margin-right: 20px', 'flex'], ['flex'], []];
+
+        behaviors: [Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior],
+
+        _dom: function () {
+            return this.$.dom.$.dom.$.dom2;
         },
-    	
+
+        _createWhenDesktopConfig: function () {
+            return ['horizontal', 'justified', 'flex', 'end', ['margin-right: 20px', 'flex'], ['flex'], []];
+        },
+
         properties: {
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
-        	// No default values are allowed in this case.														   //
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
             /**
              * This published property specifies the 'date prefix' for this date criterion.
-             * 
+             *
              * values: 'PREV', 'CURR', 'NEXT'. (see DateRangePrefixEnum.java)
              */
             datePrefix: {
-            	type: String,
-            	notify: true, // TODO val: null
-            	observer: '_datePrefixChanged'
+                type: String,
+                notify: true, // TODO val: null
+                observer: '_datePrefixChanged'
             },
 
             /**
@@ -103,9 +83,9 @@
              * values: 'DAY', 'MONTH', 'WEEK', 'YEAR' etc. (see MnemonicEnum.java)
              */
             dateMnemonic: {
-            	type: String,
-            	notify: true, // TODO val: null
-            	observer: '_dateMnemonicChanged'
+                type: String,
+                notify: true, // TODO val: null
+                observer: '_dateMnemonicChanged'
             },
 
             /**
@@ -114,24 +94,24 @@
              * values: 'null', 'true', 'false'
              */
             andBefore: {
-            	// please, note that specifying Boolean as a type is slightly dangerous -- 'null' value serialisation in that case can give us unpredictable results.
-            	type: Object,
-            	notify: true, // TODO val: null
-            	observer: '_andBeforeChanged'
+                // please, note that specifying Boolean as a type is slightly dangerous -- 'null' value serialisation in that case can give us unpredictable results.
+                type: Object,
+                notify: true, // TODO val: null
+                observer: '_andBeforeChanged'
             },
-            
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        	//   prefix. 																				           //
-        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
-        	//   populate their default values in ready callback (to have these values populated in children)!     //
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            //   prefix. 																				           //
+            // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+            //   populate their default values in ready callback (to have these values populated in children)!     //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
             _datePrefix: String,
             _dateMnemonic: String,
             _andBefore: Object,
-            
+
             _datePrefixes: Array,
             _dateMnemonics: Array,
             _andBefores: Array,
@@ -140,29 +120,35 @@
             _andBeforeTitles: Array
         },
 
-		ready: function () {
-			// TODO maybe in 'created' callback?
+        ready: function () {
+            // TODO maybe in 'created' callback?
             this._datePrefixes = ["PREV", "CURR", "NEXT"];
             this._dateMnemonics = ["DAY", "WEEK", "MONTH", "QRT1", "QRT2", "QRT3", "QRT4", "YEAR", "OZ_FIN_YEAR"];
             this._andBefores = ["THIS", "BEFORE", "AFTER"];
             this._prefixTitles = ["Previous", "Current", "Next"];
             this._mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];
             this._andBeforeTitles = ["", " and before", " and after"];
-            
+
             this._datePrefix = null;
             this._dateMnemonic = null;
             this._andBefore = null;
-		},
-		
+        },
+
         _dateMetaValueChanged: function (e, detail) {
-        	var source = e.srcElement;
+            var source = e.srcElement;
             if (source.checked) {
                 this._datePrefix = source.dateprefix;
                 this._dateMnemonic = source.datemnemonic;
                 switch (source.dateandbefore) {
-                    case "THIS": this._andBefore = null; break;
-                    case "BEFORE": this._andBefore = true; break;
-                    case "AFTER": this._andBefore = false; break;
+                case "THIS":
+                    this._andBefore = null;
+                    break;
+                case "BEFORE":
+                    this._andBefore = true;
+                    break;
+                case "AFTER":
+                    this._andBefore = false;
+                    break;
                 }
             } else {
                 this._datePrefix = null;
@@ -170,8 +156,8 @@
                 this._andBefore = null;
             }
         },
-        
-        _acceptMetaValues: function() {
+
+        _acceptMetaValues: function () {
             this.datePrefix = this._datePrefix;
             this.dateMnemonic = this._dateMnemonic;
             this.andBefore = this._andBefore;
@@ -179,51 +165,51 @@
             Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._acceptMetaValues.call(this);
         },
 
-        _cancelMetaValues: function() {
+        _cancelMetaValues: function () {
             this._datePrefix = this.datePrefix;
             this._dateMnemonic = this.dateMnemonic;
             this._andBefore = this.andBefore;
 
             Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._cancelMetaValues.call(this);
         },
-        
+
         _datePrefixChanged: function (newValue, oldValue) {
             this._datePrefix = newValue;
         },
-        
+
         _dateMnemonicChanged: function (newValue, oldValue) {
             this._dateMnemonic = newValue;
         },
-        
+
         _andBeforeChanged: function (newValue, oldValue) {
             this._andBefore = newValue;
         },
-        
+
         /**
          * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
          */
-        _hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        	return Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) && 
-        		datePrefix === null && dateMnemonic === null && andBefore === null;
+        _hasNoMetaValues: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+            return Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
+                datePrefix === null && dateMnemonic === null && andBefore === null;
         },
 
         /**
          * Returns 'true' when accordion of date mnemonics should be opened, 'false' otherwise.
          */
         _shouldAccordionBeOpened: function (_datePrefix, prefix, pIndex) {
-        	return (_datePrefix === null && pIndex === 0) || _datePrefix === prefix;
+            return (_datePrefix === null && pIndex === 0) || _datePrefix === prefix;
         },
-        
+
         _getPrefixTitle: function (_prefixTitles, pIndex) {
-	        return _prefixTitles[pIndex];
+            return _prefixTitles[pIndex];
         },
-        
+
         _radioTitle: function (_mnemonicTitles, _andBeforeTitles, mIndex, bIndex) {
-        	return _mnemonicTitles[mIndex] + _andBeforeTitles[bIndex];
+            return _mnemonicTitles[mIndex] + _andBeforeTitles[bIndex];
         },
-        
+
         _checked: function (_datePrefix, _dateMnemonic, _andBefore, prefix, mnemonic, before) {
-        	return _datePrefix === prefix && _dateMnemonic === mnemonic && ((_andBefore === null && before === 'THIS') || (_andBefore === true && before === 'BEFORE') || (_andBefore === false && before === 'AFTER'))
+            return _datePrefix === prefix && _dateMnemonic === mnemonic && ((_andBefore === null && before === 'THIS') || (_andBefore === true && before === 'BEFORE') || (_andBefore === false && before === 'AFTER'))
         }
     });
 </script>
