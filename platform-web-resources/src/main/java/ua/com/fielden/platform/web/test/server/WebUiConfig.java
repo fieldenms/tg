@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static ua.com.fielden.platform.utils.Pair.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
@@ -146,8 +146,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 build()
                 )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-                                            .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-                                            .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
+                .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
                 //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
                 .also()
                 .addCrit("desc").asMulti().text()
@@ -157,8 +157,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
                 .also()
                 .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-                                        .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-                                        .lightDesc()
+                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .lightDesc()
                 //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
                 .also()
                 .addCrit("bigDecimalProp").asRange().decimal()
@@ -178,12 +178,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.setDefaultValue(single().date()./* TODO not applicable on query generation level not().*/setValue(new Date(1000000000L))./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                                    .withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-                                    .lightDesc()
+                .withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .lightDesc()
                 /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("userParam").asSingle().autocompleter(User.class)
-                        .withProps(pair("base", false), pair("basedOnUser", false))
+                .withProps(pair("base", false), pair("basedOnUser", false))
                 /*    */.withDefaultValueAssigner(TgPersistentEntityWithProperties_UserParamAssigner.class)
                 .also()
                 .addCrit("critOnlyIntegerProp").asSingle().integer()
@@ -427,14 +427,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //        app.addCustomView(new CustomWebView(new CustomWebModel()));
 
         final String mr = "'margin-right: 20px', 'width:300px'";
+        final String fmr = "'flex', 'margin-right: 20px'";
         final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         // Add entity masters.
         final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfig = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
-                    .withProps(pair("desc", true),
-                               pair("compositeProp", false),
-                               pair("booleanProp", false))
+                .withProps(pair("desc", true),
+                        pair("compositeProp", false),
+                        pair("booleanProp", false))
                 //*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 //*      */.enabledWhen(EnabledState.VIEW)
                 //*      */.icon("trending-up")
@@ -552,26 +553,26 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['vertical', 'justified', 'padding:20px', "
-                        + "[[mr], [mr], [mr], [mr], [mr]], "
-                        + "[[mr], [mr], [mr], [mr], [mr]],"
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
+                        + "[[fmr], [fmr], [fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], [fmr], [fmr], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
-                .setLayoutFor(Device.TABLET, Optional.empty(), ("['vertical', 'padding:20px',"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
-                        + "['horizontal', 'justified', ['flex']],"
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
+                        + "[[fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], ['flex']],"
+                        + "[['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("actionMr", actionMr))
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .done();
 
         final ISimpleMasterConfig<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntity(TgFunctionalEntityWithCentreContext.class)

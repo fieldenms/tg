@@ -79,6 +79,7 @@
                         	console.timeEnd("loading");
                         	console.warn("inserting-after-load");
                         	console.time("inserting-after-load");
+                            importedURLs[this.import] = "imported";
                             self.fire('after-load', insertElement(self, elementName, attributes));
                             console.timeEnd("inserting-after-load");
                             // e.target.import is the import document.
