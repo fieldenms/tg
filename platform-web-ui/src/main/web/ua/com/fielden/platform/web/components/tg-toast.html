@@ -1,5 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
@@ -11,32 +14,46 @@
     paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
 </core-style> -->
 
-<dom-module id="tg-toast">
-    <style>
-        
-        paper-toast {
-            left:auto;
-        }
-        /* style to truncate the toast text */
-        
-        /* :host::shadow * /deep/ .toast-text {
+    <style is="custom-style">
+        .paper-toast {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
             max-width: 250px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        } */
+        }
         
-        /* <core-style ref="toast-progress-indicator"></core-style> */
+        /* style to truncate the toast text */
+        body /deep/ paper-toast::shadow #label {
+            @apply(--layout-flex);
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .paper-spinner {
+            width: 1.5em;
+            height: 1.5em;
+            min-width: 1em;
+            min-height: 1em;
+            max-width: 2em;
+            max-height: 2em;
+            padding: 2px;
+            margin-left: 1em;
+            --paper-spinner-layer-1-color: var(--paper-blue-500);
+            --paper-spinner-layer-2-color: var(--paper-blue-500);
+            --paper-spinner-layer-3-color: var(--paper-blue-500);
+            --paper-spinner-layer-4-color: var(--paper-blue-500);
+        }
     </style>
 
+<dom-module id="tg-toast">
     <template>
-        <paper-toast id="toast" text="[[text]]"> <!-- TODO responsive-width="250px" -->
-            <template is="dom-if" if="[[_shouldShowProgress]]">
-                <paper-spinner id="spinner" active="[[showProgress]]" class="blue" alt="loading"></paper-spinner>
-            </template>
-            <template is="dom-if" if="[[_shouldShowMore(showProgress, hasMore)]]">
-                <div style="color: #03A9F4;" on-tap="_showMessageDlg">More</div>
-            </template>
+        <paper-toast id="toast" class="paper-toast" text="[[text]]"> <!-- TODO responsive-width="250px" -->
+            <paper-spinner id="spinner" class="paper-spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
+            <div hidden$="[[_skipShowMore(showProgress, hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">More</div>
         </paper-toast>
 
         <paper-dialog 
@@ -79,7 +96,7 @@
             	},
             	
                 showProgress: {
-                	type: Boolean                	
+                	type: Boolean
                 },
                 
                 hasMore: {
@@ -95,9 +112,9 @@
              	//   populate their default values in ready callback (to have these values populated in children)!     //
              	/////////////////////////////////////////////////////////////////////////////////////////////////////////
              	
-                _shouldShowProgress: {
+                _skipShowProgress: {
                 	type: Boolean,
-                	computed: '_shouldShowProgress0(showProgress, hasMore)'
+                	computed: '_shouldSkipProgress(showProgress, hasMore)'
                 }
         	},
 
@@ -105,12 +122,12 @@
                 this.$.msgDialog.toggle();
             },
 
-            _shouldShowProgress0: function (progress, more) {
-                return progress && !more;
+            _shouldSkipProgress: function (progress, more) {
+                return !progress || more;
             },
 
-            _shouldShowMore: function (progress, more) {
-                return !progress && more;
+            _skipShowMore: function (progress, more) {
+                return progress || !more;
             },
             
             _msgTextChanged: function(newValue, oldValue) {
@@ -118,6 +135,12 @@
             },
             
             show: function () {
+                var toast = document.querySelector('#toast');
+                if (toast) {
+                    Polymer.dom(document.body).removeChild(toast);
+                }
+                Polymer.dom(document.body).appendChild(this.$.toast);
+                Polymer.dom().flush();
             	this.$.toast.show();
             }
         })
