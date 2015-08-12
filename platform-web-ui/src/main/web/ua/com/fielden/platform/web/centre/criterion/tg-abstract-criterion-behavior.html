@@ -68,8 +68,18 @@
             this._whenDesktop = this._createWhenDesktopConfig();
             
             this._showMetaValuesEditor = (function (e) {
-                document.body.appendChild(this._dom().$.metaValueEditor);
-            	this._dom().$.metaValueEditor.open();
+                var mve = this._dom().$.metaValueEditor;
+                
+                // FIXME: the following line should work, but does not
+                // Polymer.dom(document.body).appendChild(mve);
+                // Instead, dialog is added directly
+                document.body.appendChild(mve);
+                Polymer.dom.flush();
+                // let's open the dialog with magical async...
+                // this ensures that the dialog is opened after its relocation to body
+                this.async(function () {
+                    mve.open();
+                }.bind(this), 1);
             }).bind(this);
             
             this._acceptMetaValuesForBinding = this._acceptMetaValues.bind(this);
