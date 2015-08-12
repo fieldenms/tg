@@ -60,13 +60,14 @@
         	id="msgDialog" 
         	class="scrolling" 
         	with-backdrop 
-        	no-cancel-on-outside-click 
         	entry-animation="scale-up-animation"
-        	exit-animation="fade-out-animation"
-        	layered="false">
+        	exit-animation="fade-out-animation">
         	
         	<p id="msgDialogText"></p>
-            <paper-button dialog-confirm affirmative autofocus>Close</paper-button>
+            
+            <div class="buttons">
+                <paper-button dialog-confirm affirmative autofocus>Close</paper-button>
+            </div>
         </paper-dialog>
     </template>    
 </dom-module>
@@ -131,7 +132,8 @@
             },
             
             _msgTextChanged: function(newValue, oldValue) {
-            	this.$.msgDialogText.innerHTML = newValue;
+            	Polymer.dom(this.$.msgDialogText).innerHTML = newValue;
+            	Polymer.dom.flush();
             },
             
             show: function () {
