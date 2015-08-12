@@ -44,7 +44,9 @@
         /*  */
         .main-container {
             @apply(--layout-horizontal);
-            @apply(--layout-center);
+
+@apply(--layout-center);
+
         }
         #input-container {
             @apply(--layout-flex);
@@ -71,15 +73,21 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+        paper-checkbox::shadow #checkboxContainer {
+            flex-shrink: 0;
+        }
         paper-checkbox::shadow #checkboxLabel {
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         paper-input-container {
             --paper-input-container-label: {
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: ellipsis;
-            };
+            }
+            ;
         }
         paper-input-error {
             width: 100%;
@@ -108,7 +116,7 @@
                         <textarea id="input" disabled$="[[_disabled]]"></textarea>
                     </iron-autogrow-textarea>
 
-                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange">[[propTitle]]</paper-checkbox>
+                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal">[[propTitle]]</paper-checkbox>
 
                     <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
 
