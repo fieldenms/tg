@@ -5,7 +5,6 @@
 
 <dom-module id="tg-custom-action-dialog">
     <template>
-        <!--The template of dialog for tg-ui-action-->
         <paper-dialog id="entityMaster" modal on-iron-overlay-opened="_dialogOpened" on-iron-overlay-closed="_dialogClosed" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
             <tg-element-loader id="loadMaster" on-after-load="_afterMasterLoad"></tg-element-loader>
             <div class="buttons">
@@ -27,10 +26,6 @@
                     reflectToAttribute: true
                 }
             },
-
-            //listeners: {
-            //    'layout-finished': '_showMaster'
-            //},
 
             ready: function () {
                 //Initialising the action runner
@@ -63,14 +58,16 @@
                 if (this.currentRunningAction && this.currentRunningAction._masterComponent.noUI === false) {
                     Polymer.dom(Polymer.dom(this.$.entityMaster).parentNode).removeChild(this.$.entityMaster);
                     Polymer.dom(document.body).appendChild(this.$.entityMaster);
-                    this.$.entityMaster.open();
                     Polymer.dom.flush();
-                    
+                    // let's open the dialog with magical async...
+                    // this ensures that the dialog is opened after its relocation to body and after all layouting is done
+                    this.async(function () {
+                        this.$.entityMaster.open();
+                    }.bind(this), 1);
                 }
             },
 
             _dialogOpened: function (e, detail, source) {
-                this.$.entityMaster.fit();
                 this.currentRunningAction = null;
                 this._setIsRunning(false);
             },
