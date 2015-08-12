@@ -53,11 +53,17 @@
         }
         .table-cell,
         .table-data-cell {
-            padding-right: 1.2rem;
+            padding: 0 0.6rem;
         }
-        .table-cell:first-child,
-        .table-data-cell:first-child {
+        .table-cell:first-of-type,
+        .table-data-cell:first-of-type {
+            padding-right: 0.6rem;
             padding-left: 1.2rem;
+        }
+        .table-cell:last-of-type,
+        .table-data-cell:last-of-type {
+            padding-left: 0.6rem;
+            padding-right: 1.2rem;
         }
         .table-data-cell {
             cursor: pointer;
@@ -232,7 +238,7 @@
                     <!-- Table footer -->
                     <template is="dom-if" if="[[totals]]">
                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
-                            <div class="layout horizontal table-data-row">
+                            <div class="layout horizontal table-header-row">
                                 <div class="table-cell layout horizontal center" style="width:18px">
                                     <!-- checkbox stub for table footer -->
                                 </div>
@@ -647,7 +653,11 @@
              * Calculates the column's style.
              */
             _calcColumnStyle: function (column) {
-                return "width: " + column.width + ";";
+                var colStyle = "width: " + column.width + ";";
+                if (column.type === "Integer" || column.type === "BigDecimal") {
+                    colStyle += " text-align: right;"
+                }
+                return colStyle;
             },
             /**
              * Calculates the style for cell that represents rendering hints.

@@ -26,7 +26,7 @@
         <tg-abstract-range-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}" _exclusive="{{_exclusive}}" _exclusive2="{{_exclusive2}}" _when-desktop="[[_whenDesktop]]" _when-tablet="[[_whenTablet]]" _when-mobile="[[_whenMobile]]">
             <tg-accordion-group single-open class="date-range-criterion-config">
                 <template is="dom-repeat" items="{{_datePrefixes}}" as="prefix" index-as="pIndex">
-                    <tg-accordion dont-close-on-tap opened="[[_shouldAccordionBeOpened(_datePrefix, prefix, pIndex)]]" heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]" class$="[[_calcClass(prefix, _datePrefix)]]">
+                    <tg-accordion dont-close-on-tap opened="[[_shouldAccordionBeOpened(_justOpened, prefix, pIndex)]]" heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]" class$="[[_calcClass(prefix, _datePrefix)]]">
                         <div class="layout horizontal">
                             <template is="dom-repeat" items="{{_andBefores}}" as="before" index-as="bIndex">
                                 <div class="layout vertical">
@@ -203,8 +203,8 @@
         /**
          * Returns 'true' when accordion of date mnemonics should be opened, 'false' otherwise.
          */
-        _shouldAccordionBeOpened: function (_datePrefix, prefix, pIndex) {
-            return (_datePrefix === null && pIndex === 0) || _datePrefix === prefix;
+        _shouldAccordionBeOpened: function (justOpened, prefix, pIndex) {
+            return (this.datePrefix === null && pIndex === 0) || this.datePrefix === prefix;
         },
 
         _getPrefixTitle: function (_prefixTitles, pIndex) {

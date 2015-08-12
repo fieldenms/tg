@@ -68,6 +68,11 @@
             this._whenDesktop = this._createWhenDesktopConfig();
             
             this._showMetaValuesEditor = (function (e) {
+                if (typeof this._justOpened === 'undefined') {
+                    this._justOpened = true;
+                } else {
+                    this._justOpened = !this._justOpened;
+                }
                 var mve = this._dom().$.metaValueEditor;
                 
                 // FIXME: the following line should work, but does not
