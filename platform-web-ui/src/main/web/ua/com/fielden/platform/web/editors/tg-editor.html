@@ -13,7 +13,7 @@
 <!-- link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html" -->
 <link rel="import" href="/tg-reflector">
 
-<dom-module id="tg-editor">
+ <dom-module id="tg-editor">
     <style>
         /*Styles for tooltip*/
         /*:host::shadow * /deep/ core-tooltip::shadow #tooltip {
@@ -89,15 +89,35 @@
         paper-input-error {
             width: 100%;
         }
-        /* TODO styles */
+        
+        paper-input-container[class*="decorator-disabled"] /deep/ .unfocused-line {
+        	border-bottom: 1px dashed;
+        	/* background: var(--paper-input-container-invalid-color, --secondary-text-color); */
+        	border-color: var(--paper-input-container-invalid-color, --secondary-text-color);
+      		background: transparent;
+      		opacity: 0.6;
+        }
+        
+        /* .add-on-content.is-invalid ::content * */
+        paper-input-container[class*="decorator-disabled"] /deep/ .add-on-content.is-invalid ::content {
+      		opacity: 0.6;
+        }
+        
+        paper-input-container[class*="decorator-disabled"] /deep/ .add-on-content.is-highlighted ::content {
+      		opacity: 0.6;
+        }
+        
+        paper-input-container[class*="decorator-disabled"] /deep/ .add-on-content ::content {
+      		opacity: 0.6;
+        }
     </style>
 
     <template>
-        <paper-input-container id="decorator" attr-for-value="editing-value" disabled$="[[_disabled]]" always-float-label>
+        <paper-input-container id="decorator" attr-for-value="editing-value" class$="[[_calcDecoratorClass(_disabled)]]" always-float-label>
             <!-- flex auto  for textarea! -->
-            <label style$="[[_calcLabelStyle(_editorKind)]]">[[propTitle]]</label>
+            <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
             <div class="main-container">
-                <div id="input-container">
+                <div id="input-container" style$="[[_calcDecoratorPartStyle(_disabled)]]">
                     <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
 
                     <!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
@@ -116,21 +136,20 @@
                     <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal">[[propTitle]]</paper-checkbox>
 
                     <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
-
                 </div>
                 <!-- CONTENT HERE: -->
                 <content select=".custom-icon-buttons"></content>
-
+                
                 <div id="icon" hidden$="[[_actionDoesNotExist(action)]]">
-                    <tg-property-action entity-type="[[action.entityType]]" pre-action="[[action.preAction]]" post-action="[[action.postAction]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action>
-                </div>
+        			<tg-property-action entity-type="[[action.entityType]]" pre-action="[[action.preAction]]" post-action="[[action.postAction]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action>
+        		</div>
             </div>
 
-            <paper-input-error hidden$="[[!_error]]">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]">[[_error]]</paper-input-error>
 
-            <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]"></paper-input-char-counter>
+            <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]"></paper-input-char-counter>
         </paper-input-container>
-
+        
         <tg-reflector id="reflector"></tg-reflector>
 
         <template is="dom-if" if="[[debug]]">
@@ -171,7 +190,8 @@
             _onKeydown: Function,
             _onInput: Function,
             _maxLength: Number,
-            _autocompleterBlurEventHandler: Function
+            _autocompleterBlurEventHandler: Function,
+            currentState: String
         },
 
         _isDecimal: function (editorKind) {
@@ -210,14 +230,41 @@
         /**
          * Calculates the style for container's label.
          */
-        _calcLabelStyle: function (editorKind) {
+        _calcLabelStyle: function (editorKind, _disabled) {
             var style = "";
             if ("BOOLEAN" === editorKind) {
                 style += "visibility: hidden;"
             }
+            if (_disabled === true) {
+                style += "opacity: 0.6;"
+            }
             return style;
         },
+        
+        /**
+         * Calculates the style for decorator inner parts, based on '_disabled' property.
+         */
+        _calcDecoratorPartStyle: function (_disabled) {
+            var style = "";
+            if (_disabled === true) {
+                style += "opacity: 0.6;"
+            }
+            return style;
+        },
+        
 
+        /**
+         * Calculates the class for decorator based on '_disabled' property.
+         */
+        _calcDecoratorClass: function (_disabled) {
+            var klass = "";
+            if (_disabled === true) {
+            	// the next 'class' is designated to provide dash-styled underline in decorator, similarly as in paper-input-container inner styling code
+            	klass += "decorator-disabled "
+            }
+            return klass;
+        },
+        
         /**
          * Returns value that indicates whether boolean editor is checked or not.
          */

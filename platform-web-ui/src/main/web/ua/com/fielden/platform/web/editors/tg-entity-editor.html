@@ -67,7 +67,7 @@
     		_on-input="[[_onInput]]"
     		_on-keydown="[[_onKeydown]]"
     		_autocompleter-blur-event-handler="[[_blurEventHandler]]"
-    		>
+       		current-state="[[currentState]]">
 	    	<paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
