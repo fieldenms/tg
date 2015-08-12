@@ -56,7 +56,7 @@
 				</tg-boolean-editor>
 			</div>
 			<div class="layout horizontal">
-				<tg-colour-picker style="margin-right: 20px" color="{{color}}" class="flex"></tg-colour-picker>
+				<tg-colour-picker style="margin-right: 20px" color="{{color}}" colorRGB="{{colorRGB}}" class="flex"></tg-colour-picker>
 
 				<tg-datetime-picker class="flex" entity="[[entity]]" property-name="dateProp" current-state="EDIT" prop-title="Date property title" prop-desc="Date property desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]">
 				</tg-datetime-picker>
@@ -68,16 +68,16 @@
 -->
 
 			</div>
+
 		</div>
 	</template>
-
 
 </body>
 <script>
 	var colorId = document.querySelector('#colorId');
-	colorId.calcColorStyle = function (color) {
-		return "background-color: " + color;
-	}
+	//	colorId.calcColorStyle = function (color) {
+	//		return "background-color: " + color;
+	//	}
 </script>
 
 </html>

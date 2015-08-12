@@ -18,7 +18,7 @@
 		.small-box {
 			min-width: 18px;
 			height: 18px;
-			background-color: #ccc;
+			background-color: #F44336;
 			box-shadow: 0px 2px 6px #ccc;
 		}
 		
@@ -55,8 +55,12 @@
 				<!--				<paper-icon-button icon="editor:format-color-fill" title="Colour editor" id="fab" on-tap="open"></paper-icon-button>-->
 				<div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color)]]"></div>
 				<label>Hex code colour value</label>
-				<input bind-value="{{color}}" value="{{color::input}}" is="iron-input" style="margin-left:10px;" prevent-invalid-input allowed-pattern="[0-9# A-F a-f]" maxlength="7">
-				<!--				<paper-input-error>Hex code colour value only(#,0-9,A-F)!</paper-input-error>-->
+				<!--				<div prefix>#</div>-->
+				<input bind-value="{{color}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(color)]]" prevent-invalid-input allowed-pattern="[0-9# A-F a-f]" maxlength="7" id='inputWithButton'>
+
+				<paper-icon-button suffix onclick="clearInput()" icon="clear" alt="clear" title="clear" tabindex="0">
+				</paper-icon-button>
+				<paper-input-error>Hex code colour value only(#,0-9,A-F)!</paper-input-error>
 
 			</div>
 
@@ -67,24 +71,25 @@
 
 				<div class="layout vertical" style="margin:10px 10px 10px 10px;">
 					<div class="layout horizontal">
-						<div class="color-box" on-tap="colorSelected" mouseover="" mouseleave="" style="background-color: #F44336; border-color: white; border-width: 2px; box-shadow: 0px 2px 4px #ccc;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #FF9800;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #FFEB3B;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #4CAF50;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #009688;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #00BCD4;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #3F51B5;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #9C27B0;"></div>
+						<!--						<div class="color-box" on-tap="colorSelected" style="background-color: #F44336;"></div>-->
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#F44336')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#FF9800')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#FFEB3B')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#4CAF50')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#009688')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#00BCD4')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#3F51B5')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#9C27B0')]]"></div>
 					</div>
 					<div class="layout horizontal">
-						<div class="color-box" on-tap="colorSelected" style="background-color: #EF9A9A;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #FFCC80;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #FFF59D;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #A5D6A7;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #80CBC4;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #80DEEA;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #9FA8DA;"></div>
-						<div class="color-box" on-tap="colorSelected" style="background-color: #CE93D8;"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#EF9A9A')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#FFCC80')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#FFF59D')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#A5D6A7;')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#80CBC4')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#80DEEA')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#9FA8DA')]]"></div>
+						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#CE93D8')]]"></div>
 					</div>
 				</div>
 			</div>
@@ -100,23 +105,40 @@
 			color: {
 				type: String,
 				notify: true
-			}
+			},
+
 		},
-		//		overFocuseColor: function (e, detail) {
-		//			e.srcElement.style['border-color'] =
-		//		}
 
 		colorSelected: function (e, detail) {
 			this.color = rgbToHex(e.srcElement.style['background-color']);
-			dropdown.close;
+			this.$.dropdown.close();
+		},
+		_changeBox: function (colorValue) {
+			if (onmouseover) {
+				return "background-color: " + colorValue;
+			} else {
+				return "background-color: " + colorValue;
+			}
 		},
 		_calcColorBoxStyle: function (color) {
 			return "background-color: " + color;
 		},
+		_calcColorTextStyle: function (color) {
+			if (color.length === 4 || color.length === 7) {
+				return "margin-left: 10px; color: #212121; ";
+			} else {
+				return "margin-left: 10px; color: #DD2C00";
+			}
+		},
 		open: function () {
 			this.$.dropdown.open();
-		}
+		},
+
 	});
+
+	function clearInput() {
+		document.getElementById('inputWithButton').value = '';
+	}
 
 	function rgbToHex(color) {
 		if (color.substr(0, 1) === "#") {
