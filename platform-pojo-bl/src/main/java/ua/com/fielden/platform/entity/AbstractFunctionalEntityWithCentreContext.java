@@ -16,7 +16,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  * @param <K>
  */
-public abstract class AbstractFunctionalEntityWithCentreContext<K extends Comparable> extends AbstractEntity<K> {
+public abstract class AbstractFunctionalEntityWithCentreContext<K extends Comparable<?>> extends AbstractEntity<K> {
     private static final long serialVersionUID = 1L;
 
     public static final String CONTEXT = "context";
