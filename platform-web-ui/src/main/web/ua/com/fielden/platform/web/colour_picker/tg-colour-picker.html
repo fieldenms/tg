@@ -58,8 +58,6 @@
 				<!--				<div prefix>#</div>-->
 				<input bind-value="{{color}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(color)]]" prevent-invalid-input allowed-pattern="[0-9# A-F a-f]" maxlength="7" id='inputWithButton'>
 
-				<paper-icon-button suffix onclick="clearInput()" icon="clear" alt="clear" title="clear" tabindex="0">
-				</paper-icon-button>
 				<paper-input-error>Hex code colour value only(#,0-9,A-F)!</paper-input-error>
 
 			</div>
@@ -135,10 +133,6 @@
 		},
 
 	});
-
-	function clearInput() {
-		document.getElementById('inputWithButton').value = '';
-	}
 
 	function rgbToHex(color) {
 		if (color.substr(0, 1) === "#") {
