@@ -28,9 +28,13 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        paper-material {
+            border-radius: 5px;
+        }
         /*Table related styles*/
         .data-table {
             background-color: white;
+            border-radius: 5px;
         }
         .table-header-row {
             font-size: 0.9rem;
@@ -85,7 +89,7 @@
             --paper-checkbox-unchecked-ink-color: #212121;
         }
         /*Card related styles*/
-        .card {
+        .card-material {
             margin: 20px 30px;
         }
         .card-toolbar {
@@ -96,6 +100,10 @@
             padding: 10px;
             border-bottom: 1px solid #e5e5e5;
         }
+        .card-header-background {
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
         .card-header-background[selected] {
             background-color: #F5F5F5;
             opacity: none;
@@ -103,6 +111,10 @@
         .card-header-background:not([selected]) {
             background-color: white;
             opacity: 0.7;
+        }
+        .card-body {
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
         }
         .data-entry {
             padding: 0.75rem 1.5rem;
@@ -286,7 +298,7 @@
                 </div>
             </div>
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                <paper-material elevation="1" class="card layout vertical">
+                <paper-material elevation="1" class="card-material layout vertical">
                     <div class="card-header layout horizontal center justified relative">
                         <div selected$="[[egiEntity.selected]]" class="card-header-background fit"></div>
                         <div class="layout horizontal center relative">
@@ -308,7 +320,7 @@
                             </template>
                         </div>
                     </div>
-                    <div style$="[[_calcCardStyle(collapsePanelVisible)]]">
+                    <div class="card-body" style$="[[_calcCardStyle(collapsePanelVisible)]]">
                         <tg-flex-layout when-desktop="[[shortLayout.desktop]]" when-tablet="[[shortLayout.tablet]]" when-mobile="[[shortLayout.mobile]]">
                             <template is="dom-repeat" items="[[columns]]" as="column">
                                 <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(column)]]">
