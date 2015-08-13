@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.view.master.api.actions;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig4;
 
 /**
  *
@@ -15,5 +14,5 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 public interface IEntityActionConfig<T extends AbstractEntity<?>> {
     IEntityActionConfig0<T> addAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity);
 
-    IEntityActionConfig4<T> addAction(final MasterActions masterAction);
+    IEntityActionConfig0<T> addAction(final MasterActions masterAction);
 }

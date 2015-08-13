@@ -430,6 +430,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String fmr = "'flex', 'margin-right: 20px'";
         final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         // Add entity masters.
+        @SuppressWarnings("unchecked")
         final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfig = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
@@ -584,7 +585,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //      */.icon("trending-up") SHORT-CUT
                 /*      */.shortDesc("CANCEL")
                 /*      */.longDesc("Cancel action")
-
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
                 .addAction(MasterActions.EDIT)

@@ -62,7 +62,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IEntityActionConfig4<T> addAction(final MasterActions masterAction) {
+    public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
         final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction)), this);
         entityActions.add(entityAction);
         return entityAction;

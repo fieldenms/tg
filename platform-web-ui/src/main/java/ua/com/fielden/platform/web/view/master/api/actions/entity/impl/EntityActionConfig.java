@@ -38,7 +38,7 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IEntityActionConfig4<T> addAction(final MasterActions masterAction) {
+    public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
         return simpleMasterBuilder.addAction(masterAction);
     }
 
