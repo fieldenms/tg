@@ -160,7 +160,7 @@
                         <textarea id="input" disabled$="[[_disabled]]"></textarea>
                     </iron-autogrow-textarea>
 
-                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal">[[propTitle]]</paper-checkbox>
+                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
 
                     <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
                 </div>
