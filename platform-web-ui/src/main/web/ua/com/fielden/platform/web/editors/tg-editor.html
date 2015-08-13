@@ -32,8 +32,9 @@
         #input.upper-case {
             text-transform: uppercase;
         }
+        
         /* style requiredness */
-        paper-input-container:not([disabled]).required {
+        paper-input-container.required {
             --paper-input-container-color: #03A9F4;
             --paper-input-container-focus-color: #03A9F4;
         }
@@ -90,30 +91,65 @@
             width: 100%;
         }
         
-        paper-input-container[class*="decorator-disabled"] /deep/ .unfocused-line {
+        /* paper-input-container.decorator-disabled /deep/ .unfocused-line {
         	border-bottom: 1px dashed;
-        	/* background: var(--paper-input-container-invalid-color, --secondary-text-color); */
-        	border-color: var(--paper-input-container-invalid-color, --secondary-text-color);
       		background: transparent;
       		opacity: 0.6;
+        } */
+        
+        paper-input-container.decorator-disabled.required::shadow .unfocused-line:not(.is-invalid) {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: #03A9F4;
         }
         
-        /* .add-on-content.is-invalid ::content * */
-        paper-input-container[class*="decorator-disabled"] /deep/ .add-on-content.is-invalid ::content {
+        paper-input-container.decorator-disabled.warning::shadow .is-invalid .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: #FFA000;
+        }
+        
+        paper-input-container.decorator-disabled.warning::shadow .is-invalid .focused-line {
+      		background: transparent !important;
+        	border-color: transparent !important;
+        }
+        
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .unfocused-line:not(.is-invalid) {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: var(--secondary-text-color);
+        }
+        
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: var(--google-red-500);
+        }
+        
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .focused-line {
+      		background: transparent !important;
+        	border-color: transparent !important;
+        }
+        
+        paper-input-container.decorator-disabled::shadow .add-on-content.is-invalid ::content {
       		opacity: 0.6;
         }
         
-        paper-input-container[class*="decorator-disabled"] /deep/ .add-on-content.is-highlighted ::content {
+        paper-input-container.decorator-disabled::shadow .add-on-content.is-highlighted ::content {
       		opacity: 0.6;
         }
         
-        paper-input-container[class*="decorator-disabled"] /deep/ .add-on-content ::content {
+        paper-input-container.decorator-disabled::shadow .add-on-content ::content {
       		opacity: 0.6;
         }
     </style>
 
     <template>
-        <paper-input-container id="decorator" attr-for-value="editing-value" class$="[[_calcDecoratorClass(_disabled)]]" always-float-label>
+        <paper-input-container id="decorator" attr-for-value="editing-value" always-float-label>
             <!-- flex auto  for textarea! -->
             <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
             <div class="main-container">
@@ -175,7 +211,10 @@
             // No default values are allowed in this case.														   //
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             propTitle: String,
-            _disabled: Boolean,
+            _disabled: {
+            	type: Boolean,
+            	observer: '_disabledChanged'
+            },
             _editingValue: {
                 type: String,
                 notify: true
@@ -252,24 +291,23 @@
             return style;
         },
         
-
-        /**
-         * Calculates the class for decorator based on '_disabled' property.
-         */
-        _calcDecoratorClass: function (_disabled) {
-            var klass = "";
-            if (_disabled === true) {
-            	// the next 'class' is designated to provide dash-styled underline in decorator, similarly as in paper-input-container inner styling code
-            	klass += "decorator-disabled "
-            }
-            return klass;
-        },
-        
         /**
          * Returns value that indicates whether boolean editor is checked or not.
          */
         _isBooleanChecked: function (editingValue) {
             return editingValue === 'true';
+        },
+        
+        /**
+         * The observer to the '_disabled' property, which maintains appropriately the class list of the decorator (regarding the class 'decorator-disabled').
+         */
+        _disabledChanged: function (newValue, oldValue) {
+        	if (newValue === true) {
+            	this.$.decorator.classList.add("decorator-disabled");
+        	} else {
+        		this.$.decorator.classList.remove("decorator-disabled");
+        	}
+            this.updateStyles();
         }
     });
 </script>

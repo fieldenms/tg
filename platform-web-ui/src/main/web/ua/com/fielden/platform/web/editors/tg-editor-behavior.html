@@ -38,56 +38,7 @@
         :host::shadow #input.upper-case {
             text-transform: uppercase;
         }
-        /* style requiredness */
-        
-        :host::shadow paper-input-decorator:not([disabled]).required /deep/ .label-text {
-            color: #03A9F4;
-        }
-        
-        :host::shadow paper-input-decorator[focused].required /deep/ .label-text {
-            color: #03A9F4;
-        }
-        
-        :host::shadow paper-input-decorator.required /deep/ .focused-underline {
-            background-color: #03A9F4;
-        }
-        
-        :host::shadow paper-input-decorator.required /deep/ .unfocused-underline {
-            background-color: #03A9F4;
-        }
-        /* style warning */
-        
-        :host::shadow paper-input-decorator.warning /deep/ .error,
-        :host::shadow paper-input-decorator[focused].warning /deep/ .error {
-            color: #FFA000;
-        }
-        
-        :host::shadow paper-input-decorator.invalid[focused].warning /deep/ .floated-label .label-text {
-            color: #FFA000;
-        }
-        
-        :host::shadow paper-input-decorator.invalid.warning /deep/ .floated-label .label-text {
-            color: #FFA000;
-        }
-        
-        :host::shadow paper-input-decorator.invalid.warning /deep/ .focused-underline {
-            background-color: #FFA000;
-        }
-        
-        :host::shadow paper-input-decorator.invalid.warning /deep/ .unfocused-underline {
-            background-color: #FFA000;
-        }
     </style>
-    <template>
-        <tg-reflector id="reflector"></tg-reflector>
-
-        <template is="dom-if" if="{{debug}}">
-            <p>_editingValue: <i>{{_editingValue}}</i></p>
-            <p>_commValue: <i>{{_commValue}}</i></p>
-            <p>_acceptedValue: <i>{{_acceptedValue}}</i></p>
-            <p>_bindingValue: <i>{{_bindingValue(entity, propertyName)}}</i></p>
-        </template>
-    </template>
 </dom-module -->
 
     <script>
