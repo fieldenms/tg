@@ -33,15 +33,6 @@
             text-transform: uppercase;
         }
         
-        /* style requiredness */
-        paper-input-container.required {
-            --paper-input-container-color: #03A9F4;
-            --paper-input-container-focus-color: #03A9F4;
-        }
-        /* style warning */
-        paper-input-container.warning {
-            --paper-input-container-invalid-color: #FFA000;
-        }
         /*  */
         .main-container {
             @apply(--layout-horizontal);
@@ -91,17 +82,22 @@
             width: 100%;
         }
         
-        /* paper-input-container.decorator-disabled /deep/ .unfocused-line {
-        	border-bottom: 1px dashed;
-      		background: transparent;
-      		opacity: 0.6;
-        } */
+        /* style requiredness */
+        paper-input-container.required {
+            --paper-input-container-color: #03A9F4;
+            --paper-input-container-focus-color: #03A9F4;
+        }
         
-        paper-input-container.decorator-disabled.required::shadow .unfocused-line:not(.is-invalid) {
+        paper-input-container.decorator-disabled.required::shadow :not(.is-invalid) .unfocused-line {
         	border-bottom: 1px dashed;
       		background: transparent;
       		opacity: 0.6;
         	border-color: #03A9F4;
+        }
+        
+        /* style warning */
+        paper-input-container.warning {
+            --paper-input-container-invalid-color: #FFA000;
         }
         
         paper-input-container.decorator-disabled.warning::shadow .is-invalid .unfocused-line {
@@ -116,13 +112,7 @@
         	border-color: transparent !important;
         }
         
-        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .unfocused-line:not(.is-invalid) {
-        	border-bottom: 1px dashed;
-      		background: transparent;
-      		opacity: 0.6;
-        	border-color: var(--secondary-text-color);
-        }
-        
+        /* style error */
         paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .unfocused-line {
         	border-bottom: 1px dashed;
       		background: transparent;
@@ -135,14 +125,15 @@
         	border-color: transparent !important;
         }
         
-        paper-input-container.decorator-disabled::shadow .add-on-content.is-invalid ::content {
+        /* style not required, not warning and not error -- regular one */
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow :not(.is-invalid) .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
       		opacity: 0.6;
+        	border-color: var(--secondary-text-color);
         }
         
-        paper-input-container.decorator-disabled::shadow .add-on-content.is-highlighted ::content {
-      		opacity: 0.6;
-        }
-        
+        /* The next style chunk is applied on all 'add-on content', for e.g. char-counter, error message etc. */
         paper-input-container.decorator-disabled::shadow .add-on-content ::content {
       		opacity: 0.6;
         }
