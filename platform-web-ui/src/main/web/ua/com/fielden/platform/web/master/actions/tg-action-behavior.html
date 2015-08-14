@@ -95,7 +95,7 @@
          */
         _createRun: function () {
 		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior._createRun.call(this);
-
+		    var self = this;
     		return (function () {
     			runFunction.call(this);
 
@@ -106,7 +106,29 @@
 
                 // start the action
                 this._working = true;
-                this.action();
+                var promise = this.action();
+                if (promise) {
+                    promise
+                    .then(function(ironRequest) {
+                        if (ironRequest.xhr.status === 200) {
+                            if (self.eventChannel && self.role) {
+                                postal.publish({
+                                    channel: self.eventChannel,
+                                    topic: self.role + '.post.success',
+                                    data: {}
+                                });
+                            }
+                        } else {
+                            if (self.eventChannel && self.role) {
+                                postal.publish({
+                                    channel: self.eventChannel,
+                                    topic: self.role + '.post.error',
+                                    data: {}
+                                });
+                            }
+                        }
+                    });
+                }
             }).bind(this);
         },
 
@@ -126,13 +148,6 @@
                 	self.postAction = function (smth) {
                     	newValue(smth);
                     	self._afterExecution();
-                    	if (self.eventChannel && self.role) {
-                    	    postal.publish({
-                                channel: self.eventChannel,
-                                topic: self.role + '.post.success',
-                                data: {}
-                            });
-                    	}
                 	};
                 });
             }
@@ -146,13 +161,6 @@
 	                self.postActionError = function (smth) {
 	                    newValue(smth);
 	                    self._afterExecution();
-	                    if (self.eventChannel && self.role) {
-                            postal.publish({
-                                channel: self.eventChannel,
-                                topic: self.role + '.post.error',
-                                data: {}
-                            });
-                        }
 	                };
                 });
             }

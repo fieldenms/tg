@@ -341,7 +341,7 @@
                 
                 self._showDialog = (function (action) {
                     var closeEventChannel = self.uuid;
-                    var closeEventTopics = ['save.post.success', 'cancel.post.success'];
+                    var closeEventTopics = ['save.post.success', 'refresh.post.success'];
                 	this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }).bind(self);
             },

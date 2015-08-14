@@ -221,12 +221,13 @@
 
                     // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
                     //            This check will be done on server -- and appropriate _postSavedDefault callback will be triggered.
-                    this._saveModifiedProperties(this._reset(holder));
+                    return this._saveModifiedProperties(this._reset(holder));
                     // if (this._hasModified(holder)) {
                     //     this._saveModifiedProperties(this._reset(holder));
                     // } else {
                     //     this._validator().validate(this._reset(holder));
                     // }
+                    
                 }).bind(self);
                 
                 self._postSaverLoadingFinished = (function () {
@@ -267,7 +268,7 @@
                     longDesc: 'REFRESH ACTION...',
                     enabledStates: ['EDIT', 'VIEW'],
                     action: function () {
-                        self.retrieve();
+                        return self.retrieve();
                     }
                 };
                 self._notifyActionPathsFor('REFRESH', true);
@@ -285,7 +286,7 @@
                     longDesc: 'SAVE ACTION...',
                     enabledStates: ['EDIT'],
                     action: function () {
-                        self.save();
+                        return self.save();
                     }
                 };                
                 self._notifyActionPathsFor('SAVE', true);
@@ -384,7 +385,7 @@
             	}
             	
                 this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(savingInfoHolder));
-                this._ajaxSaver().generateRequest();
+                return this._ajaxSaver().generateRequest().completes;
             },
 
             /**

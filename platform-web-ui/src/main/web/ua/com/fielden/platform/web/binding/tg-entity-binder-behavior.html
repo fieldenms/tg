@@ -338,8 +338,9 @@
                         var ser = this._serialiser().serialise(context);
                         this._ajaxRetriever().body = JSON.stringify(ser);
                 	}
-                    this._ajaxRetriever().generateRequest();
+                    var promise = this._ajaxRetriever().generateRequest().completes;
                     this._startRefreshCycleModeForEditors();
+                    return promise;
                 }).bind(self);
                 
                 // calbacks, that will potentially be augmented by tg-action child elements:
