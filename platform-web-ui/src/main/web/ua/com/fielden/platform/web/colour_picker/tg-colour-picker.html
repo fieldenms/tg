@@ -19,7 +19,16 @@
 			min-width: 18px;
 			height: 18px;
 			background-color: #F44336;
-			box-shadow: 0px 2px 6px #ccc;
+			border-radius: 3px;
+		}
+		/*
+		a { width: 40px; height: 40px; background-color: #fff; opacity: 0; }
+*/
+		
+		a:hover {
+			box-shadow: 0px 2px 10px #ccc;
+			border: 3px solid #fff;
+			/*			position: absolute;*/
 		}
 		
 		paper-input-container {
@@ -70,27 +79,32 @@
 				<div class="layout vertical" style="margin:10px 10px 10px 10px;">
 					<div class="layout horizontal">
 						<!--						<div class="color-box" on-tap="colorSelected" style="background-color: #F44336;"></div>-->
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#F44336')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#FF9800')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#FFEB3B')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#4CAF50')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#009688')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#00BCD4')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#3F51B5')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#9C27B0')]]"></div>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #F44336;"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color:#FF9800"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color:#FFEB3B"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color:#4CAF50"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #009688"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color:#00BCD4"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #3F51B5"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #9C27B0"></a>
 					</div>
 					<div class="layout horizontal">
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#EF9A9A')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#FFCC80')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#FFF59D')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#A5D6A7;')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#80CBC4')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#80DEEA')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#9FA8DA')]]"></div>
-						<div class="color-box" on-tap="colorSelected" style$="[[_changeBox('#CE93D8')]]"></div>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #EF9A9A"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #FFCC80"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #FFF59D"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #A5D6A7"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #80CBC4"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #80DEEA"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #9FA8DA"></a>
+						<a class="color-box" on-tap="colorSelected" style="background-color: #CE93D8"></a>
 					</div>
+					<!--
+					<div style="width: 40px;height: 40px; background-color: #fff; box-shadow: 0px 2px 6px #ccc;">
+						<div style="width: 30px;height: 30px;background-color: red; margin-left: 5px; margin-top:5px;">
+						</div>
+					</div>
+-->
 				</div>
-			</div>
 		</iron-dropdown>
 
 
@@ -111,13 +125,7 @@
 			this.color = rgbToHex(e.srcElement.style['background-color']);
 			this.$.dropdown.close();
 		},
-		_changeBox: function (colorValue) {
-			if (onmouseover) {
-				return "background-color: " + colorValue;
-			} else {
-				return "background-color: " + colorValue;
-			}
-		},
+
 		_calcColorBoxStyle: function (color) {
 			return "background-color: " + color;
 		},
