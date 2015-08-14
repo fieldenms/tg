@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
+<link rel="import" href="/resources/components/postal-lib.html">
 
 <script>
     (function () {
@@ -339,7 +340,9 @@
                 }).bind(self);
                 
                 self._showDialog = (function (action) {
-                	this.$.egi.$.actionDialog.showDialog(action);
+                    var closeEventChannel = self.uuid;
+                    var closeEventTopics = ['save.post.success', 'cancel.post.success'];
+                	this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }).bind(self);
             },
 

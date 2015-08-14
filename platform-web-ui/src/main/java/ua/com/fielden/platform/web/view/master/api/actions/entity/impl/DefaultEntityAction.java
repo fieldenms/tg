@@ -35,6 +35,8 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
     protected Map<String, Object> createCustomAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
+        attrs.put("role", this.name().toLowerCase());
+        attrs.put("event-channel", "[[centreUuid]]");
         final String actionSelector = "_actions." + this.name();
 
         attrs.put("action", "[[" + actionSelector + ".action]]");

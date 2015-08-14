@@ -38,6 +38,18 @@
             	notify: true
             },
             
+            /* A postal channel that this action posts its events to. */
+            eventChannel: {
+                type: String
+            },
+            
+            /* Describes semantic role of this action. For example, save, cancel etc.
+             * It is used for composing message topics. */
+            role: {
+                type: String,
+                reflectToAttribute: true
+            },
+            
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +83,7 @@
 	         */
 	        run: {
             	type: Function
-            }
+            } 
         },
 
         ready: function () {
@@ -114,6 +126,13 @@
                 	self.postAction = function (smth) {
                     	newValue(smth);
                     	self._afterExecution();
+                    	if (self.eventChannel && self.role) {
+                    	    postal.publish({
+                                channel: self.eventChannel,
+                                topic: self.role + '.post.success',
+                                data: {}
+                            });
+                    	}
                 	};
                 });
             }
@@ -127,13 +146,19 @@
 	                self.postActionError = function (smth) {
 	                    newValue(smth);
 	                    self._afterExecution();
+	                    if (self.eventChannel && self.role) {
+                            postal.publish({
+                                channel: self.eventChannel,
+                                topic: self.role + '.post.error',
+                                data: {}
+                            });
+                        }
 	                };
                 });
             }
         },
 
         _afterExecution: function () {
-        	console.log("_afterExecution_afterExecution_afterExecution_afterExecution_afterExecution_afterExecution");
             this._working = false;
             // prevent not yet activated spinner from activating if any
             if (this._startSpinnerTimer) {
@@ -145,6 +170,8 @@
 
             // Make spinner invisible
             this.$.spinner.style.visibility = 'hidden';
+            
+            // publish 
         }
     };
 	
