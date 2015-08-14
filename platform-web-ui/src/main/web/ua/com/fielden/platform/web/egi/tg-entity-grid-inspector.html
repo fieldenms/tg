@@ -259,7 +259,7 @@
                         </div>
                     </template>
                     <!-- Table footer -->
-                    <template is="dom-if" if="[[totals]]">
+                    <template is="dom-if" if="[[_totalsVisible(egiModel, totals)]]">
                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                             <div class="layout horizontal table-footer-row">
                                 <div class="table-cell layout horizontal center" style="width:18px">
@@ -590,7 +590,7 @@
              * Observs the changes to entities property.
              */
             _entitiesChanged: function (newValue, oldValue) {
-                var self = this;
+                var tempEgiModel = [], self = this;
                 newValue.forEach(function (newEntity) {
                     var selectEntInd = _findEntity(newEntity, self.selectedEntities),
                         openedEntInd = _findEntity(newEntity, self.openedEntities);
@@ -601,22 +601,22 @@
                         self.openedEntities[openedEntInd] = newEntity;
                     }
                 });
-                self.egiModel = [];
                 newValue.forEach(function (newEntity) {
                     var egiEntity = {
                         selected: self.selectedEntities.indexOf(newEntity) > -1,
                         opened: self.openedEntities.indexOf(newEntity) > -1,
                         entity: newEntity
                     }
-                    self.push('egiModel', egiEntity);
+                    tempEgiModel.push(egiEntity);
                 });
-                if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
+                if (tempEgiModel.length > 0 && tempEgiModel.every(function (elem) {
                     return elem.selected
                 })) {
                     this.selectedAll = true;
                 } else {
                     this.selectedAll = false;
                 }
+                self.egiModel = tempEgiModel;
             },
             /**
              * Event handler for select all checkbox
@@ -725,6 +725,13 @@
              */
             _isSummaryEnabled: function (entities, cardLayout) {
                 return !!this.totals;
+            },
+            
+            /**
+             * Determine whether totals are visible on EGI.
+             */
+            _totalsVisible: function(egiModel, totals) {
+                return totals && egiModel.length > 0;
             },
             /**
              * Returns the property value of the specified entity.
