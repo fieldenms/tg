@@ -72,7 +72,7 @@
                                     <div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]"></div>
                                     <label>Hex code colour value</label>
                                     <div prefix style="font-family: , 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px">#</div>
-                                    <input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9 A-F a-f]" maxlength="6" id='inputWithButton'>
+                                    <input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
 
                                     <paper-input-error>Hex code colour value only(#,0-9,A-F)!</paper-input-error>
 
