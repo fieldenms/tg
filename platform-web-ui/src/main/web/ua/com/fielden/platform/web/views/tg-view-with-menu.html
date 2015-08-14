@@ -20,20 +20,17 @@
             --paper-item-min-height: 40px;
             --paper-fab: {
                 color: #666464;
-            }
-            ;
+            };
             --paper-menu: {
                 padding: 0;
                 margin: 0;
-            }
-            ;
+            };
             --paper-item: {
                 padding-left: 22px;
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
-            }
-            ;
+            };
         }
         neon-animated-pages {
             position: absolute;
@@ -41,6 +38,9 @@
             left: 0;
             right: 0;
             top: 100px;
+        }
+        .menu-item-view {
+            overflow: auto;
         }
         .tool-bar {
             padding: 0 16px;
@@ -88,9 +88,9 @@
                 </div>
 
                 <neon-animated-pages id="pages" selected=[[pageSelected]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-selected-changed="_pageSelectedChanged" on-neon-animation-finish="_animationFinished">
-                    <div name="__empty__"></div>
+                    <div class="menu-item-view" name="__empty__"></div>
                     <template is="dom-repeat" items="[[menuItem.menu]]">
-                        <div name$="[[item.title]]">
+                        <div class="menu-item-view" name$="[[item.title]]">
                             <tg-menu-item-view menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
                         </div>
                     </template>
@@ -236,8 +236,8 @@
                     callback: function (data, envelope) {
                         var idArray = data.view.attrs.uuid.split('/');
                         self.push("menuItem.menu", data);
-                        self.async(function(){
-                        	self.$.menu.selected = idArray[1];
+                        self.async(function () {
+                            self.$.menu.selected = idArray[1];
                         }, 1);
                     }
                 });
@@ -277,8 +277,8 @@
                         data.view.attrs.uuid = centreUuid.join('/');
                         masterCounter += 1;
                         self.push("menuItem.menu", data);
-                        self.async(function(){
-                        	self.$.menu.selected = centreUuid[1];
+                        self.async(function () {
+                            self.$.menu.selected = centreUuid[1];
                         }, 1);
                     }
                 });

@@ -55,6 +55,13 @@
         .table-data-row:hover {
             background-color: #EEEEEE;
         }
+        .table-footer-row {
+            font-size: 0.9rem;
+            color: #757575;
+            height: 3.5rem;
+            cursor: default;
+            border-top: 1px solid #e3e3e3;
+        }
         .table-cell,
         .table-data-cell {
             padding: 0 0.6rem;
@@ -71,6 +78,10 @@
         }
         .table-data-cell {
             cursor: pointer;
+        }
+        .table-icon {
+            --iron-icon-width: 1.3rem;
+            --iron-icon-height: 1.3rem;
         }
         .grid-toolbar {
             height: 4rem;
@@ -227,10 +238,10 @@
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                        <iron-icon icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
+                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
                                     </template>
                                     <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                        <div class="truncate" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column)]]</div>
+                                        <div class="truncate relative" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column)]]</div>
                                     </template>
                                 </div>
                             </template>
@@ -250,7 +261,7 @@
                     <!-- Table footer -->
                     <template is="dom-if" if="[[totals]]">
                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
-                            <div class="layout horizontal table-header-row">
+                            <div class="layout horizontal table-footer-row">
                                 <div class="table-cell layout horizontal center" style="width:18px">
                                     <!-- checkbox stub for table footer -->
                                 </div>
@@ -263,10 +274,10 @@
                                     <template is="dom-if" if="[[summary]]">
                                         <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
                                             <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                <iron-icon icon="[[_getBooleanIcon(totals, summary)]]"></iron-icon>
+                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary)]]"></iron-icon>
                                             </template>
                                             <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                <div class="truncate" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary)]]</div>
+                                                <div class="truncate relative" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary)]]</div>
                                             </template>
                                         </div>
                                     </template>
@@ -732,7 +743,11 @@
                 } else if (column.type === 'Date') {
                     return moment(entity.get(column.property)).format("L LT");
                 } else if (typeof entity.get(column.property) === 'number') {
-                    return entity.get(column.property).toLocaleString(this.$.appConfig.locale);
+                    if (column.type === 'BigDecimal') {
+                        return entity.get(column.property).toFixed(2);
+                    } else {
+                        return entity.get(column.property).toLocaleString(this.$.appConfig.locale);
+                    }
                 } else {
                     return entity.get(column.property);
                 }
