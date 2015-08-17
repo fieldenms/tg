@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review;
 
+import static java.lang.Boolean.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -226,7 +227,9 @@ public class DynamicQueryBuilder {
         }
 
         private static boolean valueEqualsToEmpty(final Object value, final Class<?> type, final boolean single) {
-            return EntityUtils.equalsEx(value, getEmptyValue(type, single));
+            // due to Web UI changes were empty value for String is always null, need to treat string nulls as empty
+            // for Swing UI this was different, whereby value "" was treated at an empty string while null was NOT treated as an empty value
+            return (String.class == type && value == null) || EntityUtils.equalsEx(value, getEmptyValue(type, single));
         }
 
         /**
@@ -245,7 +248,7 @@ public class DynamicQueryBuilder {
          * @return
          */
         public boolean shouldBeIgnored() {
-            return isCritOnly() || isEmpty() && !Boolean.TRUE.equals(orNull);
+            return isCritOnly() || isEmpty() && !TRUE.equals(orNull);
         }
 
         /**
@@ -768,7 +771,7 @@ public class DynamicQueryBuilder {
         final boolean negate = not ^ isNegated;
         if (property.isEmpty()) {
             if (!orNull) {
-                throw new RuntimeException("Should have at least NULL condition.");
+                throw new IllegalStateException("Should have at least NULL condition.");
             }
             return negate ? sc.isNotNull().model() : sc.isNull().model();
         } else {

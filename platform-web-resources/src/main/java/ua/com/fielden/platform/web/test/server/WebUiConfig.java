@@ -112,6 +112,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
+        @SuppressWarnings("unchecked")
         final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
@@ -150,7 +151,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
                 //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
                 .also()
-                .addCrit("desc").asMulti().text()
+                .addCrit("stringProp").asMulti().text()
                 //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
                 .also()
                 .addCrit("integerProp").asRange().integer()

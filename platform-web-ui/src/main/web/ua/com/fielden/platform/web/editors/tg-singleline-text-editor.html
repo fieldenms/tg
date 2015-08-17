@@ -46,9 +46,6 @@
          * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
          */
         convertFromString: function (strValue) {
-        	if (strValue === 'KK') {
-        		throw 'The value is KK, not permitted.';
-        	}
             return strValue === '' ? null : strValue;
         }
     });
