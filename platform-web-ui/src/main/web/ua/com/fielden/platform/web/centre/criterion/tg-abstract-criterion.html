@@ -9,10 +9,23 @@
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
 <link rel="import" href="/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html">
 
 <dom-module id="tg-abstract-criterion">
+    <style>
+        .buttons paper-button.blue {
+            color: red;/*var(--paper-light-blue-500);*/
+            --paper-button-flat-focus-color: red;/*var(--paper-light-blue-50);*/
+        }
+        .buttons paper-button.blue:hover {
+            background: red;/*var(--paper-light-blue-50);*/
+        }
+        .metavalue-editor {
+            padding-top: 15px;
+        }
+    </style>
     <template>
         <paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closed">
 
@@ -25,8 +38,8 @@
             </paper-dialog-scrollable>
 
             <div class="buttons">
-                <paper-button dialog-dismiss affirmative on-tap="_cancelMetaValues">Cancel</paper-button>
-                <paper-button dialog-confirm affirmative autofocus on-tap="_acceptMetaValues">Ok</paper-button>
+                <paper-button class="blue" dialog-dismiss affirmative on-tap="_cancelMetaValues">Cancel</paper-button>
+                <paper-button class="blue" dialog-confirm affirmative autofocus on-tap="_acceptMetaValues">Ok</paper-button>
             </div>
         </paper-dialog>
         <tg-reflector id="reflector"></tg-reflector>
