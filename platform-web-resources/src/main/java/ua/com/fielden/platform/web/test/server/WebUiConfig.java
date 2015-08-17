@@ -453,7 +453,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.shortDesc("Export integer prop")
                 //      */.longDesc("Export integer property") SHORT-CUT
                 .also()
-                .addProp("critOnlyEntityProp").asAutocompleter().withMatcher(SearchAlsoByDescMatcher.class).lightDesc()
+                .addProp("key").asSinglelineText()
                 /*      */.withAction("#exportCritOnlyEntityProp", TgExportFunctionalEntity.class)
                 /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
                 /*      */.postActionSuccess(new PostActionSuccess(""))
