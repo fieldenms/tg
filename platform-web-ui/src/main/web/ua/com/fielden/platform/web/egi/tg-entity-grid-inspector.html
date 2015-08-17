@@ -268,7 +268,7 @@
                         </div>
                     </template>
                     <!-- Table footer -->
-                    <template is="dom-if" if="[[_totalsVisible(egiModel, totals)]]">
+                    <template is="dom-if" if="[[totals]]">
                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                             <div class="layout horizontal table-footer-row">
                                 <div class="table-cell layout horizontal center" style="width:18px">
@@ -736,12 +736,6 @@
                 return !!this.totals;
             },
             
-            /**
-             * Determine whether totals are visible on EGI.
-             */
-            _totalsVisible: function(egiModel, totals) {
-                return totals && egiModel.length > 0;
-            },
             /**
              * Returns the property value of the specified entity.
              */
