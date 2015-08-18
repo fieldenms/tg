@@ -595,10 +595,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (resultProps.isPresent()) {
             int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
-                //                if (!resultProp.propName.isPresent()) {
-                //                    throw new IllegalStateException("The result property must have a name");
-                //                }
-
                 final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
 
                 final String resultPropName = propertyName.equals("this") ? "" : propertyName;
@@ -639,7 +635,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         });
 
         logger.debug("Initiating top-level actions...");
-        // final List<FunctionalActionElement> functionalActions = new ArrayList<>();
+        final List<FunctionalActionElement> functionalActions = new ArrayList<>();
         final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
 
         final List<List<FunctionalActionElement>> actionGroups = new ArrayList<>();
@@ -653,9 +649,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     actionGroups.add(new ArrayList<>());
                 }
                 addToLastGroup(actionGroups, topLevelAction.getKey(), i);
-
-                // final FunctionalActionElement el = new FunctionalActionElement(topLevelAction.getKey(), i);
-                // functionalActions.add(el);
             }
         }
 
@@ -712,7 +705,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String primaryActionObjectString = primaryActionObject.toString();
         final String propActionsString = propActionsObject.toString();
-        final String gridLayoutConfig = generateGridLayoutConfig();
+        final Pair<String, String> gridLayoutConfig = generateGridLayoutConfig();
         final int prefixLength = prefix.length();
         logger.debug("Initiating template...");
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html");
@@ -720,7 +713,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String entityCentreStr = text.
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
-                replace("@gridLayout", gridLayoutConfig).
+                replace("@gridLayout", gridLayoutConfig.getKey()).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getName()).
                 replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).
@@ -732,6 +725,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         : primaryActionObjectString).
                 replace("//generatedPropActions", propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
                         : propActionsString).
+                replace("//@layoutConfig", layout.code().toString()).
+                replace("//gridLayoutConfig", gridLayoutConfig.getValue()).
                 replace("<!--@functional_actions-->", functionalActionsDom.toString()).
                 replace("<!--@primary_action-->", primaryActionDom.toString()).
                 replace("<!--@secondary_actions-->", secondaryActionsDom.toString());
@@ -746,39 +741,58 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
-    private String generateGridLayoutConfig() {
-        final StringBuilder resultsetLayout = new StringBuilder(" ");
+    private Pair<String, String> generateGridLayoutConfig() {
+        final StringBuilder resultsetLayoutJs = new StringBuilder();
+        final StringBuilder resultsetLayoutHtml = new StringBuilder();
         final FlexLayout collapseLayout = dslDefaultConfig.getResultsetCollapsedCardLayout();
         final FlexLayout expandLayout = dslDefaultConfig.getResultsetExpansionCardLayout();
         final FlexLayout summaryLayout = dslDefaultConfig.getResultsetSummaryCardLayout();
+
+        final StringBuilder shortLayout = new StringBuilder();
         if (collapseLayout.hasLayoutFor(Device.DESKTOP, null)) {
-            resultsetLayout.append("desktopLayoutShort=\"{{" + collapseLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
+            shortLayout.append("desktop: " + collapseLayout.getLayout(Device.DESKTOP, null).get());
         }
         if (collapseLayout.hasLayoutFor(Device.TABLET, null)) {
-            resultsetLayout.append("tabletLayoutShort=\"{{" + collapseLayout.getLayout(Device.TABLET, null).get() + "}}\" ");
+            shortLayout.append((shortLayout.length() > 0 ? ",\n" : "") + "tablet: " + collapseLayout.getLayout(Device.TABLET, null).get());
         }
         if (collapseLayout.hasLayoutFor(Device.MOBILE, null)) {
-            resultsetLayout.append("mobileLayoutShort=\"{{" + collapseLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
+            shortLayout.append((shortLayout.length() > 0 ? ",\n" : "") + "mobile: " + collapseLayout.getLayout(Device.MOBILE, null).get());
         }
+        if (shortLayout.length() > 0) {
+            resultsetLayoutJs.append("self.gridShortLayout={\n" + shortLayout.toString() + "\n};");
+            resultsetLayoutHtml.append("short-layout='[[gridShortLayout]]'");
+        }
+
+        final StringBuilder longLayout = new StringBuilder();
         if (expandLayout.hasLayoutFor(Device.DESKTOP, null)) {
-            resultsetLayout.append("desktopLayoutLong=\"{{" + expandLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
+            longLayout.append("desktop: " + expandLayout.getLayout(Device.DESKTOP, null).get());
         }
         if (expandLayout.hasLayoutFor(Device.TABLET, null)) {
-            resultsetLayout.append("tabletLayoutLong=\"{{" + expandLayout.getLayout(Device.TABLET, null).get() + "}}\" ");
+            longLayout.append((longLayout.length() > 0 ? ",\n" : "") + "tablet: " + expandLayout.getLayout(Device.TABLET, null).get());
         }
         if (expandLayout.hasLayoutFor(Device.MOBILE, null)) {
-            resultsetLayout.append("mobileLayoutLong=\"{{" + expandLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
+            longLayout.append((longLayout.length() > 0 ? ",\n" : "") + "mobile: " + expandLayout.getLayout(Device.MOBILE, null).get());
         }
+        if (longLayout.length() > 0) {
+            resultsetLayoutJs.append("self.gridLongLayout={\n" + longLayout.toString() + "\n};");
+            resultsetLayoutHtml.append(" long-layout='[[gridLongLayout]]'");
+        }
+
+        final StringBuilder gridSummaryLayout = new StringBuilder();
         if (summaryLayout.hasLayoutFor(Device.DESKTOP, null)) {
-            resultsetLayout.append("summaryDesktopLayout=\"{{" + summaryLayout.getLayout(Device.DESKTOP, null).get() + "}}\" ");
+            gridSummaryLayout.append("desktop: " + summaryLayout.getLayout(Device.DESKTOP, null).get());
         }
         if (summaryLayout.hasLayoutFor(Device.TABLET, null)) {
-            resultsetLayout.append("summaryTabletLayout=\"{{" + summaryLayout.getLayout(Device.TABLET, null).get() + "}}\" ");
+            gridSummaryLayout.append((gridSummaryLayout.length() > 0 ? ",\n" : "") + "tablet: " + summaryLayout.getLayout(Device.TABLET, null).get());
         }
         if (summaryLayout.hasLayoutFor(Device.MOBILE, null)) {
-            resultsetLayout.append("summaryMobileLayout=\"{{" + summaryLayout.getLayout(Device.MOBILE, null).get() + "}}\" ");
+            gridSummaryLayout.append((gridSummaryLayout.length() > 0 ? ",\n" : "") + "mobile: " + summaryLayout.getLayout(Device.MOBILE, null).get());
         }
-        return resultsetLayout.toString();
+        if (gridSummaryLayout.length() > 0) {
+            resultsetLayoutJs.append("self.summaryLayout={\n" + gridSummaryLayout.toString() + "\n};");
+            resultsetLayoutHtml.append(" summary-layout='[[summaryLayout]]'");
+        }
+        return new Pair<>(resultsetLayoutHtml.toString(), resultsetLayoutJs.toString());
     }
 
     /**
@@ -791,18 +805,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     private String queryEnhancerContextConfigString() {
-        return dslDefaultConfig.getQueryEnhancerConfig().isPresent() && dslDefaultConfig.getQueryEnhancerConfig().get().getValue().isPresent() ?
-                createContextAttrs(dslDefaultConfig.getQueryEnhancerConfig().get().getValue().get()) : "";
-    }
-
-    private String createContextAttrs(final CentreContextConfig centreContextConfig) {
         final StringBuilder sb = new StringBuilder();
 
-        if (centreContextConfig.withSelectionCrit) {
-            // disregarded -- sends every time, because the selection criteria is needed for running the centre query
+        if (dslDefaultConfig.getQueryEnhancerConfig().isPresent() && dslDefaultConfig.getQueryEnhancerConfig().get().getValue().isPresent()) {
+            final CentreContextConfig centreContextConfig = dslDefaultConfig.getQueryEnhancerConfig().get().getValue().get();
+            if (centreContextConfig.withSelectionCrit) {
+                // disregarded -- sends every time, because the selection criteria is needed for running the centre query
+            }
+            sb.append("require-selected-entities=\"" + (centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE")) + "\" ");
+            sb.append("require-master-entity=\"" + (centreContextConfig.withMasterEntity ? "true" : "false") + "\"");
+        } else {
+            sb.append("require-selected-entities=\"NONE\" ");
+            sb.append("require-master-entity=\"false\"");
         }
-        sb.append("requireSelectedEntities=\"" + (centreContextConfig.withCurrentEtity ? "ONE" : (centreContextConfig.withAllSelectedEntities ? "ALL" : "NONE")) + "\" ");
-        sb.append("requireMasterEntity=\"" + (centreContextConfig.withMasterEntity ? "true" : "false") + "\"");
 
         return sb.toString();
     }
@@ -838,7 +853,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final AbstractCriterionWidget criterionWidget;
                 if (AbstractDomainTree.isCritOnlySingle(managedType, critProp)) {
                     if (EntityUtils.isEntityType(propertyType)) {
-                        criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
+                        final List<Pair<String, Boolean>> additionalProps = dslDefaultConfig.getAdditionalPropsForAutocompleter(critProp);
+                        criterionWidget = new EntitySingleCriterionWidget(root, managedType, critProp, additionalProps, getCentreContextConfigFor(critProp));
                     } else if (EntityUtils.isString(propertyType)) {
                         criterionWidget = new StringSingleCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isBoolean(propertyType)) {
@@ -854,7 +870,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     }
                 } else {
                     if (EntityUtils.isEntityType(propertyType)) {
-                        criterionWidget = new EntityCriterionWidget(root, managedType, critProp, getCentreContextConfigFor(critProp));
+                        final List<Pair<String, Boolean>> additionalProps = dslDefaultConfig.getAdditionalPropsForAutocompleter(critProp);
+                        criterionWidget = new EntityCriterionWidget(root, managedType, critProp, additionalProps, getCentreContextConfigFor(critProp));
                     } else if (EntityUtils.isString(propertyType)) {
                         criterionWidget = new StringCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isBoolean(propertyType)) {

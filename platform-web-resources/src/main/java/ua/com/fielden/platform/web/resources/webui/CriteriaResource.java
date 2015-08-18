@@ -170,7 +170,9 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             list.add(appliedCriteriaEntity);
             list.add(pair.getKey());
 
-            list.addAll(pair.getValue()); // TODO why is this needed for serialisation to perform without problems?!
+            // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
+            // FIXME Need to investigate why this is the case.
+            list.addAll(pair.getValue());
 
             // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during criteria running.");

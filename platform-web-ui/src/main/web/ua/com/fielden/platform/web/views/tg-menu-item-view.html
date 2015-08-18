@@ -1,106 +1,133 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/element_loader/load-element.html">
+<link rel="import" href="/resources/element_loader/tg-element-loader.html">
 
-<polymer-element name="tg-menu-item-view" attributes="item autoLoad uuid moduleId" vertical layout>
+<dom-module id="tg-menu-item-view">
+    <style>
+        /* :host {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        } */
+        .view {
+            background-color: white;
+        }
+    </style>
     <template>
-        <style>
-            .view {
-                background-color: white;
-            }
-        </style>
-        <template if="{{item.view}}">
-            <load-element id="elementToLoad" auto?="{{autoLoad}}" import="{{item.view.import}}" elementName="{{item.view.elementName}}" attrs="{{item.view.attrs}}" on-after-load="{{onAfterLoad}}"></load-element>
+        <template is="dom-if" if="[[menuItem.view]]">
+            <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[_getMenuItemAttributes()]]" on-after-load="_afterLoadListener"></tg-element-loader>
         </template>
-        <template if="{{!item.view}}">
+        <template is="dom-if" if="[[!menuItem.view]]">
             <div class="view">
-                Please specify view for {{item.title}}.
+                Please specify view for <span>[[menuItem.title]]</span>.
             </div>
         </template>
     </template>
-    <script>
-        (function () {
-            Polymer({
-                publish: {
-                    autoLoad: {
-                        reflect: true,
-                        value: false
-                    }
-                },
-                ready: function () {
-                    if (this.item.view) {
-                        this.item.view.attrs.uuid = this.uuid;
-                        this.item.view.attrs.moduleId = this.moduleId;
-                    }
-                },
-                onAfterLoad: function (e, detail, view) {
-                    var self = this;
-                    if (e.target === this.$.elementToLoad) {
-                        if (this.item.view.type === 'centre') {
-                            detail.onRetrieved = function (entity, bindingEntity, customObject) {
-                                self.fire("menu-item-view-loaded", self.item);
-                            };
+</dom-modules>
+<script>
+    (function () {
+        Polymer({
 
-                            detail.retrieve();
-                        } else if (this.item.view.type === 'master') {
-                            detail.onRetrieved = function (entity, bindingEntity, customObject) {
-                                if (entity.id === null) {
-                                    postal.publish({
-                                        channel: "view",
-                                        topic: "master.new.created",
-                                        data: {
-                                            centreUuid: detail.centreUuid,
-                                            item: self.item
-                                        }
-                                    });
-                                } else {
-                                    postal.publish({
-                                        channel: "view",
-                                        topic: "master.edit.created",
-                                        data: {
-                                            entityid: entity.id,
-                                            centreUuid: detail.centreUuid,
-                                            item: self.item
-                                        }
-                                    });
-                                }
-                                self.fire("menu-item-view-loaded", self.item);
-                            };
-                            detail.onValidated = function (validatedEntity, bindingEntity, customObject) {};
-                            detail.onSaved = function (potentiallySavedEntity, newBindingEntity) {
-                                //Send postal message that save was completed if it was succefull
-                                if (potentiallySavedEntity.isValid()) {
-                                    postal.publish({
-                                        channel: "master",
-                                        topic: "save.start",
-                                        data: {
-                                            centreUuid: detail.centreUuid,
-                                            masterUuid: detail.uuid,
-                                            moduleId: detail.moduleId,
-                                            entity: potentiallySavedEntity,
-                                            item: self.item,
-                                            selectedEntitiesInContext: [potentiallySavedEntity]
-                                        }
-                                    });
-                                }
-                            };
-                            detail.retrieve();
-                        } else {
-                            self.fire("menu-item-view-loaded", self.item);
-                        }
-                    }
+            is: "tg-menu-item-view",
+
+            properties: {
+                menuItem: Object,
+                autoLoad: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
                 },
-                load: function () {
-                    if (this.$.elementToLoad && !this.$.elementToLoad.wasLoaded) {
-                        this.$.elementToLoad.load();
+                uuid: String,
+                moduleId: String
+            },
+
+            hostAttributes: {
+                "class": "layout vertical"
+            },
+
+            attached: function () {
+            	var self = this;
+            	self.async(function() {
+            		if (self.menuItem && self.menuItem.view) {
+            			self.menuItem.view.attrs.uuid = self.uuid;
+            			self.menuItem.view.attrs.moduleId = self.moduleId;
                     }
-                },
-                wasLoaded: function () {
-                    if (this.$.elementToLoad) {
-                        return this.$.elementToLoad.wasLoaded;
+            	}, 1);
+            },
+            
+            _getMenuItemAttributes: function() {
+                return this.menuItem.view.attrs;
+            },
+            
+            _afterLoadListener: function (e, detail, view) {
+                var self = this;
+                if (e.target === this.$$("#elementToLoad")) {
+                    if (this.menuItem.view.type === 'centre') {
+                        detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                            self.fire("menu-item-view-loaded", self.menuItem);
+                        };
+
+                        detail.retrieve();
+                    } else if (this.menuItem.view.type === 'master') {
+                        detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                            if (entity.id === null) {
+                                postal.publish({
+                                    channel: "view",
+                                    topic: "master.new.created",
+                                    data: {
+                                        centreUuid: detail.centreUuid,
+                                        item: self.menuItem
+                                    }
+                                });
+                            } else {
+                                postal.publish({
+                                    channel: "view",
+                                    topic: "master.edit.created",
+                                    data: {
+                                        entityId: entity.id,
+                                        centreUuid: detail.centreUuid,
+                                        item: self.menuItem
+                                    }
+                                });
+                            }
+                            self.fire("menu-item-view-loaded", self.menuItem);
+                        };
+                        detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+                        detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {
+                            //Send postal message that save was completed if it was succefull
+                            if (potentiallySavedEntity.isValid()) {
+                                postal.publish({
+                                    channel: "master",
+                                    topic: "save.start",
+                                    data: {
+                                        centreUuid: detail.centreUuid,
+                                        masterUuid: detail.uuid,
+                                        moduleId: detail.moduleId,
+                                        entity: potentiallySavedEntity,
+                                        item: self.menuItem,
+                                        selectedEntitiesInContext: [potentiallySavedEntity]
+                                    }
+                                });
+                            }
+                        };
+                        detail.retrieve();
+                    } else {
+                        self.fire("menu-item-view-loaded", self.menuItem);
                     }
-                    return true;
                 }
-            });
-        })();
-    </script>
-</polymer-element>
+            },
+            load: function () {
+            	var elementToLoad = this.$$("#elementToLoad");
+                if (elementToLoad && !elementToLoad.wasLoaded) {
+                	elementToLoad.load();
+                }
+            },
+            wasLoaded: function () {
+            	var elementToLoad = this.$$("#elementToLoad");
+                if (elementToLoad) {
+                    return elementToLoad.wasLoaded;
+                }
+                return true;
+            }
+        });
+    })();
+</script>

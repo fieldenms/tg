@@ -1,71 +1,83 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/tg-reflector">
-<link rel="import" href="/resources/serialisation/tg-serialiser.html">
-<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
-<link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
-<link rel="import" href="/resources/element_loader/load-element.html">
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/components/postal-lib.html">
+<!-- <link rel="import" href="/tg-reflector">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html"> -->
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<!-- <link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
+<link rel="import" href="/resources/element_loader/load-element.html"> -->
+<!-- <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/components/postal-lib.html"> -->
 
-<polymer-element name="tg-page-action" attributes="context icon action"> <!-- enabledStates currentState  -->
+<dom-module id="tg-page-action">
     <template>
-        <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}"></core-icon-button> <!-- disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}" -->
+        <paper-icon-button id="actionButton" icon="[[icon]]" on-tap="_run"></paper-icon-buton>
     </template>
-    <script>
-        Polymer({
-            publish: {
+</dom-module>
 
-            	// /**
-                //  * A list of the states in which the action can be enabled.
-                //  */
-                // enabledStates: null,
-
-                // /**
-                //  * The state of the parent view.
-                //  */
-                // currentState: null,
-
-                /**
-                 * The icon specificator (string id).
-                 */
-                icon: null
-            },
-
+<script>
+    Polymer({
+    	is: 'tg-page-action',
+    	
+        properties: {
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These mandatory properties must be specified in attributes, when constructing the element instance. //
+        	// No default values are allowed in this case.														   //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	/**
+        	 * The action function (depends on context).
+        	 */
+        	action: {
+        		type: Function
+        	},
+        	
+        	/**
+        	 * The context of this action.
+        	 */
+        	context: {
+        		type: Object
+        	},
+        	
             /**
-             * This inner state is triggered by the action itself after the action button has been pressed (enabled:=false) and after the action
-             * has been executed (enabled:=true).
+             * The icon specificator (string id).
              */
-            // enabled: true,
-
-            /**
-             * Initialisation block.
-             */
-            ready: function () {
-                var self = this;
-
-                self.run = self.run.bind(self);
+            icon: {
+            	type: String
             },
-
-            // /**
-            //  * Returns whether the action is enabled in current moment.
-            //  */
-            // isEnabled: function (enabledStates, currentState, enabled) {
-            //     if (enabledStates) {
-            //         // console.log("isEnabled successful: enabledStates == ", enabledStates, "currentState == ", currentState, "enabled == ", enabled);
-            //         return enabledStates.indexOf(currentState) >= 0 && enabled;
-            //     } else {
-            //         console.warn("isEnabled: enabledStates is not ready at this stage! enabledStates == ", enabledStates);
-            //         return false;
-            //     }
-            // },
-
+            
+            /**
+             * Short description.
+             */
+            shortDesc: {
+            	type: Function
+            },
+            
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        	//   prefix. 																				           //
+        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+        	//   populate their default values in ready callback (to have these values populated in children)!     //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             /**
              * Executes the action.
              *
              * Please override this method in descendands to implement specific execution logic.
              */
-            run: function (e, detail, source) {
+            _run: {
+            	type: Function
+            }
+        },
+
+        /**
+         * Initialisation block.
+         */
+        ready: function () {
+            var self = this;
+
+            self._run = (function (e, detail, source) {
                 // this.enabled = false;
                 console.log(this.shortDesc + ": execute");
 
@@ -73,7 +85,7 @@
                 // var ser = this.$.serialiser.serialise(context);
                 // this.$.actionExecutor.body = JSON.stringify(ser);
                 this.action(this.context);
-            }
-        });
-    </script>
-</polymer-element>
+            }).bind(self);
+        }
+    });
+</script>

@@ -1,0 +1,89 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/centre/criterion/tg-abstract-criterion-behavior.html">
+
+<script>
+	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+	Polymer.TgBehaviors.TgAbstractMultiCriterionBehaviorImpl = {
+    	
+        properties: {
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+        	// No default values are allowed in this case.														   //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	
+            /**
+             * This published property specifies whether 'missing value' will be also considered in search queries.
+             */
+            orNull: {
+            	type: Boolean,
+            	notify: true, // TODO val: false
+            	observer: '_orNullChanged'
+            },
+
+            /**
+             * This published property specifies whether the criterion should be negated.
+             */
+            not: {
+            	type: Boolean,
+            	notify: true, // TODO val: false
+            	observer: '_notChanged'
+            },
+            
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        	//   prefix. 																				           //
+        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+        	//   populate their default values in ready callback (to have these values populated in children)!     //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            _orNull: {
+            	type: Boolean
+            },
+            _not: {
+            	type: Boolean
+            }
+        },
+        
+        ready: function () {
+        	this._orNull = false;
+        	this._not = false;
+        },
+
+        _acceptMetaValues: function() {
+            this.orNull = this._orNull;
+            this.not = this._not;
+
+            Polymer.TgBehaviors.TgAbstractCriterionBehavior._acceptMetaValues.call(this);
+        },
+        _cancelMetaValues: function() {
+            this._orNull = this.orNull;
+            this._not = this.not;
+            
+            Polymer.TgBehaviors.TgAbstractCriterionBehavior._cancelMetaValues.call(this);
+        },
+        
+        _orNullChanged: function (newValue, oldValue) {
+            this._orNull = newValue;
+        },
+        _notChanged: function (newValue, oldValue) {
+            this._not = newValue;
+        },
+        
+        /**
+         * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
+         */
+        _hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        	return Polymer.TgBehaviors.TgAbstractCriterionBehavior._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) && 
+        		orNull === false && not === false;
+        }
+    };
+	
+	Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior = [
+		Polymer.TgBehaviors.TgAbstractCriterionBehavior,
+		Polymer.TgBehaviors.TgAbstractMultiCriterionBehaviorImpl
+	];
+</script>

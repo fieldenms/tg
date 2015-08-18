@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Currency;
@@ -323,9 +324,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                         : (critOnly != null && critOnly.scale() >= 0 ? ((int) critOnly.scale()) : 2)/* default value from Hibernate */;
 
                 if (reflectedValue instanceof Integer) {
-                    return new BigDecimal(((Integer) reflectedValue).doubleValue()).setScale(propertyScale, RoundingMode.HALF_UP);
-                } else if (reflectedValue instanceof Double) {
-                    return new BigDecimal(((Double) reflectedValue).doubleValue()).setScale(propertyScale, RoundingMode.HALF_UP);
+                    return new BigDecimal((Integer) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+                } else if (reflectedValue instanceof Long) {
+                    return BigDecimal.valueOf((Long) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+                } else if (reflectedValue instanceof BigInteger) {
+                    return new BigDecimal((BigInteger) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+                } else if (reflectedValue instanceof BigDecimal) {
+                    return ((BigDecimal) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
                 } else {
                     throw new IllegalStateException("Unknown number type for 'reflectedValue'.");
                 }
@@ -505,6 +510,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         try {
             return representationCreator.get();
         } catch (final Exception undesiredEx) {
+            logger.error(undesiredEx.getMessage(), undesiredEx);
             return restUtil.errorJSONRepresentation(undesiredEx);
         }
     }

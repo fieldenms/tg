@@ -1,475 +1,309 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-error.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-char-counter.html">
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+<link rel="import" href="/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html">
+<link rel="import" href="/resources/master/actions/tg-property-action.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+
+<!-- link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html" -->
 <link rel="import" href="/tg-reflector">
 
-<polymer-element name="tg-editor" attributes="entity propertyName onAcceptedValueChanged propTitle propDesc currentState action externalRefreshCycle debug">
+ <dom-module id="tg-editor">
+    <style>
+        /*Styles for tooltip*/
+        /*:host::shadow * /deep/ core-tooltip::shadow #tooltip {
+            white-space: normal;
+        }
+        :host::shadow * /deep/ core-tooltip .span-tooltip {
+            line-height: 15px;
+        }
+        :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
+        :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
+            opacity: 1;
+            -webkit-transition-delay: 1s;
+            transition-delay: 1s;
+            transform: translate3d(0px, 0px, 0px);
+        }*/
+        #input.upper-case {
+            text-transform: uppercase;
+        }
+        
+        /*  */
+        .main-container {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+        }
+        #input-container {
+            @apply(--layout-flex);
+        }
+        /* Styles for boolean property editors. */
+        paper-checkbox {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -o-user-select: none;
+            font-family: 'Roboto', 'Noto', sans-serif;
+            --paper-checkbox-checked-color: #0288D1;
+            --paper-checkbox-checked-ink-color: #0288D1;
+            height: 1.8rem;
+        }
+        /* Styles for integer and decimal property editors. */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        paper-checkbox::shadow #checkboxContainer {
+            flex-shrink: 0;
+        }
+        paper-checkbox::shadow #checkboxLabel {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 1.3rem
+        }
+        paper-input-container {
+            --paper-input-container-label: {
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                font-size: 1.3rem
+            };
+            --paper-input-container-input: {
+                font-size: 1.3rem;
+                line-height: 1.8rem;
+            }
+        }
+        paper-input-error {
+            width: 100%;
+        }
+        
+        /* style requiredness */
+        paper-input-container.required {
+            --paper-input-container-color: #03A9F4;
+            --paper-input-container-focus-color: #03A9F4;
+        }
+        
+        paper-input-container.decorator-disabled.required::shadow :not(.is-invalid) .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: #03A9F4;
+        }
+        
+        /* style warning */
+        paper-input-container.warning {
+            --paper-input-container-invalid-color: #FFA000;
+        }
+        
+        paper-input-container.decorator-disabled.warning::shadow .is-invalid .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: #FFA000;
+        }
+        
+        paper-input-container.decorator-disabled.warning::shadow .is-invalid .focused-line {
+      		background: transparent !important;
+        	border-color: transparent !important;
+        }
+        
+        /* style error */
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: var(--google-red-500);
+        }
+        
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .focused-line {
+      		background: transparent !important;
+        	border-color: transparent !important;
+        }
+        
+        /* style not required, not warning and not error -- regular one */
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow :not(.is-invalid) .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: var(--secondary-text-color);
+        }
+        
+        /* The next style chunk is applied on all 'add-on content', for e.g. char-counter, error message etc. */
+        paper-input-container.decorator-disabled::shadow .add-on-content ::content {
+      		opacity: 0.6;
+        }
+    </style>
+
     <template>
-        <style>
-            :host::shadow #input {
-                width: 100%;
-                box-sizing: border-box;
-            }
-            
-            :host::shadow * /deep/ core-tooltip::shadow #tooltip {
-                white-space: normal;
-            }
-            
-            :host::shadow * /deep/ core-tooltip .span-tooltip {
-                line-height: 15px;
-            }
-            
-            :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
-            :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
-                opacity: 1;
-                -webkit-transition-delay: 1s;
-                transition-delay: 1s;
-                transform: translate3d(0px, 0px, 0px);
-            }
-            
-            :host::shadow #input.upper-case {
-                text-transform: uppercase;
-            }
-            /* style requiredness */
-            
-            :host::shadow paper-input-decorator:not([disabled]).required /deep/ .label-text {
-                color: #03A9F4;
-            }
-            
-            :host::shadow paper-input-decorator[focused].required /deep/ .label-text {
-                color: #03A9F4;
-            }
-            
-            :host::shadow paper-input-decorator.required /deep/ .focused-underline {
-                background-color: #03A9F4;
-            }
-            
-            :host::shadow paper-input-decorator.required /deep/ .unfocused-underline {
-                background-color: #03A9F4;
-            }
-            /* style warning */
-            
-            :host::shadow paper-input-decorator.warning /deep/ .error,
-            :host::shadow paper-input-decorator[focused].warning /deep/ .error {
-                color: #FFA000;
-            }
-            
-            :host::shadow paper-input-decorator.invalid[focused].warning /deep/ .floated-label .label-text {
-                color: #FFA000;
-            }
-            
-            :host::shadow paper-input-decorator.invalid.warning /deep/ .floated-label .label-text {
-                color: #FFA000;
-            }
-            
-            :host::shadow paper-input-decorator.invalid.warning /deep/ .focused-underline {
-                background-color: #FFA000;
-            }
-            
-            :host::shadow paper-input-decorator.invalid.warning /deep/ .unfocused-underline {
-                background-color: #FFA000;
-            }
-        </style>
+        <paper-input-container id="decorator" attr-for-value="editing-value" always-float-label>
+            <!-- flex auto  for textarea! -->
+            <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
+            <div class="main-container">
+                <div id="input-container" style$="[[_calcDecoratorPartStyle(_disabled)]]">
+                    <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
+
+                    <!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
+                    <input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+                    <!-- </template> -->
+
+                    <input id="input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled}}">
+
+                    <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+
+                    <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+                        <!--  flex -->
+                        <textarea id="input" disabled$="[[_disabled]]"></textarea>
+                    </iron-autogrow-textarea>
+
+                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
+
+                    <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
+                </div>
+                <!-- CONTENT HERE: -->
+                <content select=".custom-icon-buttons"></content>
+                
+                <div id="icon" hidden$="[[_actionDoesNotExist(action)]]">
+        			<tg-property-action entity-type="[[action.entityType]]" pre-action="[[action.preAction]]" post-action="[[action.postAction]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action>
+        		</div>
+            </div>
+
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]">[[_error]]</paper-input-error>
+
+            <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]"></paper-input-char-counter>
+        </paper-input-container>
+        
         <tg-reflector id="reflector"></tg-reflector>
 
-        <template if="{{debug}}">
-            <p>editingValue: {{editingValue}}</p>
-            <p>commValue: {{commValue}}</p>
-            <p>acceptedValue: {{acceptedValue}}</p>
-            <p>_bindingValue: {{_bindingValue(entity, propertyName)}}</p>
+        <template is="dom-if" if="[[debug]]">
+            <p>_editingValue: <i>[[_editingValue]]</i>
+            </p>
+            <p>_commValue: <i>[[_commValue]]</i>
+            </p>
+            <p>_acceptedValue: <i>[[_acceptedValue]]</i>
+            </p>
         </template>
     </template>
-    <script>
-        Polymer('tg-editor', {
-            publish: {
-                /**
-                 * The title for this editor. It normally appears as the caption for the editor.
-                 *
-                 * @attribute title
-                 * @type string
-                 * @default 'Unknown title. Please specify the title for the editor.'
-                 */
-                propTitle: 'Unknown title. Please specify the title for the editor.',
+</dom-module>
 
-                /**
-                 * The description for this editor.
-                 *
-                 * @attribute desc
-                 * @type string
-                 * @default 'Unknown desc. Please specify the desc for the editor.'
-                 */
-                propDesc: 'Unknown desc. Please specify the desc for the editor.',
+<script>
+    Polymer({
+        is: 'tg-editor',
 
-                /**
-                 * This published property specifies to what entity this editor should be bound.
-                 */
-                entity: null,
-                /**
-                 * This published property specifies to what property this editor should be bound.
-                 */
-                propertyName: null,
-
-                /**
-                 * This callback should be used for custom action after the 'acceptedValue' has been changed (for e.g. validation).
-                 */
-                onAcceptedValueChanged: null,
-
-                /**
-                 * The message about the state of the editor (most likely validation message).
-                 */
-                // msg: '',
-
-                /**
-                 * The message about the editor-specific validation. If 'null' -- the validation was successfull.
-                 */
-                editorValidationMsg: '',
-
-                /**
-                 * The message type (ERROR validation or stale conflict, WARNING validation or staleness etc.).
-                 */
-                // msgType: '', // NONE 'ERROR', 'WARNING', 'INFO'
-
-                /**
-                 * The state for the editor.
-                 *
-                 * The editor can be only in two states: EDIT and VIEW. The state EDIT
-                 * allows user to edit property.
-                 *
-                 * The state VIEW allows user to review the property.
-                 *
-                 * The initial state can be VIEW or EDIT.
-                 */
-                currentState: {
-                    value: 'VIEW', // TODO temporal default value (please make it 'null' later)
-                    reflect: true
-                },
-
-                /**
-                 * The action object that represents an action to be embedded as an icon button inside this editor.
-                 *
-                 * If the action attribute is not specified -- no action button should be displayed.
-                 */
-                action: null,
-
-                externalRefreshCycle: null
+        properties: {
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            propTitle: String,
+            _disabled: {
+            	type: Boolean,
+            	observer: '_disabledChanged'
             },
-
-            /* Controls rendering of debug information for an entity editor. */
-            debug: false,
-            /**
-             * The value being edited (main editing capability). If there are other editing views in this editor -- maintain their editingValues separately.
-             *
-             * This value is of the data type for editing (main editing capability), most likely String.
-             */
-            editingValue: '',
-
-            /**
-             * The value being committed (main editing capability). If there are other editing views in this editor -- maintain their committedValues separately.
-             *
-             * This value is of the data type for editing (main editing capability), most likely String.
-             */
-            commValue: '',
-
-            /**
-             * The value being accepted after the editing. The commit can be done using 'TAB off' or 'Enter key pressed'.
-             *
-             * This value is of the data type for concrete component, for e.g. for tg-datetime-picker it is Number, tg-textfield -- String etc.
-             * The type strictly conforms to the type of 'bindTo' attribute.
-             */
-            acceptedValue: '',
-
-            refreshCycleStarted: false,
-
-            ready: function () {
-                var self = this;
-                this.$.decorator.labelVisible = false;
+            _editingValue: {
+                type: String,
+                notify: true
             },
+            action: Object,
+            _error: String,
+            _commValue: String,
+            _acceptedValue: String,
+            debug: Boolean,
+            _editorKind: String,
+            _onChange: Function,
+            _onKeydown: Function,
+            _onInput: Function,
+            _maxLength: Number,
+            _autocompleterBlurEventHandler: Function,
+            currentState: String
+        },
 
-            /**
-             * Returns 'true' if the editor is disabled, 'false' otherwise (based on the editor's state and 'editable' meta-state for the property).
-             */
-            _isDisabled: function (state, bindingEntity, propertyName) {
-                if (state === undefined || state === 'VIEW') {
-                    return true;
-                } else if (state === 'EDIT') {
-                    return this.$.reflector.isDotNotated(propertyName) ? true : (!(bindingEntity["@" + propertyName + "_editable"]));
-                } else {
-                    throw "Unsupported state exception: " + state + ".";
-                }
-            },
+        _isDecimal: function (editorKind) {
+            return 'DECIMAL' === editorKind;
+        },
 
-            /** 
-             * The function for binding property value. The argument 'entity' will be changed in future. Polymer will listen to that change.
-             */
-            _bindingValue: function (entity, propertyName) {
-                // console.log("_bindingValue entity", entity);
-                if (typeof this.$ !== 'undefined') {
-                    if (this._isEntity(entity)) {
-                        // console.log("_bindingValue prop value", entity.get(propertyName));
-                        return this.getBindingValue(entity, propertyName);
-                    } else {
-                        return "Not yet initialised currBindingEntity, from which to get binding value!";
-                    }
-                } else {
-                    return "Not yet initialised this.$!";
-                }
-            },
+        _isInteger: function (editorKind) {
+            return 'INTEGER' === editorKind;
+        },
 
-            /**
-             * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
-             *
-             * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
-             */
-            getBindingValue: function(bindingEntity, dotNotatedName) {
-            	return this.$.reflector.isDotNotated(dotNotatedName) ? this.$.reflector.convert(this.getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
-            },
-            
-            /**
-             * Returns the full value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
-             *
-             * This method does no conversion of the value to 'binding' representation.
-             */
-            getValueFor: function(bindingEntity, dotNotatedName) {
-            	return bindingEntity["@@origin"].get(dotNotatedName);
-            },
+        _isSinglelineTextOrDate: function (editorKind) {
+            return 'SINGLELINE_TEXT' === editorKind || 'DATE' === editorKind;
+        },
 
-            /**
-             * Determines whether the specified object represents the entity.
-             */
-            _isEntity: function (obj) {
-                return obj !== null && (obj instanceof this.$.reflector.getEntityType());
-            },
+        _isMultilineText: function (editorKind) {
+            return 'MULTILINE_TEXT' === editorKind;
+        },
 
-            /**
-             * This method is called during editing.
-             *
-             * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
-             */
-            editingValueChanged: function (oldValue, newValue) {
-                // console.log("editingValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
+        _isBooleanEditor: function (editorKind) {
+            return "BOOLEAN" === editorKind;
+        },
 
-                this.$.decorator.updateLabelVisibility(this.editingValue);
+        _isAutocompleter: function (editorKind) {
+            return "AUTOCOMPLETER" === editorKind;
+        },
 
-                if (this.refreshCycleStarted) {
-                    this.commit();
-                }
-            },
+        /**
+         * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
+         *
+         * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
+         */
+        _actionDoesNotExist: function (action) {
+            return action === null;
+        },
 
-            /**
-             * This method is called once the entity was changed from the outside of the component.
-             *
-             * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
-             */
-            entityChanged: function (oldValue, newValue) {
-                // console.log("entityChanged", oldValue, newValue, "still refreshCycleStarted ==", this.refreshCycleStarted);
-                if (typeof this.$ !== 'undefined') {
-                    if (this._isEntity(newValue)) {
-                    	var propValue = this.getBindingValue(newValue, this.propertyName);
-                        var newEditingValue = this.convertToString(propValue);
-                        if (newEditingValue === this.editingValue && this.refreshCycleStarted) {
-                            this.refreshCycleStarted = false;
-                        }
-                        this.editingValue = newEditingValue;
-
-                        this.bindMessages(newValue, this.propertyName, this.editorValidationMsg);
-                    } else {
-                        // console.log("entityChanged: Not yet initialised currBindingEntity, from which to get binding value!");
-                    }
-                } else {
-                    // console.log("entityChanged: Not yet initialised this.$!");
-                }
-            },
-
-            editorValidationMsgChanged: function (oldValue, newValue) {
-                if (typeof this.$ !== 'undefined') {
-                    if (this._isEntity(this.entity)) {
-                        this.bindMessages(this.entity, this.propertyName, newValue);
-                    } else {
-                        console.log("editorValidationMsgChanged: Not yet initialised currBindingEntity, from which to get binding value!");
-                    }
-                } else {
-                    console.log("editorValidationMsgChanged: Not yet initialised this.$!");
-                }
-            },
-
-            /**
-             * This method is called once the the accepted value was changed after the editor has commited its value.
-             *
-             * IMPORTANT: please do not override this method.
-             */
-            commValueChanged: function (oldValue, newValue) {
-                // console.log("commValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
-                try {
-                    this.acceptedValue = this.convertFromString(newValue);
-                    this.editorValidationMsg = '';
-                } catch (error) {
-                    // console.log("commValueChanged catched", error, this);
-                    this.editorValidationMsg = error;
-                }
-            },
-
-            /**
-             * This method is called once the the accepted value was changed after the editor has commited its value.
-             *
-             * IMPORTANT: please do not override this method. This method have some additional customisation points:
-             * shouldInvokeValidation() and skipValidationAction().
-             */
-            acceptedValueChanged: function (oldValue, newValue) {
-                // console.log("acceptedValueChanged", oldValue, newValue, "refreshCycleStarted ==", this.refreshCycleStarted);
-
-                if (this.refreshCycleStarted) {
-                    this.refreshCycleStarted = false;
-                    // console.log("acceptedValueChanged should become false. refreshCycleStarted ==", this.refreshCycleStarted);
-                } else {
-                    this.entity.set(this.propertyName, newValue);
-                    if (this.shouldInvokeValidation()) {
-                        this.onAcceptedValueChanged();
-                    } else {
-                        this.skipValidationAction();
-                    }
-                }
-            },
-
-            /**
-             * Please override this method in case when no validation should occur after acceptedValueChanged.
-             */
-            shouldInvokeValidation: function () {
-                return true;
-            },
-
-            /**
-             * Please override this method in case when some custom action is needed when shouldInvokeValidation() returns 'false' after acceptedValueChanged.
-             */
-            skipValidationAction: function () {},
-
-            /**
-             * Converts the value into string representation (which is used in editing / comm values). Please implement this method in descendant editor.
-             */
-            convertToString: function (value) {
-                // return "" + value;
-                throw "Conversion to string is not specified for this editor.";
-            },
-
-            /**
-             * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component. Please implement this method in descendant editor.
-             */
-            convertFromString: function (strValue) {
-                // return strValue;
-                throw "Conversion from string into entity property type is not specified for this editor.";
-            },
-
-            /**
-             * Commits editing value.
-             */
-            commit: function () {
-                // console.log("commit");
-                this.commValue = this.editingValue;
-            },
-
-            externalRefreshCycleChanged: function (oldValue, newValue) {
-                if (newValue === "ACTIVATED") {
-                    // console.log("externalRefreshCycleChanged", oldValue, newValue);
-                    this.refreshCycleStarted = true;
-                }
-            },
-
-            bindMessages: function (entity, property, editorValidationMsg) {
-                if (editorValidationMsg) {
-                    this.bindError(editorValidationMsg);
-                } else if (typeof this.$ !== 'undefined') {
-                    if (this._isEntity(entity)) {
-                    	// please, note that dot-notated property will not have any errors / warnings / requiredness
-                    	//     - for these props it does not make sense to propagate such meta-information from
-                    	//     parent property -- the parent prop (if added in master) will show that errors concisely
-                        if (typeof entity["@" + property + "_error"] !== 'undefined') {
-                            this.bindError(entity["@" + property + "_error"].message);
-                        } else if (typeof entity["@" + property + "_warning"] !== 'undefined') {
-                            this.bindWarning(entity["@" + property + "_warning"].message);
-                        } else if (typeof entity["@" + property + "_required"] !== 'undefined') {
-                            this.bindRequired(entity["@" + property + "_required"]);
-                        } else {
-                            this.resetMessages();
-                        }
-
-                        this.bindUppercase(entity, property);
-
-                    } else {
-                        this.resetMessages();
-                        this.resetMetaPropDecorations();
-                    }
-                } else {
-                    this.resetMessages();
-                    this.resetMetaPropDecorations();
-                }
-            },
-
-            bindUppercase: function (entity, property) {
-                if (typeof entity["@" + property + "_uppercase"] !== 'undefined') {
-                    this.$.input.classList.add("upper-case");
-                } else {
-                    this.$.input.classList.remove("upper-case");
-                }
-            },
-
-            resetMetaPropDecorations: function () {
-                this.$.decorator.classList.remove("required");
-            },
-
-            resetMessages: function () {
-                this.$.decorator.isInvalid = false;
-                this.$.decorator.error = "";
-                this.$.decorator.classList.remove("warning");
-            },
-
-            bindError: function (msg) {
-                this.resetMessages();
-                this.$.decorator.classList.remove("required");
-                this.$.decorator.classList.remove("warning");
-                this.$.decorator.isInvalid = true;
-                this.$.decorator.error = msg;
-            },
-
-            bindWarning: function (msg) {
-                this.resetMessages();
-                this.$.decorator.classList.remove("required");
-                this.$.decorator.classList.add("warning");
-                this.$.decorator.isInvalid = true;
-                this.$.decorator.error = "" + msg;
-            },
-
-            bindRequired: function (required) {
-                this.resetMessages();
-                if (required) {
-                    this.$.decorator.classList.add("required");
-                } else {
-                    this.$.decorator.classList.remove("required");
-                }
-            },
-
-            /**
-             * Determines whether the specified object represents the entity.
-             */
-            _isEntity: function (obj) {
-                return obj !== null && (obj instanceof this.$.reflector.getEntityType());
-            },
-
-            /**
-             * Binding function for tooltips.
-             */
-            tooltip: function (propDesc) {
-                return propDesc;
-            },
-            
-            /**
-             * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
-             */
-            createContextHolder: function(inputText) {
-                var contextHolder = this.$.reflector.createContextHolder(
-					this.requireSelectionCriteria, this.requireSelectedEntities, this.requireMasterEntity,
-					this.createModifiedPropertiesHolder, this.getSelectedEntities, this.getMasterEntity
-                );
-                this.$.reflector.setCustomProperty(contextHolder, "@@searchString", inputText);
-                return contextHolder;
+        /**
+         * Calculates the style for container's label.
+         */
+        _calcLabelStyle: function (editorKind, _disabled) {
+            var style = "";
+            if ("BOOLEAN" === editorKind) {
+                style += "visibility: hidden;"
             }
-        });
-    </script>
-</polymer-element>
+            if (_disabled === true) {
+                style += "opacity: 0.6;"
+            }
+            return style;
+        },
+        
+        /**
+         * Calculates the style for decorator inner parts, based on '_disabled' property.
+         */
+        _calcDecoratorPartStyle: function (_disabled) {
+            var style = "";
+            if (_disabled === true) {
+                style += "opacity: 0.6;"
+            }
+            return style;
+        },
+        
+        /**
+         * Returns value that indicates whether boolean editor is checked or not.
+         */
+        _isBooleanChecked: function (editingValue) {
+            return editingValue === 'true';
+        },
+        
+        /**
+         * The observer to the '_disabled' property, which maintains appropriately the class list of the decorator (regarding the class 'decorator-disabled').
+         */
+        _disabledChanged: function (newValue, oldValue) {
+        	if (newValue === true) {
+            	this.$.decorator.classList.add("decorator-disabled");
+        	} else {
+        		this.$.decorator.classList.remove("decorator-disabled");
+        	}
+            this.updateStyles();
+        }
+    });
+</script>

@@ -1,96 +1,78 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-toolbar/core-toolbar.html">
+<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 <link rel="import" href="/resources/layout/tg-tile-layout.html">
-<link rel="import" href="/resources/polymer/core-icon/core-icon.html">
-<link rel="import" href="/resources/polymer/core-icons/av-icons.html">
-<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/views/tg-app-animation-behavior.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 
-<polymer-element name="tg-app-menu" attributes="items lastSelectedMenuItem selectedMenuItem whenDesktop whenTablet whenMobile minCellHeight minCellWidth" layout vertical>
-    <template>
-        <style>
-            core-toolbar {
+<dom-module id="tg-app-menu">
+    <style>
+        :host {
+            overflow: hidden;
+            --paper-toolbar-background: #0288D1;
+            --paper-toolbar-color: white;
+            --paper-toolbar: {
                 height: 100px;
-                background-color: #0288D1;
-                color: #fff;
                 font-size: 18px;
             }
-            core-toolbar::shadow #topBar {
-                height: 100px;
-            }
-            .item-name {
-                height: 48px;
-                min-height: 48px;
-                padding: 0 16px;
-                font-size: 12px;
-                color: white;
-            }
-            .item-icon-bg {
-                width: 80%;
-                height: 80%;
-            }
-            .item-icon-bg core-icon {
-                width: 100%;
-                height: 100%;
-            }
-            core-icon>div {
-                background-repeat: no-repeat;
-            }
-            .item {
-                margin: 4px;
-            }
-            .items {
-                position: absolute;
-                top: 100px;
-                right: 0;
-                bottom: 0;
-                left: 0;
-                margin: 4px -4px;
-                overflow: auto;
-            }
-            :host {
-                overflow: hidden;
-            }
-            paper-spinner {
-                position: absolute;
-                top: 0px;
-                padding: 2px;
-                margin: 0px;
-                width: 24px;
-                height: 24px;
-                z-index: 1;
-            }
-            paper-spinner.blue::shadow .circle {
-                border-color: #0288D1;
-            }
-        </style>
-        <core-style ref="menu-item-progress"></core-style>
+            ;
+        }
+        .item-name {
+            height: 48px;
+            min-height: 48px;
+            padding: 0 16px;
+            font-size: 12px;
+            color: white;
+        }
+        .item-icon-bg {
+            width: 100%;
+            height: 100%;
+        }
+        .item-icon-bg iron-icon {
+            width: 100%;
+            height: 100%;
+        }
+        .item {
+            margin: 4px;
+        }
+        .items {
+            position: absolute;
+            top: 100px;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            margin: 4px -4px;
+            overflow: auto;
+        }
+    </style>
 
-        <core-toolbar>
-        	<!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
-            <!-- div flex>{{user.name}}</div>
-            <div>{{user.login}}</div -->
-        </core-toolbar>
+    <template>
+
+        <paper-toolbar id="toolbar">
+            <!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
+        </paper-toolbar>
 
         <div class="items">
-            <paper-spinner id="spinner" active="{{spinnerWorking}}" class="blue" style="visibility: hidden;" alt="loading..."></paper-spinner>
-            <tg-tile-layout fit whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}" minCellHeight="{{minCellHeight}}" minCellWidth="{{minCellWidth}}">
-                <template repeat="{{item in items}}">
-                    <div class="tile" vertical layout>
-                        <div class="item" name="{{item.title}}" style="background-color: {{item.bgColor}}" fit hero-id="{{'hero_' + item.title}}" hero?="{{selectedMenuItem === item.title || lastSelectedMenuItem === item.title}}" on-tap="{{onSelectItem}}"></div>
-                        <div class="item" name="{{item.title}}" flex auto vertical layout relative on-tap="{{onSelectItem}}">
-                            <div flex auto relative>
-                                <div fit layout vertical center center-justified>
-                                    <div class="item-icon-bg" style="background-color: {{item.bgColor}}" relative flex auto>
-                                        <core-icon style="color: {{item.bgColor}}" src="{{item.icon}}" fit></core-icon>
+            <tg-tile-layout class="fit" when-desktop="[[menuConfig.whenDesktop]]" when-tablet="[[menuConfig.whenTablet]]" when-mobile="[[menuConfig.whenMobile]]" min-cell-height="[[menuConfig.minCellHeight]]" min-cell-width="[[menuConfig.minCellWidth]]">
+                <template is="dom-repeat" items="[[menuConfig.items]]">
+                    <div class="tile layout vertical">
+                        <div class="hero-animatable item fit" name$="[[item.title]]" style$="[[_calcStyleForItem(item)]]" on-tap="_itemSelected"></div>
+                        <div class="item relative layout vertical flex-auto" name$="[[item.title]]" on-tap="_itemSelected">
+                            <div class="flex-auto relative">
+                                <div class="fit layout vertical center-center">
+                                    <div class="item-icon-bg relative flex-auto" style$="[[_calcStyleForItem(item)]]">
+                                        <iron-icon class="fit" style$="[[_calcIconStyleForItem(item)]]" src="[[item.icon]]"></iron-icon>
                                     </div>
                                 </div>
                             </div>
-                            <div class="item-name" style="background-color: {{item.captionBgColor}}" horizontal center layout>
-                                <div flex>
-                                    <span>{{item.title}}</span>
+
+                            <div class="item-name layout horizontal center" style$="[[_calcCaptionStyleForItem(item)]]">
+                                <div class="flex">
+                                    <span>[[item.title]]</span>
                                 </div>
-                                <core-icon icon="av:play-arrow"></core-icon>
+                                <iron-icon icon="av:play-arrow"></iron-icon>
                             </div>
                         </div>
                     </div>
@@ -98,49 +80,109 @@
             </tg-tile-layout>
         </div>
     </template>
-    <script>
-        (function () {
-            var startSpinner = function (source) {
-                var width = parseInt(this.minCellWidth);
-                var height = parseInt(this.minCellHeight);
-                var size = width < height ? width : height;
-                // Position, size and make spinner visible
-                this.spinnerWorking = true;
-                this.$.spinner.style.width = size + 'px';
-                this.$.spinner.style.height = size + 'px';
-                this.$.spinner.style.left = (source.offsetParent.offsetLeft + (source.offsetWidth / 2 - size / 2)) + 'px';
-                this.$.spinner.style.top = (source.offsetParent.offsetTop + (source.offsetHeight / 2 - size / 2)) + 'px';
-                this.$.spinner.style.visibility = 'visible';
-            };
-            Polymer({
-                ready: function () {
-                    var self = this;
-                    postal.subscribe({
-                        channel: "menu",
-                        topic: "item.loaded",
-                        callback: function (data, envelope) {
-                            self.spinnerWorking = false;
-                            // Make spinner invisible
-                            self.$.spinner.style.visibility = 'hidden';
-                        }
-                    });
-                    postal.subscribe({
-                        channel: "menu",
-                        topic: "state.pop",
-                        callback: function (data, envelope) {
-                            postal.publish({
-                                channel: "app",
-                                topic: "state.poped",
-                                data: data
-                            });
-                        }
-                    });
-                },
-                onSelectItem: function (e, detail, source) {
-                    //startSpinner.bind(this)(source);
-                    this.fire("menu-item-selected", source.getAttribute("name"));
+
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-app-menu",
+
+            hostAttributes: {
+                "class": "layout vertical"
+            },
+
+            properties: {
+                menuConfig: Object,
+                animationConfig: {
+                    value: function () {
+                        return {};
+                    }
                 }
-            });
-        })();
-    </script>
-</polymer-element>
+            },
+
+            behaviors: [
+                Polymer.NeonAnimatableBehavior,
+                Polymer.TgBehaviors.TgAppAnimationBehavior
+            ],
+
+            ready: function () {
+                postal.subscribe({
+                    channel: "menu",
+                    topic: "state.pop",
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: "app",
+                            topic: "state.poped",
+                            data: data
+                        });
+                    }
+                });
+            },
+            /**
+             * Is called before moving on to page that implements this behavior. Prev - the name of previously selected page.
+             */
+            configureEntryAnimation: function (prev) {
+                var nodeList;
+                if (prev) {
+                    this.animationConfig['entry'] = [
+                        {
+                            name: 'hero-animation',
+                            id: 'hero',
+                            toPage: this
+                        }];
+                    this.sharedElements = {
+                        'hero': Polymer.dom(this.root).querySelector('.hero-animatable[name="' + prev + '"]')
+                    };
+                } else {
+                    nodeList = Polymer.dom(this.root).querySelectorAll('.tile');
+                    this.animationConfig['entry'] = [
+                        {
+                            name: 'slide-down-animation',
+                            node: this.$.toolbar
+                        }, {
+                            name: 'cascaded-animation',
+                            animation: 'transform-animation',
+                            nodes: Array.prototype.slice.call(nodeList),
+                            transformFrom: 'translateY(50%)',
+                            transformTo: 'none'
+                        }, {
+                            name: 'cascaded-animation',
+                            animation: 'fade-in-animation',
+                            nodes: Array.prototype.slice.call(nodeList)
+                        }];
+                }
+            },
+
+            /**
+             * Is called before moving out of the page that implements this behavior. Next - the name of next selected page.
+             */
+            configureExitAnimation: function (next) {
+                this.animationConfig['exit'] = [
+                    {
+                        name: 'hero-animation',
+                        id: 'hero',
+                        fromPage: this
+                    }];
+                this.sharedElements = {
+                    'hero': Polymer.dom(this.root).querySelector('.hero-animatable[name="' + next + '"]')
+                };
+            },
+
+            _itemSelected: function (e, detail) {
+                var model = e.model;
+                this.fire("menu-item-selected", model.item.title);
+            },
+            _calcStyleForItem: function (item) {
+                return "background-color: " + item.bgColor + ";";
+            },
+            _calcIconStyleForItem: function (item) {
+                return "color: " + item.bgColor + ";";
+            },
+            _calcCaptionStyleForItem: function (item) {
+                return "background-color: " + item.captionBgColor + ";";
+            }
+        });
+    })();
+</script>

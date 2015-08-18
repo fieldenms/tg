@@ -57,8 +57,8 @@ public class SummaryElement implements IRenderable, IImportable {
         attrs.put("property", propertyName); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
         attrs.put("width", width + "px");
         attrs.put("type", egiRepresentationFor(DynamicEntityClassLoader.getOriginalType(this.propertyType)));
-        attrs.put("columnTitle", this.titleDesc.getKey());
-        attrs.put("columnDesc", this.titleDesc.getValue());
+        attrs.put("column-title", this.titleDesc.getKey());
+        attrs.put("column-desc", this.titleDesc.getValue());
         return attrs;
     }
 

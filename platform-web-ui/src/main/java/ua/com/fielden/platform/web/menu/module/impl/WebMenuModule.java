@@ -56,7 +56,7 @@ public class WebMenuModule implements IExecutable {
     @Override
     public JsCode code() {
         final String code = "{ title: \"" + this.title + "\", " +
-                "descritpion: \"" + this.description + "\", " +
+                "description: \"" + this.description + "\", " +
                 "bgColor: \"" + this.bgColor + "\", " +
                 "captionBgColor: \"" + this.captionBgColor + "\", " +
                 "icon: \"" + this.icon + "\", " +

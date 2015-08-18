@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.view.master.api.helpers.impl;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
@@ -61,7 +64,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
-        widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName, false);
+        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.entityType : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.entityType, propertyName);
+        widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName, propType);
         return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
     }
 

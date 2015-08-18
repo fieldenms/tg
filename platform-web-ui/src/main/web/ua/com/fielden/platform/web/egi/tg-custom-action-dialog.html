@@ -1,0 +1,132 @@
+<link rel="import" href="/resources/element_loader/tg-element-loader.html">
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/components/postal-lib.html">
+
+<dom-module id="tg-custom-action-dialog">
+    <template>
+        <paper-dialog id="entityMaster" modal on-iron-overlay-opened="_dialogOpened" on-iron-overlay-closed="_dialogClosed" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+            <tg-element-loader id="loadMaster" on-after-load="_afterMasterLoad"></tg-element-loader>
+        </paper-dialog>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-custom-action-dialog",
+
+            properties: {
+                isRunning: {
+                    type: Boolean,
+                    readOnly: true,
+                    reflectToAttribute: true
+                },
+                
+                /* Postal subscription to events that trigger dialog closing.
+                 * It gets populated in _showDialog and unsubscrived on dialog closed.
+                 */
+                _subscriptions: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                
+                _closeEventChannel: {
+                    type: String
+                },
+                
+                _closeEventTopics: {
+                    type: Array
+                }
+            },
+
+            ready: function () {
+                //Initialising the action runner
+                this.currentActionRunning = null;
+            },
+
+            closeDialog: function () {
+                this.$.entityMaster.close();
+            },
+            
+            _handleCloseEvent: function (data, envelope) {
+                this.closeDialog();
+            },
+            
+            /*
+             * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
+             * closeEventChannel -- a channel that is provided from the outside and is used to publish for listening to event that should leade to closing of this dialog.
+             * closeEventTopics -- event topics that should be listened to on the channel to close this dialog.
+             */
+            showDialog: function (customAction, closeEventChannel, closeEventTopics) {
+                if (!this.currentRunningAction) {
+                    this._closeEventChannel = closeEventChannel;
+                    this._closeEventTopics = closeEventTopics;
+                    this._setIsRunning(true);
+                    this.currentRunningAction = customAction;
+                    this.$.loadMaster.import = this.currentRunningAction.componentUri;
+                    this.$.loadMaster.elementName = this.currentRunningAction.elementName;
+                    this.$.loadMaster.attrs = this.currentRunningAction.attrs;
+                    this.$.loadMaster.reload();
+                }
+            },
+
+            _afterMasterLoad: function (e, detail, source) {
+                if (this.currentRunningAction) {
+                    this.currentRunningAction._onExecuted(e, detail, source);
+                    if (this.currentRunningAction._masterComponent.noUI === true) {
+                        this.currentRunningAction = null;
+                    }
+                    
+                    this._showMaster();
+                }
+            },
+
+            _showMaster: function (e) {
+                if (this.currentRunningAction && this.currentRunningAction._masterComponent.noUI === false) {
+                    var self = this;
+                    // if there would be a master UI then need to subscribe for this dialog closing messages
+                    if (self._closeEventChannel && self._closeEventTopics && self._closeEventTopics.length > 0) {
+                        self._subscriptions = [];
+                        for (var index = 0; index < self._closeEventTopics.length; index++) {
+                            self._subscriptions.push(
+                                    postal.subscribe({
+                                        channel: self._closeEventChannel,
+                                        topic: self._closeEventTopics[index],
+                                        callback: self._handleCloseEvent.bind(self)
+                                    }));
+                        }
+                    }
+                    
+                    Polymer.dom(Polymer.dom(this.$.entityMaster).parentNode).removeChild(this.$.entityMaster);
+                    Polymer.dom(document.body).appendChild(this.$.entityMaster);
+                    Polymer.dom.flush();
+                    // let's open the dialog with magical async...
+                    // this ensures that the dialog is opened after its relocation to body and after all layouting is done
+                    this.async(function () {
+                        this.$.entityMaster.open();
+                    }.bind(this), 1);
+                }
+            },
+
+            _dialogOpened: function (e, detail, source) {
+                this.currentRunningAction = null;
+                this._setIsRunning(false);
+            },
+            
+            _dialogClosed: function() {
+                // if there are current subscriptions they need to be unsubscribed
+                // due to dialog being closed
+                for (var index = 0; index <this._subscriptions.length; index++) {
+                    postal.unsubscribe(this._subscriptions[index]);
+                }
+                this._subscriptions.length = 0;
+                
+                // remove this dialog from the body
+                Polymer.dom(document.body).removeChild(this.$.entityMaster);
+                Polymer.dom.flush();
+            }
+        });
+    })();
+</script>

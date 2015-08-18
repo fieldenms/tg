@@ -21,10 +21,10 @@
 
             console.log("centre =", centre);
             
-            var oldOnRun = centre.onRun;
+            var old_postRun = centre._postRun;
             
-            centre.onRun = function(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
-            	oldOnRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+            centre._postRun = function(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
             	
             	var entity = resultEntities[0];
             	
@@ -36,7 +36,7 @@
             };
 
             
-            centre.onRetrieved = function(entity, bindingEntity, customObject) {
+            centre.postRetrieved = function(entity, bindingEntity, customObject) {
 				centre.run();
             };
 

@@ -1,71 +1,151 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 
-<core-style id="toast-progress-indicator">
+<!-- <core-style id="toast-progress-indicator">
     paper-spinner { position: absolute; top: 9px; right: 9px; padding: 0px; margin: 0px;}
-    <!-- -->
+   
     paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
-</core-style>
+</core-style> -->
 
-<!-- A toas component that may have  -->
-<polymer-element name="tg-toast" attributes="text opened showProgress hasMore msgHeading msgText">
+    <style is="custom-style">
+        .paper-toast {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* style to truncate the toast text */
+        body /deep/ paper-toast::shadow #label {
+            @apply(--layout-flex);
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .paper-spinner {
+            width: 1.5em;
+            height: 1.5em;
+            min-width: 1em;
+            min-height: 1em;
+            max-width: 2em;
+            max-height: 2em;
+            padding: 2px;
+            margin-left: 1em;
+            --paper-spinner-layer-1-color: var(--paper-blue-500);
+            --paper-spinner-layer-2-color: var(--paper-blue-500);
+            --paper-spinner-layer-3-color: var(--paper-blue-500);
+            --paper-spinner-layer-4-color: var(--paper-blue-500);
+        }
+    </style>
+
+<dom-module id="tg-toast">
     <template>
-        <style>
-            /* style to truncate the toast text */
-            
-            :host::shadow * /deep/ .toast-text {
-                max-width: 250px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-        </style>
-        <core-style ref="toast-progress-indicator"></core-style>
-
-        <paper-toast id="toast" text="{{text}}" opened="{{opened}}" responsiveWidth="250px">
-            <template if="{{shouldShowProgress(showProgress, hasMore)}}">
-                <paper-spinner id="spinner" active="{{showProgress}}" class="blue" alt="loading"></paper-spinner>
-            </template>
-            <template if="{{shouldShowMore(showProgress, hasMore)}}">
-                <div style="color: #03A9F4;" on-tap="{{showMessageDlg}}">More</div>
-            </template>
+        <paper-toast id="toast" class="paper-toast" text="[[text]]"> <!-- TODO responsive-width="250px" -->
+            <paper-spinner id="spinner" class="paper-spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
+            <div hidden$="[[_skipShowMore(showProgress, hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
         </paper-toast>
 
-        <paper-action-dialog id="msgDialog" heading="{{msgHeading}}" backdrop autoCloseDisabled layered="false" class="scrolling">
-            <p id="msgDialogText"></p>
-
-            <paper-button affirmative autofocus>Close</paper-button>
-        </paper-action-dialog>
-    </template>
-    <script>
-        (function () {
-            Polymer("tg-toast", {
-
-                opened: false,
-
-                showProgress: false,
-
-                hasMore: false,
-
-                showMessageDlg: function () {
-                    this.$.msgDialog.toggle();
-                },
-
-                shouldShowProgress: function (progress, more) {
-                    return progress && !more;
-                },
-
-                shouldShowMore: function (progress, more) {
-                    return !progress && more;
+        <paper-dialog 
+        	id="msgDialog" 
+        	class="scrolling" 
+        	with-backdrop 
+        	entry-animation="scale-up-animation"
+        	exit-animation="fade-out-animation">
+        	
+        	<p id="msgDialogText"></p>
+            
+            <div class="buttons">
+                <paper-button dialog-confirm affirmative autofocus>Close</paper-button>
+            </div>
+        </paper-dialog>
+    </template>    
+</dom-module>
+    
+<script>
+    (function () {
+        Polymer({
+        	// attributes="msgHeading -- TODO was this ever needed?"
+        	
+        	is: 'tg-toast',
+        	
+        	properties: {
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+            	// No default values are allowed in this case.														   //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
+            	text: {
+            		type: String
+            	},
+            	
+            	msgText: {
+            		type: String,
+            		observer: '_msgTextChanged'
+            	},
+            	
+                showProgress: {
+                	type: Boolean
                 },
                 
-                msgTextChanged: function(oldValue, newValue) {
-                	this.$.msgDialogText.innerHTML = newValue;
+                hasMore: {
+                	type: Boolean
+                },
+                
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+             	//   prefix. 																				           //
+             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+             	//   populate their default values in ready callback (to have these values populated in children)!     //
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	
+                _skipShowProgress: {
+                	type: Boolean,
+                	computed: '_shouldSkipProgress(showProgress, hasMore)'
                 }
-            })
-        })();
-    </script>
+        	},
+
+            _showMessageDlg: function (event) {
+                this.$.msgDialog.toggle();
+            },
+
+            _shouldSkipProgress: function (progress, more) {
+                return !progress || more;
+            },
+
+            _skipShowMore: function (progress, more) {
+                return progress || !more;
+            },
+            
+            _msgTextChanged: function(newValue, oldValue) {
+            	Polymer.dom(this.$.msgDialogText).innerHTML = newValue;
+            	Polymer.dom.flush();
+            },
+            
+            show: function () {
+                var toast = document.querySelector('#toast');
+                if (toast) {
+                    Polymer.dom(document.body).removeChild(toast);
+                }
+                Polymer.dom(document.body).appendChild(this.$.toast);
+                Polymer.dom().flush();
+            	this.$.toast.show();
+            }
+        })
+    })();
+</script>
 </polymer-element>

@@ -17,6 +17,6 @@ public abstract class AbstractSingleCriterionWidget extends AbstractCriterionWid
      * @param propertyName
      */
     public AbstractSingleCriterionWidget(final String propertyName, final AbstractWidget... editors) {
-        super("centre/criterion/tg-single-criterion", propertyName, editors);
+        super("centre/criterion/single/tg-single-criterion", propertyName, editors);
     }
 }

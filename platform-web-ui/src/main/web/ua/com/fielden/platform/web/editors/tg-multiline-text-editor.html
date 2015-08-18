@@ -1,59 +1,90 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
-<link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
-<link rel="import" href="/resources/polymer/paper-input/paper-autogrow-textarea.html">
-<link rel="import" href="/resources/polymer/paper-input/paper-char-counter.html">
-<link rel="import" href="/resources/polymer/core-input/core-input.html">
-<link rel="import" href="/resources/master/actions/tg-property-action.html">
-<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 
-<polymer-element name="tg-multiline-text-editor" extends="tg-editor" attributes="max" layout vertical>
+<dom-module id="tg-multiline-text-editor"> <!-- TODO layout vertical -->
+    <style>
+    </style>
+
     <template>
-        <paper-input-decorator id="decorator" label="{{propTitle}}" flex auto floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
-            <div layout horizontal>
-                <div id="input-container" flex>
-                    <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}" layout horizontal>
-                        <paper-autogrow-textarea maxRows="5" flex>
-                            <textarea id="input"value="{{editingValue}}" on-change="{{changeAction}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}" maxLength="{{max}}"></textarea>
-                             <paper-char-counter id="inputCounter" showCounter="{{!!max}}" class="footer"></paper-char-counter>
-                        </paper-autogrow-textarea>
-<!--                        <textarea id="input" value="{{editingValue}}" on-change="{{changeAction}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}"></textarea>-->
-                        <span class="span-tooltip" tip>
-                            {{tooltip(propDesc)}}
-                        </span>
-                    </core-tooltip>
-                </div>
-                <div id="icon" hidden?="{{!action}}">
-                    <tg-property-action entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
-                </div>
-            </div>
-        </paper-input-decorator>
-        <shadow></shadow>
+    	<tg-editor 
+    		id="editorDom" 
+    		prop-title="[[propTitle]]"
+    		_disabled="[[_disabled]]" 
+    		_editing-value="{{_editingValue}}" 
+    		action="[[action]]" 
+    		_error="[[_error]]" 
+    		_comm-value="[[_commValue]]" 
+    		_accepted-value="[[_acceptedValue]]" 
+    		debug="[[debug]]" 
+    		_on-change="[[_onChange]]"
+    		_on-input="[[_onInput]]"
+    		_on-keydown="[[_onKeydown]]"
+    		_maxLength="[[maxLength]]"
+        	current-state="[[currentState]]">
+    	</tg-editor>
     </template>
-    <script>
-        Polymer('tg-multiline-text-editor', {
-            ready: function() {
-                this.super();
-                this.$.inputCounter.target = this.$.input;
-            },
-            /**
-             * Converts the value into string representation (which is used in edititing / comm values).
-             */
-            convertToString: function (value) {
-                return value === null ? "" : "" + value;
-            },
+</dom-module>
 
-            /**
-             * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
-             */
-            convertFromString: function (strValue) {
-                return strValue === '' ? null : strValue;
-            },
+<script>
+    Polymer({
+    	is: 'tg-multiline-text-editor',
+    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+    	
+    	ready: function () {
+    		this.$.editorDom._editorKind = "MULTILINE_TEXT";
+    		
+    		// this.decorator().querySelector('#inputCounter').target = this.decorator().$.input;
+    	},
+    	
+    	properties: {
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+        	// No default values are allowed in this case.														   //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	
+        	/**
+        	 * The maximum count for textarea rows.
+        	 */
+        	maxLength: {
+    			type: Number
+    		},
+            
+        	/**
+        	 * OVERRIDDEN FROM TgEditorBehavior: this specific textArea's event is invoked after some key has been pressed.
+        	 *
+        	 * Designated to be bound to child elements.
+        	 */
+            _onKeydown: {
+            	type: Function,
+            	value: function () {
+            		return (function (event) {
+            			// need to invoke base function-property? Just do it like this:
+            			//   var parentFunction = Polymer.TgBehaviors.TgEditorBehavior.properties._onKeydown.value.call(this);
+            			//   parentFunction.call(this, event);
+                		console.log("_onKeydown (for text area):", event);
+                		
+                		// TODO potentially, commit on CTRL+Enter?
+                	}).bind(this);
+            	}
+            }
+    	},
+    	
+        /**
+         * Converts the value into string representation (which is used in edititing / comm values).
+         */
+        convertToString: function (value) {
+            return value === null ? "" : "" + value;
+        },
 
-            changeAction: function () {
-                this.commit();
-            } 
-        });
-    </script>
-</polymer-element>
+        /**
+         * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
+         */
+        convertFromString: function (strValue) {
+            return strValue === '' ? null : strValue;
+        }
+    });
+</script>

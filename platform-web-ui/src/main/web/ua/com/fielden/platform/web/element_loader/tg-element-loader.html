@@ -1,0 +1,103 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<dom-module id="tg-element-loader">
+    <template>
+        <content></content>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        var importedURLs = {},
+            //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
+            insertElement = function (insertToElement, elementName, attributes) {
+                if (elementName && elementName.toString().length > 0) {
+                	console.time("create-element");
+                    var customElement = document.createElement(elementName);
+                    console.timeEnd("create-element");
+                    if (attributes && typeof attributes === "object") {
+                    	console.time("attrs-and-append");
+                        for (attr in attributes) {
+                            customElement[attr] = attributes[attr];
+                        }
+                        Polymer.dom(insertToElement).innerHTML = "";
+                        Polymer.dom(insertToElement).appendChild(customElement);
+                        console.timeEnd("attrs-and-append");
+                    }
+                    return customElement;
+                }
+            };
+        Polymer({
+
+            is: "tg-element-loader",
+
+            properties: {
+                auto: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
+                },
+                
+                wasLoaded: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
+                },
+                
+                import: {
+                    type: String
+                },
+                
+                elementName: {
+                    type: String
+                },
+                
+                attrs: {
+                    type: String
+                }
+            },
+
+            attached: function () {
+                var self = this;
+                this.async(function () {
+                    if (self.auto) {
+                        self.load();
+                    }
+                });
+            },
+            //Loads the custom element and fires after-load event with loaded element.
+            load: function () {
+                var self = this,
+                    attributes = this.attrs || {},
+                    elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
+                if (!this.wasLoaded) {
+                    if (this.import && !importedURLs.hasOwnProperty(this.import)) {
+                    	console.warn("loading");
+                    	console.time("loading");
+                    	console.time("loading-all");
+                        this.importHref(this.import, function (e) {
+                        	console.timeEnd("loading");
+                        	console.warn("inserting-after-load");
+                        	console.time("inserting-after-load");
+                            importedURLs[this.import] = "imported";
+                            self.fire('after-load', insertElement(self, elementName, attributes));
+                            console.timeEnd("inserting-after-load");
+                            // e.target.import is the import document.
+                        }, function (e) {
+                        	console.timeEnd("loading");
+                            // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
+                            console.log("error happened", e);
+                            // loading error
+                        });
+                    } else {
+                        this.fire('after-load', insertElement(this, elementName, attributes));
+                    }
+                    this.wasLoaded = true;
+                }
+            },
+            reload: function () {
+                this.wasLoaded = false;
+                this.load();
+            }
+        });
+    })();
+</script>

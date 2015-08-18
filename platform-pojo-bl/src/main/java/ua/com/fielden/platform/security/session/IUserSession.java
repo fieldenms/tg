@@ -24,9 +24,21 @@ public interface IUserSession extends IEntityDao<UserSession> {
      * All user sessions get cleared in case of suspected authenticator theft.
      * <p>
      * A non-empty result contains an updated user session with a new <code>authenticator</code>.
+     * <p>
+     * Authenticator theft scenario: in case of successful recognition, but unsuccessful authenticator location in the database, all sessions for the same user get invalidated.
      *
      * @param authenticator
      * @param key
+     * @param shouldConsiderTheftScenario -- if <code>true</code> then authenticator theft scenario is on.
+     * @return
+     */
+    Optional<UserSession> currentSession(final User user, final String authenticator, final boolean shouldConsiderTheftScenario);
+
+    /**
+     * The same as {@link IUserSession#currentSession(User, String, boolean)} with the last argument set to <code>true</code>.
+     *
+     * @param user
+     * @param authenticator
      * @return
      */
     Optional<UserSession> currentSession(final User user, final String authenticator);

@@ -62,39 +62,39 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IEntityActionConfig4<T> addAction(final MasterActions masterAction) {
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getOnAction(masterAction), getOnActionError(masterAction)), this);
+    public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
+        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction)), this);
         entityActions.add(entityAction);
         return entityAction;
     }
 
-    private String getOnActionError(final MasterActions masterAction) {
+    private String getPostActionError(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
-            return "onRetrievedDefaultError";
+            return "_postRetrievedDefaultError";
         } else if (MasterActions.VALIDATE == masterAction) {
-            return "onValidatedDefaultError";
+            return "_postValidatedDefaultError";
         } else if (MasterActions.SAVE == masterAction) {
-            return "onSavedDefaultError";
+            return "_postSavedDefaultError";
         } else if (MasterActions.EDIT == masterAction) {
-            return "actions['EDIT'].onActionError"; // TODO maybe, should be deleted (no ajax request sends)?
+            return "_actions.EDIT.postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
         } else if (MasterActions.VIEW == masterAction) {
-            return "actions['VIEW'].onActionError"; // TODO maybe, should be deleted (no ajax request sends)?
+            return "_actions.VIEW.postActionError"; // TODO maybe, should be deleted (no ajax request sends)?
         } else {
             throw new UnsupportedOperationException(masterAction.toString());
         }
     }
 
-    private String getOnAction(final MasterActions masterAction) {
+    private String getPostAction(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
-            return "onRetrievedDefault";
+            return "_postRetrievedDefault";
         } else if (MasterActions.VALIDATE == masterAction) {
-            return "onValidatedDefault";
+            return "_postValidatedDefault";
         } else if (MasterActions.SAVE == masterAction) {
-            return "onSavedDefault";
+            return "_postSavedDefault";
         } else if (MasterActions.EDIT == masterAction) {
-            return "actions['EDIT'].onAction";
+            return "_actions.EDIT.postAction";
         } else if (MasterActions.VIEW == masterAction) {
-            return "actions['VIEW'].onAction";
+            return "_actions.VIEW.postAction";
         } else {
             throw new UnsupportedOperationException(masterAction.toString());
         }
@@ -140,7 +140,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     public ISimpleMasterConfig<T> done() {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
-        importPaths.add("master/tg-entity-master");
 
         final StringBuilder propertyActionsStr = new StringBuilder();
         final DomElement editorContainer = layout.render();
@@ -168,6 +167,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html").
                 replace("<!--@imports-->", createImports(importPaths)).
                 replace("@entity_type", entityType.getSimpleName()).
+                replace("//@layoutConfig", layout.code().toString()).
                 replace("<!--@editors_and_actions-->", editorContainer.toString()).
                 replace("//@entityActions", entityActionsStr.toString()).
                 replace("//@propertyActions", propertyActionsStr.toString());

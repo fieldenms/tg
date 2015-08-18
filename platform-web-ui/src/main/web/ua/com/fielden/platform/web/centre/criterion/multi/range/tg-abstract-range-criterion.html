@@ -1,0 +1,67 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/centre/criterion/multi/tg-abstract-multi-criterion.html">
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+
+<dom-module id="tg-abstract-range-criterion">
+    <style>
+        paper-checkbox {
+            margin-bottom: 20px;
+            font-family: 'Roboto', 'Noto', sans-serif;
+            --paper-checkbox-checked-color: #0288D1;
+            --paper-checkbox-checked-ink-color: #0288D1;
+        }
+    </style>
+	<template>
+		<tg-abstract-multi-criterion
+			id="dom"
+			_cancel-meta-values="[[_cancelMetaValues]]"
+			_accept-meta-values="[[_acceptMetaValues]]"
+			_show-meta-values-editor="[[_showMetaValuesEditor]]"
+			_compute-icon-button-style="[[_computeIconButtonStyle]]"
+			_or-null="{{_orNull}}"
+			_not="{{_not}}"
+            _when-desktop="[[_whenDesktop]]"
+            _when-tablet="[[_whenTablet]]"
+            _when-mobile="[[_whenMobile]]"
+			>
+            <paper-checkbox class="range-criterion-config" checked="{{_exclusive}}">Exclusive Left</paper-checkbox>
+            <paper-checkbox class="range-criterion-config" checked="{{_exclusive2}}">Exclusive Right</paper-checkbox>
+            <content select=".date-range-criterion-config"></content>
+			<content select=".criterion-editors"></content>
+		</tg-abstract-multi-criterion>
+	</template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-abstract-range-criterion',
+    	
+        properties: {
+        	_cancelMetaValues: Function,
+        	_acceptMetaValues: Function,
+        	_showMetaValuesEditor: Function,
+        	_computeIconButtonStyle: Function,
+            _whenDesktop: Array,
+            _whenTablet: Array,
+            _whenMobile: Array,
+            
+        	_orNull: {
+        		type: Boolean,
+        		notify: true
+        	},
+        	_not: {
+        		type: Boolean,
+        		notify: true
+        	},
+        	_exclusive: {
+        		type: Boolean,
+        		notify: true
+        	},
+        	_exclusive2: {
+        		type: Boolean,
+        		notify: true
+        	}
+        }
+    });
+</script>

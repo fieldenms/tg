@@ -1,370 +1,136 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
 <link rel="import" href="/resources/polymer/paper-tabs/paper-tabs.html">
 <link rel="import" href="/resources/polymer/paper-tabs/paper-tab.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+
 <link rel="import" href="/resources/components/postal-lib.html">
 
-<polymer-element name="tg-entity-centre" attributes="entityType mitype uuid getMasterEntity onRetrieved moduleId">
+<link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
+
+<link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+
+<dom-module id="tg-entity-centre">
+    <style>
+        .tabs {
+            background-color: #0288D1;
+            color: #fff;
+            @apply(--layout-horizontal);
+
+@apply(--layout-center-justified);
+
+        }
+        .selection-criteria {
+            background-color: white;
+        }
+        iron-pages {
+            overflow: auto;
+            position: absolute;
+            top: 48px;
+            left: 0px;
+            right: 0px;
+            bottom: 0px;
+        }
+        paper-material {
+            margin: 10px 30px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+    </style>
+
     <template>
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <style>
-            .tabs {
-                background-color: #0288D1;
-                color: #fff;
-            }
-        </style>
-        <div class="tabs" layout horizontal center-justified>
-            <paper-tabs selected="{{selectedView}}" style="max-width:600px" flex on-core-transitionend="{{selectPage}}">
-                <paper-tab>Selection</paper-tab>
-                <paper-tab>Details</paper-tab>
+        <div class="tabs">
+            <paper-tabs selected="{{_selectedView}}" style="max-width:600px" class="flex">
+                <paper-tab id="selectionTab">Selection</paper-tab>
+                <paper-tab id="detailsTab">Details</paper-tab>
             </paper-tabs>
         </div>
-        <!-- <core-animated-pages selected="{{selectedView}}" transitions="slide-from-right">
-            <div>
-                <div layout vertical style="margin: 40px;">
-                    // GENERATED SELECTION CRITERIA
-                    
-                    <div layout horizontal justified style="margin-top:40px;">
-                        <div layout horizontal>
-                            <paper-button id="configurator" raised roll="button" on-tap="{{configure}}" style="margin-left: 0px;">Configure</paper-button>
-                            <paper-button id="saver" raised roll="button" on-tap="{{save}}">Save</paper-button>
+
+        <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
+        <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="DELETE" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
+
+        <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll">
+            <div class="fit">
+                <paper-material>
+                    <div class="selection-criteria layout vertical" style="padding: 40px;">
+                        <content select=".custom-selection-criteria"></content>
+                        <div class="layout horizontal justified" style="margin-top:40px;">
+                            <div class="layout horizontal">
+                                <paper-button id="saver" raised roll="button" on-tap="save" disabled$="[[_saverDisabled]]">Save</paper-button>
+                                <paper-button id="discarder" raised roll="button" on-tap="discard" disabled$="[[_discarderDisabled]]">Discard</paper-button>
+                            </div>
+                            <paper-button id="runner" raised roll="button" on-tap="run" style="margin-right: 0px;">Run</paper-button>
                         </div>
-                        <paper-button id="runner" raised roll="button" on-tap="{{run}}" style="margin-right: 0px;">Run</paper-button>
                     </div>
+                </paper-material>
+            </div>
+            <div class="fit">
+                <div class="layout vertical center">
+                    <content select=".custom-egi"></content>
                 </div>
             </div>
-            <div>
-                <div layout vertical center>
-                    // GENERATED EGI
-                </div>
-            </div>
-        </core-animated-pages> -->
-        <core-ajax id="ajaxSaver" url="/centre/{{mitype}}" method="POST" handleas="json"></core-ajax>
-        <core-ajax id="ajaxDiscarder" url="/centre/{{mitype}}" method="DELETE" handleas="json"></core-ajax>
+        </iron-pages>
     </template>
-    <script>
-        (function () {
-            Polymer({
-                publish: {
-                    /**
-                     * The entity type for which this entity centre is created.
-                     */
-                    entityType: null
-                },
+</dom-module>
 
-                selectedView: 0,
-                selectedPage: 0,
+<script>
+    Polymer({
+        is: 'tg-entity-centre',
 
-                /**
-                 * Initialisation block. It has all children web components already initialised.
-                 */
-                ready: function () {
-                    var self = this;
-                    self.super();
+        properties: {
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                    self.onRun = self.onRun.bind(self);
-                    self.getSelectedEntities = self.getSelectedEntities.bind(self);
-                    self.onSavedDefaultError = self.onSavedDefaultError.bind(self);
-                    self.onDiscardedDefaultError = self.onDiscardedDefaultError.bind(self);
+            _selectedView: {
+                type: Number,
+                notify: true
+            },
+            _url: Function,
+            _processSaverResponse: Function,
+            _processSaverError: Function,
+            _processDiscarderResponse: Function,
+            _processDiscarderError: Function,
+            _handleScroll: Function,
+            _saverDisabled: Boolean,
+            _discarderDisabled: Boolean,
+            save: Function,
+            discard: Function,
+            run: Function
+        },
 
-                    self.$.ajaxSaver.addEventListener('core-response', function (e) {
-                        self.$.selection_criteria.processResponse(e, "save", function (okString) {
-                            console.log("CENTRE SAVED", okString);
+        /**
+         * The core-ajax component for centre discarding.
+         */
+        _ajaxDiscarder: function () {
+            return this.$.ajaxDiscarder;
+        },
 
-                            self.retrieve();
-                        }, function (errorResult) {
-                            self.onSavedDefaultError(errorResult);
-                        });
-                    });
-                    self.$.ajaxDiscarder.addEventListener('core-response', function (e) {
-                        self.$.selection_criteria.processResponse(e, "discard", function (okString) {
-                            console.log("CENTRE DISCARDED", okString);
+        /**
+         * The core-ajax component for centre saving.
+         */
+        _ajaxSaver: function () {
+            return this.$.ajaxSaver;
+        },
 
-                            self.retrieve();
-                        }, function (errorResult) {
-                            self.onDiscardedDefaultError(errorResult);
-                        });
-                    });
+        /**
+         * The component for entity serialisation.
+         */
+        _serialiser: function () {
+            return this.$.serialiser;
+        },
 
-                    self.editAction = self.editAction.bind(self);
-                    self.newAction = self.newAction.bind(self);
-                    self.showMaster = self.showMaster.bind(self);
-                    self.getContext = self.getContext.bind(self);
-                    self.onFunctionalEntitySaved = self.onFunctionalEntitySaved.bind(self);
-                    self.createContextHolder = self.createContextHolder.bind(self);
-                },
-
-                /**
-                 * Default implementation for unsuccessful onSave callback.
-                 */
-                onSavedDefaultError: function (errorResult) {
-                    // This function will be invoked after server-side error appear.
-                    console.warn("SERVER ERROR: ", errorResult);
-                },
-
-                /**
-                 * Default implementation for unsuccessful onDiscard callback.
-                 */
-                onDiscardedDefaultError: function (errorResult) {
-                    // This function will be invoked after server-side error appear.
-                    console.warn("SERVER ERROR: ", errorResult);
-                },
-
-                selectPage: function (e, detail, source) {
-                    this.selectedPage = this.selectedView;
-                },
-
-                attached: function () {
-                    var self = this;
-                    ///////////////////////Edit Listeners/////////////////////////////////////
-                    this.masterCreatedListener = postal.subscribe({
-                        channel: "centre_" + self.$.selection_criteria.uuid,
-                        topic: "edit.finish.created",
-                        callback: function (data, envelope) {
-                            console.log("-------- Masters Edit Created UUID: " + data.item.view.attrs.uuid + " ------------");
-                        }
-                    });
-                    this.masterShowListener = postal.subscribe({
-                        channel: "centre_" + self.$.selection_criteria.uuid,
-                        topic: "edit.finish.shown",
-                        callback: function (data, envelope) {
-                            console.log("-------- Masters Edit Shown UUID: " + data.item.view.attrs.uuid + " ------------");
-                        }
-                    });
-                    /////////////////////////New listener//////////////////////////////////////
-                    this.masterNewListener = postal.subscribe({
-                        channel: "centre_" + self.$.selection_criteria.uuid,
-                        topic: "new.finish",
-                        callback: function (data, envelope) {
-                            console.log("-------- Masters New UUID: " + data.item.view.attrs.uuid + " ------------");
-                        }
-                    });
-
-                    ///////////////////////// Detail onSaved listener //////////////////////////////////////
-                    this.detailOnSavedListener = postal.subscribe({
-                        channel: "centre_" + self.$.selection_criteria.uuid,
-                        topic: "detail.saved",
-                        callback: function (data, envelope) {
-                            self.onFunctionalEntitySaved(data.entity, data.selectedEntitiesInContext);
-                        }
-                    });
-                },
-
-                detached: function () {
-                    this.masterCreatedListener.unsubscribe();
-                    this.masterShowListener.unsubscribe();
-                    this.masterNewListener.unsubscribe();
-                },
-
-                showMaster: function (entity) {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "edit.start",
-                        data: {
-                            entity: entity,
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                },
-                newAction: function () {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "new.start",
-                        data: {
-                            entityType: self.entityType,
-                            simpleEntityType: self.simpleEntityType(),
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                },
-                editAction: function () {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "edit.start",
-                        data: {
-                            entity: self.getContext(),
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                },
-                deleteAction: function () {
-                    console.log("The selected entities must be deleted here!");
-                },
-                getContext: function () {
-                    if (this.$.egi.getSelectedEntities().length > 0) {
-                        return this.$.egi.getSelectedEntities()[0];
-                    }
-                    return null;
-                },
-
-                getSelectedEntities: function () {
-                    return this.$.egi.getSelectedEntities();
-                },
-
-                /**
-                 * Returns simple entity type name.
-                 */
-                simpleEntityType: function () {
-                    var ind = this.entityType.lastIndexOf(".") + 1;
-                    return this.entityType.substring(ind);
-                },
-
-                /**
-                 * Starts the process of criteria entity retrieval.
-                 */
-                retrieve: function () {
-                    this.$.selection_criteria.retrieve();
-                },
-
-                /**
-                 * Starts the process of centre run.
-                 */
-                run: function () {
-                    this.$.egi.clearSelection();
-                    this.$.egi.collapseAllCards();
-                    this.$.selection_criteria.run();
-                    this.triggerRun = true;
-                },
-
-                /**
-                 * Starts the process of refreshing the current page (only after run() has been already performed).
-                 */
-                currentPage: function () {
-                    this.$.selection_criteria.currentPage();
-                },
-
-                /**
-                 * Starts the process of retrieving first page (only after run() has been already performed).
-                 */
-                firstPage: function () {
-                    this.$.selection_criteria.firstPage();
-                },
-
-                /**
-                 * Starts the process of retrieving last page (only after run() has been already performed).
-                 */
-                lastPage: function () {
-                    this.$.selection_criteria.lastPage();
-                },
-
-                /**
-                 * Starts the process of retrieving next page (only after run() has been already performed).
-                 */
-                nextPage: function () {
-                    this.$.selection_criteria.nextPage();
-                },
-
-                /**
-                 * Starts the process of retrieving prev page (only after run() has been already performed).
-                 */
-                prevPage: function () {
-                    this.$.selection_criteria.prevPage();
-                },
-
-                entitiesThatShouldBeUpdated: null,
-
-                /**
-                 * Starts the process of refreshing the specified 'entities'.
-                 *
-                 * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
-                 *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed
-                 *     from the result-set if they became unmatchable to the selection criteria after modification).
-                 */
-                refreshEntities: function (entities) {
-                    if (entities !== null && entities.length > 0) {
-                        this.entitiesThatShouldBeUpdated = entities;
-                        this.$.selection_criteria.refreshEntities(this.entitiesThatShouldBeUpdated);
-                    } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
-                        this.currentPage();
-                    }
-                },
-
-                canNotPrev: function (pageNumber) {
-                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canPrev(pageNumber);
-                },
-                canNotNext: function (pageNumber, pageCount) {
-                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canNext(pageNumber, pageCount);
-                },
-                canNotFirst: function (pageNumber, pageCount) {
-                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canFirst(pageNumber, pageCount);
-                },
-                canNotLast: function (pageNumber, pageCount) {
-                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canLast(pageNumber, pageCount);
-                },
-                canNotCurrent: function (pageNumber, pageCount) {
-                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria.canCurrent(pageNumber, pageCount);
-                },
-
-                onRun: function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
-                    // console.log("onRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                    if (criteriaEntity.isValid()) {
-                        if (typeof summary !== 'undefined') {
-                            this.$.egi.totals = summary;
-                        }
-                        if (isRefreshingConcreteEntities) {
-                            this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this.entitiesThatShouldBeUpdated);
-                        } else {
-                            this.$.egi.entities = resultEntities;
-                            this.$.egi.renderingHints = renderingHints;
-                            if (this.triggerRun && this.selectedView === 0) {
-                                this.async(function () {
-                                    this.selectedView = 1;
-                                    this.selectedPage = 1;
-                                }, null, 100);
-                                this.triggerRun = false;
-                            }
-                        }
-                    }
-                },
-
-                /**
-                 * Starts the process of centre saving.
-                 */
-                save: function () {
-                    if (!this.canSave(this.$.selection_criteria._isCentreChanged)) {
-                        throw "Cannot save the not modified centre.";
-                    }
-                    console.log("CENTRE SAVE");
-                    this.$.ajaxSaver.go();
-                },
-                canSave: function (isCentreChanged) {
-                    return this.canManageCentreConfig(isCentreChanged);
-                },
-
-                /**
-                 * Starts the process of centre discarding.
-                 */
-                discard: function () {
-                    if (!this.canDiscard(this.$.selection_criteria._isCentreChanged)) {
-                        throw "Cannot discard the not modified centre.";
-                    }
-                    console.log("CENTRE DISCARD");
-                    this.$.ajaxDiscarder.go();
-                },
-                canDiscard: function (isCentreChanged) {
-                    return this.canManageCentreConfig(isCentreChanged);
-                },
-
-                canManageCentreConfig: function (isCentreChanged) {
-                    return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : isCentreChanged === true;
-                },
-
-                onFunctionalEntitySaved: function (potentiallySavedEntity, selectedEntitiesInContext) {
-                    if (potentiallySavedEntity.isValid()) {
-                        // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
-                        this.refreshEntities(selectedEntitiesInContext);
-                    }
-                },
-
-                createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
-                    return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
-                }
-            });
-        })();
-    </script>
-</polymer-element>
+        /**
+         * The reflector component.
+         */
+        _reflector: function () {
+            return this.$.serialiser.$.reflector;
+        }
+    });
+</script>

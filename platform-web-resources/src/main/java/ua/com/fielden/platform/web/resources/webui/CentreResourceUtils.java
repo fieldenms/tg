@@ -116,6 +116,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 customObject.remove("@@pageCount");
             }
             final boolean isNotRefreshingConcreteEntities = customObject.get("@@idsToRefresh") == null;
+
             final ArrayList<Object> resultEntities = new ArrayList<Object>(isNotRefreshingConcreteEntities
                     ? page.data()
                     : selectEntities(page.data(), convertToListWithLongValues((List) customObject.get("@@idsToRefresh"))));

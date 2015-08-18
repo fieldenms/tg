@@ -30,6 +30,7 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     private PropertyAction action;
     private boolean skipValidation = false;
     private boolean debug = false;
+    private boolean criterionEditor = false;
 
     /**
      * Creates {@link AbstractWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -88,16 +89,17 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         if (isDebug()) {
             attrs.put("debug", "true");
         }
-        attrs.put("entity", "{{currBindingEntity}}");
-        attrs.put("propertyName", this.propertyName);
-        attrs.put("onAcceptedValueChanged", this.skipValidation ? "{{doNotValidate}}" : "{{validate}}");
-        attrs.put("propTitle", this.title);
-        attrs.put("propDesc", this.desc);
-        attrs.put("currentState", "{{currentState}}");
-        if (this.action != null) {
-            attrs.put("action", "{{actions['" + this.action.name() + "']}}");
+        attrs.put("entity", "[[_currBindingEntity]]");
+        attrs.put("property-name", this.propertyName);
+        attrs.put("validation-callback", this.skipValidation ? "[[doNotValidate]]" : "[[validate]]");
+        attrs.put("prop-title", this.title);
+        attrs.put("prop-desc", this.desc);
+        attrs.put("current-state", "[[currentState]]");
+        attrs.put("action", this.action != null ? "[[_actions." + this.action.name() + "]]" : "null");
+        attrs.put("external-refresh-cycle", "[[_refreshCycleMode]]");
+        if (criterionEditor) {
+            attrs.put("class", "criterion-editors");
         }
-        attrs.put("externalRefreshCycle", "{{refreshCycleMode}}");
         return attrs;
     }
 
@@ -152,5 +154,10 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
 
     public void setDebug(final boolean debug) {
         this.debug = debug;
+    }
+
+    public AbstractWidget markAsCriterionEditor() {
+        this.criterionEditor = true;
+        return this;
     }
 }

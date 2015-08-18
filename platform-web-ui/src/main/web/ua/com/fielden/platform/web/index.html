@@ -5,22 +5,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
-    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <!--<title>@title</title>-->
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
     <link rel="import" href="/app/tg-app.html">
-    <!--<link rel="import" href="/resources/polymer/font-roboto/roboto.html">-->
 
     <style>
+        html {
+            font-size: 10pt;
+        }
         body {
-            font-family: "RobotoDraft", "arial";
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 10pt;
         }
     </style>
 
 </head>
 
-<body unresolved fullbleed>
-    <template is="auto-binding" id="app">
-        <tg-app fit></tg-app>
+<body unresolved class="fullbleed">
+    <template is="dom-bind" id="app">
+        <tg-app class="fit"></tg-app>
     </template>
     <script>
         (function () {

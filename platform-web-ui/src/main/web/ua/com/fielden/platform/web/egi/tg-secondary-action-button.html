@@ -1,55 +1,52 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/paper-dropdown/paper-dropdown.html">
-<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
+<link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/actions/tg-page-action.html">
 
-<polymer-element name="tg-secondary-action-button" attributes="actions currentEntity">
+<dom-module id="tg-secondary-action-button">
+    <style>
+        .dropdown-content {
+            background-color: white;
+            box-shadow: 0px 2px 6px #ccc;
+            padding: 5px;
+        }
+    </style>
     <template>
-        <style>
-            * /deep/ core-tooltip::shadow #tooltip {
-                white-space: normal;
-            }
-            * /deep/ core-tooltip .span-tooltip {
-                line-height: 15px;
-            }
-            core-tooltip.delayed:hover::shadow .core-tooltip,
-            core-tooltip.delayed:focus::shadow .core-tooltip {
-                opacity: 1;
-                -webkit-transition-delay: 1s;
-                transition-delay: 1s;
-                transform: translate3d(0px, 0px, 0px);
-            }
-        </style>
-        <core-icon-button icon="more-vert" on-tap="{{showDropDown}}"></core-icon-button>
-        <paper-dropdown id="dropdown" style="position:absolute; color:black" on-tap="{{closeDropDown}}">
-        	<div layout vertical>
-            	<template repeat="{{action in actions}}">
-            		<tg-page-action icon="{{action.icon}}" action="{{action.action}}" context="{{currentEntity}}" hidden?="{{!action.action}}"></tg-page-action>
-            		<tg-ui-action hidden?="{{action.action}}" currentEntity="{{currentEntity}}" shortDesc="{{action.shortDesc}}" longDesc="{{action.longDesc}}" icon="{{action.icon}}" componentUri="{{action.componentUri}}" elementName="{{action.elementName}}" attrs="{{action.attrs}}" createContextHolder="{{action.createContextHolder}}" requireSelectionCriteria="{{action.requireSelectionCriteria}}" requireSelectedEntities="{{action.requireSelectedEntities}}" requireMasterEntity="{{action.requireMasterEntity}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}"></tg-ui-action>
-            	</template>
+        <paper-icon-button icon="more-vert" on-tap="_showDropDown"></paper-icon-button>
+        <iron-dropdown id="dropdown" style="color:black" on-tap="_closeDropDown">
+            <div class="dropdown-content layout vertical">
+                <template is="dom-repeat" items="[[actions]]" as="action">
+                    <tg-page-action icon="[[action.icon]]" action="[[action.action]]" context="[[currentEntity]]" hidden$="[[!action.action]]"></tg-page-action>
+                    <tg-ui-action show-dialog="[[action.showDialog]]" current-entity="[[currentEntity]]" hidden$="[[action.action]]" short-desc="[[action.shortDesc]]" long-desc="[[action.longDesc]]" icon="[[action.icon]]" component-uri="[[action.componentUri]]" element-name="[[action.elementName]]" attrs="[[action.attrs]]" create-context-holder="[[action.createContextHolder]]" require-selection-criteria="[[action.requireSelectionCriteria]]" require-selected-entities="[[action.requireSelectedEntities]]" require-master-entity="[[action.requireMasterEntity]]" pre-action="[[action.preAction]]" post-action-success="[[action.postActionSuccess]]" post-action-error="[[action.postActionError]]"></tg-ui-action>
+                </template>
             </div>
-        </paper-dropdown>
+        </iron-dropdown>
     </template>
-    <script>
-        (function () {
-            Polymer({
-            	publish: {
-            		/**
-                     * The 'currentEntity' should contain the entity that was clicked (result-set actions)
-    	             * or the entity on which primary / secondary action was chosen. In case when no of the above cases
-        	         * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
-    				 */
-                    currentEntity: null            		
-            	},
-            	
-                showDropDown: function() {
-                    this.$.dropdown.toggle();
-                },
-                closeDropDown: function() {
-                    this.$.dropdown.toggle();
-                }
-            });
-        })();
-    </script>
-</polymer-element>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-secondary-action-button",
+
+            properties: {
+                actions: Array,
+                /**
+                 * The 'currentEntity' should contain the entity that was clicked (result-set actions)
+                 * or the entity on which primary / secondary action was chosen. In case when no of the above cases
+                 * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
+                 */
+                currentEntity: Object
+            },
+
+            _showDropDown: function (e, detail) {
+                this.$.dropdown.toggle();
+            },
+
+            _closeDropDown: function (e, detail) {
+                this.$.dropdown.toggle();
+            }
+        });
+    })();
+</script>

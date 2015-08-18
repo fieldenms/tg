@@ -17,7 +17,7 @@ public class StringCriterionWidget extends AbstractMultiCriterionWidget {
      * @param propertyName
      */
     public StringCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        super("centre/criterion/tg-criterion", propertyName,
+        super("centre/criterion/multi/tg-multi-criterion", propertyName,
                 new SinglelineTextWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName)

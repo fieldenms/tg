@@ -3,7 +3,8 @@
 
 <head>
     <title>Tile spike</title>
-    <script src="/resources/polymer/platform/platform.js"></script>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
     <link rel="import" href="tg-tile-layout.html">
     <style>
         body {
@@ -36,67 +37,90 @@
     </style>
 </head>
 
-<body unresolved fullbleed>
-    <template id="app" is="auto-binding">
-        <tg-tile-layout fit whendesktop="{{whenDesktop}}" whentablet="{{whenTablet}}" whenmobile="{{whenMobile}}">
+<body unresolved class="fullbleed">
+    <template id="app" is="dom-bind">
+        <tg-tile-layout class="fit" when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]" min-cell-width="100px" min-cell-height="100px">
             <div class="tile">
-                <div class="category light-gray" fit>First</div>
+                <div class="category light-gray fit">First</div>
             </div>
             <div class="tile">
-                <div class="category light-green" fit>Second</div>
+                <div class="category light-green fit">Second</div>
             </div>
             <div class="tile">
-                <div class="category yellow" fit>Third</div>
+                <div class="category yellow fit">Third</div>
             </div>
             <div class="tile">
-                <div class="category blue" fit>Fourth</div>
+                <div class="category blue fit">Fourth</div>
             </div>
             <div class="tile">
-                <div class="category tomato" fit>Fifth</div>
+                <div class="category tomato fit">Fifth</div>
             </div>
             <div class="tile">
-                <div class="category light-green" fit>Sixth</div>
+                <div class="category light-green fit">Sixth</div>
             </div>
             <div class="tile">
-                <div class="category violet" fit>Seventh</div>
+                <div class="category violet fit">Seventh</div>
             </div>
             <div class="tile">
-                <div class="category tomato" fit>Eighth</div>
+                <div class="category tomato fit">Eighth</div>
             </div>
             <div class="tile">
-                <div class="category violet" fit>Ninth</div>
+                <div class="category violet fit">Ninth</div>
             </div>
             <div class="tile">
-                <div class="category blue" fit>Tenth</div>
+                <div class="category blue fit">Tenth</div>
             </div>
             <div class="tile">
-                <div class="category light-gray" fit>Eleventh</div>
+                <div class="category light-gray fit">Eleventh</div>
             </div>
         </tg-tile-layout>
     </template>
 </body>
 <script>
     var app = document.querySelector("#app");
-    app.whenDesktop = [
-        [[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],
-        [[{rowspan: 2,colspan: 2}], [], []],
-        [[], [], [], []]
-    ];
-    app.whenTablet = [
-        [[{rowspan: 2,colspan: 2}],[],[]],
-        [[{rowspan: 2,colspan: 2}]],
-        [[],[]],
-        [[{rowspan: 2,colspan: 2}],[],[]],
-        [[],[]],
-    ];
-    app.whenMobile = [
-        [[],[]],
-        [[],[]],
-        [[],[]],
-        [[],[]],
-        [[],[]],
-        [[]],
-    ];
+    app._whenDesktop = function () {
+        return [
+            [[{
+                rowspan: 2,
+                colspan: 2
+            }], [], [], [{
+                colspan: 2
+            }]],
+            [[{
+                rowspan: 2,
+                colspan: 2
+            }], [], []],
+            [[], [], [], []]
+        ];
+    };
+    app._whenTablet = function () {
+        return [
+            [[{
+                rowspan: 2,
+                colspan: 2
+            }], [], []],
+            [[{
+                rowspan: 2,
+                colspan: 2
+            }]],
+            [[], []],
+            [[{
+                rowspan: 2,
+                colspan: 2
+            }], [], []],
+            [[], []],
+        ];
+    };
+    app._whenMobile = function () {
+        return [
+            [[], []],
+            [[], []],
+            [[], []],
+            [[], []],
+            [[], []],
+            [[]],
+        ];
+    };
 </script>
 
 </html>

@@ -1,57 +1,53 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
-<link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
-<link rel="import" href="/resources/polymer/core-input/core-input.html">
-<link rel="import" href="/resources/master/actions/tg-property-action.html">
-<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
 
-<polymer-element name="tg-integer-editor" extends="tg-editor">
+<dom-module id="tg-integer-editor">
     <template>
-        <style>
-            input[type=number]::-webkit-outer-spin-button,
-            input[type=number]::-webkit-inner-spin-button {
-                -webkit-appearance: none;
-                margin: 0;
-            }
-            
-            input[type=number] {
-                -moz-appearance: textfield;
-            }
-        </style>
-        <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
-            <div layout horizontal>
-                <div id="input-container" flex>
-                    <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltip(propDesc)}}">
-                        <input id="input" is="core-input" type="number" step="1" preventInvalidInput value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
-                        <span class="span-tooltip" tip>
-                            {{tooltip(propDesc)}}
-                        </span>
-                    </core-tooltip>
-                </div>
-                <div id="icon" hidden?="{{!action}}">
-                    <tg-property-action entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
-                </div>
-            </div>
-        </paper-input-decorator>
-        <shadow></shadow>
-        <!-- p>$.input.committedValue: {{$.input.committedValue}}</p -->
+    	<tg-editor 
+    		id="editorDom" 
+    		prop-title="[[propTitle]]"
+    		_disabled="[[_disabled]]" 
+    		_editing-value="{{_editingValue}}" 
+    		action="[[action]]" 
+    		_error="[[_error]]" 
+    		_comm-value="[[_commValue]]" 
+    		_accepted-value="[[_acceptedValue]]" 
+    		debug="[[debug]]" 
+    		_on-change="[[_onChange]]"
+    		_on-input="[[_onInput]]"
+    		_on-keydown="[[_onKeydown]]"
+    		current-state="[[currentState]]">
+    	</tg-editor>
     </template>
-    <script>
-        Polymer('tg-integer-editor', {
-            /**
-             * Converts the value into string representation (which is used in edititing / comm values).
-             */
-            convertToString: function (value) {
-                return value === null ? "" : "" + value;
-            },
+</dom-module>
 
-            /**
-             * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
-             */
-            convertFromString: function (strValue) {
-                return strValue === '' ? null : parseInt(strValue);
-            }
-        });
-    </script>
-</polymer-element>
+<script>
+    Polymer({
+    	is: 'tg-integer-editor',
+    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+    	
+    	ready: function () {
+    		this.$.editorDom._editorKind = "INTEGER";
+    	},
+    	
+        /**
+         * Converts the value into string representation (which is used in edititing / comm values).
+         */
+        convertToString: function (value) {
+        	// NOTE: consider the follwing example, of how 'super' method can be invoked.
+        	//   Just use concrete name of the 'super' behavior and call the function excplicitly:            		
+        	// Polymer.TgBehaviors.TgEditorBehavior.convertToString(value);
+        	
+            return value === null ? "" : "" + value;
+        },
+
+        /**
+         * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
+         */
+        convertFromString: function (strValue) {
+        	return strValue === '' ? null : parseInt(strValue);
+        }
+    });
+</script>

@@ -1,72 +1,94 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-icon/core-icon.html">
-<link rel="import" href="/resources/polymer/core-icons/core-icons.html">
-<link rel="import" href="/resources/polymer/core-collapse/core-collapse.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
 
-<polymer-element name="tg-accordion" attributes="heading opened">
+<dom-module id="tg-accordion">
+    <style>
+        :host {
+            position: relative;
+            display: block;
+        }
+        .iron-collapse-closed {
+            display: block !important;
+        }
+        .panel {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .heading {
+            background-color: #f5f5f5;
+            border-color: #ddd;
+            padding: 6px 15px;
+            cursor: pointer;
+        }
+        a {
+            margin-top: 0;
+            margin-bottom: 0;
+            font-size: 16px;
+            color: #333;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        iron-collapse {
+            border-top: 1px solid #ddd;
+        }
+        iron-icon {
+            cursor: pointer;
+        }
+    </style>
     <template>
-        <style>
-            :host {
-                position: relative;
-                display: block;
-            }
-            .panel {
-                background-color: #fff;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-                overflow: hidden;
-            }
-            .heading {
-                background-color: #f5f5f5;
-                border-color: #ddd;
-                padding: 6px 15px;
-                cursor: pointer;
-            }
-            a {
-                margin-top: 0;
-                margin-bottom: 0;
-                font-size: 16px;
-                color: #333;
-            }
-            a:hover {
-                text-decoration: underline;
-            }
-            core-collapse {
-                border-top: 1px solid #ddd;
-            }
-            core-icon{
-                cursor: pointer;
-            }
-        </style>
-
-        <div class="panel" layout vertical>
-            <div class="heading" on-tap="{{toggle}}" horizontal layout center justified>
-                <a>{{heading}}</a>
-                <core-icon icon="icons:{{$.collapse.opened ? 'expand-less' : 'expand-more'}}"></core-icon>
+        <div class="panel layout vertical">
+            <div class="heading layout horizontal center justified" on-tap="_toggle">
+                <a>[[heading]]</a>
+                <iron-icon icon="[[_calcIcon(opened)]]"></iron-icon>
             </div>
-            <core-collapse opened="{{opened}}" id="collapse" on-core-collapse-open="{{collapseOpenChanged}}">
+            <iron-collapse opened="{{opened}}" id="collapse">
                 <content></content>
-            </core-collapse>
+            </iron-collapse>
 
         </div>
     </template>
-    <script>
-        Polymer({
-            publish: {
-                opened: {
-                    reflect: true,
-                    value: false
+</dom-module>
+<script>
+    Polymer({
+
+        is: "tg-accordion",
+
+        properties: {
+            opened: {
+                type: Boolean,
+                reflectToAttribute: true,
+                value: function () {
+                    return false;
+                },
+                observer: "_openedChanged"
+            },
+            dontCloseOnTap: {
+                type: Boolean,
+                reflectToAttribute: true,
+                value: function () {
+                    return false;
                 }
             },
+            heading: String
+        },
 
-            toggle: function () {
+        _calcIcon: function (isOpened) {
+            return "icons:" + (this.opened ? 'expand-less' : 'expand-more');
+        },
+
+        _toggle: function (e, detail, source) {
+            if ((this.opened && !this.dontCloseOnTap) || !this.opened) {
                 this.$.collapse.toggle();
-            },
-
-            collapseOpenChanged: function(e, detail, source) {
-                console.log("accordion toggle: ", this.opened);
-                this.fire('accordion-toggled', this.opened);
             }
-        });
-    </script>
-</polymer-element>
+        },
+
+        _openedChanged: function (newValue, oldValue) {
+            this.fire('accordion-toggled', newValue);
+        }
+    });
+</script>

@@ -16,8 +16,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
  *
  */
 public class DefaultEntityAction extends AbstractAction implements IRenderable, IExecutable {
-    private final String onActionFunction;
-    private final String onActionErrorFunction;
+    private final String postActionFunction;
+    private final String postActionErrorFunction;
 
     /**
      * Creates {@link DefaultEntityAction} from <code>functionalEntityType</code> type and other parameters.
@@ -25,31 +25,33 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
      * @param functionalEntityType
      * @param propertyName
      */
-    public DefaultEntityAction(final String name, final String onActionFunction, final String onActionErrorFunction) {
+    public DefaultEntityAction(final String name, final String postActionFunction, final String postActionErrorFunction) {
         super(name, "master/actions/tg-action");
-        this.onActionFunction = onActionFunction;
-        this.onActionErrorFunction = onActionErrorFunction;
+        this.postActionFunction = postActionFunction;
+        this.postActionErrorFunction = postActionErrorFunction;
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
-        final String actionSelector = "actions['" + this.name() + "']";
+        attrs.put("role", this.name().toLowerCase());
+        attrs.put("event-channel", "[[centreUuid]]");
+        final String actionSelector = "_actions." + this.name();
 
-        attrs.put("action", "{{" + actionSelector + ".action}}");
-        attrs.put("onAction", "{{" + this.onActionFunction() + "}}");
-        attrs.put("onActionError", "{{" + this.onActionErrorFunction() + "}}");
+        attrs.put("action", "[[" + actionSelector + ".action]]");
+        attrs.put("post-action", "{{" + this.postActionFunction() + "}}");
+        attrs.put("post-action-error", "{{" + this.postActionErrorFunction() + "}}");
 
         return attrs;
     }
 
-    private String onActionFunction() {
-        return onActionFunction;
+    private String postActionFunction() {
+        return postActionFunction;
     }
 
-    private String onActionErrorFunction() {
-        return onActionErrorFunction;
+    private String postActionErrorFunction() {
+        return postActionErrorFunction;
     }
 
     @Override
@@ -60,9 +62,9 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
     @Override
     public JsCode code() {
         final String code =
-                wrap1("self.actions['" + name() + "'].shortDesc = '%s';", shortDesc()) + //
-                wrap1("self.actions['" + name() + "'].longDesc = '%s';", longDesc()) + //
-                wrap1("self.actions['" + name() + "'].icon = '%s';", icon());
+                wrap1("self.set('_actions." + name() + ".shortDesc', '%s');", shortDesc()) + //
+                wrap1("self.set('_actions." + name() + ".longDesc', '%s');", longDesc()) + //
+                wrap1("self.set('_actions." + name() + ".icon', '%s');", icon());
         return new JsCode(code);
     }
 }

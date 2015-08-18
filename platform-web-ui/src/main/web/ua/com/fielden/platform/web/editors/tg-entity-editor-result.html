@@ -1,0 +1,395 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/resources/polymer/iron-selector/iron-selector.html">
+<link rel="import" href="/resources/polymer/iron-fit-behavior/iron-fit-behavior.html">
+
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+<link rel="import" href="/resources/components/lodash-lib.html">
+
+<dom-module id="tg-entity-editor-result">
+
+    <style>
+        :host {
+            display: block;
+            background: white;
+            color: black;
+            padding: 0px;
+            overflow: auto; /* this is to make host scorable when needed */
+            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+        }
+        
+        .tg-item {
+        	@apply(--layout-vertical);
+        	@apply(--layout-start);
+            font-size: small;
+            padding: 6px;
+            margin: 0px;
+            overflow: auto;
+            text-overflow: ellipsis;
+            border-top: 1px solid #e3e3e3;
+        }
+        
+        .tg-item:hover {
+            cursor: pointer;
+            background: var(--paper-blue-50);
+            color: var(--paper-blue-500);
+        }
+        
+        .tg-item.iron-selected {
+            background: var(--paper-blue-500);
+            color: var(--paper-blue-50);
+        }
+        
+        .key-value {
+            font-size: small;
+            min-width: 100px;
+        }
+        
+        paper-item:not(.iron-selected) span.key-value-highlighted {
+            background-color: #ffff46;
+        }
+        
+        .additional-prop {
+        	@apply(--layout-horizontal);
+            font-size: x-small;
+            min-width: 150px;
+            white-space: normal;
+            padding-left: 1em;
+            padding-top: 0.5em;
+            line-height: 15px;
+        }
+        
+        .prop-name {
+            font-weight: bold;
+            padding-right: 0.5em;
+        }
+        
+        .tg-snatchback-button {
+            color: #03A9F4;
+        }
+        
+        .tg-snatchback {
+            background-color: #FFFFFF;
+            color: #000;
+            min-width: 250px;
+            padding: 0px;
+            overflow: auto;
+            text-overflow: ellipsis;
+        }
+    </style>
+
+    <template>
+        <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
+            <!-- begin of dom-repeat -->
+            <template is="dom-repeat" items="[[_values]]" as="v">
+                <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" noink class="tg-item vertical-layout">
+                </paper-item>
+            </template>
+            <!-- end of dom-repeat -->
+        </iron-selector>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+            is: 'tg-entity-editor-result',
+            
+            behaviors: [Polymer.IronOverlayBehavior],
+
+            properties: {
+                /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
+                multi: {
+                	type: Boolean,
+                	value: false
+                },
+                
+                /* An array of entities that match the search request.
+                 * Should NOT be manipulated directly -- only via methods pushValue and clearSelection.*/
+                _values: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+                
+                /* Contains selected entities in a form of key:entity pairs. 
+                 * Can be empty. Should contain at most one entity in case of single selection mode.
+                 */
+                selectedValues: {
+                    type: Object,
+                    value: function () {
+                        return {};
+                    }
+                },
+                
+                /* Represents the search query string that was used to find resultant values to be displayed */
+                searchQuery: {
+                    type: String,
+                    value: ''
+                },
+                
+                /* Should contain the names of additional properties to be displayed. */
+                additionalProperties: {
+                	type: Object,
+                	value: function () {
+                		return {};
+                	}
+                },
+                
+                _selectedIndex: {
+                    type: Number,
+                    value: 0
+                },
+                
+                /** A property to pass in an instance of tg-reflector, used for value conversion during rendering. */
+                reflector: {
+                    type: Object,
+                    value: null
+                }
+                
+            },
+
+            clearSelection: function () {
+                this._selectedIndex = 0;
+                this.$.selector.selectedItem = null;
+            	this.selectedValues = {};
+            	while(this.pop('_values')){}
+            	
+                if (this.multi === true) {
+                    this.$.selector.selectedValues = [];
+                } else {
+                	this.$.selector.selected = '';
+                }
+            },
+
+            /* Pushes the specified value into the tail of attay _values */
+            pushValue: function(value) {
+                this.push('_values', value);
+            },
+            
+            /* 
+             * Method that identifies matching parts in the str for the searchQuery.
+             * Returns an array of objects representing matched and non-matched parts of the str in sequential order.
+             * It is used to identify those parts that needs to be highlighted during rendering.
+             */
+            _matchedParts: function (str) {
+                var parts = [];
+                var text = str.toUpperCase();
+                // if all is matched then return a single value
+                if ("\\w*" == this.searchQuery) {
+                    parts.push({
+                        part: str,
+                        matched: false
+                    });
+                    return parts;
+                } else if ('' == this.searchQuery) {
+                    return parts;
+                }
+
+                // otherwise split 
+                var searchExp = new RegExp(this.searchQuery, 'gi');
+                var match;
+                var startIndex = 0;
+                while ((match = searchExp.exec(text)) !== null) {
+                    if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
+                        var part = {
+                            part: str.substring(startIndex, match.index),
+                            matched: false
+                        };
+                        parts.push(part);
+                    }
+
+                    // record the matched part
+                    var part = {
+                        part: str.substring(match.index, searchExp.lastIndex),
+                        matched: true
+                    };
+                    parts.push(part);
+
+                    startIndex = searchExp.lastIndex;
+
+                }
+                // check if there is an unmatched part at the end
+                if (startIndex < str.length) {
+                    var part = {
+                        part: str.substring(startIndex, text.length),
+                        matched: false
+                    };
+                    parts.push(part);
+                }
+                // return the result
+                return parts;
+
+            },
+            /*
+             * Determines a title of the specified entity.propName.
+             */
+            _propTitleByName: function (entity, propName) {
+                if (entity.type().prop(propName)) {
+                    return entity.type().prop(propName).title();
+                } else {
+                    return propName;
+                }
+            },
+            /*
+             * Obtains a value of the specified by name property for the passed in entity.
+             */
+            _propValueByName: function (entity, propName) {
+                return this.reflector.convert(entity.get(propName)) + '';
+            },
+            
+            _makeId: function(id) {
+            	return "id" + id;
+            },
+            
+            /* Highlights matched parts of autocompleted values.
+             * Handles all properties that were specified as to be highlighted. */
+            highlightMatchedParts: function () {
+				this.async(function() {
+					for (var index = 0; index < this._values.length; index++) {
+						var html = '';                	
+						var v = this._values[index];
+						
+						// add key value with highlighting of matching parts
+						html = html + this._addHighlightedKeyProp(v)
+		
+						// add values for additional properties with highlighting of matching parts if required
+						for (var propName in this.additionalProperties) {
+							// interested only in the object's direct properties
+							if (this.additionalProperties.hasOwnProperty(propName)) {
+								// should highlight?
+								var highlight = this.additionalProperties[propName];
+								html = html + this._addHighlightedPropByName(v, propName, highlight);
+							}
+						}
+						
+						// put the composed for the current item HTML into the content of paper-item
+						var id = this._makeId(index);
+						var paperItem = Polymer.dom(this.root).querySelector("#" + id);
+						Polymer.dom(paperItem).innerHTML = html;
+					}
+
+					Polymer.dom.flush();
+				}.bind(this));
+			},
+			
+			_addHighlightedKeyProp : function(v) {
+				var html = '<div style="white-space: nowrap;">';
+				var matchedParts = this._matchedParts(v.key);
+				for (var index = 0; index < matchedParts.length; index++) {
+					var part = matchedParts[index];
+					if (part.matched) {
+						// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+						html = html
+								+ '<span class="key-value key-value-highlighted">'
+								+ part.part + '</span>';
+					} else {
+						html = html + part.part;
+					}
+				}
+				return html + '</div>';
+			},
+
+			_addHighlightedPropByName : function(v, propName, highlight) {
+				var html = '<div class="additional-prop">';
+				// add prop title				
+				html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
+
+				
+				// add prop value
+				var propValueAsString = this._propValueByName(v, propName);
+				if (highlight === false) {
+					html = html + propValueAsString;
+				} else {
+					// matched parts should be in a separate div
+					html = html + '<div style="white-space: nowrap;">';
+					var matchedParts = this._matchedParts(propValueAsString);
+					for (var index = 0; index < matchedParts.length; index++) {
+						var part = matchedParts[index];
+						if (part.matched) {
+							// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+							html = html
+									+ '<span class="key-value-highlighted">' + part.part + '</span>';
+						} else {
+							html = html + part.part;
+						}
+					}
+					html = html + '</div>';
+				}
+
+				return html + '</div>';
+			},
+
+			
+			/*********************************************************
+			 ****************** SELECTION HANDLERS *******************
+			 *********************************************************/
+			_itemSelected : function(event) {
+				var value = event.detail.item.getAttribute("value");
+				console.log(value);
+				this.selectedValues[value] = _.find(this._values, function (obj) {
+                    return obj.key === value;
+                });
+				
+				
+				console.log('selected item: ', this.selectedValues[value], ' size:', Object.keys(this.selectedValues).length);
+			},
+
+			_itemDeselected : function(event) {
+				var value = event.detail.item.getAttribute("value");
+				console.log(value);
+				delete this.selectedValues[value];
+
+				console.log('unselected item: ', value, ' size:', Object.keys(this.selectedValues).length);
+			},
+
+			selectFirst: function () {
+			    if (this._values.length > 0) {
+			        this._selectedIndex = 0;
+			        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+			    }
+			},
+			
+			selectNext: function () {
+			    if ((!this.multi && !this.$.selector.selected) || (this.multi === true && this.$.selector.selectedValues.length === 0)) {
+                    this.selectFirst();
+                } else {
+                    var length = this._values.length;
+                    if (this.multi == false) {
+                        this._selectedIndex = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                    } else {
+                        
+                        var index = (this._selectedIndex + 1) < length ? (this._selectedIndex + 1) : 0;
+                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        this.$.selector.select(this.$.selector._indexToValue(index));
+                        this._selectedIndex = index;
+                    }
+                }
+            },
+            
+            selectPrev: function () {
+                if ((!this.multi && !this.$.selector.selected) || (this.multi === true && this.$.selector.selectedValues.length === 0)) {
+                    this.selectFirst();
+                } else {
+                    var length = this._values.length;
+                    if (this.multi === false) {
+                        this._selectedIndex = (this._selectedIndex - 1) >= 0 ? (this._selectedIndex - 1) : length - 1;
+                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                    } else {
+                        var index = (this._selectedIndex - 1) >= 0 ? (this._selectedIndex - 1) : length - 1;
+                        this.$.selector.select(this.$.selector._indexToValue(this._selectedIndex));
+                        this.$.selector.select(this.$.selector._indexToValue(index));
+                        this._selectedIndex = index;
+                    }
+                }
+            }
+            
+		});
+	})();
+</script>

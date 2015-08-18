@@ -1,0 +1,660 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<script>
+    (function () {
+    	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    	Polymer.TgBehaviors.TgEntityBinderBehavior = {
+    			
+    		properties: {
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+            	// No default values are allowed in this case.														   //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
+                /**
+                 * The state for the entity master.
+                 *
+                 * The master can be only in two states: EDIT and VIEW. The state EDIT
+                 * allows user to edit properties and use some actions (as it was defined in Java API with 'enabledWhen').
+                 *
+                 * The state VIEW allows user to review the entity properties and do some actions (as it was defined in
+                 * Java API with 'enabledWhen').
+                 *
+                 * The initial state can be VIEW or EDIT.
+                 */
+                currentState: {
+                	type: String
+                    // reflectToAttribute: true -- why is this needed?
+                },
+                
+                /**
+                 * Universal identifier of this element instance (used for pub / sub communication).
+                 *
+                 * Should be given from the outside of the element.
+                 */
+                uuid: {
+                	type: String
+                },
+                
+                /**
+                 * Custom callback that will be invoked after successfull retrieval / deserialisation and before actual promotion of the entity to the entity binder.
+                 *
+                 * This function-property should be mainly used for testing. That is why default function-property value is set -- it does just nothing.
+                 *
+                 * arguments: entity
+                 */
+                preRetrieved: {
+                	type: Function,
+                	value: function () {
+                		return function (entity) {
+                            return entity;
+                        };
+                	}
+                },
+                
+                /**
+                 * Custom callback that will be invoked after successfull retrieval.
+                 *
+                 * arguments: entity, bindingEntity, customObject
+                 */
+                postRetrieved: {
+                	type: Function
+                },
+                
+                /**
+                 * Custom callback that will be invoked after successfull validation.
+                 *
+                 * arguments: validatedEntity, bindingEntity, customObject
+                 */
+                postValidated: {
+                	type: Function
+                },
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
+            	//   alternatively, computing function needs to be specified). 									       //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
+            	/**
+            	 * The current fully-fledged entity, that is used to create '_currBindingEntity' and '_originalBindingEntity'.
+            	 */
+  	            _currEntity: {
+  	            	type: Object,
+  	            	value: null
+  	            },
+  	            
+  	            /**
+  	             * Represents the view of original entity for binding.
+  	             */
+  	            _originalBindingEntity: {
+  	            	type: Object,
+  	            	value: null
+  	            },
+
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+             	//   prefix. 																				           //
+             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+             	//   populate their default values in ready callback (to have these values populated in children)!     //
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	
+             	/**
+             	 * Governs children editors by 'turning on' refresh cycle mode.
+             	 *
+             	 * 'ACTIVATED' and null are the only permitted values. 
+             	 */
+                _refreshCycleMode: {
+                	type: String,
+                	observer: '_refreshCycleModeChanged'
+                },
+                
+                /**
+                 * Represents the view of current entity for binding.
+                 */
+                _currBindingEntity: {
+                	type: Object
+                },
+
+                /**
+                 * '_createModifiedPropertiesHolder' function, that is designated for binding.
+                 */
+                _createModifiedPropertiesHolder: {
+                	type: Function
+                },
+                
+                /**
+                 * Default implementation for postValidated callback.
+                 */
+                _postValidatedDefault: {
+                	type: Function
+                },
+                
+                /**
+                 * Default implementation for unsuccessful postValidated callback.
+                 */
+                _postValidatedDefaultError: {
+                	type: Function
+                },
+                
+                /**
+                 * Default implementation for postRetrieved callback.
+                 */
+                _postRetrievedDefault: {
+                	type: Function
+                },
+                
+                /**
+                 * Default implementation for unsuccessful postRetrieved callback.
+                 */
+                _postRetrievedDefaultError: {
+                	type: Function
+                },
+                
+                /**
+                 * Default implementation for unsuccessful postSearched callback.
+                 */
+                _postSearchedDefaultError: {
+                	type: Function
+                },
+                
+                /**
+                 * This is the standard processor for 'core-response's and is applicable for all
+                 *   responses that contain java Result inside 'e.detail.response'.
+                 *
+                 * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown 
+                 *   and 'customErrorHandlerFor(result)' is invoked.
+                 *
+                 * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
+                 *
+                 *
+                 * This is the function, that is designated for binding.
+                 */
+                _processResponse: {
+                	type: Function
+                },
+                
+                /**
+                 * This is the standard processor for 'core-response's and is applicable for all
+                 *   responses that contain java Result inside 'e.detail.response'.
+                 *
+                 * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown 
+                 *   and 'customErrorHandlerFor(result)' is invoked.
+                 *
+                 * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
+                 *
+                 *
+                 * This is the function, that is designated for binding.
+                 */
+                _processError: {
+                	type: Function
+                },
+                
+                /**
+                 * Starts the process of entity validation (based on _currBindingEntity).
+                 *
+                 * This function is designated for binding.
+                 */
+                validate: {
+                	type: Function
+                },
+                
+                /**
+                 * The function that explicitly says that validation is skipped.
+                 *
+                 * This function is designated for binding.
+                 */
+                doNotValidate: {
+                	type: Function
+                },
+                
+                /**
+                 * Starts the process of entity retrieval (based on current entityId).
+                 *
+                 * This function is designated for binding.
+                 */
+                retrieve: {
+                	type: Function
+                },
+                
+                /**
+                 * Layout configuration (desktop) for this binder content (editors in case of 'tg-entity-master', criteria in case of 'tg-entity-centre').
+                 */
+                _desktopLayout: {
+                	type: Array
+                },
+                
+                /**
+                 * Layout configuration (tablet) for this binder content (editors in case of 'tg-entity-master', criteria in case of 'tg-entity-centre').
+                 */
+                _tabletLayout: {
+                	type: Array
+                },
+                
+                /**
+                 * Layout configuration (mobile) for this binder content (editors in case of 'tg-entity-master', criteria in case of 'tg-entity-centre').
+                 */
+                _mobileLayout: {
+                	type: Array
+                }
+    		},
+            
+            /**
+             * Initialisation block. It has all children web components already initialised.
+             */
+            ready: function () {
+                var self = this;
+                
+                this._resetRefreshCycleModeForEditors(); // init the value for '_refreshCycleMode'
+                this._currBindingEntity = null; // TODO previously, was {} -- empty object. Please, use more safe form ('null'). And check, if 'null' is appropriately working with editors.
+                
+                self._createModifiedPropertiesHolder = (function () {
+	                var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                    return this._reset(mph);
+                }).bind(self);
+                
+                self._processRetrieverResponse = function (e) {
+                	self._processResponse(e, "retrieve", function (entityAndCustomObject) {
+                		self._postRetrievedDefault(entityAndCustomObject);
+                	}, function (errorResult) {
+                		self._postRetrievedDefaultError(errorResult);
+                	});
+                };
+                
+                self._processRetrieverError = function (e) {
+                	self._processError(e, "retrieve");
+                };
+                
+                self._processResponse = (function(e, name, customHandlerFor, customErrorHandlerFor) {
+                	console.log(name, ": iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                    if (e.detail.xhr.status === 200) {
+                    	var deserialisedResult = this._serialiser().deserialise(e.detail.response);
+                    	
+                    	if (this._reflector().isError(deserialisedResult)) {
+                    		// throw the toast message about the server-side error
+                            var msg = this._toastMsgForError(deserialisedResult);
+                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg);
+                    		// continue with custom error handling of the error result
+                            customErrorHandlerFor(deserialisedResult);
+                    	} else if (this._reflector().isWarning(deserialisedResult)) {
+                    		// TODO how warnings should be handled?
+                    		console.warn(this._toastMsgForError(deserialisedResult));
+                    	} else {
+                    		// continue with normal handling of the result's instance
+    	                    customHandlerFor(deserialisedResult.instance);
+                    	}
+                    } else {
+                    	console.warn(name, ": iron-response: non-200-status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                    }
+                }).bind(self);
+                
+                self._processError = (function(e, name) {
+        			var errorObject = e.detail.error;
+                	console.warn(name, ": iron-error: e.detail.error = ", errorObject);
+                	
+            		// throw the toast message about the error (unhandled server error, connection problem, 403 authorisation error etc.)
+                    var msg = this._toastMsgForErrorObject(errorObject);
+                    this._openToastForError(this._reflector().exceptionMessageForErrorObject(errorObject), msg);
+            		// TODO: support this case, if needed: continue with custom error handling of the error result -- customErrorHandlerFor(deserialisedResult);
+                }).bind(self);
+                
+             	// calbacks, that will be bound by editor child elements:
+                self.validate = (function () {
+                	var slf = this;
+                	
+                	// it is extremely important to create 'holder' outside of the debouncing construction to create immutable data 
+                	//   and pass it to debouncing function. The main reson for that is the following:
+                	//     'slf._currBindingEntity' instance inside the debounced function can be altered by the results
+                	//     of previous validations!
+	                var holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
+                	
+                	// After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
+                	//   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and 
+                	//   again will start waiting for 50 millis and so on).
+                	this.debounce('invoke-validation', function () {
+	                    console.log("validate");
+            	        // cancel the 'invoke-validation' debouncer if there is any active one:
+            	        this.cancelDebouncer('invoke-validation');
+                	    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
+                    	slf._validator().abortValidationIfAny();
+
+        	            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
+            	        // (if the entity was not modified -- _validate(holder) will start the error recovery process)
+                    	slf._validator().validate(slf._reset(holder));
+                	}, 50);
+                }).bind(self);
+             	
+                self.doNotValidate = (function () {
+                    console.log("do not validate");
+                }).bind(self);
+                
+                self.retrieve = (function (context) {
+                	if (context) {
+                        var ser = this._serialiser().serialise(context);
+                        this._ajaxRetriever().body = JSON.stringify(ser);
+                	}
+                    var promise = this._ajaxRetriever().generateRequest().completes;
+                    this._startRefreshCycleModeForEditors();
+                    return promise;
+                }).bind(self);
+                
+                // calbacks, that will potentially be augmented by tg-action child elements:
+                // 				retrieval:
+                self._postRetrievedDefault = (function (entityAndCustomObject) {
+                    var entity = this.preRetrieved(entityAndCustomObject[0]);
+                    var customObject = this._reflector().customObject(entityAndCustomObject);
+                    
+				    var msg = this._toastMsg("Refreshing", entity);
+				    this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
+
+                    var newBindingEntity = this._postEntityReceived(entity);
+                    
+                    this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
+                    // custom external action
+                    this.postRetrieved(entity, newBindingEntity, customObject);
+                }).bind(self);
+                
+                self._postRetrievedDefaultError = (function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
+                }).bind(self);
+             	// 				validation:
+                self._postValidatedDefault = (function (entityAndCustomObject) {
+                    var validatedEntity = entityAndCustomObject[0];
+                    var customObject = this._reflector().customObject(entityAndCustomObject);
+                	
+                    var msg = this._toastMsg("Validation", validatedEntity);
+                    this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+
+                    var newBindingEntity = this._postEntityReceived(validatedEntity);
+                    // custom external action
+                    this.postValidated(validatedEntity, newBindingEntity, customObject);
+                }).bind(self);
+                
+                self._postValidatedDefaultError = (function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
+                }).bind(self);
+
+				// 				searching:
+                self._postSearchedDefaultError = (function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
+                	console.warn("SERVER ERROR: ", errorResult);
+                }).bind(this);
+            },
+
+            ///////////// toast related //////////////////
+            /**
+             * Opens the toast with some message and with indication whether progress is started.
+             */
+            _openToast: function (entity, toastMsg, hasMoreInfo, moreInfo, showProgress) {
+                this._toastGreeting().text = toastMsg;
+                this._toastGreeting().hasMore = hasMoreInfo;
+                this._toastGreeting().msgText = moreInfo;
+                this._toastGreeting().showProgress = showProgress;
+                if (hasMoreInfo) {
+                    if (!entity.isValid()) {
+                    	// TODO is it still relevant? msgHeading
+              			// TODO is it still relevant? msgHeading
+      					// TODO is it still relevant? msgHeading
+                        this._toastGreeting().msgHeading = "Error";
+                    } else if (entity.isValidWithWarning()) {
+                        this._toastGreeting().msgHeading = "Warning";
+                    } else {
+                        this._toastGreeting().msgHeading = "Info";
+                    }
+                }
+                this._toastGreeting().show();
+            },
+
+            /**
+             * Opens the toast with some error message including full 'moreInfo' message.
+             */
+            _openToastForError: function (toastMsg, moreInfo) {
+                this._toastGreeting().text = toastMsg;
+                this._toastGreeting().hasMore = true;
+                this._toastGreeting().msgText = moreInfo;
+                this._toastGreeting().showProgress = false;
+            	// TODO is it still relevant? msgHeading
+      			// TODO is it still relevant? msgHeading
+				// TODO is it still relevant? msgHeading
+             	this._toastGreeting().msgHeading = "Error";
+                this._toastGreeting().show();
+            },
+            
+            _toastMsgForError: function (errorResult) {
+            	var ex = errorResult.ex;
+            	return this._reflector().stackTrace(ex);
+            },
+            
+            _toastMsgForErrorObject: function (errorObject) {            	
+            	var stack = errorObject.stack;
+            	return this._reflector().stackTraceForErrorObjectStack(stack);
+            },
+            
+            _toastMsg: function (actionName, entity) {
+                if (!entity.isValid()) {
+                    return entity.firstFailure().message;
+                } else if (entity.isValidWithWarning()) {
+                    return entity.firstWarning().message;
+                } else {
+                    return actionName + " completed successfully.";
+                }
+            },
+            //////////////////////////////////////////////
+            
+            /**
+             * The component for entity serialisation.
+             */
+            _serialiser: function () {
+                throw "_serialiser: not implemented";
+            },
+
+            /**
+             * The core-ajax component for entity retrieval.
+             */
+            _ajaxRetriever: function () {
+                throw "_ajaxRetriever: not implemented";
+            },
+
+            /**
+             * The tg-entity-validator component for entity validation.
+             */
+            _validator: function () {
+                throw "_validator: not implemented";
+            },
+            
+            /**
+             * The reflector component.
+             */
+            _reflector: function () {
+                throw "_reflector: not implemented";
+            },
+            
+            /**
+             * The toast component.
+             */
+            _toastGreeting: function () {
+                throw "_toastGreeting: not implemented";
+            },
+
+            //////////////////////////////////////// RETRIEVAL ////////////////////////////////////////
+            /**
+             * This callback is intended to be invoked just before the custom 'postRetrieved' callback.
+             * Override it in descendants to provide some custom behaviour.
+             */
+            _postRetrievedDefaultForDescendants: function(entity, newBindingEntity, customObject) {
+            },
+            
+            //////////////////////////////////////// VALIDATION ////////////////////////////////////////
+            _reset: function (modifiedPropertiesHolder) {
+                delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
+                return modifiedPropertiesHolder;
+            },
+
+            _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
+                var modPropHolder = {
+                    "@modified": false
+                };
+                var self = this;
+                if (self._reflector().isEntity(bindingEntity)) {
+                    modPropHolder["id"] = bindingEntity["id"];
+                    modPropHolder["version"] = bindingEntity["version"];
+
+                    bindingEntity.traverseProperties(function (propertyName) {
+                        var value = bindingEntity.get(propertyName);
+                        var originalValue = _originalBindingEntity.get(propertyName);
+                        // VERY IMPORTANT: the property is considered to be 'modified'
+                        //                 in the case when its value does not equal to original value.
+                        // 
+                        //                 The "modified" property is marked by existence of "val" sub-property.
+                        //
+                        //                 All modified properties will be applied on the server upon the validation prototype.
+                        if (!self._reflector().equalsEx(value, originalValue)) {
+                            // the property is 'modified'
+                            modPropHolder[propertyName] = {
+                                "val": value,
+                                "origVal": originalValue
+                            };
+                            modPropHolder["@modified"] = true;
+                        } else {
+                            // the property is 'unmodified'
+                            modPropHolder[propertyName] = {
+                                "origVal": originalValue
+                            };
+                        }
+                    });
+                }
+                console.log("       _extractModifiedPropertiesHolder: modPropHolder", modPropHolder);
+                return modPropHolder;
+            },
+
+            _idConvert: function (id) {
+                return id === null ? "new" : ("" + id);
+            },
+
+            _refreshCycleModeChanged: function (newValue, oldValue) {
+                // console.log("_refreshCycleModeChanged", newValue, oldValue);
+            },
+
+            /**
+             * Initialises a special state for the editors called "refresh cycle". In this state
+             * the editors promotes their values through the chain: entity => editingValue (commit) => commValue => acceptedValue.
+             *
+             * If the state is simple -- the value promotes through the next chain: editingValue (commit) => commValue => acceptedValue =>
+             * => entity prop value (validate) => new entity prop.
+             */
+            _startRefreshCycleModeForEditors: function () {
+                this._refreshCycleMode = "ACTIVATED";
+            },
+
+            _resetRefreshCycleModeForEditors: function () {
+                this._refreshCycleMode = null;
+            },
+
+            //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
+            /**
+             * Provides default action after fresh entity has been received. Rebinds the entity.
+             */
+            _postEntityReceived: function (entity) {
+                var self = this;
+                // After the entity has received, potentially its id has been updated:
+                if (self._idConvert(entity.id) !== self.entityId) {
+                    self.entityId = self._idConvert(entity.id);
+                }
+                // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
+                var previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                self._reset(previousModifiedPropertiesHolder);
+                // New entity should be promoted to the local cache:
+                self._currEntity = entity;
+                // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
+                self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
+                self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
+
+                this._resetRefreshCycleModeForEditors();
+
+                console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
+                console.timeEnd('criteria-entity-retrieval');
+                console.timeEnd('loading-all');
+                return self._currBindingEntity;
+            },
+
+            _extractBindingView: function (entity, previousModifiedPropertiesHolder) {
+                var self = this;
+                var bindingView = self._reflector().newEntity(entity.type().fullClassName());
+                bindingView["id"] = entity["id"];
+                bindingView["version"] = entity["version"];
+                // this property of the bindingView will hold the reference to fully-fledged entity, 
+                //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
+                bindingView["@@origin"] = entity;
+
+                entity.traverseProperties(function (propertyName) {
+                    if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
+                        if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
+                            // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
+                            //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
+                            //   invalid 'attempted value' -- but originalVal exists for this case!
+                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
+                        } else {
+                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                        }
+
+                        bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
+                    } else {
+                    	bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
+
+                        var value = entity.get(propertyName);
+                        if (self._reflector().isEntity(value)) {
+                            bindingView["@" + propertyName + "_desc"] = self._reflector().convert(value.get("desc"));
+                        }
+
+                        if (self._reflector().isWarning(entity.prop(propertyName).validationResult())) {
+                            bindingView["@" + propertyName + "_warning"] = entity.prop(propertyName).validationResult();
+                        }
+                        if (entity.prop(propertyName).isRequired()) {
+                            bindingView["@" + propertyName + "_required"] = true;
+                        } else {
+                            bindingView["@" + propertyName + "_required"] = false;
+                        }
+                        if (entity.type().prop(propertyName).isUpperCase()) {
+                            bindingView["@" + propertyName + "_uppercase"] = true;
+                        }
+                    }
+                    
+                    bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
+
+                    if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
+                        throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
+                    }
+                });
+
+                // console.log("       entity + bindingView", entity, bindingView);
+                return bindingView;
+            },
+
+            _extractOriginalBindingView: function (entity) {
+                var self = this;
+                var originalBindingView = self._reflector().newEntityEmpty();
+
+                originalBindingView["_type"] = entity["_type"];
+                originalBindingView["id"] = entity["id"];
+                originalBindingView["version"] = entity["version"];
+
+                entity.traverseProperties(function (propertyName) {
+                    originalBindingView[propertyName] = self._reflector().convert(entity.getOriginal(propertyName));
+                });
+
+                // console.log("       entity + originalBindingView", entity, bindingView);
+                return originalBindingView;
+            }
+        };
+    })();
+</script>

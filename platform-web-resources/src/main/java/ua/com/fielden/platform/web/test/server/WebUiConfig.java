@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
@@ -12,6 +13,8 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -69,8 +72,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-import com.google.inject.Inject;
-
 /**
  * App-specific {@link IWebUiConfig} implementation.
  *
@@ -111,6 +112,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
+        @SuppressWarnings("unchecked")
         final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
@@ -144,16 +146,20 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 longDesc("Functional context-dependent action 3").
                                 build()
                 )
-                .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
+                .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
                 //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
                 .also()
-                .addCrit("desc").asMulti().text()
+                .addCrit("stringProp").asMulti().text()
                 //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
                 .also()
                 .addCrit("integerProp").asRange().integer()
                 //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
                 .also()
-                .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
+                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .lightDesc()
                 //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
                 .also()
                 .addCrit("bigDecimalProp").asRange().decimal()
@@ -172,10 +178,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addCrit("critOnlyDateProp").asSingle().date()
                 /*    */.setDefaultValue(single().date()./* TODO not applicable on query generation level not().*/setValue(new Date(1000000000L))./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
-                .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class).withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .lightDesc()
                 /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("userParam").asSingle().autocompleter(User.class)
+                .withProps(pair("base", false), pair("basedOnUser", false))
                 /*    */.withDefaultValueAssigner(TgPersistentEntityWithProperties_UserParamAssigner.class)
                 .also()
                 .addCrit("critOnlyIntegerProp").asSingle().integer()
@@ -361,7 +370,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class)
-                .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
+                // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
                 .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
@@ -419,18 +428,23 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //        app.addCustomView(new CustomWebView(new CustomWebModel()));
 
         final String mr = "'margin-right: 20px', 'width:300px'";
+        final String fmr = "'flex', 'margin-right: 20px'";
         final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         // Add entity masters.
+        @SuppressWarnings("unchecked")
         final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfig = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
+                .withProps(pair("desc", true),
+                           pair("compositeProp", false),
+                           pair("booleanProp", false))
                 /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 /*      */.enabledWhen(EnabledState.VIEW)
                 /*      */.icon("trending-up")
                 /*      */.shortDesc("Export entity prop")
                 /*      */.longDesc("Export entity property")
                 .also()
-                .addProp("entityProp.entityProp").asAutocompleter()
+                .addProp("entityProp.entityProp").asAutocompleter().withProps(pair("desc", true))
                 /*      */.withAction("#exportIntegerProp", TgExportFunctionalEntity.class)
                 /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
                 /*      */.postActionSuccess(new PostActionSuccess(""))
@@ -440,7 +454,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.shortDesc("Export integer prop")
                 //      */.longDesc("Export integer property") SHORT-CUT
                 .also()
-                .addProp("critOnlyEntityProp").asAutocompleter().withMatcher(SearchAlsoByDescMatcher.class).byDesc()
+                .addProp("key").asSinglelineText()
                 /*      */.withAction("#exportCritOnlyEntityProp", TgExportFunctionalEntity.class)
                 /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
                 /*      */.postActionSuccess(new PostActionSuccess(""))
@@ -541,26 +555,26 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['vertical', 'justified', 'padding:20px', "
-                        + "[[mr], [mr], [mr], [mr], [mr]], "
-                        + "[[mr], [mr], [mr], [mr], [mr]],"
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
+                        + "[[fmr], [fmr], [fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], [fmr], [fmr], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
-                .setLayoutFor(Device.TABLET, Optional.empty(), ("['vertical', 'padding:20px',"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px']],"
-                        + "['horizontal', 'justified', ['flex']],"
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
+                        + "[[fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], ['flex']],"
+                        + "[['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("actionMr", actionMr))
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .done();
 
         final ISimpleMasterConfig<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntity(TgFunctionalEntityWithCentreContext.class)
@@ -570,9 +584,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("REFRESH2")
-                /*      */.longDesc("REFRESH2 action")
-
+                /*      */.shortDesc("CANCEL")
+                /*      */.longDesc("Cancel action")
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
                 .addAction(MasterActions.EDIT)
@@ -646,50 +659,55 @@ public class WebUiConfig extends AbstractWebUiConfig {
         // it has two purposes -- one is to provide a high level navigation structure for the application,
         // another is to bind entity centre (and potentially other views) to respective menu items
         configMainMenu()
-            .addModule("Fleet")
+                .addModule("Fleet")
                 .description("Fleet")
                 .icon("/resources/images/fleet.svg")
                 .detailIcon("/resources/images/detailed/fleet.svg")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88")
                 .view(null)
-            .done()
-            .addModule("Import utilities")
+                .done()
+                .addModule("Import utilities")
                 .description("Import utilities")
                 .icon("/resources/images/importUtilities.svg")
                 .detailIcon("/resources/images/detailed/importUtilities.svg")
                 .bgColor("#5FBCD3")
                 .captionBgColor("#2C89A0")
-                .menu()
-                    .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                .menu().addMenuItem("First view").description("First view description").view(null).done()
+                /*  */.addMenuItem("Second view").description("Second view description").view(null).done()
+                /*  */.addMenuItem("Entity Centre 1").description("Entity centre description").centre(entityCentre).done()
+                /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre).done()
+                /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre).done()
+                /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre).done()
+                /*  */.addMenuItem("Third view").description("Third view description").view(null).done().done()
+                /*.menu()
+                    .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()*/
                 .done()
-            .done()
-            .addModule("Division daily management")
+                .addModule("Division daily management")
                 .description("Division daily management")
                 .icon("/resources/images/divisionalDailyManagment.svg")
                 .detailIcon("/resources/images/detailed/divisionalDailyManagment.svg")
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
                 .menu()
-                    .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
-                .done()
-            .done()
-            .addModule("Accidents")
+                .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                .done().done()
+                .addModule("Accidents")
                 .description("Accidents")
                 .icon("/resources/images/accidents.svg")
                 .detailIcon("/resources/images/detailed/accidents.svg")
                 .bgColor("#FF9943")
                 .captionBgColor("#C87137")
                 .view(null)
-            .done()
-            .addModule("Maintenance")
+                .done()
+                .addModule("Maintenance")
                 .description("Maintenance")
                 .icon("/resources/images/maintanance.svg")
                 .detailIcon("/resources/images/detailed/maintanance.svg")
                 .bgColor("#00AAD4")
                 .captionBgColor("#0088AA")
                 .view(null)
-            .done()
+                .done()
                 .addModule("User")
                 .description("User")
                 .icon("/resources/images/user.svg")
@@ -697,15 +715,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .bgColor("#FFE680")
                 .captionBgColor("#FFD42A")
                 .view(null)
-            .done()
-            .addModule("Online reports")
+                .done()
+                .addModule("Online reports")
                 .description("Online reports")
                 .icon("/resources/images/onlineReports.svg")
                 .detailIcon("/resources/images/detailed/onlineReports.svg")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88").
                 view(null)
-            .done()
+                .done()
                 .addModule("Fuel")
                 .description("Fuel")
                 .icon("/resources/images/fuel.svg")
@@ -713,15 +731,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .bgColor("#FFE680")
                 .captionBgColor("#FFD42A")
                 .view(null)
-            .done()
-            .addModule("Organisational")
+                .done()
+                .addModule("Organisational")
                 .description("Organisational")
                 .icon("/resources/images/organisational.svg")
                 .detailIcon("/resources/images/detailed/organisational.svg")
                 .bgColor("#2AD4F6")
                 .captionBgColor("#00AAD4")
                 .view(null)
-            .done()
+                .done()
                 .addModule("Preventive maintenance")
                 .description("Preventive maintenance")
                 .icon("/resources/images/preventiveMaintenence.svg")
@@ -729,10 +747,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .bgColor("#F6899A")
                 .captionBgColor("#D35F5F")
                 .view(null)
-            .done()
-            .setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [{colspan: 2}]]]")
-            .setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[{colspan: 2}]]]")
-            .setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
+                .done()
+                .setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [{colspan: 2}]]]")
+                .setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[{colspan: 2}]]]")
+                .setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
 
     }
 

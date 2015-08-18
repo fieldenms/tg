@@ -1,0 +1,759 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/polymer/layout.html">
+
+<link rel="import" href="/resources/polymer/core-input/core-input.html">
+<link rel="import" href="/resources/polymer/paper-shadow/paper-shadow.html">
+<link rel="import" href="/resources/polymer/core-overlay/core-overlay.html">
+<link rel="import" href="/resources/polymer/core-selector/core-selector.html">
+<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
+<link rel="import" href="/resources/polymer/core-icons/core-icons.html">
+<link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+<link rel="import" href="/resources/polymer/paper-ripple/paper-ripple.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-decorator.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/core-transition/core-transition.html">
+<link rel="import" href="/resources/polymer/core-transition/core-transition-css.html">
+<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/components/lodash-lib.html">
+
+<link rel="import" href="/resources/editors/tg-editor.html">
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="import" href="/resources/master/actions/tg-property-action.html">
+<link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+
+<core-style id="search-icon-decorator-2">
+    core-icon-button /deep/ core-icon[role="img"] { fill: {{g.paperInput.labelColor}}; }
+    <!-- -->
+    core-icon-button:hover /deep/ core-icon, #decorator[focused] /deep/ core-icon { fill: {{g.paperInput.focusedColor}}; }
+    <!-- -->
+    .invalid core-icon-button /deep/ core-icon { fill : {{g.paperInput.invalidColor}}; }
+    <!-- -->
+    paper-spinner { position: absolute; top: {{g.paperInput.top}}; padding: 0px; margin: 0px; width: 14px; height: 14px;}
+    <!-- -->
+    paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
+    <!-- -->
+    .invalid paper-spinner { border-color : {{g.paperInput.invalidColor}}; position: absolute; top: {{g.paperInput.top}}; padding: 2px; margin: 0px; width: 16px; height: 16px; }
+</core-style>
+
+<polymer-element name="tg-entity-search-criteria" attributes="composite autocompletionType hightlightDesc createModifiedPropertiesHolder requireSelectionCriteria getSelectedEntities requireSelectedEntities getMasterEntity requireMasterEntity processResponse postSearchedDefaultError" extends="tg-editor">
+    <template>
+        <!-- CSS -->
+        <core-style ref="search-icon-decorator-2"></core-style>
+        <link rel="stylesheet" href="tg-entity-search-criteria.css">
+
+        <!-- request related components -->
+        <tg-serialiser id="serialiser"></tg-serialiser>
+        <core-ajax id="ajaxSearcher" url="/autocompletion/{{autocompletionType}}/{{propertyName}}" method="POST" handleas="json"></core-ajax>
+
+        <!-- structure of representation -->
+        <div id="all" relative>
+            <paper-input-decorator id="decorator" label="{{propTitle}}" floatingLabel value="{{editingValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
+                <div layout horizontal>
+                    <div id="input-container" flex>
+                        <!-- if tooltip is empty then the core-tooltip is not shown -->
+                        <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!tooltipBinding(valueDesc, propDesc)}}">
+                            <input is="core-input" id="input" class="upper-case" on-input="{{onInput}}" on-focus="{{onFocus}}" on-blur="{{onBlur}}" value="{{editingValue}}" committedValue="{{commValue}}" disabled?="{{_isDisabled(currentState, entity, propertyName)}}">
+                            <span class="span-tooltip" tip>
+                                {{tooltipBinding(valueDesc, propDesc)}}
+                            </span>
+                        </core-tooltip>
+                    </div>
+                    <div id="icon">
+                        <template if="{{isSearching}}">
+                            <paper-spinner id="spinner" active="{{isSearching}}" class="blue" alt="searching"></paper-spinner>
+                        </template>
+
+                        <core-icon-button class="{{searchButtonClass(isSearching)}}" on-tap="{{onSearchButtonTap}}" icon="search" disabled?="{{_isDisabled(currentState, entity, propertyName)}}"></core-icon-buton>
+                    </div>
+                    <div id="action_icon" hidden?="{{!action}}">
+                        <tg-property-action entitytype="{{action.entitytype}}" preAction="{{action.preAction}}" postActionSuccess="{{action.postActionSuccess}}" postActionError="{{action.postActionError}}" enabledStates="{{action.enabledStates}}" longDesc="{{action.longDesc}}" shortDesc="{{action.shortDesc}}" icon="{{action.icon}}" currentState="{{currentState}}"></tg-property-action>
+                    </div>
+                </div>
+            </paper-input-decorator>
+
+            <core-overlay id="overlay" class="tg-snatchback" autoFocusDisabled on-core-overlay-open="{{onOpenChanged}}">
+                <paper-shadow z="1">
+                    <!-- list of suggestions, each item can be selected with space (TODO) -->
+                    <div class="tg-snatchback-suggestions">
+                        <core-selector id="suggestions" valueattr="value" class="tg-snatchback-suggestions" on-core-select="{{onSelectItem}}" multi>
+                            <template repeat="{{v in matchedValues}}">
+                                <paper-item class="tg-item" value="{{v.key}}" noink>
+                                    <!--tg-flex-layout class="tg-snatchback" whenDesktop="{{whenDesktop}}" whenTablet="{{whenTablet}}" whenMobile="{{whenMobile}}"-->
+                                    <!-- font-size:0 is a hack to enforce no space between the highlighted and not highlighted part of the key value -->
+                                    <div vertical wrap layout>
+                                        <!--  -->
+                                        <div style="font-size: 0;white-space: nowrap;">
+                                            <template repeat="{{s in matchedParts(v.key)}}">
+                                                <template if="{{s.matched}}">
+                                                    <span class="key-value key-value-highlighted">{{s.part}}</span>
+                                                </template>
+                                                <template if="{{!s.matched}}">
+                                                    <span class="key-value">{{s.part}}</span>
+                                                </template>
+                                            </template>
+                                        </div>
+                                        <div class="additional-prop">
+                                            <span class="prop-name">{{propTitleByName(v, "desc")}}:</span>
+                                            <template if="{{!hightlightDesc}}">
+                                                <span class="key-value">{{v.desc}}</span>
+                                            </template>
+                                            <template if="{{hightlightDesc}}">
+                                                <div style="font-size: 0">
+                                                    <template repeat="{{d in matchedParts(v.desc)}}">
+                                                        <template if="{{d.matched}}">
+                                                            <span class="key-value key-value-highlighted">{{d.part}}</span>
+                                                        </template>
+                                                        <template if="{{!d.matched}}">
+                                                            <!-- need to preserve spaces in the text immediately after the matched part -->
+                                                            <template repeat="{{sp in spaces(d.part)}}">
+                                                                <span class="key-value">&nbsp;</span>
+                                                            </template>
+                                                            <span class="key-value">{{d.part}}</span>
+                                                        </template>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <template if="{{isComposite(v)}}">
+                                            <template repeat="{{p in keyMembers(v)}}">
+                                                <div class="additional-prop">
+                                                    <span class="prop-name">{{propTitleByName(v, p)}}:</span>
+                                                    <span>{{propValueByName(v, p)}}</span>
+                                                </div>
+                                            </template>
+                                        </template>
+                                    </div>
+
+                                    <!--/tg-flex-layout-->
+                                </paper-item>
+                            </template>
+                        </core-selector>
+                    </div>
+                    <!-- toolbar -->
+                    <div id="toolbar" style="border-top: thin solid #ccc; padding: 8px" layout horizontal justified center>
+                        <div id="paginator" layout horizontal center>
+                            <core-icon-button class="tg-snatchback-button" icon="chevron-left"></core-icon-button>
+                            <core-icon-button class="tg-snatchback-button" icon="chevron-right"></core-icon-button>
+                        </div>
+                        <div id="okCancel" layout horizontal center>
+                            <paper-button class="tg-snatchback-button" on-click="{{onCancelClick}}" dismissive>Cancel</paper-button>
+                            <paper-button class="tg-snatchback-button" on-click="{{onOkClick}}" affirmative default>Ok</paper-button>
+                        </div>
+                    </div>
+                </paper-shadow>
+            </core-overlay>
+
+            <shadow></shadow>
+            <!-- p>$.input.committedValue: {{$.input.committedValue}}</p -->
+
+        </div>
+    </template>
+
+    <script>
+        (function () {
+            function escapeRegExp(str) {
+                return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+            }
+
+            function replaceAll(find, replace, str) {
+                // 'g' is the flag for global match,
+                // 'i' is the flag to ignore the case during matching
+                return str.replace(new RegExp(escapeRegExp(find), 'g', 'i'), replace);
+            }
+
+            Polymer('tg-entity-search-criteria', {
+                publish: {
+                    /**
+                     * Determines whether the selection criteria entity are required to be send inside the centre context.
+                     *
+                     * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectionCrit' as relevant for context.
+                     */
+                    requireSelectionCriteria: null,
+                    /**
+                     * Determines whether the selected entities are required to be send inside the centre context.
+                     *
+                     * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
+                     */
+                    requireSelectedEntities: null,
+                    /**
+                     * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context.
+                     *
+                     * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
+                     */
+                    requireMasterEntity: null,
+
+                    createModifiedPropertiesHolder: null,
+                    getSelectedEntities: null,
+                    getMasterEntity: null
+                },
+
+                /*
+                 * Initialises ajaxSearcher.
+                 */
+                ready: function () {
+                    this.super();
+                    var self = this;
+
+                    self.$.ajaxSearcher.addEventListener('core-response', function (e) {
+                    	self.processResponse(e, "search", function (foundEntities) {
+                            // TODO: Need to convert matched entities to a more suiteable representation
+                            self.onFound(foundEntities);
+                    	}, function (errorResult) {
+                    		self.postSearchedDefaultError(errorResult);
+                    		self.isSearching = false;
+                    	});
+                    });
+
+                    self.$.ajaxSearcher.addEventListener('core-error', function (e) {
+                        self.isSearching = false;
+                        self.$.overlay.close();
+                    });
+
+                },
+
+                /*
+                 * A flag that is used to differentiate the source of
+                 * the value change in method editingValueChanged.
+                 * There are two possible sources -- manual entry and selection of a list.
+                 */
+                isAcceptingValueFromSuggestions: false,
+                /* 
+                 * Indicates what kind of entity value is expected for the bound property -- with simple or composite key.
+                 * This effect the way found values are rendered in the overlay with suggested values.
+                 */
+                composite: false,
+                /*
+                 * A helper flag to driver the internal editor logic.
+                 */
+                isSearching: false,
+
+                /**
+                 * Contains the description of currently chosen entity (if no entity was chosen -- null -- then valueDesc is also null).
+                 */
+                valueDesc: null,
+
+                /**
+                 * Separator for values represented in the input
+                 */
+                separator: ",",
+
+                /**
+                 * The bound to this editor property of the bound entity should be of String array type.
+                 * Therefore, it is expected that the passed in value is either an empty array [] or an array of Strings.
+                 */
+                convertToString: function (value) {
+                    return value.join(this.separator); // for empty array it will return "". 'value' should never be 'null'!
+                },
+
+                /**
+                 * The bound to this editor property of the bound entity should be of String array type.
+                 * Therefore, the string value from the editor should be split by separator and the resulting Strig array returned.
+                 */
+                convertFromString: function (strValue) {
+                    if (strValue === '') {
+                        return []; // missing value for multi autocompliter is empty array []!
+                    } else {
+                        var arr = strValue.split(this.separator);
+                        return arr;
+                    }
+                },
+
+                created: function () {
+                    this.selectedItems = {};
+                },
+
+                /* 
+                 * The selected items in the list of found entities, presented in the overlay.
+                 */
+                selectedItems: null,
+
+                /*
+                 * Handles selection/deselection
+                 */
+                onSelectItem: function (event) {
+                    var key = event.detail.item.getAttribute("value");
+                    if (event.detail.isSelected) {
+                        this.selectedItems[key] = _.find(this.matchedValues, function (obj) {
+                            return obj.key === key;
+                        });
+                    } else {
+                        delete this.selectedItems[key];
+                    }
+                },
+
+                /* 
+                 * Regular expression to search for and highlight found matches
+                 */
+                searchQuery: "",
+
+                hightlightDesc: false,
+
+                /* Returns an array of parts of a string that corresponds to a key (or desc) property value of the returned entity, 
+                   split by matching and non-matching portions;
+                   This function is used to identify parts of the string that need to be highlighted when present to the user.
+                */
+                matchedParts: function matchedParts(str) {
+                    var parts = [];
+                    var text = str.toUpperCase();
+                    // if all is matched then return a single value
+                    if ("\\w*" == this.searchQuery) {
+                        parts.push({
+                            part: str,
+                            matched: false
+                        });
+                        return parts;
+                    } else if ('' == this.searchQuery) {
+                        return parts;
+                    }
+
+
+                    // otherwise split 
+                    var searchExp = new RegExp(this.searchQuery, 'gi');
+                    var match;
+                    var startIndex = 0;
+                    while ((match = searchExp.exec(text)) !== null) {
+                        if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
+                            var part = {
+                                part: str.substring(startIndex, match.index),
+                                matched: false
+                            };
+                            parts.push(part);
+                        }
+
+                        // record the matched part
+                        var part = {
+                            part: str.substring(match.index, searchExp.lastIndex),
+                            matched: true
+                        };
+                        parts.push(part);
+
+                        startIndex = searchExp.lastIndex;
+
+                    }
+                    // check if there is an unmatched part at the end
+                    if (startIndex < str.length) {
+                        var part = {
+                            part: str.substring(startIndex, text.length),
+                            matched: false
+                        };
+                        parts.push(part);
+                    }
+                    // return the result
+                    return parts;
+                },
+
+                /**
+                 * Creates an array equal in size to the number of spacaes in the provided text.
+                 * This function is used during rendering of found values in order to preserve spaces in the text when braking it to matching and non-matching parts.
+                 */
+                spaces: function (text) {
+                    var parts = [];
+                    var index = 0;
+                    while (index < text.length && text.substring(index, index + 1) === ' ') {
+                        parts.push(index);
+                        index = index + 1;
+                    }
+                    return parts;
+                },
+
+                /* A position of the start of the search string the input value. */
+                replaceFromIndex: 0,
+                /* A position of the end of the search string the input value. */
+                replaceToIndex: 0,
+
+                /* Tracks whether the input is in focus. */
+                hasFocus: false,
+                /* 
+                 * A callback to react to an input event to trigger search.
+                 */
+                onInput: function () {
+                    // clear any search request in already in progress
+                    this.abortSearch();
+                    // clear timeout if there is one
+                    if (this.startSearchTimerCallback) {
+                        clearTimeout(this.startSearchTimerCallback);
+                    }
+                    this.startSearchTimerCallback = setTimeout(this.search.bind(this), 500);
+                },
+
+                /*
+                 * Handles search button click. It's behaviour is similar, but yet different than that of onInput.
+                 * It enforece search, but without a typing delay timer, and also it assigned * if input is empty to show first matching values.
+                 */
+                onSearchButtonTap: function () {
+                    this.$.input.focus();
+
+                    if (!this.$.input.value) {
+                        this.$.input.value = "*";
+                    }
+
+                    this.abortSearch();
+                    // clear timeout if there is one
+                    if (this.startSearchTimerCallback) {
+                        clearTimeout(this.startSearchTimerCallback);
+                    }
+                    this.search();
+                },
+
+                /**
+                 * Cleans input text.
+                 */
+                prepInput: function (str) {
+                    if (str) {
+                        return str.replace(/\*\*/g, "*");
+                    }
+                    return str;
+                },
+                /* 
+                 * The function that actually perform the search and opensup the overlay with matched values.
+                 */
+                search: function () {
+                    // need to implement the actuall search 
+                    // what is the query string?
+                    var text = this.$.input.value;
+                    var caretPos = this.$.input.selectionStart;
+                    var toIndex = text.indexOf(this.separator, caretPos);
+                    if (toIndex < 0) {
+                        toIndex = text.length;
+                    }
+                    var startOfText = text.substring(0, caretPos);
+                    var fromIndex = startOfText.lastIndexOf(this.separator);
+                    if (fromIndex < 0) {
+                        fromIndex = -1; // just to make sure that it is -1
+                    }
+
+                    this.replaceFromIndex = fromIndex;
+                    this.replaceToIndex = toIndex;
+
+                    var inputText = this.prepInput(text.substring(fromIndex + 1, toIndex).trim());
+
+                    // prep search string
+                    if (!inputText) {
+                        this.searchQuery = "";
+                        this.isSearching = false;
+                    } else {
+                        this.searchQuery = replaceAll('*', '\\w*', inputText.toUpperCase());
+                    }
+
+                    // clear selection in the overlay, which could have been left there from last search
+                    this.$.suggestions.selected = null;
+
+                    // also need to remove matched values from the last search
+                    // in preparation for new search result
+                    while (this.matchedValues.length > 0) {
+                        this.matchedValues.pop();
+                    }
+
+                    // collect new matching values
+                    if (this.searchQuery && this.hasFocus === true) {
+                        this.isSearching = true;
+
+                        // prepare the AJAX request based on the raw search string                        
+                        var serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(inputText));
+
+                        this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
+                        this.$.ajaxSearcher.generateRequest();
+                    } else if (this.$.overlay.opened) { // make sure overlay is closed is no search is performed
+                        this.$.overlay.toggle();
+                    }
+
+                },
+
+                /*
+                 * Handles the search respons.
+                 */
+                onFound: function (entities) {
+                    for (var index = 0; index < entities.length; index++) {
+                        // Entity is converted to a string representation of its key.
+                        // This includes correct conversion of simple and composite entities
+                        var key = this.$.reflector.convert(entities[index]);
+                        entities[index].key = key;
+
+                        this.matchedValues.push(entities[index]);
+                    }
+
+                    // once we found the matching values show them, but only if there are some
+                    if (this.hasFocus === true) {
+                        if (!this.$.overlay.opened && this.matchedValues.length > 0) {
+                            this.$.overlay.style.position = 'absolute';
+                            this.$.overlay.style.top = this.$.decorator.offsetHeight + 'px';
+
+                            // if the editors right edge is close to the right side of the viewport then position the overlay
+                            // thus that its right side is aligned with editors right side
+                            // otherwise, the overlay's left side should be aligned with the editor's left sied
+                            var rect = this.$.decorator.getBoundingClientRect();
+                            var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+
+                            if ((w - rect.right) < 100) {
+                                this.$.overlay.style.right = '0px';
+                            } else {
+                                this.$.overlay.style.right = null;
+                            }
+
+                            if (this.$.decorator.offsetWidth > 250) {
+                                this.$.overlay.style['min-width'] = this.$.decorator.offsetWidth + 'px';
+                            } else {
+                                this.$.overlay.style['min-width'] = '250px';
+                            }
+
+                            this.$.overlay.open();
+                        } else if (this.$.overlay.opened && this.matchedValues.length == 0) {
+                            this.$.overlay.toggle();
+                        }
+                    }
+                    this.isSearching = false;
+                },
+
+                /* A timer callback object, which is used to implement typing delay before initiating the search. */
+                startSearchTimerCallback: null,
+
+                /* Indicates whether the OnAcceptedValueChanged event handler needs to be invoked as part of other handlers. */
+                enforceOnAcceptedValueChanged: false,
+
+                /* Indicates whether overlay was closed via the Cancel button. Used as part of the logic to invoke OnAcceptedValueChanged */
+                overlayCancelled: false,
+
+                /*
+                 * This overlay open/close event handler is responsible for enforsing invocation of
+                 * handler onAcceptedValueChanged, which in most cases is bound to the property validation logic.
+                 *
+                 * The use of this open/close event handler is necessary as part of the prevention of unnecessary validations
+                 * during user's interaction with the autocompleter.
+                 */
+                onOpenChanged: function (detail) {
+                    if (this.$.overlay.opened === false) {
+                        var okHasBeenPressed = this.okHasBeenPressed;
+                        if (this.okHasBeenPressed) { // reset the okHasBeenPressed in all cases when the overlay has been closed
+                            this.okHasBeenPressed = false;
+                        }
+
+                        if (this.enforceOnAcceptedValueChanged === true) {
+                            // if the overlay was not cancelled then enforce onAcceptedValueChange handler
+                            if (this.overlayCancelled === false) {
+                                this.enforceOnAcceptedValueChanged = false;
+                                if (okHasBeenPressed === true) { // the situation when the overlay has been closed due to Ok button pressing
+                                    // in this case validation (with newer value) will occur, but in other place: editingValueChanged + commit() call
+                                } else { // the situation when the overlay has been closed due to pressing any place outside the overlay
+                                    // in this case validation should occur
+                                    this.onAcceptedValueChanged();
+                                }
+                            } else {
+                                // otherwise reset overlay cancellation flag in preparation for further processing
+                                // overlay is already closed and tg-entity-editor is focused
+                                this.overlayCancelled = false;
+                            }
+                        }
+                    }
+                },
+
+                /*
+                 * On-blur event handler is part of the "validation enforcement/prevention" logic.
+                 * Specifically, it ensure that if the overlay was closed via Cancel button, which prevents validation, and the input looses its focus as the
+                 * result of user action (e.g. tab off) then property revalidation logic is invoked.
+                 */
+                onBlur: function () {
+                    this.hasFocus = false;
+                    if (this.$.overlay.opened === false && this.enforceOnAcceptedValueChanged === true) {
+                        this.enforceOnAcceptedValueChanged = false;
+                        this.onAcceptedValueChanged();
+                    }
+                },
+
+                onFocus: function () {
+                    this.hasFocus = true;
+                },
+
+                /* to store matching values */
+                matchedValues: [],
+
+                /**
+                 * Cancels any active search request.
+                 */
+                abortSearch: function () {
+                	var reflector = this.$.serialiser.$.reflector;
+                	var numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSearcher);
+                	console.warn("abortSearch: number of aborted requests =", numberOfAbortedRequests);
+                },
+
+                /* A function responsible for determining tooltip text, alternating between property and value descriptions. */
+                tooltipBinding: function (valueDesc, propDesc) {
+                    if (valueDesc) {
+                        return valueDesc;
+                    } else {
+                        return this.tooltip(propDesc);
+                    }
+                },
+
+                /*
+                 * Overridden to facilitate tooltip text calculation logic.
+                 */
+                entityChanged: function (oldValue, newValue) {
+                    this.super([oldValue, newValue]);
+
+                    if (this.$.reflector.isEntity(newValue)) {
+                        if (newValue.get(this.propertyName) !== null) {
+                            if (newValue._isObjectUndefined("@" + this.propertyName + "_error")) { // if valid -- desc should exist!
+                                if (newValue.get(this.propertyName).constructor === Array) { // the property holds an array of strings!
+                                    this.valueDesc = this.convertToString(newValue.get(this.propertyName));
+                                } else {
+                                    this.valueDesc = newValue.get("@" + this.propertyName + "_desc");
+                                }
+                            } else { // if invalid -- use validation message
+                                this.valueDesc = newValue.get("@" + this.propertyName + "_error").message;
+                            }
+                        } else {
+                            this.valueDesc = null;
+                        }
+                    }
+                },
+
+                /**
+                 * Overridden to invoke validation only when overlay is not opened.
+                 *
+                 * Overridden to modify the logic for determining when the onAcceptedValueChanged handler should be called.
+                 * The main purpose of this excercise is to prevent excessive and unnecessary property validation requests during the autocompleter
+                 */
+                shouldInvokeValidation: function () {
+                    return !this.$.overlay.opened;
+                },
+
+                /**
+                 * Overridden to mark that onAcceptedValueChanged is needed to be invoked later.
+                 *
+                 * Overridden to modify the logic for determining when the onAcceptedValueChanged handler should be called.
+                 * The main purpose of this excercise is to prevent excessive and unnecessary property validation requests during the autocompleter
+                 */
+                skipValidationAction: function () {
+                    this.enforceOnAcceptedValueChanged = true;
+                },
+
+                /*
+                 * Overridden in order to commit the value assigned from the overlay.
+                 */
+                editingValueChanged: function (oldValue, newValue) {
+                    this.super([oldValue, newValue]);
+                    if (this.isAcceptingValueFromSuggestions) {
+                        this.isAcceptingValueFromSuggestions = false;
+
+                        this.commit();
+                    }
+                },
+
+                /**
+                 * Indicates that the Ok button has been pressed. It can be used until onOpenChanged will be invoked.
+                 */
+                okHasBeenPressed: false,
+
+                /* 
+                 * Handles overlay's button Ok click, which confirms selection and assigns it to the input field.
+                 */
+                onOkClick: function () {
+                    if (Object.keys(this.selectedItems).length !== 0) { // disregard any action if selected items are empty
+                        this.okHasBeenPressed = true;
+
+                        var selectedItemsToStr = _.map(this.selectedItems, function (obj) {
+                            return obj.key
+                        }).toString();
+
+                        this.selectedItems = {};
+
+                        if (selectedItemsToStr) {
+                            var before = this.$.input.value.substring(0, this.replaceFromIndex + 1);
+                            var after = this.$.input.value.substr(this.replaceToIndex);
+                            var newEditingValue = before + selectedItemsToStr + after;
+
+                            if (!this.$.reflector.equalsEx(newEditingValue, this.editingValue)) {
+                                this.isAcceptingValueFromSuggestions = true;
+                                this.editingValue = newEditingValue;
+                            } else {
+                                // EDGE-CASE: when the editing value has been already populated
+                                //   and this value equals to the value that was selected from the list -- 
+                                //   changing of 'this.editingValue' will not have any effect.
+                                // Such situation happens if the user edits to, for e.g., 'A10184' and then
+                                //   choses the entity 'A10184' from the list.
+                                // TechNote: in such case, before clicking on OK button, the chain reaction 
+                                //   'editingValueChanged->commValueChanged->acceptedValueChanged' has been already
+                                //   performed. So there is a need to start validation only ('this.onAcceptedValueChanged()' method).
+                                if (this.isAcceptingValueFromSuggestions) {
+                                    this.isAcceptingValueFromSuggestions = false;
+                                }
+                                this.onAcceptedValueChanged();
+                            }
+                        }
+
+
+                        this.$.overlay.close();
+                        this.$.input.focus();
+                        // let's highlight the inseted values
+                        this.$.input.selectionStart = this.replaceFromIndex;
+                        this.$.input.selectionEnd = this.$.input.selectionStart + selectedItemsToStr.length;
+                    }
+                },
+
+                /* 
+                 * Handles overlay's button Cancel click.
+                 */
+                onCancelClick: function () {
+                    this.overlayCancelled = true;
+                    this.$.overlay.close();
+                    this.$.input.focus();
+                },
+
+                /* A helper method to determine whether the passed in value is a composite entity. */
+                isComposite: function (value) {
+                    if (this.$.reflector.isEntity(value)) {
+                        return value.type().isCompositeEntity();
+                    } else {
+                        return false;
+                    }
+                },
+
+                /* 
+                 * Returns an array of composite key member names.
+                 * Expects the passed in argument value to be a composite entity.
+                 */
+                keyMembers: function (entity) {
+                    return entity.type().compositeKeyNames();
+                },
+
+                /*
+                 * Determines a title of the specified entity.propName.
+                 */
+                propTitleByName: function (entity, propName) {
+                    if (entity.type().prop(propName)) {
+                        return entity.type().prop(propName).title();
+                    } else {
+                        return propName;
+                    }
+                },
+
+                /*
+                 * Obtains a value of the specified by name property for the passed in entity.
+                 */
+                propValueByName: function (entity, propName) {
+                    return this.$.reflector.convert(entity.get(propName));
+                },
+
+                /*
+                 * Overridden to suppress the base logic in order to have entity editor always in uppercase as defined for the input tag.
+                 */
+                bindUppercase: function (entity, property) {},
+
+                searchButtonClass: function (isSearching) {
+                    if (isSearching) {
+                        return "search-button-invisible";
+                    } else {
+                        return "search-button";
+                    }
+                },
+
+                /* TG Flex parameters for layouting autocompleted values -- not yet used. */
+                whenDesktop: ['vertical', [], []],
+                whenTablet: ['vertical', [], []],
+                whenMobile: ['vertical', [], []]
+            });
+        })();
+    </script>
+</polymer-element>

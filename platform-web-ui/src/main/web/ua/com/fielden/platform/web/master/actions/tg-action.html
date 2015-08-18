@@ -1,126 +1,47 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/master/actions/tg-action-behavior.html">
 <link rel="import" href="/resources/master/actions/tg-abstract-action.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
+<!-- <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html"> -->
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 
-
-<core-style id="paper-button-progress">
-    paper-spinner { position: absolute; top: 0px; padding: 2px; margin: 0px; width: 24px; height: 24px;}
-    <!-- -->
-    paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
-</core-style>
-
-
-<polymer-element name="tg-action" attributes="action onAction onActionError" extends="tg-abstract-action">
+<dom-module id="tg-action">
+    <style>
+        paper-spinner {
+            position: absolute;
+            top: 0px;
+            padding: 2px;
+            margin: 0px;
+            width: 24px;
+            height: 24px;
+            --paper-spinner-layer-1-color: blue;
+            --paper-spinner-layer-2-color: blue;
+            --paper-spinner-layer-3-color: blue;
+            --paper-spinner-layer-4-color: blue;
+        }
+    </style>
     <template>
-        <shadow></shadow>
-        <core-style ref="paper-button-progress"></core-style>
+        <tg-abstract-action id="abstractActionDom">
+        </tg-abstract-action>
 
-        <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!longDesc}}">
-            <paper-button id="actionButton" raised roll="button" on-tap="{{run}}" style="width:100%" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}">
-                <paper-spinner id="spinner" active="{{isWorking}}" class="blue" style="visibility: hidden;" alt="in progress"></paper-spinner>
-                {{shortDesc}}
-            </paper-button>
-            <span class="span-tooltip" tip>
+        <!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!longDesc}}"> -->
+        <paper-button id="actionButton" raised roll="button" on-tap="run" style="width:100%" disabled$="[[_disabled]]">
+            <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
+            </paper-spinner>
+            <span>[[shortDesc]]</span>
+        </paper-button>
+        <!-- <span class="span-tooltip" tip>
                 {{longDesc}}
             </span>
-        </core-tooltip>
+        </core-tooltip> -->
     </template>
-    <script>
-        Polymer('tg-action', {
-            publish: {
-                /**
-                 * Custom function to be invoked during run() of this action.
-                 */
-                action: null,
-                /**
-                 * Custom function to be invoked after run() of this action has been executed.
-                 */
-                onAction: null,
-                /**
-                 * Custom function to be invoked after run() of this action has been executed with error.
-                 */
-                onActionError: null
-            },
+</dom-module>
 
-            onActionUpgraded: false,
-            onActionErrorUpgraded: false,
+<script>
+    Polymer({
+        is: "tg-action",
 
-            /* Indicates wheather the action is in progress. */
-            isWorking: false,
-
-            /**
-             * Initialisation block.
-             */
-            ready: function () {
-                var self = this;
-                self.super();
-            },
-
-            /* Timer to prevent spinner from activating for quick actions. */
-            startSpinnerTimer: null,
-
-            /* Timer callback that performs spinner activation. */
-            startSpinnerCallback: function () {
-                // Position and make spinner visible
-                this.$.spinner.style.left = (this.$.actionButton.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
-                this.$.spinner.style.top = (this.$.actionButton.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
-                this.$.spinner.style.visibility = 'visible';
-            },
-            /**
-             * Executes the action.
-             */
-            run: function () {
-                this.super();
-
-                if (this.startSpinnerTimer) {
-                    clearTimeout(this.startSpinnerTimer);
-                }
-                this.startSpinnerTimer = setTimeout(this.startSpinnerCallback.bind(this), 700);
-
-                // start the action
-                this.isWorking = true;
-                this.action();
-            },
-
-            onActionChanged: function (oldValue, newValue) {
-                var self = this;
-                // console.log("onAction changed, old = ", oldValue, newValue);
-                if (newValue && !self.onActionUpgraded) {
-                    self.onAction = function (smth) {
-                        newValue(smth);
-                        self.afterExecution();
-                    };
-                    self.onActionUpgraded = true;
-                }
-            },
-            
-            onActionErrorChanged: function (oldValue, newValue) {
-                var self = this;
-                // console.log("onActionError changed, old = ", oldValue, newValue);
-                if (newValue && !self.onActionErrorUpgraded) {
-                    self.onActionError = function (smth) {
-                        newValue(smth);
-                        self.afterExecution();
-                    };
-                    self.onActionErrorUpgraded = true;
-                }
-            },
-
-            afterExecution: function () {
-                this.isWorking = false;
-                // prevent not yet activated spinner from activating if any
-                if (this.startSpinnerTimer) {
-                    clearTimeout(this.startSpinnerTimer);
-                }
-
-                // do the super suff
-                this.super();
-
-                // Make spinner invisible
-                this.$.spinner.style.visibility = 'hidden';
-            }
-        });
-    </script>
-</polymer-element>
+        behaviors: [Polymer.TgBehaviors.TgActionBehavior]
+    });
+</script>

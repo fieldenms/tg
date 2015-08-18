@@ -43,7 +43,7 @@ public class Attribute<T> {
 
     @Override
     public String toString() {
-        return value == null ? name : (name + nameValueSeparator + "\"" + value + "\"");
+        return value == null ? name : (name + nameValueSeparator + "'" + value + "'");
     }
 
     @Override

@@ -1,37 +1,70 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/master/actions/tg-functional-action.html">
-<link rel="import" href="/resources/polymer/core-icon-button/core-icon-button.html">
-<link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html">
+<link rel="import" href="/resources/master/actions/tg-functional-action-behavior.html">
 
-<polymer-element name="tg-property-action" extends="tg-functional-action">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<!-- <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html"> -->
+
+<dom-module id="tg-property-action">
+    <style>
+         paper-icon-button::shadow #ink {
+            width: 1.9rem;
+            height: 1.9rem;
+            top: -0.3rem;
+            left: -0.3rem;
+        }
+        paper-icon-button {
+            --iron-icon-height: 1.3rem;
+            --iron-icon-width: 1.3rem;
+            width: 1.3rem;
+            height: 1.3rem;
+            padding: 0;
+        }
+    </style>
+
     <template>
-        <style>
-            core-icon-button /deep/ core-icon[role="img"] {
-                height: 1.0em;
-                width: 1.0em;
-                padding: 0px;
-                margin: 0px;
-                vertical-align: top;
-            }
-            
-            core-icon-button {
-                padding: 0px;
-                margin: 0px;
-                height: 1.0em;
-                width: 1.0em;
-                font: inherit;
-            }
-        </style>
-        <shadow></shadow>
-        <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!longDesc}}">
-            <core-icon-button id="actionButton" icon="{{icon}}" on-tap="{{run}}" disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}"></core-icon-button>
-            <span class="span-tooltip" tip>
+        <tg-functional-action id="functionalActionDom" entity-type="[[entityType]]" _process-executor-response="[[_processExecutorResponse]]" _process-executor-error="[[_processExecutorError]]">
+        </tg-functional-action>
+
+        <!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!longDesc}}"> -->
+        <paper-icon-button id="actionButton" icon="[[icon]]" on-tap="run" disabled$="[[_disabled]]"></paper-icon-button>
+        <!-- <span class="span-tooltip" tip>
                 {{longDesc}}
             </span>
-        </core-tooltip>
+        </core-tooltip> -->
     </template>
-    <script>
-        Polymer('tg-property-action', {});
-    </script>
-</polymer-element>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-property-action',
+
+        behaviors: [Polymer.TgBehaviors.TgFunctionalActionBehavior],
+
+        /**
+         * The core-ajax component for action executor.
+         */
+        _actionExecutor: function () {
+            return this._functionalActionDom()._actionExecutor();
+        },
+
+        /**
+         * The component for entity serialisation.
+         */
+        _serialiser: function () {
+            return this._functionalActionDom()._serialiser();
+        },
+
+        /**
+         * The reflector component.
+         */
+        _reflector: function () {
+            return this._functionalActionDom()._reflector();
+        },
+
+        _functionalActionDom: function () {
+            return this.$.functionalActionDom;
+        }
+    });
+</script>

@@ -1,0 +1,190 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/master/actions/tg-abstract-action-behavior.html">
+
+<script>
+	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+	Polymer.TgBehaviors.TgActionBehaviorImpl = {
+        properties: {
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+        	// No default values are allowed in this case.														   //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	
+            /**
+             * Custom function to be invoked during run() of this action.
+             */
+            action: {
+            	type: Function
+            },
+            
+            /**
+             * Custom function to be invoked after run() of this action has been executed.
+             */
+            postAction: {
+            	type: Function,
+            	observer: '_postActionChanged',
+            	notify: true
+            },
+            
+            /**
+             * Custom function to be invoked after run() of this action has been executed with error.
+             */
+            postActionError: {
+            	type: Function,
+            	observer: '_postActionErrorChanged',
+            	notify: true
+            },
+            
+            /* A postal channel that this action posts its events to. */
+            eventChannel: {
+                type: String
+            },
+            
+            /* Describes semantic role of this action. For example, save, cancel etc.
+             * It is used for composing message topics. */
+            role: {
+                type: String,
+                reflectToAttribute: true
+            },
+            
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
+        	//   alternatively, computing function needs to be specified). 									       //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            
+            /* Timer to prevent spinner from activating for quick actions. */
+            _startSpinnerTimer: {
+            	type: Object,
+            	value: null
+            },
+            
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        	//   prefix. 																				           //
+        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+        	//   populate their default values in ready callback (to have these values populated in children)!     //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            
+            /* Indicates wheather the action is in progress. */
+            _working: {
+            	type: Boolean
+            },
+            
+	        /**
+	         * Executes the action.
+	         */
+	        run: {
+            	type: Function
+            } 
+        },
+
+        ready: function () {
+			this._working = false;     	
+        },
+        
+        /**
+         * Creates the 'Run' function. Overridden (with necessary 'super' call!) in order to invoke 'action' and to handle spinner appropriately.
+         */
+        _createRun: function () {
+		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior._createRun.call(this);
+		    var self = this;
+    		return (function () {
+    			runFunction.call(this);
+
+                if (this._startSpinnerTimer) {
+                    clearTimeout(this._startSpinnerTimer);
+                }
+                this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
+
+                // start the action
+                this._working = true;
+                var promise = this.action();
+                if (promise) {
+                    promise
+                    .then(function(ironRequest) {
+                        if (ironRequest.xhr.status === 200) {
+                            if (self.eventChannel && self.role) {
+                                postal.publish({
+                                    channel: self.eventChannel,
+                                    topic: self.role + '.post.success',
+                                    data: {}
+                                });
+                            }
+                        } else {
+                            if (self.eventChannel && self.role) {
+                                postal.publish({
+                                    channel: self.eventChannel,
+                                    topic: self.role + '.post.error',
+                                    data: {}
+                                });
+                            }
+                        }
+                    });
+                }
+            }).bind(this);
+        },
+
+        /* Timer callback that performs spinner activation. */
+        _startSpinnerCallback: function () {
+            // Position and make spinner visible
+            this.$.spinner.style.left = (this.$.actionButton.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
+            this.$.spinner.style.top = (this.$.actionButton.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
+            this.$.spinner.style.visibility = 'visible';
+        },
+
+        _postActionChanged: function (newValue, oldValue) {
+            var self = this;
+            // console.log("_postActionChanged", newValue, oldValue);
+            if (newValue && oldValue === undefined) {
+                self.async(function () { 
+                	self.postAction = function (smth) {
+                    	newValue(smth);
+                    	self._afterExecution();
+                	};
+                });
+            }
+        },
+        
+        _postActionErrorChanged: function (newValue, oldValue) {
+            var self = this;
+           	// console.log("_postActionErrorChanged", newValue, oldValue);
+            if (newValue && oldValue === undefined) {
+                self.async(function () { 
+	                self.postActionError = function (smth) {
+	                    newValue(smth);
+	                    self._afterExecution();
+	                };
+                });
+            }
+        },
+
+        _afterExecution: function () {
+            this._working = false;
+            // prevent not yet activated spinner from activating if any
+            if (this._startSpinnerTimer) {
+                clearTimeout(this._startSpinnerTimer);
+            }
+
+            // do the super stuff
+            Polymer.TgBehaviors.TgAbstractActionBehavior._afterExecution.call(this);
+
+            // Make spinner invisible
+            this.$.spinner.style.visibility = 'hidden';
+            
+            // publish 
+        }
+    };
+	
+	Polymer.TgBehaviors.TgActionBehavior = [
+		Polymer.TgBehaviors.TgAbstractActionBehavior,
+		Polymer.TgBehaviors.TgActionBehaviorImpl
+	];
+</script>

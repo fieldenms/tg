@@ -19,7 +19,7 @@ public class DateCriterionWidget extends AbstractRangeCriterionWidget {
      * @param propertyName
      */
     public DateCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        super("centre/criterion/tg-date-range-criterion", propertyName,
+        super("centre/criterion/multi/range/tg-date-range-criterion", propertyName,
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey()
@@ -33,9 +33,9 @@ public class DateCriterionWidget extends AbstractRangeCriterionWidget {
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
-        attrs.put("datePrefix", "{{propertyModel['" + this.propertyName() + "'].datePrefix}}");
-        attrs.put("dateMnemonic", "{{propertyModel['" + this.propertyName() + "'].dateMnemonic}}");
-        attrs.put("andBefore", "{{propertyModel['" + this.propertyName() + "'].andBefore}}");
+        attrs.put("date-prefix", "{{propertyModel." + this.propertyName() + ".datePrefix}}");
+        attrs.put("date-mnemonic", "{{propertyModel." + this.propertyName() + ".dateMnemonic}}");
+        attrs.put("and-before", "{{propertyModel." + this.propertyName() + ".andBefore}}");
         return attrs;
     }
 }

@@ -46,9 +46,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
-        this.editors = new Pair<>(editors[0], null);
+        this.editors = new Pair<>(editors[0].markAsCriterionEditor(), null);
         if (editors.length > 1) {
-            this.editors.setValue(editors[1]);
+            this.editors.setValue(editors[1].markAsCriterionEditor());
         }
     }
 
@@ -67,10 +67,12 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     /**
      * The name of the property to which this editor will be bound.
      *
+     * Please, note that if the "property itself" is used -- the method returns "THIS".
+     *
      * @return
      */
     protected String propertyName() {
-        return propertyName;
+        return "".equals(propertyName) ? "THIS" : propertyName;
     }
 
     /**
@@ -83,7 +85,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         if (isDebug()) {
             attrs.put("debug", "true");
         }
-        attrs.put("onAcceptedValueChanged", "{{validate}}");
+        attrs.put("validation-callback", "[[validate]]");
         return attrs;
     }
 
