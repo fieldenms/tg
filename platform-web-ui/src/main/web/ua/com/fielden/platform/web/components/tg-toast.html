@@ -59,6 +59,7 @@
         <paper-dialog 
         	id="msgDialog" 
         	class="scrolling" 
+            on-iron-overlay-closed="_dialogClosed" 
         	with-backdrop 
         	entry-animation="scale-up-animation"
         	exit-animation="fade-out-animation">
@@ -120,9 +121,24 @@
         	},
 
             _showMessageDlg: function (event) {
-                this.$.msgDialog.toggle();
+                Polymer.dom(this).removeChild(this.$.msgDialog);
+                Polymer.dom(document.body).appendChild(this.$.msgDialog);
+                Polymer.dom().flush();
+                
+                this.async(function () {
+                    this.$.msgDialog.toggle();
+                }, 1);
+                
             },
 
+            _dialogClosed: function() {
+                // remove this dialog from the body
+                Polymer.dom(document.body).removeChild(this.$.msgDialog);
+                // this is also a good time to remove the toast itself if it has not been yet...
+                Polymer.dom(document.body).removeChild(this.$.toast);
+                Polymer.dom.flush();
+            },
+            
             _shouldSkipProgress: function (progress, more) {
                 return !progress || more;
             },
@@ -141,9 +157,11 @@
                 if (toast) {
                     Polymer.dom(document.body).removeChild(toast);
                 }
+                Polymer.dom(this).removeChild(this.$.toast);
                 Polymer.dom(document.body).appendChild(this.$.toast);
                 Polymer.dom().flush();
-            	this.$.toast.show();
+                this.async(function () {this.$.toast.show();}, 1);
+            	
             }
         })
     })();
