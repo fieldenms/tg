@@ -38,12 +38,14 @@
         }
         .table-header-row {
             font-size: 0.9rem;
+            font-weight: 400;
             color: #757575;
             height: 3.5rem;
             cursor: default;
         }
         .table-data-row {
             font-size: 1rem;
+            font-weight: 400;
             color: #212121;
             height: 3rem;
             border-top: 1px solid #e3e3e3;
@@ -108,7 +110,6 @@
             margin: 0 30px;
         }
         .card-header {
-            padding: 10px;
             border-bottom: 1px solid #e5e5e5;
         }
         .card-header-background {
@@ -131,22 +132,20 @@
             padding: 0.75rem 1.5rem;
         }
         .data-label {
-            font-size: 1.3rem;
-            line-height: 1.3rem;
-            -webkit-transform: scale(0.75);
-            transform: scale(0.75);
-            transform-origin: left top;
+            font-size: 0.9rem;
+            font-weight: 400;
             background: transparent;
             color: #757575;
             cursor: default;
         }
         .data-value {
-            font-size: 1.3rem;
+            font-size: 1rem;
+            font-weight: 400;
             line-height: 1.8rem;
             height: 1.8rem;
             border-bottom: 1px solid black;
             cursor: pointer;
-            color: #607D8B;
+            color: #212121;
             cursor: pointer;
         }
         .expand-button {
@@ -156,8 +155,8 @@
             padding: 0;
         }
         .card-icon {
-            --iron-icon-width: 1.8rem;
-            --iron-icon-height: 1.8rem;
+            --iron-icon-width: 1.3rem;
+            --iron-icon-height: 1.3rem;
         }
     </style>
     <template>
@@ -312,14 +311,14 @@
                     <content select=".entity-specific-action"></content>
                 </div>
                 <div class="layout horizontal center">
-                    <paper-checkbox style="margin: 0 11px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                    <paper-checkbox style="margin: 0 8px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                     <paper-icon-button icon="editor:functions" on-tap="_showSummary" disabled$="[[!_isSummaryEnabled(egiModel, cardLayout)]]"></paper-icon-button>
                     <content select=".standart-action"></content>
                 </div>
             </div>
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                 <paper-material elevation="1" class="card-material layout vertical">
-                    <div class="card-header layout horizontal center justified relative">
+                    <div class="card-header layout horizontal center justified relative" style$="[[_calcCardHeaderStyle(primaryAction, secondaryActions)]]">
                         <div selected$="[[egiEntity.selected]]" class="card-header-background fit"></div>
                         <div class="layout horizontal center relative">
                             <div>
@@ -352,7 +351,7 @@
                                             <iron-icon class="card-icon" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
                                         </template>
                                         <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                            <div class="truncate">[[_getValue(egiEntity.entity, column)]]</div>
+                                            <div class="truncate relative">[[_getValue(egiEntity.entity, column)]]</div>
                                         </template>
                                     </div>
                                 </div>
@@ -520,6 +519,17 @@
                 }
 
                 return gridSummary;
+            },
+            
+            /**
+             * Calculates the card's header style.
+             */
+            _calcCardHeaderStyle: function(primaryAction, secondaryActions) {
+                if (primaryAction && secondaryActions.length > 0) {
+                    return "padding-left:8px;";
+                } else {
+                    return "padding: 8px;";
+                }
             },
 
             /**
