@@ -66,6 +66,15 @@
             Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior[1]._cancelMetaValues.call(this);
         },
         
+        /**
+         * Creates the string representation for meta value editors DOM (to be inserted into dynamic meta-value dialog).
+         */
+        _createMetaValueEditors: function () {
+        	console.log("tg-abstract-range-criterion-behavior: _createMetaValueEditors");
+        	return Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior[1]._createMetaValueEditors.call(this) +
+        	'<tg-range-criterion-config class="layout vertical" _exclusive="{{_exclusiveBind}}" _exclusive2="{{_exclusive2Bind}}"></tg-range-criterion-config>';
+        },
+        
         _exclusiveChanged: function (newValue, oldValue) {
             this._exclusive = newValue;
         },

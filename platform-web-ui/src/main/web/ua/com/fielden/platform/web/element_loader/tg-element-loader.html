@@ -11,17 +11,13 @@
             //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
             insertElement = function (insertToElement, elementName, attributes) {
                 if (elementName && elementName.toString().length > 0) {
-                	console.time("create-element");
                     var customElement = document.createElement(elementName);
-                    console.timeEnd("create-element");
                     if (attributes && typeof attributes === "object") {
-                    	console.time("attrs-and-append");
                         for (attr in attributes) {
                             customElement[attr] = attributes[attr];
                         }
                         Polymer.dom(insertToElement).innerHTML = "";
                         Polymer.dom(insertToElement).appendChild(customElement);
-                        console.timeEnd("attrs-and-append");
                     }
                     return customElement;
                 }
@@ -73,14 +69,15 @@
                     if (this.import && !importedURLs.hasOwnProperty(this.import)) {
                     	console.warn("loading");
                     	console.time("loading");
+                    	console.warn("loading-all");
                     	console.time("loading-all");
                         this.importHref(this.import, function (e) {
                         	console.timeEnd("loading");
-                        	console.warn("inserting-after-load");
-                        	console.time("inserting-after-load");
+                        	// console.warn("create-and-append-element");
+                        	// console.time("create-and-append-element");
                             importedURLs[this.import] = "imported";
                             self.fire('after-load', insertElement(self, elementName, attributes));
-                            console.timeEnd("inserting-after-load");
+                            // console.timeEnd("create-and-append-element");
                             // e.target.import is the import document.
                         }, function (e) {
                         	console.timeEnd("loading");

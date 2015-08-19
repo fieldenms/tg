@@ -73,23 +73,91 @@
                 } else {
                     this._justOpened = !this._justOpened;
                 }
-                var mve = this._dom().$.metaValueEditor;
-                
-                // FIXME: the following line should work, but does not
-                // Polymer.dom(document.body).appendChild(mve);
-                // Instead, dialog is added directly
-                document.body.appendChild(mve);
+                var mve = this._createMetaValuesDialog();
+                Polymer.dom(document.body).appendChild(mve);
                 Polymer.dom.flush();
-                // let's open the dialog with magical async...
-                // this ensures that the dialog is opened after its relocation to body
-                this.async(function () {
-                    mve.open();
-                }.bind(this), 1);
+                
+                mve.open();
             }).bind(this);
             
             this._acceptMetaValuesForBinding = this._acceptMetaValues.bind(this);
             this._cancelMetaValuesForBinding = this._cancelMetaValues.bind(this);
             this._computeIconButtonStyleForBinding = this._computeIconButtonStyle.bind(this);
+        },
+        
+        /**
+         * Creates dynamically the 'dom-bind' template, which hold the dilog with all meta value editors.
+         *
+         * Uses the method '_createMetaValueEditors' (which can be overridden in descendants) to insert specific meta-value editors inside the dialog.
+         */
+        _createMetaValuesDialog() {
+        	var self = this;
+        	var domBind = document.createElement('template', 'dom-bind');
+        	
+        	domBind._orNullBind = self._orNull;
+        	domBind._notBind = self._not;
+   	    	domBind._exclusiveBind = self._exclusive;
+   	    	domBind._exclusive2Bind = self._exclusive2;
+        	
+        	domBind._closedBind = function(e) {
+        		var dialog = this.$.metaValueEditor;
+        		Polymer.dom(document.body).removeChild(dialog);
+        		Polymer.dom(document.body).removeChild(this);
+        		Polymer.dom.flush();
+        	}.bind(domBind);
+        	
+        	domBind._cancelMetaValuesBind = function() {
+       	    	self._cancelMetaValues();
+       	    	domBind._orNullBind = self._orNull;
+       	    	domBind._notBind = self._not;
+       	    	domBind._exclusiveBind = self._exclusive;
+       	    	domBind._exclusive2Bind = self._exclusive2;
+       		};
+        	domBind._acceptMetaValuesBind = function() {
+        		self._exclusive = domBind._exclusiveBind;
+        		self._exclusive2 = domBind._exclusive2Bind;
+        		self._orNull = domBind._orNullBind;
+        		self._not = domBind._notBind;
+       	    	return self._acceptMetaValues();
+       		};
+       		
+       		domBind.open = function () {
+       			console.log(this);
+       			var dialog = this.$.metaValueEditor;
+                Polymer.dom(document.body).appendChild(dialog);
+                Polymer.dom.flush();
+                // let's open the dialog with magical async...
+                // this ensures that the dialog is opened after its relocation to body
+                this.async(function () {
+                	dialog.open();
+                }.bind(this), 1);
+       		}.bind(domBind);
+        	var div = document.createElement('div');
+        	div.innerHTML = '<paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
+
+                '<paper-dialog-scrollable>' +
+                    '<div class="metavalue-editor layout vertical">' +
+                        self._createMetaValueEditors() + 
+                        // <content select=".date-range-criterion-config"></content>
+                    '</div>' +
+                '</paper-dialog-scrollable>' +
+
+                '<div class="buttons">' +
+                    '<paper-button class="blue" dialog-dismiss affirmative on-tap="_cancelMetaValuesBind">Cancel</paper-button>' +
+                    '<paper-button class="blue" dialog-confirm affirmative autofocus on-tap="_acceptMetaValuesBind">Ok</paper-button>' +
+                '</div>' +
+            '</paper-dialog>';
+        	
+        	domBind.content.appendChild(div);
+        	return domBind;
+        },
+        
+        /**
+         * Creates the string representation for meta value editors DOM (to be inserted into dynamic meta-value dialog).
+         */
+        _createMetaValueEditors: function () {
+        	console.log("tg-abstract-criterion-behavior: _createMetaValueEditors");
+        	return "";
         },
         
         _createWhenDesktopConfig: function () {
@@ -107,7 +175,7 @@
         /**
          * Accepts all new meta-values. Should be overridden to provide acceptance in specific descendants.
          */
-        _acceptMetaValues: function() {
+        _acceptMetaValues: function () {
             this.validationCallback();
         },
 

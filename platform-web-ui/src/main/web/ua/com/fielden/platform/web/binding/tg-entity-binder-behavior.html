@@ -346,6 +346,7 @@
                 // calbacks, that will potentially be augmented by tg-action child elements:
                 // 				retrieval:
                 self._postRetrievedDefault = (function (entityAndCustomObject) {
+                	// console.timeEnd('actual-retrieval');
                     var entity = this.preRetrieved(entityAndCustomObject[0]);
                     var customObject = this._reflector().customObject(entityAndCustomObject);
                     
@@ -357,6 +358,9 @@
                     this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
                     // custom external action
                     this.postRetrieved(entity, newBindingEntity, customObject);
+                    
+                    // console.timeEnd('criteria-entity-retrieval');
+                    console.timeEnd('loading-all');
                 }).bind(self);
                 
                 self._postRetrievedDefaultError = (function (errorResult) {
@@ -582,8 +586,6 @@
                 this._resetRefreshCycleModeForEditors();
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
-                console.timeEnd('criteria-entity-retrieval');
-                console.timeEnd('loading-all');
                 return self._currBindingEntity;
             },
 

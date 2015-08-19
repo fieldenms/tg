@@ -145,6 +145,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     private String critOnlyStringProp;
 
     @IsProperty
+    // @CritOnly(Type.SINGLE)
     @MapTo
     @Title(value = "Status", desc = "The current status of this entity")
     private TgPersistentStatus status;

@@ -242,13 +242,30 @@
             	pageNumberUpdated: Number,
             	pageCountUpdated: Number,
             },
+            
+            created: function () {
+            	console.warn("tg-@entity_type-centre: created");
+            	console.time("created-to-ready");
+            },
+            
+            ready: function () {
+            	console.timeEnd("created-to-ready");
+            	console.warn("tg-@entity_type-centre: ready");
+            	console.time("ready-to-attached");
+            },
         	
             /**
              * Initialisation block. It has all children web components already initialised.
              */
             attached: function () {
+            	console.timeEnd("ready-to-attached");
+            	console.warn("attached-to-attached-async");
+            	console.time("attached-to-attached-async");
                 var self = this;
                 self.async(function() {
+                    console.warn("tg-@entity_type-centre: attached async");
+                    console.timeEnd("attached-to-attached-async");
+
                 	self.postRetrieved = (function (entity, newBindingEntity, customObject) {
                         console.log("centre postRetrieved");
                     }).bind(self);

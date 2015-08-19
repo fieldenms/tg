@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/centre/criterion/multi/tg-abstract-multi-criterion.html">
+<link rel="import" href="/resources/centre/criterion/multi/range/tg-range-criterion-config.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 
 <dom-module id="tg-abstract-range-criterion">
@@ -25,8 +26,6 @@
             _when-tablet="[[_whenTablet]]"
             _when-mobile="[[_whenMobile]]"
 			>
-            <paper-checkbox class="range-criterion-config" checked="{{_exclusive}}">Exclusive Left</paper-checkbox>
-            <paper-checkbox class="range-criterion-config" checked="{{_exclusive2}}">Exclusive Right</paper-checkbox>
             <content select=".date-range-criterion-config"></content>
 			<content select=".criterion-editors"></content>
 		</tg-abstract-multi-criterion>
