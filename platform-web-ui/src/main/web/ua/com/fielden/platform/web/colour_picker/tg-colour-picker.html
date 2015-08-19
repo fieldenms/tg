@@ -29,6 +29,7 @@
                            box-shadow: 0px 2px 6px #ccc;
                            z-index: 1;
                            display: none;
+                           cursor: pointer;
                   }
                   
                   .icon {
@@ -48,11 +49,12 @@
                   }
                   
                   .small-box {
-                           min-width: 20px;
-                           height: 20px;
+                           min-width: 14px;
+                           min-height: 14px;
                            background-color: #FAFAFA;
-                           border: 1px solid #9E9E9E;
+                           border: 2px solid #BDBDBD;
                            border-radius: 2px;
+                           cursor: pointer;
                   }
                   
                   paper-input-container {
@@ -201,12 +203,12 @@
                   },
                   _calcColorBoxStyle: function (color, colorString) {
                            if (colorString === null) {
-                                    return " background-color: #FAFAFA; border: 1px solid #9E9E9E;";
+                                    return " min-width: 14px;min-height: 14px; background-color: #FAFAFA; border: 2px solid #BDBDBD;";
                            }
                            if (colorString.length === 3 || colorString.length === 6) {
-                                    return " border: 0px;background-color: " + color;
+                                    return " min-width: 18px;min-height: 18px; border: 0px;background-color: " + color;
                            } else {
-                                    return " border: 0px;background-color: #f44336";
+                                    return "min-width: 18px;min-height: 18px;  border: 0px ;background-color: #f44336";
                            }
                   },
                   _calcColorTextStyle: function (colorString) {
