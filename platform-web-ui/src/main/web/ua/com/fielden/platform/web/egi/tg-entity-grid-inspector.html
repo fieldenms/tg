@@ -42,6 +42,8 @@
             color: #757575;
             height: 3.5rem;
             cursor: default;
+            -webkit-font-smoothing: antialiased; 
+            text-rendering: optimizeLegibility;
         }
         .table-data-row {
             font-size: 1rem;
@@ -50,6 +52,8 @@
             height: 3rem;
             border-top: 1px solid #e3e3e3;
             cursor: default;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .table-data-row[selected] {
             background-color: #F5F5F5;
@@ -137,6 +141,8 @@
             background: transparent;
             color: #757575;
             cursor: default;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .data-value {
             font-size: 1rem;
@@ -147,6 +153,8 @@
             cursor: pointer;
             color: #212121;
             cursor: pointer;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .expand-button {
             position: absolute;
@@ -525,7 +533,7 @@
              * Calculates the card's header style.
              */
             _calcCardHeaderStyle: function(primaryAction, secondaryActions) {
-                if (primaryAction && secondaryActions.length > 0) {
+                if (primaryAction || secondaryActions.length > 0) {
                     return "padding-left:8px;";
                 } else {
                     return "padding: 8px;";

@@ -2,7 +2,9 @@
 
 <dom-module id="tg-element-loader">
     <template>
-        <content></content>
+        <!--<div id="loaderContent">-->
+            <content></content>
+       <!-- </div>-->
     </template>
 </dom-module>
 <script>
@@ -11,11 +13,11 @@
             //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
             insertElement = function (insertToElement, elementName, attributes) {
                 if (elementName && elementName.toString().length > 0) {
-                	console.time("create-element");
+                    console.time("create-element");
                     var customElement = document.createElement(elementName);
                     console.timeEnd("create-element");
                     if (attributes && typeof attributes === "object") {
-                    	console.time("attrs-and-append");
+                        console.time("attrs-and-append");
                         for (attr in attributes) {
                             customElement[attr] = attributes[attr];
                         }
@@ -36,21 +38,21 @@
                     value: false,
                     reflectToAttribute: true
                 },
-                
+
                 wasLoaded: {
                     type: Boolean,
                     value: false,
                     reflectToAttribute: true
                 },
-                
+
                 import: {
                     type: String
                 },
-                
+
                 elementName: {
                     type: String
                 },
-                
+
                 attrs: {
                     type: String
                 }
@@ -71,19 +73,19 @@
                     elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
                 if (!this.wasLoaded) {
                     if (this.import && !importedURLs.hasOwnProperty(this.import)) {
-                    	console.warn("loading");
-                    	console.time("loading");
-                    	console.time("loading-all");
+                        console.warn("loading");
+                        console.time("loading");
+                        console.time("loading-all");
                         this.importHref(this.import, function (e) {
-                        	console.timeEnd("loading");
-                        	console.warn("inserting-after-load");
-                        	console.time("inserting-after-load");
+                            console.timeEnd("loading");
+                            console.warn("inserting-after-load");
+                            console.time("inserting-after-load");
                             importedURLs[this.import] = "imported";
                             self.fire('after-load', insertElement(self, elementName, attributes));
                             console.timeEnd("inserting-after-load");
                             // e.target.import is the import document.
                         }, function (e) {
-                        	console.timeEnd("loading");
+                            console.timeEnd("loading");
                             // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
                             console.log("error happened", e);
                             // loading error
