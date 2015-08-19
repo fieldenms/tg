@@ -203,12 +203,12 @@
                   },
                   _calcColorBoxStyle: function (color, colorString) {
                            if (colorString === null) {
-                                    return " min-width: 14px;min-height: 14px; background-color: #FAFAFA; border: 2px solid #BDBDBD;";
+                                    return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
                            }
                            if (colorString.length === 3 || colorString.length === 6) {
-                                    return " min-width: 18px;min-height: 18px; border: 0px;background-color: " + color;
+                                    return "  border: 2px solid " + ColorLuminance(color, -0.1) + ";background-color: " + color;
                            } else {
-                                    return "min-width: 18px;min-height: 18px;  border: 0px ;background-color: #f44336";
+                                    return "border: 2px solid " + ColorLuminance("#f44336", -0.1) + " ;background-color: #f44336";
                            }
                   },
                   _calcColorTextStyle: function (colorString) {
@@ -254,5 +254,24 @@
                            (g.length == 1 ? "0" + g : g) +
                            (b.length == 1 ? "0" + b : b)
                   );
+         }
+
+         function ColorLuminance(hex, lum) {
+
+                  hex = String(hex).replace(/[^0-9a-f]/gi, '');
+                  if (hex.length < 6) {
+                           hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                  }
+                  lum = lum || 0;
+
+                  var rgb = "#",
+                           c, i;
+                  for (i = 0; i < 3; i++) {
+                           c = parseInt(hex.substr(i * 2, 2), 16);
+                           c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+                           rgb += ("00" + c).substr(c.length);
+                  }
+
+                  return rgb;
          }
 </script>
