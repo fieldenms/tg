@@ -7,7 +7,6 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
 <dom-module id="tg-colour-picker">
@@ -38,12 +37,6 @@
                            color: #BDBDBD;
                   }
                   
-                  .small-icon {
-                           min-width: 20px;
-                           min-height: 20px;
-                           color: #BDBDBD;
-                  }
-                  
                   .color-box:hover > .dummy-box {
                            display: block;
                   }
@@ -69,33 +62,16 @@
                            margin-top: 53px;
                            margin-left: 5px;
                   }
-                  
-                  paper-icon-button {
-                           align-self: flex-end;
-                           --iron-icon-height: 1em;
-                           --iron-icon-width: 1em;
-                           padding-left: 4px;
-                           padding-right: 2px;
-                           padding-top: 2px;
-                           padding-bottom: 2px;
-                  }
-                  
-                  paper-checkbox {
-                           --paper-checkbox-checked-color: #0288D1;
-                           font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                  }
          </style>
 
          <template>
 
                   <paper-input-container always-float-label>
                            <div class="layout horizontal center">
-                                    <!--				<paper-icon-button icon="editor:format-color-fill" title="Colour editor" id="fab" on-tap="open"></paper-icon-button>-->
                                     <div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]"></div>
-                                    <label>Hex code colour value (use only 0-9; A-F)</label>
+                                    <label>Hex code colour value (use only 0-9, A-F)</label>
                                     <div prefix style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
                                     <input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
-                                    <!--                                    <paper-checkbox on-tap="{{nonColorActive}}" suffix style=" margin-right: 15px;">No color</paper-checkbox>-->
                            </div>
 
                   </paper-input-container>
@@ -105,7 +81,6 @@
 
                                     <div class="layout vertical" style="margin:10px 10px 10px 10px;">
                                              <div class="layout horizontal">
-                                                      <!--						<div class="color-box" on-tap="colorSelected" style="background-color: #F44336;"></div>-->
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#F44336">
                                                                <div class="dummy-box" style="background-color:#F44336"></div>
                                                       </div>
@@ -257,21 +232,21 @@
          }
 
          function ColorLuminance(hex, lum) {
+                  if (hex != null) {
+                           hex = String(hex).replace(/[^0-9a-f]/gi, '');
+                           if (hex.length < 6) {
+                                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                           }
+                           lum = lum || 0;
 
-                  hex = String(hex).replace(/[^0-9a-f]/gi, '');
-                  if (hex.length < 6) {
-                           hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-                  }
-                  lum = lum || 0;
-
-                  var rgb = "#",
-                           c, i;
-                  for (i = 0; i < 3; i++) {
-                           c = parseInt(hex.substr(i * 2, 2), 16);
-                           c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
-                           rgb += ("00" + c).substr(c.length);
-                  }
-
-                  return rgb;
+                           var rgb = "#",
+                                    c, i;
+                           for (i = 0; i < 3; i++) {
+                                    c = parseInt(hex.substr(i * 2, 2), 16);
+                                    c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+                                    rgb += ("00" + c).substr(c.length);
+                           }
+                           return rgb;
+                  } else return hex;
          }
 </script>
