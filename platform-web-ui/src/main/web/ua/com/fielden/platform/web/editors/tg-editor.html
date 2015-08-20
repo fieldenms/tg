@@ -54,10 +54,6 @@
             height: 1.8rem;
         }
         
-        paper-checkbox::shadow #checkboxLabel {
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
         /* Styles for integer and decimal property editors. */
         input[type=number]::-webkit-outer-spin-button,
         input[type=number]::-webkit-inner-spin-button {
@@ -76,6 +72,8 @@
             text-overflow: ellipsis;
             font-size: 0.9rem;
             font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
             color: #757575 !important;
         }
         paper-input-container {
