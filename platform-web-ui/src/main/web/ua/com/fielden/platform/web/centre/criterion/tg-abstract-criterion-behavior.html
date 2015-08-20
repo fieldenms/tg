@@ -51,14 +51,7 @@
             _showMetaValuesEditor: Function,
             _acceptMetaValuesForBinding: Function,
             _cancelMetaValuesForBinding: Function,
-            _computeIconButtonStyleForBinding: Function,
-            
-			/**
-			 * The property that indicates whether the meta-values dialog has been just opened (governes children).
-			 */
-			_justOpened: {
-				type: Boolean
-			}
+            _computeIconButtonStyleForBinding: Function
         },
         
         attached: function() {
@@ -73,10 +66,8 @@
 
         ready: function() {
             this._whenDesktop = this._createWhenDesktopConfig();
-            this._justOpened = false;
             
             this._showMetaValuesEditor = (function (e) {
-                this._justOpened = !this._justOpened;
                 var mve = this._createMetaValuesDialog();
                 Polymer.dom(document.body).appendChild(mve);
                 Polymer.dom.flush();
@@ -102,7 +93,6 @@
         	domBind._notBind = self._not;
         	domBind._exclusiveBind = self._exclusive;
    	    	domBind._exclusive2Bind = self._exclusive2;
-   	    	domBind._justOpenedBind = self._justOpened;
    	    	domBind._datePrefixBind = self._datePrefix;
    	    	domBind._dateMnemonicBind = self._dateMnemonic;
    	    	domBind._andBeforeBind = self._andBefore;
@@ -120,14 +110,12 @@
        	    	domBind._notBind = self._not;
        	    	domBind._exclusiveBind = self._exclusive;
        	    	domBind._exclusive2Bind = self._exclusive2;
-       	    	domBind._justOpenedBind = self._justOpened;
        	    	domBind._datePrefixBind = self._datePrefix;
        	    	domBind._dateMnemonicBind = self._dateMnemonic;
        	    	domBind._andBeforeBind = self._andBefore;
        		};
        		
         	domBind._acceptMetaValuesBind = function() {
-        		self._justOpened = domBind._justOpenedBind;
         		self._datePrefix = domBind._datePrefixBind;
         		self._dateMnemonic = domBind._dateMnemonicBind;
         		self._andBefore = domBind._andBeforeBind;

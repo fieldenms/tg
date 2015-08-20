@@ -127,7 +127,7 @@
         _createMetaValueEditors: function () {
         	console.log("tg-date-range-criterion: _createMetaValueEditors");
         	return Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._createMetaValueEditors.call(this) +
-        	'<tg-date-range-criterion-config _just-opened="[[_justOpenedBind]]" _date-prefix="{{_datePrefixBind}}" _date-mnemonic="{{_dateMnemonicBind}}" _and-before="{{_andBeforeBind}}"></tg-date-range-criterion-config>';
+        	'<tg-date-range-criterion-config _date-prefix="{{_datePrefixBind}}" _date-mnemonic="{{_dateMnemonicBind}}" _and-before="{{_andBeforeBind}}"></tg-date-range-criterion-config>';
         },
 
         _datePrefixChanged: function (newValue, oldValue) {

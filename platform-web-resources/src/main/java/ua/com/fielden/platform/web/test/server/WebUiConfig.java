@@ -8,6 +8,8 @@ import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.con
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
@@ -42,6 +44,7 @@ import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
+import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
@@ -639,74 +642,70 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 longDesc("Functional context-dependent action 3").
                                 build()
                 )
-//                .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-//                .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-//                .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
-//                //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
-//                .also()
-//                .addCrit("stringProp").asMulti().text()
-//                //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
-//                .also()
-//                .addCrit("integerProp").asRange().integer()
-//                //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
-//                .also()
-//                .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-//                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-//                .lightDesc()
-//                //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
-//                .also()
-//                .addCrit("bigDecimalProp").asRange().decimal()
-//                //*    */.setDefaultValue(range().decimal().not().setFromValueExclusive(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */).setToValueExclusive(new BigDecimal(4).setScale(5)).canHaveNoValue().value())
-//                .also()
-//                .addCrit("booleanProp").asMulti().bool()
-//                //*    */.setDefaultValue(multi().bool().not().setIsValue(false).setIsNotValue(false).canHaveNoValue().value())
-//                .also()
+                .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
+                .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
+                //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
+                .also()
+                .addCrit("stringProp").asMulti().text()
+                //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
+                .also()
+                .addCrit("integerProp").asRange().integer()
+                //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
+                .also()
+                .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
+                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .lightDesc()
+                //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
+                .also()
+                .addCrit("bigDecimalProp").asRange().decimal()
+                //*    */.setDefaultValue(range().decimal().not().setFromValueExclusive(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */).setToValueExclusive(new BigDecimal(4).setScale(5)).canHaveNoValue().value())
+                .also()
+                .addCrit("booleanProp").asMulti().bool()
+                //*    */.setDefaultValue(multi().bool().not().setIsValue(false).setIsNotValue(false).canHaveNoValue().value())
+                .also()
                 .addCrit("dateProp").asRange().date()
                 //    */.setDefaultValue(range().date().not().next()./* TODO not applicable on query generation level dayAndAfter().exclusiveFrom().exclusiveTo().*/canHaveNoValue().value())
                 //*    */.setDefaultValue(range().date().not().setFromValueExclusive(new Date(1000000000L)).setToValueExclusive(new Date(2000000000L)).canHaveNoValue().value())
-//                .also()
-//                .addCrit("compositeProp").asMulti().autocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositePropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-//                //*    */.setDefaultValue(multi().string().not().setValues("DEFAULT_KEY 10").canHaveNoValue().value())
-//                .also()
-//                .addCrit("critOnlyDateProp").asSingle().date()
-//                /*    */.setDefaultValue(single().date()./* TODO not applicable on query generation level not().*/setValue(new Date(1000000000L))./* TODO not applicable on query generation level canHaveNoValue(). */value())
-//                .also()
-//                .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-//                .withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-//                .lightDesc()
-//                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
-//                .also()
-//                .addCrit("userParam").asSingle().autocompleter(User.class)
-//                .withProps(pair("base", false), pair("basedOnUser", false))
-//                /*    */.withDefaultValueAssigner(TgPersistentEntityWithProperties_UserParamAssigner.class)
-//                .also()
-//                .addCrit("critOnlyIntegerProp").asSingle().integer()
-//                /*    */.setDefaultValue(single().integer()./* TODO not applicable on query generation level not(). */setValue(1)./* TODO not applicable on query generation level canHaveNoValue(). */value())
-//                .also()
-//                .addCrit("critOnlyBigDecimalProp").asSingle().decimal()
-//                /*    */.setDefaultValue(single().decimal()./* TODO not applicable on query generation level not(). */setValue(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */)./* TODO not applicable on query generation level canHaveNoValue(). */value())
-//                .also()
-//                .addCrit("critOnlyBooleanProp").asSingle().bool()
-//                /*    */.setDefaultValue(single().bool()./* TODO not applicable on query generation level not(). */setValue(false)./* TODO not applicable on query generation level canHaveNoValue(). */value())
-//                .also()
-//                .addCrit("critOnlyStringProp").asSingle().text()
-//                /*    */.setDefaultValue(single().text()./* TODO not applicable on query generation level not(). */setValue("DE*")./* TODO not applicable on query generation level canHaveNoValue(). */value())
-//                .also()
-//                .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
-//                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
-
-
-
-//                .addCrit("status").asSingle().autocompleter(TgPersistentStatus.class)
+                .also()
+                .addCrit("compositeProp").asMulti().autocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositePropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                //*    */.setDefaultValue(multi().string().not().setValues("DEFAULT_KEY 10").canHaveNoValue().value())
+                .also()
+                .addCrit("critOnlyDateProp").asSingle().date()
+                /*    */.setDefaultValue(single().date()./* TODO not applicable on query generation level not().*/setValue(new Date(1000000000L))./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .lightDesc()
+                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("userParam").asSingle().autocompleter(User.class)
+                .withProps(pair("base", false), pair("basedOnUser", false))
+                /*    */.withDefaultValueAssigner(TgPersistentEntityWithProperties_UserParamAssigner.class)
+                .also()
+                .addCrit("critOnlyIntegerProp").asSingle().integer()
+                /*    */.setDefaultValue(single().integer()./* TODO not applicable on query generation level not(). */setValue(1)./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("critOnlyBigDecimalProp").asSingle().decimal()
+                /*    */.setDefaultValue(single().decimal()./* TODO not applicable on query generation level not(). */setValue(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */)./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("critOnlyBooleanProp").asSingle().bool()
+                /*    */.setDefaultValue(single().bool()./* TODO not applicable on query generation level not(). */setValue(false)./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("critOnlyStringProp").asSingle().text()
+                /*    */.setDefaultValue(single().text()./* TODO not applicable on query generation level not(). */setValue("DE*")./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
+                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(),
-                        ("[['center-justified', 'start', mrLast]]")
-//                                ("[['center-justified', 'start', mr, mr, mrLast]," +
-//                                "['center-justified', 'start', mr, mr, mrLast]," +
-//                                "['center-justified', 'start', mr, mr, mrLast]," +
-//                                "['center-justified', 'start', mr, mr, mrLast]," +
-//                                "['center-justified', 'start', mr, mr, mrLast]," +
-//                                "['center-justified', 'start', mrLast]]")
+//                        ("[['center-justified', 'start', mrLast]]")
+                                ("[['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, Optional.empty(),
