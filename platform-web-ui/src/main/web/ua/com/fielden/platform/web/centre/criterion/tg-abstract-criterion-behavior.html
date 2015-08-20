@@ -90,7 +90,7 @@
         },
         
         /**
-         * Creates dynamically the 'dom-bind' template, which hold the dilog with all meta value editors.
+         * Creates dynamically the 'dom-bind' template, which hold the dialog with all meta value editors.
          *
          * Uses the method '_createMetaValueEditors' (which can be overridden in descendants) to insert specific meta-value editors inside the dialog.
          */
@@ -139,7 +139,6 @@
        		};
        		
        		domBind.open = function () {
-       			console.log(this);
        			var dialog = this.$.metaValueEditor;
                 Polymer.dom(document.body).appendChild(dialog);
                 Polymer.dom.flush();
