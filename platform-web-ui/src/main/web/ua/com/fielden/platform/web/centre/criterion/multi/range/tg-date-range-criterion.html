@@ -1,53 +1,27 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+
 <link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion.html">
 <link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html">
 
-<link rel="import" href="/resources/polymer/paper-radio-button/paper-radio-button.html">
-
-<link rel="import" href="/resources/components/tg-accordion.html">
-<link rel="import" href="/resources/components/tg-accordion-group.html">
-
-<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/resources/centre/criterion/multi/range/tg-date-range-criterion-config.html">
 
 <dom-module id="tg-date-range-criterion">
-    <style>
-        tg-accordion {
-            margin-bottom: 20px;
-        }
-        paper-radio-button {
-            margin: 10px;
-            --paper-radio-button-checked-color: #0288D1;
-            --paper-radio-button-checked-ink-color: #0288D1;
-            font-family: 'Roboto', 'Noto', sans-serif;
-        }
-        paper-radio-button::shadow #ink {
-            top: -10px;
-            left: -10px;
-            width: 36px;
-            height: 36px;
-        }
-        .selected::shadow .heading {
-            background-color: #CCE6FF;
-        }
-    </style>
     <template>
-        <tg-abstract-range-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}" _exclusive="{{_exclusive}}" _exclusive2="{{_exclusive2}}" _when-desktop="[[_whenDesktop]]" _when-tablet="[[_whenTablet]]" _when-mobile="[[_whenMobile]]">
-            <tg-accordion-group single-open class="date-range-criterion-config">
-                <template is="dom-repeat" items="{{_datePrefixes}}" as="prefix" index-as="pIndex">
-                    <tg-accordion dont-close-on-tap opened="[[_shouldAccordionBeOpened(_justOpened, prefix, pIndex)]]" heading="[[_getPrefixTitle(_prefixTitles, pIndex)]]" class$="[[_calcClass(prefix, _datePrefix)]]">
-                        <div class="layout horizontal">
-                            <template is="dom-repeat" items="{{_andBefores}}" as="before" index-as="bIndex">
-                                <div class="layout vertical">
-                                    <template is="dom-repeat" items="{{_dateMnemonics}}" as="mnemonic" index-as="mIndex">
-                                        <paper-radio-button dateprefix="[[prefix]]" datemnemonic="[[mnemonic]]" dateandbefore="[[before]]" toggles on-change="_dateMetaValueChanged" checked="[[_checked(_datePrefix, _dateMnemonic, _andBefore, prefix, mnemonic, before)]]">[[_radioTitle(_mnemonicTitles, _andBeforeTitles, mIndex, bIndex)]]</paper-radio-button>
-                                    </template>
-                                </div>
-                            </template>
-                        </div>
-                    </tg-accordion>
-                </template>
-            </tg-accordion-group>
+        <tg-abstract-range-criterion
+        	id="dom"
+        	_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
+        	_accept-meta-values="[[_acceptMetaValuesForBinding]]"
+        	_show-meta-values-editor="[[_showMetaValuesEditor]]"
+        	_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]"
+        	_or-null="{{_orNull}}"
+        	_not="{{_not}}"
+        	_exclusive="{{_exclusive}}"
+        	_exclusive2="{{_exclusive2}}"
+        	_when-desktop="[[_whenDesktop]]"
+        	_when-tablet="[[_whenTablet]]"
+        	_when-mobile="[[_whenMobile]]">
             <content select=".criterion-editors"></content>
         </tg-abstract-range-criterion>
     </template>
@@ -122,55 +96,13 @@
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             _datePrefix: String,
             _dateMnemonic: String,
-            _andBefore: Object,
-
-            _datePrefixes: Array,
-            _dateMnemonics: Array,
-            _andBefores: Array,
-            _prefixTitles: Array,
-            _mnemonicTitles: Array,
-            _andBeforeTitles: Array
+            _andBefore: Object
         },
 
         ready: function () {
-            // TODO maybe in 'created' callback?
-            this._datePrefixes = ["PREV", "CURR", "NEXT"];
-            this._dateMnemonics = ["DAY", "WEEK", "MONTH", "QRT1", "QRT2", "QRT3", "QRT4", "YEAR", "OZ_FIN_YEAR"];
-            this._andBefores = ["THIS", "BEFORE", "AFTER"];
-            this._prefixTitles = ["Previous", "Current", "Next"];
-            this._mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];
-            this._andBeforeTitles = ["", " and before", " and after"];
-
             this._datePrefix = null;
             this._dateMnemonic = null;
             this._andBefore = null;
-        },
-        
-        _calcClass: function(prefix, _datePrefix) {
-            return prefix === _datePrefix ? "selected" : "normal";
-        },
-
-        _dateMetaValueChanged: function (e, detail) {
-            var source = e.srcElement;
-            if (source.checked) {
-                this._datePrefix = source.dateprefix;
-                this._dateMnemonic = source.datemnemonic;
-                switch (source.dateandbefore) {
-                case "THIS":
-                    this._andBefore = null;
-                    break;
-                case "BEFORE":
-                    this._andBefore = true;
-                    break;
-                case "AFTER":
-                    this._andBefore = false;
-                    break;
-                }
-            } else {
-                this._datePrefix = null;
-                this._dateMnemonic = null;
-                this._andBefore = null;
-            }
         },
 
         _acceptMetaValues: function () {
@@ -187,6 +119,16 @@
             this._andBefore = this.andBefore;
 
             Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._cancelMetaValues.call(this);
+        },
+        
+        /**
+         * Creates the string representation for meta value editors DOM (to be inserted into dynamic meta-value dialog).
+         */
+        _createMetaValueEditors: function () {
+        	console.log("tg-date-range-criterion: _createMetaValueEditors");
+        	return Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._createMetaValueEditors.call(this) +
+        	// '<div>tg-date-range-criterion-config</div>';
+        	'<tg-date-range-criterion-config _just-opened="[[_justOpenedBind]]" _date-prefix="{{_datePrefixBind}}" _date-mnemonic="{{_dateMnemonicBind}}" _and-before="{{_andBeforeBind}}"></tg-date-range-criterion-config>';
         },
 
         _datePrefixChanged: function (newValue, oldValue) {
@@ -207,25 +149,6 @@
         _hasNoMetaValues: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
             return Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
                 datePrefix === null && dateMnemonic === null && andBefore === null;
-        },
-
-        /**
-         * Returns 'true' when accordion of date mnemonics should be opened, 'false' otherwise.
-         */
-        _shouldAccordionBeOpened: function (justOpened, prefix, pIndex) {
-            return (this.datePrefix === null && pIndex === 0) || this.datePrefix === prefix;
-        },
-
-        _getPrefixTitle: function (_prefixTitles, pIndex) {
-            return _prefixTitles[pIndex];
-        },
-
-        _radioTitle: function (_mnemonicTitles, _andBeforeTitles, mIndex, bIndex) {
-            return _mnemonicTitles[mIndex] + _andBeforeTitles[bIndex];
-        },
-
-        _checked: function (_datePrefix, _dateMnemonic, _andBefore, prefix, mnemonic, before) {
-            return _datePrefix === prefix && _dateMnemonic === mnemonic && ((_andBefore === null && before === 'THIS') || (_andBefore === true && before === 'BEFORE') || (_andBefore === false && before === 'AFTER'))
         }
     });
 </script>

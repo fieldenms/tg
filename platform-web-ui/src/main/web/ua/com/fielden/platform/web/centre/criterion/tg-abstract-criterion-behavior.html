@@ -51,7 +51,14 @@
             _showMetaValuesEditor: Function,
             _acceptMetaValuesForBinding: Function,
             _cancelMetaValuesForBinding: Function,
-            _computeIconButtonStyleForBinding: Function
+            _computeIconButtonStyleForBinding: Function,
+            
+			/**
+			 * The property that indicates whether the meta-values dialog has been just opened (governes children).
+			 */
+			_justOpened: {
+				type: Boolean
+			}
         },
         
         attached: function() {
@@ -66,13 +73,10 @@
 
         ready: function() {
             this._whenDesktop = this._createWhenDesktopConfig();
+            this._justOpened = false;
             
             this._showMetaValuesEditor = (function (e) {
-                if (typeof this._justOpened === 'undefined') {
-                    this._justOpened = true;
-                } else {
-                    this._justOpened = !this._justOpened;
-                }
+                this._justOpened = !this._justOpened;
                 var mve = this._createMetaValuesDialog();
                 Polymer.dom(document.body).appendChild(mve);
                 Polymer.dom.flush();
@@ -96,8 +100,12 @@
         	
         	domBind._orNullBind = self._orNull;
         	domBind._notBind = self._not;
-   	    	domBind._exclusiveBind = self._exclusive;
+        	domBind._exclusiveBind = self._exclusive;
    	    	domBind._exclusive2Bind = self._exclusive2;
+   	    	domBind._justOpenedBind = self._justOpened;
+   	    	domBind._datePrefixBind = self._datePrefix;
+   	    	domBind._dateMnemonicBind = self._dateMnemonic;
+   	    	domBind._andBeforeBind = self._andBefore;
         	
         	domBind._closedBind = function(e) {
         		var dialog = this.$.metaValueEditor;
@@ -112,13 +120,22 @@
        	    	domBind._notBind = self._not;
        	    	domBind._exclusiveBind = self._exclusive;
        	    	domBind._exclusive2Bind = self._exclusive2;
+       	    	domBind._justOpenedBind = self._justOpened;
+       	    	domBind._datePrefixBind = self._datePrefix;
+       	    	domBind._dateMnemonicBind = self._dateMnemonic;
+       	    	domBind._andBeforeBind = self._andBefore;
        		};
+       		
         	domBind._acceptMetaValuesBind = function() {
+        		self._justOpened = domBind._justOpenedBind;
+        		self._datePrefix = domBind._datePrefixBind;
+        		self._dateMnemonic = domBind._dateMnemonicBind;
+        		self._andBefore = domBind._andBeforeBind;
         		self._exclusive = domBind._exclusiveBind;
         		self._exclusive2 = domBind._exclusive2Bind;
         		self._orNull = domBind._orNullBind;
         		self._not = domBind._notBind;
-       	    	return self._acceptMetaValues();
+       	    	self._acceptMetaValues();
        		};
        		
        		domBind.open = function () {
@@ -138,7 +155,6 @@
                 '<paper-dialog-scrollable>' +
                     '<div class="metavalue-editor layout vertical">' +
                         self._createMetaValueEditors() + 
-                        // <content select=".date-range-criterion-config"></content>
                     '</div>' +
                 '</paper-dialog-scrollable>' +
 
