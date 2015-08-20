@@ -2,14 +2,14 @@
 
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 
-<link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion.html">
+<link rel="import" href="/resources/centre/criterion/tg-abstract-criterion.html">
 <link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html">
 
 <link rel="import" href="/resources/centre/criterion/multi/range/tg-date-range-criterion-config.html">
 
 <dom-module id="tg-date-range-criterion">
     <template>
-        <tg-abstract-range-criterion
+        <tg-abstract-criterion
         	id="dom"
         	_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
         	_accept-meta-values="[[_acceptMetaValuesForBinding]]"
@@ -23,7 +23,7 @@
         	_when-tablet="[[_whenTablet]]"
         	_when-mobile="[[_whenMobile]]">
             <content select=".criterion-editors"></content>
-        </tg-abstract-range-criterion>
+        </tg-abstract-criterion>
     </template>
 </dom-module>
 
@@ -38,7 +38,7 @@
         behaviors: [Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior],
 
         _dom: function () {
-            return this.$.dom.$.dom.$.dom2;
+            return this.$.dom;
         },
 
         _createWhenDesktopConfig: function () {
@@ -127,7 +127,6 @@
         _createMetaValueEditors: function () {
         	console.log("tg-date-range-criterion: _createMetaValueEditors");
         	return Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior[1]._createMetaValueEditors.call(this) +
-        	// '<div>tg-date-range-criterion-config</div>';
         	'<tg-date-range-criterion-config _just-opened="[[_justOpenedBind]]" _date-prefix="{{_datePrefixBind}}" _date-mnemonic="{{_dateMnemonicBind}}" _and-before="{{_andBeforeBind}}"></tg-date-range-criterion-config>';
         },
 
