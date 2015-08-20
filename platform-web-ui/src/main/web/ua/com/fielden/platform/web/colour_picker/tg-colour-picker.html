@@ -34,7 +34,14 @@
                   .icon {
                            min-width: 40px;
                            min-height: 40px;
-                           color: #BDBDBD;
+                           color: #757575;
+                  }
+                  
+                  .small-icon {
+                           max-width: 14px;
+                           max-height: 14px;
+                           color: #757575;
+                           opacity: 1;
                   }
                   
                   .color-box:hover > .dummy-box {
@@ -68,7 +75,9 @@
 
                   <paper-input-container always-float-label>
                            <div class="layout horizontal center">
-                                    <div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]"></div>
+                                    <div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]">
+                                             <iron-icon class="small-icon" icon="icons:close" style$="[[_calcSmallIconStyle(colorString)]]"></iron-icon>
+                                    </div>
                                     <label>Hex code colour value (use only 0-9, A-F)</label>
                                     <div prefix style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
                                     <input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
@@ -81,6 +90,12 @@
 
                                     <div class="layout vertical" style="margin:10px 10px 10px 10px;">
                                              <div class="layout horizontal">
+                                                      <div class="color-box" on-tap="nonColorSelected" style="background-color:#F5F5F5">
+                                                               <div class="dummy-box" style="background-color:#F5F5F5">
+                                                                        <iron-icon class="icon" icon="icons:close"></iron-icon>
+                                                               </div>
+                                                               <iron-icon class="icon" icon="icons:close"></iron-icon>
+                                                      </div>
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#F44336">
                                                                <div class="dummy-box" style="background-color:#F44336"></div>
                                                       </div>
@@ -105,12 +120,14 @@
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#9C27B0">
                                                                <div class="dummy-box" style="background-color:#9C27B0"></div>
                                                       </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#9E9E9E">
-                                                               <div class="dummy-box" style="background-color:#9E9E9E"></div>
-                                                      </div>
+
 
                                              </div>
                                              <div class="layout horizontal">
+                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#E0E0E0">
+                                                               <div class="dummy-box" style="background-color:#E0E0E0"></div>
+                                                      </div>
+
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#EF9A9A">
                                                                <div class="dummy-box" style="background-color:#EF9A9A"></div>
                                                       </div>
@@ -135,12 +152,7 @@
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#CE93D8">
                                                                <div class="dummy-box" style="background-color:#CE93D8"></div>
                                                       </div>
-                                                      <div class="color-box" on-tap="nonColorSelected" style="background-color:#EEEEEE">
-                                                               <div class="dummy-box" style="background-color:#EEEEEE">
-                                                                        <iron-icon class="icon" icon="icons:close"></iron-icon>
-                                                               </div>
-                                                               <iron-icon class="icon" icon="icons:close"></iron-icon>
-                                                      </div>
+
                                              </div>
 
                                     </div>
@@ -183,12 +195,20 @@
                            if (colorString.length === 3 || colorString.length === 6) {
                                     return "  border: 2px solid " + ColorLuminance(color, -0.1) + ";background-color: " + color;
                            } else {
-                                    return "border: 2px solid " + ColorLuminance("#f44336", -0.1) + " ;background-color: #f44336";
+                                    return "background-color: #FAFAFA; border: 2px solid #BDBDBD;";
                            }
+                  },
+                  _calcSmallIconStyle: function (colorString) {
+                           if (colorString === null) {
+                                    return " opacity: 1 ";
+                           } else if (colorString.length === 3 || colorString.length === 6) {
+                                    return "opacity: 0 ";
+                           }
+
                   },
                   _calcColorTextStyle: function (colorString) {
                            if (colorString === null) {
-                                    return "margin-left: 1px; color: #DD2C00";
+                                    return "margin-left: 1px; color: #212121";
                            }
                            if (colorString.length === 3 || colorString.length === 6) {
                                     return "margin-left: 1px; color: #212121; ";
@@ -199,7 +219,7 @@
                   },
                   _calcColorPrefixStyle: function (colorString) {
                            if (colorString === null) {
-                                    return "opacity: 0";
+                                    return "opacity: 0; color: #212121";
                            }
                            if (colorString.length === 3 || colorString.length === 6) {
                                     return "margin-left: 1px; color: #212121;font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px ";
