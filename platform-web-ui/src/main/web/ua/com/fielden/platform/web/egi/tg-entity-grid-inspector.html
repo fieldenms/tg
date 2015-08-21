@@ -714,8 +714,8 @@
              * Calculates the style for cell that represents rendering hints.
              */
             _calcRenderingHintsStyle: function (entity, entityIndex, property) {
-                var style = "opacity: 0.3;",
-                    rendHints = (this.renderingHints && this.renderingHints[entityIndex][property]) || [];
+                var style = "opacity: 0.3;";
+                var rendHints = (this.renderingHints.length > 0 && this.renderingHints[entityIndex][property]) || [];
                 for (var property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
