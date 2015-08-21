@@ -42,6 +42,8 @@
             color: #757575;
             height: 3.5rem;
             cursor: default;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .table-data-row {
             font-size: 1rem;
@@ -50,6 +52,8 @@
             height: 3rem;
             border-top: 1px solid #e3e3e3;
             cursor: default;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .table-data-row[selected] {
             background-color: #F5F5F5;
@@ -137,6 +141,8 @@
             background: transparent;
             color: #757575;
             cursor: default;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .data-value {
             font-size: 1rem;
@@ -147,6 +153,8 @@
             cursor: pointer;
             color: #212121;
             cursor: pointer;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .expand-button {
             position: absolute;
@@ -173,7 +181,7 @@
         <tg-custom-action-dialog id="actionDialog"></tg-custom-action-dialog>
 
         <!-- The dialog for summary when egi is in card layout -->
-        <paper-dialog id="summaryDialog" modal entry-animation="slide-down-animation" exit-animation="slide-up-animation">
+        <paper-dialog id="summaryDialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed" on-iron-resize="_fixSumaryDialog">
             <template is="dom-if" if="[[totals]]">
                 <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
                     <template is="dom-repeat" items="[[_calcCardSummary(columns)]]">
@@ -520,12 +528,12 @@
 
                 return gridSummary;
             },
-            
+
             /**
              * Calculates the card's header style.
              */
-            _calcCardHeaderStyle: function(primaryAction, secondaryActions) {
-                if (primaryAction && secondaryActions.length > 0) {
+            _calcCardHeaderStyle: function (primaryAction, secondaryActions) {
+                if (primaryAction || secondaryActions.length > 0) {
                     return "padding-left:8px;";
                 } else {
                     return "padding: 8px;";
@@ -609,7 +617,8 @@
              * Observs the changes to entities property.
              */
             _entitiesChanged: function (newValue, oldValue) {
-                var tempEgiModel = [], self = this;
+                var tempEgiModel = [],
+                    self = this;
                 newValue.forEach(function (newEntity) {
                     var selectEntInd = _findEntity(newEntity, self.selectedEntities),
                         openedEntInd = _findEntity(newEntity, self.openedEntities);
@@ -705,8 +714,8 @@
              * Calculates the style for cell that represents rendering hints.
              */
             _calcRenderingHintsStyle: function (entity, entityIndex, property) {
-                var style = "opacity: 0.3;",
-                    rendHints = (this.renderingHints && this.renderingHints[entityIndex][property]) || [];
+                var style = "opacity: 0.3;";
+                var rendHints = (this.renderingHints.length > 0 && this.renderingHints[entityIndex][property]) || [];
                 for (var property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
@@ -745,7 +754,7 @@
             _isSummaryEnabled: function (entities, cardLayout) {
                 return !!this.totals;
             },
-            
+
             /**
              * Returns the property value of the specified entity.
              */
@@ -853,9 +862,32 @@
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.
              */
             _showSummary: function (e, detail, source) {
+                var summaryDialog = this.$.summaryDialog;
+                //Openening dialog
                 if (this.cardLayout && this.totals) {
-                    this.$.summaryDialog.open();
+                    Polymer.dom(Polymer.dom(summaryDialog).parentNode).removeChild(summaryDialog);
+                    Polymer.dom(document.body).appendChild(summaryDialog);
+                    Polymer.dom.flush();
+
+                    this.async(function () {
+                        summaryDialog.open();
+                    }.bind(this), 200);
                 }
+            },
+            /**
+             * Responds on iron-resize event of summary dialog.
+             */
+            _fixSumaryDialog: function () {
+                if (this.$.summaryDialog.opened) {
+                    this.$.summaryDialog.fit();
+                }
+            },
+            /**
+             *  listener for summary dialog close dialog.
+             */
+            _summaryDialogClosed: function (e, detail) {
+                Polymer.dom(document.body).removeChild(this.$.summaryDialog);
+                Polymer.dom.flush();
             },
             ///////////////////Next three functions are responsible for calculating media queries expressions for mobile tablet and desktop screens/////////
             _calcMobileQuery: function () {

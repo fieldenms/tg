@@ -7,7 +7,6 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
 <dom-module id="tg-colour-picker">
@@ -29,18 +28,20 @@
                            box-shadow: 0px 2px 6px #ccc;
                            z-index: 1;
                            display: none;
+                           cursor: pointer;
                   }
                   
                   .icon {
                            min-width: 40px;
                            min-height: 40px;
-                           color: #BDBDBD;
+                           color: #757575;
                   }
                   
                   .small-icon {
-                           min-width: 20px;
-                           min-height: 20px;
-                           color: #BDBDBD;
+                           max-width: 14px;
+                           max-height: 14px;
+                           color: #757575;
+                           opacity: 1;
                   }
                   
                   .color-box:hover > .dummy-box {
@@ -48,11 +49,12 @@
                   }
                   
                   .small-box {
-                           min-width: 20px;
-                           height: 20px;
+                           min-width: 14px;
+                           min-height: 14px;
                            background-color: #FAFAFA;
-                           border: 1px solid #9E9E9E;
+                           border: 2px solid #BDBDBD;
                            border-radius: 2px;
+                           cursor: pointer;
                   }
                   
                   paper-input-container {
@@ -67,33 +69,18 @@
                            margin-top: 53px;
                            margin-left: 5px;
                   }
-                  
-                  paper-icon-button {
-                           align-self: flex-end;
-                           --iron-icon-height: 1em;
-                           --iron-icon-width: 1em;
-                           padding-left: 4px;
-                           padding-right: 2px;
-                           padding-top: 2px;
-                           padding-bottom: 2px;
-                  }
-                  
-                  paper-checkbox {
-                           --paper-checkbox-checked-color: #0288D1;
-                           font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                  }
          </style>
 
          <template>
 
                   <paper-input-container always-float-label>
                            <div class="layout horizontal center">
-                                    <!--				<paper-icon-button icon="editor:format-color-fill" title="Colour editor" id="fab" on-tap="open"></paper-icon-button>-->
-                                    <div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]"></div>
-                                    <label>Hex code colour value (use only 0-9; A-F)</label>
+                                    <div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]">
+                                             <iron-icon class="small-icon" icon="icons:close" style$="[[_calcSmallIconStyle(colorString)]]"></iron-icon>
+                                    </div>
+                                    <label>Hex code colour value (use only 0-9, A-F)</label>
                                     <div prefix style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
                                     <input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
-                                    <!--                                    <paper-checkbox on-tap="{{nonColorActive}}" suffix style=" margin-right: 15px;">No color</paper-checkbox>-->
                            </div>
 
                   </paper-input-container>
@@ -103,7 +90,12 @@
 
                                     <div class="layout vertical" style="margin:10px 10px 10px 10px;">
                                              <div class="layout horizontal">
-                                                      <!--						<div class="color-box" on-tap="colorSelected" style="background-color: #F44336;"></div>-->
+                                                      <div class="color-box" on-tap="nonColorSelected" style="background-color:#F5F5F5">
+                                                               <div class="dummy-box" style="background-color:#F5F5F5">
+                                                                        <iron-icon class="icon" icon="icons:close"></iron-icon>
+                                                               </div>
+                                                               <iron-icon class="icon" icon="icons:close"></iron-icon>
+                                                      </div>
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#F44336">
                                                                <div class="dummy-box" style="background-color:#F44336"></div>
                                                       </div>
@@ -128,12 +120,14 @@
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#9C27B0">
                                                                <div class="dummy-box" style="background-color:#9C27B0"></div>
                                                       </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#9E9E9E">
-                                                               <div class="dummy-box" style="background-color:#9E9E9E"></div>
-                                                      </div>
+
 
                                              </div>
                                              <div class="layout horizontal">
+                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#E0E0E0">
+                                                               <div class="dummy-box" style="background-color:#E0E0E0"></div>
+                                                      </div>
+
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#EF9A9A">
                                                                <div class="dummy-box" style="background-color:#EF9A9A"></div>
                                                       </div>
@@ -158,12 +152,7 @@
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#CE93D8">
                                                                <div class="dummy-box" style="background-color:#CE93D8"></div>
                                                       </div>
-                                                      <div class="color-box" on-tap="nonColorSelected" style="background-color:#EEEEEE">
-                                                               <div class="dummy-box" style="background-color:#EEEEEE">
-                                                                        <iron-icon class="icon" icon="icons:close"></iron-icon>
-                                                               </div>
-                                                               <iron-icon class="icon" icon="icons:close"></iron-icon>
-                                                      </div>
+
                                              </div>
 
                                     </div>
@@ -201,17 +190,25 @@
                   },
                   _calcColorBoxStyle: function (color, colorString) {
                            if (colorString === null) {
-                                    return " background-color: #FAFAFA; border: 1px solid #9E9E9E;";
+                                    return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
                            }
                            if (colorString.length === 3 || colorString.length === 6) {
-                                    return " border: 0px;background-color: " + color;
+                                    return "  border: 2px solid " + ColorLuminance(color, -0.1) + ";background-color: " + color;
                            } else {
-                                    return " border: 0px;background-color: #f44336";
+                                    return "background-color: #FAFAFA; border: 2px solid #BDBDBD;";
                            }
+                  },
+                  _calcSmallIconStyle: function (colorString) {
+                           if (colorString === null) {
+                                    return " opacity: 1 ";
+                           } else if (colorString.length === 3 || colorString.length === 6) {
+                                    return "opacity: 0 ";
+                           }
+
                   },
                   _calcColorTextStyle: function (colorString) {
                            if (colorString === null) {
-                                    return "margin-left: 1px; color: #DD2C00";
+                                    return "margin-left: 1px; color: #212121";
                            }
                            if (colorString.length === 3 || colorString.length === 6) {
                                     return "margin-left: 1px; color: #212121; ";
@@ -222,7 +219,7 @@
                   },
                   _calcColorPrefixStyle: function (colorString) {
                            if (colorString === null) {
-                                    return "opacity: 0";
+                                    return "opacity: 0; color: #212121";
                            }
                            if (colorString.length === 3 || colorString.length === 6) {
                                     return "margin-left: 1px; color: #212121;font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px ";
@@ -252,5 +249,24 @@
                            (g.length == 1 ? "0" + g : g) +
                            (b.length == 1 ? "0" + b : b)
                   );
+         }
+
+         function ColorLuminance(hex, lum) {
+                  if (hex != null) {
+                           hex = String(hex).replace(/[^0-9a-f]/gi, '');
+                           if (hex.length < 6) {
+                                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                           }
+                           lum = lum || 0;
+
+                           var rgb = "#",
+                                    c, i;
+                           for (i = 0; i < 3; i++) {
+                                    c = parseInt(hex.substr(i * 2, 2), 16);
+                                    c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+                                    rgb += ("00" + c).substr(c.length);
+                           }
+                           return rgb;
+                  } else return hex;
          }
 </script>
