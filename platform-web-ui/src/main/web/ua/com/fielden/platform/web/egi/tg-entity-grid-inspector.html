@@ -715,7 +715,7 @@
              */
             _calcRenderingHintsStyle: function (entity, entityIndex, property) {
                 var style = "opacity: 0.3;";
-                var rendHints = (this.renderingHints.length > 0 && this.renderingHints[entityIndex][property]) || [];
+                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property]) || [];
                 for (var property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
