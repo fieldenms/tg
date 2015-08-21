@@ -17,6 +17,15 @@
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
+<style is="custom-style">
+    .summary-dialog paper-button {
+        color: var(--paper-light-blue-500);
+        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+    .summary-dialog paper-button:hover {
+        background: var(--paper-light-blue-50);
+    }
+</style>
 <dom-module id="tg-entity-grid-inspector">
     <style>
         /*miscellanea styles*/
@@ -181,7 +190,7 @@
         <tg-custom-action-dialog id="actionDialog"></tg-custom-action-dialog>
 
         <!-- The dialog for summary when egi is in card layout -->
-        <paper-dialog id="summaryDialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed" on-iron-resize="_fixSumaryDialog">
+        <paper-dialog id="summaryDialog" class="summary-dialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed" on-iron-resize="_fixSumaryDialog">
             <template is="dom-if" if="[[totals]]">
                 <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
                     <template is="dom-repeat" items="[[_calcCardSummary(columns)]]">
