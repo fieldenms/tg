@@ -136,7 +136,8 @@
                 	dialog.open();
                 }.bind(this), 1);
        		}.bind(domBind);
-        	var div = document.createElement('div');
+        	
+       		var div = domBind.content.ownerDocument.createElement('div');
         	div.innerHTML = '<paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
 
                 '<paper-dialog-scrollable>' +
