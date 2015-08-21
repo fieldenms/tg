@@ -6,7 +6,6 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
 <dom-module id="tg-colour-picker">
@@ -70,9 +69,7 @@
                            margin-left: 5px;
                   }
          </style>
-
          <template>
-
                   <paper-input-container always-float-label>
                            <div class="layout horizontal center">
                                     <div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]">
@@ -82,12 +79,9 @@
                                     <div prefix style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
                                     <input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
                            </div>
-
                   </paper-input-container>
-
                   <iron-dropdown positionTarget="fab" id="dropdown">
                            <div class="dropdown-content">
-
                                     <div class="layout vertical" style="margin:10px 10px 10px 10px;">
                                              <div class="layout horizontal">
                                                       <div class="color-box" on-tap="nonColorSelected" style="background-color:#F5F5F5">
@@ -120,14 +114,11 @@
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#9C27B0">
                                                                <div class="dummy-box" style="background-color:#9C27B0"></div>
                                                       </div>
-
-
                                              </div>
                                              <div class="layout horizontal">
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#E0E0E0">
-                                                               <div class="dummy-box" style="background-color:#E0E0E0"></div>
+                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#D7CCC8">
+                                                               <div class="dummy-box" style="background-color:#D7CCC8"></div>
                                                       </div>
-
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#EF9A9A">
                                                                <div class="dummy-box" style="background-color:#EF9A9A"></div>
                                                       </div>
@@ -152,15 +143,10 @@
                                                       <div class="color-box" on-tap="colorSelected" style="background-color:#CE93D8">
                                                                <div class="dummy-box" style="background-color:#CE93D8"></div>
                                                       </div>
-
                                              </div>
-
                                     </div>
-
                            </div>
                   </iron-dropdown>
-
-
          </template>
 </dom-module>
 <script>
