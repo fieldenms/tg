@@ -434,10 +434,9 @@
                 }
             };
         Polymer({
-            is: "tg-entity-grid-inspector",
+            is: "tg-@entityType-grid-inspector",
 
             properties: {
-                entityType: String,
                 entities: {
                     type: Array,
                     observer: "_entitiesChanged"
