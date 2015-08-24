@@ -271,8 +271,10 @@
                 };
                 
                 self._processResponse = (function(e, name, customHandlerFor) {
+                    console.log("PROCESS RESPONSE");
                 	console.log(name, ": iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
                     if (e.detail.xhr.status === 200) { // successful execution of the request
+                        e.detail.successful = true;
                     	var deserialisedResult = this._serialiser().deserialise(e.detail.response);
                     	
                     	if (this._reflector().isWarning(deserialisedResult)) {
@@ -280,7 +282,11 @@
                     		this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult));
                     	} else {
                     		// continue with normal handling of the result's instance
-    	                    customHandlerFor(deserialisedResult.instance);
+    	                    e.detail.successful = customHandlerFor(deserialisedResult.instance);
+                    		// in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
+                    		if (e.detail.successful !== false) {
+                    		    e.detail.successful = true;
+                    		}
                     	}
                     } else { // other codes
                         this._openToastForError('Request could not be dispatched.', 'Most likely due to networking issues the request could not be dispatched to server.');

@@ -109,11 +109,11 @@
                 var promise = this.action();
                 if (promise) {
                     promise
-                    //.catch(function (value) { console.log('AJAX ERROR', value);})
                     .then(  // first a handler for successful promise execution
                             function(ironRequest) {
                                 if (self.eventChannel && self.role) {
-                                    if (ironRequest.xhr.status === 200) {
+                                    console.log('AJAX PROMISE THEN', ironRequest.successful);
+                                    if (ironRequest.xhr.status === 200 && ironRequest.successful === true) {
                                         postal.publish({
                                             channel: self.eventChannel,
                                             topic: self.role + '.post.success',

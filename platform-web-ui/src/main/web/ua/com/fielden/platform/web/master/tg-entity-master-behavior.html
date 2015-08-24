@@ -183,6 +183,8 @@
 				
 				    // custom external action
 				    this.postSaved(potentiallySavedEntity, newBindingEntity);
+				    
+				    return potentiallySavedEntity.isValid();
 				}).bind(self);
 				
                 self._postSavedDefaultError = (function (errorResult) {
