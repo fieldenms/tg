@@ -185,13 +185,13 @@
                         var summary = customObject.summary;
 
                         self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary);
-                	}, function (errorResult) {
-                		self._postRunDefaultError(errorResult);
                 	});
                 };
                 
                 self._processRunnerError = function (e) {
-                	self._processError(e, "run");
+                	self._processError(e, "run", function (errorResult) {
+                        self._postRunDefaultError(errorResult);
+                    });
                 };
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 

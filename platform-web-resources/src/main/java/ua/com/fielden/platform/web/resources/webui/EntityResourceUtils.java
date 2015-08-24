@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
+import org.restlet.Response;
+import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.dao.DefaultEntityProducer;
@@ -506,11 +508,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param representationCreator
      * @return
      */
-    public static Representation handleUndesiredExceptions(final Supplier<Representation> representationCreator, final RestServerUtil restUtil) {
+    public static Representation handleUndesiredExceptions(final Response response, final Supplier<Representation> representationCreator, final RestServerUtil restUtil) {
         try {
             return representationCreator.get();
         } catch (final Exception undesiredEx) {
             logger.error(undesiredEx.getMessage(), undesiredEx);
+            response.setStatus(Status.SERVER_ERROR_INTERNAL);
             return restUtil.errorJSONRepresentation(undesiredEx);
         }
     }

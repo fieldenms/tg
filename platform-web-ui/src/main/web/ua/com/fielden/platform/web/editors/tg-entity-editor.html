@@ -76,7 +76,7 @@
     	</tg-editor>
         <tg-entity-editor-result id="result" on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed"></tg-entity-editor-result>
         
-        <iron-ajax id="ajaxSearcher" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
+        <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
         <tg-serialiser id="serialiser"></tg-serialiser>
         
     </template>
@@ -110,11 +110,11 @@
              ********************************************************
              ********************************************************/
             properties: {
-            	/* Indicates whether a search is in progress. This property controls visibility of the progress indecator. */
+            	/* Indicates whether a search is in progress. This property controls visibility of the progress indecator. 
+            	 * It is bound to iron-ajax property loading, which basicaly controlls spinner visibility. */
                 searching: {
                     type: Boolean,
-                    value: false,
-                    notify: false
+                    value: false
                 },
                 
                 _searchQuery: {
@@ -437,7 +437,6 @@
                 // prep this.searchQuery for highlighting of the matching parts in the search result
                 if (!inputText) {
                     this._searchQuery = "";
-                    this.searching = false;
                 } else {
                     this._searchQuery = replaceAll('*', '\\w*', inputText.toUpperCase());
                 }
@@ -449,7 +448,6 @@
                 var container = self.$.container;
 
                 if (this._searchQuery /*&& this.hasFocus === true*/ ) {
-                    this.searching = true;
 
                     self.async((function () {
                         // close the result overlay, but prevent on-change firing
@@ -476,7 +474,7 @@
                 result.reflector = this.reflector();
 
                 result.clearSelection();
-                self.searching = false;
+                //self.searching = false;
                 
                 for (var index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
@@ -691,17 +689,16 @@
             	var self = this;
                 self.processResponse(e, "search", function (foundEntities) {
                     self._onFound(foundEntities);
-                }, function (errorResult) {
-                    self.postSearchedDefaultError(errorResult);
-                    self.searching = false;
                 });
             },
             
             _processSearcherError: function (e) {
-                this.searching = false;
                 this.opened = true;
                 this.$.result.close();
-                this.processError(e, "search");
+                this.processError(e, "search", function (errorResult) {
+                    self.postSearchedDefaultError(errorResult);
+                    //self.searching = false;
+                });
             },
             
             _selectNextOnKeyDown: function(e) {

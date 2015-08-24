@@ -10,7 +10,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -68,8 +67,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     @Post
     @Override
-    public Representation post(final Representation envelope) throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> tryToSave(envelope), restUtil);
+    public Representation post(final Representation envelope) {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> tryToSave(envelope), restUtil);
     }
 
     /**
@@ -77,8 +76,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     @Put
     @Override
-    public Representation put(final Representation envelope) throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+    public Representation put(final Representation envelope) {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             if (envelope != null) {
                 final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
                 final T entity = utils.createValidationPrototypeWithCentreContext(
@@ -99,7 +98,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     @Delete
     @Override
     public Representation delete() {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             if (entityId == null) {
                 final String message = String.format("New entity was not persisted and thus can not be deleted. Actually this error should be prevented at the client-side.");
                 logger.error(message);

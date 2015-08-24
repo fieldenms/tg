@@ -163,13 +163,13 @@
                 self._processSaverResponse = function (e) {
                 	self._processResponse(e, "save", function (potentiallySavedEntity) {
                 		self._postSavedDefault(potentiallySavedEntity);
-                	}, function (errorResult) {
-                		self._postSavedDefaultError(errorResult);
                 	});
                 };
                 
                 self._processSaverError = function (e) {
-                	self._processError(e, "save");
+                	self._processError(e, "save", function (errorResult) {
+                        self._postSavedDefaultError(errorResult);
+                    });
                 };
 
 				self._createActions();

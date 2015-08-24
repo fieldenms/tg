@@ -110,21 +110,21 @@
                 if (promise) {
                     promise
                     .then(function(ironRequest) {
-                        if (ironRequest.xhr.status === 200) {
-                            if (self.eventChannel && self.role) {
+                        if (self.eventChannel && self.role) {
+                            if (ironRequest.xhr.status === 200) {
                                 postal.publish({
                                     channel: self.eventChannel,
                                     topic: self.role + '.post.success',
                                     data: {}
                                 });
-                            }
-                        } else {
-                            if (self.eventChannel && self.role) {
+                            } else {
+                                
                                 postal.publish({
                                     channel: self.eventChannel,
                                     topic: self.role + '.post.error',
                                     data: {}
                                 });
+                                self._afterExecution();
                             }
                         }
                     });
@@ -178,8 +178,6 @@
 
             // Make spinner invisible
             this.$.spinner.style.visibility = 'hidden';
-            
-            // publish 
         }
     };
 	

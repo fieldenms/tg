@@ -229,29 +229,27 @@
                 self._processSaverResponse = function (e) {
                 	self.$.selection_criteria._processResponse(e, "save", function (okString) {
                         console.log("CENTRE SAVED", okString);
-
                         self.retrieve();
-                    }, function (errorResult) {
-                        // This function will be invoked after server-side error appear.
-                        console.warn("SERVER ERROR: ", errorResult);
                     });
                 };
                 self._processSaverError = function (e) {
-                	self.$.selection_criteria._processError(e, "save");
+                	self.$.selection_criteria._processError(e, "save", function (errorResult) {
+                        // This function will be invoked after server-side error appear.
+                        console.warn("SERVER ERROR: ", errorResult);
+                    });
                 };
                 
                 self._processDiscarderResponse = function (e) {
                 	self.$.selection_criteria._processResponse(e, "discard", function (okString) {
                         console.log("CENTRE DISCARDED", okString);
-
                         self.retrieve();
-                    }, function (errorResult) {
-                        // This function will be invoked after server-side error appear.
-                        console.warn("SERVER ERROR: ", errorResult);
                     });
                 };
                 self._processDiscarderError = function (e) {
-                	self.$.selection_criteria._processError(e, "discard");
+                	self.$.selection_criteria._processError(e, "discard", function (errorResult) {
+                        // This function will be invoked after server-side error appear.
+                        console.warn("SERVER ERROR: ", errorResult);
+                    });
                 };
                 
                 self._editAction = (function () {
