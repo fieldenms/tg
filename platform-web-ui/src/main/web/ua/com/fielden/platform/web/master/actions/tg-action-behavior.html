@@ -109,26 +109,30 @@
                 var promise = this.action();
                 if (promise) {
                     promise
-                    .then(function(ironRequest) {
-                        if (self.eventChannel && self.role) {
-                            if (ironRequest.xhr.status === 200) {
-                                postal.publish({
-                                    channel: self.eventChannel,
-                                    topic: self.role + '.post.success',
-                                    data: {}
-                                });
-                            } else {
-                                postal.publish({
-                                    channel: self.eventChannel,
-                                    topic: self.role + '.post.error',
-                                    data: {}
-                                });
-                                // call the generic button execution logic, which ensures stopping of the spinner and handling of
-                                // its enabled state
-                                self._afterExecution();
-                            }
-                        }
-                    });
+                    //.catch(function (value) { console.log('AJAX ERROR', value);})
+                    .then(  // first a handler for successful promise execution
+                            function(ironRequest) {
+                                if (self.eventChannel && self.role) {
+                                    if (ironRequest.xhr.status === 200) {
+                                        postal.publish({
+                                            channel: self.eventChannel,
+                                            topic: self.role + '.post.success',
+                                            data: {}
+                                        });
+                                    } else {
+                                        postal.publish({
+                                            channel: self.eventChannel,
+                                            topic: self.role + '.post.error',
+                                            data: {}
+                                        });
+                                        // call the generic button execution logic, which ensures stopping of the spinner and handling of
+                                        // its enabled state
+                                        self._afterExecution();
+                                    }
+                                }
+                            },
+                            // and in case of some exceptional situation let's provide a trivial catch handler
+                            function (value) { console.log('AJAX PROMISE CATCH', value);});
                 }
             }).bind(this);
         },

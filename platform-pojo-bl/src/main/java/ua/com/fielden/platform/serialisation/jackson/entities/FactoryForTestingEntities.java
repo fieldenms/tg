@@ -171,7 +171,7 @@ public class FactoryForTestingEntities {
     public EntityWithString createEntityWithStringAndResult() {
         final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
-        entity.getProperty("prop").setRequiredValidationResult(new Result(entity, "Ex.", new Exception("Exception.")));
+        entity.getProperty("prop").setRequiredValidationResult(new Result(entity, new Exception("Exception.")));
         return finalise(entity);
     }
 

@@ -288,6 +288,7 @@
                 }).bind(self);
                 
                 self._processError = (function(e, name, customErrorHandlerFor) {
+                    console.log("PROCESS ERROR", e.error);
                     var xhr = e.detail.request.xhr;
                     if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
                         var deserialisedResult = this._serialiser().deserialise(xhr.response);

@@ -28,13 +28,13 @@ import ua.com.fielden.platform.swing.utils.SimpleLauncher;
 
 /**
  * This is a layer, which serves as a validation feedback indicator.
- * 
+ *
  * The current implementation simply changes the foreground colour of the component and updates its tool tip. Later modifications may introduce glyph painting.
- * 
+ *
  * IMPORTANT: once layer painted its state, the result is set to null.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
     private static final long serialVersionUID = 1L;
@@ -89,7 +89,7 @@ public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
 
     /**
      * Bounds passed layer to this one. Binding means unidirectional binding from this layer to passed one between {@link Result} properties on their UI's.
-     * 
+     *
      * @param key
      *            - {@link String} key, by which this layer could be obtained later
      * @param validationLayer
@@ -102,7 +102,7 @@ public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
 
     /**
      * Unbounds passed layer, if it was bounded
-     * 
+     *
      * @param validationLayer
      */
     @SuppressWarnings("unchecked")
@@ -122,7 +122,7 @@ public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
 
     /**
      * Returns unmodifiable list of layers, bounded to this one
-     * 
+     *
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -136,9 +136,9 @@ public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
 
     /**
      * Provides painting logic.
-     * 
+     *
      * @author 01es
-     * 
+     *
      */
     public class ValidationUi extends AbstractLayerUI<T> {
         private final JComponent component;
@@ -160,7 +160,7 @@ public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
 
         /**
          * additional method for BoundeValidationUi descendant
-         * 
+         *
          * @param g2
          * @param layer
          */
@@ -221,7 +221,7 @@ public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
 
         /**
          * Determines color based on result state.
-         * 
+         *
          * @param result
          * @return
          */
@@ -238,7 +238,7 @@ public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
 
         /**
          * Sets the result and triggers layer repainting.
-         * 
+         *
          * @param result
          */
         @SuppressWarnings("unchecked")
@@ -282,7 +282,7 @@ public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
             @Override
             protected Boolean action(final ActionEvent e) throws Exception {
                 if (layer.getUI().getResult() == null || layer.getUI().getResult().isSuccessful()) {
-                    layer.getUI().setResult(new Result(null, "failed validation", new Exception()));
+                    layer.getUI().setResult(new Result(null, new Exception("failed validation")));
                 } else {
                     layer.getUI().setResult(new Result(null, "all ok"));
                 }
@@ -297,7 +297,6 @@ public class ValidationLayer<T extends JComponent> extends JXLayer<T> {
 
             @Override
             protected Boolean action(final ActionEvent e) throws Exception {
-                @SuppressWarnings("unchecked")
                 final ValidationLayer bounded = layer.getBoundedLayers().get(boundedLayerKey);
                 if (bounded != null) {
                     layer.unboundLayer(bounded);
