@@ -118,12 +118,13 @@
                                     data: {}
                                 });
                             } else {
-                                
                                 postal.publish({
                                     channel: self.eventChannel,
                                     topic: self.role + '.post.error',
                                     data: {}
                                 });
+                                // call the generic button execution logic, which ensures stopping of the spinner and handling of
+                                // its enabled state
                                 self._afterExecution();
                             }
                         }
