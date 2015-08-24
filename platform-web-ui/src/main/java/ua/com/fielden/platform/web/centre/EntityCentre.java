@@ -556,10 +556,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return defaultCentre;
     }
 
+    public ICentreDomainTreeManagerAndEnhancer getAssociatedCentre() {
+        return CentreUtils.getFreshCentre(getUserSpecificGlobalManager(), this.menuItemType);
+    }
+
     private IRenderable createRenderableRepresentation() {
         logger.debug("Initiating fresh centre...");
 
-        final ICentreDomainTreeManagerAndEnhancer centre = CentreUtils.getFreshCentre(getUserSpecificGlobalManager(), this.menuItemType);
+        final ICentreDomainTreeManagerAndEnhancer centre = getAssociatedCentre();
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");

@@ -629,7 +629,9 @@
                     }
                     self.push('egiModel', egiEntity);
                 });
-                if (this.egiModel.every(function (elem) {return elem.selected})) {
+                if (this.egiModel.every(function (elem) {
+                    return elem.selected
+                })) {
                     this.selectAll = true;
                 }
             },
@@ -658,7 +660,9 @@
                     _processEntitySelection(this.selectedEntities, this.entities[index], e.srcElement.checked);
                     if (this.selectedAll && !e.srcElement.checked) {
                         this.selectedAll = false;
-                    } else if (this.egiModel.every(function (elem) {return elem.selected})) {
+                    } else if (this.egiModel.every(function (elem) {
+                        return elem.selected
+                    })) {
                         this.selectAll = true;
                     }
                 }

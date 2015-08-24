@@ -26,7 +26,7 @@
         background: var(--paper-light-blue-50);
     }
 </style>
-<dom-module id="tg-@entityType-grid-inspector">
+<dom-module id="tg-@miType-grid-inspector">
     <style>
         /*miscellanea styles*/
         :host {
@@ -198,10 +198,10 @@
                             <div class="data-label truncate">[[item.columnTitle]]</div>
                             <div class="data-value relative">
                                 <template is="dom-if" if="[[_isBooleanProp(totals, item)]]">
-                                    <iron-icon class="card-icon" icon="[[_getBooleanIcon(totals, item)]]"></iron-icon>
+                                    <iron-icon class="card-icon" icon="[[_getBooleanIcon(totals, item.property)]]"></iron-icon>
                                 </template>
                                 <template is="dom-if" if="[[_isNotBooleanProp(totals, item)]]">
-                                    <div class="truncate">[[_getValue(totals, item)]]</div>
+                                    <div class="truncate">[[_getValue(totals, item.property, item.type)]]</div>
                                 </template>
                             </div>
                         </div>
@@ -263,10 +263,10 @@
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
+                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                     </template>
                                     <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                        <div class="truncate relative" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column)]]</div>
+                                        <div class="truncate relative" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
                                     </template>
                                 </div>
                             </template>
@@ -299,10 +299,10 @@
                                     <template is="dom-if" if="[[summary]]">
                                         <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
                                             <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary)]]"></iron-icon>
+                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
                                             </template>
                                             <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                <div class="truncate relative" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary)]]</div>
+                                                <div class="truncate relative" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary.property, summary.type)]]</div>
                                             </template>
                                         </div>
                                     </template>
@@ -415,10 +415,9 @@
                 }
             };
         Polymer({
-            is: "tg-entity-grid-inspector",
+            is: "tg-@miType-grid-inspector",
 
             properties: {
-                entityType: String,
                 entities: {
                     type: Array,
                     observer: "_entitiesChanged"
@@ -739,27 +738,27 @@
             /**
              * Returns the property value of the specified entity.
              */
-            _get: function (entity, column) {
-                return entity && entity.get(column.property);
+            _get: function (entity, property) {
+                return entity && entity.get(property);
             },
             /**
              * Returns the property value of the specified entity and converts it to string.
              */
-            _getValue: function (entity, column) {
-                if (!entity || !column || this._get(entity, column) === null) {
+            _getValue: function (entity, property, type) {
+                if (!entity || !property || !type || this._get(entity, property) === null) {
                     return "";
-                } else if (this.$.reflector.findTypeByName(column.type)) {
-                    return this.$.reflector.convert(this._get(entity, column));
-                } else if (column.type === 'Date') {
-                    return moment(entity.get(column.property)).format("L LT");
-                } else if (typeof entity.get(column.property) === 'number') {
-                    if (column.type === 'BigDecimal') {
-                        return entity.get(column.property).toFixed(2);
+                } else if (this.$.reflector.findTypeByName(type)) {
+                    return this.$.reflector.convert(this._get(entity, property));
+                } else if (type === 'Date') {
+                    return moment(entity.get(property)).format("L LT");
+                } else if (typeof entity.get(property) === 'number') {
+                    if (type === 'BigDecimal') {
+                        return entity.get(property).toFixed(2);
                     } else {
-                        return entity.get(column.property).toLocaleString(this.$.appConfig.locale);
+                        return entity.get(property).toLocaleString(this.$.appConfig.locale);
                     }
                 } else {
-                    return entity.get(column.property);
+                    return entity.get(property);
                 }
             },
             /**
@@ -802,7 +801,7 @@
              * Determines whether property is boolean or not.
              */
             _isBooleanProp: function (entity, column) {
-                return column.type === 'Boolean' && this._get(entity, column) !== null
+                return column.type === 'Boolean' && this._get(entity, column.property) !== null
             },
             /**
              * Determines whether property is not boolean property or is.
@@ -819,8 +818,8 @@
             /**
              * Returns icon that represents the boolean value.
              */
-            _getBooleanIcon: function (entity, column) {
-                return "icons:" + (this._get(entity, column) ? "check" : "clear");
+            _getBooleanIcon: function (entity, property) {
+                return "icons:" + (this._get(entity, property) ? "check" : "clear");
             },
             /**
              * Tap action on data column. TODO: implement this.

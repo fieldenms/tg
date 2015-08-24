@@ -19,6 +19,7 @@ import ua.com.fielden.platform.web.factories.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.CentreEgiResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
@@ -180,6 +181,7 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/criteria/{mitype}", new CriteriaResourceFactory(webUiConfig, injector));
         router.attach("/centre/{mitype}", new CentreResourceFactory(webUiConfig, injector));
         router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(webUiConfig, injector));
+        router.attach("/centre_ui/egi/{mitype}", new CentreEgiResourceFactory(webUiConfig, injector));
     }
 
     /**
