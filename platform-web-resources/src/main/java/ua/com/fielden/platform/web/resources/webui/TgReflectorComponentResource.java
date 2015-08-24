@@ -5,17 +5,19 @@ import java.io.ByteArrayInputStream;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.MediaType;
+import org.restlet.data.Encoding;
+import org.restlet.engine.application.EncodeRepresentation;
+import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
+
+import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-
-import com.google.common.base.Charsets;
 
 /**
  * Resource for tg-reflector component.
@@ -42,8 +44,8 @@ public class TgReflectorComponentResource extends ServerResource {
     protected Representation get() throws ResourceException {
         final String typeTableRepresentation = new String(restUtil.getSerialiser().serialise(tgJackson.getTypeTable(), SerialiserEngines.JACKSON), Charsets.UTF_8);
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/reflection/tg-reflector.html");
-        final byte[] reflectorComponent = text.
-                replace("@typeTable", typeTableRepresentation).getBytes(Charsets.UTF_8);
-        return RestServerUtil.encodedRepresentation(new ByteArrayInputStream(reflectorComponent), MediaType.TEXT_HTML);
+
+        final byte[] reflectorComponent = text.replace("@typeTable", typeTableRepresentation).getBytes(Charsets.UTF_8);
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(reflectorComponent)));
     }
 }

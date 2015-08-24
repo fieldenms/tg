@@ -14,6 +14,8 @@ import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 import org.restlet.security.Authenticator;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebUiComponentResourceFactory;
@@ -31,8 +33,6 @@ import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceF
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
-
-import com.google.inject.Injector;
 
 /**
  * Represents the web application that is running on the server as a resource provider for browser client. Extend this abstract web application in order to provide custom entity
@@ -122,7 +122,7 @@ public abstract class AbstractWebUiResources extends Application {
         //For egi example TODO remove later.
         router.attach("/test/egi", new EgiExampleResourceFactory(injector));
         // type meta info resource
-        router.attach("/tg-reflector", new TgReflectorComponentResourceFactory(injector));
+        router.attach("/tg-reflector.html", new TgReflectorComponentResourceFactory(injector));
 
         // attache internal components and related resources
         //final Set<String> webComponents = new HashSet<>();
