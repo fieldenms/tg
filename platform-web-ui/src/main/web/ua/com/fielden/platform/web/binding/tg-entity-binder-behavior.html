@@ -260,13 +260,13 @@
                 
                 self._processRetrieverResponse = function (e) {
                 	self._processResponse(e, "retrieve", function (entityAndCustomObject) {
-                		self._postRetrievedDefault(entityAndCustomObject);
+                		return self._postRetrievedDefault(entityAndCustomObject);
                 	});
                 };
                 
                 self._processRetrieverError = function (e) {
                 	self._processError(e, "retrieve", function (errorResult) {
-                        self._postRetrievedDefaultError(errorResult);
+                        return self._postRetrievedDefaultError(errorResult);
                     });
                 };
                 
@@ -283,6 +283,7 @@
                     	} else {
                     		// continue with normal handling of the result's instance
     	                    e.detail.successful = customHandlerFor(deserialisedResult.instance);
+                    		console.log('CUSTOM HANDLER FOR RETURNED', e.detail.successful);
                     		// in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
                     		if (e.detail.successful !== false) {
                     		    e.detail.successful = true;

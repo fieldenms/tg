@@ -151,8 +151,9 @@
             if (newValue && oldValue === undefined) {
                 self.async(function () { 
                 	self.postAction = function (smth) {
-                    	newValue(smth);
+                    	var result = newValue(smth);
                     	self._afterExecution();
+                    	return result;
                 	};
                 });
             }
@@ -164,8 +165,9 @@
             if (newValue && oldValue === undefined) {
                 self.async(function () { 
 	                self.postActionError = function (smth) {
-	                    newValue(smth);
+	                    var result = newValue(smth);
 	                    self._afterExecution();
+	                    return result;
 	                };
                 });
             }
