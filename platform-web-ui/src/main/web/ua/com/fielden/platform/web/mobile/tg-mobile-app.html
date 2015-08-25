@@ -20,17 +20,17 @@
         Polymer({
 
             is: "tg-mobile-app",
-            
+
             listeners: {
                 "menu-item-selected": "_showView"
             },
 
-            _showView: function (e) {
-                _setSelected(e.detail);
-            },
-            
             _setSelected: function (selected) {
                 this.$.pages.selected = selected;
+            },
+
+            _showView: function (e) {
+                this._setSelected(e.detail);
             },
 
             _animationFinished: function (e, detail, source) {
@@ -52,7 +52,11 @@
                                 elementName: "tg-Incident-master",
                                 type: "master",
                                 attrs: {
-                                    uuid: "Incident"
+                                    entityId: "new",
+                                    centreUuid: "menu",
+                                    currentState: "EDIT",
+                                    entityType: "fleet.incident.Incident",
+                                    uuid: "Incident",
                                 }
                             }
                         }

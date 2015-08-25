@@ -16,7 +16,7 @@
 
         <div class="items layout horizontal wrap">
                 <template is="dom-repeat" items="[[menuConfig.items]]">
-                    <paper-button on-tap="_itemSelected">[[item.title]]</paper-button>
+                    <paper-button raised on-tap="_itemSelected">[[item.title]]</paper-button>
                 </template>
             </tg-tile-layout>
         </div>
@@ -36,7 +36,7 @@
             
             hostAttributes: {
                 "class": "layout vertical"
-            }
+            },
 
             _itemSelected: function (e, detail) {
                 var model = e.model;
