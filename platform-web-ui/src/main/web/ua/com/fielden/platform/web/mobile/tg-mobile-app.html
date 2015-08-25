@@ -1,0 +1,69 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
+<link rel="import" href="/resources/mobile/tg-mobile-menu.html">
+<link rel="import" href="/resources/mobile/tg-mobile-view.html">
+<link rel="import" href="/resources/components/postal-lib.html">
+
+<dom-module id="tg-mobile-app">
+    <template>
+        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
+            <tg-mobile-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-mobile-menu>
+            <template is="dom-repeat" items="[[menuConfig.items]]">
+                <tg-mobile-view class="fit hero-animatable" name$="[[item.title]]" menu-item="[[item]]"></tg-mobile-view>
+            </template>
+        </neon-animated-pages>
+    </template>
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-mobile-app",
+            
+            listeners: {
+                "menu-item-selected": "_showView"
+            },
+
+            _showView: function (e) {
+                _setSelected(e.detail);
+            },
+            
+            _setSelected: function (selected) {
+                this.$.pages.selected = selected;
+            },
+
+            _animationFinished: function (e, detail, source) {
+                var viewToLoad;
+                if (this.$.pages.selected != 'menu') {
+                    detail.toPage.reload();
+                }
+            },
+
+            attached: function () {
+                var self = this;
+                this.menuConfig = {
+                    items: [
+                        {
+                            title: "Incident master",
+                            description: "Entity centre description",
+                            view: {
+                                import: "/master_ui/fleet.incident.Incident",
+                                elementName: "tg-Incident-master",
+                                type: "master",
+                                attrs: {
+                                    uuid: "Incident"
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                //Selectes the menu
+                this.async(function () {
+                    self._setSelected("menu");
+                }, 1);
+            }
+        });
+    })();
+</script>

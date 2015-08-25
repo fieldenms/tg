@@ -1,0 +1,47 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+
+
+<dom-module id="tg-mobile-menu">
+    <style>
+        .toolbar {
+            padding: 0 16px;
+            height: 20px;
+            color: white;
+            background-color: #0288D1
+        }
+    </style>
+    <template>
+        <div class="toolbar">[[menuConfig.title]]</div>
+
+        <div class="items layout horizontal wrap">
+                <template is="dom-repeat" items="[[menuConfig.items]]">
+                    <paper-button on-tap="_itemSelected">[[item.title]]</paper-button>
+                </template>
+            </tg-tile-layout>
+        </div>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-mobile-menu",
+
+            properties: {
+                menuConfig: Object,
+            },
+            
+            hostAttributes: {
+                "class": "layout vertical"
+            }
+
+            _itemSelected: function (e, detail) {
+                var model = e.model;
+                this.fire("menu-item-selected", model.item.title);
+            }
+        });
+    })();
+</script>

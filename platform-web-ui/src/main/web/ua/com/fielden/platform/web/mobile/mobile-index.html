@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>@title</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
+    <link rel="import" href="/resources/mobile/tg-mobile-app.html">
+
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+
+</head>
+
+<body unresolved class="fullbleed">
+    <template is="dom-bind" id="app">
+        <tg-mobile-app class="fit"></tg-mobile-app>
+    </template>
+    <script>
+        (function () {
+            var app = document.querySelector('#app');
+        })();
+    </script>
+</body>
+
+</html>

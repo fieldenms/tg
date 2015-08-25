@@ -1,0 +1,33 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/element_loader/tg-element-loader.html">
+
+<dom-module id="tg-mobile-view">
+    <style>
+        .toolbar {
+            padding: 0 16px;
+            height: 20px;
+            color: white;
+            background-color: #0288D1
+        }
+    </style>
+    <template>
+        <div class="toolbar">[[menuItem.title]]</div>
+        <tg-element-loader id="elementToLoad" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]"></tg-element-loader>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-mobile-view",
+
+            properties: {
+                menuItem: Object
+            },
+
+            hostAttributes: {
+                "class": "layout vertical"
+            }
+        });
+    })();
+</script>
