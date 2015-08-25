@@ -11,9 +11,8 @@ import org.hibernate.usertype.UserType;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.types.markers.IColourType;
-import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 
-public class ColourUserType implements UserType, ISecurityTokenType {
+public class ColourUserType implements UserType, IColourType {
 
 	private static final int[] SQL_TYPES = { Types.VARCHAR };
 
