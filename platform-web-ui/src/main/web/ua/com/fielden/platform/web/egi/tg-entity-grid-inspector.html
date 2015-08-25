@@ -870,17 +870,16 @@
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.
              */
-            _showSummary: function (e, detail, source) {
-                var summaryDialog = this.$.summaryDialog;
+            _showSummary: function (e, detail, source) {                
                 //Openening dialog
                 if (this.cardLayout && this.totals) {
-                    Polymer.dom(Polymer.dom(summaryDialog).parentNode).removeChild(summaryDialog);
+                    var summaryDialog = this.$.summaryDialog;
                     Polymer.dom(document.body).appendChild(summaryDialog);
                     Polymer.dom.flush();
 
                     this.async(function () {
                         summaryDialog.open();
-                    }.bind(this), 200);
+                    }.bind(this), 1);
                 }
             },
             /**

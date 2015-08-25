@@ -121,7 +121,6 @@
         	},
 
             _showMessageDlg: function (event) {
-                Polymer.dom(this).removeChild(this.$.msgDialog);
                 Polymer.dom(document.body).appendChild(this.$.msgDialog);
                 Polymer.dom().flush();
                 
@@ -157,7 +156,6 @@
                 for (var index = 0; index < toast.length; index++) {
                     Polymer.dom(document.body).removeChild(toast.item(index));
                 }
-                Polymer.dom(Polymer.dom(this.$.toast).parentNode).removeChild(this.$.toast);
                 Polymer.dom(document.body).appendChild(this.$.toast);
                 Polymer.dom().flush();
                 this.$.toast.show();

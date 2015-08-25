@@ -531,7 +531,8 @@
             		this._onChange();
             	}
                 
-            	document.body.removeChild(this.$.result);
+            	Polymer.dom(document.body).removeChild(this.$.result);
+            	Polymer.dom.flush();
             },
             
             /* This method handles an explicit user action for accepting selected values from an autocompleted list.
