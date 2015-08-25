@@ -12,7 +12,7 @@
     </style>
     <template>
         <div class="toolbar">[[menuItem.title]]</div>
-        <tg-element-loader id="elementToLoad" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]"></tg-element-loader>
+        <tg-element-loader id="elementToLoad" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
     </template>
 </dom-module>
 <script>
@@ -28,9 +28,19 @@
             hostAttributes: {
                 "class": "layout vertical"
             },
-            
-            reload: function() {
+
+            reload: function () {
                 this.$.elementToLoad.reload();
+            },
+
+            _afterLoadListener: function (e, detail, view) {
+                var self = this;
+                if (e.target === this.$.elementToLoad) {
+                    detail.postRetrieved = function (entity, bindingEntity, customObject) {};
+                    detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+                    detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                    detail.retrieve();
+                }
             }
         });
     })();

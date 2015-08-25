@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 <link rel="import" href="/resources/mobile/tg-mobile-menu.html">
 <link rel="import" href="/resources/mobile/tg-mobile-view.html">
 <link rel="import" href="/resources/components/postal-lib.html">
@@ -32,12 +34,30 @@
             _showView: function (e) {
                 this._setSelected(e.detail);
             },
+            
+            _showMainMenu: function (e) {
+                this._setSelected("menu");
+            },
 
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
                 if (this.$.pages.selected != 'menu') {
                     detail.toPage.reload();
                 }
+            },
+
+            ready: function () {
+                var self = this;
+                postal.subscribe({
+                    channel: "menu",
+                    topic: "save.post.success",
+                    callback: self._showMainMenu.bind(self)
+                });
+                postal.subscribe({
+                    channel: "menu",
+                    topic: "refresh.post.success",
+                    callback: self._showMainMenu.bind(self)
+                });
             },
 
             attached: function () {
