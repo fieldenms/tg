@@ -12,7 +12,7 @@
     </style>
     <template>
         <div class="toolbar">[[menuItem.title]]</div>
-        <tg-element-loader id="elementToLoad" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+        <tg-element-loader id="elementToLoad" auto import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
     </template>
 </dom-module>
 <script>
@@ -22,24 +22,32 @@
             is: "tg-mobile-view",
 
             properties: {
-                menuItem: Object
+                menuItem: Object,
+                loadedView: Object,
+                firstTimeRetrieved: Boolean
             },
 
             hostAttributes: {
                 "class": "layout vertical"
             },
 
+            ready: function () {
+                this.firstTimeRetrieved = true;
+            },
+
             reload: function () {
-                this.$.elementToLoad.reload();
+                this.loadedView.retrieve();
             },
 
             _afterLoadListener: function (e, detail, view) {
                 var self = this;
+                this.loadedView = detail;
                 if (e.target === this.$.elementToLoad) {
-                    detail.postRetrieved = function (entity, bindingEntity, customObject) {};
+                    detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                        self.fire("menu-item-loaded", self.menuItem.title);
+                    };
                     detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                     detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
-                    detail.retrieve();
                 }
             }
         });

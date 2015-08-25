@@ -24,7 +24,8 @@
             is: "tg-mobile-app",
 
             listeners: {
-                "menu-item-selected": "_showView"
+                "menu-item-selected": "_loadView",
+                "menu-item-loaded": "_showView"
             },
 
             _setSelected: function (selected) {
@@ -34,13 +35,16 @@
             _showView: function (e) {
                 this._setSelected(e.detail);
             },
-            
+
+            _loadView: function (e) {
+                this.$$("[name='" + e.detail + "']").reload();
+            },
+
             _showMainMenu: function (e) {
                 this._setSelected("menu");
             },
 
             _animationFinished: function (e, detail, source) {
-                var viewToLoad;
                 if (this.$.pages.selected != 'menu') {
                     detail.toPage.reload();
                 }
