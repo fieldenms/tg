@@ -153,15 +153,14 @@
             },
             
             show: function () {
-                var toast = document.querySelector('#toast');
-                if (toast) {
-                    Polymer.dom(document.body).removeChild(toast);
+                var toast = document.querySelectorAll('#toast');
+                for (var index = 0; index < toast.length; index++) {
+                    Polymer.dom(document.body).removeChild(toast.item(index));
                 }
-                Polymer.dom(this).removeChild(this.$.toast);
+                Polymer.dom(Polymer.dom(this.$.toast).parentNode).removeChild(this.$.toast);
                 Polymer.dom(document.body).appendChild(this.$.toast);
                 Polymer.dom().flush();
-                this.async(function () {this.$.toast.show();}, 1);
-            	
+                this.$.toast.show();
             }
         })
     })();
