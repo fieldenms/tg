@@ -10,96 +10,109 @@ import org.hibernate.HibernateException;
 import org.hibernate.usertype.UserType;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.types.markers.IColourType;
 import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 
-public class ColourUserType implements UserType, ISecurityTokenType{
-	
+public class ColourUserType implements UserType, ISecurityTokenType {
+
 	private static final int[] SQL_TYPES = { Types.VARCHAR };
 
-    @Override
+	@Override
 	public int[] sqlTypes() {
-        return SQL_TYPES;
-    }
+		return SQL_TYPES;
+	}
 
-    @Override
+	@Override
 	public Class<?> returnedClass() {
-        return ISecurityToken.class;
-    }
+		return IColourType.class;
+	}
 
-    @Override
+	@Override
 	public Object instantiate(final Object argument, final EntityFactory factory) {
-        try {
-            return Class.forName((String) argument);
-        } catch (final Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Could not instantiate instance of '" + SecurityTokenType.class.getName() + " with value [" + argument + "] due to: " + e.getMessage());
-        }
-    }
-    @Override
-	public Object nullSafeGet(final ResultSet resultSet, final String[] names, final Object owner) throws HibernateException, SQLException {
-        final String name = resultSet.getString(names[0]);
-        Object result = null;
-        if (!resultSet.wasNull()) {
-            try {
-                result = Class.forName(name);
-            } catch (final ClassNotFoundException e) {
-                e.printStackTrace();
-                throw new HibernateException("Security token for value '" + name + "' could not be found");
-            }
-        }
-        return result;
-    }
-    @Override
-	public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index) throws HibernateException, SQLException {
-        if (null == value) {
-            preparedStatement.setNull(index, Types.VARCHAR);
-        } else {
-            preparedStatement.setString(index, value instanceof String ? (String) value : ((Class) value).getName());
-        }
-    }
+		try {
+			return Class.forName((String) argument);
+		} catch (final Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException("Could not instantiate instance of '"
+					+ ColourUserType.class.getName() + " with value ["
+					+ argument + "] due to: " + e.getMessage());
+		}
+	}
 
+	@Override
+	public Object nullSafeGet(final ResultSet resultSet, final String[] names,
+			final Object owner) throws HibernateException, SQLException {
+		final String name = resultSet.getString(names[0]);
+		Object result = null;
+		if (!resultSet.wasNull()) {
+			try {
+				result = Class.forName(name);
+			} catch (final ClassNotFoundException e) {
+				e.printStackTrace();
+				throw new HibernateException("Colour for value '" + name
+						+ "' could not be found");
+			}
+		}
+		return result;
+	}
 
-    @Override
-	public Object assemble(final Serializable cached, final Object owner) throws HibernateException {
-        return cached;
-    }
+	@Override
+	public void nullSafeSet(final PreparedStatement preparedStatement,
+			final Object value, final int index) throws HibernateException,
+			SQLException {
+		if (null == value) {
+			preparedStatement.setNull(index, Types.VARCHAR);
+		} else {
+			preparedStatement.setString(
+					index,
+					value instanceof String ? (String) value : ((Class) value)
+							.getName());
+		}
+	}
+
+	@Override
+	public Object assemble(final Serializable cached, final Object owner)
+			throws HibernateException {
+		return cached;
+	}
 
 	@Override
 	public Object deepCopy(final Object value) throws HibernateException {
-				return value;
+		return value;
 	}
 
 	@Override
-	public Serializable disassemble(final Object value) throws HibernateException {
-        return (Serializable) value;
-    }
+	public Serializable disassemble(final Object value)
+			throws HibernateException {
+		return (Serializable) value;
+	}
 
 	@Override
-	public boolean equals(final Object x, final Object y) throws HibernateException {
-        if (x == y) {
-            return true;
-        }
-        if (null == x || null == y) {
-            return false;
-        }
-        return x.equals(y);
-    }
+	public boolean equals(final Object x, final Object y)
+			throws HibernateException {
+		if (x == y) {
+			return true;
+		}
+		if (null == x || null == y) {
+			return false;
+		}
+		return x.equals(y);
+	}
 
-	 @Override
+	@Override
 	public int hashCode(final Object x) throws HibernateException {
-	        return x.hashCode();
-	    }
+		return x.hashCode();
+	}
 
 	@Override
 	public boolean isMutable() {
-				return false;
+		return false;
 	}
 
-
 	@Override
-	public Object replace(final Object original, final Object target, final Object owner) throws HibernateException {
-        return original;
-    }
-	
+	public Object replace(final Object original, final Object target,
+			final Object owner) throws HibernateException {
+		return original;
+	}
+
 }
