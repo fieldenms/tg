@@ -13,8 +13,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.egi.WebEntityGridInspector;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -24,7 +23,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CentreEgiResource extends ServerResource {
-    private final EntityCentre<? extends AbstractEntity<?>> centre;
+    private final WebEntityGridInspector webEgi;
     private final RestServerUtil restUtil;
 
     /**
@@ -37,20 +36,20 @@ public class CentreEgiResource extends ServerResource {
      */
     public CentreEgiResource(
             final RestServerUtil restUtil,
-            final EntityCentre<? extends AbstractEntity<?>> centre,//
+            final WebEntityGridInspector webEgi,//
             final Context context, //
             final Request request, //
             final Response response) {
         init(context, request, response);
         this.restUtil = restUtil;
-        this.centre = centre;
+        this.webEgi = webEgi;
     }
 
     @Override
     protected Representation get() throws ResourceException {
         return EntityResourceUtils.handleUndesiredExceptions(() -> {
             try {
-                return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(centre.build().render().toString().getBytes("UTF-8"))));
+                return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(webEgi.render().toString().getBytes("UTF-8"))));
             } catch (final UnsupportedEncodingException e) {
                 e.printStackTrace();
                 throw new ResourceException(e);

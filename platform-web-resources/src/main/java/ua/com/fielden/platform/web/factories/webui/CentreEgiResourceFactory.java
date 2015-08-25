@@ -6,6 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.egi.WebEntityGridInspector;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreEgiResource;
 
@@ -43,7 +44,7 @@ public class CentreEgiResourceFactory extends Restlet {
         if (Method.GET.equals(request.getMethod())) {
             new CentreEgiResource(
                     restUtil,
-                    ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
+                    new WebEntityGridInspector(ResourceFactoryUtils.getEntityCentre(request, webUiConfig)),
                     getContext(),
                     request,
                     response //

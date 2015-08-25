@@ -10,6 +10,7 @@
 
 <!-- EGI imports -->
 <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
+<link rel="import" href="/centre_ui/egi/@mi_type">
 
 <link rel="import" href="/resources/actions/tg-page-action.html">
 
@@ -166,7 +167,7 @@
             	page-count-updated="{{pageCountUpdated}}"
             	@queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
 
-            <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entity-type="@full_entity_type" @gridLayout>
+            <tg-@egiType-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entity-type="@full_entity_type" @gridLayout>
                 <!-- EGI COLUMNS DOM (GENERATED) -->
                 <!--@egi_columns-->
 
@@ -214,7 +215,7 @@
                 
                 <!--@primary_action-->
                 <!--@secondary_actions-->
-            </tg-entity-grid-inspector>
+            </tg-@egiType-grid-inspector>
         </tg-entity-centre>
     </template>
 </dom-module>

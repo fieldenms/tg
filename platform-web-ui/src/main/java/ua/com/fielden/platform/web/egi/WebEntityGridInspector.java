@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.egi;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
 
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomContainer;
@@ -11,7 +12,6 @@ import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
@@ -21,19 +21,19 @@ public class WebEntityGridInspector implements IRenderable {
 
     private final EntityCentre<? extends AbstractEntity<?>> entityCentre;
 
-    private final String simpleValueString = "<div class='data-entry layout vertical' property='@property-name'>" +
+    private final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
             "<div class='data-label truncate'>@column-title</div>" +
             "<div class='data-value relative' on-tap='_tapAction'>" +
-            "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, @property-name)]]' class='fit'></div>" +
-            "<div class='truncate relative'>[[_getValue(egiEntity.entity, @property-name, @property-type)]]</div>" +
+            "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, '@property-name')]]' class='fit'></div>" +
+            "<div class='truncate relative'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>" +
             "</div>" +
             "</div>";
 
-    private final String booleanValueString = "<div class='data-entry layout vertical' property='@property-name'>" +
+    private final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
             "<div class='data-label truncate'>@column-title</div>" +
             "<div class='data-value relative' on-tap='_tapAction'>" +
-            "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, @property-name)]]' class='fit'></div>" +
-            "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, @property-name)]]'></iron-icon>" +
+            "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, '@property-name')]]' class='fit'></div>" +
+            "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, '@property-name')]]'></iron-icon>" +
             "</div>" +
             "</div>";
 
@@ -50,17 +50,20 @@ public class WebEntityGridInspector implements IRenderable {
             for (final ResultSetProp resultProp : resultProps.get()) {
                 final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
                 final String resultPropName = propertyName.equals("this") ? "" : propertyName;
-                final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
-                final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
-                final Pair<String, String> titleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName);
+                final Class<?> propertyType = "".equals(resultPropName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
                 final String typeTemplate = EntityUtils.isBoolean(propertyType) ? booleanValueString : simpleValueString;
-                domContainer.add(new InnerTextElement(typeTemplate.replaceAll("@property-name", propertyName).replaceAll("@column-title", titleDesc.getKey()).replaceAll("@property-type", egiRepresentationFor(propertyType).toString())));
+                domContainer.add(
+                        new InnerTextElement(typeTemplate
+                                .replaceAll("@calc-property-name", propertyName)
+                                .replaceAll("@property-name", resultPropName)
+                                .replaceAll("@column-title", CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName).getKey())
+                                .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
             }
         }
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-grid-inspector-template.html");
+        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
         final String egiStr = text.
-                replaceAll("@miType", entityCentre.getMenuItemType().getName()).
-                replaceAll("@gridCardDom", domContainer.toString());
+                replaceAll("@miType", entityCentre.getMenuItemType().getSimpleName()).
+                replaceAll("@gridCardDom", Matcher.quoteReplacement(domContainer.toString()));
         return new InnerTextElement(egiStr);
     }
 
