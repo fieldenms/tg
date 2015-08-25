@@ -190,7 +190,7 @@
         <tg-custom-action-dialog id="actionDialog"></tg-custom-action-dialog>
 
         <!-- The dialog for summary when egi is in card layout -->
-        <paper-dialog id="summaryDialog" class="summary-dialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed" on-iron-resize="_fixSumaryDialog">
+        <paper-dialog id="summaryDialog" class="summary-dialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed">
             <template is="dom-if" if="[[totals]]">
                 <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
                     <template is="dom-repeat" items="[[_calcCardSummary(columns)]]">
@@ -873,23 +873,15 @@
             _showSummary: function (e, detail, source) {                
                 //Openening dialog
                 if (this.cardLayout && this.totals) {
-                    var summaryDialog = this.$.summaryDialog;
-                    Polymer.dom(document.body).appendChild(summaryDialog);
+                    var summaryDialog = Polymer.dom(document.body).appendChild(this.$.summaryDialog);
                     Polymer.dom.flush();
-
+                    
                     this.async(function () {
                         summaryDialog.open();
-                    }.bind(this), 1);
+                    }, 200);
                 }
             },
-            /**
-             * Responds on iron-resize event of summary dialog.
-             */
-            _fixSumaryDialog: function () {
-                if (this.$.summaryDialog.opened) {
-                    this.$.summaryDialog.fit();
-                }
-            },
+
             /**
              *  listener for summary dialog close dialog.
              */
