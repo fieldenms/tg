@@ -1,0 +1,55 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/element_loader/tg-element-loader.html">
+
+<dom-module id="tg-mobile-view">
+    <style>
+        .toolbar {
+            padding: 10px;
+            color: white;
+            background-color: var(--paper-light-blue-700);
+        }
+    </style>
+    <template>
+        <div class="toolbar">[[menuItem.title]]</div>
+        <tg-element-loader id="elementToLoad" auto import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-mobile-view",
+
+            properties: {
+                menuItem: Object,
+                loadedView: Object,
+                firstTimeRetrieved: Boolean
+            },
+
+            hostAttributes: {
+                "class": "layout vertical"
+            },
+
+            ready: function () {
+                this.firstTimeRetrieved = true;
+            },
+
+            reload: function () {
+                this.loadedView.retrieve();
+            },
+
+            _afterLoadListener: function (e, detail, view) {
+                var self = this;
+                this.loadedView = detail;
+                if (e.target === this.$.elementToLoad) {
+                    detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                        self.fire("menu-item-loaded", self.menuItem.title);
+                    };
+                    detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+                    detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                }
+            }
+        });
+    })();
+</script>

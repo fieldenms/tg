@@ -55,17 +55,17 @@
             <paper-spinner id="spinner" class="paper-spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
             <div hidden$="[[_skipShowMore(showProgress, hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
         </paper-toast>
+        <!-- class="scrolling" -->
 
         <paper-dialog 
-        	id="msgDialog" 
-        	class="scrolling" 
+        	id="msgDialog"
             on-iron-overlay-closed="_dialogClosed" 
-        	with-backdrop 
+        	with-backdrop
         	entry-animation="scale-up-animation"
         	exit-animation="fade-out-animation">
-        	
-        	<p id="msgDialogText"></p>
-            
+        	<paper-dialog-scrollable>
+        	   <p style="padding: 10px" id="msgDialogText"></p>
+            </paper-dialog-scrollable>
             <div class="buttons">
                 <paper-button dialog-confirm affirmative autofocus>Close</paper-button>
             </div>

@@ -22,11 +22,11 @@
         <template is="dom-if" if="[[menuItem.view]]">
             <template is="dom-if" if="[[!_isCentre(menuItem)]]">
                 <paper-material>
-                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[_getMenuItemAttributes()]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
                 </paper-material>
             </template>
             <template is="dom-if" if="[[_isCentre(menuItem)]]">
-                <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[_getMenuItemAttributes()]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
             </template>
         </template>
         <template is="dom-if" if="[[!menuItem.view]]">

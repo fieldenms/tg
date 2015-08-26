@@ -1,0 +1,111 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
+<link rel="import" href="/resources/mobile/tg-mobile-menu.html">
+<link rel="import" href="/resources/mobile/tg-mobile-view.html">
+<link rel="import" href="/resources/components/postal-lib.html">
+
+<dom-module id="tg-mobile-app">
+    <template>
+        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
+            <tg-mobile-menu class="fit layout horizontal center-center" name="menu" menu-config="[[menuConfig]]"></tg-mobile-menu>
+            
+            <!-- looks like pre-loading logic, which would need to be removed when vulcanization is employed -->
+            <template is="dom-repeat" items="[[menuConfig.items]]">
+                <tg-mobile-view class="fit hero-animatable" name$="[[item.title]]" menu-item="[[item]]"></tg-mobile-view>
+            </template>
+        </neon-animated-pages>
+    </template>
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-mobile-app",
+
+            listeners: {
+                "menu-item-selected": "_loadView",
+                "menu-item-loaded": "_showView"
+            },
+
+            _setSelected: function (selected) {
+                this.$.pages.selected = selected;
+            },
+
+            _showView: function (e) {
+                this._setSelected(e.detail);
+            },
+
+            _loadView: function (e) {
+                this.$$("[name='" + e.detail + "']").reload();
+            },
+
+            _showMainMenu: function (e) {
+                this._setSelected("menu");
+            },
+
+            _animationFinished: function (e, detail, source) {
+                if (this.$.pages.selected != 'menu') {
+                    detail.toPage.reload();
+                }
+            },
+
+            ready: function () {
+                var self = this;
+                postal.subscribe({
+                    channel: "menu",
+                    topic: "save.post.success",
+                    callback: self._showMainMenu.bind(self)
+                });
+                postal.subscribe({
+                    channel: "menu",
+                    topic: "refresh.post.success",
+                    callback: self._showMainMenu.bind(self)
+                });
+            },
+
+            attached: function () {
+                var self = this;
+                this.menuConfig = {
+                    items: [
+                        {
+                            title: "Update Operation Info for Vehicle",
+                            description: "Should be used for updating operational information about a vehicle.",
+                            bgColor: "#F4B793",
+                            icon:"/resources/images/fleet.svg",
+                            view: {
+                                import: "/master_ui/fleet.incident.Incident",
+                                elementName: "tg-Incident-master",
+                                type: "master",
+                                attrs: {
+                                    entityId: "new",
+                                    centreUuid: "menu",
+                                    currentState: "EDIT",
+                                    entityType: "fleet.incident.Incident",
+                                    uuid: "Incident",
+                                }
+                            }
+                        },
+                        {
+                            title: "View Vehicles in your vicinity",
+                            description: "Allows review of nearby vehicles on the map.",
+                            bgColor:"#00D4AA",
+                            icon:"/resources/images/divisionalDailyManagment.svg",
+                            view: {
+                                attrs: {
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                //Selectes the menu
+                this.async(function () {
+                    self._setSelected("menu");
+                }, 1);
+            }
+        });
+    })();
+</script>

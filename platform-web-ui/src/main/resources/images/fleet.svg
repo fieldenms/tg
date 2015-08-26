@@ -10,12 +10,12 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="1000"
-   height="1000"
+   width="410"
+   height="410"
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="fleet(Min).svg">
+   sodipodi:docname="fleet.svg">
   <defs
      id="defs4">
     <inkscape:path-effect
@@ -5935,23 +5935,29 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.70710678"
-     inkscape:cx="644.9328"
-     inkscape:cy="451.15603"
+     inkscape:cx="180.18887"
+     inkscape:cy="150.39358"
      inkscape:document-units="px"
      inkscape:current-layer="g36410"
      showgrid="false"
-     inkscape:window-width="1615"
-     inkscape:window-height="1026"
+     inkscape:window-width="1855"
+     inkscape:window-height="1176"
      inkscape:window-x="65"
      inkscape:window-y="24"
-     inkscape:window-maximized="1">
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0">
     <inkscape:grid
        type="xygrid"
        id="grid49298"
        empspacing="5"
        visible="true"
        enabled="true"
-       snapvisiblegridlinesonly="true" />
+       snapvisiblegridlinesonly="true"
+       originx="-296.45252px"
+       originy="-300.76245px" />
   </sodipodi:namedview>
   <metadata
      id="metadata7">
@@ -5961,7 +5967,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -5969,7 +5975,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-52.362183)">
+     transform="translate(-296.45252,-341.59975)">
     <g
        id="g36410"
        transform="translate(-12,2)">
@@ -5978,7 +5984,7 @@
          transform="matrix(0.96762226,0,0,1,-8.8655154,10.432885)" />
       <g
          id="g5545"
-         transform="translate(4.9497502,1.5734561e-6)">
+         transform="translate(6.4022702,-5.7624314)">
         <g
            transform="matrix(3.0128299,0.00985936,-0.00309347,-2.9877497,638.18349,567.63058)"
            id="g226">
