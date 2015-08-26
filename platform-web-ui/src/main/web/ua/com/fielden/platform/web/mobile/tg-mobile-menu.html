@@ -1,4 +1,6 @@
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
 
@@ -8,15 +10,33 @@
             padding: 0 16px;
             height: 20px;
             color: white;
-            background-color: #0288D1
+            background-color: var(--paper-light-blue-700);
         }
+        
+        .menu-item {
+            padding: 10px;
+            width: 300px;
+        }
+        
+        paper-button::shadow paper-material {
+            background: white;
+        }
+        
+        :host {
+            background-color: var(--paper-light-blue-700);
+        }
+        
+        .items {
+            align-items: center;
+        }
+        
     </style>
     <template>
         <div class="toolbar">[[menuConfig.title]]</div>
 
-        <div class="items layout horizontal wrap">
+        <div class="items layout vertical wrap center-justified">
                 <template is="dom-repeat" items="[[menuConfig.items]]">
-                    <paper-button raised on-tap="_itemSelected">[[item.title]]</paper-button>
+                    <paper-button class="menu-item" raised on-tap="_itemSelected">[[item.title]]</paper-button>
                 </template>
             </tg-tile-layout>
         </div>
@@ -31,7 +51,9 @@
             is: "tg-mobile-menu",
 
             properties: {
-                menuConfig: Object,
+                menuConfig: {
+                    type: Object
+                }
             },
             
             hostAttributes: {

@@ -10,6 +10,8 @@
     <template>
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
             <tg-mobile-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-mobile-menu>
+            
+            <!-- looks like pre-loading logic, which would need to be removed when vulcanization is employed -->
             <template is="dom-repeat" items="[[menuConfig.items]]">
                 <tg-mobile-view class="fit hero-animatable" name$="[[item.title]]" menu-item="[[item]]"></tg-mobile-view>
             </template>
@@ -69,8 +71,8 @@
                 this.menuConfig = {
                     items: [
                         {
-                            title: "Incident master",
-                            description: "Entity centre description",
+                            title: "Update Operation Info for Vehicle",
+                            description: "Should be used for updating operational information about a vehicle.",
                             view: {
                                 import: "/master_ui/fleet.incident.Incident",
                                 elementName: "tg-Incident-master",
@@ -81,6 +83,14 @@
                                     currentState: "EDIT",
                                     entityType: "fleet.incident.Incident",
                                     uuid: "Incident",
+                                }
+                            }
+                        },
+                        {
+                            title: "View Vehicles in your vicinity",
+                            description: "Allows review of nearby vehicles on the map.",
+                            view: {
+                                attrs: {
                                 }
                             }
                         }
