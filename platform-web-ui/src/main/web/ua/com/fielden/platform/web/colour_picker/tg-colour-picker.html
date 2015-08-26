@@ -90,59 +90,19 @@
                                                                </div>
                                                                <iron-icon class="icon" icon="icons:close"></iron-icon>
                                                       </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#F44336">
-                                                               <div class="dummy-box" style="background-color:#F44336"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#FF9800">
-                                                               <div class="dummy-box" style="background-color:#FF9800"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color: #FFEB3B">
-                                                               <div class="dummy-box" style="background-color: #FFEB3B"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#4CAF50">
-                                                               <div class="dummy-box" style="background-color:#4CAF50"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#009688">
-                                                               <div class="dummy-box" style="background-color:#009688"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#00BCD4">
-                                                               <div class="dummy-box" style="background-color:#00BCD4"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#3F51B5">
-                                                               <div class="dummy-box" style="background-color:#3F51B5"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#9C27B0">
-                                                               <div class="dummy-box" style="background-color:#9C27B0"></div>
-                                                      </div>
+
+                                                      <template is="dom-repeat" items="{{firstLineColors}}" as="color">
+                                                               <div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">
+                                                                        <div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>
+                                                               </div>
+                                                      </template>
                                              </div>
                                              <div class="layout horizontal">
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#D7CCC8">
-                                                               <div class="dummy-box" style="background-color:#D7CCC8"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#EF9A9A">
-                                                               <div class="dummy-box" style="background-color:#EF9A9A"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#FFCC80">
-                                                               <div class="dummy-box" style="background-color:#FFCC80"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#FFF59D">
-                                                               <div class="dummy-box" style="background-color:#FFF59D"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#A5D6A7;">
-                                                               <div class="dummy-box" style="background-color:#A5D6A7;"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#80CBC4">
-                                                               <div class="dummy-box" style="background-color:#80CBC4"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#80DEEA">
-                                                               <div class="dummy-box" style="background-color:#80DEEA"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#9FA8DA">
-                                                               <div class="dummy-box" style="background-color:#9FA8DA"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#CE93D8">
-                                                               <div class="dummy-box" style="background-color:#CE93D8"></div>
-                                                      </div>
+                                                      <template is="dom-repeat" items="{{secondLineColors}}" as="color">
+                                                               <div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">
+                                                                        <div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>
+                                                               </div>
+                                                      </template>
                                              </div>
                                     </div>
                            </div>
@@ -152,6 +112,10 @@
 <script>
          Polymer({
                   is: "tg-colour-picker",
+                  ready: function () {
+                           this.firstLineColors = ['#F44336', '#FF9800', '#FFEB3B', '#4CAF50', '#009688', '#00BCD4', '#3F51B5', '#9C27B0'];
+                           this.secondLineColors = ['#D7CCC8', '#EF9A9A', '#FFCC80', '#FFF59D', '#A5D6A7', ' #80CBC4', '#80DEEA', '#9FA8DA', '#CE93D8'];
+                  },
                   properties: {
                            color: {
                                     type: String,
@@ -161,7 +125,10 @@
                                     type: String,
                                     notify: true,
                                     value: null
-                           }
+                           },
+                  },
+                  _returnBackgroundColor(color) {
+                           return "background-color:" + color;
                   },
                   colorSelected: function (e, detail) {
                            this.color = rgbToHex(e.srcElement.style['background-color']);
