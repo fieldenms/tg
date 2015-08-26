@@ -10,33 +10,35 @@
     <style>
         .menu-item {
             border-radius: 2px;
-            padding: 10px;
+            background-color: var(--paper-light-blue-100);
         }
         .item-name {
             font-size: 12pt;
+            padding: 10px;
+            border-bottom-left-radius: 2px;
+            border-bottom-right-radius: 2px;
+            background-color: var(--paper-light-blue-700);
         }
         paper-material {
             margin: 10px;
+            border-radius: 2px;
         }
         iron-icon {
-            margin: 10px;
+            margin: 20px;
             --iron-icon-height: 100px;
             --iron-icon-width: 100px;
-        }
-        :host {
-            background-color: var(--paper-light-blue-700);
         }
     </style>
     <template>
 
         <div class="items layout vertical">
             <template is="dom-repeat" items="[[menuConfig.items]]">
-                <paper-material elevation="1">
-                    <div class="menu-item relative" on-tap="_itemSelected" style$="[[_calcStyleForItem(item)]]">
+                <paper-material elevation="3">
+                    <div class="menu-item relative" on-tap="_itemSelected">
                         <paper-ripple></paper-ripple>
                         <div class="layout vertical center">
                             <iron-icon src="[[item.icon]]"></iron-icon>
-                            <div class="item-name" style="color:white;">[[item.title]]</div>
+                            <div class="item-name self-stretch layout horizontal center-center" style="color:white;">[[item.title]]</div>
                         </div>
                     </div>
                 </paper-material>
@@ -66,11 +68,7 @@
             _itemSelected: function (e, detail) {
                 var model = e.model;
                 this.fire("menu-item-selected", model.item.title);
-            },
-
-            _calcStyleForItem: function (item) {
-                return "background-color: " + item.bgColor + ";";
-            },
+            }
         });
     })();
 </script>
