@@ -1,43 +1,46 @@
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-ripple/paper-ripple.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 
 
 <dom-module id="tg-mobile-menu">
     <style>
-        .toolbar {
-            padding: 0 16px;
-            height: 20px;
-            color: white;
-            background-color: var(--paper-light-blue-700);
-        }
-        
         .menu-item {
+            border-radius: 2px;
             padding: 10px;
-            width: 300px;
         }
-        
-        paper-button::shadow paper-material {
-            background: white;
+        .item-name {
+            font-size: 12pt;
         }
-        
+        paper-material {
+            margin: 10px;
+        }
+        iron-icon {
+            margin: 10px;
+            --iron-icon-height: 100px;
+            --iron-icon-width: 100px;
+        }
         :host {
             background-color: var(--paper-light-blue-700);
         }
-        
-        .items {
-            align-items: center;
-        }
-        
     </style>
     <template>
-        <div class="toolbar">[[menuConfig.title]]</div>
 
-        <div class="items layout vertical wrap center-justified">
-                <template is="dom-repeat" items="[[menuConfig.items]]">
-                    <paper-button class="menu-item" raised on-tap="_itemSelected">[[item.title]]</paper-button>
-                </template>
+        <div class="items layout vertical">
+            <template is="dom-repeat" items="[[menuConfig.items]]">
+                <paper-material elevation="1">
+                    <div class="menu-item relative" on-tap="_itemSelected" style$="[[_calcStyleForItem(item)]]">
+                        <paper-ripple></paper-ripple>
+                        <div class="layout vertical center">
+                            <iron-icon src="[[item.icon]]"></iron-icon>
+                            <div class="item-name" style="color:white;">[[item.title]]</div>
+                        </div>
+                    </div>
+                </paper-material>
+            </template>
             </tg-tile-layout>
         </div>
     </template>
@@ -55,15 +58,19 @@
                     type: Object
                 }
             },
-            
+
             hostAttributes: {
-                "class": "layout vertical"
+                "class": "layout horizontal center"
             },
 
             _itemSelected: function (e, detail) {
                 var model = e.model;
                 this.fire("menu-item-selected", model.item.title);
-            }
+            },
+
+            _calcStyleForItem: function (item) {
+                return "background-color: " + item.bgColor + ";";
+            },
         });
     })();
 </script>

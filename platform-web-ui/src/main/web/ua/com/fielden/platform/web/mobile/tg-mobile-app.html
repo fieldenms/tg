@@ -9,7 +9,7 @@
 <dom-module id="tg-mobile-app">
     <template>
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
-            <tg-mobile-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-mobile-menu>
+            <tg-mobile-menu class="fit layout horizontal center-center" name="menu" menu-config="[[menuConfig]]"></tg-mobile-menu>
             
             <!-- looks like pre-loading logic, which would need to be removed when vulcanization is employed -->
             <template is="dom-repeat" items="[[menuConfig.items]]">
@@ -73,6 +73,8 @@
                         {
                             title: "Update Operation Info for Vehicle",
                             description: "Should be used for updating operational information about a vehicle.",
+                            bgColor: "#F4B793",
+                            icon:"/resources/images/fleet.svg",
                             view: {
                                 import: "/master_ui/fleet.incident.Incident",
                                 elementName: "tg-Incident-master",
@@ -89,6 +91,8 @@
                         {
                             title: "View Vehicles in your vicinity",
                             description: "Allows review of nearby vehicles on the map.",
+                            bgColor:"#00D4AA",
+                            icon:"/resources/images/divisionalDailyManagment.svg",
                             view: {
                                 attrs: {
                                 }
