@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -40,20 +40,25 @@ public class TgElementLoaderComponentResource extends ServerResource {
     }
 
     /**
-     * Reads the source of 'app-specific preloaded resources' file and extracts the list of top-level (root) import URLS.
+     * Reads the source of 'app-specific preloaded resources' file and extracts the list of top-level (root) import URIs.
      *
      * @param appSpecificPreloadedResourcesSrc
      * @return
      */
     private static List<String> getPreloadedResources(final String appSpecificPreloadedResourcesSrc) {
-        // TODO Auto-generated method stub
-        // TODO Auto-generated method stub
-        // TODO Auto-generated method stub
-        // TODO Auto-generated method stub
-        // TODO Auto-generated method stub
-        // TODO Auto-generated method stub
-        // TODO Auto-generated method stub
-        return Arrays.asList("/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties");
+        final List<String> list = new ArrayList<String>();
+        String curr = appSpecificPreloadedResourcesSrc;
+        // TODO enhance the logic to support single quotes, whitespaces etc.?
+        while (curr.indexOf("href=\"") >= 0) {
+            final int startIndex = curr.indexOf("href=\"") + 6;
+            final String nextCurr = curr.substring(startIndex);
+            final int endIndex = nextCurr.indexOf("\"");
+            final String importURI = nextCurr.substring(0, endIndex);
+            list.add(importURI);
+            curr = nextCurr.substring(endIndex);
+        }
+
+        return list;
     }
 
     /**
@@ -73,7 +78,7 @@ public class TgElementLoaderComponentResource extends ServerResource {
      * @return
      */
     private String generateImportUrlsFrom(final List<String> appSpecificPreloadedResources) {
-        final String finalResult = "importedURLs = {";
+        final String prepender = "importedURLs = {";
         final StringBuilder sb = new StringBuilder("");
         final Iterator<String> iter = appSpecificPreloadedResources.iterator();
         while (iter.hasNext()) {
@@ -81,6 +86,6 @@ public class TgElementLoaderComponentResource extends ServerResource {
             sb.append(",'" + next + "': 'imported'");
         }
         final String res = sb.toString();
-        return finalResult + (StringUtils.isEmpty(res) ? "" : res.substring(1)) + "}";
+        return prepender + (StringUtils.isEmpty(res) ? "" : res.substring(1)) + "}";
     }
 }
