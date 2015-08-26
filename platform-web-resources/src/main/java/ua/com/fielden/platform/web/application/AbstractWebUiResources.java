@@ -31,6 +31,7 @@ import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.TgElementLoaderComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 
@@ -105,7 +106,7 @@ public abstract class AbstractWebUiResources extends Application {
 
         // Attach main application resource.
         router.attach("/", new AppIndexResourceFactory(webApp));
-        router.attach("/tg-web-app/tg-app-config.html", new WebUiPreferencesResourceFactory(webApp));
+        router.attach("/app/tg-app-config.html", new WebUiPreferencesResourceFactory(webApp));
         router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(webApp));
 
         // Registering entity centres:
@@ -122,7 +123,8 @@ public abstract class AbstractWebUiResources extends Application {
         //For egi example TODO remove later.
         router.attach("/test/egi", new EgiExampleResourceFactory(injector));
         // type meta info resource
-        router.attach("/tg-reflector.html", new TgReflectorComponentResourceFactory(injector));
+        router.attach("/app/tg-reflector.html", new TgReflectorComponentResourceFactory(injector));
+        router.attach("/app/tg-element-loader.html", new TgElementLoaderComponentResourceFactory(injector));
 
         // attache internal components and related resources
         //final Set<String> webComponents = new HashSet<>();
