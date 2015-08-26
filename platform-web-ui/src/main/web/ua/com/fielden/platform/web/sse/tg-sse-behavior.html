@@ -1,0 +1,64 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<script>
+    (function () {
+    	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    	Polymer.TgBehaviors.TgSseBehavior = {
+    			
+    		properties: {
+    		    /* A URI that should be connected to for listening to push events. */
+    		    uri: {
+    		        type: String
+    		    },
+    		    /* A function that takes a single String arugment representing the push event data. */
+    		    dataHandler: {
+    		        type: Function
+    		    },
+    		    
+    		    errorHandler: {
+    		        type: Function
+    		    }
+    		},
+            
+            ready: function () {
+                var self = this;
+                if (!self.uri) {
+                    throw new Error('URI for SSE is not defined yet.');
+                }
+                
+                var source = new EventSource(self.uri);
+                source.addEventListener('message', function (e) {
+                    self.dataHandler(e.data);
+                }, false);
+
+                source.addEventListener('completed', function (e) {
+                    console.log('the observable at the server-side completed');
+                }, false);
+
+                source.addEventListener('connection', function (e) {
+                    console.log('connection message received from server');
+                }, false);
+
+                source.addEventListener('open', function (e) {
+                    console.log('opened connection');
+                }, false);
+
+                source.addEventListener('error', function (e) {
+                    // TODO Might need to implement some error recovery strategy to reconnect to the server-side observable
+                    console.log('an error occurred: ', e);
+
+                    if (e.readyState == EventSource.CLOSED) {
+                        // Connection was closed.
+                    }
+
+                    // invoke error handler if provided
+                    if (self.errorHandler) {
+                        self.errorHandler();
+                    }
+                    
+                }, false);
+
+            }
+        }; // end of behaviour declaration
+    })();
+</script>
