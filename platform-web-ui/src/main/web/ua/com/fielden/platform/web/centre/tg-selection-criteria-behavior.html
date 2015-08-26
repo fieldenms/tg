@@ -390,7 +390,8 @@
                 var self = this;
 
                 if (self._runningInProgress()) {
-                    throw new SimultaneousRunException();
+                    console.warn("Refresh is already in progress...");
+                    return;
                 }
 
                 self._startRefreshCycleModeForEditors();
