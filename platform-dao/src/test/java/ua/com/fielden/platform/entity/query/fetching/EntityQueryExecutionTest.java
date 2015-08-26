@@ -975,7 +975,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     public void test_all_quantified_condition() {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().val(100).lt().all(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").yield().prop("qty").modelAsPrimitive()).model();
         final List<TgVehicle> values = vehicleDao.getAllEntities(from(model).model());
-        assertEquals("Incorrect count", 0, values.size());
+        assertEquals("Incorrect count", 1, values.size());
     }
 
     @Test
@@ -1143,7 +1143,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals("Incorrect value", "0", values.get(0).get("zero-days").toString());
         assertEquals("Incorrect value", "0", values.get(0).get("zero-months").toString());
         assertEquals("Incorrect value", "0", values.get(0).get("zero-years").toString());
-        assertEquals("Incorrect value", "150", values.get(0).get("avgPrice").toString());
+        assertEquals(BigDecimal.class, values.get(0).get("avgPrice").getClass());
+        assertEquals("Incorrect value", 0, ((BigDecimal) values.get(0).get("avgPrice")).compareTo(new BigDecimal("150")));
         assertEquals("Incorrect value", "66.7", values.get(0).get("third-of-price").toString());
     }
 
