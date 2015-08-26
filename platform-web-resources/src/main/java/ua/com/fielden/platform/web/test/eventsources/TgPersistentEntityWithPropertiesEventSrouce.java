@@ -38,7 +38,7 @@ public class TgPersistentEntityWithPropertiesEventSrouce extends AbstractEventSo
 
     @Override
     protected String eventToData(final TgPersistentEntityWithProperties event) {
-        return String.format("{id: %s, key: %s, changeDate: %s}", event.getId(), event.getKey(), new Date());
+        return String.format("{\"id\": %s, \"key\": \"%s\", \"changeDate\": \"%s\"}", event.getId(), event.getKey(), new Date());
     }
 
 }

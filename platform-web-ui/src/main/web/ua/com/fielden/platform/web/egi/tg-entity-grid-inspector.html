@@ -413,8 +413,7 @@
                 return a.id === b.id;
             },
             _hasEntity = function (entity, entities) {
-                var i = 0;
-                for (i = 0; i < entities.length; i += 1) {
+                for (var i = 0; i < entities.length; i += 1) {
                     if (_areEqual(entity, entities[i])) {
                         return true;
                     }
@@ -422,8 +421,7 @@
                 return false;
             },
             _findEntity = function (entity, entities) {
-                var i = 0;
-                for (i = 0; i < entities.length; i += 1) {
+                for (var i = 0; i < entities.length; i += 1) {
                     if (_areEqual(entity, entities[i])) {
                         return i;
                     }
