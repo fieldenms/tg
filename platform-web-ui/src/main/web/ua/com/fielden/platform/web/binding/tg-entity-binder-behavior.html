@@ -279,7 +279,7 @@
                     	
                     	if (this._reflector().isWarning(deserialisedResult)) {
                     		console.warn(this._toastMsgForError(deserialisedResult));
-                    		this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult));
+                    		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult));
                     	} else {
                     		// continue with normal handling of the result's instance
     	                    e.detail.successful = customHandlerFor(deserialisedResult.instance);
@@ -290,7 +290,8 @@
                     		}
                     	}
                     } else { // other codes
-                        this._openToastForError('Request could not be dispatched.', 'Most likely due to networking issues the request could not be dispatched to server.');
+                        console.warn('Request could not be dispatched.');
+                        this._openToastForError('Request could not be dispatched.', 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.');
                     }
                 }).bind(self);
                 
@@ -311,7 +312,9 @@
                             customErrorHandlerFor('Responses with status code 500 suppose to carry an error cause!');
                         }
                     } else { // other codes
-                        this._openToastForError('Response with status ' + xhr.status + ' is unexpected and will be ignored.');
+                        // from what it could be observed, this siuation was occuring only in case of request cancellation...
+                        // let's simply produce a console warning at this stage
+                        console.warn('Response with status ' + xhr.status + ' is unexpected and will be ignored.');
                     }
                 }).bind(self);
                 
@@ -386,7 +389,9 @@
                     var customObject = this._reflector().customObject(entityAndCustomObject);
                 	
                     var msg = this._toastMsg("Validation", validatedEntity);
-                    this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+                    if (!validatedEntity.isValid()) {
+                        this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+                    }
 
                     var newBindingEntity = this._postEntityReceived(validatedEntity);
                     // custom external action
