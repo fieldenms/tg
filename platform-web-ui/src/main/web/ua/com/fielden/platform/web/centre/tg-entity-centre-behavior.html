@@ -448,11 +448,13 @@
              *     from the result-set if they became unmatchable to the selection criteria after modification).
              */
             refreshEntities: function (entities) {
-                if (entities !== null && entities.length > 0) {
-                    this._entitiesThatShouldBeUpdated = entities;
-                    this.$.selection_criteria.refreshEntities(this._entitiesThatShouldBeUpdated);
-                } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
-                    this.currentPage();
+                if (this.$.egi.egiModel.length > 0) {
+                    if (entities !== null && entities.length > 0) {
+                        this._entitiesThatShouldBeUpdated = entities;
+                        this.$.selection_criteria.refreshEntities(this._entitiesThatShouldBeUpdated);
+                    } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
+                        this.currentPage();
+                    }
                 }
             },
 
