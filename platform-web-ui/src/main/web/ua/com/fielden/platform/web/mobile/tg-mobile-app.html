@@ -8,7 +8,7 @@
 
 <dom-module id="tg-mobile-app">
     <template>
-        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
+        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
             <tg-mobile-menu class="fit layout horizontal center-center" name="menu" menu-config="[[menuConfig]]"></tg-mobile-menu>
             
             <!-- looks like pre-loading logic, which would need to be removed when vulcanization is employed -->
