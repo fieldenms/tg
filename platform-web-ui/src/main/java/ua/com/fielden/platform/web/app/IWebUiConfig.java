@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.app;
 
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -27,7 +28,7 @@ public interface IWebUiConfig {
     /**
      * Should return a path that follows the domain name where the application is to be bound to. For example, <code>/</code> for an application that is directly bound to the
      * domain name. Or, <code>/trident-fleet</code> is the application is bound to <code>https://www.fielden.com.au/trident-fleet</code>.
-     * 
+     *
      * @return
      */
     String getPath();
@@ -85,4 +86,10 @@ public interface IWebUiConfig {
      * Implement this in order to provide custom configurations for entity centre, master and other views.
      */
     void initConfiguration();
+
+    /**
+     * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
+     * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
+     */
+    List<String> resourcePaths();
 }

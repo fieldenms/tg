@@ -14,6 +14,8 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -46,10 +48,18 @@ public class MasterComponentResource extends ServerResource {
     @Override
     protected Representation get() throws ResourceException {
         try {
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(master.build().render().toString().getBytes("UTF-8"))));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(master).getBytes("UTF-8"))));
         } catch (final UnsupportedEncodingException e) {
             e.printStackTrace();
             throw new ResourceException(e);
         }
+    }
+
+    public static String get(final EntityMaster<? extends AbstractEntity<?>> master) {
+        return master.build().render().toString();
+    }
+
+    public static String get(final String entityTypeString, final IWebUiConfig webUiConfig) {
+        return get(ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig));
     }
 }

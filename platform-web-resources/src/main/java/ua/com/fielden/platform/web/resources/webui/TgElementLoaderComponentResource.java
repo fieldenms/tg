@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
@@ -18,7 +17,7 @@ import org.restlet.resource.ServerResource;
 
 import com.google.common.base.Charsets;
 
-import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.app.IPreloadedResources;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -31,44 +30,26 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class TgElementLoaderComponentResource extends ServerResource {
     private final RestServerUtil restUtil;
-    private final static String appSpecificPreloadedResourcesSrc = ResourceLoader.getText("ua/com/fielden/platform/web/application-startup-resources.html");
-    private final static List<String> appSpecificPreloadedResources = getPreloadedResources(appSpecificPreloadedResourcesSrc);
+    private final IPreloadedResources preloadedResources;
 
-    public TgElementLoaderComponentResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public TgElementLoaderComponentResource(final IPreloadedResources preloadedResources, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
         this.restUtil = restUtil;
+        this.preloadedResources = preloadedResources;
     }
 
-    /**
-     * Reads the source of 'app-specific preloaded resources' file and extracts the list of top-level (root) import URIs.
-     *
-     * @param appSpecificPreloadedResourcesSrc
-     * @return
-     */
-    private static List<String> getPreloadedResources(final String appSpecificPreloadedResourcesSrc) {
-        final List<String> list = new ArrayList<String>();
-        String curr = appSpecificPreloadedResourcesSrc;
-        // TODO enhance the logic to support single quotes, whitespaces etc.?
-        while (curr.indexOf("href=\"") >= 0) {
-            final int startIndex = curr.indexOf("href=\"") + 6;
-            final String nextCurr = curr.substring(startIndex);
-            final int endIndex = nextCurr.indexOf("\"");
-            final String importURI = nextCurr.substring(0, endIndex);
-            list.add(importURI);
-            curr = nextCurr.substring(endIndex);
-        }
-
-        return list;
-    }
 
     /**
      * Handles sending of generated tg-element-loader to the Web UI client (GET method).
      */
     @Override
     protected Representation get() throws ResourceException {
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/element_loader/tg-element-loader.html");
-        final byte[] elementLoaderComponent = text.replace("importedURLs = {}", generateImportUrlsFrom(appSpecificPreloadedResources)).getBytes(Charsets.UTF_8);
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(elementLoaderComponent)));
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(preloadedResources).getBytes(Charsets.UTF_8))));
+    }
+
+    public static String get(final IPreloadedResources preloadedResources) {
+        final String source = preloadedResources.getSource("/resources/element_loader/tg-element-loader.html");
+        return source.replace("importedURLs = {}", generateImportUrlsFrom(preloadedResources.get()));
     }
 
     /**
@@ -77,7 +58,7 @@ public class TgElementLoaderComponentResource extends ServerResource {
      * @param appSpecificPreloadedResources
      * @return
      */
-    private String generateImportUrlsFrom(final List<String> appSpecificPreloadedResources) {
+    private static String generateImportUrlsFrom(final LinkedHashSet<String> appSpecificPreloadedResources) {
         final String prepender = "importedURLs = {";
         final StringBuilder sb = new StringBuilder("");
         final Iterator<String> iter = appSpecificPreloadedResources.iterator();

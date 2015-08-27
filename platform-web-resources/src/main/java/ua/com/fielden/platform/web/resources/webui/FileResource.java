@@ -45,23 +45,44 @@ public class FileResource extends ServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        try {
-            final String originalPath = getReference().getRemainingPart();
-            logger.debug(String.format("File resource [%s] generation started...", originalPath));
-            final String filePath = generateFileName(originalPath);
-            final String extension = getReference().getExtensions();
-            if (StringUtils.isEmpty(filePath)) {
-                throw new FileNotFoundException("The requested resource (" + originalPath + " + " + extension + ") wasn't found.");
-            } else {
-                final InputStream stream = ResourceLoader.getStream(filePath);
-                final MediaType mediaType = determineMediaType(extension);
-                final Representation encodedRepresentation = RestServerUtil.encodedRepresentation(stream, mediaType);
-                logger.debug(String.format("File resource [%s] generated.", originalPath));
-                return encodedRepresentation;
-            }
-        } catch (final FileNotFoundException e) {
-            e.printStackTrace();
+        final String originalPath = getReference().getRemainingPart();
+        final String extension = getReference().getExtensions();
+        System.out.println(originalPath);
+
+        final InputStream stream = getStream(originalPath, extension, resourcePaths);
+        if (stream != null) {
+//          // TODO need to enhance file resource to exclude preloaded resources!
+//          // TODO need to enhance file resource to exclude preloaded resources!
+//          // TODO need to enhance file resource to exclude preloaded resources!
+//          // TODO need to enhance file resource to exclude preloaded resources!
+//          // TODO need to enhance file resource to exclude preloaded resources!
+//          // System.out.println("STREAM:" + IOUtils.toString(stream, "UTF-8"));
+            final Representation encodedRepresentation = RestServerUtil.encodedRepresentation(stream, determineMediaType(extension));
+            logger.debug(String.format("File resource [%s] generated.", originalPath));
+            return encodedRepresentation;
+        } else {
             return null;
+        }
+    }
+
+    public static InputStream getStream(final String originalPath, final String extension, final List<String> resourcePaths) {
+        final String filePath = generateFileName(resourcePaths, originalPath);
+        if (StringUtils.isEmpty(filePath)) {
+            new FileNotFoundException("The requested resource (" + originalPath + " + " + extension + ") wasn't found.").printStackTrace();
+            return null;
+        } else {
+            return ResourceLoader.getStream(filePath);
+        }
+    }
+
+    public static String get(final String originalPath, final String extension, final List<String> resourcePaths) {
+        final String filePath = generateFileName(resourcePaths, originalPath);
+        if (StringUtils.isEmpty(filePath)) {
+            System.out.println("The requested resource (" + originalPath + " + " + extension + ") wasn't found.");
+            // new FileNotFoundException("The requested resource (" + originalPath + " + " + extension + ") wasn't found.").printStackTrace();
+            return null;
+        } else {
+            return ResourceLoader.getText(filePath);
         }
     }
 
@@ -72,14 +93,15 @@ public class FileResource extends ServerResource {
      *            - the relative file path for which full file path must be generated.
      * @return
      */
-    private String generateFileName(final String path) {
+    private static String generateFileName(final List<String> resourcePaths, final String path) {
         // this is a preventive stuff: if the server receives additional link parameters -- JUST IGNORE THEM. Was used to run
         // appropriately Mocha / Chai tests for Polymer web components. See http://localhost:8091/resources/polymer/runner.html for results.
         final String filePath = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
 
         for (int pathIndex = 0; pathIndex < resourcePaths.size(); pathIndex++) {
-            if (ResourceLoader.exist(resourcePaths.get(pathIndex) + filePath)) {
-                return resourcePaths.get(pathIndex) + filePath;
+            String prepender = resourcePaths.get(pathIndex);
+            if (ResourceLoader.exist(prepender + filePath)) {
+                return prepender + filePath;
             }
         }
         return null;
@@ -92,7 +114,7 @@ public class FileResource extends ServerResource {
      *            - the file extension that is used to determine media type.
      * @return
      */
-    private MediaType determineMediaType(final String extension) {
+    private static MediaType determineMediaType(final String extension) {
         switch (extension) {
         case "png":
             return MediaType.IMAGE_PNG;

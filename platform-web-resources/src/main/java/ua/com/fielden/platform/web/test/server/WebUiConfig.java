@@ -88,7 +88,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String path;
 
     public WebUiConfig(final String domainName, final String path) {
-        super("TG Test and Demo Application");
+        super("TG Test and Demo Application", new String[0]);
         if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }

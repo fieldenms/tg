@@ -14,7 +14,9 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -50,11 +52,20 @@ public class CentreComponentResource extends ServerResource {
     protected Representation get() throws ResourceException {
         return EntityResourceUtils.handleUndesiredExceptions(() -> {
             try {
-                return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(centre.build().render().toString().getBytes("UTF-8"))));
+                return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(centre).getBytes("UTF-8"))));
             } catch (final UnsupportedEncodingException e) {
                 e.printStackTrace();
                 throw new ResourceException(e);
             }
         }, restUtil);
     }
+
+    public static String get(final EntityCentre<? extends AbstractEntity<?>> centre) {
+        return centre.build().render().toString();
+    }
+
+    public static String get(final String mitypeString, final IWebUiConfig webUiConfig) {
+        return get(ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig));
+    }
+
 }

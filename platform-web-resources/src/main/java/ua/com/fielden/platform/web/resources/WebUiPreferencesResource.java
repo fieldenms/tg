@@ -33,11 +33,14 @@ public class WebUiPreferencesResource extends ServerResource {
     @Override
     protected Representation get() throws ResourceException {
         try {
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(app.genWebUiPreferences().getBytes("UTF-8"))));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(app).getBytes("UTF-8"))));
         } catch (final UnsupportedEncodingException e) {
             e.printStackTrace();
             throw new ResourceException(e);
         }
     }
 
+    public static String get(final IWebUiConfig app) {
+        return app.genWebUiPreferences();
+    }
 }

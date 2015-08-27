@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.web.factories.webui;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -27,9 +25,8 @@ public class FileResourceFactory extends Restlet {
      *
      * @param resourcePaths
      */
-    public FileResourceFactory(final Set<String> resourcePaths) {
-        this.resourcePaths = new ArrayList<String>(resourcePaths);
-        Collections.reverse(this.resourcePaths);
+    public FileResourceFactory(final List<String> resourcePaths) {
+        this.resourcePaths = resourcePaths;
     }
 
     /**

@@ -1,10 +1,5 @@
 package ua.com.fielden.platform.web.application;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restlet.Application;
@@ -43,13 +38,7 @@ import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
  *
  */
 public abstract class AbstractWebUiResources extends Application {
-
     protected final Injector injector;
-    /**
-     * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
-     * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
-     */
-    private final Set<String> resourcePaths = new LinkedHashSet<>();
 
     protected final Logger logger = Logger.getLogger(getClass());
     private final IWebUiConfig webApp;
@@ -59,8 +48,6 @@ public abstract class AbstractWebUiResources extends Application {
      *
      * @param context
      * @param injector
-     * @param resourcePaths
-     *            - additional root paths for file resources. (see {@link #resourcePaths} for more information).
      * @param appName
      *            - meaningful application name.
      * @param desc
@@ -73,7 +60,6 @@ public abstract class AbstractWebUiResources extends Application {
     public AbstractWebUiResources(
             final Context context,
             final Injector injector,
-            final String[] resourcePaths,
             final String appName,
             final String desc,
             final String owner,
@@ -87,8 +73,7 @@ public abstract class AbstractWebUiResources extends Application {
         //        this.platformGisJsScriptsLocation = platformJsScriptsLocation + "gis/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         this.injector = injector;
-        this.resourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
-        this.resourcePaths.addAll(Arrays.asList(resourcePaths));
+
         setName(appName);
         setDescription(desc);
         setOwner(owner);
@@ -108,6 +93,14 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/", new AppIndexResourceFactory(webApp));
         router.attach("/app/tg-app-config.html", new WebUiPreferencesResourceFactory(webApp));
         router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(webApp));
+        // type meta info resource
+        router.attach("/app/tg-reflector.html", new TgReflectorComponentResourceFactory(injector));
+        router.attach("/app/tg-element-loader.html", new TgElementLoaderComponentResourceFactory(injector));
+
+        // serialisation testing resource
+        router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
+        // For egi example TODO remove later.
+        router.attach("/test/egi", new EgiExampleResourceFactory(injector));
 
         // Registering entity centres:
         attachCentreResources(router, webApp);
@@ -117,14 +110,6 @@ public abstract class AbstractWebUiResources extends Application {
 
         // Registering autocompletion resources:
         attachAutocompletionResources(router, webApp);
-
-        // serialisation testing resource
-        router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
-        //For egi example TODO remove later.
-        router.attach("/test/egi", new EgiExampleResourceFactory(injector));
-        // type meta info resource
-        router.attach("/app/tg-reflector.html", new TgReflectorComponentResourceFactory(injector));
-        router.attach("/app/tg-element-loader.html", new TgElementLoaderComponentResourceFactory(injector));
 
         // attache internal components and related resources
         //final Set<String> webComponents = new HashSet<>();
@@ -190,7 +175,7 @@ public abstract class AbstractWebUiResources extends Application {
      * @param router
      */
     private void attachResources(final Router router) {
-        logger.info("\t\tResources attaching for:..." + "\n\t\t" + StringUtils.join(resourcePaths, "/\n\t\t") + "/");
-        router.attach("/resources/", new FileResourceFactory(Collections.unmodifiableSet(resourcePaths)), Template.MODE_STARTS_WITH);
+        logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
+        router.attach("/resources/", new FileResourceFactory(webApp.resourcePaths()), Template.MODE_STARTS_WITH);
     }
 }

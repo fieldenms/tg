@@ -42,10 +42,13 @@ public class TgReflectorComponentResource extends ServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(restUtil, tgJackson).getBytes(Charsets.UTF_8))));
+    }
+
+    public static String get(final RestServerUtil restUtil, final TgJackson tgJackson) {
         final String typeTableRepresentation = new String(restUtil.getSerialiser().serialise(tgJackson.getTypeTable(), SerialiserEngines.JACKSON), Charsets.UTF_8);
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/reflection/tg-reflector.html");
 
-        final byte[] reflectorComponent = text.replace("@typeTable", typeTableRepresentation).getBytes(Charsets.UTF_8);
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(reflectorComponent)));
+        return text.replace("@typeTable", typeTableRepresentation);
     }
 }
