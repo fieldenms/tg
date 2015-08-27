@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
@@ -43,7 +44,7 @@ public final class EntityActionConfig {
         }
 
         if (functionalEntity != null && context == null) {
-            throw new IllegalArgumentException("Any functional entity requires some exection context to be specified.");
+            throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
 
         this.functionalEntity = Optional.ofNullable(functionalEntity);
@@ -73,6 +74,15 @@ public final class EntityActionConfig {
      */
     public static EntityActionConfig createMasterInvocationActionConfig() {
         return new EntityActionConfig(MasterInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, false);
+    }
+
+    /**
+     * A factory method for creating a configuration that indicates a need to invoke corresponding master in dialog for row entity.
+     *
+     * @return
+     */
+    public static EntityActionConfig createMasterInDialogInvocationActionConfig() {
+        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, false);
     }
 
     /**
