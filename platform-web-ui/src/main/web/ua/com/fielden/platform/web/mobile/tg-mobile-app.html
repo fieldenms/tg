@@ -71,26 +71,26 @@
                 this.menuConfig = {
                     items: [
                         {
-                            title: "Update Operation Info for Vehicle",
+                            title: "Update Operational Vehicle Info",
                             description: "Should be used for updating operational information about a vehicle.",
                             bgColor: "#F4B793",
                             icon:"/resources/images/fleetMobile.svg",
                             view: {
-                                import: "/master_ui/fleet.incident.Incident",
-                                elementName: "tg-Incident-master",
+                                import: "/master_ui/fleet.dds.MobileDdsEntry",
+                                elementName: "tg-MobileDdsEntry-master",
                                 type: "master",
                                 attrs: {
                                     entityId: "new",
                                     centreUuid: "menu",
                                     currentState: "EDIT",
-                                    entityType: "fleet.incident.Incident",
-                                    uuid: "Incident",
+                                    entityType: "fleet.dds.MobileDdsEntry",
+                                    uuid: "MobileDdsEntry",
                                 }
                             }
                         },
                         {
-                            title: "View Vehicles in your vicinity",
-                            description: "Allows review of nearby vehicles on the map.",
+                            title: "Availability Reports",
+                            description: "Provides the most resent fleet availability information.",
                             bgColor:"#00D4AA",
                             icon:"/resources/images/divisionalDailyManagmentMobile.svg",
                             view: {
