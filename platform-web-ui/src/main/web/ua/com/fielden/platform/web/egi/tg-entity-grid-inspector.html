@@ -780,7 +780,7 @@
                     return moment(entity.get(column.property)).format("L LT");
                 } else if (typeof entity.get(column.property) === 'number') {
                     if (column.type === 'BigDecimal') {
-                        return entity.get(column.property).toFixed(2);
+                        return entity.get(column.property).toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2, minimumFractionDigits:2});
                     } else {
                         return entity.get(column.property).toLocaleString(this.$.appConfig.locale);
                     }
