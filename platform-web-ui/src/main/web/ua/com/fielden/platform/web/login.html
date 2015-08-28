@@ -7,6 +7,8 @@
     <title>@title</title>
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="shortcut icon" href="/resources/icons/tg-icon.png">
+    <link rel="icon" href="/resources/icons/tg-icon.png">
+    <link rel="apple-touch-icon-precomposed" href="/resources/icons/tg-icon.png">
     <link rel="import" href="/resources/polymer/polymer/polymer.html">
     <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
     <link rel="import" href="/resources/polymer/iron-form/iron-form.html">
@@ -23,38 +25,32 @@
         * {
             box-sizing: border-box;
         }
-        
         .vertical-section {
             @apply(--paper-font-body1);
-            line-height: 25px;
+
+line-height: 25px;
             margin-bottom: 25px;
         }
-        
         body {
             font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
             font-size: 10pt;
             background: #eee;
             -webkit-font-smoothing: antialiased;
         }
-        
         h1,
         h3 {
             font-weight: 300;
         }
-        
         h1 {
             color: #636363;
         }
-        
         h3 {
             color: #4a89dc;
         }
-        
         hgroup {
             text-align: center;
             margin-top: 4em;
         }
-        
         form {
             width: 380px;
             margin: 2em auto;
@@ -63,25 +59,20 @@
             border: 1px solid #ebebeb;
             box-shadow: rgba(0, 0, 0, 0.14902) 0px 1px 1px 0px, rgba(0, 0, 0, 0.09804) 0px 1px 2px 0px;
         }
-        
         paper-checkbox {
             margin: 1em 0px 0px 0px;
             /* Checked state colors. */
-            
             --paper-checkbox-checked-color: #4285f4;
             --paper-checkbox-checked-ink-color: #4285f4;
         }
-        
         .submit-normal {
             background: #4285f4;
             color: white;
         }
-        
         .submit-error {
             background: #D32F2F;
             color: white;
         }
-        
         input[is="iron-input"] {
             font: inherit;
             outline: none;
