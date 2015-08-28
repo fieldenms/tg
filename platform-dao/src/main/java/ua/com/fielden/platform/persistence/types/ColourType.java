@@ -10,9 +10,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.usertype.UserType;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.markers.IColourType;
 
-public class ColourUserType implements UserType, IColourType {
+public class ColourType implements UserType, IColourType {
 
 	private static final int[] SQL_TYPES = { Types.VARCHAR };
 
@@ -23,19 +25,21 @@ public class ColourUserType implements UserType, IColourType {
 
 	@Override
 	public Class<?> returnedClass() {
-		return IColourType.class;
+		return Colour.class;
 	}
 
 	@Override
 	public Object instantiate(final Object argument, final EntityFactory factory) {
-		try {
-			return Class.forName((String) argument);
-		} catch (final Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException("Could not instantiate instance of '"
-					+ ColourUserType.class.getName() + " with value ["
-					+ argument + "] due to: " + e.getMessage());
-		}
+        if (argument == null) {
+            return null;
+        }
+
+        try {
+            return new Colour((String) argument);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Could not instantiate instance of '" + Colour.class.getName() + " with value [" + argument + "] due to: " + e.getMessage());
+        }
 	}
 
 	@Override
@@ -45,11 +49,10 @@ public class ColourUserType implements UserType, IColourType {
 		Object result = null;
 		if (!resultSet.wasNull()) {
 			try {
-				result = Class.forName(name);
-			} catch (final ClassNotFoundException e) {
+				result = new Colour(name);
+			} catch (final Exception e) {
 				e.printStackTrace();
-				throw new HibernateException("Colour for value '" + name
-						+ "' could not be found");
+				throw new HibernateException("Colour for value '" + name + "' could not be instantiated");
 			}
 		}
 		return result;
@@ -62,10 +65,7 @@ public class ColourUserType implements UserType, IColourType {
 		if (null == value) {
 			preparedStatement.setNull(index, Types.VARCHAR);
 		} else {
-			preparedStatement.setString(
-					index,
-					value instanceof String ? (String) value : ((Class) value)
-							.getName());
+			preparedStatement.setString(index, value.toString());
 		}
 	}
 
@@ -113,5 +113,4 @@ public class ColourUserType implements UserType, IColourType {
 			final Object owner) throws HibernateException {
 		return original;
 	}
-
 }
