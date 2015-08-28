@@ -36,8 +36,10 @@
             },
 
             reload: function () {
-                this.loadedView.entityId = 'new';
-                this.loadedView.retrieve();
+                if (this.loadedView) {
+                    this.loadedView.entityId = 'new';
+                    this.loadedView.retrieve();
+                }
             },
 
             _afterLoadListener: function (e, detail, view) {
