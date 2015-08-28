@@ -121,18 +121,14 @@
         	},
 
             _showMessageDlg: function (event) {
-                Polymer.dom(document.body).appendChild(this.$.msgDialog);
-                Polymer.dom().flush();
-                
+                // need to open dialog asynchronously for it to open on mobile devices 
                 this.async(function () {
-                    this.$.msgDialog.toggle();
+                    this.$.msgDialog.open();
                 }, 100);
                 
             },
 
             _dialogClosed: function() {
-                // remove this dialog from the body
-                Polymer.dom(document.body).removeChild(this.$.msgDialog);
                 // this is also a good time to remove the toast itself if it has not been yet...
                 Polymer.dom(document.body).removeChild(this.$.toast);
                 Polymer.dom.flush();
