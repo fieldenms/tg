@@ -19,7 +19,6 @@ import ua.com.fielden.platform.web.resources.MainWebUiComponentResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.WebUiPreferencesResource;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
-import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
 import ua.com.fielden.platform.web.resources.webui.TgElementLoaderComponentResource;
 import ua.com.fielden.platform.web.resources.webui.TgReflectorComponentResource;
 
@@ -223,9 +222,9 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         } else if ("/app/tg-element-loader.html".equalsIgnoreCase(resourceURI)) {
             return TgElementLoaderComponentResource.get(this);
         } else if (resourceURI.startsWith("/master_ui")) {
-            return MasterComponentResource.get(resourceURI.replaceFirst("/master_ui/", ""), webUiConfig);
+            return getMasterSource(resourceURI.replaceFirst("/master_ui/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
-            return PreloadedResourcesImpl.getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig);
+            return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/resources/")) {
             final String rest = resourceURI.replaceFirst("/resources/", "");
             final int lastDotIndex = rest.lastIndexOf(".");
@@ -250,6 +249,10 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
 
     private String getFileSource(final String filePath) {
         return ResourceLoader.getText(filePath);
+    }
+
+    public static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
+        return ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig).build().render().toString();
     }
 
     private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {

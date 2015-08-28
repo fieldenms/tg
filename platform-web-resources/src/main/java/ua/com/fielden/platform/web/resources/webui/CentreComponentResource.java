@@ -45,7 +45,6 @@ public class CentreComponentResource extends ServerResource {
         init(context, request, response);
         this.restUtil = restUtil;
         this.preloadedResources = preloadedResources;
-        // this.centre = centre;
         this.mitypeString = (String) request.getAttributes().get("mitype");
     }
 

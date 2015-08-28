@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 
 import org.restlet.Context;
 import org.restlet.Request;
@@ -13,10 +12,10 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
-import ua.com.fielden.platform.web.view.master.EntityMaster;
+import com.google.common.base.Charsets;
+
+import ua.com.fielden.platform.web.app.IPreloadedResources;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Represents web server resource that returns entity master component for specified entity type to the client.
@@ -25,7 +24,9 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class MasterComponentResource extends ServerResource {
-    private final EntityMaster<? extends AbstractEntity<?>> master;
+    private final IPreloadedResources preloadedResources;
+    private final String entityTypeString;
+    private final RestServerUtil restUtil;
 
     /**
      * Creates {@link MasterComponentResource} and initialises it with master instance.
@@ -36,30 +37,23 @@ public class MasterComponentResource extends ServerResource {
      * @param response
      */
     public MasterComponentResource(
-            final EntityMaster<? extends AbstractEntity<?>> master,
+            final RestServerUtil restUtil,
+            final IPreloadedResources preloadedResources,//
             final Context context,
             final Request request,
             final Response response //
     ) {
         init(context, request, response);
-        this.master = master;
+        this.restUtil = restUtil;
+        this.preloadedResources = preloadedResources;
+        this.entityTypeString = (String) request.getAttributes().get("entityType");
     }
 
     @Override
     protected Representation get() throws ResourceException {
-        try {
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(master).getBytes("UTF-8"))));
-        } catch (final UnsupportedEncodingException e) {
-            e.printStackTrace();
-            throw new ResourceException(e);
-        }
-    }
-
-    public static String get(final EntityMaster<? extends AbstractEntity<?>> master) {
-        return master.build().render().toString();
-    }
-
-    public static String get(final String entityTypeString, final IWebUiConfig webUiConfig) {
-        return get(ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig));
+        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+            final String source = preloadedResources.getSourceOnTheFly("/master_ui/" + this.entityTypeString);
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
+        }, restUtil);
     }
 }

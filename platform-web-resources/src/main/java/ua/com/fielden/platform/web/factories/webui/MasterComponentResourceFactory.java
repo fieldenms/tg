@@ -5,7 +5,10 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.web.app.IWebUiConfig;
+import com.google.inject.Injector;
+
+import ua.com.fielden.platform.web.app.IPreloadedResources;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
 
 /**
@@ -17,15 +20,17 @@ import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
  *
  */
 public class MasterComponentResourceFactory extends Restlet {
-    private final IWebUiConfig webUiConfig;
+    private final IPreloadedResources preloadedResources;
+    private final RestServerUtil restUtil;
 
     /**
      * Creates the {@link MasterComponentResourceFactory} instance.
      *
      * @param centres
      */
-    public MasterComponentResourceFactory(final IWebUiConfig webUiConfig) {
-        this.webUiConfig = webUiConfig;
+    public MasterComponentResourceFactory(final IPreloadedResources preloadedResources, final Injector injector) {
+        this.preloadedResources = preloadedResources;
+        this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
     @Override
@@ -34,7 +39,8 @@ public class MasterComponentResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod())) {
             new MasterComponentResource(
-                    ResourceFactoryUtils.getEntityMaster(request, webUiConfig),
+                    restUtil,
+                    preloadedResources,
                     getContext(),
                     request,
                     response //

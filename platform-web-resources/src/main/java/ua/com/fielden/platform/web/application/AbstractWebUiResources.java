@@ -146,8 +146,8 @@ public abstract class AbstractWebUiResources extends Application {
         logger.info("\t\tEntity master resources attaching...");
         router.attach("/entity/{entityType}/{entity-id}", new EntityResourceFactory(webUiConfig, injector));
         router.attach("/validation/{entityType}", new EntityValidationResourceFactory(webUiConfig, injector));
-        router.attach("/master_ui/Test_TgPersistentEntityWithProperties", new MasterTestsComponentResourceFactory(injector));
-        router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(webUiConfig));
+        router.attach("/master_ui/Test_TgPersistentEntityWithProperties", new MasterTestsComponentResourceFactory(preloadedResources, injector));
+        router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(preloadedResources, injector));
     }
 
     /**
