@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.app;
 
+import java.io.InputStream;
 import java.util.LinkedHashSet;
 
 /**
@@ -39,4 +40,10 @@ public interface IPreloadedResources {
      * @return
      */
     String getSource(final String resourceURI);
+
+
+    String getSourceOnTheFly(final String resourceURI);
+    String getSourceOnTheFlyWithFilePath(final String filePath);
+
+    InputStream getStreamOnTheFly(final String resourceURI);
 }

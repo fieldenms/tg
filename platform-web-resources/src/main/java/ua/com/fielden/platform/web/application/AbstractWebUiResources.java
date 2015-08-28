@@ -11,6 +11,7 @@ import org.restlet.security.Authenticator;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.web.app.IPreloadedResources;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.MainWebUiComponentResourceFactory;
@@ -42,6 +43,7 @@ public abstract class AbstractWebUiResources extends Application {
 
     protected final Logger logger = Logger.getLogger(getClass());
     private final IWebUiConfig webApp;
+    private final IPreloadedResources preloadedResources;
 
     /**
      * Creates an instance of {@link AbstractWebUiResources} with custom application name, description, author, owner and resource paths.
@@ -73,6 +75,9 @@ public abstract class AbstractWebUiResources extends Application {
         //        this.platformGisJsScriptsLocation = platformJsScriptsLocation + "gis/";
         // --> TODO not so elegant and flexible. There should be more elegant version for development and deployment. Use application.props file.
         this.injector = injector;
+
+        this.preloadedResources = injector.getInstance(IPreloadedResources.class);
+
 
         setName(appName);
         setDescription(desc);
@@ -166,7 +171,7 @@ public abstract class AbstractWebUiResources extends Application {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/criteria/{mitype}", new CriteriaResourceFactory(webUiConfig, injector));
         router.attach("/centre/{mitype}", new CentreResourceFactory(webUiConfig, injector));
-        router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(webUiConfig, injector));
+        router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(preloadedResources, injector));
     }
 
     /**
@@ -176,6 +181,6 @@ public abstract class AbstractWebUiResources extends Application {
      */
     private void attachResources(final Router router) {
         logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
-        router.attach("/resources/", new FileResourceFactory(webApp.resourcePaths()), Template.MODE_STARTS_WITH);
+        router.attach("/resources/", new FileResourceFactory(preloadedResources, webApp.resourcePaths()), Template.MODE_STARTS_WITH);
     }
 }

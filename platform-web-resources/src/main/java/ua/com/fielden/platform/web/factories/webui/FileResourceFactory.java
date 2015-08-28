@@ -8,6 +8,7 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import ua.com.fielden.platform.web.app.IPreloadedResources;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
 
 /**
@@ -17,7 +18,7 @@ import ua.com.fielden.platform.web.resources.webui.FileResource;
  *
  */
 public class FileResourceFactory extends Restlet {
-
+    private final IPreloadedResources preloadedResources;
     private final List<String> resourcePaths;
 
     /**
@@ -25,7 +26,8 @@ public class FileResourceFactory extends Restlet {
      *
      * @param resourcePaths
      */
-    public FileResourceFactory(final List<String> resourcePaths) {
+    public FileResourceFactory(final IPreloadedResources preloadedResources, final List<String> resourcePaths) {
+        this.preloadedResources = preloadedResources;
         this.resourcePaths = resourcePaths;
     }
 
@@ -37,7 +39,7 @@ public class FileResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new FileResource(Collections.unmodifiableList(resourcePaths), getContext(), request, response).handle();
+            new FileResource(preloadedResources, Collections.unmodifiableList(resourcePaths), getContext(), request, response).handle();
         }
     }
 

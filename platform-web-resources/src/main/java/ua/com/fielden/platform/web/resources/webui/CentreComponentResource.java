@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 
 import org.restlet.Context;
 import org.restlet.Request;
@@ -13,10 +12,9 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
+import com.google.common.base.Charsets;
+
+import ua.com.fielden.platform.web.app.IPreloadedResources;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -26,7 +24,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CentreComponentResource extends ServerResource {
-    private final EntityCentre<? extends AbstractEntity<?>> centre;
+    private final IPreloadedResources preloadedResources;
+    private final String mitypeString;
     private final RestServerUtil restUtil;
 
     /**
@@ -39,33 +38,22 @@ public class CentreComponentResource extends ServerResource {
      */
     public CentreComponentResource(
             final RestServerUtil restUtil,
-            final EntityCentre<? extends AbstractEntity<?>> centre,//
+            final IPreloadedResources preloadedResources,//
             final Context context, //
             final Request request, //
             final Response response) {
         init(context, request, response);
         this.restUtil = restUtil;
-        this.centre = centre;
+        this.preloadedResources = preloadedResources;
+        // this.centre = centre;
+        this.mitypeString = (String) request.getAttributes().get("mitype");
     }
 
     @Override
     protected Representation get() throws ResourceException {
         return EntityResourceUtils.handleUndesiredExceptions(() -> {
-            try {
-                return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(centre).getBytes("UTF-8"))));
-            } catch (final UnsupportedEncodingException e) {
-                e.printStackTrace();
-                throw new ResourceException(e);
-            }
+            final String source = preloadedResources.getSourceOnTheFly("/centre_ui/" + this.mitypeString);
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
         }, restUtil);
     }
-
-    public static String get(final EntityCentre<? extends AbstractEntity<?>> centre) {
-        return centre.build().render().toString();
-    }
-
-    public static String get(final String mitypeString, final IWebUiConfig webUiConfig) {
-        return get(ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig));
-    }
-
 }

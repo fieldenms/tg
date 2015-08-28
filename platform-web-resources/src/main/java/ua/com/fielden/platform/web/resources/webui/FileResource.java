@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
@@ -14,7 +15,10 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import com.google.common.base.Charsets;
+
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.app.IPreloadedResources;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -26,6 +30,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class FileResource extends ServerResource {
     private final Logger logger = Logger.getLogger(getClass());
     private final List<String> resourcePaths;
+    private final IPreloadedResources preloadedResources;
 
     /**
      * Creates an instance of {@link FileResource} with custom resource paths.
@@ -35,8 +40,9 @@ public class FileResource extends ServerResource {
      * @param request
      * @param response
      */
-    public FileResource(final List<String> resourcePaths, final Context context, final Request request, final Response response) {
+    public FileResource(final IPreloadedResources preloadedResources, final List<String> resourcePaths, final Context context, final Request request, final Response response) {
         init(context, request, response);
+        this.preloadedResources = preloadedResources;
         this.resourcePaths = resourcePaths;
     }
 
@@ -47,42 +53,30 @@ public class FileResource extends ServerResource {
     protected Representation get() throws ResourceException {
         final String originalPath = getReference().getRemainingPart();
         final String extension = getReference().getExtensions();
-        System.out.println(originalPath);
+        final MediaType mediaType = determineMediaType(extension);
 
-        final InputStream stream = getStream(originalPath, extension, resourcePaths);
-        if (stream != null) {
-//          // TODO need to enhance file resource to exclude preloaded resources!
-//          // TODO need to enhance file resource to exclude preloaded resources!
-//          // TODO need to enhance file resource to exclude preloaded resources!
-//          // TODO need to enhance file resource to exclude preloaded resources!
-//          // TODO need to enhance file resource to exclude preloaded resources!
-//          // System.out.println("STREAM:" + IOUtils.toString(stream, "UTF-8"));
-            final Representation encodedRepresentation = RestServerUtil.encodedRepresentation(stream, determineMediaType(extension));
-            logger.debug(String.format("File resource [%s] generated.", originalPath));
-            return encodedRepresentation;
-        } else {
-            return null;
-        }
-    }
-
-    public static InputStream getStream(final String originalPath, final String extension, final List<String> resourcePaths) {
         final String filePath = generateFileName(resourcePaths, originalPath);
         if (StringUtils.isEmpty(filePath)) {
             new FileNotFoundException("The requested resource (" + originalPath + " + " + extension + ") wasn't found.").printStackTrace();
             return null;
         } else {
-            return ResourceLoader.getStream(filePath);
-        }
-    }
-
-    public static String get(final String originalPath, final String extension, final List<String> resourcePaths) {
-        final String filePath = generateFileName(resourcePaths, originalPath);
-        if (StringUtils.isEmpty(filePath)) {
-            System.out.println("The requested resource (" + originalPath + " + " + extension + ") wasn't found.");
-            // new FileNotFoundException("The requested resource (" + originalPath + " + " + extension + ") wasn't found.").printStackTrace();
-            return null;
-        } else {
-            return ResourceLoader.getText(filePath);
+            if (MediaType.TEXT_HTML.equals(mediaType)) {
+                final String source = preloadedResources.getSourceOnTheFlyWithFilePath(filePath);
+                if (source != null) {
+                    return RestServerUtil.encodedRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), mediaType);
+                } else {
+                    return null;
+                }
+            } else {
+                final InputStream stream = preloadedResources.getStreamOnTheFly(filePath);
+                if (stream != null) {
+                    final Representation encodedRepresentation = RestServerUtil.encodedRepresentation(stream, mediaType);
+                    logger.debug(String.format("File resource [%s] generated.", originalPath));
+                    return encodedRepresentation;
+                } else {
+                    return null;
+                }
+            }
         }
     }
 
@@ -93,13 +87,13 @@ public class FileResource extends ServerResource {
      *            - the relative file path for which full file path must be generated.
      * @return
      */
-    private static String generateFileName(final List<String> resourcePaths, final String path) {
+    public static String generateFileName(final List<String> resourcePaths, final String path) {
         // this is a preventive stuff: if the server receives additional link parameters -- JUST IGNORE THEM. Was used to run
         // appropriately Mocha / Chai tests for Polymer web components. See http://localhost:8091/resources/polymer/runner.html for results.
         final String filePath = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
 
         for (int pathIndex = 0; pathIndex < resourcePaths.size(); pathIndex++) {
-            String prepender = resourcePaths.get(pathIndex);
+            final String prepender = resourcePaths.get(pathIndex);
             if (ResourceLoader.exist(prepender + filePath)) {
                 return prepender + filePath;
             }

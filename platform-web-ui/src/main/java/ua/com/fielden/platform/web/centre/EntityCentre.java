@@ -13,6 +13,9 @@ import java.util.function.UnaryOperator;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.ListMultimap;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -32,6 +35,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -76,9 +80,6 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
-import com.google.common.collect.ListMultimap;
-import com.google.inject.Injector;
-
 /**
  * Represents the entity centre.
  *
@@ -117,6 +118,71 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.entityType = (Class<T>) CentreUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
+    }
+
+    /**
+     * Generates default centre from DSL config and postCentreCreated callback.
+     *
+     * @param dslDefaultConfig
+     * @param postCentreCreated
+     * @return
+     */
+    public ICentreDomainTreeManagerAndEnhancer createUserUnspecificDefaultCentre() {
+        final ISerialiser serialiser = injector.getInstance(ISerialiser.class);
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = GlobalDomainTreeManager.createEmptyCentre(entityType, serialiser);
+
+        final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
+        if (selectionCriteria.isPresent()) {
+            for (final String property : selectionCriteria.get()) {
+                cdtmae.getFirstTick().check(entityType, treeName(property), true);
+
+                // provideDefaultsFor(property, cdtmae, dslDefaultConfig);
+            }
+        }
+
+        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        if (resultSetProps.isPresent()) {
+            for (final ResultSetProp property : resultSetProps.get()) {
+                if (property.propName.isPresent()) {
+                    cdtmae.getSecondTick().check(entityType, treeName(property.propName.get()), true);
+                } else {
+                    if (property.propDef.isPresent()) { // represents the 'custom' property
+                        final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
+                        enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
+
+                        cdtmae.getSecondTick().check(entityType, treeName(customPropName), true);
+                    } else {
+                        throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+                    }
+                }
+            }
+        }
+
+        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
+        if (summaryExpressions.isPresent()) {
+            for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
+                final String originationProperty = treeName(entry.getKey());
+                for (final SummaryPropDef summaryProp : entry.getValue()) {
+                    cdtmae.getEnhancer().addCalculatedProperty(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, summaryProp.desc, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF"
+                            : originationProperty);
+                    cdtmae.getEnhancer().apply();
+                    cdtmae.getSecondTick().check(entityType, summaryProp.alias, true);
+                }
+            }
+        }
+
+        final Optional<Map<String, OrderDirection>> propOrdering = dslDefaultConfig.getResultSetOrdering();
+        if (propOrdering.isPresent()) {
+            for (final Map.Entry<String, OrderDirection> propAndOrderDirection : propOrdering.get().entrySet()) {
+                if (OrderDirection.ASC == propAndOrderDirection.getValue()) {
+                    cdtmae.getSecondTick().toggleOrdering(entityType, treeName(propAndOrderDirection.getKey()));
+                } else { // OrderDirection.DESC
+                    cdtmae.getSecondTick().toggleOrdering(entityType, treeName(propAndOrderDirection.getKey())).toggleOrdering(entityType, treeName(propAndOrderDirection.getKey()));
+                }
+            }
+        }
+
+        return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
 
     /**
@@ -541,7 +607,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     @Override
     public IRenderable build() {
-        return createRenderableRepresentation();
+        logger.debug("Initiating fresh centre...");
+        final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
+        if (userSpecificGlobalManager == null) {
+            return createRenderableRepresentation(createUserUnspecificDefaultCentre());
+        } else {
+            return createRenderableRepresentation(CentreUtils.getFreshCentre(userSpecificGlobalManager, this.menuItemType));
+        }
     }
 
     /**
@@ -556,11 +628,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return defaultCentre;
     }
 
-    private IRenderable createRenderableRepresentation() {
-        logger.debug("Initiating fresh centre...");
-
-        final ICentreDomainTreeManagerAndEnhancer centre = CentreUtils.getFreshCentre(getUserSpecificGlobalManager(), this.menuItemType);
-
+    private IRenderable createRenderableRepresentation(final ICentreDomainTreeManagerAndEnhancer centre) {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
         importPaths.add("master/tg-entity-master");
@@ -801,7 +869,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     private IGlobalDomainTreeManager getUserSpecificGlobalManager() {
-        return injector.getInstance(IServerGlobalDomainTreeManager.class).get(injector.getInstance(IUserProvider.class).getUser().getKey());
+        final IServerGlobalDomainTreeManager serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
+        final User user = injector.getInstance(IUserProvider.class).getUser();
+        if (user == null) { // the user is unknown at this stage!
+            return null; // no user-specific global exists for unknown user!
+        }
+        final String userName = user.getKey();
+        return serverGdtm.get(userName);
     }
 
     private String queryEnhancerContextConfigString() {
