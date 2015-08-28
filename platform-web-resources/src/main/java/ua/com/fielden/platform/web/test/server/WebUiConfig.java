@@ -838,8 +838,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
                 .addPrimaryAction(
-                        EntityActionConfig.createMasterInvocationActionConfig()
-                //                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                        //                        EntityActionConfig.createMasterInvocationActionConfig()
+                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 //                        action(TgFunctionalEntityWithCentreContext.class).
                 //                                withContext(context().withSelectedEntities().build()).
                 //                                icon("assignment-turned-in").
@@ -849,6 +849,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
                 ) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
                 .also()
+                /*.addSecondaryAction(
+                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                ).also()*/
                 .addSecondaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
