@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>@title</title>
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <link rel="import" href="/resources/polymer/polymer/polymer.html">
-    <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
-    <link rel="import" href="/resources/polymer/iron-form/iron-form.html">
-    <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
-    <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
-    <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-    <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+    <!-- The following file of login.html dependencies (tg-login-dependencies) resides in polymer library package to be able to
+         define dependency in '../iron-smth/smth.html' fashion.
+         
+         It prevents these resources to be going through ISourceController filter, not to pre-filter main application 'preloaded resources'
+         (index.html dependencies) from login.html dependencies.
+    -->
+    <link rel="import" href="/resources/polymer/tg-login/tg-login-dependencies.html">
 
     <!-- 
        The se of is="custom-style" is an experimental feature. 
