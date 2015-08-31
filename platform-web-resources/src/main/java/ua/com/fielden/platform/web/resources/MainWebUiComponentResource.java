@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.resources;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 
 import org.restlet.Context;
 import org.restlet.Request;
@@ -13,7 +12,9 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.web.app.IWebUiConfig;
+import com.google.common.base.Charsets;
+
+import ua.com.fielden.platform.web.app.IPreloadedResources;
 
 /**
  *
@@ -23,25 +24,16 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
  *
  */
 public class MainWebUiComponentResource extends ServerResource {
+    private final IPreloadedResources preloadedResources;
 
-    private final IWebUiConfig app;
-
-    public MainWebUiComponentResource(final IWebUiConfig app, final Context context, final Request request, final Response response) {
+    public MainWebUiComponentResource(final IPreloadedResources preloadedResources, final Context context, final Request request, final Response response) {
         init(context, request, response);
-        this.app = app;
+        this.preloadedResources = preloadedResources;
     }
 
     @Override
     protected Representation get() throws ResourceException {
-        try {
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(app).getBytes("UTF-8"))));
-        } catch (final UnsupportedEncodingException e) {
-            e.printStackTrace();
-            throw new ResourceException(e);
-        }
-    }
-
-    public static String get(final IWebUiConfig app) {
-        return app.genMainWebUIComponent();
+        final String source = preloadedResources.getSourceOnTheFly("/app/tg-app.html");
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 }

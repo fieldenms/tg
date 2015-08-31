@@ -18,9 +18,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IPreloadedResources;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
-import ua.com.fielden.platform.web.resources.MainWebUiComponentResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.WebUiPreferencesResource;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
 
 /**
@@ -217,9 +215,9 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
     @Override
     public String getSource(final String resourceURI) {
         if ("/app/tg-app-config.html".equalsIgnoreCase(resourceURI)) {
-            return WebUiPreferencesResource.get(webUiConfig);
+            return getTgAppConfigSource(webUiConfig);
         } else if ("/app/tg-app.html".equalsIgnoreCase(resourceURI)) {
-            return MainWebUiComponentResource.get(webUiConfig);
+            return getTgAppSource(webUiConfig);
         } else if ("/app/tg-reflector.html".equalsIgnoreCase(resourceURI)) {
             return getReflectorSource(serialiser, tgJackson);
         } else if ("/app/tg-element-loader.html".equalsIgnoreCase(resourceURI)) {
@@ -234,6 +232,14 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
             // System.out.println("The URI is not known: [" + resourceURI + "].");
             return null;
         }
+    }
+
+    private static String getTgAppConfigSource(final IWebUiConfig app) {
+        return app.genWebUiPreferences();
+    }
+
+    private static String getTgAppSource(final IWebUiConfig app) {
+        return app.genMainWebUIComponent();
     }
 
     private static String getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
