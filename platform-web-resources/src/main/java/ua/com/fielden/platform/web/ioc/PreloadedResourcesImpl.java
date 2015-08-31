@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.ioc;
 
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -19,7 +20,6 @@ import ua.com.fielden.platform.web.resources.MainWebUiComponentResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.WebUiPreferencesResource;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
-import ua.com.fielden.platform.web.resources.webui.TgElementLoaderComponentResource;
 import ua.com.fielden.platform.web.resources.webui.TgReflectorComponentResource;
 
 /**
@@ -220,7 +220,7 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         } else if ("/app/tg-reflector.html".equalsIgnoreCase(resourceURI)) {
             return TgReflectorComponentResource.get(restUtil, tgJackson);
         } else if ("/app/tg-element-loader.html".equalsIgnoreCase(resourceURI)) {
-            return TgElementLoaderComponentResource.get(this);
+            return getElementLoaderSource();
         } else if (resourceURI.startsWith("/master_ui")) {
             return getMasterSource(resourceURI.replaceFirst("/master_ui/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
@@ -235,6 +235,29 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
             // System.out.println("The URI is not known: [" + resourceURI + "].");
             return null;
         }
+    }
+
+    private String getElementLoaderSource() {
+        final String source = getSource("/resources/element_loader/tg-element-loader.html");
+        return source.replace("importedURLs = {}", generateImportUrlsFrom(get()));
+    }
+
+    /**
+     * Generates the string of tg-element-loader's 'importedURLs' from 'appSpecificPreloadedResources'.
+     *
+     * @param appSpecificPreloadedResources
+     * @return
+     */
+    private static String generateImportUrlsFrom(final LinkedHashSet<String> appSpecificPreloadedResources) {
+        final String prepender = "importedURLs = {";
+        final StringBuilder sb = new StringBuilder("");
+        final Iterator<String> iter = appSpecificPreloadedResources.iterator();
+        while (iter.hasNext()) {
+            final String next = iter.next();
+            sb.append(",'" + next + "': 'imported'");
+        }
+        final String res = sb.toString();
+        return prepender + (StringUtils.isEmpty(res) ? "" : res.substring(1)) + "}";
     }
 
     private String getFileSource(final String originalPath, final String extension, final List<String> resourcePaths) {

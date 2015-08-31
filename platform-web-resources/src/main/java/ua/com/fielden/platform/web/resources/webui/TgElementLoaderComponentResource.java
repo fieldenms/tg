@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.ByteArrayInputStream;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 
-import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -18,7 +15,6 @@ import org.restlet.resource.ServerResource;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.IPreloadedResources;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Resource for tg-element-loader component.
@@ -29,12 +25,10 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @param <DAO>
  */
 public class TgElementLoaderComponentResource extends ServerResource {
-    private final RestServerUtil restUtil;
     private final IPreloadedResources preloadedResources;
 
-    public TgElementLoaderComponentResource(final IPreloadedResources preloadedResources, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public TgElementLoaderComponentResource(final IPreloadedResources preloadedResources, final Context context, final Request request, final Response response) {
         init(context, request, response);
-        this.restUtil = restUtil;
         this.preloadedResources = preloadedResources;
     }
 
@@ -44,29 +38,7 @@ public class TgElementLoaderComponentResource extends ServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(preloadedResources).getBytes(Charsets.UTF_8))));
-    }
-
-    public static String get(final IPreloadedResources preloadedResources) {
-        final String source = preloadedResources.getSource("/resources/element_loader/tg-element-loader.html");
-        return source.replace("importedURLs = {}", generateImportUrlsFrom(preloadedResources.get()));
-    }
-
-    /**
-     * Generates the string of tg-element-loader's 'importedURLs' from 'appSpecificPreloadedResources'.
-     *
-     * @param appSpecificPreloadedResources
-     * @return
-     */
-    private static String generateImportUrlsFrom(final LinkedHashSet<String> appSpecificPreloadedResources) {
-        final String prepender = "importedURLs = {";
-        final StringBuilder sb = new StringBuilder("");
-        final Iterator<String> iter = appSpecificPreloadedResources.iterator();
-        while (iter.hasNext()) {
-            final String next = iter.next();
-            sb.append(",'" + next + "': 'imported'");
-        }
-        final String res = sb.toString();
-        return prepender + (StringUtils.isEmpty(res) ? "" : res.substring(1)) + "}";
+        final String source = preloadedResources.getSourceOnTheFly("/app/tg-element-loader.html");
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 }
