@@ -11,9 +11,9 @@ public class ColourTypeTestCase {
 	@Test
 	public void color_hexCode_creation_test() {
 		final Colour color = new Colour("bbb");
-		assertEquals("BBB", color.getColourValue());
+		assertEquals("#BBB", color.getColourValue());
 	}
-
+	
 	@Test
 	public void colour_hexCode_must_have_correct_length() {
 		try {

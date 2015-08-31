@@ -1,27 +1,30 @@
 package ua.com.fielden.platform.types;
 
 public class Colour {
-	private final String colourValue;
+    private final String hashlessUppercasedColourValue;
 
-	public Colour(final String colorValue) {
-		this.colourValue = checkColourValue(colorValue).toUpperCase();
-	}
+    public static Colour BLACK = new Colour("000000");
+    public static Colour RED = new Colour("FF0000");
+    public static Colour WHITE = new Colour("FFFFFF");
+    
+    public Colour(final String colorValue) {
+        validateColourValue(colorValue);
+        this.hashlessUppercasedColourValue = colorValue.toUpperCase();
+    }
 
-	private String checkColourValue(final String colourValue) {
-		if (colourValue.length() == 3 || colourValue.length() == 6) {
-			if (!colourValue.matches("\\p{XDigit}*")) {
-				throw new IllegalArgumentException(
-						"Colour value string must use only [0-9], [A-F]!");
-			}
-			return colourValue;
-		} else {
-			throw new IllegalArgumentException(
-					"Colour value string length must be 6 or 3 only!");
-		}
-	}
+    private void validateColourValue(final String colourValue) {
+        if (!colourValue.matches("\\p{XDigit}{3}|\\p{XDigit}{6}")) {
+            throw new IllegalArgumentException(
+                    "Colour value string must be composed of either 3 or 6 hexadecimal chars");
+        }
+    }
 
-	public String getColourValue() {
-		return colourValue;
-	}
+    public String getColourValue() {
+        return "#" + hashlessUppercasedColourValue;
+    }
 
+    @Override
+    public String toString() {
+        return hashlessUppercasedColourValue;
+    }
 }
