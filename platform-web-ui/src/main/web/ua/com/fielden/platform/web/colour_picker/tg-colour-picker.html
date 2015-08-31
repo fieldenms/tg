@@ -73,10 +73,10 @@
 		<paper-input-container always-float-label>
 			<div class="layout horizontal center">
 				<div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]">
-					<iron-icon class="small-icon" icon="icons:close" style$="[[_calcSmallIconStyle(colorString)]]"></iron-icon>
+					<iron-icon class="small-icon" icon="close" style$="[[_calcSmallIconStyle(colorString)]]"></iron-icon>
 				</div>
 				<label>Hex code colour value (use only 0-9, A-F)</label>
-				<div prefix style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
+				<div style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
 				<input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
 			</div>
 		</paper-input-container>
