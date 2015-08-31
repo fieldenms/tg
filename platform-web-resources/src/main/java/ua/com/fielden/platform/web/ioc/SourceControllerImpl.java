@@ -30,8 +30,14 @@ public class SourceControllerImpl implements ISourceController {
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;
     private final TgJackson tgJackson;
+    /**
+     * Root URIs, that will be preloaded ('/resources/application-startup-resources.html' defines them) during index.html loading.
+     */
     private LinkedHashSet<String> preloadedResources;
-    private LinkedHashSet<String> calculatedPreloadedResources;
+    /**
+     * All URIs (including derived ones), that will be preloaded ('/resources/application-startup-resources.html' defines them) during index.html loading.
+     */
+    private LinkedHashSet<String> allPreloadedResources;
     private Boolean deploymentMode;
 
     @Inject
@@ -66,7 +72,7 @@ public class SourceControllerImpl implements ISourceController {
      * @param source
      * @return
      */
-    private static LinkedHashSet<String> getDependentResourceURIs(final String source) {
+    private static LinkedHashSet<String> getRootDependencies(final String source) {
         final LinkedHashSet<String> set = new LinkedHashSet<String>();
         String curr = source;
         // TODO enhance the logic to support whitespaces etc.?
@@ -88,11 +94,11 @@ public class SourceControllerImpl implements ISourceController {
      *
      * @return
      */
-    public LinkedHashSet<String> get() {
+    private LinkedHashSet<String> getApplicationStartupRootDependencies() {
         if (this.preloadedResources == null) {
             this.preloadedResources = new LinkedHashSet<>();
 
-            final LinkedHashSet<String> result = get("/resources/application-startup-resources.html");
+            final LinkedHashSet<String> result = getRootDependenciesFor("/resources/application-startup-resources.html");
             if (result == null) {
                 throw new IllegalStateException("The [/resources/application-startup-resources.html] resource should exist. It is crucial for startup loading of app-specific resources.");
             }
@@ -103,16 +109,16 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     /**
-     * Returns dependent resources URIs.
+     * Returns dependent resources URIs for the specified resource's 'resourceURI'.
      *
      * @return
      */
-    public LinkedHashSet<String> get(final String resourceURI) {
+    private LinkedHashSet<String> getRootDependenciesFor(final String resourceURI) {
         final String source = getSource(resourceURI);
         if (source == null) {
             return null;
         } else {
-            final LinkedHashSet<String> dependentResourceURIs = getDependentResourceURIs(source);
+            final LinkedHashSet<String> dependentResourceURIs = getRootDependencies(source);
             final LinkedHashSet<String> dependentResourceURIsWithoutCoreTooltip = new LinkedHashSet<>(dependentResourceURIs);
             for (final String dependentResourceURI: dependentResourceURIs) {
                 if (dependentResourceURI.contains("core-tooltip")) {
@@ -129,14 +135,14 @@ public class SourceControllerImpl implements ISourceController {
      *
      * @return
      */
-    private LinkedHashSet<String> getAll(final String resourceURI) {
-        final LinkedHashSet<String> roots = get(resourceURI);
+    private LinkedHashSet<String> getAllDependenciesFor(final String resourceURI) {
+        final LinkedHashSet<String> roots = getRootDependenciesFor(resourceURI);
         if (roots == null) {
             return null;
         } else {
             final LinkedHashSet<String> all = new LinkedHashSet<>();
             for (final String root : roots) {
-                final LinkedHashSet<String> rootDependencies = getAll(root);
+                final LinkedHashSet<String> rootDependencies = getAllDependenciesFor(root);
                 if (rootDependencies != null) {
                     all.add(root);
                     all.addAll(rootDependencies);
@@ -175,8 +181,8 @@ public class SourceControllerImpl implements ISourceController {
         if (!isDeploymentMode()) {
             return source;
         } else {
-            if (calculatedPreloadedResources == null) {
-                calculatedPreloadedResources = calculatePreloadedResources();
+            if (allPreloadedResources == null) {
+                allPreloadedResources = calculatePreloadedResources();
             }
 
             // System.out.println("SOURCE [" + path + "]: " + source);
@@ -195,10 +201,9 @@ public class SourceControllerImpl implements ISourceController {
      */
     private String removePrealodedDependencies(final String source) {
         String result = source;
-        for (final String preloaded : calculatedPreloadedResources) {
+        for (final String preloaded : allPreloadedResources) {
             result = removePrealodedDependency(result, preloaded);
         }
-
         return result;
     }
 
@@ -225,7 +230,7 @@ public class SourceControllerImpl implements ISourceController {
         // System.out.println("allUrls = |" + getAll("/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties") + "|.");
         // System.out.println("allUrls = |" + getAll("/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties") + "|.");
         // System.out.println("allUrls = |" + getAll("/resources/application-startup-resources.html") + "|.");
-        final LinkedHashSet<String> all = getAll("/resources/startup-resources-origin.html");
+        final LinkedHashSet<String> all = getAllDependenciesFor("/resources/startup-resources-origin.html");
         System.out.println("allUrls = |" + all + "|.");
         System.out.println("--------------calculatePreloadedResources--------------");
         return all;
@@ -269,7 +274,7 @@ public class SourceControllerImpl implements ISourceController {
 
     private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig) {
         final String source = getFileSource("/resources/element_loader/tg-element-loader.html", webUiConfig.resourcePaths());
-        return source.replace("importedURLs = {}", generateImportUrlsFrom(sourceControllerImpl.get()));
+        return source.replace("importedURLs = {}", generateImportUrlsFrom(sourceControllerImpl.getApplicationStartupRootDependencies()));
     }
 
     /**
@@ -290,7 +295,7 @@ public class SourceControllerImpl implements ISourceController {
         return prepender + (StringUtils.isEmpty(res) ? "" : res.substring(1)) + "}";
     }
 
-    public static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
+    private static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
         return ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig).build().render().toString();
     }
 
