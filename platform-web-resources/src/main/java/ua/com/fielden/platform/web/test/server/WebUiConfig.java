@@ -14,8 +14,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -75,6 +73,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+
+import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -149,8 +149,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 // PROPERTY EDITORS
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
                 .withProps(pair("desc", true),
-                           pair("compositeProp", false),
-                           pair("booleanProp", false))
+                        pair("compositeProp", false),
+                        pair("booleanProp", false))
                 /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 /*      */.enabledWhen(EnabledState.VIEW)
                 /*      */.icon("trending-up")
@@ -699,8 +699,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(),
-//                        ("[['center-justified', 'start', mrLast]]")
-                                ("[['center-justified', 'start', mr, mr, mrLast]," +
+                        //                        ("[['center-justified', 'start', mrLast]]")
+                        ("[['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mr, mr, mrLast]," +
@@ -838,7 +838,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
                 .addPrimaryAction(
-                        EntityActionConfig.createMasterInvocationActionConfig()
+                        //                        EntityActionConfig.createMasterInvocationActionConfig()
+                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 //                        action(TgFunctionalEntityWithCentreContext.class).
                 //                                withContext(context().withSelectedEntities().build()).
                 //                                icon("assignment-turned-in").
@@ -848,6 +849,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
                 ) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
                 .also()
+                /*.addSecondaryAction(
+                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                ).also()*/
                 .addSecondaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
