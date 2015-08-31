@@ -14,10 +14,7 @@ import org.restlet.resource.ServerResource;
 
 import com.google.common.base.Charsets;
 
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
-import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.app.IPreloadedResources;
 
 /**
  * Resource for tg-reflector component.
@@ -28,13 +25,11 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @param <DAO>
  */
 public class TgReflectorComponentResource extends ServerResource {
-    private final RestServerUtil restUtil;
-    private final TgJackson tgJackson;
+    private final IPreloadedResources preloadedResources;
 
-    public TgReflectorComponentResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final TgJackson tgJackson) {
+    public TgReflectorComponentResource(final IPreloadedResources preloadedResources, final Context context, final Request request, final Response response) {
         init(context, request, response);
-        this.restUtil = restUtil;
-        this.tgJackson = tgJackson;
+        this.preloadedResources = preloadedResources;
     }
 
     /**
@@ -42,13 +37,7 @@ public class TgReflectorComponentResource extends ServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(get(restUtil, tgJackson).getBytes(Charsets.UTF_8))));
-    }
-
-    public static String get(final RestServerUtil restUtil, final TgJackson tgJackson) {
-        final String typeTableRepresentation = new String(restUtil.getSerialiser().serialise(tgJackson.getTypeTable(), SerialiserEngines.JACKSON), Charsets.UTF_8);
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/reflection/tg-reflector.html");
-
-        return text.replace("@typeTable", typeTableRepresentation);
+        final String source = preloadedResources.getSourceOnTheFly("/app/tg-reflector.html");
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 }

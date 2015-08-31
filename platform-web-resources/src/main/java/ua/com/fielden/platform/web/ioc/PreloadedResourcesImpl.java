@@ -7,8 +7,10 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -20,7 +22,6 @@ import ua.com.fielden.platform.web.resources.MainWebUiComponentResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.WebUiPreferencesResource;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
-import ua.com.fielden.platform.web.resources.webui.TgReflectorComponentResource;
 
 /**
  * {@link IPreloadedResources} implementation.
@@ -31,6 +32,7 @@ import ua.com.fielden.platform.web.resources.webui.TgReflectorComponentResource;
 public class PreloadedResourcesImpl implements IPreloadedResources {
     private final IWebUiConfig webUiConfig;
     private final RestServerUtil restUtil;
+    private final ISerialiser serialiser;
     private final TgJackson tgJackson;
     private LinkedHashSet<String> preloadedResources;
     private LinkedHashSet<String> calculatedPreloadedResources;
@@ -40,7 +42,8 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
     public PreloadedResourcesImpl(final IWebUiConfig webUiConfig, final RestServerUtil restUtil) {
         this.webUiConfig = webUiConfig;
         this.restUtil = restUtil;
-        this.tgJackson = (TgJackson) this.restUtil.getSerialiser().getEngine(SerialiserEngines.JACKSON);
+        this.serialiser = this.restUtil.getSerialiser();
+        this.tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
     }
 
     private boolean isDeploymentMode() {
@@ -218,28 +221,31 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         } else if ("/app/tg-app.html".equalsIgnoreCase(resourceURI)) {
             return MainWebUiComponentResource.get(webUiConfig);
         } else if ("/app/tg-reflector.html".equalsIgnoreCase(resourceURI)) {
-            return TgReflectorComponentResource.get(restUtil, tgJackson);
+            return getReflectorSource(serialiser, tgJackson);
         } else if ("/app/tg-element-loader.html".equalsIgnoreCase(resourceURI)) {
-            return getElementLoaderSource();
+            return getElementLoaderSource(this, webUiConfig);
         } else if (resourceURI.startsWith("/master_ui")) {
             return getMasterSource(resourceURI.replaceFirst("/master_ui/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
             return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/resources/")) {
-            final String rest = resourceURI.replaceFirst("/resources/", "");
-            final int lastDotIndex = rest.lastIndexOf(".");
-            final String originalPath = rest.substring(0);
-            final String extension = rest.substring(lastDotIndex + 1);
-            return getFileSource(originalPath, extension, webUiConfig.resourcePaths());
+            return getFileSource(resourceURI, webUiConfig.resourcePaths());
         } else {
             // System.out.println("The URI is not known: [" + resourceURI + "].");
             return null;
         }
     }
 
-    private String getElementLoaderSource() {
-        final String source = getSource("/resources/element_loader/tg-element-loader.html");
-        return source.replace("importedURLs = {}", generateImportUrlsFrom(get()));
+    private static String getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
+        final String typeTableRepresentation = new String(serialiser.serialise(tgJackson.getTypeTable(), SerialiserEngines.JACKSON), Charsets.UTF_8);
+        final String originalSource = ResourceLoader.getText("ua/com/fielden/platform/web/reflection/tg-reflector.html");
+
+        return originalSource.replace("@typeTable", typeTableRepresentation);
+    }
+
+    private static String getElementLoaderSource(final IPreloadedResources preloadedResources, final IWebUiConfig webUiConfig) {
+        final String source = getFileSource("/resources/element_loader/tg-element-loader.html", webUiConfig.resourcePaths());
+        return source.replace("importedURLs = {}", generateImportUrlsFrom(preloadedResources.get()));
     }
 
     /**
@@ -260,7 +266,24 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         return prepender + (StringUtils.isEmpty(res) ? "" : res.substring(1)) + "}";
     }
 
-    private String getFileSource(final String originalPath, final String extension, final List<String> resourcePaths) {
+    public static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
+        return ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig).build().render().toString();
+    }
+
+    private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
+        return ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig).build().render().toString();
+    }
+
+    ////////////////////////////////// Getting file source //////////////////////////////////
+    private static String getFileSource(final String resourceURI, final List<String> resourcePaths) {
+        final String rest = resourceURI.replaceFirst("/resources/", "");
+        final int lastDotIndex = rest.lastIndexOf(".");
+        final String originalPath = rest.substring(0);
+        final String extension = rest.substring(lastDotIndex + 1);
+        return getFileSource(originalPath, extension, resourcePaths);
+    }
+
+    private static String getFileSource(final String originalPath, final String extension, final List<String> resourcePaths) {
         final String filePath = FileResource.generateFileName(resourcePaths, originalPath);
         if (StringUtils.isEmpty(filePath)) {
             System.out.println("The requested resource (" + originalPath + " + " + extension + ") wasn't found.");
@@ -270,15 +293,7 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         }
     }
 
-    private String getFileSource(final String filePath) {
+    private static String getFileSource(final String filePath) {
         return ResourceLoader.getText(filePath);
-    }
-
-    public static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
-        return ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig).build().render().toString();
-    }
-
-    private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
-        return ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig).build().render().toString();
     }
 }
