@@ -8,7 +8,7 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.web.app.IPreloadedResources;
+import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
 
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
  *
  */
 public class MasterTestsComponentResourceFactory extends Restlet {
-    private final IPreloadedResources preloadedResources;
+    private final ISourceController sourceController;
     private final RestServerUtil restUtil;
 
     /**
@@ -27,8 +27,8 @@ public class MasterTestsComponentResourceFactory extends Restlet {
      *
      * @param centres
      */
-    public MasterTestsComponentResourceFactory(final IPreloadedResources preloadedResources, final Injector injector) {
-        this.preloadedResources = preloadedResources;
+    public MasterTestsComponentResourceFactory(final ISourceController sourceController, final Injector injector) {
+        this.sourceController = sourceController;
         this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
@@ -39,8 +39,15 @@ public class MasterTestsComponentResourceFactory extends Restlet {
         if (Method.GET.equals(request.getMethod())) {
             new MasterComponentResource(
                     restUtil,
-                    preloadedResources,
+                    sourceController,
 
+                    // TODO needs to be modified to get specific master for tests!
+                    // TODO needs to be modified to get specific master for tests!
+                    // TODO needs to be modified to get specific master for tests!
+                    // TODO needs to be modified to get specific master for tests!
+                    // TODO needs to be modified to get specific master for tests!
+                    // TODO needs to be modified to get specific master for tests!
+                    // TODO needs to be modified to get specific master for tests!
                     // TODO needs to be modified to get specific master for tests!
 //                    new EntityMaster<TgPersistentEntityWithProperties>(
 //                            TgPersistentEntityWithProperties.class,

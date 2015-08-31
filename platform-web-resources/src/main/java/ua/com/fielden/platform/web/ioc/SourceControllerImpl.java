@@ -15,21 +15,19 @@ import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.app.IPreloadedResources;
+import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
 
 /**
- * {@link IPreloadedResources} implementation.
+ * {@link ISourceController} implementation.
  *
  * @author TG Team
  *
  */
-public class PreloadedResourcesImpl implements IPreloadedResources {
+public class SourceControllerImpl implements ISourceController {
     private final IWebUiConfig webUiConfig;
-    private final RestServerUtil restUtil;
     private final ISerialiser serialiser;
     private final TgJackson tgJackson;
     private LinkedHashSet<String> preloadedResources;
@@ -37,13 +35,22 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
     private Boolean deploymentMode;
 
     @Inject
-    public PreloadedResourcesImpl(final IWebUiConfig webUiConfig, final RestServerUtil restUtil) {
+    public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
         this.webUiConfig = webUiConfig;
-        this.restUtil = restUtil;
-        this.serialiser = this.restUtil.getSerialiser();
+        this.serialiser = serialiser;
         this.tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
     }
 
+    /**
+     * Returns <code>true</code> in case where the server is in deployment mode, <code>false</code> -- in development mode.
+     * <p>
+     * At this stage deployment mode is activated in the case, where /resources/startup-resources.html and /resources/startup-resources-origin.html are different (which means that potentially /resources/startup-resources.html is vulcanized
+     * version of /resources/startup-resources-original.html or just changed intentionally to activate the deployment mode for testing purposes).
+     *
+     * After the first heavy comparison has been performed -- the flag is cached.
+     *
+     * @return
+     */
     private boolean isDeploymentMode() {
         if (deploymentMode == null) {
             final String startupResources = getSource("/resources/startup-resources.html");
@@ -76,7 +83,11 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         return set;
     }
 
-    @Override
+    /**
+     * Returns app-specific preloaded resources.
+     *
+     * @return
+     */
     public LinkedHashSet<String> get() {
         if (this.preloadedResources == null) {
             this.preloadedResources = new LinkedHashSet<>();
@@ -91,7 +102,11 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         return this.preloadedResources;
     }
 
-    @Override
+    /**
+     * Returns dependent resources URIs.
+     *
+     * @return
+     */
     public LinkedHashSet<String> get(final String resourceURI) {
         final String source = getSource(resourceURI);
         if (source == null) {
@@ -109,8 +124,12 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         }
     }
 
-    @Override
-    public LinkedHashSet<String> getAll(final String resourceURI) {
+    /**
+     * Returns dependent resources URIs including transitive.
+     *
+     * @return
+     */
+    private LinkedHashSet<String> getAll(final String resourceURI) {
         final LinkedHashSet<String> roots = get(resourceURI);
         if (roots == null) {
             return null;
@@ -127,6 +146,23 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
             }
             return all;
         }
+    }
+
+    @Override
+    public String loadSource(final String resourceURI) {
+        final String source = getSource(resourceURI);
+        return enhanceSource(source, resourceURI);
+    }
+
+    @Override
+    public String loadSourceWithFilePath(final String filePath) {
+        final String source = getFileSource(filePath);
+        return enhanceSource(source, filePath);
+    }
+
+    @Override
+    public InputStream loadStreamWithFilePath(final String filePath) {
+        return ResourceLoader.getStream(filePath);
     }
 
     private String enhanceSource(final String source, final String path) {
@@ -148,23 +184,6 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
             // System.out.println("SOURCE WITHOUT PRELOADED [" + path + "]: " + sourceWithoutPreloadedDependencies);
             return sourceWithoutPreloadedDependencies;
         }
-    }
-
-    @Override
-    public String getSourceOnTheFly(final String resourceURI) {
-        final String source = getSource(resourceURI);
-        return enhanceSource(source, resourceURI);
-    }
-
-    @Override
-    public String getSourceOnTheFlyWithFilePath(final String filePath) {
-        final String source = getFileSource(filePath);
-        return enhanceSource(source, filePath);
-    }
-
-    @Override
-    public InputStream getStreamOnTheFly(final String filePath) {
-        return ResourceLoader.getStream(filePath);
     }
 
     /**
@@ -202,9 +221,9 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
 
     private LinkedHashSet<String> calculatePreloadedResources() {
         System.out.println("=============calculatePreloadedResources===============");
-        // System.out.println("allUrls = |" + preloadedResources.getAll("/resources/binding/tg-entity-binder.html") + "|.");
-        // System.out.println("allUrls = |" + preloadedResources.getAll("/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties") + "|.");
-        // System.out.println("allUrls = |" + this.getAll("/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties") + "|.");
+        // System.out.println("allUrls = |" + getAll("/resources/binding/tg-entity-binder.html") + "|.");
+        // System.out.println("allUrls = |" + getAll("/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties") + "|.");
+        // System.out.println("allUrls = |" + getAll("/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties") + "|.");
         // System.out.println("allUrls = |" + getAll("/resources/application-startup-resources.html") + "|.");
         final LinkedHashSet<String> all = getAll("/resources/startup-resources-origin.html");
         System.out.println("allUrls = |" + all + "|.");
@@ -212,8 +231,7 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         return all;
     }
 
-    @Override
-    public String getSource(final String resourceURI) {
+    private String getSource(final String resourceURI) {
         if ("/app/tg-app-config.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppConfigSource(webUiConfig);
         } else if ("/app/tg-app.html".equalsIgnoreCase(resourceURI)) {
@@ -249,9 +267,9 @@ public class PreloadedResourcesImpl implements IPreloadedResources {
         return originalSource.replace("@typeTable", typeTableRepresentation);
     }
 
-    private static String getElementLoaderSource(final IPreloadedResources preloadedResources, final IWebUiConfig webUiConfig) {
+    private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig) {
         final String source = getFileSource("/resources/element_loader/tg-element-loader.html", webUiConfig.resourcePaths());
-        return source.replace("importedURLs = {}", generateImportUrlsFrom(preloadedResources.get()));
+        return source.replace("importedURLs = {}", generateImportUrlsFrom(sourceControllerImpl.get()));
     }
 
     /**

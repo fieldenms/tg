@@ -7,7 +7,7 @@ import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.web.app.IPreloadedResources;
+import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreComponentResource;
 
@@ -20,7 +20,7 @@ import ua.com.fielden.platform.web.resources.webui.CentreComponentResource;
  *
  */
 public class CentreComponentResourceFactory extends Restlet {
-    private final IPreloadedResources preloadedResources;
+    private final ISourceController sourceController;
     private final RestServerUtil restUtil;
 
     /**
@@ -28,8 +28,8 @@ public class CentreComponentResourceFactory extends Restlet {
      *
      * @param centres
      */
-    public CentreComponentResourceFactory(final IPreloadedResources preloadedResources, final Injector injector) {
-        this.preloadedResources = preloadedResources;
+    public CentreComponentResourceFactory(final ISourceController sourceController, final Injector injector) {
+        this.sourceController = sourceController;
         this.restUtil = injector.getInstance(RestServerUtil.class);
     }
 
@@ -43,7 +43,7 @@ public class CentreComponentResourceFactory extends Restlet {
         if (Method.GET.equals(request.getMethod())) {
             new CentreComponentResource(
                     restUtil,
-                    preloadedResources,
+                    sourceController,
                     getContext(),
                     request,
                     response //

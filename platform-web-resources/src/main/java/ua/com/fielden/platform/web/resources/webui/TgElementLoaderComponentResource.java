@@ -14,7 +14,7 @@ import org.restlet.resource.ServerResource;
 
 import com.google.common.base.Charsets;
 
-import ua.com.fielden.platform.web.app.IPreloadedResources;
+import ua.com.fielden.platform.web.app.ISourceController;
 
 /**
  * Resource for tg-element-loader component.
@@ -25,11 +25,11 @@ import ua.com.fielden.platform.web.app.IPreloadedResources;
  * @param <DAO>
  */
 public class TgElementLoaderComponentResource extends ServerResource {
-    private final IPreloadedResources preloadedResources;
+    private final ISourceController sourceController;
 
-    public TgElementLoaderComponentResource(final IPreloadedResources preloadedResources, final Context context, final Request request, final Response response) {
+    public TgElementLoaderComponentResource(final ISourceController sourceController, final Context context, final Request request, final Response response) {
         init(context, request, response);
-        this.preloadedResources = preloadedResources;
+        this.sourceController = sourceController;
     }
 
 
@@ -38,7 +38,7 @@ public class TgElementLoaderComponentResource extends ServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        final String source = preloadedResources.getSourceOnTheFly("/app/tg-element-loader.html");
+        final String source = sourceController.loadSource("/app/tg-element-loader.html");
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 }

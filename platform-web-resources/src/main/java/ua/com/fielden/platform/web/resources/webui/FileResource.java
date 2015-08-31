@@ -18,7 +18,7 @@ import org.restlet.resource.ServerResource;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.app.IPreloadedResources;
+import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -30,7 +30,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class FileResource extends ServerResource {
     private final Logger logger = Logger.getLogger(getClass());
     private final List<String> resourcePaths;
-    private final IPreloadedResources preloadedResources;
+    private final ISourceController sourceController;
 
     /**
      * Creates an instance of {@link FileResource} with custom resource paths.
@@ -40,9 +40,9 @@ public class FileResource extends ServerResource {
      * @param request
      * @param response
      */
-    public FileResource(final IPreloadedResources preloadedResources, final List<String> resourcePaths, final Context context, final Request request, final Response response) {
+    public FileResource(final ISourceController sourceController, final List<String> resourcePaths, final Context context, final Request request, final Response response) {
         init(context, request, response);
-        this.preloadedResources = preloadedResources;
+        this.sourceController = sourceController;
         this.resourcePaths = resourcePaths;
     }
 
@@ -61,14 +61,14 @@ public class FileResource extends ServerResource {
             return null;
         } else {
             if (MediaType.TEXT_HTML.equals(mediaType)) {
-                final String source = preloadedResources.getSourceOnTheFlyWithFilePath(filePath);
+                final String source = sourceController.loadSourceWithFilePath(filePath);
                 if (source != null) {
                     return RestServerUtil.encodedRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), mediaType);
                 } else {
                     return null;
                 }
             } else {
-                final InputStream stream = preloadedResources.getStreamOnTheFly(filePath);
+                final InputStream stream = sourceController.loadStreamWithFilePath(filePath);
                 if (stream != null) {
                     final Representation encodedRepresentation = RestServerUtil.encodedRepresentation(stream, mediaType);
                     logger.debug(String.format("File resource [%s] generated.", originalPath));

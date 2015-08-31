@@ -14,7 +14,7 @@ import org.restlet.resource.ServerResource;
 
 import com.google.common.base.Charsets;
 
-import ua.com.fielden.platform.web.app.IPreloadedResources;
+import ua.com.fielden.platform.web.app.ISourceController;
 
 /**
  *
@@ -24,16 +24,16 @@ import ua.com.fielden.platform.web.app.IPreloadedResources;
  *
  */
 public class MainWebUiComponentResource extends ServerResource {
-    private final IPreloadedResources preloadedResources;
+    private final ISourceController sourceController;
 
-    public MainWebUiComponentResource(final IPreloadedResources preloadedResources, final Context context, final Request request, final Response response) {
+    public MainWebUiComponentResource(final ISourceController sourceController, final Context context, final Request request, final Response response) {
         init(context, request, response);
-        this.preloadedResources = preloadedResources;
+        this.sourceController = sourceController;
     }
 
     @Override
     protected Representation get() throws ResourceException {
-        final String source = preloadedResources.getSourceOnTheFly("/app/tg-app.html");
+        final String source = sourceController.loadSource("/app/tg-app.html");
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 }

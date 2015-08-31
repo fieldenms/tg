@@ -7,14 +7,14 @@ import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.web.app.IPreloadedResources;
+import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.WebUiPreferencesResource;
 
 public class WebUiPreferencesResourceFactory extends Restlet {
-    private final IPreloadedResources preloadedResources;
+    private final ISourceController sourceController;
 
     public WebUiPreferencesResourceFactory(final Injector injector) {
-        this.preloadedResources = injector.getInstance(IPreloadedResources.class);
+        this.sourceController = injector.getInstance(ISourceController.class);
     }
 
     @Override
@@ -22,7 +22,7 @@ public class WebUiPreferencesResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new WebUiPreferencesResource(preloadedResources, getContext(), request, response).handle();
+            new WebUiPreferencesResource(sourceController, getContext(), request, response).handle();
         }
     }
 }
