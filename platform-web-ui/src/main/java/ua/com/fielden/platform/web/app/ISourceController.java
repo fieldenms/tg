@@ -46,4 +46,7 @@ public interface ISourceController {
      * @return
      */
     InputStream loadStreamWithFilePath(final String filePath);
+
+    boolean isDeploymentMode();
+    void setDeploymentMode(final boolean deploymentMode);
 }

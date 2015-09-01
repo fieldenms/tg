@@ -4,6 +4,8 @@ import java.util.Properties;
 
 import org.restlet.Component;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -16,8 +18,6 @@ import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 import ua.com.fielden.platform.web.system.SystemResources;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
-import com.google.inject.Injector;
-
 /**
  * Configuration point for Web UI Testing Server.
  *
@@ -25,6 +25,7 @@ import com.google.inject.Injector;
  *
  */
 public class TgTestApplicationConfiguration extends Component {
+    private final Injector injector;
 
     public TgTestApplicationConfiguration(final Properties props) {
         // /////////////////////////////////////////////////////
@@ -34,7 +35,7 @@ public class TgTestApplicationConfiguration extends Component {
             // create application IoC module and injector
             final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
             final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
-            final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+            injector = new ApplicationInjectorFactory().add(module).getInjector();
 
             // create and configure REST server utility
             final RestServerUtil serverRestUtil = injector.getInstance(RestServerUtil.class);
@@ -94,5 +95,9 @@ public class TgTestApplicationConfiguration extends Component {
             e.printStackTrace();
             throw new IllegalStateException(e);
         }
+    }
+
+    public Injector injector() {
+        return injector;
     }
 }

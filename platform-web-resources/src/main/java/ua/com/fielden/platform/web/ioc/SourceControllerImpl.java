@@ -57,13 +57,20 @@ public class SourceControllerImpl implements ISourceController {
      *
      * @return
      */
-    private boolean isDeploymentMode() {
+    public boolean isDeploymentMode() {
         if (deploymentMode == null) {
             final String startupResources = getSource("/resources/startup-resources.html");
             final String startupResourcesOrigin = getSource("/resources/startup-resources-origin.html");
             deploymentMode = !EntityUtils.equalsEx(startupResources, startupResourcesOrigin);
         }
         return deploymentMode;
+    }
+
+    public void setDeploymentMode(final boolean deploymentMode) {
+        if (this.deploymentMode != null) {
+            throw new IllegalStateException("The [deployment mode == " + this.deploymentMode + "] has been already automatically populated (it cannot be overriden now). Please, ensure that no resource loading occurs before this setting.");
+        }
+        this.deploymentMode = deploymentMode;
     }
 
     /**
