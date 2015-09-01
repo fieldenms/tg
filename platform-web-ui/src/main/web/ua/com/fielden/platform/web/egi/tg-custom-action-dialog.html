@@ -7,7 +7,7 @@
 
 <dom-module id="tg-custom-action-dialog">
     <template>
-        <paper-dialog id="entityMaster" no-cancel-on-outside-click on-iron-overlay-opened="_dialogOpened" on-iron-overlay-closed="_dialogClosed" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+        <paper-dialog id="entityMaster" no-cancel-on-outside-click no-cancel-on-esc-key on-iron-overlay-opened="_dialogOpened" on-iron-overlay-closed="_dialogClosed" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
             <tg-element-loader id="loadMaster" on-after-load="_afterMasterLoad"></tg-element-loader>
         </paper-dialog>
         <tg-toast id="toaster"></tg-toast>
