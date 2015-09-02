@@ -745,7 +745,7 @@
              * Returns the property value of the specified entity and converts it to string.
              */
             _getValue: function (entity, property, type) {
-                if (!entity || !property || !type || this._get(entity, property) === null) {
+                if (entity === null || property === null || type === null || this._get(entity, property) === null) {
                     return "";
                 } else if (this.$.reflector.findTypeByName(type)) {
                     return this.$.reflector.convert(this._get(entity, property));

@@ -24,7 +24,7 @@ public class WebEntityGridInspector implements IRenderable {
     private final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
             "<div class='data-label truncate'>@column-title</div>" +
             "<div class='data-value relative' on-tap='_tapAction'>" +
-            "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, '@property-name')]]' class='fit'></div>" +
+            "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
             "<div class='truncate relative'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>" +
             "</div>" +
             "</div>";
@@ -32,8 +32,8 @@ public class WebEntityGridInspector implements IRenderable {
     private final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
             "<div class='data-label truncate'>@column-title</div>" +
             "<div class='data-value relative' on-tap='_tapAction'>" +
-            "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, '@property-name')]]' class='fit'></div>" +
-            "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, '@property-name')]]'></iron-icon>" +
+            "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
+            "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]'></iron-icon>" +
             "</div>" +
             "</div>";
 
