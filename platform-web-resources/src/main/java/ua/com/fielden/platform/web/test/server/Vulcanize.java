@@ -9,9 +9,11 @@ import java.io.PrintStream;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import com.google.common.base.Charsets;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -111,6 +113,19 @@ public class Vulcanize {
         }
         logger.info("\tVulcanized [startup-resources-origin.html].");
 
+        logger.info("\tInlining styles / scripts in [startup-resources-origin-vulcanized.html]...");
+        try {
+            final String vulcanized = IOUtils.toString(new FileInputStream("startup-resources-origin-vulcanized.html"), Charsets.UTF_8.name());
+
+            final PrintStream ps = new PrintStream("startup-resources-origin-vulcanized.html");
+            ps.print(inlineScripts(inlineStyles(vulcanized, sourceController), sourceController));
+            ps.close();
+        } catch (final IOException e) {
+            logger.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+        logger.info("\tInlined styles / scripts in [startup-resources-origin-vulcanized.html].");
+
         logger.info("\tMove vulcanized file to its destination and clear obsolete files...");
         try {
             FileUtils.copyFile(new File("startup-resources-origin-vulcanized.html"), new File("../platform-web-ui/src/main/web/ua/com/fielden/platform/web/startup-resources.html"));
@@ -123,6 +138,7 @@ public class Vulcanize {
         logger.info("\tMoved vulcanized file to its destination and cleared obsolete files.");
 
         logger.info("Vulcanized.");
+        System.out.println("<script charset=\"utf-8\" src=\"".length());
     }
 
     private static void downloadSource(final String dir, final String name, final ISourceController sourceController) {
@@ -140,6 +156,58 @@ public class Vulcanize {
         } catch (final FileNotFoundException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * Inlines stylesheets inside the source (vulcanized).
+     *
+     * Format of styles to be inlined: <link rel="import" type="css" href="/resources/polymer/paper-item/paper-item-shared.css">
+     *
+     * @param source
+     * @param sourceController
+     *
+     * @return
+     */
+    private static String inlineStyles(final String source, final ISourceController sourceController) {
+        // TODO FRAGILE APPROACH! please, provide better implementation (whitespaces, exchanged rel, type and href, double or single quotes etc.?):
+        final String searchString = "<link rel=\"import\" type=\"css\" href=\"";
+        final int indexOfCssImport = source.indexOf(searchString);
+        if (indexOfCssImport > -1) {
+            final String endSearchString = "\">";
+            final int endIndex = source.indexOf(endSearchString, indexOfCssImport + searchString.length()) + endSearchString.length();
+            final String importStatement = source.substring(indexOfCssImport, endIndex);
+            final String uri = importStatement.substring(searchString.length(), importStatement.length() - endSearchString.length());
+            logger.info("\t\tInlining style [" + uri + "]...");
+            return inlineStyles(source.replace(importStatement, "<style>" + sourceController.loadSource(uri) + "\n</style>"), sourceController);
+        } else {
+            return source;
+        }
+    }
+
+    /**
+     * Manually inlines scripts inside the source (vulcanized).
+     *
+     * Format of scripts to be inlined: <script charset="utf-8" src="/resources/lodash/3.5.0/lodash.min.js"></script>
+     *
+     * @param source
+     * @param sourceController
+     *
+     * @return
+     */
+    private static String inlineScripts(final String source, final ISourceController sourceController) {
+        // TODO FRAGILE APPROACH! please, provide better implementation (whitespaces, exchanged charset and src, double or single quotes etc.?)
+        final String searchString = "<script charset=\"utf-8\" src=\"";
+        final int indexOfScriptTag = source.indexOf(searchString);
+        if (indexOfScriptTag > -1) {
+            final String endSearchString = "\"></script>";
+            final int endIndex = source.indexOf(endSearchString, indexOfScriptTag + searchString.length()) + endSearchString.length();
+            final String scriptTag = source.substring(indexOfScriptTag, endIndex);
+            final String uri = scriptTag.substring(searchString.length(), scriptTag.length() - endSearchString.length());
+            logger.info("\t\tInlining script [" + uri + "]...");
+            return inlineScripts(source.replace(scriptTag, "<script>" + sourceController.loadSource(uri).replace("//# sourceMappingURL", "//") + "\n</script>"), sourceController);
+        } else {
+            return source;
         }
     }
 }

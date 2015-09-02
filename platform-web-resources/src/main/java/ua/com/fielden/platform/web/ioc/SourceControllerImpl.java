@@ -51,12 +51,13 @@ public class SourceControllerImpl implements ISourceController {
      * Returns <code>true</code> in case where the server is in deployment mode, <code>false</code> -- in development mode.
      * <p>
      * At this stage deployment mode is activated in the case, where /resources/startup-resources.html and /resources/startup-resources-origin.html are different (which means that potentially /resources/startup-resources.html is vulcanized
-     * version of /resources/startup-resources-original.html or just changed intentionally to activate the deployment mode for testing purposes).
+     * version of /resources/startup-resources-origin.html or just changed intentionally to activate the deployment mode for testing purposes).
      *
      * After the first heavy comparison has been performed -- the flag is cached.
      *
      * @return
      */
+    @Override
     public boolean isDeploymentMode() {
         if (deploymentMode == null) {
             final String startupResources = getSource("/resources/startup-resources.html");
@@ -66,6 +67,7 @@ public class SourceControllerImpl implements ISourceController {
         return deploymentMode;
     }
 
+    @Override
     public void setDeploymentMode(final boolean deploymentMode) {
         if (this.deploymentMode != null) {
             throw new IllegalStateException("The [deployment mode == " + this.deploymentMode + "] has been already automatically populated (it cannot be overriden now). Please, ensure that no resource loading occurs before this setting.");
