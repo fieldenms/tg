@@ -115,7 +115,9 @@ public class Vulcanize {
 
         logger.info("\tInlining styles / scripts in [startup-resources-origin-vulcanized.html]...");
         try {
-            final String vulcanized = IOUtils.toString(new FileInputStream("startup-resources-origin-vulcanized.html"), Charsets.UTF_8.name());
+            final FileInputStream fileInputStream = new FileInputStream("startup-resources-origin-vulcanized.html");
+            final String vulcanized = IOUtils.toString(fileInputStream, Charsets.UTF_8.name());
+            fileInputStream.close();
 
             final PrintStream ps = new PrintStream("startup-resources-origin-vulcanized.html");
             ps.print(inlineScripts(inlineStyles(vulcanized, sourceController), sourceController));
@@ -138,7 +140,6 @@ public class Vulcanize {
         logger.info("\tMoved vulcanized file to its destination and cleared obsolete files.");
 
         logger.info("Vulcanized.");
-        System.out.println("<script charset=\"utf-8\" src=\"".length());
     }
 
     private static void downloadSource(final String dir, final String name, final ISourceController sourceController) {
@@ -188,7 +189,7 @@ public class Vulcanize {
     /**
      * Manually inlines scripts inside the source (vulcanized).
      *
-     * Format of scripts to be inlined: <script charset="utf-8" src="/resources/lodash/3.5.0/lodash.min.js"></script>
+     * Format of scripts to be inlined: <script src="/resources/lodash/3.5.0/lodash.min.js"></script>
      *
      * @param source
      * @param sourceController
@@ -197,7 +198,7 @@ public class Vulcanize {
      */
     private static String inlineScripts(final String source, final ISourceController sourceController) {
         // TODO FRAGILE APPROACH! please, provide better implementation (whitespaces, exchanged charset and src, double or single quotes etc.?)
-        final String searchString = "<script charset=\"utf-8\" src=\"";
+        final String searchString = "<script src=\"";
         final int indexOfScriptTag = source.indexOf(searchString);
         if (indexOfScriptTag > -1) {
             final String endSearchString = "\"></script>";
