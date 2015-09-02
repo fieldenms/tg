@@ -152,7 +152,7 @@
                 /**
                  * Shows the master for current entity in dialog.
                  */
-                _showMasterInDailog: {
+                _showMasterInDialog: {
                     type: Function
                 },
 
@@ -303,7 +303,7 @@
                     });
                 }).bind(self);
 
-                self._showMasterInDailog = (function (action, entity) {
+                self._showMasterInDialog = (function (action, entity) {
                     var fullTypeName = entity.type().notEnhancedFullClassName(),
                         simpleTypeName = entity.type()._notEnhancedSimpleClassName(),
                         closeEventChannel = self.uuid,

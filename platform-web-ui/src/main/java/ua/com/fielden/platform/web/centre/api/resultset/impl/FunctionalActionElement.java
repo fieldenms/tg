@@ -127,7 +127,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public final DomElement render() {
         final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (masterInvocationAction) {
-            return FunctionalActionKind.PROP != functionalActionKind ? new DomElement("tg-page-action").attr("class", "primary-action").attr("action", masterInDialogInvocationAction ? "[[_showMasterInDailog]]"
+            return FunctionalActionKind.PROP != functionalActionKind ? new DomElement("tg-page-action").attr("class", "primary-action").attr("action", masterInDialogInvocationAction ? "[[_showMasterInDialog]]"
                     : "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit")
                     : null;
         } else if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
