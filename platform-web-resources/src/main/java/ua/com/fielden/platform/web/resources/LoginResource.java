@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.assi
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
@@ -131,11 +130,15 @@ public class LoginResource extends ServerResource {
     public void login(final Representation entity) throws ResourceException {
         try {
             final Form form = new Form(entity);
-            final Credentials credo = new ObjectMapper().readValue(form.get(0).getName(), Credentials.class);
+            final Credentials credo = new Credentials();
+            credo.setUsername(form.getValues("username"));
+            credo.setPasswd(form.getValues("passwd"));
+            credo.setTrustedDevice(Boolean.parseBoolean(form.getValues("trustedDevice")));
 
             final Result authResult = authenticationModel.authenticate(credo.getUsername(), credo.getPasswd());
             if (!authResult.isSuccessful()) {
                 logger.debug(format("Unsuccessful login request (%s)", credo));
+                getResponse().setEntity(restUtil.errorJSONRepresentation("Invalid credentials."));
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             } else {
                 // create a new session for an authenticated user...
@@ -144,9 +147,11 @@ public class LoginResource extends ServerResource {
 
                 // ...and provide the response with an authenticating cookie
                 assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+                getResponse().setEntity(restUtil.errorJSONRepresentation("Credentials are valid."));
             }
         } catch (final Exception ex) {
             logger.fatal(ex);
+            getResponse().setEntity(restUtil.errorJSONRepresentation(ex.getMessage()));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         }
     }

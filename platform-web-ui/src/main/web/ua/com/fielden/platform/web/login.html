@@ -56,7 +56,7 @@
         }
         
         form {
-            width: 380px;
+            width: 300px;
             margin: 2em auto;
             padding: 3em 2em 2em 2em;
             background: #fafafa;
@@ -112,11 +112,10 @@
                 <input id="in-passwd" is="iron-input" type="password" name="passwd" required prevent-invalid-input/>
             </paper-input-container>
 
-            <paper-checkbox id="in-trusted-device-mock">Trusted device?</paper-checkbox>
-            <input id="in-trusted-device" type="hidden" name="trustedDevice">
+            <paper-checkbox id="in-trusted-device" name="trustedDevice">Trusted device?</paper-checkbox>
         </div>
 
-        <paper-button id="submitButton" style="width:100%" class="submit-normal" raised>
+        <paper-button id="submitButton" style="width:100%; margin: 0px" class="submit-normal" raised>
             <span id="submitLabel">Login</span>
         </paper-button>
     </form>
@@ -128,13 +127,10 @@
 
             var submit = document.getElementById('submitButton');
             var submitLabel = document.getElementById('submitLabel');
-            var trustedDevice = document.querySelector('#in-trusted-device');
-            var trustedDeviceMock = document.querySelector('#in-trusted-device-mock');
 
             submit.onclick = function () {
                 // need to transfer value from a paper-checkbox that does not get submitted in the from
                 // to a hidden input that does
-                trustedDevice.value = trustedDeviceMock.checked;
                 console.log("about to start submitting...");
                 submit.disabled = true;
                 form.submit();
@@ -147,12 +143,10 @@
 
             form.addEventListener('iron-form-response',
                 function (event) {
-                    console.log('RESPONSE event: ', event);
-                    console.log('Login response code: ', event.detail.status);
-                    console.log('\tresponse: ', event.detail);
+                    console.log('Server response: ', event.detail.message);
 
                     submit.classList.remove("submit-error");
-                    submitLabel.innerHTML = "Success";
+                    submitLabel.innerHTML = "Loading...";
                     window.location.href = "/"
                 }
             );
@@ -160,13 +154,18 @@
 
             form.addEventListener('iron-form-error',
                 function (event) {
-                    console.log('ERROR event: ', event);
-                    console.log('Login response code: ', event.detail.status);
-                    console.log('\tresponse: ', event.detail);
-
-                    submit.classList.add("submit-error");
-                    submitLabel.innerHTML = "Try Again"
-                    submit.disabled = false;
+                    if (event.detail.request.status === 400) {
+                        console.log('Server response: ', event.detail.request.xhr.response.message);
+                        submit.classList.add("submit-error");
+                        submitLabel.innerHTML = "Access Denied"
+                        submit.disabled = false;
+                    } else {
+                        console.log('Server response: ', event.detail.request.xhr.response.message);
+                        // JSON.parse(xml.responseText)
+                        submit.classList.add("submit-error");
+                        submitLabel.innerHTML = "Try Again"
+                        submit.disabled = false;
+                    }
                 }
             );
 
