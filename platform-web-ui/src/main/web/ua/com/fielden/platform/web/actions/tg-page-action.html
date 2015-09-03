@@ -111,7 +111,10 @@
                 // TODO var context = ...;
                 // var ser = this.$.serialiser.serialise(context);
                 // this.$.actionExecutor.body = JSON.stringify(ser);
-                this.action(this, this.context);
+                this.async(function () {
+                    this.action(this, this.context);
+                }.bind(self), 100);
+                
             }).bind(self);
             
             self._onExecuted = (function (e, detail, source) {
