@@ -17,8 +17,8 @@ import com.google.inject.Injector;
 /**
  * The base implementation for Web UI configuration, which should be inherited from in concrete applications for defining the final application specific Web UI configuration.
  * <p>
- * Method {@link IWebUiConfig#initConfiguration()} should be implemented in the application specific Web UI configuration, where menus, entity centres and entity master should be registered
- * by obtaining corresponding builders via methods {@link #configApp()} and {@link #configMainMenu()}.
+ * Method {@link IWebUiConfig#initConfiguration()} should be implemented in the application specific Web UI configuration, where menus, entity centres and entity master should be
+ * registered by obtaining corresponding builders via methods {@link #configApp()} and {@link #configMainMenu()}.
  *
  * @author TG Team
  *
@@ -75,6 +75,17 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final String genAppIndex() {
         return ResourceLoader.getText("ua/com/fielden/platform/web/index.html").
+                replaceAll("@title", title);
+    }
+
+    /**
+     * Generates the mobile web application.
+     *
+     * @return
+     */
+    @Override
+    public String genMobileAppIndex() {
+        return ResourceLoader.getText("ua/com/fielden/platform/web/mobile/mobile-index.html").
                 replaceAll("@title", title);
     }
 

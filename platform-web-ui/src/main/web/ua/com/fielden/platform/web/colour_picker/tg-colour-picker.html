@@ -6,247 +6,219 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
 <dom-module id="tg-colour-picker">
-         <style>
-                  .color-box {
-                           position: relative;
-                           min-width: 40px;
-                           min-height: 40px;
-                  }
-                  
-                  .dummy-box {
-                           position: absolute;
-                           top: -3px;
-                           left: -3px;
-                           min-width: 40px;
-                           min-height: 40px;
-                           border: 3px solid white;
-                           background-color: none;
-                           box-shadow: 0px 2px 6px #ccc;
-                           z-index: 1;
-                           display: none;
-                           cursor: pointer;
-                  }
-                  
-                  .icon {
-                           min-width: 40px;
-                           min-height: 40px;
-                           color: #BDBDBD;
-                  }
-                  
-                  .color-box:hover > .dummy-box {
-                           display: block;
-                  }
-                  
-                  .small-box {
-                           min-width: 14px;
-                           min-height: 14px;
-                           background-color: #FAFAFA;
-                           border: 2px solid #BDBDBD;
-                           border-radius: 2px;
-                           cursor: pointer;
-                  }
-                  
-                  paper-input-container {
-                           padding: 0.2em;
-                           font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                           --paper-input-container-input-color: #212121;
-                  }
-                  
-                  iron-dropdown {
-                           background-color: #FAFAFA;
-                           box-shadow: 0px 2px 6px #ccc;
-                           margin-top: 53px;
-                           margin-left: 5px;
-                  }
-         </style>
-
-         <template>
-
-                  <paper-input-container always-float-label>
-                           <div class="layout horizontal center">
-                                    <div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]"></div>
-                                    <label>Hex code colour value (use only 0-9, A-F)</label>
-                                    <div prefix style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
-                                    <input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
-                           </div>
-
-                  </paper-input-container>
-
-                  <iron-dropdown positionTarget="fab" id="dropdown">
-                           <div class="dropdown-content">
-
-                                    <div class="layout vertical" style="margin:10px 10px 10px 10px;">
-                                             <div class="layout horizontal">
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#F44336">
-                                                               <div class="dummy-box" style="background-color:#F44336"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#FF9800">
-                                                               <div class="dummy-box" style="background-color:#FF9800"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color: #FFEB3B">
-                                                               <div class="dummy-box" style="background-color: #FFEB3B"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#4CAF50">
-                                                               <div class="dummy-box" style="background-color:#4CAF50"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#009688">
-                                                               <div class="dummy-box" style="background-color:#009688"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#00BCD4">
-                                                               <div class="dummy-box" style="background-color:#00BCD4"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#3F51B5">
-                                                               <div class="dummy-box" style="background-color:#3F51B5"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#9C27B0">
-                                                               <div class="dummy-box" style="background-color:#9C27B0"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#9E9E9E">
-                                                               <div class="dummy-box" style="background-color:#9E9E9E"></div>
-                                                      </div>
-
-                                             </div>
-                                             <div class="layout horizontal">
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#EF9A9A">
-                                                               <div class="dummy-box" style="background-color:#EF9A9A"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#FFCC80">
-                                                               <div class="dummy-box" style="background-color:#FFCC80"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#FFF59D">
-                                                               <div class="dummy-box" style="background-color:#FFF59D"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#A5D6A7;">
-                                                               <div class="dummy-box" style="background-color:#A5D6A7;"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#80CBC4">
-                                                               <div class="dummy-box" style="background-color:#80CBC4"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#80DEEA">
-                                                               <div class="dummy-box" style="background-color:#80DEEA"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#9FA8DA">
-                                                               <div class="dummy-box" style="background-color:#9FA8DA"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="colorSelected" style="background-color:#CE93D8">
-                                                               <div class="dummy-box" style="background-color:#CE93D8"></div>
-                                                      </div>
-                                                      <div class="color-box" on-tap="nonColorSelected" style="background-color:#EEEEEE">
-                                                               <div class="dummy-box" style="background-color:#EEEEEE">
-                                                                        <iron-icon class="icon" icon="icons:close"></iron-icon>
-                                                               </div>
-                                                               <iron-icon class="icon" icon="icons:close"></iron-icon>
-                                                      </div>
-                                             </div>
-
-                                    </div>
-
-                           </div>
-                  </iron-dropdown>
-
-
-         </template>
+	<style>
+		.color-box {
+			position: relative;
+			min-width: 40px;
+			min-height: 40px;
+		}
+		
+		.dummy-box {
+			position: absolute;
+			top: -3px;
+			left: -3px;
+			min-width: 40px;
+			min-height: 40px;
+			border: 3px solid white;
+			background-color: none;
+			box-shadow: 0px 2px 6px #ccc;
+			z-index: 1;
+			display: none;
+			cursor: pointer;
+		}
+		
+		.icon {
+			min-width: 40px;
+			min-height: 40px;
+			color: #757575;
+		}
+		
+		.small-icon {
+			max-width: 14px;
+			max-height: 14px;
+			color: #757575;
+			opacity: 1;
+		}
+		
+		.color-box:hover > .dummy-box {
+			display: block;
+		}
+		
+		.small-box {
+			min-width: 14px;
+			min-height: 14px;
+			background-color: #FAFAFA;
+			border: 2px solid #BDBDBD;
+			border-radius: 2px;
+			cursor: pointer;
+		}
+		
+		paper-input-container {
+			padding: 0.2em;
+			font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+			--paper-input-container-input-color: #212121;
+		}
+		
+		iron-dropdown {
+			background-color: #FAFAFA;
+			box-shadow: 0px 2px 6px #ccc;
+			margin-top: 53px;
+			margin-left: 5px;
+		}
+	</style>
+	<template>
+		<paper-input-container always-float-label>
+			<div class="layout horizontal center">
+				<div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]">
+					<iron-icon class="small-icon" icon="icons:close" style$="[[_calcSmallIconStyle(colorString)]]"></iron-icon>
+				</div>
+				<label>Hex code colour value (use only 0-9, A-F)</label>
+				<div prefix style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
+				<input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
+			</div>
+		</paper-input-container>
+		<iron-dropdown positionTarget="fab" id="dropdown">
+			<div class="dropdown-content">
+				<div class="layout vertical" style="margin:10px 10px 10px 10px;">
+					<div class="layout horizontal">
+						<div class="color-box" on-tap="nonColorSelected" style="background-color:#F5F5F5">
+							<div class="dummy-box" style="background-color:#F5F5F5">
+								<iron-icon class="icon" icon="icons:close"></iron-icon>
+							</div>
+							<iron-icon class="icon" icon="icons:close"></iron-icon>
+						</div>
+						<template is="dom-repeat" items="{{firstLineColors}}" as="color">
+							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">
+								<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>
+							</div>
+						</template>
+					</div>
+					<div class="layout horizontal">
+						<template class="layout horizontal" is="dom-repeat" items="{{secondLineColors}}" as="color">
+							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">
+								<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>
+							</div>
+						</template>
+					</div>
+				</div>
+			</div>
+		</iron-dropdown>
+	</template>
 </dom-module>
 <script>
-         Polymer({
-                  is: "tg-colour-picker",
-                  properties: {
-                           color: {
-                                    type: String,
-                                    notify: true
-                           },
-                           colorString: {
-                                    type: String,
-                                    notify: true,
-                                    value: null
-                           }
-                  },
-                  colorSelected: function (e, detail) {
-                           this.color = rgbToHex(e.srcElement.style['background-color']);
-                           this.colorString = this.color.substring(1);
-                           this.$.dropdown.close();
-                  },
-                  nonColorSelected: function (e, detail) {
-                           this.color = null;
-                           this.colorString = null;
-                           this.$.dropdown.close();
+	Polymer({
+		is: "tg-colour-picker",
+		ready: function () {
+			this.firstLineColors = ['#F44336', '#FF9800', '#FFEB3B', '#4CAF50', '#009688', '#00BCD4', '#3F51B5', '#9C27B0'];
+			this.secondLineColors = ['#D7CCC8', '#EF9A9A', '#FFCC80', '#FFF59D', '#A5D6A7', ' #80CBC4', '#80DEEA', '#9FA8DA', '#CE93D8'];
+		},
+		properties: {
+			color: {
+				type: String,
+				notify: true
+			},
+			colorString: {
+				type: String,
+				notify: true,
+				value: null
+			},
+		},
+		_returnBackgroundColor(color) {
+			return "background-color:" + color;
+		},
+		colorSelected: function (e, detail) {
+			this.color = rgbToHex(e.srcElement.style['background-color']);
+			this.colorString = this.color.substring(1);
+			this.$.dropdown.close();
+		},
+		nonColorSelected: function (e, detail) {
+			this.color = null;
+			this.colorString = null;
+			this.$.dropdown.close();
 
-                  },
-                  _calcColorBoxStyle: function (color, colorString) {
-                           if (colorString === null) {
-                                    return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
-                           }
-                           if (colorString.length === 3 || colorString.length === 6) {
-                                    return "  border: 2px solid " + ColorLuminance(color, -0.1) + ";background-color: " + color;
-                           } else {
-                                    return "border: 2px solid " + ColorLuminance("#f44336", -0.1) + " ;background-color: #f44336";
-                           }
-                  },
-                  _calcColorTextStyle: function (colorString) {
-                           if (colorString === null) {
-                                    return "margin-left: 1px; color: #DD2C00";
-                           }
-                           if (colorString.length === 3 || colorString.length === 6) {
-                                    return "margin-left: 1px; color: #212121; ";
+		},
+		_calcColorBoxStyle: function (color, colorString) {
+			if (colorString === null) {
+				return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
+			}
+			if (colorString.length === 3 || colorString.length === 6) {
+				return "  border: 2px solid " + ColorLuminance(color, -0.1) + ";background-color: " + color;
+			} else {
+				return "background-color: #FAFAFA; border: 2px solid #BDBDBD;";
+			}
+		},
+		_calcSmallIconStyle: function (colorString) {
+			if (colorString === null) {
+				return " opacity: 1 ";
+			} else if (colorString.length === 3 || colorString.length === 6) {
+				return "opacity: 0 ";
+			}
 
-                           } else {
-                                    return "margin-left: 1px; color: #DD2C00";
-                           }
-                  },
-                  _calcColorPrefixStyle: function (colorString) {
-                           if (colorString === null) {
-                                    return "opacity: 0";
-                           }
-                           if (colorString.length === 3 || colorString.length === 6) {
-                                    return "margin-left: 1px; color: #212121;font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px ";
-                           } else {
-                                    return "margin-left: 1px; color: #DD2C00; font-family: , 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px";
-                           }
-                  },
+		},
+		_calcColorTextStyle: function (colorString) {
+			if (colorString === null) {
+				return "margin-left: 1px; color: #212121";
+			}
+			if (colorString.length === 3 || colorString.length === 6) {
+				return "margin-left: 1px; color: #212121; ";
 
-                  open: function () {
-                           this.$.dropdown.open();
-                  },
-         });
+			} else {
+				return "margin-left: 1px; color: #DD2C00";
+			}
+		},
+		_calcColorPrefixStyle: function (colorString) {
+			if (colorString === null) {
+				return "opacity: 0; color: #212121";
+			}
+			if (colorString.length === 3 || colorString.length === 6) {
+				return "margin-left: 1px; color: #212121;font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px ";
+			} else {
+				return "margin-left: 1px; color: #DD2C00; font-family: , 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px";
+			}
+		},
 
-         function rgbToHex(color) {
-                  if (color === null) {
-                           return color;
-                  }
-                  if (color.substr(0, 1) === "#") {
-                           return color;
-                  }
-                  var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(color),
-                           r = parseInt(nums[2], 10).toString(16),
-                           g = parseInt(nums[3], 10).toString(16),
-                           b = parseInt(nums[4], 10).toString(16);
-                  return "#" + (
-                           (r.length == 1 ? "0" + r : r) +
-                           (g.length == 1 ? "0" + g : g) +
-                           (b.length == 1 ? "0" + b : b)
-                  );
-         }
+		open: function () {
+			this.$.dropdown.open();
+		},
+	});
 
-         function ColorLuminance(hex, lum) {
-                  if (hex != null) {
-                           hex = String(hex).replace(/[^0-9a-f]/gi, '');
-                           if (hex.length < 6) {
-                                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-                           }
-                           lum = lum || 0;
+	function rgbToHex(color) {
+		if (color === null) {
+			return color;
+		}
+		if (color.substr(0, 1) === "#") {
+			return color;
+		}
+		var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(color),
+			r = parseInt(nums[2], 10).toString(16),
+			g = parseInt(nums[3], 10).toString(16),
+			b = parseInt(nums[4], 10).toString(16);
+		return "#" + (
+			(r.length == 1 ? "0" + r : r) +
+			(g.length == 1 ? "0" + g : g) +
+			(b.length == 1 ? "0" + b : b)
+		);
+	}
 
-                           var rgb = "#",
-                                    c, i;
-                           for (i = 0; i < 3; i++) {
-                                    c = parseInt(hex.substr(i * 2, 2), 16);
-                                    c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
-                                    rgb += ("00" + c).substr(c.length);
-                           }
-                           return rgb;
-                  } else return hex;
-         }
+	function ColorLuminance(hex, lum) {
+		if (hex != null) {
+			hex = String(hex).replace(/[^0-9a-f]/gi, '');
+			if (hex.length < 6) {
+				hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+			}
+			lum = lum || 0;
+
+			var rgb = "#",
+				c, i;
+			for (i = 0; i < 3; i++) {
+				c = parseInt(hex.substr(i * 2, 2), 16);
+				c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+				rgb += ("00" + c).substr(c.length);
+			}
+			return rgb;
+		} else return hex;
+	}
 </script>

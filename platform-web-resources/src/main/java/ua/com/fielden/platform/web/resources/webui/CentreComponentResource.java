@@ -47,8 +47,8 @@ public class CentreComponentResource extends ServerResource {
     }
 
     @Override
-    protected Representation get() throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+    protected Representation get() {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             try {
                 return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(centre.build().render().toString().getBytes("UTF-8"))));
             } catch (final UnsupportedEncodingException e) {

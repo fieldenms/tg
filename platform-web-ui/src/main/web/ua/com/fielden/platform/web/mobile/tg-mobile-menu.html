@@ -1,0 +1,74 @@
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/paper-ripple/paper-ripple.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+
+
+<dom-module id="tg-mobile-menu">
+    <style>
+        .menu-item {
+            border-radius: 2px;
+            background-color: var(--paper-light-blue-100);
+        }
+        .item-name {
+            font-size: 12pt;
+            padding: 10px;
+            border-bottom-left-radius: 2px;
+            border-bottom-right-radius: 2px;
+            background-color: var(--paper-light-blue-700);
+        }
+        paper-material {
+            margin: 10px;
+            border-radius: 2px;
+        }
+        iron-icon {
+            margin: 20px;
+            --iron-icon-height: 100px;
+            --iron-icon-width: 100px;
+        }
+    </style>
+    <template>
+
+        <div class="items layout vertical">
+            <template is="dom-repeat" items="[[menuConfig.items]]">
+                <paper-material elevation="3">
+                    <div class="menu-item relative" on-tap="_itemSelected">
+                        <paper-ripple></paper-ripple>
+                        <div class="layout vertical center">
+                            <iron-icon src="[[item.icon]]"></iron-icon>
+                            <div class="item-name self-stretch layout horizontal center-center" style="color:white;">[[item.title]]</div>
+                        </div>
+                    </div>
+                </paper-material>
+            </template>
+            </tg-tile-layout>
+        </div>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-mobile-menu",
+
+            properties: {
+                menuConfig: {
+                    type: Object
+                }
+            },
+
+            hostAttributes: {
+                "class": "layout horizontal center"
+            },
+
+            _itemSelected: function (e, detail) {
+                var model = e.model;
+                this.fire("menu-item-selected", model.item.title);
+            }
+        });
+    })();
+</script>

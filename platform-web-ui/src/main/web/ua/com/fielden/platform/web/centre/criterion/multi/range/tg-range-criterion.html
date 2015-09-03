@@ -1,11 +1,11 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion.html">
+<link rel="import" href="/resources/centre/criterion/tg-abstract-criterion.html">
 <link rel="import" href="/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html">
 
 <dom-module id="tg-range-criterion">
 	<template>
-		<tg-abstract-range-criterion 
+		<tg-abstract-criterion 
 			id="dom"
 			_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
 			_accept-meta-values="[[_acceptMetaValuesForBinding]]"
@@ -20,7 +20,7 @@
             _when-mobile="[[_whenMobile]]"
 			>
 			<content select=".criterion-editors"></content>
-		</tg-abstract-range-criterion>
+		</tg-abstract-criterion>
 	</template>
 </dom-module>
 
@@ -39,7 +39,7 @@
         },
     
 	    _dom: function () {
-    		return this.$.dom.$.dom.$.dom2;
+    		return this.$.dom;
     	}
     });
 </script>

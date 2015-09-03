@@ -146,7 +146,7 @@ public class RestServerUtil {
      */
     public Representation errorJSONRepresentation(final Exception ex) {
         logger.debug("Start building error JSON representation:" + new DateTime());
-        final byte[] bytes = serialiser.serialise(new Result(ex), SerialiserEngines.JACKSON);
+        final byte[] bytes = serialiser.serialise(ex instanceof Result ? ex : new Result(ex), SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }

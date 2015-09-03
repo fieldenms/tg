@@ -84,7 +84,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
     @Get
     @Override
     public Representation get() throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
             // NOTE: the following line can be the example how 'criteria retrieval' server errors manifest to the client application
@@ -104,8 +104,8 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
      */
     @Post
     @Override
-    public Representation post(final Representation envelope) throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+    public Representation post(final Representation envelope) {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
             final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
@@ -128,8 +128,8 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
     @SuppressWarnings("unchecked")
     @Put
     @Override
-    public Representation put(final Representation envelope) throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+    public Representation put(final Representation envelope) {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             //            // NOTE: the following line can be the example how 'centre running' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during centre running.");
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();

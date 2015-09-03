@@ -27,7 +27,7 @@ public interface IWebUiConfig {
     /**
      * Should return a path that follows the domain name where the application is to be bound to. For example, <code>/</code> for an application that is directly bound to the
      * domain name. Or, <code>/trident-fleet</code> is the application is bound to <code>https://www.fielden.com.au/trident-fleet</code>.
-     * 
+     *
      * @return
      */
     String getPath();
@@ -52,6 +52,13 @@ public interface IWebUiConfig {
      * @return
      */
     String genAppIndex();
+
+    /**
+     * Generates the mobile web application.
+     *
+     * @return
+     */
+    String genMobileAppIndex();
 
     /**
      * Generates the main menu component.

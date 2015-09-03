@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
@@ -24,6 +25,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final int numberOfAction;
     private final FunctionalActionKind functionalActionKind;
     private final boolean masterInvocationAction;
+    private final boolean masterInDialogInvocationAction;
     private final String chosenProperty;
 
     /**
@@ -56,7 +58,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         this.numberOfAction = numberOfAction;
         this.functionalActionKind = functionalActionKind;
         this.masterInvocationAction = this.entityActionConfig.functionalEntity.isPresent()
-                && this.entityActionConfig.functionalEntity.get().equals(MasterInvocationFunctionalEntity.class);
+                && MasterInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
+        this.masterInDialogInvocationAction = this.entityActionConfig.functionalEntity.isPresent()
+                && MasterInDialogInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
+
         this.chosenProperty = chosenProperty;
     }
 
@@ -122,7 +127,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public final DomElement render() {
         final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (masterInvocationAction) {
-            return FunctionalActionKind.PROP != functionalActionKind ? new DomElement("tg-page-action").attr("class", "primary-action").attr("action", "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit")
+            return FunctionalActionKind.PROP != functionalActionKind ? new DomElement("tg-page-action").attr("class", "primary-action").attr("action", masterInDialogInvocationAction ? "[[_showMasterInDialog]]"
+                    : "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit")
                     : null;
         } else if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
             // final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()

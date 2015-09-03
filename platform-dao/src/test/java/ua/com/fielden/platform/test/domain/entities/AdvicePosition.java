@@ -119,7 +119,7 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
     public AdvicePosition setReceivingWorkshop(final Workshop receivingWorkshop) throws Result {
         // TODO the isReceived() should be moved to a domain validator
         if (isReceived()) {
-            throw new Result(this, "Receiving workshop cannot be changed once position is received.", new IllegalStateException("Receiving workshop cannot be changed once position is received."));
+            throw new Result(this, new IllegalStateException("Receiving workshop cannot be changed once position is received."));
         }
         this.receivingWorkshop = receivingWorkshop;
         return this;
@@ -202,7 +202,7 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
                 errorMessage = "Position " + getPosition() + " contains no rotable but 'Remove bearings' flag is set";
             }
             if (errorMessage != null) {
-                return new Result(this, errorMessage, new Exception(errorMessage));
+                return new Result(this, new Exception(errorMessage));
             }
         }
         return superResult;

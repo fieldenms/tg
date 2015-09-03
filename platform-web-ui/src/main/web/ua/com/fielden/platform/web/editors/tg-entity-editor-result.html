@@ -79,6 +79,13 @@
             overflow: auto;
             text-overflow: ellipsis;
         }
+        
+        .no-result {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 50px;
+        }
     </style>
 
     <template>
@@ -90,6 +97,10 @@
             </template>
             <!-- end of dom-repeat -->
         </iron-selector>
+        
+        <div hidden$="[[_foundSome]]" class="no-result">
+            <span>Found no matching values.</span>
+        </div>
     </template>
 
 </dom-module>
@@ -117,6 +128,10 @@
                     }
                 },
                 
+                _foundSome: {
+                    type: Boolean,
+                    value: false
+                },
                 /* Contains selected entities in a form of key:entity pairs. 
                  * Can be empty. Should contain at most one entity in case of single selection mode.
                  */
@@ -154,6 +169,10 @@
                 
             },
 
+            ready: function () {
+                this.noAutoFocus = true;
+            },
+            
             clearSelection: function () {
                 this._selectedIndex = 0;
                 this.$.selector.selectedItem = null;
@@ -251,6 +270,7 @@
              * Handles all properties that were specified as to be highlighted. */
             highlightMatchedParts: function () {
 				this.async(function() {
+				    this._foundSome = this._values.length > 0;
 					for (var index = 0; index < this._values.length; index++) {
 						var html = '';                	
 						var v = this._values[index];
@@ -273,7 +293,6 @@
 						var paperItem = Polymer.dom(this.root).querySelector("#" + id);
 						Polymer.dom(paperItem).innerHTML = html;
 					}
-
 					Polymer.dom.flush();
 				}.bind(this));
 			},

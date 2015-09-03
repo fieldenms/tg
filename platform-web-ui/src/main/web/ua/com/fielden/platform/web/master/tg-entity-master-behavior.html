@@ -162,14 +162,14 @@
                 
                 self._processSaverResponse = function (e) {
                 	self._processResponse(e, "save", function (potentiallySavedEntity) {
-                		self._postSavedDefault(potentiallySavedEntity);
-                	}, function (errorResult) {
-                		self._postSavedDefaultError(errorResult);
+                		return self._postSavedDefault(potentiallySavedEntity);
                 	});
                 };
                 
                 self._processSaverError = function (e) {
-                	self._processError(e, "save");
+                	self._processError(e, "save", function (errorResult) {
+                	    return self._postSavedDefaultError(errorResult);
+                    });
                 };
 
 				self._createActions();
@@ -183,6 +183,8 @@
 				
 				    // custom external action
 				    this.postSaved(potentiallySavedEntity, newBindingEntity);
+				    
+				    return potentiallySavedEntity.isValid();
 				}).bind(self);
 				
                 self._postSavedDefaultError = (function (errorResult) {

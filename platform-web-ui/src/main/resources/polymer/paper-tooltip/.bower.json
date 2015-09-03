@@ -1,6 +1,6 @@
 {
   "name": "paper-tooltip",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Material design tooltip popup for content",
   "authors": [
     "The Polymer Authors"
@@ -34,11 +34,11 @@
     "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0",
     "paper-icon-button": "PolymerElements/paper-icon-button#^1.0.0"
   },
-  "_release": "1.0.1",
+  "_release": "1.0.2",
   "_resolution": {
     "type": "version",
-    "tag": "v1.0.1",
-    "commit": "0f7e959c8eb1fcaf0963acc5f65b20c4be9fec77"
+    "tag": "v1.0.2",
+    "commit": "b05fd605975aca7d3f59f675637f9b0e0cfe0cf9"
   },
   "_source": "git://github.com/PolymerElements/paper-tooltip.git",
   "_target": "^1.0.0",

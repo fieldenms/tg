@@ -12,6 +12,7 @@ import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
 import ua.com.fielden.platform.migration.MigrationRun;
+import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -51,5 +52,6 @@ public class PlatformDomainTypes {
         types.add(CentreContextHolder.class);
         types.add(SavingInfoHolder.class);
         types.add(MasterInvocationFunctionalEntity.class);
+        types.add(MasterInDialogInvocationFunctionalEntity.class);
     }
 }

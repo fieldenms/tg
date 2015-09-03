@@ -156,7 +156,7 @@ public interface IDomainTreeEnhancer extends IRootTyped {
         private static final long serialVersionUID = 435410515344805056L;
 
         public IncorrectCalcPropertyException(final String s) {
-            super(null, s, new Exception(s));
+            super(null, new Exception(s));
         }
     }
 

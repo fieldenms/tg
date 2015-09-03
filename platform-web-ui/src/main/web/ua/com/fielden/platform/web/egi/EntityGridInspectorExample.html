@@ -42,7 +42,7 @@
     <template id="egi_example" is="dom-bind">
         <tg-serialiser id="serialiser"></tg-serialiser>
         <iron-ajax id="data_retriever" url="/test/egi" handle-as="json" on-response="_dataRetrieved"></iron-ajax>
-        <tg-entity-grid-inspector entity-type="[[entityType]]" entities="[[entities]]" short-layout="[[shortLayout]]" long-layout="[[longLayout]]">
+        <tg-entity-grid-inspector entity-type="[[entityType]]" entities="[[entities]]" rendering-hints="[[renderingHints]]" short-layout="[[shortLayout]]" long-layout="[[longLayout]]">
             <tg-property-column property="" width="60px" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" column-title="Key" column-desc="Some key description"></tg-property-column>
             <tg-property-column property="desc" width="200px" type="String" column-title="Desc" column-desc="Some desc description">
             </tg-property-column>
@@ -126,6 +126,7 @@
             };
             egiExample._dataRetrieved = function (e, detail, source) {
                 egiExample.entities = egiExample.$.serialiser.deserialise(e.detail.response).instance;
+                egiExample.renderingHints = [];
             };
         })();
     </script>

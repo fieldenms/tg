@@ -26,7 +26,7 @@
         </tg-abstract-action>
 
         <!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!longDesc}}"> -->
-        <paper-button id="actionButton" raised roll="button" on-tap="run" style="width:100%" disabled$="[[_disabled]]">
+        <paper-button id="actionButton" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]">
             <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
             </paper-spinner>
             <span>[[shortDesc]]</span>
@@ -42,6 +42,14 @@
     Polymer({
         is: "tg-action",
 
-        behaviors: [Polymer.TgBehaviors.TgActionBehavior]
+        behaviors: [Polymer.TgBehaviors.TgActionBehavior],
+        
+        _asyncRun: function () {
+            // it is critical to execute the actual logic that is intended for an on-tap action in async
+            // with a relatively long delay to make sure that all required changes
+            this.async( function () {
+                this.run();
+            }, 100);
+        }
     });
 </script>

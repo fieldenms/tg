@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/centre/criterion/tg-abstract-criterion-behavior.html">
+<link rel="import" href="/resources/centre/criterion/multi/tg-multi-criterion-config.html">
 
 <script>
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
@@ -64,6 +65,15 @@
             this._not = this.not;
             
             Polymer.TgBehaviors.TgAbstractCriterionBehavior._cancelMetaValues.call(this);
+        },
+        
+        /**
+         * Creates the string representation for meta value editors DOM (to be inserted into dynamic meta-value dialog).
+         */
+        _createMetaValueEditors: function () {
+        	console.log("tg-abstract-multi-criterion-behavior: _createMetaValueEditors");
+        	return Polymer.TgBehaviors.TgAbstractCriterionBehavior._createMetaValueEditors.call(this) + 
+        		'<tg-multi-criterion-config class="layout vertical" _or-null="{{_orNullBind}}" _not="{{_notBind}}"></tg-multi-criterion-config>';
         },
         
         _orNullChanged: function (newValue, oldValue) {

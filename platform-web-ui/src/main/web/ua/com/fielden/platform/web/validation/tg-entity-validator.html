@@ -48,13 +48,13 @@
                 self._processValidatorResponse = function (e) {
                 	self.processResponse(e, "validate", function (entityAndCustomObject) {
                         self.postValidatedDefault(entityAndCustomObject);
-                	}, function (errorResult) {
-                		self.postValidatedDefaultError(errorResult);
                 	});
                 };
                 
                 self._processValidatorError = function (e) {
-                	self.processError(e, "validate");
+                	self.processError(e, "validate", function (errorResult) {
+                        self.postValidatedDefaultError(errorResult);
+                    });
                 };
             },
 

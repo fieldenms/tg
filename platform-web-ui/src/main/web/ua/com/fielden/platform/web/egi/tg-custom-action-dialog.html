@@ -1,14 +1,16 @@
 <link rel="import" href="/resources/element_loader/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/tg-toast.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
-        <paper-dialog id="entityMaster" modal on-iron-overlay-opened="_dialogOpened" on-iron-overlay-closed="_dialogClosed" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+        <paper-dialog id="entityMaster" autofocus no-cancel-on-outside-click no-cancel-on-esc-key on-iron-overlay-opened="_dialogOpened" on-iron-overlay-closed="_dialogClosed" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
             <tg-element-loader id="loadMaster" on-after-load="_afterMasterLoad"></tg-element-loader>
         </paper-dialog>
+        <tg-toast id="toaster"></tg-toast>
     </template>
 </dom-module>
 <script>
@@ -60,15 +62,24 @@
              * closeEventTopics -- event topics that should be listened to on the channel to close this dialog.
              */
             showDialog: function (customAction, closeEventChannel, closeEventTopics) {
-                if (!this.currentRunningAction) {
-                    this._closeEventChannel = closeEventChannel;
-                    this._closeEventTopics = closeEventTopics;
-                    this._setIsRunning(true);
-                    this.currentRunningAction = customAction;
-                    this.$.loadMaster.import = this.currentRunningAction.componentUri;
-                    this.$.loadMaster.elementName = this.currentRunningAction.elementName;
-                    this.$.loadMaster.attrs = this.currentRunningAction.attrs;
-                    this.$.loadMaster.reload();
+                if (this.$.entityMaster.opened === true) {
+                    this.$.toaster.text = 'Please close the currently open dialog.';
+                    this.$.toaster.hasMore = true;
+                    this.$.toaster.msgText = 'Any operation on the currently open dialog should be completed and the dialog closed before opening anyother dialog.';
+                    this.$.toaster.showProgress = false;
+                    this.$.toaster.show();
+                    console.log("The dialog is already opened and should be closed be being used again.");
+                }  else {
+                    if (!this.currentRunningAction) {
+                        this._closeEventChannel = closeEventChannel;
+                        this._closeEventTopics = closeEventTopics;
+                        this._setIsRunning(true);
+                        this.currentRunningAction = customAction;
+                        this.$.loadMaster.import = this.currentRunningAction.componentUri;
+                        this.$.loadMaster.elementName = this.currentRunningAction.elementName;
+                        this.$.loadMaster.attrs = this.currentRunningAction.attrs;
+                        this.$.loadMaster.reload();
+                    }
                 }
             },
 
@@ -99,7 +110,6 @@
                         }
                     }
                     
-                    Polymer.dom(Polymer.dom(this.$.entityMaster).parentNode).removeChild(this.$.entityMaster);
                     Polymer.dom(document.body).appendChild(this.$.entityMaster);
                     Polymer.dom.flush();
                     // let's open the dialog with magical async...

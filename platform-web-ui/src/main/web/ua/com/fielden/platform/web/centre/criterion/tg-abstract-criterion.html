@@ -27,21 +27,6 @@
         }
     </style>
     <template>
-        <paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closed">
-
-            <paper-dialog-scrollable>
-                <div class="metavalue-editor layout vertical">
-                    <content select=".multi-criterion-config"></content>
-                    <content select=".range-criterion-config"></content>
-                    <content select=".date-range-criterion-config"></content>
-                </div>
-            </paper-dialog-scrollable>
-
-            <div class="buttons">
-                <paper-button class="blue" dialog-dismiss affirmative on-tap="_cancelMetaValues">Cancel</paper-button>
-                <paper-button class="blue" dialog-confirm affirmative autofocus on-tap="_acceptMetaValues">Ok</paper-button>
-            </div>
-        </paper-dialog>
         <tg-reflector id="reflector"></tg-reflector>
         <tg-flex-layout when-desktop="[[_whenDesktop]]" when-tablet="[[_whenTablet]]" when-mobile="[[_whenMobile]]">
             <content select=".criterion-editors" id="components"></content>
@@ -61,12 +46,25 @@
             _computeIconButtonStyle: Function,
             _whenDesktop: Array,
             _whenTablet: Array,
-            _whenMobile: Array
-        },
-
-        _closed: function (e) {
-            Polymer.dom(document.body).removeChild(this.$.metaValueEditor);
-            Polymer.dom.flush();
+            _whenMobile: Array,
+            
+        	_orNull: {
+        		type: Boolean,
+        		notify: true
+        	},
+        	_not: {
+        		type: Boolean,
+        		notify: true
+        	},
+        	
+        	_exclusive: {
+        		type: Boolean,
+        		notify: true
+        	},
+        	_exclusive2: {
+        		type: Boolean,
+        		notify: true
+        	}
         }
 
     });

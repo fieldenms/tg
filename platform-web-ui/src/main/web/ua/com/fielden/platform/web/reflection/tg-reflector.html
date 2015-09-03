@@ -777,9 +777,11 @@
          */
         stackTrace: function (ex) {
         	var msg = "<p><b>" + this.exceptionMessage(ex) + "</b></p><p>";
-        	for (var i = 0; i < ex.stackTrace.length; i += 1) {
-        		var st = ex.stackTrace[i];
-        		msg = msg + st.className + ".java:" + st.lineNumber + ":" + st.methodName + ";<br>";
+        	if (Array.isArray(ex.stackTrace)) {
+            	for (var i = 0; i < ex.stackTrace.length; i += 1) {
+            		var st = ex.stackTrace[i];
+            		msg = msg + st.className + ".java:" + st.lineNumber + ":" + st.methodName + ";<br>";
+            	}
         	}
         	msg = msg + "</p>";
         	

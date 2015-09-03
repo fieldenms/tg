@@ -14,8 +14,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -27,6 +25,10 @@ import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1;
+import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties2;
+import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3;
+import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
@@ -48,6 +50,7 @@ import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityP
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -63,7 +66,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
-import ua.com.fielden.platform.web.test.matchers.SearchAlsoByDescMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
@@ -71,6 +73,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+
+import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -107,309 +111,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
      */
     @Override
     public void initConfiguration() {
-
         // Add entity centres.
-
-        final String centreMr = "['margin-right: 40px', 'flex']";
-        final String centreMrLast = "['flex']";
-        @SuppressWarnings("unchecked")
-        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
-                .addTopAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
-                                preAction(new IPreAction() {
-                                    @Override
-                                    public JsCode build() {
-                                        return new JsCode("    return confirm('Are you sure you want to proceed?');\n");
-                                    }
-                                }).
-                                icon("assignment-ind").
-                                shortDesc("Function 1").
-                                longDesc("Functional context-dependent action 1").
-                                build()
-                )
-                .also()
-                .addTopAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
-                                icon("assignment-returned").
-                                shortDesc("Function 2").
-                                longDesc("Functional context-dependent action 2").
-                                build()
-                )
-                .also()
-                .addTopAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withCurrentEntity().build()).
-                                icon("assignment").
-                                shortDesc("Function 3").
-                                longDesc("Functional context-dependent action 3").
-                                build()
-                )
-                .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-                .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-                .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
-                //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
-                .also()
-                .addCrit("stringProp").asMulti().text()
-                //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
-                .also()
-                .addCrit("integerProp").asRange().integer()
-                //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
-                .also()
-                .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-                .lightDesc()
-                //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
-                .also()
-                .addCrit("bigDecimalProp").asRange().decimal()
-                //*    */.setDefaultValue(range().decimal().not().setFromValueExclusive(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */).setToValueExclusive(new BigDecimal(4).setScale(5)).canHaveNoValue().value())
-                .also()
-                .addCrit("booleanProp").asMulti().bool()
-                //*    */.setDefaultValue(multi().bool().not().setIsValue(false).setIsNotValue(false).canHaveNoValue().value())
-                .also()
-                .addCrit("dateProp").asRange().date()
-                //    */.setDefaultValue(range().date().not().next()./* TODO not applicable on query generation level dayAndAfter().exclusiveFrom().exclusiveTo().*/canHaveNoValue().value())
-                //*    */.setDefaultValue(range().date().not().setFromValueExclusive(new Date(1000000000L)).setToValueExclusive(new Date(2000000000L)).canHaveNoValue().value())
-                .also()
-                .addCrit("compositeProp").asMulti().autocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositePropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-                //*    */.setDefaultValue(multi().string().not().setValues("DEFAULT_KEY 10").canHaveNoValue().value())
-                .also()
-                .addCrit("critOnlyDateProp").asSingle().date()
-                /*    */.setDefaultValue(single().date()./* TODO not applicable on query generation level not().*/setValue(new Date(1000000000L))./* TODO not applicable on query generation level canHaveNoValue(). */value())
-                .also()
-                .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
-                .withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
-                .lightDesc()
-                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
-                .also()
-                .addCrit("userParam").asSingle().autocompleter(User.class)
-                .withProps(pair("base", false), pair("basedOnUser", false))
-                /*    */.withDefaultValueAssigner(TgPersistentEntityWithProperties_UserParamAssigner.class)
-                .also()
-                .addCrit("critOnlyIntegerProp").asSingle().integer()
-                /*    */.setDefaultValue(single().integer()./* TODO not applicable on query generation level not(). */setValue(1)./* TODO not applicable on query generation level canHaveNoValue(). */value())
-                .also()
-                .addCrit("critOnlyBigDecimalProp").asSingle().decimal()
-                /*    */.setDefaultValue(single().decimal()./* TODO not applicable on query generation level not(). */setValue(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */)./* TODO not applicable on query generation level canHaveNoValue(). */value())
-                .also()
-                .addCrit("critOnlyBooleanProp").asSingle().bool()
-                /*    */.setDefaultValue(single().bool()./* TODO not applicable on query generation level not(). */setValue(false)./* TODO not applicable on query generation level canHaveNoValue(). */value())
-                .also()
-                .addCrit("critOnlyStringProp").asSingle().text()
-                /*    */.setDefaultValue(single().text()./* TODO not applicable on query generation level not(). */setValue("DE*")./* TODO not applicable on query generation level canHaveNoValue(). */value())
-                .also()
-                .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
-                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
-
-                .setLayoutFor(Device.DESKTOP, Optional.empty(),
-                        ("[['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mrLast]]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
-                )
-                .setLayoutFor(Device.TABLET, Optional.empty(),
-                        ("[['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]," +
-                                "['center-justified', 'start', mr, mrLast]]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
-                )
-                .setLayoutFor(Device.MOBILE, Optional.empty(),
-                        ("[['center-justified', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]," +
-                                "['center-justified', 'start', mrLast]]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
-                )
-                .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInvocationActionConfig())
-                .also()
-                .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
-                        withContext(context().withSelectedEntities().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Function 5").
-                        longDesc("Functional context-dependent action 5").
-                        build())
-
-                .also()
-                .addProp(mkProp("DR", "Defect Radio", String.class)).withAction(action(TgStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to DR").
-                        longDesc("Change Status to DR").
-                        build())
-                .also()
-                .addProp(mkProp("IS", "In Service", String.class)).withAction(action(TgISStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to IS").
-                        longDesc("Change Status to IS").
-                        build())
-                .also()
-                .addProp(mkProp("IR", "In Repair", String.class)).withAction(action(TgIRStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to IR").
-                        longDesc("Change Status to IR").
-                        build())
-                .also()
-                .addProp(mkProp("ON", "On Road Defect Station", String.class)).withAction(action(TgONStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to ON").
-                        longDesc("Change Status to ON").
-                        build())
-                .also()
-                .addProp(mkProp("SR", "Defect Smash Repair", String.class)).withAction(action(TgSRStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to SR").
-                        longDesc("Change Status to SR").
-                        build())
-
-                .also()
-                .addProp("integerProp").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
-                .also()
-                .addProp("bigDecimalProp").withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
-                .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
-                .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property")
-                .also()
-                .addProp("entityProp")
-                .also()
-                .addProp("booleanProp")
-                .also()
-                .addProp("dateProp")
-                .also()
-                .addProp("compositeProp")
-                .also()
-                .addProp("stringProp")
-                //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
-                //                        "["
-                //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
-                //                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp'], ['flex', 'select:property=dateProp'],    ['flex', 'select:property=compositeProp']]"
-                //                                + "]")
-                //                .withExpansionLayout(
-                //                        "["
-                //                                + "[['flex', 'select:property=stringProp']]"
-                //                                + "]")
-                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
-                        "["
-                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
-                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
-                                + "]")
-                .withExpansionLayout(
-                        "["
-                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
-                                + "[['flex', 'select:property=stringProp']]"
-                                + "]")
-                .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(),
-                        "["
-                                + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
-                                + "[['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]"
-                                + "]")
-                .withExpansionLayout(
-                        "["
-                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
-                                + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
-                                + "[['flex', 'select:property=stringProp']]"
-                                + "]")
-                //                .also()
-                //                .addProp("status")
-
-                //                .also()
-                //                .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
-                //                .also()
-                //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
-
-                .addPrimaryAction(
-                        EntityActionConfig.createMasterInvocationActionConfig()
-                //                        action(TgFunctionalEntityWithCentreContext.class).
-                //                                withContext(context().withSelectedEntities().build()).
-                //                                icon("assignment-turned-in").
-                //                                shortDesc("Function 2.5").
-                //                                longDesc("Functional context-dependent action 2.5").
-                //                                build()
-
-                ) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
-                .also()
-                .addSecondaryAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
-                                icon("assignment-turned-in").
-                                shortDesc("Function 3").
-                                longDesc("Functional context-dependent action 3").
-                                build()
-                )
-                .also()
-                .addSecondaryAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
-                                icon("attachment").
-                                shortDesc("Function 4").
-                                longDesc("Functional context-dependent action 4").
-                                build()
-                )
-                .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
-                .setRenderingCustomiser(TestRenderingCustomiser.class)
-                // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
-                .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
-                .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
-                .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
-                .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
-
-                //                .also()
-                //                .addProp("status").order(3).desc().withAction(null)
-                //                .also()
-                //                .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
-                //                .also()
-                //                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
-                //                .also()
-                //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
-                .build();
-
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = new EntityCentre<>(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", ecc, injector(), (centre) -> {
-            // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
-
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 60);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "desc", 200);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "integerProp", 42);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "bigDecimalProp", 68);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "entityProp", 40);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "booleanProp", 49);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 130);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 110);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
-            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "status", 30);
-            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
-            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp2", 30);
-            final int statusWidth = 26; // TODO does not matter below 18px -- still remain 18px, +20+20 as padding
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dR", statusWidth);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iS", statusWidth);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iR", statusWidth);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "oN", statusWidth);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "sR", statusWidth);
-            return centre;
-        });
-
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
                         .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).
@@ -421,7 +123,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build(), injector(), null);
 
         configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
+
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig());
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig());
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig());
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig());
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig());
+
         configApp().addCentre(MiTgPersistentEntityWithProperties.class, entityCentre);
+        configApp().addCentre(MiTgPersistentEntityWithProperties1.class, entityCentre1);
+        configApp().addCentre(MiTgPersistentEntityWithProperties2.class, entityCentre2);
+        configApp().addCentre(MiTgPersistentEntityWithProperties3.class, entityCentre3);
+        configApp().addCentre(MiTgPersistentEntityWithProperties4.class, entityCentre4);
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
@@ -436,8 +149,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 // PROPERTY EDITORS
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
                 .withProps(pair("desc", true),
-                           pair("compositeProp", false),
-                           pair("booleanProp", false))
+                        pair("compositeProp", false),
+                        pair("booleanProp", false))
                 /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
                 /*      */.enabledWhen(EnabledState.VIEW)
                 /*      */.icon("trending-up")
@@ -675,10 +388,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .captionBgColor("#2C89A0")
                 .menu().addMenuItem("First view").description("First view description").view(null).done()
                 /*  */.addMenuItem("Second view").description("Second view description").view(null).done()
-                /*  */.addMenuItem("Entity Centre 1").description("Entity centre description").centre(entityCentre).done()
-                /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre).done()
-                /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre).done()
-                /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre).done()
+                /*  */.addMenuItem("Entity Centre 1").description("Entity centre description").centre(entityCentre1).done()
+                /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre2).done()
+                /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre3).done()
+                /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre4).done()
                 /*  */.addMenuItem("Third view").description("Third view description").view(null).done().done()
                 /*.menu()
                     .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()*/
@@ -889,6 +602,317 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
             return where.prop("status").eq().val(coStatus.findByKey("IS"));
         }
+    }
 
+    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig() {
+        final String centreMr = "['margin-right: 40px', 'flex']";
+        final String centreMrLast = "['flex']";
+
+        @SuppressWarnings("unchecked")
+        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
+                .addTopAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectedEntities().build()).
+                                preAction(new IPreAction() {
+                                    @Override
+                                    public JsCode build() {
+                                        return new JsCode("    return confirm('Are you sure you want to proceed?');\n");
+                                    }
+                                }).
+                                icon("assignment-ind").
+                                shortDesc("Function 1").
+                                longDesc("Functional context-dependent action 1").
+                                build()
+                )
+                .also()
+                .addTopAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectedEntities().build()).
+                                icon("assignment-returned").
+                                shortDesc("Function 2").
+                                longDesc("Functional context-dependent action 2").
+                                build()
+                )
+                .also()
+                .addTopAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withCurrentEntity().build()).
+                                icon("assignment").
+                                shortDesc("Function 3").
+                                longDesc("Functional context-dependent action 3").
+                                build()
+                )
+                .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
+                .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .withProps(pair("desc", true), pair("booleanProp", false), pair("compositeProp", true), pair("compositeProp.desc", true))
+                //*    */.setDefaultValue(multi().string().not().setValues("A*", "B*").canHaveNoValue().value())
+                .also()
+                .addCrit("stringProp").asMulti().text()
+                //*    */.setDefaultValue(multi().string().not().setValues("DE*", "ED*").canHaveNoValue().value())
+                .also()
+                .addCrit("integerProp").asRange().integer()
+                //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
+                .also()
+                .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
+                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .lightDesc()
+                //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
+                .also()
+                .addCrit("bigDecimalProp").asRange().decimal()
+                //*    */.setDefaultValue(range().decimal().not().setFromValueExclusive(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */).setToValueExclusive(new BigDecimal(4).setScale(5)).canHaveNoValue().value())
+                .also()
+                .addCrit("booleanProp").asMulti().bool()
+                //*    */.setDefaultValue(multi().bool().not().setIsValue(false).setIsNotValue(false).canHaveNoValue().value())
+                .also()
+                .addCrit("dateProp").asRange().date()
+                //    */.setDefaultValue(range().date().not().next()./* TODO not applicable on query generation level dayAndAfter().exclusiveFrom().exclusiveTo().*/canHaveNoValue().value())
+                //*    */.setDefaultValue(range().date().not().setFromValueExclusive(new Date(1000000000L)).setToValueExclusive(new Date(2000000000L)).canHaveNoValue().value())
+                .also()
+                .addCrit("compositeProp").asMulti().autocompleter(TgPersistentCompositeEntity.class).withMatcher(CompositePropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                //*    */.setDefaultValue(multi().string().not().setValues("DEFAULT_KEY 10").canHaveNoValue().value())
+                .also()
+                .addCrit("critOnlyDateProp").asSingle().date()
+                /*    */.setDefaultValue(single().date()./* TODO not applicable on query generation level not().*/setValue(new Date(1000000000L))./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                .withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .lightDesc()
+                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("userParam").asSingle().autocompleter(User.class)
+                .withProps(pair("base", false), pair("basedOnUser", false))
+                /*    */.withDefaultValueAssigner(TgPersistentEntityWithProperties_UserParamAssigner.class)
+                .also()
+                .addCrit("critOnlyIntegerProp").asSingle().integer()
+                /*    */.setDefaultValue(single().integer()./* TODO not applicable on query generation level not(). */setValue(1)./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("critOnlyBigDecimalProp").asSingle().decimal()
+                /*    */.setDefaultValue(single().decimal()./* TODO not applicable on query generation level not(). */setValue(new BigDecimal(3).setScale(5) /* TODO scale does not give appropriate effect on centres -- the prop becomes 'changed by other user' -- investigate generated crit property */)./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("critOnlyBooleanProp").asSingle().bool()
+                /*    */.setDefaultValue(single().bool()./* TODO not applicable on query generation level not(). */setValue(false)./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("critOnlyStringProp").asSingle().text()
+                /*    */.setDefaultValue(single().text()./* TODO not applicable on query generation level not(). */setValue("DE*")./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                .also()
+                .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
+                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
+
+                .setLayoutFor(Device.DESKTOP, Optional.empty(),
+                        //                        ("[['center-justified', 'start', mrLast]]")
+                        ("[['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mrLast]]")
+                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                )
+                .setLayoutFor(Device.TABLET, Optional.empty(),
+                        ("[['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]," +
+                                "['center-justified', 'start', mr, mrLast]]")
+                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                )
+                .setLayoutFor(Device.MOBILE, Optional.empty(),
+                        ("[['center-justified', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]," +
+                                "['center-justified', 'start', mrLast]]")
+                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                )
+                .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInvocationActionConfig())
+                .also()
+                .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
+                        withContext(context().withSelectedEntities().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Function 5").
+                        longDesc("Functional context-dependent action 5").
+                        build())
+
+                .also()
+                .addProp(mkProp("DR", "Defect Radio", String.class)).withAction(action(TgStatusActivationFunctionalEntity.class).
+                        withContext(context().withCurrentEntity().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Change Status to DR").
+                        longDesc("Change Status to DR").
+                        build())
+                .also()
+                .addProp(mkProp("IS", "In Service", String.class)).withAction(action(TgISStatusActivationFunctionalEntity.class).
+                        withContext(context().withCurrentEntity().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Change Status to IS").
+                        longDesc("Change Status to IS").
+                        build())
+                .also()
+                .addProp(mkProp("IR", "In Repair", String.class)).withAction(action(TgIRStatusActivationFunctionalEntity.class).
+                        withContext(context().withCurrentEntity().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Change Status to IR").
+                        longDesc("Change Status to IR").
+                        build())
+                .also()
+                .addProp(mkProp("ON", "On Road Defect Station", String.class)).withAction(action(TgONStatusActivationFunctionalEntity.class).
+                        withContext(context().withCurrentEntity().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Change Status to ON").
+                        longDesc("Change Status to ON").
+                        build())
+                .also()
+                .addProp(mkProp("SR", "Defect Smash Repair", String.class)).withAction(action(TgSRStatusActivationFunctionalEntity.class).
+                        withContext(context().withCurrentEntity().build()).
+                        icon("assignment-turned-in").
+                        shortDesc("Change Status to SR").
+                        longDesc("Change Status to SR").
+                        build())
+
+                .also()
+                .addProp("integerProp").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
+                .also()
+                .addProp("bigDecimalProp").withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
+                .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
+                .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property")
+                .also()
+                .addProp("entityProp")
+                .also()
+                .addProp("booleanProp")
+                .also()
+                .addProp("dateProp")
+                .also()
+                .addProp("compositeProp")
+                .also()
+                .addProp("stringProp")
+                //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
+                //                        "["
+                //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
+                //                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp'], ['flex', 'select:property=dateProp'],    ['flex', 'select:property=compositeProp']]"
+                //                                + "]")
+                //                .withExpansionLayout(
+                //                        "["
+                //                                + "[['flex', 'select:property=stringProp']]"
+                //                                + "]")
+                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
+                        "["
+                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
+                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
+                                + "]")
+                .withExpansionLayout(
+                        "["
+                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
+                                + "[['flex', 'select:property=stringProp']]"
+                                + "]")
+                .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(),
+                        "["
+                                + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
+                                + "[['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]"
+                                + "]")
+                .withExpansionLayout(
+                        "["
+                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
+                                + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
+                                + "[['flex', 'select:property=stringProp']]"
+                                + "]")
+                //                .also()
+                //                .addProp("status")
+
+                //                .also()
+                //                .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
+                //                .also()
+                //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
+
+                .addPrimaryAction(
+                        //                        EntityActionConfig.createMasterInvocationActionConfig()
+                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                //                        action(TgFunctionalEntityWithCentreContext.class).
+                //                                withContext(context().withSelectedEntities().build()).
+                //                                icon("assignment-turned-in").
+                //                                shortDesc("Function 2.5").
+                //                                longDesc("Functional context-dependent action 2.5").
+                //                                build()
+
+                ) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
+                .also()
+                /*.addSecondaryAction(
+                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                ).also()*/
+                .addSecondaryAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectedEntities().build()).
+                                icon("assignment-turned-in").
+                                shortDesc("Function 3").
+                                longDesc("Functional context-dependent action 3").
+                                build()
+                )
+                .also()
+                .addSecondaryAction(
+                        action(TgFunctionalEntityWithCentreContext.class).
+                                withContext(context().withSelectedEntities().build()).
+                                icon("attachment").
+                                shortDesc("Function 4").
+                                longDesc("Functional context-dependent action 4").
+                                build()
+                )
+                .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
+                .setRenderingCustomiser(TestRenderingCustomiser.class)
+                // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
+                .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
+                .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
+                .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
+                .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
+
+                //                .also()
+                //                .addProp("status").order(3).desc().withAction(null)
+                //                .also()
+                //                .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
+                //                .also()
+                //                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
+                //                .also()
+                //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
+                .build();
+        return ecc;
+    }
+
+    private EntityCentre<TgPersistentEntityWithProperties> createEntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<TgPersistentEntityWithProperties> entityCentreConfig) {
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = new EntityCentre<>(miType, name, entityCentreConfig, injector(), (centre) -> {
+            // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
+
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 60);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "desc", 200);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "integerProp", 42);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "bigDecimalProp", 68);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "entityProp", 40);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "booleanProp", 49);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 130);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 110);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
+            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "status", 30);
+            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
+            // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp2", 30);
+            final int statusWidth = 26; // TODO does not matter below 18px -- still remain 18px, +20+20 as padding
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dR", statusWidth);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iS", statusWidth);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iR", statusWidth);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "oN", statusWidth);
+            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "sR", statusWidth);
+            return centre;
+        });
+        return entityCentre;
     }
 }

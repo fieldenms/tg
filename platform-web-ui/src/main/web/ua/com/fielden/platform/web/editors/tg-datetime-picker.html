@@ -70,14 +70,6 @@
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-change="[[_onChange]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" current-state="[[currentState]]">
             <paper-icon-button class="custom-icon-buttons picker-button" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
         </tg-editor>
-        <paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_dateDialogClosed">
-            <!--on-iron-overlay-opened="_fixDialog"-->
-            <tg-calendar id="datePicker" pick-time></tg-calendar>
-            <div class="buttons">
-                <paper-button dialog-dismiss affirmative on-tap="_cancelDate">Cancel</paper-button>
-                <paper-button dialog-confirm affirmative autofocus on-tap="_acceptDate">Ok</paper-button>
-            </div>
-        </paper-dialog>
     </template>
 </dom-module>
 
@@ -114,10 +106,6 @@
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
             },
 
-            listeners: {
-                'iron-resize': '_fixDialog'
-            },
-
             /**
              * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
              */
@@ -147,41 +135,77 @@
             },
 
             _showCalendar: function (e) {
-                var dateDialog = this.$.dateDialog,
-                    datePicker = this.$.datePicker;
-                //Openening dialog
-                Polymer.dom(Polymer.dom(dateDialog).parentNode).removeChild(dateDialog);
-                Polymer.dom(document.body).appendChild(dateDialog);
+                var mve = this._createCalendarDialog();
+                Polymer.dom(document.body).appendChild(mve);
                 Polymer.dom.flush();
                 
-                // let's open the dialog with magical async...
-                // this ensures that the dialog is opened after its relocation to body
-                this.async(function () {
-                    dateDialog.open();
-                }.bind(this), 1);
-                
-                //this.async(dateDialog.notifyResize, 1);
-                if (this._editingValue) { // TODO should this be "this._editingValue === ''"?
-                    var selectedMoment = moment(this._editingValue.trim(), "L LT", true);
-                    if (selectedMoment.isValid()) {
-                        datePicker.selectedDate = selectedMoment.valueOf();
-                        datePicker.selectedHour = selectedMoment.hour();
-                        datePicker.selectedMinute = selectedMoment.minute();
-                        return;
-                    }
-                }
-                datePicker.selectedDate = null;
-                datePicker.selectedHour = 0;
-                datePicker.selectedMinute = 0;
+                mve.open();
             },
-
-            _acceptDate: function () {
-                this._isAcceptingDateFromPicker = true;
-                this._editingValue = moment(this.$.datePicker.selectedDate)
-                    .hour(this.$.datePicker.selectedHour)
-                    .minute(this.$.datePicker.selectedMinute)
-                    .format("L LT");
-                this.decoratedInput().focus();
+            
+            /**
+             * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
+             */
+            _createCalendarDialog: function() {
+            	var self = this;
+            	var domBind = document.createElement('template', 'dom-bind');
+            	
+            	domBind._closedBind = function(e) {
+            		var dialog = this.$.dateDialog;
+            		Polymer.dom(document.body).removeChild(dialog);
+            		Polymer.dom(document.body).removeChild(this);
+            		Polymer.dom.flush();
+            	}.bind(domBind);
+            	
+            	domBind._cancelDateBind = function() {
+            		self.decoratedInput().focus();
+           		};
+           		
+            	domBind._acceptDateBind = function() {
+                    self._isAcceptingDateFromPicker = true;
+                    self._editingValue = moment(this.$.datePicker.selectedDate)
+                        .hour(this.$.datePicker.selectedHour)
+                        .minute(this.$.datePicker.selectedMinute)
+                        .format("L LT");
+                    self.decoratedInput().focus();
+           		}.bind(domBind);
+           		
+           		domBind.open = function () {
+           			var dialog = this.$.dateDialog;
+           			var datePicker = this.$.datePicker;
+           			datePicker.selectedDate = null;
+                	datePicker.selectedHour = 0;
+                	datePicker.selectedMinute = 0;
+                	
+                    if (self._editingValue  !== '') {
+                        var selectedMoment = moment(self._editingValue.trim(), "L LT", true);
+                        if (selectedMoment.isValid()) {
+                            datePicker.selectedDate = selectedMoment.valueOf();
+                            datePicker.selectedHour = selectedMoment.hour();
+                            datePicker.selectedMinute = selectedMoment.minute();
+                        }
+                    }
+           			
+                    Polymer.dom(document.body).appendChild(dialog);
+                    Polymer.dom.flush();
+                    // let's open the dialog with magical async...
+                    // this ensures that the dialog is opened after its relocation to body
+                    this.async(function () {
+                    	dialog.open();
+                    }.bind(this), 1);
+           		}.bind(domBind);
+           		
+            	var div = domBind.content.ownerDocument.createElement('div');
+            	div.innerHTML = 
+            	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
+	                '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
+	                '<div class="buttons">' +
+	                    '<paper-button dialog-dismiss affirmative on-tap="_cancelDateBind">Cancel</paper-button>' +
+	                    '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
+	                '</div>' +
+	            '</paper-dialog>';
+            	
+            	domBind.content.appendChild(div);
+            	return domBind;
             },
 
             _editingValueChanged: function (newValue, oldValue) {
@@ -192,28 +216,8 @@
 
                     this.commit();
                 }
-            },
-
-            _cancelDate: function () {
-                this.decoratedInput().focus();
-            },
-
-            /**
-             * listener for resize event of dialog
-             */
-            _fixDialog: function () {
-                if (this.$.dateDialog.opened) {
-                    this.$.dateDialog.fit();
-                }
-            },
-
-            /**
-             * listens the event when dialog closes.
-             */
-            _dateDialogClosed: function () {
-                Polymer.dom(document.body).removeChild(this.$.dateDialog);
-                Polymer.dom.flush();
             }
+
         });
     })();
 </script>
