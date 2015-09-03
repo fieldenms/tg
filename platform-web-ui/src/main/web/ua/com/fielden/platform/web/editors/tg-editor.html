@@ -76,6 +76,11 @@
             text-rendering: optimizeLegibility;
             color: #757575 !important;
         }
+        
+        paper-input-container::shadow .add-on-content {
+            position: relative;
+        }
+        
         paper-input-container {
             --paper-input-container-label: {
                 overflow: hidden;
@@ -89,8 +94,16 @@
                 line-height: 1.8rem;
             }
         }
+            
         paper-input-error {
             width: 100%;
+            position: absolute;
+        }
+            
+        paper-char-counter {
+            position: absolute;
+            right: 0;
+            top: 0;
         }
         
         /* style requiredness */
