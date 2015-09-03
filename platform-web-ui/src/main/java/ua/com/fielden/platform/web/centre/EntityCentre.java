@@ -121,78 +121,28 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * Generates default centre from DSL config and postCentreCreated callback.
+     * Generates default centre from DSL config and postCentreCreated callback (user unspecific).
      *
      * @param dslDefaultConfig
      * @param postCentreCreated
      * @return
      */
-    public ICentreDomainTreeManagerAndEnhancer createUserUnspecificDefaultCentre() {
-        final ISerialiser serialiser = injector.getInstance(ISerialiser.class);
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = GlobalDomainTreeManager.createEmptyCentre(entityType, serialiser);
-
-        final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
-        if (selectionCriteria.isPresent()) {
-            for (final String property : selectionCriteria.get()) {
-                cdtmae.getFirstTick().check(entityType, treeName(property), true);
-
-                // provideDefaultsFor(property, cdtmae, dslDefaultConfig);
-            }
-        }
-
-        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
-        if (resultSetProps.isPresent()) {
-            for (final ResultSetProp property : resultSetProps.get()) {
-                if (property.propName.isPresent()) {
-                    cdtmae.getSecondTick().check(entityType, treeName(property.propName.get()), true);
-                } else {
-                    if (property.propDef.isPresent()) { // represents the 'custom' property
-                        final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
-                        enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
-
-                        cdtmae.getSecondTick().check(entityType, treeName(customPropName), true);
-                    } else {
-                        throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
-                    }
-                }
-            }
-        }
-
-        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
-        if (summaryExpressions.isPresent()) {
-            for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
-                final String originationProperty = treeName(entry.getKey());
-                for (final SummaryPropDef summaryProp : entry.getValue()) {
-                    cdtmae.getEnhancer().addCalculatedProperty(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, summaryProp.desc, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF"
-                            : originationProperty);
-                    cdtmae.getEnhancer().apply();
-                    cdtmae.getSecondTick().check(entityType, summaryProp.alias, true);
-                }
-            }
-        }
-
-        final Optional<Map<String, OrderDirection>> propOrdering = dslDefaultConfig.getResultSetOrdering();
-        if (propOrdering.isPresent()) {
-            for (final Map.Entry<String, OrderDirection> propAndOrderDirection : propOrdering.get().entrySet()) {
-                if (OrderDirection.ASC == propAndOrderDirection.getValue()) {
-                    cdtmae.getSecondTick().toggleOrdering(entityType, treeName(propAndOrderDirection.getKey()));
-                } else { // OrderDirection.DESC
-                    cdtmae.getSecondTick().toggleOrdering(entityType, treeName(propAndOrderDirection.getKey())).toggleOrdering(entityType, treeName(propAndOrderDirection.getKey()));
-                }
-            }
-        }
-
-        return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
+    private ICentreDomainTreeManagerAndEnhancer createUserUnspecificDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
+        return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, false);
     }
 
     /**
-     * Generates default centre from DSL config and postCentreCreated callback.
+     * Generates default centre from DSL config and postCentreCreated callback (user specific).
      *
      * @param dslDefaultConfig
      * @param postCentreCreated
      * @return
      */
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
+        return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, true);
+    }
+
+    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
         final ICentreDomainTreeManagerAndEnhancer cdtmae = GlobalDomainTreeManager.createEmptyCentre(entityType, serialiser);
 
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
@@ -200,7 +150,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (final String property : selectionCriteria.get()) {
                 cdtmae.getFirstTick().check(entityType, treeName(property), true);
 
-                provideDefaultsFor(property, cdtmae, dslDefaultConfig);
+                if (userSpecific) {
+                    provideDefaultsFor(property, cdtmae, dslDefaultConfig);
+                }
             }
         }
 
@@ -610,7 +562,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating fresh centre...");
         final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
         if (userSpecificGlobalManager == null) {
-            return createRenderableRepresentation(createUserUnspecificDefaultCentre());
+            return createRenderableRepresentation(createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated));
         } else {
             return createRenderableRepresentation(CentreUtils.getFreshCentre(userSpecificGlobalManager, this.menuItemType));
         }
