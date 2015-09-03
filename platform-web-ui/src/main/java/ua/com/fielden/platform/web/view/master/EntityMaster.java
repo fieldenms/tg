@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.view.master;
 
 import java.util.Optional;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.DefaultEntityProducer;
@@ -20,8 +22,6 @@ import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-import com.google.inject.Injector;
-
 /**
  * Represents entity master.
  *
@@ -37,11 +37,11 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     private final boolean noUIMaster;
 
     /**
-     * Creates master for the specified <code>entityType</code> and <code>entityProducerType</code>.
+     * Creates master for the specified <code>entityType</code>, <code>smConfig</code> and <code>entityProducerType</code>.
      *
      * @param entityType
      * @param entityProducerType
-     * @param masterComponent
+     * @param smConfig
      *
      */
     public EntityMaster(
@@ -68,10 +68,10 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     }
 
     /**
-     * Creates master for the specified <code>entityType</code> and default entity producer.
+     * Creates master for the specified <code>entityType</code> and <code>smConfig</code> (no producer).
      *
      * @param entityType
-     * @param masterComponent
+     * @param smConfig
      *
      */
     public EntityMaster(final Class<T> entityType, final ISimpleMasterConfig<T> smConfig, final Injector injector) {

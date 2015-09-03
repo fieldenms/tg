@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.sample.domain;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.DefaultEntityProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-
-import com.google.inject.Inject;
 
 /**
  * A producer for new instances of entity {@link TgPersistentEntityWithProperties}.
@@ -32,8 +32,6 @@ public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProdu
                 //                ).with(fetchOnly(TgPersistentEntityWithProperties.class).with("key")).model());
                 //                coTgPersistentEntityWithProperties.findById(12L, fetchOnly(TgPersistentEntityWithProperties.class).with("key"));
                 coTgPersistentEntityWithProperties.findByKeyAndFetch(fetchStrategy.<TgPersistentEntityWithProperties> fetchFor("producerInitProp").fetchModel(), "DEFAULT_KEY");
-
-        System.out.println("defValue.getProperty(producerInitProp).isProxy() == " + defValue.getProperty("producerInitProp").isProxy());
 
         entity.setProducerInitProp(defValue);
         return entity;
