@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
@@ -29,9 +31,15 @@ import ua.com.fielden.platform.web.resources.webui.FileResource;
  */
 public class SourceControllerImpl implements ISourceController {
     private static final String COMMENT_END = "-->";
+    private static final int COMMENT_END_LENGTH = COMMENT_END.length();
+
     private static final String COMMENT_START = "<!--";
+    private static final int COMMENT_START_LENGTH = COMMENT_START.length();
+
     private static final String SGL_QUOTED_HREF = "href='";
     private static final String DBL_QUOTED_HREF = "href=\"";
+    private static final int HREF_LENGTH = DBL_QUOTED_HREF.length();
+
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;
     private final TgJackson tgJackson;
@@ -93,46 +101,33 @@ public class SourceControllerImpl implements ISourceController {
         final int doubleQuotedStart = source.indexOf(DBL_QUOTED_HREF);
         final int singleQuotedStart = source.indexOf(SGL_QUOTED_HREF);
 
-        if (doubleQuotedStart >= 0 || singleQuotedStart >= 0) {
-            final boolean bothTypesPresent = doubleQuotedStart >= 0 && singleQuotedStart >= 0;
-            final boolean doubleQuote = bothTypesPresent ? doubleQuotedStart < singleQuotedStart : (doubleQuotedStart >= 0);
-            final int start = doubleQuote ? doubleQuotedStart : singleQuotedStart;
+        final boolean doubleQuotedPresent = doubleQuotedStart >= 0;
+        final boolean singleQuotedPresent = singleQuotedStart >= 0;
+        if (doubleQuotedPresent || singleQuotedPresent) {
+            final boolean bothTypesPresent = doubleQuotedPresent && singleQuotedPresent;
+            final boolean doubleQuoted = bothTypesPresent ? (doubleQuotedStart < singleQuotedStart) : doubleQuotedPresent;
+            final int start = doubleQuoted ? doubleQuotedStart : singleQuotedStart;
             if (commentStart >= 0) {
                 if (commentStart < start) {
                     // remove comment and process the rest of source
-                    final String temp = source.substring(commentStart + COMMENT_START.length());
+                    final String temp = source.substring(commentStart + COMMENT_START_LENGTH);
                     final int indexOfUncommentedPart = temp.indexOf(COMMENT_END);
-                    final String sourceWithoutComment = temp.substring(indexOfUncommentedPart + COMMENT_END.length());
+                    final String sourceWithoutComment = temp.substring(indexOfUncommentedPart + COMMENT_END_LENGTH);
                     return getRootDependencies(sourceWithoutComment, currentRootDependencies);
                 } else {
-                    return rootDependencies0(source, currentRootDependencies, start, doubleQuote);
+                    return rootDependencies0(source, currentRootDependencies, start, doubleQuoted);
                 }
             } else {
-                return rootDependencies0(source, currentRootDependencies, start, doubleQuote);
+                return rootDependencies0(source, currentRootDependencies, start, doubleQuoted);
             }
         } else {
             return currentRootDependencies;
         }
-//        old implementation:
-//        final LinkedHashSet<String> set = new LinkedHashSet<String>(currentRootDependencies);
-//        String curr = source;
-//        // TODO enhance the logic to support whitespaces etc.?
-//        while (curr.indexOf("href=\"") >= 0 || curr.indexOf("href='") >= 0) {
-//            final boolean singleQuote = curr.indexOf("href='") >= 0;
-//            final int startIndex = singleQuote ? curr.indexOf("href='") + 6 : curr.indexOf("href=\"") + 6;
-//            final String nextCurr = curr.substring(startIndex);
-//            final int endIndex = singleQuote ? nextCurr.indexOf("'") : nextCurr.indexOf("\"");
-//            final String importURI = nextCurr.substring(0, endIndex);
-//            set.add(importURI);
-//            curr = nextCurr.substring(endIndex);
-//        }
-//
-//        return set;
     }
 
     private static LinkedHashSet<String> rootDependencies0(final String source, final LinkedHashSet<String> currentRootDependencies, final int start, final boolean doubleQuote) {
         // process the rest of source
-        final int startOfURI = start + DBL_QUOTED_HREF.length();
+        final int startOfURI = start + HREF_LENGTH;
         final String nextCurr = source.substring(startOfURI);
         final int endOfURIIndex = doubleQuote ? nextCurr.indexOf("\"") : nextCurr.indexOf("'");
         final String importURI = nextCurr.substring(0, endOfURIIndex);
@@ -166,20 +161,18 @@ public class SourceControllerImpl implements ISourceController {
      * @return
      */
     private LinkedHashSet<String> getRootDependenciesFor(final String resourceURI) {
-        final String source = getSource(resourceURI);
-        if (source == null) {
-            return null;
+        if (resourceURI.startsWith("/resources/polymer/")) {
+            // no need to analyze polymer sources!
+            return new LinkedHashSet<String>();
         } else {
-            final LinkedHashSet<String> dependentResourceURIs = getRootDependencies(source, new LinkedHashSet<String>());
-            // logger.info("[" + resourceURI + "]: " + dependentResourceURIs);
-            final LinkedHashSet<String> dependentResourceURIsWithoutCoreTooltip = new LinkedHashSet<>(dependentResourceURIs);
-            for (final String dependentResourceURI: dependentResourceURIs) {
-                if (dependentResourceURI.contains("core-tooltip")) {
-                    dependentResourceURIsWithoutCoreTooltip.remove(dependentResourceURI);
-                }
+            final String source = getSource(resourceURI);
+            if (source == null) {
+                return null;
+            } else {
+                final LinkedHashSet<String> dependentResourceURIs = getRootDependencies(source, new LinkedHashSet<String>());
+                logger.debug("[" + resourceURI + "]: " + dependentResourceURIs);
+                return dependentResourceURIs;
             }
-            // System.out.println("get: [" + resourceURI + "] ==> " + dependentResourceURIsWithoutCoreTooltip);
-            return dependentResourceURIsWithoutCoreTooltip;
         }
     }
 
@@ -278,15 +271,12 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private LinkedHashSet<String> calculatePreloadedResources() {
-        // TODO provide normal logging, timing of heavy logic
         logger.info("======== Calculating preloaded resources... ========");
-        // System.out.println("allUrls = |" + getAll("/resources/binding/tg-entity-binder.html") + "|.");
-        // System.out.println("allUrls = |" + getAll("/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties") + "|.");
-        // System.out.println("allUrls = |" + getAll("/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties") + "|.");
-        // System.out.println("allUrls = |" + getAll("/resources/application-startup-resources.html") + "|.");
+        final DateTime start = new DateTime();
         final LinkedHashSet<String> all = getAllDependenciesFor("/resources/startup-resources-origin.html");
-        logger.info("allUrls = |" + all + "|.");
-        logger.info("-------- Calculated preloaded resources. --------");
+        logger.info("\t ==> " + all + ".");
+        final Period pd = new Period(start, new DateTime());
+        logger.info("-------- Calculated preloaded resources [" + all.size() + "]. Duration [" + pd.getSeconds() + " s " + pd.getMillis() + " ms]. --------");
         return all;
     }
 
@@ -306,7 +296,7 @@ public class SourceControllerImpl implements ISourceController {
         } else if (resourceURI.startsWith("/resources/")) {
             return getFileSource(resourceURI, webUiConfig.resourcePaths());
         } else {
-            // logger.error("The URI is not known: [" + resourceURI + "].");
+            logger.error("The URI is not known: [" + resourceURI + "].");
             return null;
         }
     }
