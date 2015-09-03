@@ -304,10 +304,11 @@
                 }).bind(self);
 
                 self._showMasterInDialog = (function (action, entity) {
-                    var fullTypeName = entity.type().notEnhancedFullClassName(),
-                        simpleTypeName = entity.type()._notEnhancedSimpleClassName(),
-                        closeEventChannel = self.uuid,
-                        closeEventTopics = ['save.post.success', 'refresh.post.success'];
+                    var fullTypeName = entity.type().notEnhancedFullClassName();
+                    var simpleTypeName = entity.type()._notEnhancedSimpleClassName();
+                    var closeEventChannel = self.uuid;
+                    var closeEventTopics = ['save.post.success', 'refresh.post.success'];
+                    
                     action.componentUri = "/master_ui/" + fullTypeName;
                     action.elementName = "tg-" + simpleTypeName + "-master";
                     action.attrs = {
