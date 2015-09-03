@@ -94,7 +94,8 @@ public class SourceControllerImpl implements ISourceController {
         final int singleQuotedStart = source.indexOf(SGL_QUOTED_HREF);
 
         if (doubleQuotedStart >= 0 || singleQuotedStart >= 0) {
-            final boolean doubleQuote = doubleQuotedStart >= 0;
+            final boolean bothTypesPresent = doubleQuotedStart >= 0 && singleQuotedStart >= 0;
+            final boolean doubleQuote = bothTypesPresent ? doubleQuotedStart < singleQuotedStart : (doubleQuotedStart >= 0);
             final int start = doubleQuote ? doubleQuotedStart : singleQuotedStart;
             if (commentStart >= 0) {
                 if (commentStart < start) {
