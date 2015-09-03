@@ -47,7 +47,7 @@ public class CentreEgiResource extends ServerResource {
 
     @Override
     protected Representation get() throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             try {
                 return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(webEgi.render().toString().getBytes("UTF-8"))));
             } catch (final UnsupportedEncodingException e) {
