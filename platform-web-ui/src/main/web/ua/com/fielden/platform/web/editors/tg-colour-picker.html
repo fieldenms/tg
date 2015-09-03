@@ -1,0 +1,187 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<link rel="import" href="/resources/colour_picker/tg-colour-picker.html">
+
+<style>
+	.small-icon {
+		max-width: 14px;
+		max-height: 14px;
+		color: #757575;
+		opacity: 1;
+	}
+	
+	.color-box:hover > .dummy-box {
+		display: block;
+	}
+	
+	.small-box {
+		min-width: 14px;
+		min-height: 14px;
+		background-color: #FAFAFA;
+		border: 2px solid #BDBDBD;
+		border-radius: 2px;
+		cursor: pointer;
+	}
+</style>
+
+<dom-module id="tg-colour-picker">
+	<template>
+		<tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-change="[[_onChange]]" current-state="[[currentState]]">
+		</tg-editor>
+	</template>
+</dom-module>
+
+<script>
+	Polymer({
+		is: 'tg-colour-picker',
+		behaviors: [Polymer.TgBehaviors.TgEditorBehavior],
+
+		properties: {
+			_onChange: {
+				type: Function
+			}
+		},
+
+		ready: function () {
+			this.$.editorDom._editorKind = "COLOUR";
+
+			this._onChange = (function (event) {
+				console.log("_onChange:", event);
+				this._editingValue = this.convertToString(event.srcElement.checked);
+
+				var parentFunction = Polymer.TgBehaviors.TgEditorBehavior.properties._onChange.value.call(this);
+				parentFunction.call(this, event);
+			}).bind(this);
+		},
+
+		/**
+		 * This method returns a default value for '_editingValue', which is used
+		 *  for representing the value when no entity was bound to this editor yet.
+		 *
+		 * Overriden to return 'false' as the value that will be used when no entity is bound to this editor yet.
+		 */
+		_defaultEditingValue: function () {
+			return null;
+		},
+		_calcColourBoxStyle: function (colorString) {
+			if (colorString === null) {
+				return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
+			}
+			if (colorString.length === 3 || colorString.length === 6) {
+				return "  border: 2px solid " + ColorLuminance('#' + colorString, -0.1) + ";background-color: " + '#' + colorString;
+			} else {
+				return "background-color: #FAFAFA; border: 2px solid #BDBDBD;";
+			}
+		},
+		_calcSmallIconStyle: function (colorString) {
+			if (colorString === null) {
+				return " opacity: 1 ";
+			} else if (colorString.length === 3 || colorString.length === 6) {
+				return "opacity: 0 ";
+			}
+
+		},
+
+		/**
+		 * Converts the value into string representation (which is used in edititing / comm values).
+		 */
+		convertToString: function (value) {
+			return "" + value;
+		},
+
+		/**
+		 * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
+		 */
+		convertFromString: function (strValue) {
+			if (strValue.length !== 3 || strValue.length !== 6) {
+				throw "The entered check value is incorrect [" + strValue + "].";
+			}
+			return strValue;
+		},
+		openDropdown: function (e) {
+			var mve = this._createDialog();
+			Polymer.dom(document.body).appendChild(mve);
+			Polymer.dom.flush();
+			mve.open();
+		},
+
+		_createDialog: function () {
+			var self = this;
+			var domBind = document.createElement('template', 'dom-bind');
+
+			domBind._closedBind = function (e) {
+				var dialog = this.$.dropdown;
+				Polymer.dom(document.body).removeChild(dropdown);
+				Polymer.dom(document.body).removeChild(this);
+				Polymer.dom.flush();
+			}.bind(domBind);
+
+			domBind._cancelBind = function () {
+				self.decoratedInput().focus();
+			};
+
+			domBind._acceptBind = function () {
+				self._isAcceptingColourFromPicker = true;
+				self._editingValue = moment(this.$.dropdown.colour);
+				self.decoratedInput().focus();
+			}.bind(domBind);
+
+			domBind.open = function () {
+				var dialog = this.$.dropdown;
+				var colourPicker = this.$.color;
+				colourPicker = null;
+				if (self._editingValue !== '') {
+					var selectedMoment = moment(self._editingValue);
+					if (selectedMoment.isValid()) {
+						colourPicker = selectedMoment.valueOf();
+					}
+				}
+
+				Polymer.dom(document.body).appendChild(dropdown);
+				Polymer.dom.flush();
+				// let's open the dialog with magical async...
+				// this ensures that the dialog is opened after its relocation to body
+				this.async(function () {
+					dropdown.open();
+				}.bind(this), 1);
+			}.bind(domBind);
+
+			var div = domBind.content.ownerDocument.createElement('div');
+			div.innerHTML =
+
+				'<iron-dropdown positionTarget="fab" id="dropdown">' +
+				'<div class="dropdown-content">' +
+				'<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
+				'<div class="layout horizontal">' +
+				'<div class="color-box" on-tap="nonColorSelected" style="background-color:#F5F5F5">' +
+				'<div class="dummy-box" style="background-color:#F5F5F5">' +
+				'<iron-icon class="icon" icon="icons:close"></iron-icon>' +
+				'</div>' +
+				'<iron-icon class="icon" icon="icons:close"></iron-icon>' +
+				'</div>' +
+				'<template is="dom-repeat" items="{{firstLineColors}}" as="color">' +
+				'<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">' +
+				'<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>' +
+				'</div>' +
+				'</template>' +
+				'</div>' +
+				'<div class="layout horizontal">' +
+				'<template class="layout horizontal" is="dom-repeat" items="{{secondLineColors}}" as="color">' +
+				'<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">' +
+				'<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>' +
+				'</div>' +
+				'</template>' +
+				'</div>' +
+				'</div>' +
+				'</div>' +
+				'</iron-dropdown>';
+
+			domBind.content.appendChild(div);
+			return domBind;
+
+		}
+
+	});
+</script>
