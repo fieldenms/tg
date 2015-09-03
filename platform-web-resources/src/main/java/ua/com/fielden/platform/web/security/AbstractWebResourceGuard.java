@@ -93,6 +93,11 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 return false;
             }
 
+            // at this stage it is safe to record the fact of successful resource access for later analysis of resources being accessed and
+            // to count concurrent users ... it would be wise to use some key/value database for this instead of the underlying RDBMS
+            // TODO #236 implement logging of accessed by users resources... potentially a custom log4j appender could be created for this purpose
+
+
             // the provided authenticator was valid and a new cookie should be send back to the client
             assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
 
