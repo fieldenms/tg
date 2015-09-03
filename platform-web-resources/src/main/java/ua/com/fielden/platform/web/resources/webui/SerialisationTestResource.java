@@ -13,7 +13,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -52,8 +51,8 @@ public class SerialisationTestResource extends ServerResource {
      */
     @Post
     @Override
-    public Representation post(final Representation envelope) throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+    public Representation post(final Representation envelope) {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) EntityResourceUtils.restoreJSONResult(envelope, restUtil).getInstance();
 
             final Result result = deepEqualsForTesting(this.entities, entities, this.dvc);
@@ -68,8 +67,8 @@ public class SerialisationTestResource extends ServerResource {
      * Handles sending of the serialised testing entities to the Web UI client (GET method).
      */
     @Override
-    protected Representation get() throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+    protected Representation get() {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             return restUtil.listJSONRepresentation(this.entities);
         }, restUtil);
     }

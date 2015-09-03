@@ -1,179 +1,190 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
+<style is="custom-style">
+    .meta-value-editor paper-button {
+        color: var(--paper-light-blue-500);
+        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+    
+    .meta-value-editor paper-button:hover {
+         background: var(--paper-light-blue-50);
+    }
+</style>
 <script>
-	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-	Polymer.TgBehaviors.TgAbstractCriterionBehavior = {
-    	
+    Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    Polymer.TgBehaviors.TgAbstractCriterionBehavior = {
+
         properties: {
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
-        	// No default values are allowed in this case.														   //
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
             /**
              * This callback should be used for custom validation action after some meta-value has been changed.
              */
             validationCallback: {
-            	type: Object
+                type: Object
             },
-            
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
-        	//   alternatively, computing function needs to be specified). 									       //
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            //   prefix and default values specified in 'value' specificator of the property definition (or,       //
+            //   alternatively, computing function needs to be specified). 									       //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
             _whenDesktop: {
-            	type: Array
+                type: Array
             },
-            
+
             _whenTablet: {
-            	type: Array,
-            	computed: '_computeTabletRepresentation(_whenDesktop)'
+                type: Array,
+                computed: '_computeTabletRepresentation(_whenDesktop)'
             },
-            
+
             _whenMobile: {
-            	type: Array,
-            	computed: '_computeMobileRepresentation(_whenDesktop)'
+                type: Array,
+                computed: '_computeMobileRepresentation(_whenDesktop)'
             },
-            
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        	//   prefix. 																				           //
-        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
-        	//   populate their default values in ready callback (to have these values populated in children)!     //
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            //   prefix. 																				           //
+            // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+            //   populate their default values in ready callback (to have these values populated in children)!     //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
             _showMetaValuesEditor: Function,
             _acceptMetaValuesForBinding: Function,
             _cancelMetaValuesForBinding: Function,
             _computeIconButtonStyleForBinding: Function
         },
-        
-        attached: function() {
-           this.async(function() {
-              // code that formerly resided in `domReady`
-           });
+
+        attached: function () {
+            this.async(function () {
+                // code that formerly resided in `domReady`
+            });
         },
-        
+
         observers: [
-        	'_updateIconButtonStyle(orNull, not)'
+         '_updateIconButtonStyle(orNull, not)'
         ],
 
-        ready: function() {
+        ready: function () {
             this._whenDesktop = this._createWhenDesktopConfig();
-            
+
             this._showMetaValuesEditor = (function (e) {
                 var mve = this._createMetaValuesDialog();
                 Polymer.dom(document.body).appendChild(mve);
                 Polymer.dom.flush();
-                
+
                 mve.open();
             }).bind(this);
-            
+
             this._acceptMetaValuesForBinding = this._acceptMetaValues.bind(this);
             this._cancelMetaValuesForBinding = this._cancelMetaValues.bind(this);
             this._computeIconButtonStyleForBinding = this._computeIconButtonStyle.bind(this);
         },
-        
+
         /**
          * Creates dynamically the 'dom-bind' template, which hold the dialog with all meta value editors.
          *
          * Uses the method '_createMetaValueEditors' (which can be overridden in descendants) to insert specific meta-value editors inside the dialog.
          */
-        _createMetaValuesDialog() {
-        	var self = this;
-        	var domBind = document.createElement('template', 'dom-bind');
-        	
-        	domBind._orNullBind = self._orNull;
-        	domBind._notBind = self._not;
-        	domBind._exclusiveBind = self._exclusive;
-   	    	domBind._exclusive2Bind = self._exclusive2;
-   	    	domBind._datePrefixBind = self._datePrefix;
-   	    	domBind._dateMnemonicBind = self._dateMnemonic;
-   	    	domBind._andBeforeBind = self._andBefore;
-        	
-        	domBind._closedBind = function(e) {
-        		var dialog = this.$.metaValueEditor;
-        		Polymer.dom(document.body).removeChild(dialog);
-        		Polymer.dom(document.body).removeChild(this);
-        		Polymer.dom.flush();
-        	}.bind(domBind);
-        	
-        	domBind._cancelMetaValuesBind = function() {
-       	    	self._cancelMetaValues();
-       	    	domBind._orNullBind = self._orNull;
-       	    	domBind._notBind = self._not;
-       	    	domBind._exclusiveBind = self._exclusive;
-       	    	domBind._exclusive2Bind = self._exclusive2;
-       	    	domBind._datePrefixBind = self._datePrefix;
-       	    	domBind._dateMnemonicBind = self._dateMnemonic;
-       	    	domBind._andBeforeBind = self._andBefore;
-       		};
-       		
-        	domBind._acceptMetaValuesBind = function() {
-        		self._datePrefix = domBind._datePrefixBind;
-        		self._dateMnemonic = domBind._dateMnemonicBind;
-        		self._andBefore = domBind._andBeforeBind;
-        		self._exclusive = domBind._exclusiveBind;
-        		self._exclusive2 = domBind._exclusive2Bind;
-        		self._orNull = domBind._orNullBind;
-        		self._not = domBind._notBind;
-       	    	self._acceptMetaValues();
-       		};
-       		
-       		domBind.open = function () {
-       			var dialog = this.$.metaValueEditor;
+        _createMetaValuesDialog: function () {
+            var self = this;
+            var domBind = document.createElement('template', 'dom-bind');
+
+            domBind._orNullBind = self._orNull;
+            domBind._notBind = self._not;
+            domBind._exclusiveBind = self._exclusive;
+            domBind._exclusive2Bind = self._exclusive2;
+            domBind._datePrefixBind = self._datePrefix;
+            domBind._dateMnemonicBind = self._dateMnemonic;
+            domBind._andBeforeBind = self._andBefore;
+
+            domBind._closedBind = function (e) {
+                var dialog = this.$.metaValueEditor;
+                Polymer.dom(document.body).removeChild(dialog);
+                Polymer.dom(document.body).removeChild(this);
+                Polymer.dom.flush();
+            }.bind(domBind);
+
+            domBind._cancelMetaValuesBind = function () {
+                self._cancelMetaValues();
+                domBind._orNullBind = self._orNull;
+                domBind._notBind = self._not;
+                domBind._exclusiveBind = self._exclusive;
+                domBind._exclusive2Bind = self._exclusive2;
+                domBind._datePrefixBind = self._datePrefix;
+                domBind._dateMnemonicBind = self._dateMnemonic;
+                domBind._andBeforeBind = self._andBefore;
+            };
+
+            domBind._acceptMetaValuesBind = function () {
+                self._datePrefix = domBind._datePrefixBind;
+                self._dateMnemonic = domBind._dateMnemonicBind;
+                self._andBefore = domBind._andBeforeBind;
+                self._exclusive = domBind._exclusiveBind;
+                self._exclusive2 = domBind._exclusive2Bind;
+                self._orNull = domBind._orNullBind;
+                self._not = domBind._notBind;
+                self._acceptMetaValues();
+            };
+
+            domBind.open = function () {
+                var dialog = this.$.metaValueEditor;
                 Polymer.dom(document.body).appendChild(dialog);
                 Polymer.dom.flush();
                 // let's open the dialog with magical async...
                 // this ensures that the dialog is opened after its relocation to body
                 this.async(function () {
-                	dialog.open();
+                    dialog.open();
                 }.bind(this), 1);
-       		}.bind(domBind);
-        	
-       		var div = domBind.content.ownerDocument.createElement('div');
-        	div.innerHTML = '<paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
+            }.bind(domBind);
 
-                '<paper-dialog-scrollable>' +
-                    '<div class="metavalue-editor layout vertical">' +
-                        self._createMetaValueEditors() + 
-                    '</div>' +
+            var div = domBind.content.ownerDocument.createElement('div');
+            div.innerHTML = '<paper-dialog id="metaValueEditor" class="meta-value-editor" with-backdrop no-cancel-on-outside-click entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
+
+            '<paper-dialog-scrollable>' +
+                '<div class="metavalue-editor layout vertical">' +
+                self._createMetaValueEditors() +
+                '</div>' +
                 '</paper-dialog-scrollable>' +
 
-                '<div class="buttons">' +
-                    '<paper-button class="blue" dialog-dismiss affirmative on-tap="_cancelMetaValuesBind">Cancel</paper-button>' +
-                    '<paper-button class="blue" dialog-confirm affirmative autofocus on-tap="_acceptMetaValuesBind">Ok</paper-button>' +
+            '<div class="buttons">' +
+                '<paper-button class="blue" dialog-dismiss affirmative on-tap="_cancelMetaValuesBind">Cancel</paper-button>' +
+                '<paper-button class="blue" dialog-confirm affirmative autofocus on-tap="_acceptMetaValuesBind">Ok</paper-button>' +
                 '</div>' +
-            '</paper-dialog>';
-        	
-        	domBind.content.appendChild(div);
-        	return domBind;
+                '</paper-dialog>';
+
+            domBind.content.appendChild(div);
+            return domBind;
         },
-        
+
         /**
          * Creates the string representation for meta value editors DOM (to be inserted into dynamic meta-value dialog).
          */
         _createMetaValueEditors: function () {
-        	console.log("tg-abstract-criterion-behavior: _createMetaValueEditors");
-        	return "";
+            console.log("tg-abstract-criterion-behavior: _createMetaValueEditors");
+            return "";
         },
-        
+
         _createWhenDesktopConfig: function () {
-        	throw "not implemented";
-        	// return ['horizontal', 'justified', 'flex', ['flex'], ['flex']];
+            throw "not implemented";
+            // return ['horizontal', 'justified', 'flex', ['flex'], ['flex']];
         },
-        
+
         _computeTabletRepresentation: function (_whenDesktop) {
-        	return _whenDesktop; // the same as in 'desktop'
+            return _whenDesktop; // the same as in 'desktop'
         },
         _computeMobileRepresentation: function (_whenDesktop) {
-        	return _whenDesktop; // the same as in 'desktop'
+            return _whenDesktop; // the same as in 'desktop'
         },
 
         /**
@@ -186,36 +197,35 @@
         /**
          * Cancels all new meta-values. Should be overridden to provide cancellation in specific descendants.
          */
-        _cancelMetaValues: function() {
-        },
+        _cancelMetaValues: function () {},
 
         /**
          * Returns 'true' if criterion has no meta values assigned, 'false' otherwise. Should be overridden to provide functionality in specific descendants.
          */
-        _hasNoMetaValues: function(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        	return true;
+        _hasNoMetaValues: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+            return true;
         },
-        
+
         _updateIconButtonStyle: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        	Polymer.dom(this._dom().$.iconButton).setAttribute("style", this._computeIconButtonStyle(this.orNull, this.not, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore));
+            Polymer.dom(this._dom().$.iconButton).setAttribute("style", this._computeIconButtonStyle(this.orNull, this.not, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore));
         },
-        
+
         _computeIconButtonStyle: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        	return "visibility:" + (!this._iconButtonVisible() ? 'hidden' : 'inherit') + "; color:" + (this._hasNoMetaValues(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) ? '#757575' : '#0288D1') + ";";
+            return "visibility:" + (!this._iconButtonVisible() ? 'hidden' : 'inherit') + "; color:" + (this._hasNoMetaValues(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) ? '#757575' : '#0288D1') + ";";
         },
-        
+
         /**
          * Returns 'true' if the icon button of this criterion editor should be visible, 'false' otherwise.
          */
         _iconButtonVisible: function () {
-        	return true;
+            return true;
         },
-        
+
         /**
          * Returns the reference to main 'dom' element (of type 'tg-abstract-criterion').
          */
-	    _dom: function () {
-    		throw "not implemented";
-    	}
+        _dom: function () {
+            throw "not implemented";
+        }
     };
 </script>

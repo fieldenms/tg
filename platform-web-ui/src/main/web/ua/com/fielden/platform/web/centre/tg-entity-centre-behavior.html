@@ -4,201 +4,208 @@
 <script>
     (function () {
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-    	Polymer.TgBehaviors.TgEntityCentreBehaviorImpl = {
+        Polymer.TgBehaviors.TgEntityCentreBehaviorImpl = {
             properties: {
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	// These mandatory properties must be specified in attributes, when constructing the element instance. //
-            	// No default values are allowed in this case.														   //
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These mandatory properties must be specified in attributes, when constructing the element instance. //
+                // No default values are allowed in this case.														   //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
                 /**
                  * The entity type for which this entity centre is created.
                  */
                 entityType: {
-                	type: String
+                    type: String
                 },
-                
+
                 /**
                  * The menu item type, that identifies this entity centre.
                  */
                 miType: {
-                	type: String
+                    type: String
                 },
-                
+
                 /**
                  * Universal identifier of this element instance (used for pub / sub communication).
                  *
                  * Should be given from the outside of the element.
                  */
                 uuid: {
-                	type: String
+                    type: String
                 },
-                
+
                 /**
                  * The function to return 'master' entity (if this entity centre is dependent, i.e. the part of some compound master).
                  */
                 getMasterEntity: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * Custom callback that will be invoked after successfull retrieval of selection criteria entity.
                  *
                  * arguments: entity, bindingEntity, customObject
                  */
                 postRetrieved: {
-                	type: Function
+                    type: Function
                 },
-                
-				/**
-				 * The module where the centre is located.
-				 *
-				 * This parameter is populated during dynamic loading of the centre.
-				 */
+
+                /**
+                 * The module where the centre is located.
+                 *
+                 * This parameter is populated during dynamic loading of the centre.
+                 */
                 moduleId: {
-            		type: String
-            	},
-            	
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-            	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
-            	//   alternatively, computing function needs to be specified). 									       //
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	
-            	/**
-            	 * The holder of EGI entities that 'should be updated'.
-            	 */
+                    type: String
+                },
+
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+                //   prefix and default values specified in 'value' specificator of the property definition (or,       //
+                //   alternatively, computing function needs to be specified). 									       //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                /**
+                 * The holder of EGI entities that 'should be updated'.
+                 */
                 _entitiesThatShouldBeUpdated: {
-                	type: Array,
-                	value: null
+                    type: Array,
+                    value: null
                 },
-                
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-            	//   prefix. 																				           //
-            	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
-            	//   populate their default values in ready callback (to have these values populated in children)!     //
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	
-            	/**
-            	 * The property which indicates whether the centre has been changed (should be bound from tg-selection-criteria).
-            	 */
-            	_centreChanged: {
-            		type: Boolean
-            	},
-            	
-            	_saverDisabled: {
-            		type: Boolean,
-            		computed: '_computeSaverDisabled(_centreChanged)'
-            	},
-            	_discarderDisabled: {
-            		type: Boolean,
-            		computed: '_computeDiscarderDisabled(_centreChanged)'
-            	},
-            	
-            	_url: {
-             		type: String,
-             		computed: '_computeUrl(miType)'
-             	},
-            	
-            	/**
-            	 * The currently selected view.
-            	 */
+
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+                //   prefix. 																				           //
+                // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+                //   populate their default values in ready callback (to have these values populated in children)!     //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                /**
+                 * The property which indicates whether the centre has been changed (should be bound from tg-selection-criteria).
+                 */
+                _centreChanged: {
+                    type: Boolean
+                },
+
+                _saverDisabled: {
+                    type: Boolean,
+                    computed: '_computeSaverDisabled(_centreChanged)'
+                },
+                _discarderDisabled: {
+                    type: Boolean,
+                    computed: '_computeDiscarderDisabled(_centreChanged)'
+                },
+
+                _url: {
+                    type: String,
+                    computed: '_computeUrl(miType)'
+                },
+
+                /**
+                 * The currently selected view.
+                 */
                 _selectedView: {
-                	type: Number
+                    type: Number
                 },
-                
+
                 /**
                  * The function that is invoked after 'Run' action has been completed.
                  */
                 _postRun: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * The action to be invoked on EGI's 'edit' button.
                  */
                 _editAction: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * The action to be invoked on EGI's 'new' button.
                  */
                 _newAction: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * The action to be invoked on EGI's 'delete' button.
                  */
                 _deleteAction: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * The action to be bound to 'tg-primary-instance-action'.
                  */
                 _showMaster: {
-                	type: Function
+                    type: Function
                 },
-                
+
+                /**
+                 * Shows the master for current entity in dialog.
+                 */
+                _showMasterInDialog: {
+                    type: Function
+                },
+
                 /**
                  * Starts the process of centre saving.
                  */
                 save: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * Starts the process of centre discarding.
                  */
                 discard: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * Starts the process of centre run.
                  */
                 run: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * Shows the dialog relative to this centre's EGI ('tg-ui-action's).
                  */
                 _showDialog: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * The function to be bound inside selection criteria, to provide 'selected entities' part of context.
                  */
                 _getSelectedEntities: {
-                	type: Function
+                    type: Function
                 }
             },
-            
+
             _computeSaverDisabled: function (_centreChanged) {
-            	return !this.canSave(_centreChanged);
+                return !this.canSave(_centreChanged);
             },
-            
+
             _computeDiscarderDisabled: function (_centreChanged) {
-            	return !this.canDiscard(_centreChanged);
+                return !this.canDiscard(_centreChanged);
             },
-            
+
             /**
              * Initialisation block. It has all children web components already initialised.
              */
             ready: function () {
                 var self = this;
-                
+
                 self._selectedView = 0;
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
@@ -221,39 +228,37 @@
                         }
                     }
                 }).bind(self);
-                
-                self._getSelectedEntities = (function () {
-                	return this.$.egi.getSelectedEntities();
-                }).bind(self);
-                
-                self._processSaverResponse = function (e) {
-                	self.$.selection_criteria._processResponse(e, "save", function (okString) {
-                        console.log("CENTRE SAVED", okString);
 
+                self._getSelectedEntities = (function () {
+                    return this.$.egi.getSelectedEntities();
+                }).bind(self);
+
+                self._processSaverResponse = function (e) {
+                    self.$.selection_criteria._processResponse(e, "save", function (okString) {
+                        console.log("CENTRE SAVED", okString);
                         self.retrieve();
-                    }, function (errorResult) {
-                        // This function will be invoked after server-side error appear.
-                        console.warn("SERVER ERROR: ", errorResult);
                     });
                 };
                 self._processSaverError = function (e) {
-                	self.$.selection_criteria._processError(e, "save");
-                };
-                
-                self._processDiscarderResponse = function (e) {
-                	self.$.selection_criteria._processResponse(e, "discard", function (okString) {
-                        console.log("CENTRE DISCARDED", okString);
-
-                        self.retrieve();
-                    }, function (errorResult) {
+                    self.$.selection_criteria._processError(e, "save", function (errorResult) {
                         // This function will be invoked after server-side error appear.
                         console.warn("SERVER ERROR: ", errorResult);
                     });
                 };
-                self._processDiscarderError = function (e) {
-                	self.$.selection_criteria._processError(e, "discard");
+
+                self._processDiscarderResponse = function (e) {
+                    self.$.selection_criteria._processResponse(e, "discard", function (okString) {
+                        console.log("CENTRE DISCARDED", okString);
+                        self.retrieve();
+                    });
                 };
-                
+                self._processDiscarderError = function (e) {
+                    self.$.selection_criteria._processError(e, "discard", function (errorResult) {
+                        // This function will be invoked after server-side error appear.
+                        console.warn("SERVER ERROR: ", errorResult);
+                    });
+                };
+
                 self._editAction = (function () {
                     var self = this;
                     postal.publish({
@@ -266,7 +271,7 @@
                         }
                     });
                 }).bind(self);
-                
+
                 self._newAction = (function () {
                     var self = this;
                     postal.publish({
@@ -280,12 +285,12 @@
                         }
                     });
                 }).bind(self);
-                
+
                 self._deleteAction = (function () {
                     console.log("The selected entities must be deleted here!");
                 }).bind(self);
-                
-                self._showMaster = (function (entity) {
+
+                self._showMaster = (function (action, entity) {
                     var self = this;
                     postal.publish({
                         channel: "centre",
@@ -297,25 +302,42 @@
                         }
                     });
                 }).bind(self);
-                
+
+                self._showMasterInDialog = (function (action, entity) {
+                    var fullTypeName = entity.type().notEnhancedFullClassName();
+                    var simpleTypeName = entity.type()._notEnhancedSimpleClassName();
+                    var closeEventChannel = self.uuid;
+                    var closeEventTopics = ['save.post.success', 'refresh.post.success'];
+                    
+                    action.componentUri = "/master_ui/" + fullTypeName;
+                    action.elementName = "tg-" + simpleTypeName + "-master";
+                    action.attrs = {
+                        entityId: entity.id,
+                        entityType: fullTypeName,
+                        currentState: 'EDIT',
+                        centreUuid: self.uuid
+                    };
+                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                }).bind(this);
+
                 self._getContext = (function () {
                     if (this._getSelectedEntities().length > 0) {
                         return this._getSelectedEntities()[0];
                     }
                     return null;
                 }).bind(self);
-                
+
                 self._postFunctionalEntitySaved = (function (potentiallySavedEntity, selectedEntitiesInContext) {
                     if (potentiallySavedEntity.isValid()) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }
                 }).bind(self);
-                
+
                 self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
                     return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
                 }).bind(self);
-                
+
                 self.save = (function () {
                     if (!this.canSave(this._centreChanged)) {
                         throw "Cannot save the not modified centre.";
@@ -323,7 +345,7 @@
                     console.log("CENTRE SAVE");
                     this._ajaxSaver().generateRequest();
                 }).bind(self);
-                
+
                 self.discard = (function () {
                     if (!this.canDiscard(this._centreChanged)) {
                         throw "Cannot discard the not modified centre.";
@@ -331,18 +353,18 @@
                     console.log("CENTRE DISCARD");
                     this._ajaxDiscarder().generateRequest();
                 }).bind(self);
-                
+
                 self.run = (function () {
                     this.$.egi.clearSelection();
                     this.$.egi.collapseAllCards();
                     this.$.selection_criteria.run();
                     this._triggerRun = true;
                 }).bind(self);
-                
+
                 self._showDialog = (function (action) {
                     var closeEventChannel = self.uuid;
                     var closeEventTopics = ['save.post.success', 'refresh.post.success'];
-                	this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }).bind(self);
             },
 
@@ -400,10 +422,10 @@
              * Starts the process of criteria entity retrieval.
              */
             retrieve: function () {
-            	// console.warn("criteria-entity-retrieval");
-            	// console.time("criteria-entity-retrieval");
-            	// console.warn('actual-retrieval');
-            	// console.time('actual-retrieval');
+                // console.warn("criteria-entity-retrieval");
+                // console.time("criteria-entity-retrieval");
+                // console.warn('actual-retrieval');
+                // console.time('actual-retrieval');
                 this.$.selection_criteria.retrieve();
             },
 
@@ -450,11 +472,13 @@
              *     from the result-set if they became unmatchable to the selection criteria after modification).
              */
             refreshEntities: function (entities) {
-                if (entities !== null && entities.length > 0) {
-                    this._entitiesThatShouldBeUpdated = entities;
-                    this.$.selection_criteria.refreshEntities(this._entitiesThatShouldBeUpdated);
-                } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
-                    this.currentPage();
+                if (this.$.egi.egiModel.length > 0) {
+                    if (entities !== null && entities.length > 0) {
+                        this._entitiesThatShouldBeUpdated = entities;
+                        this.$.selection_criteria.refreshEntities(this._entitiesThatShouldBeUpdated);
+                    } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
+                        this.currentPage();
+                    }
                 }
             },
 
@@ -473,9 +497,9 @@
             canNotCurrent: function (pageNumber, pageCount) {
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canCurrent(pageNumber, pageCount);
             },
-            
+
             currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {
-            	return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
+                return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
             },
 
             canSave: function (centreChanged) {
@@ -490,17 +514,17 @@
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false : centreChanged === true;
             },
 
-        	/**
-        	 * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
-        	 */
-        	_computeUrl: function (miType) {
-        		return "/centre/" + miType;
-        	}
+            /**
+             * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
+             */
+            _computeUrl: function (miType) {
+                return "/centre/" + miType;
+            }
         };
-        
-		Polymer.TgBehaviors.TgEntityCentreBehavior = [
-			Polymer.TgBehaviors.TgEntityCentreBehaviorImpl
-		];
-		
+
+        Polymer.TgBehaviors.TgEntityCentreBehavior = [
+   Polymer.TgBehaviors.TgEntityCentreBehaviorImpl
+  ];
+
     })();
 </script>

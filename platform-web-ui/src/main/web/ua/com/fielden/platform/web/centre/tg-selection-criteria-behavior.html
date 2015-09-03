@@ -185,13 +185,13 @@
                         var summary = customObject.summary;
 
                         self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary);
-                	}, function (errorResult) {
-                		self._postRunDefaultError(errorResult);
                 	});
                 };
                 
                 self._processRunnerError = function (e) {
-                	self._processError(e, "run");
+                	self._processError(e, "run", function (errorResult) {
+                        self._postRunDefaultError(errorResult);
+                    });
                 };
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 
@@ -390,34 +390,38 @@
                 var self = this;
 
                 if (self._runningInProgress()) {
-                    throw new SimultaneousRunException();
+                    console.warn("Refresh is already in progress...");
+                    return;
                 }
 
-                self._startRefreshCycleModeForEditors();
-
-                if (isRunAction) {
-                    self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                }
-
-                // cancel previous validation before starting saving process -- it includes validation process internally!
-                self._validator().abortValidationIfAny();
-
-                // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
-                self._runModifiedProperties(
-                	self._createContextHolderForRunning(function() {
-                			return self._reset(self._persistedModifiedPropertiesHolder);
-                		}, 
-                		self.requireSelectedEntities, 
-                		self.requireMasterEntity, 
-                		entitiesToRefresh
-                	)
-                );
-                // if (self._hasModified(holder)) {
-                //     self._saveModifiedProperties(self._reset(holder));
-                // } else {
-                //     self._validator().validate(self._reset(holder));
-                // }
+                this.async(function () {
+                    self._startRefreshCycleModeForEditors();
+    
+                    if (isRunAction) {
+                        self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                    }
+    
+                    // cancel previous validation before starting saving process -- it includes validation process internally!
+                    self._validator().abortValidationIfAny();
+    
+                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+                    //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
+                    self._runModifiedProperties(
+                    	self._createContextHolderForRunning(function() {
+                    			return self._reset(self._persistedModifiedPropertiesHolder);
+                    		}, 
+                    		self.requireSelectedEntities, 
+                    		self.requireMasterEntity, 
+                    		entitiesToRefresh
+                    	)
+                    );
+                    // TODO What is this code commented below???
+                    // if (self._hasModified(holder)) {
+                    //     self._saveModifiedProperties(self._reset(holder));
+                    // } else {
+                    //     self._validator().validate(self._reset(holder));
+                    // }
+                }.bind(self), 100);
             },
 
             idsToRefresh: function (entities) {

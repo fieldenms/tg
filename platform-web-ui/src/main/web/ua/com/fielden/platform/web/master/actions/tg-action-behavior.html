@@ -109,25 +109,30 @@
                 var promise = this.action();
                 if (promise) {
                     promise
-                    .then(function(ironRequest) {
-                        if (ironRequest.xhr.status === 200) {
-                            if (self.eventChannel && self.role) {
-                                postal.publish({
-                                    channel: self.eventChannel,
-                                    topic: self.role + '.post.success',
-                                    data: {}
-                                });
-                            }
-                        } else {
-                            if (self.eventChannel && self.role) {
-                                postal.publish({
-                                    channel: self.eventChannel,
-                                    topic: self.role + '.post.error',
-                                    data: {}
-                                });
-                            }
-                        }
-                    });
+                    .then(  // first a handler for successful promise execution
+                            function(ironRequest) {
+                                if (self.eventChannel && self.role) {
+                                    console.log('AJAX PROMISE THEN', ironRequest.successful);
+                                    if (ironRequest.xhr.status === 200 && ironRequest.successful === true) {
+                                        postal.publish({
+                                            channel: self.eventChannel,
+                                            topic: self.role + '.post.success',
+                                            data: {}
+                                        });
+                                    } else {
+                                        postal.publish({
+                                            channel: self.eventChannel,
+                                            topic: self.role + '.post.error',
+                                            data: {}
+                                        });
+                                        // call the generic button execution logic, which ensures stopping of the spinner and handling of
+                                        // its enabled state
+                                        self._afterExecution();
+                                    }
+                                }
+                            },
+                            // and in case of some exceptional situation let's provide a trivial catch handler
+                            function (value) { console.log('AJAX PROMISE CATCH', value);});
                 }
             }).bind(this);
         },
@@ -146,8 +151,9 @@
             if (newValue && oldValue === undefined) {
                 self.async(function () { 
                 	self.postAction = function (smth) {
-                    	newValue(smth);
+                    	var result = newValue(smth);
                     	self._afterExecution();
+                    	return result;
                 	};
                 });
             }
@@ -159,8 +165,9 @@
             if (newValue && oldValue === undefined) {
                 self.async(function () { 
 	                self.postActionError = function (smth) {
-	                    newValue(smth);
+	                    var result = newValue(smth);
 	                    self._afterExecution();
+	                    return result;
 	                };
                 });
             }
@@ -178,8 +185,6 @@
 
             // Make spinner invisible
             this.$.spinner.style.visibility = 'hidden';
-            
-            // publish 
         }
     };
 	

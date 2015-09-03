@@ -12,9 +12,9 @@ import ua.com.fielden.platform.security.user.IAuthenticationModel;
 
 /**
  * Provide user authentication implementation, which should be used by web-enabled clients for authenticating users trying to login to the system.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ClientAuthenticationModel implements IAuthenticationModel {
 
@@ -48,7 +48,7 @@ public class ClientAuthenticationModel implements IAuthenticationModel {
                 return new Result(result.getInstance(), "User successfully authenticated");
             } else {
                 util.resetUser();
-                return new Result(null, util.process(response).getMessage(), new IllegalArgumentException("The provided credentials are invalid."));
+                return new Result(null, new IllegalArgumentException("The provided credentials are invalid.", util.process(response)));
             }
         } catch (final Exception e) {
             util.resetUser();
@@ -58,7 +58,7 @@ public class ClientAuthenticationModel implements IAuthenticationModel {
 
     /**
      * Validates username for its correspondence to the provided private key.
-     * 
+     *
      * @param username
      * @param privateKey
      * @return

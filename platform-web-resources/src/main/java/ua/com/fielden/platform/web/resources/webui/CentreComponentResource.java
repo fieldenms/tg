@@ -49,8 +49,8 @@ public class CentreComponentResource extends ServerResource {
     }
 
     @Override
-    protected Representation get() throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+    protected Representation get() {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final String source = sourceController.loadSource("/centre_ui/" + this.mitypeString);
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
         }, restUtil);

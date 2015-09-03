@@ -17,6 +17,15 @@
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
+<style is="custom-style">
+    .summary-dialog paper-button {
+        color: var(--paper-light-blue-500);
+        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+    .summary-dialog paper-button:hover {
+        background: var(--paper-light-blue-50);
+    }
+</style>
 <dom-module id="tg-entity-grid-inspector">
     <style>
         /*miscellanea styles*/
@@ -181,7 +190,7 @@
         <tg-custom-action-dialog id="actionDialog"></tg-custom-action-dialog>
 
         <!-- The dialog for summary when egi is in card layout -->
-        <paper-dialog id="summaryDialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed" on-iron-resize="_fixSumaryDialog">
+        <paper-dialog id="summaryDialog" class="summary-dialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed">
             <template is="dom-if" if="[[totals]]">
                 <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
                     <template is="dom-repeat" items="[[_calcCardSummary(columns)]]">
@@ -268,7 +277,7 @@
                                         <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]"></tg-ui-action>
                                     </template>
                                     <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                        <tg-secondary-action-button current-entity="[[entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
+                                        <tg-secondary-action-button current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
                                     </template>
                                 </div>
                             </template>
@@ -404,8 +413,7 @@
                 return a.id === b.id;
             },
             _hasEntity = function (entity, entities) {
-                var i = 0;
-                for (i = 0; i < entities.length; i += 1) {
+                for (var i = 0; i < entities.length; i += 1) {
                     if (_areEqual(entity, entities[i])) {
                         return true;
                     }
@@ -413,8 +421,7 @@
                 return false;
             },
             _findEntity = function (entity, entities) {
-                var i = 0;
-                for (i = 0; i < entities.length; i += 1) {
+                for (var i = 0; i < entities.length; i += 1) {
                     if (_areEqual(entity, entities[i])) {
                         return i;
                     }
@@ -715,7 +722,7 @@
              */
             _calcRenderingHintsStyle: function (entity, entityIndex, property) {
                 var style = "opacity: 0.3;";
-                var rendHints = (this.renderingHints.length > 0 && this.renderingHints[entityIndex][property]) || [];
+                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property]) || [];
                 for (var property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
@@ -773,7 +780,7 @@
                     return moment(entity.get(column.property)).format("L LT");
                 } else if (typeof entity.get(column.property) === 'number') {
                     if (column.type === 'BigDecimal') {
-                        return entity.get(column.property).toFixed(2);
+                        return entity.get(column.property).toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2, minimumFractionDigits:2});
                     } else {
                         return entity.get(column.property).toLocaleString(this.$.appConfig.locale);
                     }
@@ -861,27 +868,18 @@
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.
              */
-            _showSummary: function (e, detail, source) {
-                var summaryDialog = this.$.summaryDialog;
+            _showSummary: function (e, detail, source) {                
                 //Openening dialog
                 if (this.cardLayout && this.totals) {
-                    Polymer.dom(Polymer.dom(summaryDialog).parentNode).removeChild(summaryDialog);
-                    Polymer.dom(document.body).appendChild(summaryDialog);
+                    var summaryDialog = Polymer.dom(document.body).appendChild(this.$.summaryDialog);
                     Polymer.dom.flush();
-
+                    
                     this.async(function () {
                         summaryDialog.open();
-                    }.bind(this), 200);
+                    }, 200);
                 }
             },
-            /**
-             * Responds on iron-resize event of summary dialog.
-             */
-            _fixSumaryDialog: function () {
-                if (this.$.summaryDialog.opened) {
-                    this.$.summaryDialog.fit();
-                }
-            },
+
             /**
              *  listener for summary dialog close dialog.
              */

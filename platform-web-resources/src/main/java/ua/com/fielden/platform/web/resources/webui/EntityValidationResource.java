@@ -7,7 +7,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.IEntityProducer;
@@ -40,8 +39,8 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
      */
     @Post
     @Override
-    public Representation post(final Representation envelope) throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+    public Representation post(final Representation envelope) {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             // NOTE: the following line can be the example how 'entity validation' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during entity validation.");
             final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);

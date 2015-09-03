@@ -55,6 +55,13 @@ public interface IWebUiConfig {
     String genAppIndex();
 
     /**
+     * Generates the mobile web application.
+     *
+     * @return
+     */
+    String genMobileAppIndex();
+
+    /**
      * Generates the main menu component.
      *
      * @return

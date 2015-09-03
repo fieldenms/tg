@@ -260,47 +260,62 @@
                 
                 self._processRetrieverResponse = function (e) {
                 	self._processResponse(e, "retrieve", function (entityAndCustomObject) {
-                		self._postRetrievedDefault(entityAndCustomObject);
-                	}, function (errorResult) {
-                		self._postRetrievedDefaultError(errorResult);
+                		return self._postRetrievedDefault(entityAndCustomObject);
                 	});
                 };
                 
                 self._processRetrieverError = function (e) {
-                	self._processError(e, "retrieve");
+                	self._processError(e, "retrieve", function (errorResult) {
+                        return self._postRetrievedDefaultError(errorResult);
+                    });
                 };
                 
-                self._processResponse = (function(e, name, customHandlerFor, customErrorHandlerFor) {
+                self._processResponse = (function(e, name, customHandlerFor) {
+                    console.log("PROCESS RESPONSE");
                 	console.log(name, ": iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
-                    if (e.detail.xhr.status === 200) {
+                    if (e.detail.xhr.status === 200) { // successful execution of the request
+                        e.detail.successful = true;
                     	var deserialisedResult = this._serialiser().deserialise(e.detail.response);
                     	
-                    	if (this._reflector().isError(deserialisedResult)) {
-                    		// throw the toast message about the server-side error
-                            var msg = this._toastMsgForError(deserialisedResult);
-                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg);
-                    		// continue with custom error handling of the error result
-                            customErrorHandlerFor(deserialisedResult);
-                    	} else if (this._reflector().isWarning(deserialisedResult)) {
-                    		// TODO how warnings should be handled?
+                    	if (this._reflector().isWarning(deserialisedResult)) {
                     		console.warn(this._toastMsgForError(deserialisedResult));
+                    		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult));
                     	} else {
                     		// continue with normal handling of the result's instance
-    	                    customHandlerFor(deserialisedResult.instance);
+    	                    e.detail.successful = customHandlerFor(deserialisedResult.instance);
+                    		console.log('CUSTOM HANDLER FOR RETURNED', e.detail.successful);
+                    		// in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
+                    		if (e.detail.successful !== false) {
+                    		    e.detail.successful = true;
+                    		}
                     	}
-                    } else {
-                    	console.warn(name, ": iron-response: non-200-status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+                    } else { // other codes
+                        console.warn('Request could not be dispatched.');
+                        this._openToastForError('Request could not be dispatched.', 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.');
                     }
                 }).bind(self);
                 
-                self._processError = (function(e, name) {
-        			var errorObject = e.detail.error;
-                	console.warn(name, ": iron-error: e.detail.error = ", errorObject);
-                	
-            		// throw the toast message about the error (unhandled server error, connection problem, 403 authorisation error etc.)
-                    var msg = this._toastMsgForErrorObject(errorObject);
-                    this._openToastForError(this._reflector().exceptionMessageForErrorObject(errorObject), msg);
-            		// TODO: support this case, if needed: continue with custom error handling of the error result -- customErrorHandlerFor(deserialisedResult);
+                self._processError = (function(e, name, customErrorHandlerFor) {
+                    console.log("PROCESS ERROR", e.error);
+                    var xhr = e.detail.request.xhr;
+                    if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
+                        var deserialisedResult = this._serialiser().deserialise(xhr.response);
+                        
+                        if (this._reflector().isError(deserialisedResult)) {
+                            // throw the toast message about the server-side error
+                            var msg = this._toastMsgForError(deserialisedResult);
+                            this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), msg);
+                            // continue with custom error handling of the error result
+                            customErrorHandlerFor(deserialisedResult);
+                        } else {
+                            //throw new Error('Responses with status code 500 suppose to carry an error cause!');
+                            customErrorHandlerFor('Responses with status code 500 suppose to carry an error cause!');
+                        }
+                    } else { // other codes
+                        // from what it could be observed, this siuation was occuring only in case of request cancellation...
+                        // let's simply produce a console warning at this stage
+                        console.warn('Response with status ' + xhr.status + ' is unexpected and will be ignored.');
+                    }
                 }).bind(self);
                 
              	// calbacks, that will be bound by editor child elements:
@@ -374,7 +389,9 @@
                     var customObject = this._reflector().customObject(entityAndCustomObject);
                 	
                     var msg = this._toastMsg("Validation", validatedEntity);
-                    this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+                    if (!validatedEntity.isValid()) {
+                        this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+                    }
 
                     var newBindingEntity = this._postEntityReceived(validatedEntity);
                     // custom external action
@@ -424,8 +441,10 @@
              */
             _openToastForError: function (toastMsg, moreInfo) {
                 this._toastGreeting().text = toastMsg;
-                this._toastGreeting().hasMore = true;
-                this._toastGreeting().msgText = moreInfo;
+                if (moreInfo) {
+                    this._toastGreeting().hasMore = true;
+                    this._toastGreeting().msgText = moreInfo;
+                }
                 this._toastGreeting().showProgress = false;
             	// TODO is it still relevant? msgHeading
       			// TODO is it still relevant? msgHeading

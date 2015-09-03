@@ -57,8 +57,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
      */
     @Post
     @Override
-    public Representation post(final Representation envelope) throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+    public Representation post(final Representation envelope) {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             //            // NOTE: the following line can be the example how 'centre saving' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during centre saving.");
             // gets the fresh centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'fresh centre')
@@ -83,7 +83,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
     @Delete
     @Override
     public Representation delete() {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             //            // NOTE: the following line can be the example how 'centre discarding' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during centre discarding.");
             // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)

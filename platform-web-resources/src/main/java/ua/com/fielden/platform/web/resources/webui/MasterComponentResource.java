@@ -51,7 +51,7 @@ public class MasterComponentResource extends ServerResource {
 
     @Override
     protected Representation get() throws ResourceException {
-        return EntityResourceUtils.handleUndesiredExceptions(() -> {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final String source = sourceController.loadSource("/master_ui/" + this.entityTypeString);
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
         }, restUtil);

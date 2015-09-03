@@ -599,7 +599,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             setter.setAccessible(isAccessible);
             return this;
         } catch (final Exception e) {
-            throw new IllegalStateException(e.getCause());
+            throw new IllegalStateException(format("Error setting value '%s' into property '%s' for entity `%s'.", value, propertyName, this), e);
         }
     }
 

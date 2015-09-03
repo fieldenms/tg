@@ -24,11 +24,11 @@
         	// No default values are allowed in this case.														   //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	/**
-        	 * The action function (depends on context).
-        	 */
-        	action: {
-        		type: Function
-        	},
+             * Shows the dialog relative to this 'tg-ui-action'.
+             */
+            action: {
+            	type: Function
+            },
         	
         	/**
         	 * The context of this action.
@@ -51,6 +51,19 @@
             	type: Function
             },
             
+            elementName: {
+            	type: String
+            },
+            attrs: {
+            	type: Object
+            },
+            /**
+             * The URI of custom UI component to be loaded on run() action.
+             */
+            componentUri: {
+            	type: String
+            },
+            
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,12 +72,26 @@
         	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
         	//   populate their default values in ready callback (to have these values populated in children)!     //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+           /**
+            * The reference to component that was opened.
+            */
+            _masterComponent: {
+            	type: Object,
+            	value: null
+            },
             /**
              * Executes the action.
              *
              * Please override this method in descendands to implement specific execution logic.
              */
             _run: {
+            	type: Function
+            },
+            
+            /**
+             * Analyzes and processes the result of executor response.
+             */
+            _onExecuted: {
             	type: Function
             }
         },
@@ -82,7 +109,39 @@
                 // TODO var context = ...;
                 // var ser = this.$.serialiser.serialise(context);
                 // this.$.actionExecutor.body = JSON.stringify(ser);
-                this.action(this.context);
+                this.async(function () {
+                    this.action(this, this.context);
+                }.bind(self), 100);
+                
+            }).bind(self);
+            
+            self._onExecuted = (function (e, detail, source) {
+                var self = this;
+                // console.log("_onExecuted: e", e, "egi", e.srcElement);
+                self._masterComponent = detail;
+
+                detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                    console.log("postRetrieved");
+                };
+                detail.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    console.log("postValidated");
+                };
+
+                detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {
+                    postal.publish({
+                        channel: "centre_" + detail.centreUuid,
+                        topic: "detail.saved",
+                        data: {
+                            entity: potentiallySavedEntity,
+                            // send selectedEntitiesInContext further to be able to update only them on EGI
+                            selectedEntitiesInContext: [potentiallySavedEntity]
+                        }
+                    });
+
+                    console.log("postSaved");
+                };
+
+                detail.retrieve();
             }).bind(self);
         }
     });
