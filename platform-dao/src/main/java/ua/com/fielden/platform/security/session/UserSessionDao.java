@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -226,6 +227,15 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             return Optional.empty();
         }
 
+        // the presented authenticator might already be expired and does not need to be validated any further -- simply return no session
+        // if authenticator has expired then use this opportunity to clear all expired sessions for the current
+        if (auth.getExpiryTime().isBefore(constants.now().getMillis())) {
+            logger.warn(format("The provided authenticator %s for user %s has expired.", auth, user.getKey()));
+            // clean up expired sessions
+            clearExpired(user);
+            return Optional.empty();
+        }
+
         // so far so good, there is a hope that the current request is authentic, but there is still a chance that it is coming for an adversary...
         // let's find a persisted session, and there should be one if request is authentic, associated with the specified user and series ID
         final UserSession session = findByKeyAndFetch(fetchAll(UserSession.class), user, seriesHash(auth.seriesId));
@@ -267,12 +277,6 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         if (auth.expiryTime != session.getExpiryTime().getTime()) {
             final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
             logger.warn(format("Session expiry time %s for authenticator %s differes to the persisted expiry time %s.", formatter.print(auth.expiryTime), auth, formatter.print(session.getExpiryTime().getTime())));
-        }
-        // now let's check if session has expired, if it did then use this opportunity to clear all expired session for this user and return an empty result to trigger re-authentication
-        if (auth.getExpiryTime().isBefore(constants.now().getMillis())) {
-            // clean up expired sessions
-            clearExpired(user);
-            return Optional.empty();
         }
 
         // if this point is reached then the identified session is considered valid
