@@ -101,21 +101,23 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static ICentreDomainTreeManagerAndEnhancer getFreshCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        if (gdtm.getEntityCentreManager(miType, FRESH_CENTRE_NAME) == null) {
-            final ICentreDomainTreeManagerAndEnhancer freshCentre =
-                    applyDifferences(
-                            ((GlobalDomainTreeManager) gdtm).copyCentre(getDefaultCentre(gdtm, miType)),
-                            getDifferencesCentre(gdtm, miType),
-                            getEntityType(miType)
-                    );
+        synchronized (gdtm) {
+            if (gdtm.getEntityCentreManager(miType, FRESH_CENTRE_NAME) == null) {
+                final ICentreDomainTreeManagerAndEnhancer freshCentre =
+                        applyDifferences(
+                                ((GlobalDomainTreeManager) gdtm).copyCentre(getDefaultCentre(gdtm, miType)),
+                                getDifferencesCentre(gdtm, miType),
+                                getEntityType(miType)
+                        );
 
-            ((GlobalDomainTreeManager) gdtm).init(miType, FRESH_CENTRE_NAME, freshCentre, true);
+                ((GlobalDomainTreeManager) gdtm).init(miType, FRESH_CENTRE_NAME, freshCentre, true);
 
-            if (gdtm.isChangedEntityCentreManager(miType, FRESH_CENTRE_NAME)) {
-                throw new IllegalStateException("Should be not changed.");
+                if (gdtm.isChangedEntityCentreManager(miType, FRESH_CENTRE_NAME)) {
+                    throw new IllegalStateException("Should be not changed.");
+                }
             }
+            return freshCentre(gdtm, miType);
         }
-        return freshCentre(gdtm, miType);
     }
 
     /**
