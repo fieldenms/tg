@@ -47,18 +47,35 @@ public class SourceControllerImpl implements ISourceController {
     /**
      * Root URIs, that will be preloaded ('/resources/application-startup-resources.html' defines them) during index.html loading.
      */
-    private LinkedHashSet<String> preloadedResources;
+    private final LinkedHashSet<String> preloadedResources;
     /**
      * All URIs (including derived ones), that will be preloaded ('/resources/application-startup-resources.html' defines them) during index.html loading.
      */
-    private LinkedHashSet<String> allPreloadedResources;
-    private Boolean deploymentMode;
+    private final LinkedHashSet<String> allPreloadedResources;
+    private boolean deploymentMode;
 
     @Inject
     public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
         this.webUiConfig = webUiConfig;
         this.serialiser = serialiser;
         this.tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
+
+        final String startupResources = getSource("/resources/startup-resources.html");
+        final String startupResourcesOrigin = getSource("/resources/startup-resources-origin.html");
+
+        this.deploymentMode = !EntityUtils.equalsEx(startupResources, startupResourcesOrigin);
+        logger.info(String.format("\t[%s MODE]", this.deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
+
+        final LinkedHashSet<String> result = getRootDependenciesFor("/resources/application-startup-resources.html");
+        if (result == null) {
+            throw new IllegalStateException("The [/resources/application-startup-resources.html] resource should exist. It is crucial for startup loading of app-specific resources.");
+        }
+        this.preloadedResources = result;
+        if (this.deploymentMode) {
+            this.allPreloadedResources = calculatePreloadedResources();
+        } else {
+            this.allPreloadedResources = null;
+        }
     }
 
     /**
@@ -73,19 +90,11 @@ public class SourceControllerImpl implements ISourceController {
      */
     @Override
     public boolean isDeploymentMode() {
-        if (deploymentMode == null) {
-            final String startupResources = getSource("/resources/startup-resources.html");
-            final String startupResourcesOrigin = getSource("/resources/startup-resources-origin.html");
-            deploymentMode = !EntityUtils.equalsEx(startupResources, startupResourcesOrigin);
-        }
         return deploymentMode;
     }
 
     @Override
     public void setDeploymentMode(final boolean deploymentMode) {
-        if (this.deploymentMode != null) {
-            throw new IllegalStateException("The [deployment mode == " + this.deploymentMode + "] has been already automatically populated (it cannot be overriden now). Please, ensure that no resource loading occurs before this setting.");
-        }
         this.deploymentMode = deploymentMode;
     }
 
@@ -142,17 +151,7 @@ public class SourceControllerImpl implements ISourceController {
      * @return
      */
     private LinkedHashSet<String> getApplicationStartupRootDependencies() {
-        if (this.preloadedResources == null) {
-            this.preloadedResources = new LinkedHashSet<>();
-
-            final LinkedHashSet<String> result = getRootDependenciesFor("/resources/application-startup-resources.html");
-            if (result == null) {
-                throw new IllegalStateException("The [/resources/application-startup-resources.html] resource should exist. It is crucial for startup loading of app-specific resources.");
-            }
-
-            this.preloadedResources = result;
-        }
-        return this.preloadedResources;
+        return preloadedResources;
     }
 
     /**
@@ -227,10 +226,6 @@ public class SourceControllerImpl implements ISourceController {
         if (!isDeploymentMode()) {
             return source;
         } else {
-            if (allPreloadedResources == null) {
-                allPreloadedResources = calculatePreloadedResources();
-            }
-
             // System.out.println("SOURCE [" + path + "]: " + source);
             final String sourceWithoutPreloadedDependencies = removePrealodedDependencies(source);
             // System.out.println("SOURCE WITHOUT PRELOADED [" + path + "]: " + sourceWithoutPreloadedDependencies);
