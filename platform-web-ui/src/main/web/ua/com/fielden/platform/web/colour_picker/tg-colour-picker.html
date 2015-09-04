@@ -72,12 +72,12 @@
 	<template>
 		<paper-input-container always-float-label>
 			<div class="layout horizontal center">
-				<div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]">
+				<div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(colorString)]]">
 					<iron-icon class="small-icon" icon="close" style$="[[_calcSmallIconStyle(colorString)]]"></iron-icon>
 				</div>
-				<label>Hex code colour value (use only 0-9, A-F)</label>
+				<label>Hex code colour value (use only 0-9, a-f, A-F)</label>
 				<div style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
-				<input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
+				<input bind-value="{{colorString}}" value="{{colorString::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
 			</div>
 		</paper-input-container>
 		<iron-dropdown positionTarget="fab" id="dropdown">
@@ -90,16 +90,16 @@
 							</div>
 							<iron-icon class="icon" icon="icons:close"></iron-icon>
 						</div>
-						<template is="dom-repeat" items="{{firstLineColors}}" as="color">
-							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">
-								<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>
+						<template is="dom-repeat" items="{{firstLineColors}}" as="colorString">
+							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(colorString)]]">
+								<div class="dummy-box" style$="[[_returnBackgroundColor(colorString)]]"></div>
 							</div>
 						</template>
 					</div>
 					<div class="layout horizontal">
-						<template class="layout horizontal" is="dom-repeat" items="{{secondLineColors}}" as="color">
-							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">
-								<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>
+						<template class="layout horizontal" is="dom-repeat" items="{{secondLineColors}}" as="colorString">
+							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(colorString)]]">
+								<div class="dummy-box" style$="[[_returnBackgroundColor(colorString)]]"></div>
 							</div>
 						</template>
 					</div>
@@ -112,40 +112,40 @@
 	Polymer({
 		is: "tg-colour-picker",
 		ready: function () {
-			this.firstLineColors = ['#F44336', '#FF9800', '#FFEB3B', '#4CAF50', '#009688', '#00BCD4', '#3F51B5', '#9C27B0'];
-			this.secondLineColors = ['#D7CCC8', '#EF9A9A', '#FFCC80', '#FFF59D', '#A5D6A7', ' #80CBC4', '#80DEEA', '#9FA8DA', '#CE93D8'];
+			this.firstLineColors = ['F44336', 'FF9800', 'FFEB3B', '4CAF50', '009688', '00BCD4', '3F51B5', '9C27B0'];
+			this.secondLineColors = ['D7CCC8', 'EF9A9A', 'FFCC80', 'FFF59D', 'A5D6A7', '80CBC4', '80DEEA', '9FA8DA', 'CE93D8'];
 		},
 		properties: {
-			color: {
-				type: String,
-				notify: true
-			},
+			//			color: {
+			//				type: String,
+			//				notify: true
+			//			},
 			colorString: {
 				type: String,
 				notify: true,
 				value: null
 			},
 		},
-		_returnBackgroundColor(color) {
-			return "background-color:" + color;
+		_returnBackgroundColor(colorString) {
+			return "background-color: #" + colorString;
 		},
 		colorSelected: function (e, detail) {
-			this.color = rgbToHex(e.srcElement.style['background-color']);
-			this.colorString = this.color.substring(1);
+			this.colorString = (rgbToHex(e.srcElement.style['background-color'])).substring(1);
+			//			this.colorString = this.color.substring(1);
 			this.$.dropdown.close();
 		},
 		nonColorSelected: function (e, detail) {
-			this.color = null;
+			//			this.color = null;
 			this.colorString = null;
 			this.$.dropdown.close();
 
 		},
-		_calcColorBoxStyle: function (color, colorString) {
+		_calcColorBoxStyle: function (colorString) {
 			if (colorString === null) {
 				return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
 			}
 			if (colorString.length === 3 || colorString.length === 6) {
-				return "  border: 2px solid " + ColorLuminance(color, -0.1) + ";background-color: " + color;
+				return "  border: 2px solid " + ColorLuminance('#' + colorString, -0.1) + ";background-color: #" + colorString;
 			} else {
 				return "background-color: #FAFAFA; border: 2px solid #BDBDBD;";
 			}
@@ -185,14 +185,14 @@
 		},
 	});
 
-	function rgbToHex(color) {
-		if (color === null) {
-			return color;
+	function rgbToHex(colorString) {
+		if (colorString === null) {
+			return colorString;
 		}
-		if (color.substr(0, 1) === "#") {
-			return color;
+		if (colorString.length === 3 || colorString.length === 6) {
+			return colorString;
 		}
-		var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(color),
+		var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(colorString),
 			r = parseInt(nums[2], 10).toString(16),
 			g = parseInt(nums[3], 10).toString(16),
 			b = parseInt(nums[4], 10).toString(16);

@@ -39,61 +39,21 @@
 		behaviors: [Polymer.TgBehaviors.TgEditorBehavior],
 
 		properties: {
-			_onChange: {
-				type: Function
-			}
+			_isAcceptingColourFromPicker: {
+				type: Boolean,
+				value: false
+			},
 		},
 
 		ready: function () {
 			this.$.editorDom._editorKind = "COLOUR";
 
-			this._onChange = (function (event) {
-				console.log("_onChange:", event);
-				this._editingValue = this.convertToString(event.srcElement.checked);
-
-				var parentFunction = Polymer.TgBehaviors.TgEditorBehavior.properties._onChange.value.call(this);
-				parentFunction.call(this, event);
-			}).bind(this);
 		},
 
-		/**
-		 * This method returns a default value for '_editingValue', which is used
-		 *  for representing the value when no entity was bound to this editor yet.
-		 *
-		 * Overriden to return 'false' as the value that will be used when no entity is bound to this editor yet.
-		 */
-		_defaultEditingValue: function () {
-			return null;
-		},
-		_calcColourBoxStyle: function (colorString) {
-			if (colorString === null) {
-				return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
-			}
-			if (colorString.length === 3 || colorString.length === 6) {
-				return "  border: 2px solid " + ColorLuminance('#' + colorString, -0.1) + ";background-color: " + '#' + colorString;
-			} else {
-				return "background-color: #FAFAFA; border: 2px solid #BDBDBD;";
-			}
-		},
-		_calcSmallIconStyle: function (colorString) {
-			if (colorString === null) {
-				return " opacity: 1 ";
-			} else if (colorString.length === 3 || colorString.length === 6) {
-				return "opacity: 0 ";
-			}
-
-		},
-
-		/**
-		 * Converts the value into string representation (which is used in edititing / comm values).
-		 */
 		convertToString: function (value) {
 			return "" + value;
 		},
 
-		/**
-		 * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
-		 */
 		convertFromString: function (strValue) {
 			if (strValue.length !== 3 || strValue.length !== 6) {
 				throw "The entered check value is incorrect [" + strValue + "].";
@@ -111,38 +71,25 @@
 			var self = this;
 			var domBind = document.createElement('template', 'dom-bind');
 
-			domBind._closedBind = function (e) {
-				var dialog = this.$.dropdown;
-				Polymer.dom(document.body).removeChild(dropdown);
-				Polymer.dom(document.body).removeChild(this);
-				Polymer.dom.flush();
-			}.bind(domBind);
-
-			domBind._cancelBind = function () {
-				self.decoratedInput().focus();
+			domBind.colorSelected: function (e, detail) {
+				this.colorString = (rgbToHex(e.srcElement.style['background-color'])).substring(1);
+				this.$.dropdown.close();
+			};
+			domBind.nonColorSelected: function (e, detail) {
+				this.colorString = null;
+				this.$.dropdown.close();
 			};
 
-			domBind._acceptBind = function () {
-				self._isAcceptingColourFromPicker = true;
-				self._editingValue = moment(this.$.dropdown.colour);
-				self.decoratedInput().focus();
-			}.bind(domBind);
-
 			domBind.open = function () {
-				var dialog = this.$.dropdown;
-				var colourPicker = this.$.color;
-				colourPicker = null;
+				var dropdown = this.$.dropdown;
+				var colourPicked = this.$.colourString;
+				colourPicked = null;
 				if (self._editingValue !== '') {
 					var selectedMoment = moment(self._editingValue);
 					if (selectedMoment.isValid()) {
 						colourPicker = selectedMoment.valueOf();
 					}
 				}
-
-				Polymer.dom(document.body).appendChild(dropdown);
-				Polymer.dom.flush();
-				// let's open the dialog with magical async...
-				// this ensures that the dialog is opened after its relocation to body
 				this.async(function () {
 					dropdown.open();
 				}.bind(this), 1);
@@ -150,7 +97,6 @@
 
 			var div = domBind.content.ownerDocument.createElement('div');
 			div.innerHTML =
-
 				'<iron-dropdown positionTarget="fab" id="dropdown">' +
 				'<div class="dropdown-content">' +
 				'<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
@@ -161,18 +107,58 @@
 				'</div>' +
 				'<iron-icon class="icon" icon="icons:close"></iron-icon>' +
 				'</div>' +
-				'<template is="dom-repeat" items="{{firstLineColors}}" as="color">' +
-				'<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">' +
-				'<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#F44336">' +
+				'<div class="dummy-box" style="background-color:#F44336"></div>' +
 				'</div>' +
-				'</template>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#FF9800">' +
+				'<div class="dummy-box" style="background-color:#FF9800"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#FFEB3B">' +
+				'<div class="dummy-box" style="background-color:#FFEB3B"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#4CAF50;">' +
+				'<div class="dummy-box" style="background-color:#4CAF50;"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#009688">' +
+				'<div class="dummy-box" style="background-color:#009688"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#00BCD4">' +
+				'<div class="dummy-box" style="background-color:#00BCD4"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#3F51B5">' +
+				'<div class="dummy-box" style="background-color:#3F51B5"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#9C27B0">' +
+				'<div class="dummy-box" style="background-color:#9C27B0"></div>' +
 				'</div>' +
 				'<div class="layout horizontal">' +
-				'<template class="layout horizontal" is="dom-repeat" items="{{secondLineColors}}" as="color">' +
-				'<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">' +
-				'<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#D7CCC8">' +
+				'<div class="dummy-box" style="background-color:#D7CCC8"></div>' +
 				'</div>' +
-				'</template>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#EF9A9A">' +
+				'<div class="dummy-box" style="background-color:#EF9A9A"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#FFCC80">' +
+				'<div class="dummy-box" style="background-color:#FFCC80"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#FFF59D">' +
+				'<div class="dummy-box" style="background-color:#FFF59D"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#A5D6A7;">' +
+				'<div class="dummy-box" style="background-color:#A5D6A7;"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#80CBC4">' +
+				'<div class="dummy-box" style="background-color:#80CBC4"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#80DEEA">' +
+				'<div class="dummy-box" style="background-color:#80DEEA"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#9FA8DA">' +
+				'<div class="dummy-box" style="background-color:#9FA8DA"></div>' +
+				'</div>' +
+				'<div class="color-box" on-tap="colorSelected" style="background-color:#CE93D8">' +
+				'<div class="dummy-box" style="background-color:#CE93D8"></div>' +
+				'</div>' +
 				'</div>' +
 				'</div>' +
 				'</div>' +
@@ -181,6 +167,31 @@
 			domBind.content.appendChild(div);
 			return domBind;
 
+		},
+		_editingValueChanged: function (newValue, oldValue) {
+			Polymer.TgBehaviors.TgEditorBehavior._editingValueChanged.call(this, newValue, oldValue);
+
+			if (this._isAcceptingColourFromPicker) {
+				this._isAcceptingColourFromPicker = false;
+				this.commit();
+			}
+		},
+		rgbToHex: function (colorString) {
+			if (colorString === null) {
+				return colorString;
+			}
+			if (colorString.length === 3 || colorString.length === 6) {
+				return colorString;
+			}
+			var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(colorString),
+				r = parseInt(nums[2], 10).toString(16),
+				g = parseInt(nums[3], 10).toString(16),
+				b = parseInt(nums[4], 10).toString(16);
+			return "#" + (
+				(r.length == 1 ? "0" + r : r) +
+				(g.length == 1 ? "0" + g : g) +
+				(b.length == 1 ? "0" + b : b)
+			);
 		}
 
 	});

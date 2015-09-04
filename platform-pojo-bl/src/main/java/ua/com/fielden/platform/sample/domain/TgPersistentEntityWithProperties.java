@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
 import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -70,6 +71,12 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Date prop", desc = "Date prop desc")
     private Date dateProp;
+    
+    @IsProperty
+    @MapTo
+    @Title(value ="Colour prop")
+    @UpperCase
+    private Colour colourProp;
 
     @IsProperty
     @MapTo
