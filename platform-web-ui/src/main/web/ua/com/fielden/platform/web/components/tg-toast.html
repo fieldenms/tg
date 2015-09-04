@@ -124,7 +124,6 @@
                     Polymer.dom(paperDialog).setAttribute("exit-animation", "fade-out-animation");
                     
                     var paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
-                    //paperDialogScrollable.setAttribute("class", "scrollable");
                     var msgPar = domBind.content.ownerDocument.createElement('p');
                     Polymer.dom(msgPar).setAttribute("style", "padding: 10px");
                     Polymer.dom(msgPar).innerHTML = this.msgText;
@@ -132,7 +131,7 @@
                     
                     var buttons = domBind.content.ownerDocument.createElement('div');
                     Polymer.dom(buttons).setAttribute("class", "buttons");
-                    Polymer.dom(buttons).innerHTML = '<paper-button dialog-confirm affirmative autofocus>Close</paper-button> ';
+                    Polymer.dom(buttons).innerHTML = '<paper-button dialog-confirm affirmative autofocus>Close</paper-button>';
                     
                     Polymer.dom(paperDialog).appendChild(paperDialogScrollable);
                     Polymer.dom(paperDialog).appendChild(buttons);
