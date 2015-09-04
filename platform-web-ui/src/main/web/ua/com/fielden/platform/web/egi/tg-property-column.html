@@ -3,7 +3,7 @@
 
 <dom-module id="tg-property-column">
     <template>
-        <content id="action_selector" select="tg-ui-action" hidden></content>
+        <content id="action_selector" select="tg-ui-action,tg-page-action" hidden></content>
         <content id="summary_selection" select="tg-summary-property" hidden></content>
     </template>
 </dom-module>
@@ -19,9 +19,8 @@
                 width: String,
                 columnTitle: String,
                 columnDesc: String,
-                action: Object
             },
-            
+
             hostAttributes: {
                 hidden: true
             },
@@ -37,9 +36,7 @@
             },
 
             runAction: function (entity) {
-                if (this.action) {
-                    this.action(entity);
-                } else if (this.customAction) {
+                if (this.customAction) {
                     this.customAction.currentEntity = entity;
                     this.customAction._run();
                 }
