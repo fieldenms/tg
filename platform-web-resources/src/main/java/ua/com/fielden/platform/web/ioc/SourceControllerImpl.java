@@ -13,10 +13,11 @@ import org.joda.time.Period;
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -52,18 +53,15 @@ public class SourceControllerImpl implements ISourceController {
      * All URIs (including derived ones), that will be preloaded ('/resources/application-startup-resources.html' defines them) during index.html loading.
      */
     private final LinkedHashSet<String> allPreloadedResources;
-    private boolean deploymentMode;
+    private final boolean deploymentMode;
 
     @Inject
-    public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
+    public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final IApplicationSettings appSettings) {
         this.webUiConfig = webUiConfig;
         this.serialiser = serialiser;
         this.tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
 
-        final String startupResources = getSource("/resources/startup-resources.html");
-        final String startupResourcesOrigin = getSource("/resources/startup-resources-origin.html");
-
-        this.deploymentMode = !EntityUtils.equalsEx(startupResources, startupResourcesOrigin);
+        this.deploymentMode = Workflows.deployment.equals(Workflows.valueOf(appSettings.workflow()));
         logger.info(String.format("\t[%s MODE]", this.deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
 
         final LinkedHashSet<String> result = getRootDependenciesFor("/resources/application-startup-resources.html");
@@ -76,26 +74,6 @@ public class SourceControllerImpl implements ISourceController {
         } else {
             this.allPreloadedResources = null;
         }
-    }
-
-    /**
-     * Returns <code>true</code> in case where the server is in deployment mode, <code>false</code> -- in development mode.
-     * <p>
-     * At this stage deployment mode is activated in the case, where /resources/startup-resources.html and /resources/startup-resources-origin.html are different (which means that potentially /resources/startup-resources.html is vulcanized
-     * version of /resources/startup-resources-origin.html or just changed intentionally to activate the deployment mode for testing purposes).
-     *
-     * After the first heavy comparison has been performed -- the flag is cached.
-     *
-     * @return
-     */
-    @Override
-    public boolean isDeploymentMode() {
-        return deploymentMode;
-    }
-
-    @Override
-    public void setDeploymentMode(final boolean deploymentMode) {
-        this.deploymentMode = deploymentMode;
     }
 
     /**
@@ -223,7 +201,7 @@ public class SourceControllerImpl implements ISourceController {
         //  and then exclude all preloaded resources from the requested resource file.
         //
         // If this is the development mode -- do nothing (no need to calculate all preloaded resources).
-        if (!isDeploymentMode()) {
+        if (!deploymentMode) {
             return source;
         } else {
             // System.out.println("SOURCE [" + path + "]: " + source);

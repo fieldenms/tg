@@ -50,6 +50,9 @@ public class Vulcanize {
             }
         }
 
+        // needs to be overridden to start vulcanization in development mode (no need to calculate preloaded resources)
+        props.setProperty("workflow", "development");
+
         DOMConfigurator.configure(props.getProperty("log4j"));
 
         logger.info("Starting app...");
@@ -60,15 +63,13 @@ public class Vulcanize {
     }
 
     /**
-     * Vulcanizes 'startup-resources-origin.html' file into 'startup-resources.html'.
+     * Vulcanizes 'startup-resources-origin.html' file into 'startup-resources-vulcanized.html'.
      *
      * @param injector
      */
     private static void vulcanize(final Injector injector) {
         logger.info("Vulcanizing...");
         final ISourceController sourceController = injector.getInstance(ISourceController.class);
-        // ensures that all resources will be downloaded without 'startup dependencies' exclusion:
-        sourceController.setDeploymentMode(false);
 
         final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
 
@@ -130,7 +131,7 @@ public class Vulcanize {
 
         logger.info("\tMove vulcanized file to its destination and clear obsolete files...");
         try {
-            FileUtils.copyFile(new File("startup-resources-origin-vulcanized.html"), new File("../platform-web-ui/src/main/web/ua/com/fielden/platform/web/startup-resources.html"));
+            FileUtils.copyFile(new File("startup-resources-origin-vulcanized.html"), new File("../platform-web-ui/src/main/web/ua/com/fielden/platform/web/startup-resources-vulcanized.html"));
             FileUtils.deleteDirectory(dir);
             new File("startup-resources-origin-vulcanized.html").delete();
         } catch (final IOException e) {

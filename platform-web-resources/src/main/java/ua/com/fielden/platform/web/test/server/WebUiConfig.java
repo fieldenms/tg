@@ -14,7 +14,10 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -74,8 +77,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-import com.google.inject.Inject;
-
 /**
  * App-specific {@link IWebUiConfig} implementation.
  *
@@ -87,8 +88,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String domainName;
     private final String path;
 
-    public WebUiConfig(final String domainName, final String path) {
-        super("TG Test and Demo Application", new String[0]);
+    public WebUiConfig(final String domainName, final Workflows workflow, final String path) {
+        super("TG Test and Demo Application", workflow, new String[0]);
         if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }

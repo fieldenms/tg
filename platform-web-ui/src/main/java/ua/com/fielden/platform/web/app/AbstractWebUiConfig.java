@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -39,6 +40,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
      */
     private final List<String> resourcePaths;
+    private final Workflows workflow;
 
     /**
      * Creates abstract {@link IWebUiConfig}.
@@ -47,10 +49,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param externalResourcePaths
      * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
      */
-    public AbstractWebUiConfig(final String title, final String[] externalResourcePaths) {
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths) {
         this.title = title;
         this.webUiBuilder = new WebUiBuilder(this);
         this.mainMenuConfig = new MainMenuBuilder(this);
+
+        this.workflow = workflow;
 
         final LinkedHashSet<String> allResourcePaths = new LinkedHashSet<>();
         allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
@@ -97,8 +101,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      */
     @Override
     public final String genAppIndex() {
-        return ResourceLoader.getText("ua/com/fielden/platform/web/index.html").
+        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/index.html").
                 replaceAll("@title", title);
+        if (Workflows.development.equals(this.workflow)) {
+            return indexSource.replace("@startupResources", "startup-resources-origin");
+        } else {
+            return indexSource.replace("@startupResources", "startup-resources-vulcanized");
+        }
     }
 
     /**
