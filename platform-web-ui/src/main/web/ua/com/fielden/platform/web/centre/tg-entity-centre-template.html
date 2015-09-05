@@ -16,7 +16,7 @@
 <link rel="import" href="/resources/centre/tg-entity-centre-behavior.html">
 <link rel="import" href="/resources/sse/tg-sse-behavior.html">
 
-<dom-module id="tg-@entity_type-selection-criteria">
+<dom-module id="tg-@mi_type-selection-criteria">
     <template>
     	<tg-selection-criteria
     		id="dom"
@@ -38,7 +38,7 @@
 <script>
     (function () {
         Polymer({
-        	is: 'tg-@entity_type-selection-criteria',
+        	is: 'tg-@mi_type-selection-criteria',
         	
         	behaviors: [ Polymer.TgBehaviors.TgSelectionCriteriaBehavior ],
         	
@@ -96,7 +96,7 @@
     })();
 </script>
 
-<dom-module id="tg-@entity_type-centre">
+<dom-module id="tg-@mi_type-centre">
     <style>
     	paper-icon-button.revers {
             --paper-icon-button: {
@@ -147,12 +147,12 @@
         	discard="[[discard]]"
         	run="[[run]]"
         	>
-            <tg-@entity_type-selection-criteria
+            <tg-@mi_type-selection-criteria
             	id="selection_criteria"
             	class="custom-selection-criteria"
             	_centre-changed="{{_centreChanged}}"
             	uuid="[[uuid]]"
-            	mi-type="@mi_type"
+            	mi-type="@full_mi_type"
             	post-run="[[_postRun]]"
             	get-selected-entities="[[_getSelectedEntities]]"
             	get-master-entity="[[getMasterEntity]]"
@@ -161,7 +161,7 @@
             	page-count="{{pageCount}}"
             	page-number-updated="{{pageNumberUpdated}}"
             	page-count-updated="{{pageCountUpdated}}"
-            	@queryEnhancerContextConfig></tg-@entity_type-selection-criteria>
+            	@queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
 
             <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entity-type="@full_entity_type" @gridLayout>
                 <!-- EGI COLUMNS DOM (GENERATED) -->
@@ -219,14 +219,14 @@
 <script>
     (function () {
         Polymer({
-        	is: 'tg-@entity_type-centre',
+        	is: 'tg-@mi_type-centre',
         	
         	behaviors: [ Polymer.TgBehaviors.TgEntityCentreBehavior, Polymer.TgBehaviors.TgSseBehavior],
         	
             hostAttributes: {
                 "class": "layout vertical",
                	"entity-type": "@full_entity_type",
-               	"mi-type": "@mi_type",
+               	"mi-type": "@full_mi_type",
                	"get-master-entity": "null"
             },
             
@@ -241,7 +241,7 @@
             },
             
             created: function () {
-            	console.warn("tg-@entity_type-centre: created");
+            	console.warn("tg-@mi_type-centre: created");
             	console.time("created-to-ready");
                 console.warn("CREATED in TG-ENTITY-CENTRE-TAMPLATE");
                 this.uri = '/entity-centre-events';
@@ -271,7 +271,7 @@
             
             ready: function () {
             	console.timeEnd("created-to-ready");
-            	console.warn("tg-@entity_type-centre: ready");
+            	console.warn("tg-@mi_type-centre: ready");
             	console.time("ready-to-attached");
             },
         	
@@ -284,7 +284,7 @@
             	console.time("attached-to-attached-async");
                 var self = this;
                 self.async(function() {
-                    console.warn("tg-@entity_type-centre: attached async");
+                    console.warn("tg-@mi_type-centre: attached async");
                     console.timeEnd("attached-to-attached-async");
 
                 	self.postRetrieved = (function (entity, newBindingEntity, customObject) {

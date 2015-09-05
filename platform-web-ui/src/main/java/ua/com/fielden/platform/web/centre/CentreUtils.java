@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.centre;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -102,6 +104,9 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      */
     public static ICentreDomainTreeManagerAndEnhancer getFreshCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
         synchronized (gdtm) {
+            logger.info("Getting 'fresh centre' for miType [" + miType.getSimpleName() + "]...");
+            final DateTime start = new DateTime();
+
             if (gdtm.getEntityCentreManager(miType, FRESH_CENTRE_NAME) == null) {
                 final ICentreDomainTreeManagerAndEnhancer freshCentre =
                         applyDifferences(
@@ -116,7 +121,12 @@ public class CentreUtils<T extends AbstractEntity<?>> {
                     throw new IllegalStateException("Should be not changed.");
                 }
             }
-            return freshCentre(gdtm, miType);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = freshCentre(gdtm, miType);
+
+            final DateTime end = new DateTime();
+            final Period pd = new Period(start, end);
+            logger.info("Got the 'fresh centre' for miType [" + miType.getSimpleName() + "]... done in [" + pd.getSeconds() + " s " + pd.getMillis() + " ms].");
+            return freshCentre;
         }
     }
 

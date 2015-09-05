@@ -735,7 +735,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@entity_type", entityType.getSimpleName()).
                 replace("@gridLayout", gridLayoutConfig.getKey()).
                 replace("@full_entity_type", entityType.getName()).
-                replace("@mi_type", miType.getName()).
+                replace("@mi_type", miType.getSimpleName()).
+                replace("@full_mi_type", miType.getName()).
                 replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).
                 replace("<!--@criteria_editors-->", editorContainer.toString()).
                 replace("<!--@egi_columns-->", egiColumns.toString()).
