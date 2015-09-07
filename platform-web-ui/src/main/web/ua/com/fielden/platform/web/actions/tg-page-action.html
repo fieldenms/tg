@@ -33,7 +33,7 @@
         	/**
         	 * The context of this action.
         	 */
-        	context: {
+        	currentEntity: {
         		type: Object
         	},
         	
@@ -102,7 +102,7 @@
         ready: function () {
             var self = this;
 
-            self._run = (function (e, detail, source) {
+            self._run = (function () {
                 // this.enabled = false;
                 console.log(this.shortDesc + ": execute");
 
@@ -110,7 +110,7 @@
                 // var ser = this.$.serialiser.serialise(context);
                 // this.$.actionExecutor.body = JSON.stringify(ser);
                 this.async(function () {
-                    this.action(this, this.context);
+                    this.action(this, this.currentEntity);
                 }.bind(self), 100);
                 
             }).bind(self);
