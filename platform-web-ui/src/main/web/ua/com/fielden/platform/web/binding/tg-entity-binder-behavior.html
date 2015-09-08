@@ -623,15 +623,21 @@
 
                 entity.traverseProperties(function (propertyName) {
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
-                        if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
-                            // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
-                            //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
-                            //   invalid 'attempted value' -- but originalVal exists for this case!
-                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
-                        } else {
-                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                        // There could a case where entity represents a brand new instance just received from server, but already invalid.
+                        // This means there will be no value for it in previousModifiedPropertiesHolder...
+                        if (typeof previousModifiedPropertiesHolder[propertyName] === 'undefined') {
+                            // bind the received from server property value
+                            bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
+                        } else { // otherwise, this entity instance has already been received before and should be handled accordingly
+                            if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
+                                // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
+                                //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
+                                //   invalid 'attempted value' -- but originalVal exists for this case!
+                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
+                            } else {
+                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                            }
                         }
-
                         bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                     } else {
                     	bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
