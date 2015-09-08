@@ -311,6 +311,10 @@
                             //throw new Error('Responses with status code 500 suppose to carry an error cause!');
                             customErrorHandlerFor('Responses with status code 500 suppose to carry an error cause!');
                         }
+                    } else if (xhr.status === 403) { // forbidden!
+                        // TODO should prompt for login in place...
+                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.");
+                        customErrorHandlerFor('Access denied');
                     } else { // other codes
                         // from what it could be observed, this siuation was occuring only in case of request cancellation...
                         // let's simply produce a console warning at this stage
