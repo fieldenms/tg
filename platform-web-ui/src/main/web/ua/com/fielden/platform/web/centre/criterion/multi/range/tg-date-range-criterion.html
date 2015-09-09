@@ -18,10 +18,7 @@
         	_or-null="{{_orNull}}"
         	_not="{{_not}}"
         	_exclusive="{{_exclusive}}"
-        	_exclusive2="{{_exclusive2}}"
-        	_when-desktop="[[_whenDesktop]]"
-        	_when-tablet="[[_whenTablet]]"
-        	_when-mobile="[[_whenMobile]]">
+        	_exclusive2="{{_exclusive2}}">
             <content select=".criterion-editors"></content>
         </tg-abstract-criterion>
     </template>
@@ -39,10 +36,6 @@
 
         _dom: function () {
             return this.$.dom;
-        },
-
-        _createWhenDesktopConfig: function () {
-            return ['horizontal', 'justified', 'flex', 'end', ['margin-right: 20px', 'flex'], ['flex'], []];
         },
 
         properties: {

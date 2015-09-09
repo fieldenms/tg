@@ -37,19 +37,6 @@
             //   prefix and default values specified in 'value' specificator of the property definition (or,       //
             //   alternatively, computing function needs to be specified). 									       //
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
-            _whenDesktop: {
-                type: Array
-            },
-
-            _whenTablet: {
-                type: Array,
-                computed: '_computeTabletRepresentation(_whenDesktop)'
-            },
-
-            _whenMobile: {
-                type: Array,
-                computed: '_computeMobileRepresentation(_whenDesktop)'
-            },
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
@@ -76,8 +63,6 @@
         ],
 
         ready: function () {
-            this._whenDesktop = this._createWhenDesktopConfig();
-
             this._showMetaValuesEditor = (function (e) {
                 var mve = this._createMetaValuesDialog();
                 Polymer.dom(document.body).appendChild(mve);
@@ -173,18 +158,6 @@
         _createMetaValueEditors: function () {
             console.log("tg-abstract-criterion-behavior: _createMetaValueEditors");
             return "";
-        },
-
-        _createWhenDesktopConfig: function () {
-            throw "not implemented";
-            // return ['horizontal', 'justified', 'flex', ['flex'], ['flex']];
-        },
-
-        _computeTabletRepresentation: function (_whenDesktop) {
-            return _whenDesktop; // the same as in 'desktop'
-        },
-        _computeMobileRepresentation: function (_whenDesktop) {
-            return _whenDesktop; // the same as in 'desktop'
         },
 
         /**
