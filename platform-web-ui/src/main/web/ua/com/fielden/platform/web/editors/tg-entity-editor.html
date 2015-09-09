@@ -483,8 +483,13 @@
                     result.pushValue(entities[index]);
                 }
 
-                Polymer.dom(document.body).appendChild(this.$.result);
-                Polymer.dom.flush();
+                // There is a need to check whether element already exists before appending it to document.body.
+                // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
+                var elementExists = Polymer.dom(document.body).querySelector("#result");
+                if (!elementExists) {
+                    Polymer.dom(document.body).appendChild(this.$.result);
+                    Polymer.dom.flush();
+                }
                 var self = this;
                 this.async(function () {
                     if (result.opened) {
