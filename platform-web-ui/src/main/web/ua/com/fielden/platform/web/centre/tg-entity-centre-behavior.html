@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
+<link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
 <script>
@@ -61,6 +62,15 @@
                     type: String
                 },
 
+                /**
+                 * A dialog instance that is used for displaying entity (functional and not) masters as part of centre actions logic.
+                 * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
+                 * Right away it is appanded to document.body.
+                 */
+                actionDialog: {
+                  type: Object,
+                  value: null
+                },
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -317,7 +327,11 @@
                         currentState: 'EDIT',
                         centreUuid: self.uuid
                     };
-                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    
+                    this.async(function () {
+                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(this), 1);
+                    
                 }).bind(this);
 
                 self._getContext = (function () {
@@ -364,12 +378,22 @@
                 self._showDialog = (function (action) {
                     var closeEventChannel = self.uuid;
                     var closeEventTopics = ['save.post.success', 'refresh.post.success'];
-                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    this.async(function () {
+                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(self), 1);
                 }).bind(self);
             },
 
             attached: function () {
                 var self = this;
+                
+                if (this.actionDialog == null) {
+                    this.actionDialog = document.createElement('tg-custom-action-dialog');
+                    Polymer.dom(this.actionDialog).setAttribute("id", self.uuid + '');
+                    Polymer.dom(document.body).appendChild(this.actionDialog);
+                    Polymer.dom.flush();
+                }
+
                 ///////////////////////Edit Listeners/////////////////////////////////////
                 this.masterCreatedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,

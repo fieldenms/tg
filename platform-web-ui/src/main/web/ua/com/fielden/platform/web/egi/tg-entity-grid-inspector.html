@@ -4,7 +4,6 @@
 <link rel="import" href="/resources/actions/tg-page-action.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
-<link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
@@ -188,9 +187,6 @@
         <iron-media-query id="mobileQuery" query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
         <iron-media-query id="tabletQuery" query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
         <iron-media-query id="desktopQuery" query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>
-
-        <!-- The dialog for tg-ui-action -->
-        <tg-custom-action-dialog id="actionDialog"></tg-custom-action-dialog>
 
         <!-- The dialog for summary when egi is in card layout -->
         <paper-dialog id="summaryDialog" class="summary-dialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed">
