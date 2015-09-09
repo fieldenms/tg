@@ -4,7 +4,12 @@
 <script>
     (function () {
 
-        moment.locale(@locale);
+        moment.locale(@locale, {
+            longDateFormat: {
+                LT: @timeFormat,
+                L: @dateFormat
+            }
+        });
 
         Polymer({
 
@@ -25,6 +30,16 @@
                     type: String,
                     readOnly: true,
                     value: @locale
+                },
+                dateFormat: {
+                    type: String,
+                    readOnly: true,
+                    value: @dateFormat
+                },
+                timeFormat: {
+                    type: String,
+                    readOnly: true,
+                    value: @timeFormat
                 }
             }
         });
