@@ -1,5 +1,4 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/components/eventsource-lib.html">
 
 <script>
     (function () {
@@ -27,6 +26,22 @@
                     throw new Error('URI for SSE is not defined yet.');
                 }
                 
+                console.log('Determine if EventSrouce needs polyfilling: ', window.EventSource)
+                if(window.EventSource == undefined) {
+                    console.warn('EventSrouce polyfilling is in progress.');
+                    var esPoly = document.createElement('script');
+                    esPoly.src = '/resources/polyfills/eventsource.min.js';
+                    esPoly.onload = self._registerEventSourceHandlers.bind(self);
+                    document.head.appendChild(esPoly);
+                } else {
+                    self._registerEventSourceHandlers();
+                }
+                
+            },
+            
+            _registerEventSourceHandlers: function () {
+                var self = this;
+                console.log("Registering EventSrouce handlers for URI ", self.uri);
                 var source = new EventSource(self.uri);
                 source.addEventListener('message', function (e) {
                     self.dataHandler(e.data);
@@ -58,8 +73,7 @@
                     }
                     
                 }, false);
-
-            }
+            } 
         }; // end of behaviour declaration
     })();
 </script>
