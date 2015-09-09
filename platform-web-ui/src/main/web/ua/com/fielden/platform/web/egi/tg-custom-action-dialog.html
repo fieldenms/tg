@@ -112,11 +112,12 @@
                     
                     Polymer.dom(document.body).appendChild(this.$.entityMaster);
                     Polymer.dom.flush();
+                    
                     // let's open the dialog with magical async...
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done
                     this.async(function () {
                         this.$.entityMaster.open();
-                    }.bind(this), 1);
+                    }.bind(this), 100);
                 }
             },
 
