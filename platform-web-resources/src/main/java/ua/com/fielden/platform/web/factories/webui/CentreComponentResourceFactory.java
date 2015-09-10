@@ -5,8 +5,6 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreComponentResource;
@@ -28,9 +26,9 @@ public class CentreComponentResourceFactory extends Restlet {
      *
      * @param centres
      */
-    public CentreComponentResourceFactory(final ISourceController sourceController, final Injector injector) {
+    public CentreComponentResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil) {
         this.sourceController = sourceController;
-        this.restUtil = injector.getInstance(RestServerUtil.class);
+        this.restUtil = restUtil;
     }
 
     /**
@@ -42,8 +40,8 @@ public class CentreComponentResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod())) {
             new CentreComponentResource(
-                    restUtil,
                     sourceController,
+                    restUtil,
                     getContext(),
                     request,
                     response //

@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  * The base implementation for Web UI configuration, which should be inherited from in concrete applications for defining the final application specific Web UI configuration.
  * <p>
  * Method {@link IWebUiConfig#initConfiguration()} should be implemented in the application specific Web UI configuration, where menus, entity centres and entity master should be
- * registered by obtaining corresponding builders via methods {@link #configApp()} and {@link #configMainMenu()}.
+ * registered by obtaining corresponding builders via methods {@link #configApp()} and {@link #configDesktopMainMenu()}.
  *
  * @author TG Team
  *
@@ -33,7 +33,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     private final String title;
     private final WebUiBuilder webUiBuilder;
-    private final MainMenuBuilder mainMenuConfig;
+    private final MainMenuBuilder desktopMainMenuConfig;
+    private final MainMenuBuilder mobileMainMenuConfig;
     private Injector injector;
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
@@ -52,7 +53,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths) {
         this.title = title;
         this.webUiBuilder = new WebUiBuilder(this);
-        this.mainMenuConfig = new MainMenuBuilder(this);
+        this.desktopMainMenuConfig = new MainMenuBuilder(this);
+        this.mobileMainMenuConfig = new MainMenuBuilder(this);
 
         this.workflow = workflow;
 
@@ -69,56 +71,52 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public IMainMenuBuilder configMainMenu() {
-        return mainMenuConfig;
+    public IMainMenuBuilder configDesktopMainMenu() {
+        return desktopMainMenuConfig;
     }
 
-    /**
-     * Generates the global configuration component.
-     *
-     * @return
-     */
+    @Override
+    public IMainMenuBuilder configMobileMainMenu() {
+        return mobileMainMenuConfig;
+    }
+
     @Override
     public final String genWebUiPreferences() {
         return webUiBuilder.genWebUiPrefComponent();
     }
 
-    /**
-     * Generates the main menu component.
-     *
-     * @return
-     */
     @Override
-    public final String genMainWebUIComponent() {
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app.html").
-                replaceAll("@menuConfig", mainMenuConfig.code().toString());
+    public final String genDesktopMainWebUIComponent() {
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-desktop-app.html").
+                replace("@menuConfig", desktopMainMenuConfig.code().toString());
     }
 
-    /**
-     * Generates the web application.
-     *
-     * @return
-     */
     @Override
-    public final String genAppIndex() {
-        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/index.html").
-                replaceAll("@title", title);
+    public final String genMobileMainWebUIComponent() {
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-mobile-app.html").
+                replace("@menuConfig", mobileMainMenuConfig.code().toString());
+    }
+
+    @Override
+    public final String genDesktopAppIndex() {
+        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/desktop-index.html").
+                replace("@title", title);
         if (Workflows.development.equals(this.workflow)) {
-            return indexSource.replace("@startupResources", "startup-resources-origin");
+            return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-origin");
         } else {
-            return indexSource.replace("@startupResources", "startup-resources-vulcanized");
+            return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-vulcanized");
         }
     }
 
-    /**
-     * Generates the mobile web application.
-     *
-     * @return
-     */
     @Override
     public String genMobileAppIndex() {
-        return ResourceLoader.getText("ua/com/fielden/platform/web/mobile/mobile-index.html").
-                replaceAll("@title", title);
+        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/mobile-index.html").
+                replace("@title", title);
+        if (Workflows.development.equals(this.workflow)) {
+            return indexSource.replace("@mobileStartupResources", "mobile-startup-resources-origin");
+        } else {
+            return indexSource.replace("@mobileStartupResources", "mobile-startup-resources-vulcanized");
+        }
     }
 
     /**

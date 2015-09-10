@@ -2,8 +2,10 @@ package ua.com.fielden.platform.web.ioc;
 
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -18,10 +20,12 @@ import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
 
 /**
@@ -45,14 +49,11 @@ public class SourceControllerImpl implements ISourceController {
     private final ISerialiser serialiser;
     private final TgJackson tgJackson;
     private static final Logger logger = Logger.getLogger(SourceControllerImpl.class);
+    private final LinkedHashMap<Pair<DeviceProfile, String>, String> sourcesByURI = new LinkedHashMap<>();
     /**
-     * Root URIs, that will be preloaded ('/resources/application-startup-resources.html' defines them) during index.html loading.
+     * All URIs (including derived ones), that will be preloaded during *-index.html loading (deviceProfile-related).
      */
-    private final LinkedHashSet<String> preloadedResources;
-    /**
-     * All URIs (including derived ones), that will be preloaded ('/resources/application-startup-resources.html' defines them) during index.html loading.
-     */
-    private final LinkedHashSet<String> allPreloadedResources;
+    private final Map<DeviceProfile, LinkedHashSet<String>> preloadedResourcesByProfile;
     private final boolean deploymentMode;
 
     @Inject
@@ -64,16 +65,8 @@ public class SourceControllerImpl implements ISourceController {
         this.deploymentMode = Workflows.deployment.equals(Workflows.valueOf(appSettings.workflow()));
         logger.info(String.format("\t[%s MODE]", this.deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
 
-        final LinkedHashSet<String> result = getRootDependenciesFor("/resources/application-startup-resources.html");
-        if (result == null) {
-            throw new IllegalStateException("The [/resources/application-startup-resources.html] resource should exist. It is crucial for startup loading of app-specific resources.");
-        }
-        this.preloadedResources = result;
-        if (this.deploymentMode) {
-            this.allPreloadedResources = calculatePreloadedResources();
-        } else {
-            this.allPreloadedResources = null;
-        }
+        this.preloadedResourcesByProfile = calculatePreloadedResourcesByProfile();
+        this.sourcesByURI.clear();
     }
 
     /**
@@ -85,8 +78,10 @@ public class SourceControllerImpl implements ISourceController {
     private static LinkedHashSet<String> getRootDependencies(final String source, final LinkedHashSet<String> currentRootDependencies) {
         final int commentStart = source.indexOf(COMMENT_START);
         // TODO enhance the logic to support whitespaces etc.?
-        final int doubleQuotedStart = source.indexOf(DBL_QUOTED_HREF);
-        final int singleQuotedStart = source.indexOf(SGL_QUOTED_HREF);
+        final int dqs = source.indexOf(" " + DBL_QUOTED_HREF);
+        final int doubleQuotedStart = dqs < 0 ? dqs : dqs + 1;
+        final int sqs = source.indexOf(" " + SGL_QUOTED_HREF);
+        final int singleQuotedStart = sqs < 0 ? sqs : sqs + 1;
 
         final boolean doubleQuotedPresent = doubleQuotedStart >= 0;
         final boolean singleQuotedPresent = singleQuotedStart >= 0;
@@ -124,32 +119,22 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     /**
-     * Returns app-specific preloaded resources.
-     *
-     * @return
-     */
-    private LinkedHashSet<String> getApplicationStartupRootDependencies() {
-        return preloadedResources;
-    }
-
-    /**
      * Returns dependent resources URIs for the specified resource's 'resourceURI'.
      *
      * @return
      */
-    private LinkedHashSet<String> getRootDependenciesFor(final String resourceURI) {
-        if (resourceURI.startsWith("/resources/polymer/")) {
-            // no need to analyze polymer sources!
+    private LinkedHashSet<String> getRootDependenciesFor(final String absolutePath, final DeviceProfile deviceProfile) {
+        // logger.info("getRootDependenciesFor: previousPath = [" + previousPath + "] resourceURI = [" + resourceURI + "]");
+        final Pair<DeviceProfile, String> key = Pair.pair(deviceProfile, absolutePath);
+        if (!sourcesByURI.containsKey(key)) {
+            sourcesByURI.put(key, getSource(absolutePath, deviceProfile));
+        }
+        final String source = sourcesByURI.get(key);
+        if (source == null) {
             return new LinkedHashSet<String>();
         } else {
-            final String source = getSource(resourceURI);
-            if (source == null) {
-                return null;
-            } else {
-                final LinkedHashSet<String> dependentResourceURIs = getRootDependencies(source, new LinkedHashSet<String>());
-                logger.debug("[" + resourceURI + "]: " + dependentResourceURIs);
-                return dependentResourceURIs;
-            }
+            final LinkedHashSet<String> dependentResourceURIs = getRootDependencies(source, new LinkedHashSet<String>());
+            return dependentResourceURIs;
         }
     }
 
@@ -158,35 +143,37 @@ public class SourceControllerImpl implements ISourceController {
      *
      * @return
      */
-    private LinkedHashSet<String> getAllDependenciesFor(final String resourceURI) {
-        final LinkedHashSet<String> roots = getRootDependenciesFor(resourceURI);
-        if (roots == null) {
-            return null;
-        } else {
-            final LinkedHashSet<String> all = new LinkedHashSet<>();
-            for (final String root : roots) {
-                final LinkedHashSet<String> rootDependencies = getAllDependenciesFor(root);
-                if (rootDependencies != null) {
-                    all.add(root);
-                    all.addAll(rootDependencies);
-                } else {
-                    // System.out.println("disregarded dependencies of unknown resource [" + root + "]");
-                }
-            }
-            return all;
+    private LinkedHashSet<String> getAllDependenciesFor(final String previousPath, final String resourceURI, final DeviceProfile deviceProfile) {
+        final String absolutePath = calculateAbsoluteURI(resourceURI, previousPath);
+        final LinkedHashSet<String> roots = getRootDependenciesFor(absolutePath, deviceProfile);
+        final String currentPath = absolutePath.substring(0, absolutePath.lastIndexOf("/") + 1);
+        final LinkedHashSet<String> all = new LinkedHashSet<>();
+        for (final String root : roots) {
+            final LinkedHashSet<String> rootDependencies = getAllDependenciesFor(currentPath, root, deviceProfile);
+            all.add(calculateAbsoluteURI(root, currentPath));
+            all.addAll(rootDependencies);
         }
+        return all;
+    }
+
+    private String calculateAbsoluteURI(final String root, final String currentPath) {
+        return isRelative(root) ? merge(currentPath, root) : root;
+    }
+
+    private boolean isRelative(final String root) {
+        return !root.equals("#a") && !root.equals("#c") && !root.startsWith("/master_ui/") && !root.startsWith("/centre_ui/") && !root.startsWith("/app/") && !root.startsWith("/resources/") && !root.startsWith("http");
     }
 
     @Override
-    public String loadSource(final String resourceURI) {
-        final String source = getSource(resourceURI);
-        return enhanceSource(source, resourceURI);
+    public String loadSource(final String resourceURI, final DeviceProfile deviceProfile) {
+        final String source = getSource(resourceURI, deviceProfile);
+        return enhanceSource(source, deviceProfile);
     }
 
     @Override
-    public String loadSourceWithFilePath(final String filePath) {
+    public String loadSourceWithFilePath(final String filePath, final DeviceProfile deviceProfile) {
         final String source = getFileSource(filePath);
-        return enhanceSource(source, filePath);
+        return enhanceSource(source, deviceProfile);
     }
 
     @Override
@@ -194,7 +181,7 @@ public class SourceControllerImpl implements ISourceController {
         return ResourceLoader.getStream(filePath);
     }
 
-    private String enhanceSource(final String source, final String path) {
+    private String enhanceSource(final String source, final DeviceProfile deviceProfile) {
         // There is a try to get the resource.
         //
         // If this is the deployment mode -- need to calculate all preloaded resources (if not calculated yet)
@@ -204,10 +191,7 @@ public class SourceControllerImpl implements ISourceController {
         if (!deploymentMode) {
             return source;
         } else {
-            // System.out.println("SOURCE [" + path + "]: " + source);
-            final String sourceWithoutPreloadedDependencies = removePrealodedDependencies(source);
-            // System.out.println("SOURCE WITHOUT PRELOADED [" + path + "]: " + sourceWithoutPreloadedDependencies);
-            return sourceWithoutPreloadedDependencies;
+            return removePrealodedDependencies(source, deviceProfile);
         }
     }
 
@@ -215,12 +199,13 @@ public class SourceControllerImpl implements ISourceController {
      * Removes preloaded dependencies from source.
      *
      * @param source
+     * @param deviceProfile
      *
      * @return
      */
-    private String removePrealodedDependencies(final String source) {
+    private String removePrealodedDependencies(final String source, final DeviceProfile deviceProfile) {
         String result = source;
-        for (final String preloaded : allPreloadedResources) {
+        for (final String preloaded : preloadedResourcesByProfile.get(deviceProfile)) {
             result = removePrealodedDependency(result, preloaded);
         }
         return result;
@@ -239,29 +224,51 @@ public class SourceControllerImpl implements ISourceController {
         // TODO VERY FRAGILE APPROACH!
         // TODO VERY FRAGILE APPROACH!
         // TODO VERY FRAGILE APPROACH! please, provide better implementation (whitespaces, exchanged rel and href, etc.?):
-        return source.replaceAll("<link rel=\"import\" href=\"" + dependency + "\">", "")
-                    .replaceAll("<link rel='import' href='" + dependency + "'>", "");
+        final String replacedOurDependency = source
+                .replace("<link rel=\"import\" href=\"" + dependency + "\">", "")
+                .replace("<link rel='import' href='" + dependency + "'>", "");
+
+        // let's replace inner polymer dependencies:
+        if (dependency.startsWith("/resources/polymer/")) {
+            final String polymerDependencyFileName = dependency.substring(dependency.lastIndexOf("/") + 1);
+
+            final String replacedPolymerDependency = replacedOurDependency
+                    .replaceAll("<link rel=\"import\" href=\".*" + polymerDependencyFileName + "\">", "")
+                    .replaceAll("<link rel='import' href='.*" + polymerDependencyFileName + "'>", "");
+            return replacedPolymerDependency;
+        } else {
+            return replacedOurDependency;
+        }
     }
 
-    private LinkedHashSet<String> calculatePreloadedResources() {
-        logger.info("======== Calculating preloaded resources... ========");
+    private LinkedHashMap<DeviceProfile, LinkedHashSet<String>> calculatePreloadedResourcesByProfile() {
+        final LinkedHashMap<DeviceProfile, LinkedHashSet<String>> result = new LinkedHashMap<>();
+        result.put(DeviceProfile.DESKTOP, calculatePreloadedResources("/resources/desktop-startup-resources-origin.html", DeviceProfile.DESKTOP));
+        result.put(DeviceProfile.MOBILE, calculatePreloadedResources("/resources/mobile-startup-resources-origin.html", DeviceProfile.MOBILE));
+        return result;
+    }
+
+    private LinkedHashSet<String> calculatePreloadedResources(final String startupResourcesOrigin, final DeviceProfile deviceProfile) {
+        logger.info("======== Calculating " + deviceProfile + " preloaded resources... ========");
         final DateTime start = new DateTime();
-        final LinkedHashSet<String> all = getAllDependenciesFor("/resources/startup-resources-origin.html");
+        final LinkedHashSet<String> all = getAllDependenciesFor("/", startupResourcesOrigin, deviceProfile);
         logger.info("\t ==> " + all + ".");
         final Period pd = new Period(start, new DateTime());
-        logger.info("-------- Calculated preloaded resources [" + all.size() + "]. Duration [" + pd.getSeconds() + " s " + pd.getMillis() + " ms]. --------");
+        logger.info("-------- Calculated " + deviceProfile + " preloaded resources [" + all.size() + "]. Duration [" + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms]. --------");
         return all;
     }
 
-    private String getSource(final String resourceURI) {
-        if ("/app/tg-app-config.html".equalsIgnoreCase(resourceURI)) {
+    private String getSource(final String resourceURI, final DeviceProfile deviceProfile) {
+        if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
+            return getTgAppIndexSource(webUiConfig, deviceProfile);
+        } else if ("/app/tg-app-config.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppConfigSource(webUiConfig);
         } else if ("/app/tg-app.html".equalsIgnoreCase(resourceURI)) {
-            return getTgAppSource(webUiConfig);
+            return getTgAppSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-reflector.html".equalsIgnoreCase(resourceURI)) {
             return getReflectorSource(serialiser, tgJackson);
         } else if ("/app/tg-element-loader.html".equalsIgnoreCase(resourceURI)) {
-            return getElementLoaderSource(this, webUiConfig);
+            return getElementLoaderSource(this, webUiConfig, deviceProfile);
         } else if (resourceURI.startsWith("/master_ui")) {
             return getMasterSource(resourceURI.replaceFirst("/master_ui/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
@@ -274,12 +281,38 @@ public class SourceControllerImpl implements ISourceController {
         }
     }
 
+    /**
+     * Merges the current path, in which we are doing dependency analysis, with the 'uri' (perhaps relative).
+     *
+     * @param currentPath
+     * @param uri
+     * @return
+     */
+    private String merge(final String currentPath, final String uri) {
+        return (currentPath == null || !isRelative(uri)) ? uri :
+            uri.startsWith("../") ? merge(currentPathWithoutLast(currentPath), uri.substring(3)) :
+                uri.contains("/") ? merge(currentPathWith(currentPath, uri.substring(0, uri.indexOf("/"))), uri.substring(uri.indexOf("/") + 1)) : currentPath + uri;
+    }
+
+    private String currentPathWithoutLast(final String currentPath) {
+        final String withLastSlash = currentPath.substring(0, currentPath.length() - 1);
+        return withLastSlash.substring(0, withLastSlash.lastIndexOf("/") + 1);
+    }
+
+    private String currentPathWith(final String currentPath, final String suffix) {
+        return currentPath + suffix + "/";
+    }
+
+    private static String getTgAppIndexSource(final IWebUiConfig app, final DeviceProfile deviceProfile) {
+        return DeviceProfile.DESKTOP.equals(deviceProfile) ? app.genDesktopAppIndex() : app.genMobileAppIndex();
+    }
+
     private static String getTgAppConfigSource(final IWebUiConfig app) {
         return app.genWebUiPreferences();
     }
 
-    private static String getTgAppSource(final IWebUiConfig app) {
-        return app.genMainWebUIComponent();
+    private static String getTgAppSource(final IWebUiConfig app, final DeviceProfile deviceProfile) {
+        return DeviceProfile.DESKTOP.equals(deviceProfile) ? app.genDesktopMainWebUIComponent() : app.genMobileMainWebUIComponent();
     }
 
     private static String getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
@@ -289,9 +322,17 @@ public class SourceControllerImpl implements ISourceController {
         return originalSource.replace("@typeTable", typeTableRepresentation);
     }
 
-    private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig) {
+    private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile) {
         final String source = getFileSource("/resources/element_loader/tg-element-loader.html", webUiConfig.resourcePaths());
-        return source.replace("importedURLs = {}", generateImportUrlsFrom(sourceControllerImpl.getApplicationStartupRootDependencies()));
+        return source.replace("importedURLs = {}", sourceControllerImpl.isPreloadedResourcesInitialised() ? generateImportUrlsFrom(sourceControllerImpl.getPreloadedResources(deviceProfile)) : "importedIrrelevantURLs = {}");
+    }
+
+    private boolean isPreloadedResourcesInitialised() {
+        return preloadedResourcesByProfile != null;
+    }
+
+    private LinkedHashSet<String> getPreloadedResources(final DeviceProfile deviceProfile) {
+        return preloadedResourcesByProfile.get(deviceProfile);
     }
 
     /**

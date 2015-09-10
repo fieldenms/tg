@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.app;
 
 import java.io.InputStream;
 
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+
 /**
  * The contract for loading resources by their URIs of filePaths.
  * <p>
@@ -21,10 +23,11 @@ public interface ISourceController {
      * in case of deployment server mode).
      *
      * @param resourceURI
+     * @param deviceProfile indicates the profile for the web app device (preloaded resources for different deviceProfiles could be different)
      *
      * @return
      */
-    String loadSource(final String resourceURI);
+    String loadSource(final String resourceURI, final DeviceProfile deviceProfile);
 
     /**
      * Loads the text representation of the resource with the specified 'filePath'.
@@ -33,10 +36,11 @@ public interface ISourceController {
      * in case of deployment server mode).
      *
      * @param resourceURI
+     * @param deviceProfile indicates the profile for the web app device (preloaded resources for different deviceProfiles could be different)
      *
      * @return
      */
-    String loadSourceWithFilePath(final String filePath);
+    String loadSourceWithFilePath(final String filePath, final DeviceProfile deviceProfile);
 
     /**
      * Loads input stream representation of the resource with the specified 'filePath'.

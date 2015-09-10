@@ -68,13 +68,13 @@
 
             attached: function () {
                 var self = this;
-                this.menuConfig = {
+                /* this.menuConfig = {
                     items: [
                         {
                             title: "Update Operational Vehicle Info",
                             description: "Should be used for updating operational information about a vehicle.",
                             bgColor: "#F4B793",
-                            icon:"/resources/images/fleetMobile.svg",
+                            icon:"mobile-menu:fleet",
                             view: {
                                 import: "/master_ui/fleet.dds.MobileDdsEntry",
                                 elementName: "tg-MobileDdsEntry-master",
@@ -92,14 +92,16 @@
                             title: "Availability Reports",
                             description: "Provides the most resent fleet availability information.",
                             bgColor:"#00D4AA",
-                            icon:"/resources/images/divisionalDailyManagmentMobile.svg",
+                            icon:"mobile-menu:divisional-daily-management",
                             view: {
                                 attrs: {
                                 }
                             }
                         }
                     ]
-                };
+                }; */
+                
+                this.menuConfig = @menuConfig;
 
                 //Selectes the menu
                 this.async(function () {

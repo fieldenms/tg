@@ -10,11 +10,11 @@ import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
 
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Resource for tg-reflector component.
@@ -24,12 +24,9 @@ import ua.com.fielden.platform.web.app.ISourceController;
  * @param <T>
  * @param <DAO>
  */
-public class TgReflectorComponentResource extends ServerResource {
-    private final ISourceController sourceController;
-
-    public TgReflectorComponentResource(final ISourceController sourceController, final Context context, final Request request, final Response response) {
-        init(context, request, response);
-        this.sourceController = sourceController;
+public class TgReflectorComponentResource extends DeviceProfileDifferentiatorResource {
+    public TgReflectorComponentResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+        super(sourceController, restUtil, context, request, response);
     }
 
     /**
@@ -37,7 +34,7 @@ public class TgReflectorComponentResource extends ServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController.loadSource("/app/tg-reflector.html");
+        final String source = sourceController().loadSource("/app/tg-reflector.html", deviceProfile());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 }

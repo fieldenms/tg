@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.factories;
+package ua.com.fielden.platform.web.factories.webui;
 
 import org.apache.commons.lang.StringUtils;
 import org.restlet.Request;
@@ -12,8 +12,8 @@ import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.resources.LoginResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.LoginResource;
 
 import com.google.inject.Injector;
 

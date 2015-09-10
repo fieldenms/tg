@@ -17,25 +17,29 @@ import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
- * Resource for tg-element-loader component.
+ * Responds to GET request with a generated application specific index resource (for desktop and mobile web apps).
+ * <p>
+ * The returned HTML should be thought of as <code>index.html</code> in its classical meaning.
  *
  * @author TG Team
  *
- * @param <T>
- * @param <DAO>
  */
-public class TgElementLoaderComponentResource extends DeviceProfileDifferentiatorResource {
-    public TgElementLoaderComponentResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+public class AppIndexResource extends DeviceProfileDifferentiatorResource {
+    /**
+     * Creates {@link AppIndexResource} instance.
+     *
+     * @param sourceController
+     * @param context
+     * @param request
+     * @param response
+     */
+    public AppIndexResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         super(sourceController, restUtil, context, request, response);
     }
 
-
-    /**
-     * Handles sending of generated tg-element-loader to the Web UI client (GET method).
-     */
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController().loadSource("/app/tg-element-loader.html", deviceProfile());
+        final String source = sourceController().loadSource("/app/tg-app-index.html", deviceProfile());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 }

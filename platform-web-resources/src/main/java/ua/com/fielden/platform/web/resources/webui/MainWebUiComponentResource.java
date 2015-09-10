@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.resources;
+package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.ByteArrayInputStream;
 
@@ -10,11 +10,11 @@ import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
 
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  *
@@ -23,17 +23,22 @@ import ua.com.fielden.platform.web.app.ISourceController;
  * @author TG Team
  *
  */
-public class MainWebUiComponentResource extends ServerResource {
-    private final ISourceController sourceController;
-
-    public MainWebUiComponentResource(final ISourceController sourceController, final Context context, final Request request, final Response response) {
-        init(context, request, response);
-        this.sourceController = sourceController;
+public class MainWebUiComponentResource  extends DeviceProfileDifferentiatorResource {
+    /**
+     * Creates {@link MainWebUiComponentResource} instance.
+     *
+     * @param sourceController
+     * @param context
+     * @param request
+     * @param response
+     */
+    public MainWebUiComponentResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+        super(sourceController, restUtil, context, request, response);
     }
 
     @Override
     protected Representation get() throws ResourceException {
-        final String source = sourceController.loadSource("/app/tg-app.html");
+        final String source = sourceController().loadSource("/app/tg-app.html", deviceProfile());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 }
