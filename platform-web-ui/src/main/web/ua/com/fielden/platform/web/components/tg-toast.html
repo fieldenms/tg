@@ -129,12 +129,22 @@
                     Polymer.dom(msgPar).innerHTML = this.msgText;
                     Polymer.dom(paperDialogScrollable).appendChild(msgPar);
                     
-                    var buttons = domBind.content.ownerDocument.createElement('div');
-                    Polymer.dom(buttons).setAttribute("class", "buttons");
-                    Polymer.dom(buttons).innerHTML = '<paper-button dialog-confirm affirmative autofocus>Close</paper-button>';
+                    var buttonsDiv = domBind.content.ownerDocument.createElement('div');
+                    Polymer.dom(buttonsDiv).setAttribute("class", "buttons");
+                    
+                    var buttons = domBind.content.ownerDocument.createElement('paper-button');
+                    Polymer.dom(buttons).setAttribute("dialog-confirm", "dialog-confirm");
+                    Polymer.dom(buttons).setAttribute("affirmative", "affirmative");
+                    Polymer.dom(buttons).setAttribute("autofocus", "autofocus");
+                    
+                    var textSpan = domBind.content.ownerDocument.createElement('span');
+                    Polymer.dom(textSpan).innerHTML = 'Close';
+                    Polymer.dom(buttons).appendChild(textSpan);
+                    
+                    Polymer.dom(buttonsDiv).appendChild(buttons);
                     
                     Polymer.dom(paperDialog).appendChild(paperDialogScrollable);
-                    Polymer.dom(paperDialog).appendChild(buttons);
+                    Polymer.dom(paperDialog).appendChild(buttonsDiv);
                     
                     Polymer.dom(domBind.content).appendChild(paperDialog);
                     Polymer.dom(document.body).appendChild(domBind);
