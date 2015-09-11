@@ -172,8 +172,25 @@ public class SourceControllerImpl implements ISourceController {
 
     @Override
     public String loadSourceWithFilePath(final String filePath, final DeviceProfile deviceProfile) {
+        final DateTime start = new DateTime();
+
         final String source = getFileSource(filePath);
-        return enhanceSource(source, deviceProfile);
+        final String result = isVulcanized(filePath) ? source : enhanceSource(source, deviceProfile);
+
+        final Period pd = new Period(start, new DateTime());
+        logger.info("loadSourceWithFilePath: loaded [" + filePath + "]. Duration [" + pd.getSeconds() + " s " + pd.getMillis() + " ms].");
+        return result;
+    }
+
+    /**
+     * Returns <code>true</code> where the <code>filePath</code> represents the vulcanized resource (which is not needed to be analyzed for preloaded dependencies), <code>false</code> otherwise.
+     *
+     * @param filePath
+     * @return
+     */
+    private static boolean isVulcanized(final String filePath) {
+        // covers three cases: desktop-startup-resources-vulcanized.html, mobile-startup-resources-vulcanized.html and login-startup-resources-vulcanized.html
+        return filePath.endsWith("-startup-resources-vulcanized.html");
     }
 
     @Override

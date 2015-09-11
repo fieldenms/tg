@@ -36,21 +36,42 @@
             },
 
             reload: function () {
-                if (this.loadedView) {
-                    this.loadedView.entityId = 'new';
-                    this.loadedView.retrieve();
-                }
+            	if (this.menuItem.view.type === 'master') {
+                    if (this.loadedView) {
+                        this.loadedView.entityId = 'new';
+                        this.loadedView.retrieve();
+                    }
+            	} else if (this.menuItem.view.type === 'centre') {
+            		if (this.$.elementToLoad.wasLoaded) {
+            			this.fire("menu-item-loaded", this.menuItem.title);
+            		} else {
+            			this.$.elementToLoad.load();
+            		}
+            	} else {
+            		// nothing to do
+            	}
             },
 
             _afterLoadListener: function (e, detail, view) {
                 var self = this;
                 this.loadedView = detail;
                 if (e.target === this.$.elementToLoad) {
-                    detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                        self.fire("menu-item-loaded", self.menuItem.title);
-                    };
-                    detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
-                    detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                	if (this.menuItem.view.type === 'centre') {
+                		console.warn("TG-MOBILE-VIEW: this.menuItem.view.type === centre");
+                        detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                            self.fire("menu-item-loaded", self.menuItem.title);
+                        };
+
+                        detail.retrieve();
+                    } else if (this.menuItem.view.type === 'master') {
+                        detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                            self.fire("menu-item-loaded", self.menuItem.title);
+                        };
+                        detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+                        detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                    } else {
+                    	// TODO unknown view
+                    }
                 }
             }
         });

@@ -46,12 +46,6 @@
                 this._setSelected("menu");
             },
 
-            _animationFinished: function (e, detail, source) {
-                if (this.$.pages.selected != 'menu') {
-                    detail.toPage.reload();
-                }
-            },
-
             ready: function () {
                 var self = this;
                 postal.subscribe({

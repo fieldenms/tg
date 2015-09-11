@@ -12,6 +12,7 @@ import ua.com.fielden.platform.web.menu.module.IModuleConfig2;
 import ua.com.fielden.platform.web.menu.module.IModuleConfig3;
 import ua.com.fielden.platform.web.menu.module.IModuleConfig4;
 import ua.com.fielden.platform.web.menu.module.IModuleConfigDone;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfig1, IModuleConfig2, IModuleConfig3, IModuleConfig4, IModuleConfigDone {
 
@@ -56,6 +57,12 @@ public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfi
     @Override
     public IModuleConfigDone centre(final EntityCentre<?> centre) {
         module.view(new WebView(centre));
+        return this;
+    }
+
+    @Override
+    public IModuleConfigDone master(final EntityMaster<?> master) {
+        module.view(new WebView(master));
         return this;
     }
 

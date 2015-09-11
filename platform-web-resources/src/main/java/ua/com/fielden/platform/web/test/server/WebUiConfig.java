@@ -319,16 +319,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "]").replaceAll("actionMr", actionMr))
                 .done();
 
+        final EntityMaster<TgPersistentEntityWithProperties> entityMaster = new EntityMaster<TgPersistentEntityWithProperties>(
+                TgPersistentEntityWithProperties.class,
+                TgPersistentEntityWithPropertiesProducer.class,
+                masterConfig,
+                injector());
         configApp().
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
                         EntityWithInteger.class,
                         null,
                         injector())). // efs(EntityWithInteger.class).with("prop")
-                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(
-                        TgPersistentEntityWithProperties.class,
-                        TgPersistentEntityWithPropertiesProducer.class,
-                        masterConfig,
-                        injector())).
+                addMaster(TgPersistentEntityWithProperties.class, entityMaster).
                 addMaster(TgFunctionalEntityWithCentreContext.class, new EntityMaster<TgFunctionalEntityWithCentreContext>(
                         TgFunctionalEntityWithCentreContext.class,
                         TgFunctionalEntityWithCentreContextProducer.class,
@@ -379,7 +380,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .detailIcon("menu-iconset-detailed-svg:fleet")
             .bgColor("#00D4AA")
             .captionBgColor("#00AA88")
-            .centre(entityCentre1)
+            .master(entityMaster)
+            //.centre(entityCentre)
             // .view(null)
             .done();
 
