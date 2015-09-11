@@ -36,9 +36,11 @@ public class WebView implements IExecutable {
             return new JsCode("null");
         } else {
             final String viewUrl = entityMaster != null ? "master_ui" : (entityCentre != null ? "centre_ui" : "custom_view");
-            final String typeUrl = entityMaster != null ? entityMaster.getEntityType().getName() : (entityCentre != null ? entityCentre.getMenuItemType().getName() : customView.getClass().getName());
+            final String typeUrl = entityMaster != null ? entityMaster.getEntityType().getName() : (entityCentre != null ? entityCentre.getMenuItemType().getName()
+                    : customView.getClass().getName());
             final String importUrl = "\"/" + viewUrl + "/" + typeUrl + "\"";
-            final String typeName = entityMaster != null ? (entityMaster.getEntityType().getSimpleName() + "-master") : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : (customView.getClass().getSimpleName() + "-view"));
+            final String typeName = entityMaster != null ? (entityMaster.getEntityType().getSimpleName() + "-master")
+                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : (customView.getClass().getSimpleName() + "-view"));
             final String elementName = "\"tg-" + typeName + "\"";
             final String viewType = entityMaster != null ? "\"master\"" : (entityCentre != null ? "\"centre\"" : "\"view\"");
             final String attrs;
@@ -52,7 +54,9 @@ public class WebView implements IExecutable {
                         + "uuid: \"" + entityMaster.getEntityType().getSimpleName() + "\","
                         + "}";
             } else if (entityCentre != null) {
-                attrs = "{}";
+                attrs = "{"
+                        + "uuid: \"" + entityCentre.getName() + "\""
+                        + "}";
             } else {
                 attrs = "null";
             }

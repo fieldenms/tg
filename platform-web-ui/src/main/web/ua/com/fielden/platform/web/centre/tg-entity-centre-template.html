@@ -287,11 +287,11 @@
                     console.warn("tg-@mi_type-centre: attached async");
                     console.timeEnd("attached-to-attached-async");
 
-                	self.postRetrieved = (function (entity, newBindingEntity, customObject) {
+                	self.postRetrieved = self.postRetrieved || (function (entity, newBindingEntity, customObject) {
                         console.log("centre postRetrieved");
                     }).bind(self);
                     
-                    self._handleScroll = (function (e) {
+                    self._handleScroll = self._handleScroll || (function (e) {
                         this.fire("scroll-container", e.target);
                     }).bind(self);
                     

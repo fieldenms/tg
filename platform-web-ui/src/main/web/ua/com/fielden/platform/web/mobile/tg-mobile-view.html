@@ -4,10 +4,21 @@
 
 <dom-module id="tg-mobile-view">
     <style>
+        :host {
+            background-color: #f1f1f1;
+        }
         .toolbar {
             padding: 10px;
             color: white;
+            height: 35px;
             background-color: var(--paper-light-blue-700);
+        }
+        tg-element-loader {
+            position: absolute;
+            top: 35px;
+            bottom: 0;
+            right: 0;
+            left: 0;
         }
     </style>
     <template>
@@ -36,28 +47,28 @@
             },
 
             reload: function () {
-            	if (this.menuItem.view.type === 'master') {
+                if (this.menuItem.view.type === 'master') {
                     if (this.loadedView) {
                         this.loadedView.entityId = 'new';
                         this.loadedView.retrieve();
                     }
-            	} else if (this.menuItem.view.type === 'centre') {
-            		if (this.$.elementToLoad.wasLoaded) {
-            			this.fire("menu-item-loaded", this.menuItem.title);
-            		} else {
-            			this.$.elementToLoad.load();
-            		}
-            	} else {
-            		// nothing to do
-            	}
+                } else if (this.menuItem.view.type === 'centre') {
+                    if (this.$.elementToLoad.wasLoaded) {
+                        this.fire("menu-item-loaded", this.menuItem.title);
+                    } else {
+                        this.$.elementToLoad.load();
+                    }
+                } else {
+                    // nothing to do
+                }
             },
 
             _afterLoadListener: function (e, detail, view) {
                 var self = this;
                 this.loadedView = detail;
                 if (e.target === this.$.elementToLoad) {
-                	if (this.menuItem.view.type === 'centre') {
-                		console.warn("TG-MOBILE-VIEW: this.menuItem.view.type === centre");
+                    if (this.menuItem.view.type === 'centre') {
+                        console.warn("TG-MOBILE-VIEW: this.menuItem.view.type === centre");
                         detail.postRetrieved = function (entity, bindingEntity, customObject) {
                             self.fire("menu-item-loaded", self.menuItem.title);
                         };
@@ -70,7 +81,7 @@
                         detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                         detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
                     } else {
-                    	// TODO unknown view
+                        // TODO unknown view
                     }
                 }
             }
