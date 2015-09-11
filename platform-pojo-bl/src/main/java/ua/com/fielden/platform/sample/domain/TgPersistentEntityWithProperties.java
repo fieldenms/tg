@@ -81,24 +81,6 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @UpperCase
     private Colour colourProp;
     
-//    @IsProperty
-//	@MapTo
-//    @PersistedType(userType = IColourType.class)
-//	@Title(value = "My colour prop", desc = "Desc")
-//	private Colour myColourProp;
-//
-//	@Observable
-//	public TgPersistentEntityWithProperties setMyColourProp(final Colour myColourProp) {
-//		this.myColourProp = myColourProp;
-//		return this;
-//	}
-//
-//	public Colour getMyColourProp() {
-//		return myColourProp;
-//	}
-
-	
-
 
     @IsProperty
     @MapTo

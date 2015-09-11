@@ -5,30 +5,64 @@
 <link rel="import" href="/resources/colour_picker/tg-colour-picker.html">
 
 <style>
+	.color-box {
+		position: relative;
+		min-width: 40px;
+		min-height: 40px;
+	}
+	
+	.dummy-box {
+		position: absolute;
+		top: -3px;
+		left: -3px;
+		min-width: 40px;
+		min-height: 40px;
+		border: 3px solid white;
+		background-color: none;
+		box-shadow: 0px 2px 6px #ccc;
+		z-index: 1;
+		display: none;
+		cursor: pointer;
+	}
+	
+	.icon {
+		min-width: 40px;
+		min-height: 40px;
+		color: #757575;
+	}
+	/*
 	.small-icon {
-		max-width: 14px;
-		max-height: 14px;
+		min-width: 14px;
+		min-height: 14px;
 		color: #757575;
 		opacity: 1;
 	}
+*/
 	
 	.color-box:hover > .dummy-box {
 		display: block;
 	}
-	
+	/*
 	.small-box {
-		min-width: 14px;
-		min-height: 14px;
+		max-width: 14px;
+		max-height: 14px;
 		background-color: #FAFAFA;
 		border: 2px solid #BDBDBD;
 		border-radius: 2px;
 		cursor: pointer;
 	}
+*/
+	
+	iron-dropdown {
+		background-color: #FAFAFA;
+		box-shadow: 0px 2px 6px #ccc;
+		margin-top: 1em;
+	}
 </style>
 
 <dom-module id="tg-colour-picker">
 	<template>
-		<tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-change="[[_onChange]]" current-state="[[currentState]]">
+		<tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" _on-change="[[_onChange]]" current-state="[[currentState]]" _open-colour-picker="[[_openColourPicker]]">
 		</tg-editor>
 	</template>
 </dom-module>
@@ -39,15 +73,29 @@
 		behaviors: [Polymer.TgBehaviors.TgEditorBehavior],
 
 		properties: {
+
 			_isAcceptingColourFromPicker: {
 				type: Boolean,
 				value: false
 			},
+
+			_openColourPicker: {
+				type: Function,
+				value: function () {
+					return (function (e) {
+						if (!this.$.colourTemplate) {
+							var mve = this._createDialog();
+							Polymer.dom(this.root).appendChild(mve);
+							Polymer.dom.flush();
+						}
+						this.$.colourTemplate.open();
+					}).bind(this);
+				}
+			}
 		},
 
 		ready: function () {
 			this.$.editorDom._editorKind = "COLOUR";
-
 		},
 
 		convertToString: function (value) {
@@ -55,41 +103,38 @@
 		},
 
 		convertFromString: function (strValue) {
-			if (strValue.length !== 3 || strValue.length !== 6) {
+			if (strValue.length !== 3 && strValue.length !== 6 && strValue !== "") {
 				throw "The entered check value is incorrect [" + strValue + "].";
 			}
 			return strValue;
 		},
-		openDropdown: function (e) {
-			var mve = this._createDialog();
-			Polymer.dom(document.body).appendChild(mve);
-			Polymer.dom.flush();
-			mve.open();
-		},
 
 		_createDialog: function () {
-			var self = this;
-			var domBind = document.createElement('template', 'dom-bind');
+			var self = this,
+				domBind = document.createElement('template', 'dom-bind');
 
-			domBind.colorSelected: function (e, detail) {
-				this.colorString = (rgbToHex(e.srcElement.style['background-color'])).substring(1);
+			self.$.colourTemplate = domBind;
+
+			domBind.colorSelected = function (e, detail) {
+				this._acceptColourBind();
+				self._editingValue = (rgbToHex(e.srcElement.style['background-color'])).substring(1);
 				this.$.dropdown.close();
-			};
-			domBind.nonColorSelected: function (e, detail) {
-				this.colorString = null;
+			}.bind(domBind);
+
+			domBind.nonColorSelected = function () {
+				this._acceptColourBind();
+				self._editingValue = "";
 				this.$.dropdown.close();
-			};
+
+			}.bind(domBind);
+
+			domBind._acceptColourBind = function () {
+				self._isAcceptingColourFromPicker = true;
+				self.decoratedInput().focus();
+			}.bind(domBind);
 
 			domBind.open = function () {
 				var dropdown = this.$.dropdown;
-				var colourPicked = this.$.colourString;
-				colourPicked = null;
-				if (self._editingValue !== '') {
-					var selectedMoment = moment(self._editingValue);
-					if (selectedMoment.isValid()) {
-						colourPicker = selectedMoment.valueOf();
-					}
-				}
 				this.async(function () {
 					dropdown.open();
 				}.bind(this), 1);
@@ -97,7 +142,7 @@
 
 			var div = domBind.content.ownerDocument.createElement('div');
 			div.innerHTML =
-				'<iron-dropdown positionTarget="fab" id="dropdown">' +
+				'<iron-dropdown  id="dropdown">' +
 				'<div class="dropdown-content">' +
 				'<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
 				'<div class="layout horizontal">' +
@@ -130,6 +175,7 @@
 				'</div>' +
 				'<div class="color-box" on-tap="colorSelected" style="background-color:#9C27B0">' +
 				'<div class="dummy-box" style="background-color:#9C27B0"></div>' +
+				'</div>' +
 				'</div>' +
 				'<div class="layout horizontal">' +
 				'<div class="color-box" on-tap="colorSelected" style="background-color:#D7CCC8">' +
@@ -170,12 +216,12 @@
 		},
 		_editingValueChanged: function (newValue, oldValue) {
 			Polymer.TgBehaviors.TgEditorBehavior._editingValueChanged.call(this, newValue, oldValue);
-
 			if (this._isAcceptingColourFromPicker) {
 				this._isAcceptingColourFromPicker = false;
 				this.commit();
 			}
 		},
+
 		rgbToHex: function (colorString) {
 			if (colorString === null) {
 				return colorString;
