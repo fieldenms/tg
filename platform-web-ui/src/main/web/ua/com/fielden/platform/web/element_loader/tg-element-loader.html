@@ -68,42 +68,99 @@
                     }
                 });
             },
-            //Loads the custom element and fires after-load event with loaded element.
+            
+            /** 
+             * Loads a custom element and returns a Promise that could be used to porvide custom loginc upon successful (then) or unsuccessful (catch) result.
+             * For backward compatibility reasons, an "after-load" event is fired in loading was successful.
+             */ 
             load: function () {
-                var self = this,
-                    attributes = this.attrs || {},
-                    elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
-                if (!this.wasLoaded) {
-                    if (this.import && !importedURLs.hasOwnProperty(this.import)) {
+                var self = this;
+                var attributes = this.attrs || {};
+                var elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
+                
+                if (this.wasLoaded === true) {
+                	// in case of already loaded an inserted element the only sensible thing to do is to 
+                	// return a resolved Promise with the value of actually loaded element...
+                	// however... there could potenitally be more that one instance of the element with the name of elementName
+                	// so, let's return all of them
+                	return Promise.resolve(Polymer.dom(self).querySelectorAll(elementName));
+                } else {
+                    if (self.import && (!importedURLs.hasOwnProperty(self.import) || importedURLs[self.import] !== "imported")) {
                         console.warn("loading");
                         console.time("loading");
-                    	console.warn("loading-all");
+                        console.warn("loading-all");
                         console.time("loading-all");
-                        this.importHref(this.import, 
-                            function (e) {
-                                console.timeEnd("loading");
-                                console.warn("inserting-after-load");
-                                console.time("inserting-after-load");
-                                importedURLs[this.import] = "imported";
-                                self.fire('after-load', insertElement(self, elementName, attributes));
-                                // console.timeEnd("create-and-append-element");
-                                // e.target.import is the import document.
-                            }, 
-                            function (e) {
-                                console.timeEnd("loading");
-                                // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
-                                console.log("error happened", e);
-                                // loading error
-                            });
+                        
+                        var promise = new Promise(function (resolve, reject) {
+                        	var href = self.import;
+                        	// check if URI mutation is needed and mutate URI for repeated import if required
+                        	if (importedURLs.hasOwnProperty(self.import)) {
+                        		var mutation = importedURLs[self.import];
+                        		href = href + '?' + mutation;
+                        	}
+                        	
+                        	// proceed with import
+                            var link = self.importHref(href,
+                                // link.onload
+                                function (e) {
+                                    console.timeEnd("loading");
+                                    console.warn("inserting-after-load");
+                                    console.time("inserting-after-load");
+                                    importedURLs[self.import] = "imported";
+                                    
+                                    // insert the element
+                                    var insertedElement = insertElement(self, elementName, attributes);
+                                    self.wasLoaded = true;
+                                    // resolve the pormise
+                                    resolve(insertedElement);
+
+                                    // fire event for backward compatibility
+                                    self.fire('after-load', insertedElement);
+                                }, 
+                                // link.onerror
+                                function (e) {
+                                    console.timeEnd("loading");
+                             
+                                    // prepare mutation for the repeated invocation of import
+                                    if (!importedURLs.hasOwnProperty(self.import)) {
+                                    	importedURLs[self.import] = 1;
+                                	} else {
+                                		importedURLs[self.import] = importedURLs[self.import] + 1;
+                                	}
+                                    
+                                    Polymer.dom(document.head).removeChild(link);
+                                    Polymer.dom.flush();
+                                    // reject the promise
+                                    reject(new Error('Could not load element ', elementName, ' due to ', e));
+                                    
+                                    // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
+                                    console.warn("error happened", e);
+                                    // loading error
+                                });
+                        }); // end of promise 
+                        
+                        return promise;
                     } else {
-                        this.fire('after-load', insertElement(this, elementName, attributes));
+                    	return new Promise(function (resolve, reject) {
+                    		
+                    		// insert the element
+                    		var insertedElement = insertElement(self, elementName, attributes);
+                    		self.wasLoaded = true;
+                    		
+                    		// resolve the promise
+                    		resolve(insertedElement);
+                    		
+                    		self.fire('after-load', insertedElement);
+                    	});
                     }
-                    this.wasLoaded = true;
+                    
                 }
             },
+            
+            /** */
             reload: function () {
                 this.wasLoaded = false;
-                this.load();
+                return this.load();
             }
         });
     })();

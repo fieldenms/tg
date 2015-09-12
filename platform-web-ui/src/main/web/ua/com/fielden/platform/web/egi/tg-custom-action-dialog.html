@@ -18,8 +18,7 @@
     </style>
 
     <template>
-         <tg-element-loader id="loadMaster" on-after-load="_afterMasterLoad">
-         </tg-element-loader>
+         <tg-element-loader id="loadMaster"></tg-element-loader>
          <tg-toast id="toaster"></tg-toast>
     </template>
 </dom-module>
@@ -91,27 +90,35 @@
                     this.$.toaster.show();
                     console.log("The dialog is already opened and should be closed be being used again.");
                 }  else {
-                    if (!this.currentRunningAction) {
-                        this._closeEventChannel = closeEventChannel;
-                        this._closeEventTopics = closeEventTopics;
-                        this._setIsRunning(true);
-                        this.currentRunningAction = customAction;
-                        this.$.loadMaster.import = this.currentRunningAction.componentUri;
-                        this.$.loadMaster.elementName = this.currentRunningAction.elementName;
-                        this.$.loadMaster.attrs = this.currentRunningAction.attrs;
-                        this.$.loadMaster.reload();
+                	var self = this;
+                    if (!self.currentRunningAction) {
+                    	self.$.loadMaster.import = customAction.componentUri;
+                    	self.$.loadMaster.elementName = customAction.elementName;
+                    	self.$.loadMaster.attrs = customAction.attrs;
+                    	self.$.loadMaster.reload()
+	                    	.then(function(element) {
+	                    		self._closeEventChannel = closeEventChannel;
+	                        	self._closeEventTopics = closeEventTopics;
+	                        	self._setIsRunning(true);
+	                        	self.currentRunningAction = customAction;
+	                        	
+	                        	self.currentRunningAction._onExecuted(null, element, null);
+	                            if (self.currentRunningAction._masterComponent.noUI === true) {
+	                                self.currentRunningAction = null;
+	                            }
+	                            
+	                            self._showMaster();
+	                    	})
+	                    	.catch(function(error) {
+	                        	console.warn('ERROR on load: ', error);
+	                            self.$.toaster.text = 'There was an error while loading the resource.';
+	                            self.$.toaster.hasMore = true;
+	                            self.$.toaster.msgText = 'There was an error while loading the resource. Please try again.<br><br> \
+	                                                      <b>Error cause:</b><br>' + error.message;
+	                            self.$.toaster.showProgress = false;
+	                            self.$.toaster.show();
+	                        });
                     }
-                }
-            },
-
-            _afterMasterLoad: function (e, detail, source) {
-                if (this.currentRunningAction) {
-                    this.currentRunningAction._onExecuted(e, detail, source);
-                    if (this.currentRunningAction._masterComponent.noUI === true) {
-                        this.currentRunningAction = null;
-                    }
-                    
-                    this._showMaster();
                 }
             },
 
