@@ -311,6 +311,10 @@
                             //throw new Error('Responses with status code 500 suppose to carry an error cause!');
                             customErrorHandlerFor('Responses with status code 500 suppose to carry an error cause!');
                         }
+                    } else if (xhr.status === 403) { // forbidden!
+                        // TODO should prompt for login in place...
+                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.");
+                        customErrorHandlerFor('Access denied');
                     } else { // other codes
                         // from what it could be observed, this siuation was occuring only in case of request cancellation...
                         // let's simply produce a console warning at this stage
@@ -619,15 +623,21 @@
 
                 entity.traverseProperties(function (propertyName) {
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
-                        if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
-                            // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
-                            //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
-                            //   invalid 'attempted value' -- but originalVal exists for this case!
-                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
-                        } else {
-                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                        // There could a case where entity represents a brand new instance just received from server, but already invalid.
+                        // This means there will be no value for it in previousModifiedPropertiesHolder...
+                        if (typeof previousModifiedPropertiesHolder[propertyName] === 'undefined') {
+                            // bind the received from server property value
+                            bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
+                        } else { // otherwise, this entity instance has already been received before and should be handled accordingly
+                            if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
+                                // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
+                                //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
+                                //   invalid 'attempted value' -- but originalVal exists for this case!
+                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
+                            } else {
+                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                            }
                         }
-
                         bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                     } else {
                     	bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));

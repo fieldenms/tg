@@ -14307,7 +14307,12 @@ case"millisecond":return Math.floor(24*b*60*60*1e3)+this._milliseconds;default:t
 </script><script>
     (function () {
 
-        moment.locale("en-AU");
+        moment.locale("en-AU", {
+            longDateFormat: {
+                LT: "h:mm A",
+                L: "DD/MM/YYYY"
+            }
+        });
 
         Polymer({
 
@@ -14328,6 +14333,16 @@ case"millisecond":return Math.floor(24*b*60*60*1e3)+this._milliseconds;default:t
                     type: String,
                     readOnly: true,
                     value: "en-AU"
+                },
+                dateFormat: {
+                    type: String,
+                    readOnly: true,
+                    value: "DD/MM/YYYY"
+                },
+                timeFormat: {
+                    type: String,
+                    readOnly: true,
+                    value: "h:mm A"
                 }
             }
         });
@@ -14479,19 +14494,6 @@ is hidden if it is scrolled to the bottom.
             //   prefix and default values specified in 'value' specificator of the property definition (or,       //
             //   alternatively, computing function needs to be specified). 									       //
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
-            _whenDesktop: {
-                type: Array
-            },
-
-            _whenTablet: {
-                type: Array,
-                computed: '_computeTabletRepresentation(_whenDesktop)'
-            },
-
-            _whenMobile: {
-                type: Array,
-                computed: '_computeMobileRepresentation(_whenDesktop)'
-            },
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
@@ -14518,8 +14520,6 @@ is hidden if it is scrolled to the bottom.
         ],
 
         ready: function () {
-            this._whenDesktop = this._createWhenDesktopConfig();
-
             this._showMetaValuesEditor = (function (e) {
                 var mve = this._createMetaValuesDialog();
                 Polymer.dom(document.body).appendChild(mve);
@@ -14615,18 +14615,6 @@ is hidden if it is scrolled to the bottom.
         _createMetaValueEditors: function () {
             console.log("tg-abstract-criterion-behavior: _createMetaValueEditors");
             return "";
-        },
-
-        _createWhenDesktopConfig: function () {
-            throw "not implemented";
-            // return ['horizontal', 'justified', 'flex', ['flex'], ['flex']];
-        },
-
-        _computeTabletRepresentation: function (_whenDesktop) {
-            return _whenDesktop; // the same as in 'desktop'
-        },
-        _computeMobileRepresentation: function (_whenDesktop) {
-            return _whenDesktop; // the same as in 'desktop'
         },
 
         /**
@@ -17399,6 +17387,10 @@ method is called on the element.
                             //throw new Error('Responses with status code 500 suppose to carry an error cause!');
                             customErrorHandlerFor('Responses with status code 500 suppose to carry an error cause!');
                         }
+                    } else if (xhr.status === 403) { // forbidden!
+                        // TODO should prompt for login in place...
+                        this._openToastForError("Access denied.", "The current session has expired. Please login and try again.");
+                        customErrorHandlerFor('Access denied');
                     } else { // other codes
                         // from what it could be observed, this siuation was occuring only in case of request cancellation...
                         // let's simply produce a console warning at this stage
@@ -17707,15 +17699,21 @@ method is called on the element.
 
                 entity.traverseProperties(function (propertyName) {
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
-                        if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
-                            // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
-                            //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
-                            //   invalid 'attempted value' -- but originalVal exists for this case!
-                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
-                        } else {
-                            bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                        // There could a case where entity represents a brand new instance just received from server, but already invalid.
+                        // This means there will be no value for it in previousModifiedPropertiesHolder...
+                        if (typeof previousModifiedPropertiesHolder[propertyName] === 'undefined') {
+                            // bind the received from server property value
+                            bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
+                        } else { // otherwise, this entity instance has already been received before and should be handled accordingly
+                            if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
+                                // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
+                                //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
+                                //   invalid 'attempted value' -- but originalVal exists for this case!
+                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
+                            } else {
+                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                            }
                         }
-
                         bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                     } else {
                     	bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
@@ -17850,7 +17848,7 @@ method is called on the element.
                  */
                 _pageCapacity: {
                 	type: Number,
-                	value: 10
+                	value: 20
                 },
                 
                 _centreChanged: {
@@ -18735,6 +18733,15 @@ Example:
                     type: String
                 },
 
+                /**
+                 * A dialog instance that is used for displaying entity (functional and not) masters as part of centre actions logic.
+                 * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
+                 * Right away it is appanded to document.body.
+                 */
+                actionDialog: {
+                  type: Object,
+                  value: null
+                },
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18991,7 +18998,11 @@ Example:
                         currentState: 'EDIT',
                         centreUuid: self.uuid
                     };
-                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    
+                    this.async(function () {
+                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(this), 1);
+                    
                 }).bind(this);
 
                 self._getContext = (function () {
@@ -19038,12 +19049,22 @@ Example:
                 self._showDialog = (function (action) {
                     var closeEventChannel = self.uuid;
                     var closeEventTopics = ['save.post.success', 'refresh.post.success'];
-                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    this.async(function () {
+                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(self), 1);
                 }).bind(self);
             },
 
             attached: function () {
                 var self = this;
+                
+                if (this.actionDialog == null) {
+                    this.actionDialog = document.createElement('tg-custom-action-dialog');
+                    Polymer.dom(this.actionDialog).setAttribute("id", self.uuid + '');
+                    Polymer.dom(document.body).appendChild(this.actionDialog);
+                    Polymer.dom.flush();
+                }
+
                 ///////////////////////Edit Listeners/////////////////////////////////////
                 this.masterCreatedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,
@@ -19227,6 +19248,22 @@ Example:
                     throw new Error('URI for SSE is not defined yet.');
                 }
                 
+                console.log('Determine if EventSrouce needs polyfilling: ', window.EventSource)
+                if(window.EventSource == undefined) {
+                    console.warn('EventSrouce polyfilling is in progress.');
+                    var esPoly = document.createElement('script');
+                    esPoly.src = '/resources/polyfills/eventsource.min.js';
+                    esPoly.onload = self._registerEventSourceHandlers.bind(self);
+                    document.head.appendChild(esPoly);
+                } else {
+                    self._registerEventSourceHandlers();
+                }
+                
+            },
+            
+            _registerEventSourceHandlers: function () {
+                var self = this;
+                console.log("Registering EventSrouce handlers for URI ", self.uri);
                 var source = new EventSource(self.uri);
                 source.addEventListener('message', function (e) {
                     self.dataHandler(e.data);
@@ -19258,8 +19295,7 @@ Example:
                     }
                     
                 }, false);
-
-            }
+            } 
         }; // end of behaviour declaration
     })();
 </script><!-- menu icons: -->
@@ -20391,7 +20427,7 @@ Example:
 </dom-module>
 <script>
     (function () {
-        var importedURLs = {'/resources/polymer/paper-styles/paper-styles.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout.html': 'imported','/resources/polymer/polymer/polymer.html': 'imported','/resources/polymer/polymer/polymer-mini.html': 'imported','/resources/polymer/polymer/polymer-micro.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-shadow-flex-layout.html': 'imported','/resources/polymer/paper-styles/color.html': 'imported','/resources/polymer/paper-styles/default-theme.html': 'imported','/resources/polymer/paper-styles/shadow.html': 'imported','/resources/polymer/paper-styles/typography.html': 'imported','/resources/polymer/font-roboto/roboto.html': 'imported','https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic': 'imported','https://fonts.googleapis.com/css?family=Roboto+Mono:400,700': 'imported','/app/tg-app.html': 'imported','/resources/polymer/neon-animation/neon-animated-pages.html': 'imported','/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html': 'imported','/resources/polymer/iron-selector/iron-selectable.html': 'imported','/resources/polymer/iron-selector/iron-selection.html': 'imported','/resources/polymer/neon-animation/neon-animation-runner-behavior.html': 'imported','/resources/polymer/iron-meta/iron-meta.html': 'imported','/resources/polymer/neon-animation/neon-animatable-behavior.html': 'imported','/resources/polymer/neon-animation/animations/opaque-animation.html': 'imported','/resources/polymer/neon-animation/neon-animation-behavior.html': 'imported','/resources/polymer/neon-animation/web-animations.html': 'imported','/resources/polymer/neon-animation/neon-animation.html': 'imported','/resources/polymer/neon-animation/neon-animatable.html': 'imported','/resources/polymer/neon-animation/neon-animations.html': 'imported','/resources/polymer/neon-animation/animations/cascaded-animation.html': 'imported','/resources/polymer/neon-animation/animations/fade-in-animation.html': 'imported','/resources/polymer/neon-animation/animations/fade-out-animation.html': 'imported','/resources/polymer/neon-animation/animations/hero-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animation-behavior.html': 'imported','/resources/polymer/neon-animation/animations/ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/reverse-ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/transform-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animatable-behavior.html': 'imported','/resources/mobile/tg-mobile-menu.html': 'imported','/resources/polymer/paper-ripple/paper-ripple.html': 'imported','/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html': 'imported','/resources/polymer/paper-material/paper-material.html': 'imported','/resources/polymer/iron-icon/iron-icon.html': 'imported','/resources/mobile/tg-mobile-view.html': 'imported','/app/tg-element-loader.html': 'imported','/resources/components/postal-lib.html': 'imported','/resources/components/lodash-lib.html': 'imported','/resources/mobile-application-startup-resources.html': 'imported','/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties': 'imported','/resources/master/tg-entity-master.html': 'imported','/resources/polymer/iron-ajax/iron-ajax.html': 'imported','/resources/polymer/iron-ajax/iron-request.html': 'imported','/resources/polymer/promise-polyfill/promise-polyfill-lite.html': 'imported','/resources/validation/tg-entity-validator.html': 'imported','/resources/serialisation/tg-serialiser.html': 'imported','/app/tg-reflector.html': 'imported','/resources/binding/tg-entity-binder.html': 'imported','/resources/components/tg-toast.html': 'imported','/resources/polymer/paper-button/paper-button.html': 'imported','/resources/polymer/paper-behaviors/paper-button-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-button-state.html': 'imported','/resources/polymer/iron-behaviors/iron-control-state.html': 'imported','/resources/polymer/paper-dialog/paper-dialog.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-behavior.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html': 'imported','/resources/polymer/iron-fit-behavior/iron-fit-behavior.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-backdrop.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-manager.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-common.css': 'imported','/resources/polymer/paper-toast/paper-toast.html': 'imported','/resources/polymer/iron-a11y-announcer/iron-a11y-announcer.html': 'imported','/resources/polymer/paper-spinner/paper-spinner.html': 'imported','/resources/polymer/paper-spinner/paper-spinner.css': 'imported','/resources/layout/tg-flex-layout.html': 'imported','/resources/polymer/iron-media-query/iron-media-query.html': 'imported','/app/tg-app-config.html': 'imported','/resources/components/moment-component.html': 'imported','/resources/centre/criterion/multi/tg-multi-criterion.html': 'imported','/resources/centre/criterion/tg-abstract-criterion.html': 'imported','/resources/polymer/paper-icon-button/paper-icon-button.html': 'imported','/resources/polymer/paper-behaviors/paper-inky-focus-behavior.html': 'imported','/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html': 'imported','/resources/centre/criterion/multi/tg-abstract-multi-criterion-behavior.html': 'imported','/resources/centre/criterion/tg-abstract-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/tg-multi-criterion-config.html': 'imported','/resources/polymer/paper-checkbox/paper-checkbox.html': 'imported','/resources/polymer/iron-checked-element-behavior/iron-checked-element-behavior.html': 'imported','/resources/polymer/iron-validatable-behavior/iron-validatable-behavior.html': 'imported','/resources/polymer/iron-form-element-behavior/iron-form-element-behavior.html': 'imported','/resources/editors/tg-entity-editor.html': 'imported','/resources/polymer/iron-input/iron-input.html': 'imported','/resources/polymer/iron-icons/iron-icons.html': 'imported','/resources/polymer/iron-iconset-svg/iron-iconset-svg.html': 'imported','/resources/polymer/paper-input/paper-input-container.html': 'imported','/resources/editors/tg-entity-editor-result.html': 'imported','/resources/polymer/iron-selector/iron-selector.html': 'imported','/resources/polymer/iron-selector/iron-multi-selectable.html': 'imported','/resources/polymer/paper-item/paper-item.html': 'imported','/resources/polymer/paper-item/paper-item-shared.css': 'imported','/resources/editors/tg-editor-behavior.html': 'imported','/resources/editors/tg-editor.html': 'imported','/resources/polymer/paper-input/paper-input-error.html': 'imported','/resources/polymer/paper-input/paper-input-addon-behavior.html': 'imported','/resources/polymer/paper-input/paper-input-char-counter.html': 'imported','/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html': 'imported','/resources/master/actions/tg-property-action.html': 'imported','/resources/master/actions/tg-functional-action.html': 'imported','/resources/master/actions/tg-abstract-action.html': 'imported','/resources/master/actions/tg-functional-action-behavior.html': 'imported','/resources/master/actions/tg-abstract-action-behavior.html': 'imported','/resources/editors/tg-singleline-text-editor.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion-config.html': 'imported','/resources/editors/tg-integer-editor.html': 'imported','/resources/editors/tg-decimal-editor.html': 'imported','/resources/centre/criterion/multi/tg-boolean-criterion.html': 'imported','/resources/editors/tg-boolean-editor.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion-config.html': 'imported','/resources/polymer/paper-radio-button/paper-radio-button.html': 'imported','/resources/polymer/paper-radio-button/paper-radio-button.css': 'imported','/resources/components/tg-accordion.html': 'imported','/resources/polymer/iron-collapse/iron-collapse.html': 'imported','/resources/editors/tg-datetime-picker.html': 'imported','/resources/components/tg-calendar.html': 'imported','/resources/components/tg-time.html': 'imported','/resources/centre/criterion/single/tg-single-criterion.html': 'imported','/resources/egi/tg-property-column.html': 'imported','/resources/egi/tg-summary-property.html': 'imported','/resources/actions/tg-page-action.html': 'imported','/resources/actions/tg-ui-action.html': 'imported','/resources/polymer/iron-icons/editor-icons.html': 'imported','/resources/polymer/iron-icons/hardware-icons.html': 'imported','/resources/egi/tg-entity-grid-inspector.html': 'imported','/resources/egi/tg-custom-action-dialog.html': 'imported','/resources/egi/tg-secondary-action-button.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown-scroll-manager.html': 'imported','/resources/centre/tg-selection-criteria.html': 'imported','/resources/centre/tg-criteria-validator.html': 'imported','/resources/centre/tg-selection-criteria-behavior.html': 'imported','/resources/binding/tg-entity-binder-behavior.html': 'imported','/resources/centre/tg-entity-centre.html': 'imported','/resources/polymer/paper-tabs/paper-tabs.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menubar-behavior.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menu-behavior.html': 'imported','/resources/polymer/paper-tabs/paper-tabs-icons.html': 'imported','/resources/polymer/paper-tabs/paper-tab.html': 'imported','/resources/polymer/iron-pages/iron-pages.html': 'imported','/resources/centre/tg-entity-centre-behavior.html': 'imported','/resources/sse/tg-sse-behavior.html': 'imported','/resources/images/mobile-menu.html': 'imported'},
+        var importedURLs = {'/resources/polymer/paper-styles/paper-styles.html': 'imported','/resources/polymer/iron-flex-layout/iron-flex-layout.html': 'imported','/resources/polymer/polymer/polymer.html': 'imported','/resources/polymer/polymer/polymer-mini.html': 'imported','/resources/polymer/polymer/polymer-micro.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html': 'imported','/resources/polymer/iron-flex-layout/classes/iron-shadow-flex-layout.html': 'imported','/resources/polymer/paper-styles/color.html': 'imported','/resources/polymer/paper-styles/default-theme.html': 'imported','/resources/polymer/paper-styles/shadow.html': 'imported','/resources/polymer/paper-styles/typography.html': 'imported','/resources/polymer/font-roboto/roboto.html': 'imported','https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic': 'imported','https://fonts.googleapis.com/css?family=Roboto+Mono:400,700': 'imported','/app/tg-app.html': 'imported','/resources/polymer/neon-animation/neon-animated-pages.html': 'imported','/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html': 'imported','/resources/polymer/iron-selector/iron-selectable.html': 'imported','/resources/polymer/iron-selector/iron-selection.html': 'imported','/resources/polymer/neon-animation/neon-animation-runner-behavior.html': 'imported','/resources/polymer/iron-meta/iron-meta.html': 'imported','/resources/polymer/neon-animation/neon-animatable-behavior.html': 'imported','/resources/polymer/neon-animation/animations/opaque-animation.html': 'imported','/resources/polymer/neon-animation/neon-animation-behavior.html': 'imported','/resources/polymer/neon-animation/web-animations.html': 'imported','/resources/polymer/neon-animation/neon-animation.html': 'imported','/resources/polymer/neon-animation/neon-animatable.html': 'imported','/resources/polymer/neon-animation/neon-animations.html': 'imported','/resources/polymer/neon-animation/animations/cascaded-animation.html': 'imported','/resources/polymer/neon-animation/animations/fade-in-animation.html': 'imported','/resources/polymer/neon-animation/animations/fade-out-animation.html': 'imported','/resources/polymer/neon-animation/animations/hero-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animation-behavior.html': 'imported','/resources/polymer/neon-animation/animations/ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/reverse-ripple-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/scale-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-from-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-left-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-right-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-up-animation.html': 'imported','/resources/polymer/neon-animation/animations/slide-down-animation.html': 'imported','/resources/polymer/neon-animation/animations/transform-animation.html': 'imported','/resources/polymer/neon-animation/neon-shared-element-animatable-behavior.html': 'imported','/resources/mobile/tg-mobile-menu.html': 'imported','/resources/polymer/paper-ripple/paper-ripple.html': 'imported','/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html': 'imported','/resources/polymer/paper-material/paper-material.html': 'imported','/resources/polymer/iron-icon/iron-icon.html': 'imported','/resources/mobile/tg-mobile-view.html': 'imported','/app/tg-element-loader.html': 'imported','/resources/components/postal-lib.html': 'imported','/resources/components/lodash-lib.html': 'imported','/resources/mobile-application-startup-resources.html': 'imported','/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties': 'imported','/resources/master/tg-entity-master.html': 'imported','/resources/polymer/iron-ajax/iron-ajax.html': 'imported','/resources/polymer/iron-ajax/iron-request.html': 'imported','/resources/polymer/promise-polyfill/promise-polyfill-lite.html': 'imported','/resources/validation/tg-entity-validator.html': 'imported','/resources/serialisation/tg-serialiser.html': 'imported','/app/tg-reflector.html': 'imported','/resources/binding/tg-entity-binder.html': 'imported','/resources/components/tg-toast.html': 'imported','/resources/polymer/paper-button/paper-button.html': 'imported','/resources/polymer/paper-behaviors/paper-button-behavior.html': 'imported','/resources/polymer/iron-behaviors/iron-button-state.html': 'imported','/resources/polymer/iron-behaviors/iron-control-state.html': 'imported','/resources/polymer/paper-dialog/paper-dialog.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-behavior.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html': 'imported','/resources/polymer/iron-fit-behavior/iron-fit-behavior.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-backdrop.html': 'imported','/resources/polymer/iron-overlay-behavior/iron-overlay-manager.html': 'imported','/resources/polymer/paper-dialog-behavior/paper-dialog-common.css': 'imported','/resources/polymer/paper-toast/paper-toast.html': 'imported','/resources/polymer/iron-a11y-announcer/iron-a11y-announcer.html': 'imported','/resources/polymer/paper-spinner/paper-spinner.html': 'imported','/resources/polymer/paper-spinner/paper-spinner.css': 'imported','/resources/layout/tg-flex-layout.html': 'imported','/resources/polymer/iron-media-query/iron-media-query.html': 'imported','/app/tg-app-config.html': 'imported','/resources/components/moment-component.html': 'imported','/resources/centre/criterion/multi/tg-multi-criterion.html': 'imported','/resources/centre/criterion/tg-abstract-criterion.html': 'imported','/resources/polymer/paper-icon-button/paper-icon-button.html': 'imported','/resources/polymer/paper-behaviors/paper-inky-focus-behavior.html': 'imported','/resources/polymer/paper-dialog-scrollable/paper-dialog-scrollable.html': 'imported','/resources/centre/criterion/multi/tg-abstract-multi-criterion-behavior.html': 'imported','/resources/centre/criterion/tg-abstract-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/tg-multi-criterion-config.html': 'imported','/resources/polymer/paper-checkbox/paper-checkbox.html': 'imported','/resources/polymer/iron-checked-element-behavior/iron-checked-element-behavior.html': 'imported','/resources/polymer/iron-validatable-behavior/iron-validatable-behavior.html': 'imported','/resources/polymer/iron-form-element-behavior/iron-form-element-behavior.html': 'imported','/resources/editors/tg-entity-editor.html': 'imported','/resources/polymer/iron-input/iron-input.html': 'imported','/resources/polymer/iron-icons/iron-icons.html': 'imported','/resources/polymer/iron-iconset-svg/iron-iconset-svg.html': 'imported','/resources/polymer/paper-input/paper-input-container.html': 'imported','/resources/editors/tg-entity-editor-result.html': 'imported','/resources/polymer/iron-selector/iron-selector.html': 'imported','/resources/polymer/iron-selector/iron-multi-selectable.html': 'imported','/resources/polymer/paper-item/paper-item.html': 'imported','/resources/polymer/paper-item/paper-item-shared.css': 'imported','/resources/editors/tg-editor-behavior.html': 'imported','/resources/editors/tg-editor.html': 'imported','/resources/polymer/paper-input/paper-input-error.html': 'imported','/resources/polymer/paper-input/paper-input-addon-behavior.html': 'imported','/resources/polymer/paper-input/paper-input-char-counter.html': 'imported','/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html': 'imported','/resources/master/actions/tg-property-action.html': 'imported','/resources/master/actions/tg-functional-action.html': 'imported','/resources/master/actions/tg-abstract-action.html': 'imported','/resources/master/actions/tg-functional-action-behavior.html': 'imported','/resources/master/actions/tg-abstract-action-behavior.html': 'imported','/resources/editors/tg-singleline-text-editor.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-abstract-range-criterion-behavior.html': 'imported','/resources/centre/criterion/multi/range/tg-range-criterion-config.html': 'imported','/resources/editors/tg-integer-editor.html': 'imported','/resources/editors/tg-decimal-editor.html': 'imported','/resources/centre/criterion/multi/tg-boolean-criterion.html': 'imported','/resources/editors/tg-boolean-editor.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion.html': 'imported','/resources/centre/criterion/multi/range/tg-date-range-criterion-config.html': 'imported','/resources/polymer/paper-radio-button/paper-radio-button.html': 'imported','/resources/polymer/paper-radio-button/paper-radio-button.css': 'imported','/resources/components/tg-accordion.html': 'imported','/resources/polymer/iron-collapse/iron-collapse.html': 'imported','/resources/editors/tg-datetime-picker.html': 'imported','/resources/components/tg-calendar.html': 'imported','/resources/components/tg-time.html': 'imported','/resources/centre/criterion/single/tg-single-criterion.html': 'imported','/resources/egi/tg-property-column.html': 'imported','/resources/egi/tg-summary-property.html': 'imported','/resources/actions/tg-page-action.html': 'imported','/resources/actions/tg-ui-action.html': 'imported','/resources/polymer/iron-icons/editor-icons.html': 'imported','/resources/polymer/iron-icons/hardware-icons.html': 'imported','/resources/egi/tg-entity-grid-inspector.html': 'imported','/resources/egi/tg-secondary-action-button.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown.html': 'imported','/resources/polymer/iron-dropdown/iron-dropdown-scroll-manager.html': 'imported','/resources/centre/tg-selection-criteria.html': 'imported','/resources/centre/tg-criteria-validator.html': 'imported','/resources/centre/tg-selection-criteria-behavior.html': 'imported','/resources/binding/tg-entity-binder-behavior.html': 'imported','/resources/centre/tg-entity-centre.html': 'imported','/resources/polymer/paper-tabs/paper-tabs.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menubar-behavior.html': 'imported','/resources/polymer/iron-menu-behavior/iron-menu-behavior.html': 'imported','/resources/polymer/paper-tabs/paper-tabs-icons.html': 'imported','/resources/polymer/paper-tabs/paper-tab.html': 'imported','/resources/polymer/iron-pages/iron-pages.html': 'imported','/resources/centre/tg-entity-centre-behavior.html': 'imported','/resources/egi/tg-custom-action-dialog.html': 'imported','/resources/sse/tg-sse-behavior.html': 'imported','/resources/images/mobile-menu.html': 'imported'},
             //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
             insertElement = function (insertToElement, elementName, attributes) {
                 if (elementName && elementName.toString().length > 0) {
@@ -20400,8 +20436,14 @@ Example:
                         for (attr in attributes) {
                             customElement[attr] = attributes[attr];
                         }
-                        Polymer.dom(insertToElement).innerHTML = "";
+                        // removing node is faster than to empty innerHTML
+                        var child = Polymer.dom(insertToElement).firstChild;
+                        while (child) {
+                            Polymer.dom(insertToElement).removeChild(child);
+                            child = Polymer.dom(insertToElement).firstChild;
+                        }
                         Polymer.dom(insertToElement).appendChild(customElement);
+                        Polymer.dom.flush();
                     }
                     return customElement;
                 }
@@ -20444,46 +20486,98 @@ Example:
                     }
                 });
             },
-            //Loads the custom element and fires after-load event with loaded element.
+            
+            /** 
+             * Loads a custom element and returns a Promise that could be used to porvide custom loginc upon successful (then) or unsuccessful (catch) result.
+             * For backward compatibility reasons, an "after-load" event is fired in loading was successful.
+             */ 
             load: function () {
                 var self = this;
                 var attributes = this.attrs || {};
                 var elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
-                
+
                 console.warn("loading");
                 console.time("loading");
-            	console.warn("loading-all");
+                console.warn("loading-all");
                 console.time("loading-all");
                 
-                if (!this.wasLoaded) {
-                    if (this.import && !importedURLs.hasOwnProperty(this.import)) {
-                        this.importHref(this.import, function (e) {
-                            console.timeEnd("loading");
-                            // console.warn("inserting-after-load");
-                            // console.time("inserting-after-load");
-                            importedURLs[this.import] = "imported";
-                            self.fire('after-load', insertElement(self, elementName, attributes));
-                            // console.timeEnd("inserting-after-load");
-                            // e.target.import is the import document.
-                        }, function (e) {
-                            console.timeEnd("loading");
-                            // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
-                            console.log("error happened", e);
-                            // loading error
-                        });
+                if (this.wasLoaded === true) {
+                	// in case of already loaded an inserted element the only sensible thing to do is to 
+                	// return a resolved Promise with the value of actually loaded element...
+                	// however... there could potenitally be more that one instance of the element with the name of elementName
+                	// so, let's return all of them
+                	return Promise.resolve(Polymer.dom(self).querySelectorAll(elementName));
+                } else {
+                    if (self.import && (!importedURLs.hasOwnProperty(self.import) || importedURLs[self.import] !== "imported")) {
+                        
+                        var promise = new Promise(function (resolve, reject) {
+                        	var href = self.import;
+                        	// check if URI mutation is needed and mutate URI for repeated import if required
+                        	if (importedURLs.hasOwnProperty(self.import)) {
+                        		var mutation = importedURLs[self.import];
+                        		href = href + '?' + mutation;
+                        	}
+                        	
+                        	// proceed with import
+                            var link = self.importHref(href,
+                                // link.onload
+                                function (e) {
+                                    console.timeEnd("loading");
+                                    importedURLs[self.import] = "imported";
+                                    
+                                    // insert the element
+                                    var insertedElement = insertElement(self, elementName, attributes);
+                                    self.wasLoaded = true;
+                                    // resolve the pormise
+                                    resolve(insertedElement);
+
+                                    // fire event for backward compatibility
+                                    self.fire('after-load', insertedElement);
+                                }, 
+                                // link.onerror
+                                function (e) {
+                                    console.timeEnd("loading");
+                             
+                                    // prepare mutation for the repeated invocation of import
+                                    if (!importedURLs.hasOwnProperty(self.import)) {
+                                    	importedURLs[self.import] = 1;
+                                	} else {
+                                		importedURLs[self.import] = importedURLs[self.import] + 1;
+                                	}
+                                    
+                                    Polymer.dom(document.head).removeChild(link);
+                                    Polymer.dom.flush();
+                                    // reject the promise
+                                    reject(new Error('Could not load element ', elementName, ' due to ', e));
+                                    
+                                    // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
+                                    console.warn("error happened", e);
+                                    // loading error
+                                });
+                        }); // end of promise 
+                        
+                        return promise;
                     } else {
-                        console.timeEnd("loading");
-                        // console.warn("inserting-after-load");
-                        // console.time("inserting-after-load");
-                        this.fire('after-load', insertElement(this, elementName, attributes));
-                        // console.timeEnd("inserting-after-load");
+                    	return new Promise(function (resolve, reject) {
+                    		
+                    		// insert the element
+                    		var insertedElement = insertElement(self, elementName, attributes);
+                    		self.wasLoaded = true;
+                    		
+                    		// resolve the promise
+                    		resolve(insertedElement);
+                    		
+                    		self.fire('after-load', insertedElement);
+                    	});
                     }
-                    this.wasLoaded = true;
+                    
                 }
             },
+            
+            /** */
             reload: function () {
                 this.wasLoaded = false;
-                this.load();
+                return this.load();
             }
         });
     })();
@@ -22030,12 +22124,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     Polymer.dom(msgPar).innerHTML = this.msgText;
                     Polymer.dom(paperDialogScrollable).appendChild(msgPar);
                     
-                    var buttons = domBind.content.ownerDocument.createElement('div');
-                    Polymer.dom(buttons).setAttribute("class", "buttons");
-                    Polymer.dom(buttons).innerHTML = '<paper-button dialog-confirm affirmative autofocus>Close</paper-button>';
+                    var buttonsDiv = domBind.content.ownerDocument.createElement('div');
+                    Polymer.dom(buttonsDiv).setAttribute("class", "buttons");
+                    
+                    var buttons = domBind.content.ownerDocument.createElement('paper-button');
+                    Polymer.dom(buttons).setAttribute("dialog-confirm", "dialog-confirm");
+                    Polymer.dom(buttons).setAttribute("affirmative", "affirmative");
+                    Polymer.dom(buttons).setAttribute("autofocus", "autofocus");
+                    
+                    var textSpan = domBind.content.ownerDocument.createElement('span');
+                    Polymer.dom(textSpan).innerHTML = 'Close';
+                    Polymer.dom(buttons).appendChild(textSpan);
+                    
+                    Polymer.dom(buttonsDiv).appendChild(buttons);
                     
                     Polymer.dom(paperDialog).appendChild(paperDialogScrollable);
-                    Polymer.dom(paperDialog).appendChild(buttons);
+                    Polymer.dom(paperDialog).appendChild(buttonsDiv);
                     
                     Polymer.dom(domBind.content).appendChild(paperDialog);
                     Polymer.dom(document.body).appendChild(domBind);
@@ -22729,10 +22833,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
     <template>
         <tg-reflector id="reflector"></tg-reflector>
-        <tg-flex-layout when-desktop="[[_whenDesktop]]" when-tablet="[[_whenTablet]]" when-mobile="[[_whenMobile]]">
+        <div class="layout horizontal justified flex end">
             <content select=".criterion-editors" id="components"></content>
             <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert">
-        </paper-icon-button></tg-flex-layout>
+        </paper-icon-button></div>
     </template>
 </dom-module>
 
@@ -22745,9 +22849,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             _acceptMetaValues: Function,
             _showMetaValuesEditor: Function,
             _computeIconButtonStyle: Function,
-            _whenDesktop: Array,
-            _whenTablet: Array,
-            _whenMobile: Array,
             
         	_orNull: {
         		type: Boolean,
@@ -23044,7 +23145,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	});
 </script><dom-module id="tg-multi-criterion" assetpath="/resources/centre/criterion/multi/">
 	<template>
-		<tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}" _when-desktop="[[_whenDesktop]]" _when-tablet="[[_whenTablet]]" _when-mobile="[[_whenMobile]]">
+		<tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}">
 			<content select=".criterion-editors"></content>
 		</tg-abstract-criterion>
 	</template>
@@ -23060,10 +23161,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     	
     	behaviors: [ Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior ],
     	
-        _createWhenDesktopConfig: function () {
-        	return ['horizontal', 'justified', 'flex', 'end', ['flex'], []];
-        },
-    
 	    _dom: function () {
     		return this.$.dom;
     	}
@@ -25613,8 +25710,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     result.pushValue(entities[index]);
                 }
 
-                Polymer.dom(document.body).appendChild(this.$.result);
-                Polymer.dom.flush();
+                // There is a need to check whether element already exists before appending it to document.body.
+                // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
+                var elementExists = Polymer.dom(document.body).querySelector("#result");
+                if (!elementExists) {
+                    Polymer.dom(document.body).appendChild(this.$.result);
+                    Polymer.dom.flush();
+                }
                 var self = this;
                 this.async(function () {
                     if (result.opened) {
@@ -25923,7 +26025,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	});
 </script><dom-module id="tg-range-criterion" assetpath="/resources/centre/criterion/multi/range/">
 	<template>
-		<tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}" _exclusive="{{_exclusive}}" _exclusive2="{{_exclusive2}}" _when-desktop="[[_whenDesktop]]" _when-tablet="[[_whenTablet]]" _when-mobile="[[_whenMobile]]">
+		<tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}" _exclusive="{{_exclusive}}" _exclusive2="{{_exclusive2}}">
 			<content select=".criterion-editors"></content>
 		</tg-abstract-criterion>
 	</template>
@@ -25939,10 +26041,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     	
     	behaviors: [ Polymer.TgBehaviors.TgAbstractRangeCriterionBehavior ],
     	
-        _createWhenDesktopConfig: function () {
-        	return ['horizontal', 'justified', 'flex', 'end', ['margin-right: 20px', 'flex'], ['flex'], []];
-        },
-    
 	    _dom: function () {
     		return this.$.dom;
     	}
@@ -26021,7 +26119,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     })()
 </script><dom-module id="tg-boolean-criterion" assetpath="/resources/centre/criterion/multi/">
 	<template>
-		<tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}" _when-desktop="[[_whenDesktop]]" _when-tablet="[[_whenTablet]]" _when-mobile="[[_whenMobile]]">
+		<tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}">
 			<content select=".criterion-editors"></content>
 		</tg-abstract-criterion>
 	</template>
@@ -26037,10 +26135,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     	
     	behaviors: [ Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior ],
     	
-        _createWhenDesktopConfig: function () {
-        	return ['horizontal', 'justified', 'flex', 'end', ['margin-right: 20px', 'flex'], ['flex'], []];
-        },
-    
 	    _dom: function () {
     		return this.$.dom;
     	}
@@ -26690,7 +26784,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	});
 </script><dom-module id="tg-date-range-criterion" assetpath="/resources/centre/criterion/multi/range/">
     <template>
-        <tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}" _exclusive="{{_exclusive}}" _exclusive2="{{_exclusive2}}" _when-desktop="[[_whenDesktop]]" _when-tablet="[[_whenTablet]]" _when-mobile="[[_whenMobile]]">
+        <tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _or-null="{{_orNull}}" _not="{{_not}}" _exclusive="{{_exclusive}}" _exclusive2="{{_exclusive2}}">
             <content select=".criterion-editors"></content>
         </tg-abstract-criterion>
     </template>
@@ -26708,10 +26802,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         _dom: function () {
             return this.$.dom;
-        },
-
-        _createWhenDesktopConfig: function () {
-            return ['horizontal', 'justified', 'flex', 'end', ['margin-right: 20px', 'flex'], ['flex'], []];
         },
 
         properties: {
@@ -27269,9 +27359,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			 */
 			_adjustShownMonth: function (shownDate) {
 				if (this.shownMonth !== shownDate.getMonth() || this.shownYear !== shownDate.getFullYear()) {
-					this.shownMonthName = shownDate.toLocaleString(this.$.appConfig.locale, {
-						month: "long"
-					});
+					this.shownMonthName = moment(shownDate).format("MMMM");
 					this.shownMonth = shownDate.getMonth();
 					this.shownYear = shownDate.getFullYear();
 					this.weeks = createMonth(this.shownYear, this.shownMonth);
@@ -27289,12 +27377,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			 * Updates the calendar information according to specified date.
 			 */
 			_adjustDate: function (date) {
-				this.dayName = date.toLocaleString(this.$.appConfig.locale, {
-					weekday: "long"
-				});
-				this.monthName = date.toLocaleString(this.$.appConfig.locale, {
-					month: "short"
-				}).toUpperCase();
+				this.dayName = moment(date).format("dddd");
+				this.monthName = moment(date).format("MMM").toUpperCase();
 				this.day = date.getDate();
 				this.year = date.getFullYear();
 			},
@@ -27540,7 +27624,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     })();
 </script><dom-module id="tg-single-criterion" assetpath="/resources/centre/criterion/single/">
 	<template>
-		<tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]" _when-desktop="[[_whenDesktop]]" _when-tablet="[[_whenTablet]]" _when-mobile="[[_whenMobile]]">
+		<tg-abstract-criterion id="dom" _cancel-meta-values="[[_cancelMetaValuesForBinding]]" _accept-meta-values="[[_acceptMetaValuesForBinding]]" _show-meta-values-editor="[[_showMetaValuesEditor]]" _compute-icon-button-style="[[_computeIconButtonStyleForBinding]]">
 			<content select=".criterion-editors"></content>
 		</tg-abstract-criterion>
 	</template>
@@ -27559,11 +27643,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     	_iconButtonVisible: function () {
     		return false;
     	},
-    	
-        _createWhenDesktopConfig: function () {
-        	return ['horizontal', 'justified', 'flex', 'end', ['flex'], []];
-        },
-        
+    	 
         _dom: function () {
         	return this.$.dom;
         }
@@ -28162,141 +28242,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <g id="watch"><path d="M20 12c0-2.54-1.19-4.81-3.04-6.27L16 0H8l-.95 5.73C5.19 7.19 4 9.45 4 12s1.19 4.81 3.05 6.27L8 24h8l.96-5.73C18.81 16.81 20 14.54 20 12zM6 12c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6z"></path></g>
 </defs></svg>
 </iron-iconset-svg>
-<dom-module id="tg-custom-action-dialog" assetpath="/resources/egi/">
-    <template>
-        <paper-dialog id="entityMaster" autofocus="" no-cancel-on-outside-click="" no-cancel-on-esc-key="" on-iron-overlay-opened="_dialogOpened" on-iron-overlay-closed="_dialogClosed" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
-            <tg-element-loader id="loadMaster" on-after-load="_afterMasterLoad"></tg-element-loader>
-        </paper-dialog>
-        <tg-toast id="toaster"></tg-toast>
-    </template>
-</dom-module>
-<script>
-    (function () {
-        Polymer({
-
-            is: "tg-custom-action-dialog",
-
-            properties: {
-                isRunning: {
-                    type: Boolean,
-                    readOnly: true,
-                    reflectToAttribute: true
-                },
-                
-                /* Postal subscription to events that trigger dialog closing.
-                 * It gets populated in _showDialog and unsubscrived on dialog closed.
-                 */
-                _subscriptions: {
-                    type: Array,
-                    value: function () { return []; }
-                },
-                
-                _closeEventChannel: {
-                    type: String
-                },
-                
-                _closeEventTopics: {
-                    type: Array
-                }
-            },
-
-            ready: function () {
-                //Initialising the action runner
-                this.currentActionRunning = null;
-            },
-
-            closeDialog: function () {
-                this.$.entityMaster.close();
-            },
-            
-            _handleCloseEvent: function (data, envelope) {
-                this.closeDialog();
-            },
-            
-            /*
-             * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
-             * closeEventChannel -- a channel that is provided from the outside and is used to publish for listening to event that should leade to closing of this dialog.
-             * closeEventTopics -- event topics that should be listened to on the channel to close this dialog.
-             */
-            showDialog: function (customAction, closeEventChannel, closeEventTopics) {
-                if (this.$.entityMaster.opened === true) {
-                    this.$.toaster.text = 'Please close the currently open dialog.';
-                    this.$.toaster.hasMore = true;
-                    this.$.toaster.msgText = 'Any operation on the currently open dialog should be completed and the dialog closed before opening anyother dialog.';
-                    this.$.toaster.showProgress = false;
-                    this.$.toaster.show();
-                    console.log("The dialog is already opened and should be closed be being used again.");
-                }  else {
-                    if (!this.currentRunningAction) {
-                        this._closeEventChannel = closeEventChannel;
-                        this._closeEventTopics = closeEventTopics;
-                        this._setIsRunning(true);
-                        this.currentRunningAction = customAction;
-                        this.$.loadMaster.import = this.currentRunningAction.componentUri;
-                        this.$.loadMaster.elementName = this.currentRunningAction.elementName;
-                        this.$.loadMaster.attrs = this.currentRunningAction.attrs;
-                        this.$.loadMaster.reload();
-                    }
-                }
-            },
-
-            _afterMasterLoad: function (e, detail, source) {
-                if (this.currentRunningAction) {
-                    this.currentRunningAction._onExecuted(e, detail, source);
-                    if (this.currentRunningAction._masterComponent.noUI === true) {
-                        this.currentRunningAction = null;
-                    }
-                    
-                    this._showMaster();
-                }
-            },
-
-            _showMaster: function (e) {
-                if (this.currentRunningAction && this.currentRunningAction._masterComponent.noUI === false) {
-                    var self = this;
-                    // if there would be a master UI then need to subscribe for this dialog closing messages
-                    if (self._closeEventChannel && self._closeEventTopics && self._closeEventTopics.length > 0) {
-                        self._subscriptions = [];
-                        for (var index = 0; index < self._closeEventTopics.length; index++) {
-                            self._subscriptions.push(
-                                    postal.subscribe({
-                                        channel: self._closeEventChannel,
-                                        topic: self._closeEventTopics[index],
-                                        callback: self._handleCloseEvent.bind(self)
-                                    }));
-                        }
-                    }
-                    
-                    Polymer.dom(document.body).appendChild(this.$.entityMaster);
-                    Polymer.dom.flush();
-                    // let's open the dialog with magical async...
-                    // this ensures that the dialog is opened after its relocation to body and after all layouting is done
-                    this.async(function () {
-                        this.$.entityMaster.open();
-                    }.bind(this), 1);
-                }
-            },
-
-            _dialogOpened: function (e, detail, source) {
-                this.currentRunningAction = null;
-                this._setIsRunning(false);
-            },
-            
-            _dialogClosed: function() {
-                // if there are current subscriptions they need to be unsubscribed
-                // due to dialog being closed
-                for (var index = 0; index <this._subscriptions.length; index++) {
-                    postal.unsubscribe(this._subscriptions[index]);
-                }
-                this._subscriptions.length = 0;
-                
-                // remove this dialog from the body
-                Polymer.dom(document.body).removeChild(this.$.entityMaster);
-                Polymer.dom.flush();
-            }
-        });
-    })();
-</script><dom-module id="iron-dropdown" assetpath="/resources/polymer/iron-dropdown/">
+<dom-module id="iron-dropdown" assetpath="/resources/polymer/iron-dropdown/">
   <style>
     :host {
       position: fixed;
@@ -28899,9 +28845,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <iron-media-query id="mobileQuery" query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
         <iron-media-query id="tabletQuery" query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
         <iron-media-query id="desktopQuery" query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>
-
-        <!-- The dialog for tg-ui-action -->
-        <tg-custom-action-dialog id="actionDialog"></tg-custom-action-dialog>
 
         <!-- The dialog for summary when egi is in card layout -->
         <paper-dialog id="summaryDialog" class="summary-dialog" modal="" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed">
@@ -30559,62 +30502,220 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             return this.$.serialiser.$.reflector;
         }
     });
+</script><dom-module id="tg-custom-action-dialog" assetpath="/resources/egi/">
+    <style>
+        :host {
+            display: block;
+            background: white;
+            color: black;
+            padding: 0px;
+            overflow: auto; /* this is to make host scorable when needed */
+            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+        }
+    </style>
+
+    <template>
+         <tg-element-loader id="loadMaster"></tg-element-loader>
+         <tg-toast id="toaster"></tg-toast>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-custom-action-dialog",
+
+            behaviors: [Polymer.IronOverlayBehavior],
+            
+            listeners: {
+                'iron-overlay-opened': '_dialogOpened',
+                'iron-overlay-closed': '_dialogClosed'
+            },
+            
+            properties: {
+                isRunning: {
+                    type: Boolean,
+                    readOnly: true,
+                    reflectToAttribute: true
+                },
+                
+                /* Postal subscription to events that trigger dialog closing.
+                 * It gets populated in _showDialog and unsubscrived on dialog closed.
+                 */
+                _subscriptions: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                
+                _closeEventChannel: {
+                    type: String
+                },
+                
+                _closeEventTopics: {
+                    type: Array
+                }
+            },
+
+            ready: function () {
+                this.noAutoFocus = false;
+                this.noCancelOnOutsideClick = true;
+                this.noCancelOnEscKey = true;
+                
+                //Initialising the action runner
+                this.currentActionRunning = null;
+            },
+
+            closeDialog: function () {
+                this.close();
+            },
+            
+            _handleCloseEvent: function (data, envelope) {
+                this.closeDialog();
+            },
+            
+            /*
+             * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
+             * closeEventChannel -- a channel that is provided from the outside and is used to publish for listening to event that should leade to closing of this dialog.
+             * closeEventTopics -- event topics that should be listened to on the channel to close this dialog.
+             */
+            showDialog: function (customAction, closeEventChannel, closeEventTopics) {
+                if (this.opened === true) {
+                    this.$.toaster.text = 'Please close the currently open dialog.';
+                    this.$.toaster.hasMore = true;
+                    this.$.toaster.msgText = 'Any operation on the currently open dialog should be completed and the dialog closed before opening anyother dialog.';
+                    this.$.toaster.showProgress = false;
+                    this.$.toaster.show();
+                    console.log("The dialog is already opened and should be closed be being used again.");
+                }  else {
+                	var self = this;
+                    if (!self.currentRunningAction) {
+                    	self.$.loadMaster.import = customAction.componentUri;
+                    	self.$.loadMaster.elementName = customAction.elementName;
+                    	self.$.loadMaster.attrs = customAction.attrs;
+                    	self.$.loadMaster.reload()
+	                    	.then(function(element) {
+	                    		self._closeEventChannel = closeEventChannel;
+	                        	self._closeEventTopics = closeEventTopics;
+	                        	self._setIsRunning(true);
+	                        	self.currentRunningAction = customAction;
+	                        	
+	                        	self.currentRunningAction._onExecuted(null, element, null);
+	                            if (self.currentRunningAction._masterComponent.noUI === true) {
+	                                self.currentRunningAction = null;
+	                            }
+	                            
+	                            self._showMaster();
+	                    	})
+	                    	.catch(function(error) {
+	                        	console.warn('ERROR on load: ', error);
+	                            self.$.toaster.text = 'There was an error while loading the resource.';
+	                            self.$.toaster.hasMore = true;
+	                            self.$.toaster.msgText = 'There was an error while loading the resource. Please try again.<br><br> \
+	                                                      <b>Error cause:</b><br>' + error.message;
+	                            self.$.toaster.showProgress = false;
+	                            self.$.toaster.show();
+	                        });
+                    }
+                }
+            },
+
+            _showMaster: function (e) {
+                if (this.currentRunningAction && this.currentRunningAction._masterComponent.noUI === false) {
+                    var self = this;
+                    // if there would be a master UI then need to subscribe for this dialog closing messages
+                    if (self._closeEventChannel && self._closeEventTopics && self._closeEventTopics.length > 0) {
+                        self._subscriptions = [];
+                        for (var index = 0; index < self._closeEventTopics.length; index++) {
+                            self._subscriptions.push(
+                                    postal.subscribe({
+                                        channel: self._closeEventChannel,
+                                        topic: self._closeEventTopics[index],
+                                        callback: self._handleCloseEvent.bind(self)
+                                    }));
+                        }
+                    }
+                    this.refit();
+                    // let's open the dialog with magical async...
+                    // this ensures that the dialog is opened after its relocation to body and after all layouting is done
+                    this.async(function () {
+                        //this.resetFit();
+                        //this.fit();
+                        this.open();
+                    }.bind(this), 100);
+                }
+            },
+
+            _dialogOpened: function (e, detail, source) {
+                this.currentRunningAction = null;
+                this._setIsRunning(false);
+            },
+            
+            _dialogClosed: function() {
+                // if there are current subscriptions they need to be unsubscribed
+                // due to dialog being closed
+                for (var index = 0; index <this._subscriptions.length; index++) {
+                    postal.unsubscribe(this._subscriptions[index]);
+                }
+                this._subscriptions.length = 0;
+            }
+        });
+    })();
 </script><dom-module id="tg-MiTgPersistentEntityWithProperties-selection-criteria" assetpath="/centre_ui/">
     <template>
     	<tg-selection-criteria id="dom" mi-type="[[miType]]" _post-validated-default="[[_postValidatedDefault]]" _post-validated-default-error="[[_postValidatedDefaultError]]" _process-response="[[_processResponse]]" _process-error="[[_processError]]" _process-retriever-response="[[_processRetrieverResponse]]" _process-retriever-error="[[_processRetrieverError]]" _process-runner-response="[[_processRunnerResponse]]" _process-runner-error="[[_processRunnerError]]">
    	        <!--CRITERIA EDITORS DOM (GENERATED)-->
         	<tg-flex-layout when-tablet="[[_tabletLayout]]" when-desktop="[[_desktopLayout]]" when-mobile="[[_mobileLayout]]">
 <tg-multi-criterion validation-callback="[[validate]]" or-null="{{propertyModel.THIS.orNull}}" not="{{propertyModel.THIS.not}}">
-<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_" validation-callback="[[validate]]" prop-title="Key" prop-desc="Some key description" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors" additional-properties="{&quot;desc&quot;: true,&quot;booleanProp&quot;: false,&quot;compositeProp&quot;: true,&quot;compositeProp.desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
+<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_" validation-callback="[[validate]]" prop-title="Key" prop-desc="Some key description" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" additional-properties="{&quot;desc&quot;: true,&quot;booleanProp&quot;: false,&quot;compositeProp&quot;: true,&quot;compositeProp.desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
 </tg-multi-criterion>
 <tg-multi-criterion validation-callback="[[validate]]" or-null="{{propertyModel.stringProp.orNull}}" not="{{propertyModel.stringProp.not}}">
-<tg-singleline-text-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_stringProp" validation-callback="[[validate]]" prop-title="String prop" prop-desc="String prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-singleline-text-editor>
+<tg-singleline-text-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_stringProp" validation-callback="[[validate]]" prop-title="String prop" prop-desc="String prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-singleline-text-editor>
 </tg-multi-criterion>
 <tg-range-criterion validation-callback="[[validate]]" or-null="{{propertyModel.integerProp.orNull}}" not="{{propertyModel.integerProp.not}}" exclusive="{{propertyModel.integerProp.exclusive}}" exclusive2="{{propertyModel.integerProp.exclusive2}}">
-<tg-integer-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_integerProp_from" validation-callback="[[validate]]" prop-title="Integer prop" prop-desc="Integer prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-integer-editor>
-<tg-integer-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_integerProp_to" validation-callback="[[validate]]" prop-title="Integer prop" prop-desc="Integer prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-integer-editor>
+<tg-integer-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_integerProp_from" validation-callback="[[validate]]" prop-title="Integer prop" prop-desc="Integer prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" style="margin-right:20px"></tg-integer-editor>
+<tg-integer-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_integerProp_to" validation-callback="[[validate]]" prop-title="Integer prop" prop-desc="Integer prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-integer-editor>
 </tg-range-criterion>
 <tg-multi-criterion validation-callback="[[validate]]" or-null="{{propertyModel.entityProp.orNull}}" not="{{propertyModel.entityProp.not}}">
-<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_entityProp" validation-callback="[[validate]]" prop-title="Entity prop" prop-desc="Entity prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors" additional-properties="{&quot;desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
+<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_entityProp" validation-callback="[[validate]]" prop-title="Entity prop" prop-desc="Entity prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" additional-properties="{&quot;desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
 </tg-multi-criterion>
 <tg-range-criterion validation-callback="[[validate]]" or-null="{{propertyModel.bigDecimalProp.orNull}}" not="{{propertyModel.bigDecimalProp.not}}" exclusive="{{propertyModel.bigDecimalProp.exclusive}}" exclusive2="{{propertyModel.bigDecimalProp.exclusive2}}">
-<tg-decimal-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_bigDecimalProp_from" validation-callback="[[validate]]" prop-title="BigDecimal prop" prop-desc="BigDecimal prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-decimal-editor>
-<tg-decimal-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_bigDecimalProp_to" validation-callback="[[validate]]" prop-title="BigDecimal prop" prop-desc="BigDecimal prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-decimal-editor>
+<tg-decimal-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_bigDecimalProp_from" validation-callback="[[validate]]" prop-title="BigDecimal prop" prop-desc="BigDecimal prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" style="margin-right:20px"></tg-decimal-editor>
+<tg-decimal-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_bigDecimalProp_to" validation-callback="[[validate]]" prop-title="BigDecimal prop" prop-desc="BigDecimal prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-decimal-editor>
 </tg-range-criterion>
 <tg-boolean-criterion validation-callback="[[validate]]" or-null="{{propertyModel.booleanProp.orNull}}" not="{{propertyModel.booleanProp.not}}">
-<tg-boolean-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_booleanProp_is" validation-callback="[[validate]]" prop-title="Boolean prop" prop-desc="Boolean prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-boolean-editor>
-<tg-boolean-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_booleanProp_not" validation-callback="[[validate]]" prop-title="Boolean prop" prop-desc="Boolean prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-boolean-editor>
+<tg-boolean-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_booleanProp_is" validation-callback="[[validate]]" prop-title="Boolean prop" prop-desc="Boolean prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" style="margin-right:20px"></tg-boolean-editor>
+<tg-boolean-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_booleanProp_not" validation-callback="[[validate]]" prop-title="Boolean prop" prop-desc="Boolean prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-boolean-editor>
 </tg-boolean-criterion>
 <tg-date-range-criterion validation-callback="[[validate]]" or-null="{{propertyModel.dateProp.orNull}}" not="{{propertyModel.dateProp.not}}" exclusive="{{propertyModel.dateProp.exclusive}}" exclusive2="{{propertyModel.dateProp.exclusive2}}" date-prefix="{{propertyModel.dateProp.datePrefix}}" date-mnemonic="{{propertyModel.dateProp.dateMnemonic}}" and-before="{{propertyModel.dateProp.andBefore}}">
-<tg-datetime-picker entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_dateProp_from" validation-callback="[[validate]]" prop-title="Date prop" prop-desc="Date prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-datetime-picker>
-<tg-datetime-picker entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_dateProp_to" validation-callback="[[validate]]" prop-title="Date prop" prop-desc="Date prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-datetime-picker>
+<tg-datetime-picker entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_dateProp_from" validation-callback="[[validate]]" prop-title="Date prop" prop-desc="Date prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" style="margin-right:20px"></tg-datetime-picker>
+<tg-datetime-picker entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_dateProp_to" validation-callback="[[validate]]" prop-title="Date prop" prop-desc="Date prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-datetime-picker>
 </tg-date-range-criterion>
 <tg-multi-criterion validation-callback="[[validate]]" or-null="{{propertyModel.compositeProp.orNull}}" not="{{propertyModel.compositeProp.not}}">
-<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_compositeProp" validation-callback="[[validate]]" prop-title="Composite prop" prop-desc="Composite prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors" additional-properties="{&quot;desc&quot;: false}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
+<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_compositeProp" validation-callback="[[validate]]" prop-title="Composite prop" prop-desc="Composite prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" additional-properties="{&quot;desc&quot;: false}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
 </tg-multi-criterion>
 <tg-single-criterion validation-callback="[[validate]]">
-<tg-datetime-picker entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyDateProp" validation-callback="[[validate]]" prop-title="Crit-only single date prop" prop-desc="Crit-only single date prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-datetime-picker>
+<tg-datetime-picker entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyDateProp" validation-callback="[[validate]]" prop-title="Crit-only single date prop" prop-desc="Crit-only single date prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-datetime-picker>
 </tg-single-criterion>
 <tg-single-criterion validation-callback="[[validate]]">
-<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyEntityProp" validation-callback="[[validate]]" prop-title="Crit-only single entity prop" prop-desc="Crit-only single entity prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors" additional-properties="{&quot;desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" as-part-of-entity-master="false" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
+<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyEntityProp" validation-callback="[[validate]]" prop-title="Crit-only single entity prop" prop-desc="Crit-only single entity prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" additional-properties="{&quot;desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" as-part-of-entity-master="false" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
 </tg-single-criterion>
 <tg-single-criterion validation-callback="[[validate]]">
-<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_userParam" validation-callback="[[validate]]" prop-title="Crit-only single user prop" prop-desc="Crit-only single user prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors" additional-properties="{&quot;base&quot;: false,&quot;basedOnUser&quot;: false}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" as-part-of-entity-master="false" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="NONE" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
+<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_userParam" validation-callback="[[validate]]" prop-title="Crit-only single user prop" prop-desc="Crit-only single user prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" additional-properties="{&quot;base&quot;: false,&quot;basedOnUser&quot;: false}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" as-part-of-entity-master="false" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="NONE" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
 </tg-single-criterion>
 <tg-single-criterion validation-callback="[[validate]]">
-<tg-integer-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyIntegerProp" validation-callback="[[validate]]" prop-title="Crit-only single integer prop" prop-desc="Crit-only single integer prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-integer-editor>
+<tg-integer-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyIntegerProp" validation-callback="[[validate]]" prop-title="Crit-only single integer prop" prop-desc="Crit-only single integer prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-integer-editor>
 </tg-single-criterion>
 <tg-single-criterion validation-callback="[[validate]]">
-<tg-decimal-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyBigDecimalProp" validation-callback="[[validate]]" prop-title="Crit-only single bigDecimal prop" prop-desc="Crit-only single bigDecimal prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-decimal-editor>
+<tg-decimal-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyBigDecimalProp" validation-callback="[[validate]]" prop-title="Crit-only single bigDecimal prop" prop-desc="Crit-only single bigDecimal prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-decimal-editor>
 </tg-single-criterion>
 <tg-single-criterion validation-callback="[[validate]]">
-<tg-boolean-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyBooleanProp_is" validation-callback="[[validate]]" prop-title="Crit-only single boolean prop" prop-desc="Crit-only single boolean prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-boolean-editor>
+<tg-boolean-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyBooleanProp_is" validation-callback="[[validate]]" prop-title="Crit-only single boolean prop" prop-desc="Crit-only single boolean prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-boolean-editor>
 </tg-single-criterion>
 <tg-single-criterion validation-callback="[[validate]]">
-<tg-singleline-text-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyStringProp" validation-callback="[[validate]]" prop-title="Crit-only single string prop" prop-desc="Crit-only single string prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors"></tg-singleline-text-editor>
+<tg-singleline-text-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_critOnlyStringProp" validation-callback="[[validate]]" prop-title="Crit-only single string prop" prop-desc="Crit-only single string prop desc" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex"></tg-singleline-text-editor>
 </tg-single-criterion>
 <tg-multi-criterion validation-callback="[[validate]]" or-null="{{propertyModel.status.orNull}}" not="{{propertyModel.status.not}}">
-<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_status" validation-callback="[[validate]]" prop-title="Status" prop-desc="The current status of this entity" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors" additional-properties="{&quot;desc&quot;: false}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="NONE" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
+<tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_status" validation-callback="[[validate]]" prop-title="Status" prop-desc="The current status of this entity" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" additional-properties="{&quot;desc&quot;: false}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="NONE" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
 </tg-multi-criterion>
 </tg-flex-layout>
     	</tg-selection-criteria>

@@ -12,10 +12,7 @@
 			_show-meta-values-editor="[[_showMetaValuesEditor]]"
 			_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]"
 			_or-null="{{_orNull}}"
-			_not="{{_not}}"
-            _when-desktop="[[_whenDesktop]]"
-            _when-tablet="[[_whenTablet]]"
-            _when-mobile="[[_whenMobile]]">
+			_not="{{_not}}">
 			<content select=".criterion-editors"></content>
 		</tg-abstract-criterion>
 	</template>
@@ -31,10 +28,6 @@
     	
     	behaviors: [ Polymer.TgBehaviors.TgAbstractMultiCriterionBehavior ],
     	
-        _createWhenDesktopConfig: function () {
-        	return ['horizontal', 'justified', 'flex', 'end', ['margin-right: 20px', 'flex'], ['flex'], []];
-        },
-    
 	    _dom: function () {
     		return this.$.dom;
     	}

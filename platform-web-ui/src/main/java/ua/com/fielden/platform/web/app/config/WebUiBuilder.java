@@ -26,6 +26,8 @@ public class WebUiBuilder implements IWebUiBuilder {
 
     private int minDesktopWidth = 980, minTabletWidth = 768;
     private String locale = "en-AU";
+    private String dateFormat = "DD/MM/YYYY";
+    private String timeFormat = "h:mm A";
 
     /**
      * Holds the map between master's entity type and its master component.
@@ -61,6 +63,18 @@ public class WebUiBuilder implements IWebUiBuilder {
     @Override
     public IWebUiBuilder setLocale(final String locale) {
         this.locale = locale;
+        return this;
+    }
+
+    @Override
+    public IWebUiBuilder setTimeFormat(final String timeFormat) {
+        this.timeFormat = timeFormat;
+        return this;
+    }
+
+    @Override
+    public IWebUiBuilder setDateFormat(final String dateFormat) {
+        this.dateFormat = dateFormat;
         return this;
     }
 
@@ -101,6 +115,8 @@ public class WebUiBuilder implements IWebUiBuilder {
         return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/tg-app-config.html").
                 replaceAll("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
                 replaceAll("@minTabletWidth", Integer.toString(this.minTabletWidth)).
-                replaceAll("@locale", "\"" + locale + "\"");
+                replaceAll("@locale", "\"" + this.locale + "\"").
+                replaceAll("@dateFormat", "\"" + this.dateFormat + "\"").
+                replaceAll("@timeFormat", "\"" + this.timeFormat + "\"");
     }
 }
