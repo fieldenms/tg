@@ -110,10 +110,9 @@
 	                            self._showMaster();
 	                    	})
 	                    	.catch(function(error) {
-	                        	console.warn('ERROR on load: ', error);
-	                            self.$.toaster.text = 'There was an error while loading the resource.';
+	                            self.$.toaster.text = 'There was an error displaying the dialog.';
 	                            self.$.toaster.hasMore = true;
-	                            self.$.toaster.msgText = 'There was an error while loading the resource. Please try again.<br><br> \
+	                            self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
 	                                                      <b>Error cause:</b><br>' + error.message;
 	                            self.$.toaster.showProgress = false;
 	                            self.$.toaster.show();

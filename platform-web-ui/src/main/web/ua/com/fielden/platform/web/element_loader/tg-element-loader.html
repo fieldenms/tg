@@ -128,7 +128,7 @@
                                     Polymer.dom(document.head).removeChild(link);
                                     Polymer.dom.flush();
                                     // reject the promise
-                                    reject(new Error('Could not load element ', elementName, ' due to ', e));
+                                    reject(new Error('Could not load element <tt>' + elementName + '</tt>.'));
                                     
                                     // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
                                     console.warn("error happened", e);
