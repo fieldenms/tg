@@ -14,8 +14,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -76,6 +74,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+
+import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -380,8 +380,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .detailIcon("menu-detailed:fleet")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88")
-                //.master(entityMaster)
-                .centre(entityCentre)
+                .master(entityMaster)
+                //.centre(entityCentre)
                 // .view(null)
                 .done()
 
@@ -392,8 +392,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88")
                 //.master(entityMaster)
-                // .centre(entityCentre)
-                .view(null)
+                .centre(entityCentre)
+                //.view(null)
                 .done();
 
         configDesktopMainMenu()

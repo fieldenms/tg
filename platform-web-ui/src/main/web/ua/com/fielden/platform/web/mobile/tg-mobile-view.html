@@ -23,7 +23,7 @@
     </style>
     <template>
         <div class="toolbar">[[menuItem.title]]</div>
-        <!-- auto --> <tg-element-loader id="elementToLoad" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+        <tg-element-loader id="elementToLoad" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
     </template>
 </dom-module>
 <script>
@@ -34,45 +34,39 @@
 
             properties: {
                 menuItem: Object,
-                loadedView: Object,
-                firstTimeRetrieved: Boolean
+                loadedView: Object
             },
 
             hostAttributes: {
                 "class": "layout vertical"
             },
 
-            ready: function () {
-                this.firstTimeRetrieved = true;
-            },
-
             reload: function () {
-                if (this.menuItem.view.type === 'master') {
-                    if (this.loadedView) {
+                if (this.$.elementToLoad.wasLoaded) {
+                    if (this.menuItem.view.type === 'master' && this.loadedView) {
                         this.loadedView.entityId = 'new';
                         this.loadedView.retrieve();
-                    }
-                } else if (this.menuItem.view.type === 'centre') {
-                    if (this.$.elementToLoad.wasLoaded) {
+                    } else if (this.menuItem.view.type === 'centre') {
                         this.fire("menu-item-loaded", this.menuItem.title);
                     } else {
-                        this.$.elementToLoad.load();
+                        // Nothing to do.
                     }
                 } else {
-                    // nothing to do
+                    this.$.elementToLoad.load();
                 }
             },
 
-            _afterLoadListener: function (e, detail, view) {
+            _afterLoadListener: function (e, detail) {
                 var self = this;
                 this.loadedView = detail;
                 if (e.target === this.$.elementToLoad) {
                     if (this.menuItem.view.type === 'centre') {
                         console.warn("TG-MOBILE-VIEW: this.menuItem.view.type === centre");
                         detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                            self.fire("menu-item-loaded", self.menuItem.title);
+                            if (!self.$.elementToLoad.auto) {
+                                self.fire("menu-item-loaded", self.menuItem.title);
+                            }
                         };
-
                         detail.retrieve();
                     } else if (this.menuItem.view.type === 'master') {
                         detail.postRetrieved = function (entity, bindingEntity, customObject) {
@@ -80,6 +74,10 @@
                         };
                         detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                         detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                        if (!self.$.elementToLoad.auto) {
+                            detail.entityId = 'new';
+                            detail.retrieve();
+                        }
                     } else {
                         // TODO unknown view
                     }
