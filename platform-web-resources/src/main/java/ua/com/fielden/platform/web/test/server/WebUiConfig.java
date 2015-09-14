@@ -14,6 +14,8 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -74,8 +76,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -377,19 +377,30 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Fleet Mobile")
                 .description("Fleet Mobile")
                 .icon("mobile-menu:fleet")
-                .detailIcon("menu-iconset-detailed-svg:fleet")
+                .detailIcon("menu-detailed:fleet")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88")
                 //.master(entityMaster)
                 .centre(entityCentre)
                 // .view(null)
+                .done()
+
+                .addModule("DDS Mobile")
+                .description("DDS Mobile")
+                .icon("mobile-menu:divisional-daily-management")
+                .detailIcon("menu-detailed:divisional-daily-management")
+                .bgColor("#00D4AA")
+                .captionBgColor("#00AA88")
+                //.master(entityMaster)
+                // .centre(entityCentre)
+                .view(null)
                 .done();
 
         configDesktopMainMenu()
                 .addModule("Fleet")
                 .description("Fleet")
                 .icon("menu:fleet")
-                .detailIcon("menu-iconset-detailed-svg:fleet")
+                .detailIcon("menu-detailed:fleet")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88")
                 .view(null)
@@ -397,7 +408,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Import utilities")
                 .description("Import utilities")
                 .icon("menu:import-utilities")
-                .detailIcon("menu-iconset-detailed-svg:import-utilities")
+                .detailIcon("menu-detailed:import-utilities")
                 .bgColor("#5FBCD3")
                 .captionBgColor("#2C89A0")
                 .menu().addMenuItem("First view").description("First view description").view(null).done()
@@ -413,7 +424,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Division daily management")
                 .description("Division daily management")
                 .icon("menu:divisional-daily-management")
-                .detailIcon("menu-iconset-detailed-svg:divisional-daily-management")
+                .detailIcon("menu-detailed:divisional-daily-management")
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
                 .menu()
@@ -422,7 +433,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Accidents")
                 .description("Accidents")
                 .icon("menu:accidents")
-                .detailIcon("menu-iconset-detailed-svg:accidents")
+                .detailIcon("menu-detailed:accidents")
                 .bgColor("#FF9943")
                 .captionBgColor("#C87137")
                 .view(null)
@@ -430,7 +441,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Maintenance")
                 .description("Maintenance")
                 .icon("menu:maintenance")
-                .detailIcon("menu-iconset-detailed-svg:maintenance")
+                .detailIcon("menu-detailed:maintenance")
                 .bgColor("#00AAD4")
                 .captionBgColor("#0088AA")
                 .view(null)
@@ -438,7 +449,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("User")
                 .description("User")
                 .icon("menu:user")
-                .detailIcon("menu-iconset-detailed-svg:user")
+                .detailIcon("menu-detailed:user")
                 .bgColor("#FFE680")
                 .captionBgColor("#FFD42A")
                 .view(null)
@@ -446,7 +457,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Online reports")
                 .description("Online reports")
                 .icon("menu:online-reports")
-                .detailIcon("menu-iconset-detailed-svg:online-reports")
+                .detailIcon("menu-detailed:online-reports")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88").
                 view(null)
@@ -454,7 +465,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Fuel")
                 .description("Fuel")
                 .icon("menu:fuel")
-                .detailIcon("menu-iconset-detailed-svg:fuel")
+                .detailIcon("menu-detailed:fuel")
                 .bgColor("#FFE680")
                 .captionBgColor("#FFD42A")
                 .view(null)
@@ -462,7 +473,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Organisational")
                 .description("Organisational")
                 .icon("menu:organisational")
-                .detailIcon("menu-iconset-detailed-svg:organisational")
+                .detailIcon("menu-detailed:organisational")
                 .bgColor("#2AD4F6")
                 .captionBgColor("#00AAD4")
                 .view(null)
@@ -470,7 +481,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Preventive maintenance")
                 .description("Preventive maintenance")
                 .icon("menu:preventive-maintenance")
-                .detailIcon("menu-iconset-detailed-svg:preventive-maintenance")
+                .detailIcon("menu-detailed:preventive-maintenance")
                 .bgColor("#F6899A")
                 .captionBgColor("#D35F5F")
                 .view(null)
