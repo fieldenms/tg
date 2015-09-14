@@ -49,7 +49,7 @@ public class SourceControllerImpl implements ISourceController {
     private final ISerialiser serialiser;
     private final TgJackson tgJackson;
     private static final Logger logger = Logger.getLogger(SourceControllerImpl.class);
-    private final LinkedHashMap<Pair<DeviceProfile, String>, String> sourcesByURI = new LinkedHashMap<>();
+    private final LinkedHashMap<Pair<DeviceProfile, String>, LinkedHashSet<String>> dependenciesByURI = new LinkedHashMap<>();
     /**
      * All URIs (including derived ones), that will be preloaded during *-index.html loading (deviceProfile-related).
      */
@@ -66,7 +66,7 @@ public class SourceControllerImpl implements ISourceController {
         logger.info(String.format("\t[%s MODE]", this.deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
 
         this.preloadedResourcesByProfile = calculatePreloadedResourcesByProfile();
-        this.sourcesByURI.clear();
+        this.dependenciesByURI.clear();
     }
 
     /**
@@ -126,10 +126,13 @@ public class SourceControllerImpl implements ISourceController {
     private LinkedHashSet<String> getRootDependenciesFor(final String absolutePath, final DeviceProfile deviceProfile) {
         // logger.info("getRootDependenciesFor: previousPath = [" + previousPath + "] resourceURI = [" + resourceURI + "]");
         final Pair<DeviceProfile, String> key = Pair.pair(deviceProfile, absolutePath);
-        if (!sourcesByURI.containsKey(key)) {
-            sourcesByURI.put(key, getSource(absolutePath, deviceProfile));
+        if (!dependenciesByURI.containsKey(key)) {
+            dependenciesByURI.put(key, calculateRootDependenciesFor(getSource(absolutePath, deviceProfile)));
         }
-        final String source = sourcesByURI.get(key);
+        return dependenciesByURI.get(key);
+    }
+
+    private LinkedHashSet<String> calculateRootDependenciesFor(final String source) {
         if (source == null) {
             return new LinkedHashSet<String>();
         } else {
