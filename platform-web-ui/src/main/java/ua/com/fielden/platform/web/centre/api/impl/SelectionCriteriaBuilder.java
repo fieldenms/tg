@@ -57,7 +57,7 @@ class SelectionCriteriaBuilder<T extends AbstractEntity<?>> implements ISelectio
         if (field.isAnnotationPresent(CritOnly.class)) {
             final CritOnly critOnly = field.getAnnotation(CritOnly.class);
             if (critOnly.value() != CritOnly.Type.SINGLE) {
-                throw new IllegalArgumentException(String.format("Property '%s'@'%s' cannot be used as a single-valued criterion due to its definition as @CritOnly(RANGE).", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName()));
+                throw new IllegalArgumentException(String.format("Property '%s'@'%s' cannot be used as a single-valued criterion due to its definition as @CritOnly(%s).", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), critOnly.value()));
             }
 
         } else {
