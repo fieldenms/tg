@@ -165,6 +165,13 @@
                 _showMasterInDialog: {
                     type: Function
                 },
+                
+                /**
+                 * Shows the custom view (centre, master, user defined view) in dialog.
+                 */
+                _showCustomViewInDialog: {
+                    type: Function
+                },
 
                 /**
                  * Starts the process of centre saving.
@@ -327,11 +334,18 @@
                         currentState: 'EDIT',
                         centreUuid: self.uuid
                     };
+                    action.viewType = 'master';
                     
                     this.async(function () {
                         this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                     }.bind(this), 1);
                     
+                }).bind(this);
+                
+                self._showCustomViewInDialog=(function(action, entity) {
+                    this.async(function () {
+                        this.actionDialog.showDialog(action);
+                    }.bind(this), 1);
                 }).bind(this);
 
                 self._getContext = (function () {

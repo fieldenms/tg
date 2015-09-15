@@ -6,6 +6,7 @@ import java.util.Map;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.ShowViewInDialogFunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
@@ -26,6 +27,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final FunctionalActionKind functionalActionKind;
     private final boolean masterInvocationAction;
     private final boolean masterInDialogInvocationAction;
+    private final boolean showDetailAction;
     private final String chosenProperty;
 
     /**
@@ -61,6 +63,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                 && MasterInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
         this.masterInDialogInvocationAction = this.entityActionConfig.functionalEntity.isPresent()
                 && MasterInDialogInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
+        // Indicates whether custom view should be shown in dialog.
+        this.showDetailAction = this.entityActionConfig.functionalEntity.isPresent()
+                && ShowViewInDialogFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
 
         this.chosenProperty = chosenProperty;
     }
@@ -125,7 +130,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     @Override
     public final DomElement render() {
-        final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
+        final DomElement uiActionElement = showDetailAction ?
+                new DomElement("tg-page-action").attrs(createShowCustomViewAttrs()) :
+                new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (masterInvocationAction) {
             return new DomElement("tg-page-action").attr("class", "primary-action").attr("action", masterInDialogInvocationAction ? "[[_showMasterInDialog]]"
                     : "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit");
@@ -140,9 +147,24 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
     }
 
+    /**
+     * Creates custom attributes for custom view action.
+     *
+     * @return
+     */
+    private Map<String, Object> createShowCustomViewAttrs() {
+        final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("icon", (conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit"));
+        attrs.put("component-uri", "/centre_ui/" + conf().entityCentre.get().getMenuItemType().getName() + "");
+        attrs.put("element-name", "tg-" + conf().entityCentre.get().getEntityType().getSimpleName() + "-centre");
+        attrs.put("view-type", "centre");
+        attrs.put("action", "[[_showCustomViewInDialog]]");
+        return attrs;
+    }
+
     @Override
     public String importPath() {
-        return masterInvocationAction ? "actions/tg-page-action" : widgetPath;
+        return masterInvocationAction || showDetailAction ? "actions/tg-page-action" : widgetPath;
     }
 
     public FunctionalActionKind getFunctionalActionKind() {

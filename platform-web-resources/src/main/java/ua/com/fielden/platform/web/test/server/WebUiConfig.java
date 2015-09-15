@@ -63,6 +63,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssi
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -124,11 +125,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
 
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig());
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig());
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig());
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig());
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig());
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(null));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(entityCentre1));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(null));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(null));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(null));
 
         configApp().addCentre(MiTgPersistentEntityWithProperties.class, entityCentre);
         configApp().addCentre(MiTgPersistentEntityWithProperties1.class, entityCentre1);
@@ -604,12 +605,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
-    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig() {
+    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final EntityCentre<?> entityCentre) {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
 
+        ICentreTopLevelActions<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
+        if (entityCentre != null) {
+            partialCentre = partialCentre.addTopAction(EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind")).also();
+        }
+
         @SuppressWarnings("unchecked")
-        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
+        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = partialCentre
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).

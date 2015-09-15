@@ -49,7 +49,8 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         return new EntityActionBuilder<T>().noAction();
     }
 
-    private EntityActionBuilder() {}
+    private EntityActionBuilder() {
+    }
 
     @Override
     public EntityActionConfig build() {
@@ -58,6 +59,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         } else {
             return EntityActionConfig.createActionConfig(
                     functionalEntity,
+                    null,
                     context,
                     icon,
                     shortDesc,
