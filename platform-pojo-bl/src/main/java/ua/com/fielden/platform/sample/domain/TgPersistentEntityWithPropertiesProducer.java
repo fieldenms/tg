@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducer;
+import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -14,7 +14,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProducer<TgPersistentEntityWithProperties> implements IEntityProducer<TgPersistentEntityWithProperties> {
+public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProducerWithContext<TgPersistentEntityWithProperties, TgPersistentEntityWithProperties> implements IEntityProducer<TgPersistentEntityWithProperties> {
     private final ITgPersistentEntityWithProperties coTgPersistentEntityWithProperties;
 
     @Inject

@@ -13,20 +13,20 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  * @param <T>
  */
-public class DefaultEntityProducer<T extends AbstractEntity<?>> implements IEntityProducer<T> {
+public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C extends AbstractEntity<?>> implements IEntityProducer<T> {
 
     private final EntityFactory factory;
     private final Class<T> entityType;
     private final IEntityDao<T> companion;
     // optional centre context for context-dependent entity producing logic
-    private CentreContext<T, AbstractEntity<?>> centreContext;
+    private CentreContext<C, AbstractEntity<?>> centreContext;
     private String chosenProperty;
 
-    public DefaultEntityProducer(final EntityFactory factory, final Class<T> entityType) {
+    public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType) {
         this(factory, entityType, null);
     }
 
-    public DefaultEntityProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
+    public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         this.factory = factory;
         this.entityType = entityType;
         this.companion = companionFinder == null ? null : companionFinder.<IEntityDao<T>, T> find(this.entityType);
@@ -76,11 +76,11 @@ public class DefaultEntityProducer<T extends AbstractEntity<?>> implements IEnti
      *
      * @return
      */
-    protected CentreContext<T, AbstractEntity<?>> getCentreContext() {
+    protected CentreContext<C, AbstractEntity<?>> getCentreContext() {
         return centreContext;
     }
 
-    public void setCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext) {
+    public void setCentreContext(final CentreContext<C, AbstractEntity<?>> centreContext) {
         this.centreContext = centreContext;
     }
 

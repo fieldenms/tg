@@ -350,6 +350,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @SuppressWarnings("unchecked")
     protected AbstractEntity() {
         actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(getClass());
+        
         changeSupport = new PropertyChangeSupportEx(this);
         properties = new LinkedHashMap<>();
         lock = new ReentrantLock();
@@ -375,6 +376,27 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
+     * A convenient method for obtaining the actual type that was used to potentially derive the type of the current instance.
+     * For example, generated types are always derived from some prototype entity type.
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+	public Class<? extends AbstractEntity<?>> getDerivedFromType() {
+        Class<? extends AbstractEntity<?>> tmpDerivedFromType = getType();
+        final String name = getType().getName();
+        int index = name.indexOf("$$");
+        if (index > 0) {
+        	final String cleanName = name.substring(0, index);
+        	try {
+				tmpDerivedFromType = (Class<? extends AbstractEntity<?>>) Class.forName(cleanName);
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			} 
+        }
+        return tmpDerivedFromType;
+	}
+
+	/**
      * The main entity constructor.
      *
      * @param id

@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
-import ua.com.fielden.platform.dao.DefaultEntityProducer;
+import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -99,7 +99,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @return
      */
     public static <T extends AbstractEntity<?>> IEntityProducer<T> createDefaultEntityProducer(final EntityFactory factory, final Class<T> entityType) {
-        return new DefaultEntityProducer<T>(factory, entityType);
+        return new DefaultEntityProducerWithContext<T, T>(factory, entityType);
     }
 
     /**
