@@ -1,9 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-iocn-button/paper-iocn-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
 <link rel="import" href="/resources/element_loader/tg-element-loader.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 
 <dom-module id="tg-custom-action-dialog">
     <style>
@@ -16,14 +17,23 @@
             /* this is to make host scorable when needed */
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
         }
+        paper-icon-button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            color: #757575;
+            --iron-icon-height: 18px;
+            --iron-icon-width: 18px;
+        }
+        paper-icon-button:hover {
+            color: black;
+        }
     </style>
 
     <template>
         <tg-element-loader id="loadMaster"></tg-element-loader>
         <tg-toast id="toaster"></tg-toast>
-        <div hidden$="[[_isCloseButtonHidden]]" class="layout horizontal end-justified">
-            <paper-button on-tap="closeDialog">Close</paper-button>
-        </div>
+        <paper-icon-button icon="icons:close" on-tap="closeDialog"></paper-icon-button>
     </template>
 </dom-module>
 <script>
@@ -62,11 +72,6 @@
 
                 _closeEventTopics: {
                     type: Array
-                },
-
-                _isCloseButtonHidden: {
-                    type: Boolean,
-                    value: true
                 }
             },
 
@@ -112,8 +117,6 @@
                                 self._closeEventTopics = closeEventTopics;
                                 self._setIsRunning(true);
                                 self.currentRunningAction = customAction;
-                                // viewType is not present in all cases
-                                self._isCloseButtonHidden = customAction.viewType === 'master' || customAction.viewType === undefined;
 								
                                 self.currentRunningAction._onExecuted(null, element, null);
                                 if (self.currentRunningAction._masterComponent.noUI === true) {
