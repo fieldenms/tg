@@ -38,9 +38,13 @@ public class WebView implements IExecutable {
             final String typeName = entityCentre != null ? (entityCentre.getEntityType().getSimpleName() + "-centre") : (customView.getClass().getSimpleName() + "-view");
             final String elementName = "\"tg-" + typeName + "\"";
             final String viewType = entityCentre != null ? "\"centre\"" : "\"view\"";
-            final String attrs;
+            String attrs;
             if (entityCentre != null) {
-                attrs = "{}";
+                if (entityCentre.isRunAutomatically()) {
+                    attrs = "{autoRun: true}";
+                } else {
+                    attrs = "{}";
+                }
             } else {
                 attrs = "null";
             }

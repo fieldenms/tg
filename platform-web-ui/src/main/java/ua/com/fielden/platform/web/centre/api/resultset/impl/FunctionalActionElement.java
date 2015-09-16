@@ -159,6 +159,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("element-name", "tg-" + conf().entityCentre.get().getEntityType().getSimpleName() + "-centre");
         attrs.put("view-type", "centre");
         attrs.put("action", "[[_showCustomViewInDialog]]");
+        final String actionsHolderName = functionalActionKind == FunctionalActionKind.TOP_LEVEL ? "topLevelActions" :
+                functionalActionKind == FunctionalActionKind.PRIMARY_RESULT_SET ? "primaryAction" :
+                        functionalActionKind == FunctionalActionKind.SECONDARY_RESULT_SET ? "secondaryActions" :
+                                "propActions";
+        attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");
         return attrs;
     }
 
@@ -208,7 +213,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         sb.append("},\n");
 
         sb.append("attrs: {\n");
-        sb.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid\n");
+        if (showDetailAction && conf().entityCentre.get().isRunAutomatically()) {
+            sb.append("    autoRun:true");
+        } else {
+            sb.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid\n");
+        }
         sb.append("},\n");
 
         sb.append("postActionError: function () {\n");

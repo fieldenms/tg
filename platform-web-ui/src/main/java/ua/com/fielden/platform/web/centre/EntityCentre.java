@@ -527,6 +527,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
+     * Returns the value that indicates whether centre must run automatically or not.
+     *
+     * @return
+     */
+    public boolean isRunAutomatically() {
+        return dslDefaultConfig.isRunAutomatically();
+    }
+
+    /**
      * Returns the instance of rendering customiser for this entity centre.
      *
      * @return

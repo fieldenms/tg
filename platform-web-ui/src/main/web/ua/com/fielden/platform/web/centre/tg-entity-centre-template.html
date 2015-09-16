@@ -284,10 +284,17 @@
             	console.time("attached-to-attached-async");
                 var self = this;
                 self.async(function() {
+                    var oldRetrive = self.postRetrieved;
                     console.warn("tg-@entity_type-centre: attached async");
                     console.timeEnd("attached-to-attached-async");
-
+                    
                 	self.postRetrieved = (function (entity, newBindingEntity, customObject) {
+                        if (self.autoRun) {
+                            self.run();
+                        }
+                        if (oldRetrive) {
+                            oldRetrive(entity, newBindingEntity, customObject);
+                        }
                         console.log("centre postRetrieved");
                     }).bind(self);
                     

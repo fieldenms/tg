@@ -59,8 +59,10 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
@@ -125,11 +127,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
 
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(null));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(entityCentre1));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(null));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(null));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(null));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(null, true));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(entityCentre1, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(null, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(null, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(null, false));
 
         configApp().addCentre(MiTgPersistentEntityWithProperties.class, entityCentre);
         configApp().addCentre(MiTgPersistentEntityWithProperties1.class, entityCentre1);
@@ -605,7 +607,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
-    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final EntityCentre<?> entityCentre) {
+    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final EntityCentre<?> entityCentre, final boolean runAutomatically) {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
 
@@ -615,7 +617,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         @SuppressWarnings("unchecked")
-        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = partialCentre
+        final IAlsoCrit<TgPersistentEntityWithProperties> alsoCrit = partialCentre
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
@@ -702,17 +704,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.setDefaultValue(single().text()./* TODO not applicable on query generation level not(). */setValue("DE*")./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
-                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
+                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value());
 
-                .setLayoutFor(Device.DESKTOP, Optional.empty(),
-                        //                        ("[['center-justified', 'start', mrLast]]")
-                        ("[['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mr, mr, mrLast]," +
-                                "['center-justified', 'start', mrLast]]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+        final ILayoutConfig<TgPersistentEntityWithProperties> layoutConfig = runAutomatically ? alsoCrit.runAutomatically() : alsoCrit;
+
+        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = layoutConfig.setLayoutFor(Device.DESKTOP, Optional.empty(),
+                //                        ("[['center-justified', 'start', mrLast]]")
+                ("[['center-justified', 'start', mr, mr, mrLast]," +
+                        "['center-justified', 'start', mr, mr, mrLast]," +
+                        "['center-justified', 'start', mr, mr, mrLast]," +
+                        "['center-justified', 'start', mr, mr, mrLast]," +
+                        "['center-justified', 'start', mr, mr, mrLast]," +
+                        "['center-justified', 'start', mrLast]]")
+                        .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, Optional.empty(),
                         ("[['center-justified', 'start', mr, mrLast]," +
@@ -917,6 +921,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iR", statusWidth);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "oN", statusWidth);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "sR", statusWidth);
+
             return centre;
         });
         return entityCentre;
