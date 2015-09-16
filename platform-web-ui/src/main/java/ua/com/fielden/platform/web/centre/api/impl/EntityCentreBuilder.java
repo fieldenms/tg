@@ -115,6 +115,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig = null;
     protected IFetchProvider<T> fetchProvider = null;
 
+    protected boolean runAutomatically = false;
+
     private EntityCentreBuilder() {
     }
 
@@ -166,6 +168,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 defaultSingleValuesForDateSelectionCriteria,
                 valueMatchersForSelectionCriteria,
                 additionalPropsForAutocompleter,
+                runAutomatically,
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,
                 resultsetExpansionCardLayout,

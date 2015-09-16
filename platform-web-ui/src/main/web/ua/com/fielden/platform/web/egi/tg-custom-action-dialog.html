@@ -1,9 +1,10 @@
 <link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 
 <dom-module id="tg-custom-action-dialog">
     <style>
@@ -12,14 +13,27 @@
             background: white;
             color: black;
             padding: 0px;
-            overflow: auto; /* this is to make host scorable when needed */
+            overflow: auto;
+            /* this is to make host scorable when needed */
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+        }
+        paper-icon-button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            color: #757575;
+            --iron-icon-height: 18px;
+            --iron-icon-width: 18px;
+        }
+        paper-icon-button:hover {
+            color: black;
         }
     </style>
 
     <template>
-         <tg-element-loader id="loadMaster"></tg-element-loader>
-         <tg-toast id="toaster"></tg-toast>
+        <tg-element-loader id="loadMaster"></tg-element-loader>
+        <tg-toast id="toaster"></tg-toast>
+        <paper-icon-button icon="icons:close" on-tap="closeDialog"></paper-icon-button>
     </template>
 </dom-module>
 <script>
@@ -29,31 +43,33 @@
             is: "tg-custom-action-dialog",
 
             behaviors: [Polymer.IronOverlayBehavior],
-            
+
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
                 'iron-overlay-closed': '_dialogClosed'
             },
-            
+
             properties: {
                 isRunning: {
                     type: Boolean,
                     readOnly: true,
                     reflectToAttribute: true
                 },
-                
+
                 /* Postal subscription to events that trigger dialog closing.
                  * It gets populated in _showDialog and unsubscrived on dialog closed.
                  */
                 _subscriptions: {
                     type: Array,
-                    value: function () { return []; }
+                    value: function () {
+                        return [];
+                    }
                 },
-                
+
                 _closeEventChannel: {
                     type: String
                 },
-                
+
                 _closeEventTopics: {
                     type: Array
                 }
@@ -63,7 +79,7 @@
                 this.noAutoFocus = false;
                 this.noCancelOnOutsideClick = true;
                 this.noCancelOnEscKey = true;
-                
+
                 //Initialising the action runner
                 this.currentActionRunning = null;
             },
@@ -71,11 +87,11 @@
             closeDialog: function () {
                 this.close();
             },
-            
+
             _handleCloseEvent: function (data, envelope) {
                 this.closeDialog();
             },
-            
+
             /*
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
              * closeEventChannel -- a channel that is provided from the outside and is used to publish for listening to event that should leade to closing of this dialog.
@@ -89,59 +105,64 @@
                     this.$.toaster.showProgress = false;
                     this.$.toaster.show();
                     console.log("The dialog is already opened and should be closed be being used again.");
-                }  else {
-                	var self = this;
+                } else {
+                    var self = this;
                     if (!self.currentRunningAction) {
-                    	self.$.loadMaster.import = customAction.componentUri;
-                    	self.$.loadMaster.elementName = customAction.elementName;
-                    	self.$.loadMaster.attrs = customAction.attrs;
-                    	self.$.loadMaster.reload()
-	                    	.then(function(element) {
-	                    		self._closeEventChannel = closeEventChannel;
-	                        	self._closeEventTopics = closeEventTopics;
-	                        	self._setIsRunning(true);
-	                        	self.currentRunningAction = customAction;
-	                        	
-	                        	self.currentRunningAction._onExecuted(null, element, null);
-	                            if (self.currentRunningAction._masterComponent.noUI === true) {
-	                                self.currentRunningAction = null;
-	                            }
-	                            
-	                            self._showMaster();
-	                    	})
-	                    	.catch(function(error) {
-	                            self.$.toaster.text = 'There was an error displaying the dialog.';
-	                            self.$.toaster.hasMore = true;
-	                            self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
+                        self.$.loadMaster.import = customAction.componentUri;
+                        self.$.loadMaster.elementName = customAction.elementName;
+                        self.$.loadMaster.attrs = customAction.attrs;
+                        self.$.loadMaster.reload()
+                            .then(function (element) {
+                                self._closeEventChannel = closeEventChannel;
+                                self._closeEventTopics = closeEventTopics;
+                                self._setIsRunning(true);
+                                self.currentRunningAction = customAction;
+								
+                                self.currentRunningAction._onExecuted(null, element, null);
+                                if (self.currentRunningAction._masterComponent.noUI === true) {
+                                    self.currentRunningAction = null;
+                                }
+
+                                self._showMaster();
+                            })
+                            .catch(function (error) {
+                                self.$.toaster.text = 'There was an error displaying the dialog.';
+                                self.$.toaster.hasMore = true;
+                                self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
 	                                                      <b>Error cause:</b><br>' + error.message;
-	                            self.$.toaster.showProgress = false;
-	                            self.$.toaster.show();
-	                        });
+                                self.$.toaster.showProgress = false;
+                                self.$.toaster.show();
+                            });
                     }
                 }
             },
 
             _showMaster: function (e) {
-                if (this.currentRunningAction && this.currentRunningAction._masterComponent.noUI === false) {
+                if (this.currentRunningAction && (!this.currentRunningAction._masterComponent.hasOwnProperty('noUI') || this.currentRunningAction._masterComponent.noUI === false)) {
                     var self = this;
                     // if there would be a master UI then need to subscribe for this dialog closing messages
                     if (self._closeEventChannel && self._closeEventTopics && self._closeEventTopics.length > 0) {
                         self._subscriptions = [];
                         for (var index = 0; index < self._closeEventTopics.length; index++) {
                             self._subscriptions.push(
-                                    postal.subscribe({
-                                        channel: self._closeEventChannel,
-                                        topic: self._closeEventTopics[index],
-                                        callback: self._handleCloseEvent.bind(self)
-                                    }));
+                                postal.subscribe({
+                                    channel: self._closeEventChannel,
+                                    topic: self._closeEventTopics[index],
+                                    callback: self._handleCloseEvent.bind(self)
+                                }));
                         }
+                    }
+                    if (this.currentRunningAction.viewType === 'centre') {
+                        this.style.width = "500px";
+                        this.style.height = "300px";
+                    } else {
+                        this.style.width = "auto";
+                        this.style.height = "auto";
                     }
                     this.refit();
                     // let's open the dialog with magical async...
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done
                     this.async(function () {
-                        //this.resetFit();
-                        //this.fit();
                         this.open();
                     }.bind(this), 100);
                 }
@@ -151,11 +172,11 @@
                 this.currentRunningAction = null;
                 this._setIsRunning(false);
             },
-            
-            _dialogClosed: function() {
+
+            _dialogClosed: function () {
                 // if there are current subscriptions they need to be unsubscribed
                 // due to dialog being closed
-                for (var index = 0; index <this._subscriptions.length; index++) {
+                for (var index = 0; index < this._subscriptions.length; index++) {
                     postal.unsubscribe(this._subscriptions[index]);
                 }
                 this._subscriptions.length = 0;

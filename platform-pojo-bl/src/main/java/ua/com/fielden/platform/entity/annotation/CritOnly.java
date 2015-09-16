@@ -25,19 +25,14 @@ public @interface CritOnly {
     long scale() default -1;
 
     /**
-     * Enumeration to choose whether range property should be selected by single or double criterion. Single property will not be affected.
-     *
-     * @author jhou
-     *
+     * Enumeration for specifying the type of a crit-only selection criterion. 
      */
     public enum Type {
-        /**
-         * Indicates that property should be selected by left and right boundary (if it is range property) and by single boundary (if it is single property).
-         */
+        /** Indicates that property should be selected by left and right boundary (if it is range property) and by single boundary (if it is single property). */
         RANGE,
-        /**
-         * Indicates that property should be selected only by single boundary (even if it is range property).
-         */
-        SINGLE
+        /** Indicates that property should be selected only by single boundary (even if it is range property). */
+        SINGLE,
+        /** Specifies whether associated crit-only property should represent a multi valued selection criterion. */
+        MULTI
     }
 }

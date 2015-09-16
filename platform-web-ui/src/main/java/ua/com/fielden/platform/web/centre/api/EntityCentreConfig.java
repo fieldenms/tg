@@ -11,10 +11,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -34,6 +30,10 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
 
 /**
  *
@@ -111,8 +111,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
 
     /**
-     * A map between selection criteria properties that are associated with multi- or single-value autocompleter and the additional properties
-     * that should be set up for those autocompleters to be displayed as part of the autocompletion result list.
+     * A map between selection criteria properties that are associated with multi- or single-value autocompleter and the additional properties that should be set up for those
+     * autocompleters to be displayed as part of the autocompletion result list.
      */
     private final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
 
@@ -129,6 +129,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     protected final FlexLayout resultsetSummaryCardLayout;
 
+    /**
+     * Determines whether centre should run automatically or not.
+     */
+    private final boolean runAutomatically;
 
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
@@ -140,9 +144,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     private final List<ResultSetProp> resultSetProperties = new ArrayList<>();
     /**
-     * The key in this structure represent resultset properties that are considered to be originating for the associated with them summaries.
-     * Each key may reference several definitions of summary expressions, hence, the use of a multimap.
-     * More specifically, {@link ListMultimap} is used to preserve the order of summary expression as declared using Entity Centre DSL.
+     * The key in this structure represent resultset properties that are considered to be originating for the associated with them summaries. Each key may reference several
+     * definitions of summary expressions, hence, the use of a multimap. More specifically, {@link ListMultimap} is used to preserve the order of summary expression as declared
+     * using Entity Centre DSL.
      */
     private final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
 
@@ -187,7 +191,6 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     }
 
-
     /**
      * This is just a convenience structure for capturing a summary property definition.
      *
@@ -202,14 +205,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 final String alias,
                 final String expression,
                 final String title,
-                final String desc
-                ) {
+                final String desc) {
             this.alias = alias;
             this.expression = expression;
             this.title = title;
             this.desc = desc;
         }
     }
+
     /**
      * A map between properties to order by and the ordering direction. The order of elements in this map corresponds to the ordering sequence. That is, the first listed property
      * should be the first in the resultant order statement, the second -- second, and so on.
@@ -289,6 +292,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria,
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
 
+            final boolean runAutomatically,
+
             final FlexLayout selectionCriteriaLayout,
             final FlexLayout resultsetCollapsedCardLayout,
             final FlexLayout resultsetExpansionCardLayout,
@@ -341,6 +346,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultsetExpansionCardLayout = resultsetExpansionCardLayout;
         this.resultsetSummaryCardLayout = resultsetSummaryCardLayout;
 
+        this.runAutomatically = runAutomatically;
+
         this.resultSetProperties.addAll(resultSetProperties);
         this.summaryExpressions.putAll(summaryExpressions);
         this.resultSetOrdering.putAll(resultSetOrdering);
@@ -384,6 +391,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public FlexLayout getResultsetSummaryCardLayout() {
         return resultsetSummaryCardLayout;
+    }
+
+    public boolean isRunAutomatically() {
+        return runAutomatically;
     }
 
     public Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {

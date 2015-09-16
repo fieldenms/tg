@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducer;
+import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -13,7 +13,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgSRStatusActivationFunctionalEntityProducer extends DefaultEntityProducer<TgSRStatusActivationFunctionalEntity> implements IEntityProducer<TgSRStatusActivationFunctionalEntity> {
+public class TgSRStatusActivationFunctionalEntityProducer extends DefaultEntityProducerWithContext<TgSRStatusActivationFunctionalEntity, TgSRStatusActivationFunctionalEntity> implements IEntityProducer<TgSRStatusActivationFunctionalEntity> {
     private final ITgStatusActivationFunctionalEntity companion;
 
     @Inject

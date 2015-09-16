@@ -19,7 +19,7 @@ import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducer;
+import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -94,7 +94,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public T createValidationPrototypeWithCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
-        final DefaultEntityProducer<T> defProducer = (DefaultEntityProducer<T>) entityProducer;
+        final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
         defProducer.setCentreContext(centreContext);
         defProducer.setChosenProperty(chosenProperty);
         return entityProducer.newEntity();

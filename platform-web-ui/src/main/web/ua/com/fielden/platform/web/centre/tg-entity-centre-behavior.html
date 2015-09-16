@@ -71,6 +71,16 @@
                   type: Object,
                   value: null
                 },
+                
+                /**
+                 * Property that indcates whether this centre should load date right after that when it was loaded.
+                 */
+                autoRun: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
+                },
+                
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,6 +173,13 @@
                  * Shows the master for current entity in dialog.
                  */
                 _showMasterInDialog: {
+                    type: Function
+                },
+                
+                /**
+                 * Shows the custom view (centre, master, user defined view) in dialog.
+                 */
+                _showCustomViewInDialog: {
                     type: Function
                 },
 
@@ -327,11 +344,18 @@
                         currentState: 'EDIT',
                         centreUuid: self.uuid
                     };
+                    action.viewType = 'master';
                     
                     this.async(function () {
                         this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                     }.bind(this), 1);
                     
+                }).bind(this);
+                
+                self._showCustomViewInDialog=(function(action, entity) {
+                    this.async(function () {
+                        this.actionDialog.showDialog(action);
+                    }.bind(this), 1);
                 }).bind(this);
 
                 self._getContext = (function () {

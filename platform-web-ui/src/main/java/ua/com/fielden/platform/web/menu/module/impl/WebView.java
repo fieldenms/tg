@@ -43,7 +43,7 @@ public class WebView implements IExecutable {
                     : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : (customView.getClass().getSimpleName() + "-view"));
             final String elementName = "\"tg-" + typeName + "\"";
             final String viewType = entityMaster != null ? "\"master\"" : (entityCentre != null ? "\"centre\"" : "\"view\"");
-            final String attrs;
+            String attrs;
             if (entityMaster != null) {
                 // TODO the next piece of code was provided analogously to tg-mobile-app's hardcoded stuff.
                 attrs = "{"
@@ -54,9 +54,11 @@ public class WebView implements IExecutable {
                         + "uuid: \"" + entityMaster.getEntityType().getSimpleName() + "\","
                         + "}";
             } else if (entityCentre != null) {
-                attrs = "{"
-                        + "uuid: \"" + entityCentre.getName() + "\""
-                        + "}";
+                if (entityCentre.isRunAutomatically()) {
+                    attrs = "{autoRun: true, uuid: \"" + entityCentre.getName() + "\"}";
+                } else {
+                    attrs = "{uuid: \"" + entityCentre.getName() + "\"}";
+                }
             } else {
                 attrs = "null";
             }

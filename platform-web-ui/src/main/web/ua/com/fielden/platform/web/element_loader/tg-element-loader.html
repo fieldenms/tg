@@ -101,7 +101,7 @@
                         	// proceed with import
                             var link = self.importHref(href,
                                 // link.onload
-                                function (e) {
+                                function (event) {
                                     console.timeEnd("loading");
                                     importedURLs[self.import] = "imported";
                                     
@@ -115,7 +115,7 @@
                                     self.fire('after-load', insertedElement);
                                 }, 
                                 // link.onerror
-                                function (e) {
+                                function (event) {
                                     console.timeEnd("loading");
                              
                                     // prepare mutation for the repeated invocation of import
@@ -131,7 +131,7 @@
                                     reject(new Error('Could not load element <tt>' + elementName + '</tt>.'));
                                     
                                     // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
-                                    console.warn("error happened", e);
+                                    console.warn("error happened", event);
                                     // loading error
                                 });
                         }); // end of promise 
@@ -154,11 +154,32 @@
                 }
             },
             
-            /** */
+            /** 
+             * Enforces reloading of a resource that has failed to load during previous attampts.
+             * Thsi method should not be confused with the actual element reloading, which would require deregistering of the element and handling of already existing instances.
+             */
             reload: function () {
                 this.wasLoaded = false;
                 return this.load();
-            }
+            },
+            
+            importHref: function (href, onload, onerror) {
+            	var link = document.createElement('link');
+            	link.rel = 'import';
+            	link.href = href;
+            	if (onload) {
+            		link.onload = onload.bind(this);
+            	}
+            	if (onerror) {
+            		link.onerror = onerror.bind(this);
+            	}
+            	try {
+            		document.head.appendChild(link);
+            	} catch (ex) {
+            		console.warn(ex);
+            	}
+            	return link;
+           	}
         });
     })();
 </script>
