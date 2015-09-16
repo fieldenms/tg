@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
  *
  */
 public class AbstractVulcanize {
-    private static final Logger logger = Logger.getLogger(Vulcanize.class);
+    private static final Logger logger = Logger.getLogger(AbstractVulcanize.class);
 
     protected static Logger logger() {
         return logger;
