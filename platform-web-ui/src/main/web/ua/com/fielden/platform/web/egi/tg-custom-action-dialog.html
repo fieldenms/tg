@@ -112,8 +112,9 @@
                                 self._closeEventTopics = closeEventTopics;
                                 self._setIsRunning(true);
                                 self.currentRunningAction = customAction;
-                                self._isCloseButtonHidden = customAction.viewType === 'master';
-
+                                // viewType is not present in all cases
+                                self._isCloseButtonHidden = customAction.viewType === 'master' || customAction.viewType === undefined;
+								
                                 self.currentRunningAction._onExecuted(null, element, null);
                                 if (self.currentRunningAction._masterComponent.noUI === true) {
                                     self.currentRunningAction = null;
