@@ -1,10 +1,11 @@
 <link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
-<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 
 <dom-module id="tg-custom-action-dialog">
     <style>
@@ -21,19 +22,19 @@
             position: absolute;
             top: 0;
             right: 0;
-            color: #757575;
+            color: var(--paper-deep-orange-300);
             --iron-icon-height: 18px;
             --iron-icon-width: 18px;
         }
         paper-icon-button:hover {
-            color: black;
+            color: var(--paper-deep-orange-600);
         }
     </style>
 
     <template>
         <tg-element-loader id="loadMaster"></tg-element-loader>
         <tg-toast id="toaster"></tg-toast>
-        <paper-icon-button icon="icons:close" on-tap="closeDialog"></paper-icon-button>
+        <paper-icon-button icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
     </template>
 </dom-module>
 <script>
