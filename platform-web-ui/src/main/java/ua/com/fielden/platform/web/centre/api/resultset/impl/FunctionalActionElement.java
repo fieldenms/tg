@@ -159,7 +159,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
         attrs.put("icon", (conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit"));
         attrs.put("component-uri", "/centre_ui/" + conf().entityCentre.get().getMenuItemType().getName() + "");
-        attrs.put("element-name", "tg-" + conf().entityCentre.get().getEntityType().getSimpleName() + "-centre");
+        attrs.put("element-name", "tg-" + conf().entityCentre.get().getMenuItemType().getSimpleName() + "-centre");
         attrs.put("view-type", "centre");
         attrs.put("action", "[[_showCustomViewInDialog]]");
         final String actionsHolderName = functionalActionKind == FunctionalActionKind.TOP_LEVEL ? "topLevelActions" :
@@ -225,7 +225,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         	final PrefDim prefDim = conf().prefDimForView.get();
         	sb.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
         }
-        
+
         sb.append("},\n");
 
         sb.append("postActionError: function () {\n");
