@@ -4,14 +4,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.inject.Injector;
+import com.google.inject.binder.AnnotatedBindingBuilder;
+
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
-
-import com.google.inject.Injector;
-import com.google.inject.binder.AnnotatedBindingBuilder;
 
 /**
  * Guice injector module for TG Testing Server (WebApp-enabled).
@@ -23,6 +24,7 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
 
     private final String domainName;
     private final String path;
+    private final Workflows workflow;
 
     public TgTestWebApplicationServerModule(
             final Map<Class, Class> defaultHibernateTypes,
@@ -34,12 +36,13 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
         super(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, props);
         this.domainName = props.getProperty("web.domain");
         this.path = props.getProperty("web.path");
+        this.workflow = Workflows.valueOf(props.getProperty("workflow"));
     }
 
     @Override
     protected void configure() {
         super.configure();
-        bindWebAppResources(new WebUiConfig(domainName, path));
+        bindWebAppResources(new WebUiConfig(domainName, workflow, path));
     }
 
     @Override

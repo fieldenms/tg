@@ -15,6 +15,7 @@ import java.util.Optional;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -90,8 +91,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String domainName;
     private final String path;
 
-    public WebUiConfig(final String domainName, final String path) {
-        super("TG Test and Demo Application");
+    public WebUiConfig(final String domainName, final Workflows workflow, final String path) {
+        super("TG Test and Demo Application", workflow, new String[0]);
         if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }
@@ -321,16 +322,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "]").replaceAll("actionMr", actionMr))
                 .done();
 
+        final EntityMaster<TgPersistentEntityWithProperties> entityMaster = new EntityMaster<TgPersistentEntityWithProperties>(
+                TgPersistentEntityWithProperties.class,
+                TgPersistentEntityWithPropertiesProducer.class,
+                masterConfig,
+                injector());
         configApp().
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
                         EntityWithInteger.class,
                         null,
                         injector())). // efs(EntityWithInteger.class).with("prop")
-                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(
-                        TgPersistentEntityWithProperties.class,
-                        TgPersistentEntityWithPropertiesProducer.class,
-                        masterConfig,
-                        injector())).
+                addMaster(TgPersistentEntityWithProperties.class, entityMaster).
                 addMaster(TgFunctionalEntityWithCentreContext.class, new EntityMaster<TgFunctionalEntityWithCentreContext>(
                         TgFunctionalEntityWithCentreContext.class,
                         TgFunctionalEntityWithCentreContextProducer.class,
@@ -374,19 +376,42 @@ public class WebUiConfig extends AbstractWebUiConfig {
         // here comes main menu configuration
         // it has two purposes -- one is to provide a high level navigation structure for the application,
         // another is to bind entity centre (and potentially other views) to respective menu items
-        configMainMenu()
+        configMobileMainMenu()
+                .addModule("Fleet Mobile")
+                .description("Fleet Mobile")
+                .icon("mobile-menu:fleet")
+                .detailIcon("menu-detailed:fleet")
+                .bgColor("#00D4AA")
+                .captionBgColor("#00AA88")
+                .master(entityMaster)
+                //.centre(entityCentre)
+                // .view(null)
+                .done()
+
+                .addModule("DDS Mobile")
+                .description("DDS Mobile")
+                .icon("mobile-menu:divisional-daily-management")
+                .detailIcon("menu-detailed:divisional-daily-management")
+                .bgColor("#00D4AA")
+                .captionBgColor("#00AA88")
+                //.master(entityMaster)
+                .centre(entityCentre)
+                //.view(null)
+                .done();
+
+        configDesktopMainMenu()
                 .addModule("Fleet")
                 .description("Fleet")
-                .icon("/resources/images/fleet.svg")
-                .detailIcon("/resources/images/detailed/fleet.svg")
+                .icon("menu:fleet")
+                .detailIcon("menu-detailed:fleet")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88")
                 .view(null)
                 .done()
                 .addModule("Import utilities")
                 .description("Import utilities")
-                .icon("/resources/images/importUtilities.svg")
-                .detailIcon("/resources/images/detailed/importUtilities.svg")
+                .icon("menu:import-utilities")
+                .detailIcon("menu-detailed:import-utilities")
                 .bgColor("#5FBCD3")
                 .captionBgColor("#2C89A0")
                 .menu().addMenuItem("First view").description("First view description").view(null).done()
@@ -401,8 +426,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done()
                 .addModule("Division daily management")
                 .description("Division daily management")
-                .icon("/resources/images/divisionalDailyManagment.svg")
-                .detailIcon("/resources/images/detailed/divisionalDailyManagment.svg")
+                .icon("menu:divisional-daily-management")
+                .detailIcon("menu-detailed:divisional-daily-management")
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
                 .menu()
@@ -410,56 +435,56 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
-                .icon("/resources/images/accidents.svg")
-                .detailIcon("/resources/images/detailed/accidents.svg")
+                .icon("menu:accidents")
+                .detailIcon("menu-detailed:accidents")
                 .bgColor("#FF9943")
                 .captionBgColor("#C87137")
                 .view(null)
                 .done()
                 .addModule("Maintenance")
                 .description("Maintenance")
-                .icon("/resources/images/maintanance.svg")
-                .detailIcon("/resources/images/detailed/maintanance.svg")
+                .icon("menu:maintenance")
+                .detailIcon("menu-detailed:maintenance")
                 .bgColor("#00AAD4")
                 .captionBgColor("#0088AA")
                 .view(null)
                 .done()
                 .addModule("User")
                 .description("User")
-                .icon("/resources/images/user.svg")
-                .detailIcon("/resources/images/detailed/user.svg")
+                .icon("menu:user")
+                .detailIcon("menu-detailed:user")
                 .bgColor("#FFE680")
                 .captionBgColor("#FFD42A")
                 .view(null)
                 .done()
                 .addModule("Online reports")
                 .description("Online reports")
-                .icon("/resources/images/onlineReports.svg")
-                .detailIcon("/resources/images/detailed/onlineReports.svg")
+                .icon("menu:online-reports")
+                .detailIcon("menu-detailed:online-reports")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88").
                 view(null)
                 .done()
                 .addModule("Fuel")
                 .description("Fuel")
-                .icon("/resources/images/fuel.svg")
-                .detailIcon("/resources/images/detailed/fuel.svg")
+                .icon("menu:fuel")
+                .detailIcon("menu-detailed:fuel")
                 .bgColor("#FFE680")
                 .captionBgColor("#FFD42A")
                 .view(null)
                 .done()
                 .addModule("Organisational")
                 .description("Organisational")
-                .icon("/resources/images/organisational.svg")
-                .detailIcon("/resources/images/detailed/organisational.svg")
+                .icon("menu:organisational")
+                .detailIcon("menu-detailed:organisational")
                 .bgColor("#2AD4F6")
                 .captionBgColor("#00AAD4")
                 .view(null)
                 .done()
                 .addModule("Preventive maintenance")
                 .description("Preventive maintenance")
-                .icon("/resources/images/preventiveMaintenence.svg")
-                .detailIcon("/resources/images/detailed/preventiveMaintenence.svg")
+                .icon("menu:preventive-maintenance")
+                .detailIcon("menu-detailed:preventive-maintenance")
                 .bgColor("#F6899A")
                 .captionBgColor("#D35F5F")
                 .view(null)

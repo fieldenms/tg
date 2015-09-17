@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 
 import org.restlet.Context;
 import org.restlet.Request;
@@ -10,11 +9,10 @@ import org.restlet.data.Encoding;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.EntityCentre;
+import com.google.common.base.Charsets;
+
+import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -23,9 +21,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class CentreComponentResource extends ServerResource {
-    private final EntityCentre<? extends AbstractEntity<?>> centre;
-    private final RestServerUtil restUtil;
+public class CentreComponentResource extends DeviceProfileDifferentiatorResource {
+    private final String mitypeString;
 
     /**
      * Creates {@link CentreComponentResource} and initialises it with centre instance.
@@ -36,25 +33,20 @@ public class CentreComponentResource extends ServerResource {
      * @param response
      */
     public CentreComponentResource(
+            final ISourceController sourceController,//
             final RestServerUtil restUtil,
-            final EntityCentre<? extends AbstractEntity<?>> centre,//
             final Context context, //
             final Request request, //
             final Response response) {
-        init(context, request, response);
-        this.restUtil = restUtil;
-        this.centre = centre;
+        super(sourceController, restUtil, context, request, response);
+        this.mitypeString = (String) request.getAttributes().get("mitype");
     }
 
     @Override
     protected Representation get() {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
-            try {
-                return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(centre.build().render().toString().getBytes("UTF-8"))));
-            } catch (final UnsupportedEncodingException e) {
-                e.printStackTrace();
-                throw new ResourceException(e);
-            }
-        }, restUtil);
+            final String source = sourceController().loadSource("/centre_ui/" + this.mitypeString, deviceProfile());
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
+        }, restUtil());
     }
 }

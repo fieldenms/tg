@@ -11,10 +11,8 @@
             //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
             insertElement = function (insertToElement, elementName, attributes) {
                 if (elementName && elementName.toString().length > 0) {
-                    console.time("create-element");
                     var customElement = document.createElement(elementName);
                     if (attributes && typeof attributes === "object") {
-                        console.time("attrs-and-append");
                         for (attr in attributes) {
                             customElement[attr] = attributes[attr];
                         }
@@ -77,6 +75,11 @@
                 var self = this;
                 var attributes = this.attrs || {};
                 var elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
+
+                console.warn("loading");
+                console.time("loading");
+                console.warn("loading-all");
+                console.time("loading-all");
                 
                 if (this.wasLoaded === true) {
                 	// in case of already loaded an inserted element the only sensible thing to do is to 
@@ -86,10 +89,6 @@
                 	return Promise.resolve(Polymer.dom(self).querySelectorAll(elementName));
                 } else {
                     if (self.import && (!importedURLs.hasOwnProperty(self.import) || importedURLs[self.import] !== "imported")) {
-                        console.warn("loading");
-                        console.time("loading");
-                        console.warn("loading-all");
-                        console.time("loading-all");
                         
                         var promise = new Promise(function (resolve, reject) {
                         	var href = self.import;
@@ -104,8 +103,6 @@
                                 // link.onload
                                 function (event) {
                                     console.timeEnd("loading");
-                                    console.warn("inserting-after-load");
-                                    console.time("inserting-after-load");
                                     importedURLs[self.import] = "imported";
                                     
                                     // insert the element

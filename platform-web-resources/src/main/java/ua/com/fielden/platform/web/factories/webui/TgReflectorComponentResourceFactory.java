@@ -5,12 +5,9 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
+import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.TgReflectorComponentResource;
-
-import com.google.inject.Injector;
 
 /**
  * Resource factory for tg-reflector component.
@@ -19,12 +16,12 @@ import com.google.inject.Injector;
  *
  */
 public class TgReflectorComponentResourceFactory extends Restlet {
+    private final ISourceController sourceController;
     private final RestServerUtil restUtil;
-    private final TgJackson tgJackson;
 
-    public TgReflectorComponentResourceFactory(final Injector injector) {
-        this.restUtil = injector.getInstance(RestServerUtil.class);
-        this.tgJackson = (TgJackson) this.restUtil.getSerialiser().getEngine(SerialiserEngines.JACKSON);
+    public TgReflectorComponentResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil) {
+        this.sourceController = sourceController;
+        this.restUtil = restUtil;
     }
 
     @Override
@@ -32,7 +29,7 @@ public class TgReflectorComponentResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            final TgReflectorComponentResource resource = new TgReflectorComponentResource(restUtil, getContext(), request, response, tgJackson);
+            final TgReflectorComponentResource resource = new TgReflectorComponentResource(sourceController, restUtil, getContext(), request, response);
             resource.handle();
         }
     }

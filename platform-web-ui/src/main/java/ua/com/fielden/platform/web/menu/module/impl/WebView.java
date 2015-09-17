@@ -4,46 +4,60 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 public class WebView implements IExecutable {
 
     private final IRenderable customView;
     private final EntityCentre<?> entityCentre;
-
-    //    private EntityMaster<?> entityMaster;
+    private final EntityMaster<?> entityMaster;
 
     public WebView(final IRenderable customView) {
-        this.entityCentre = null;
-        this.customView = customView;
+        this(customView, null, null);
     }
 
     public WebView(final EntityCentre<?> entityCentre) {
-        this.customView = null;
-        this.entityCentre = entityCentre;
+        this(null, entityCentre, null);
     }
 
-    //    public WebView entityMaster(final EntityMaster<?> entityMaster) {
-    //        this.entityMaster = entityMaster;
-    //        return this;
-    //    }
+    public WebView(final EntityMaster<?> entityMaster) {
+        this(null, null, entityMaster);
+    }
+
+    private WebView(final IRenderable customView, final EntityCentre<?> entityCentre, final EntityMaster<?> entityMaster) {
+        this.customView = customView;
+        this.entityCentre = entityCentre;
+        this.entityMaster = entityMaster;
+    }
 
     @Override
     public JsCode code() {
-        if (entityCentre == null && customView == null) {
+        if (entityMaster == null && entityCentre == null && customView == null) {
             return new JsCode("null");
         } else {
-            final String viewUrl = entityCentre != null ? "centre_ui" : "custom_view";
-            final String typeUrl = entityCentre != null ? entityCentre.getMenuItemType().getName() : customView.getClass().getName();
+            final String viewUrl = entityMaster != null ? "master_ui" : (entityCentre != null ? "centre_ui" : "custom_view");
+            final String typeUrl = entityMaster != null ? entityMaster.getEntityType().getName() : (entityCentre != null ? entityCentre.getMenuItemType().getName()
+                    : customView.getClass().getName());
             final String importUrl = "\"/" + viewUrl + "/" + typeUrl + "\"";
-            final String typeName = entityCentre != null ? (entityCentre.getEntityType().getSimpleName() + "-centre") : (customView.getClass().getSimpleName() + "-view");
+            final String typeName = entityMaster != null ? (entityMaster.getEntityType().getSimpleName() + "-master")
+                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : (customView.getClass().getSimpleName() + "-view"));
             final String elementName = "\"tg-" + typeName + "\"";
-            final String viewType = entityCentre != null ? "\"centre\"" : "\"view\"";
+            final String viewType = entityMaster != null ? "\"master\"" : (entityCentre != null ? "\"centre\"" : "\"view\"");
             String attrs;
-            if (entityCentre != null) {
+            if (entityMaster != null) {
+                // TODO the next piece of code was provided analogously to tg-mobile-app's hardcoded stuff.
+                attrs = "{"
+                        + "entityId: \"new\","
+                        + "centreUuid: \"menu\","
+                        + "currentState: \"EDIT\","
+                        + "entityType: \"" + entityMaster.getEntityType().getName() + "\","
+                        + "uuid: \"" + entityMaster.getEntityType().getSimpleName() + "\","
+                        + "}";
+            } else if (entityCentre != null) {
                 if (entityCentre.isRunAutomatically()) {
-                    attrs = "{autoRun: true}";
+                    attrs = "{autoRun: true, uuid: \"" + entityCentre.getName() + "\"}";
                 } else {
-                    attrs = "{}";
+                    attrs = "{uuid: \"" + entityCentre.getName() + "\"}";
                 }
             } else {
                 attrs = "null";

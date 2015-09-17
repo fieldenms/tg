@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.resources;
+package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.assignAuthenticatingCookie;
@@ -32,6 +32,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
