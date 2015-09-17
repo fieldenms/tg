@@ -23,7 +23,7 @@
     </style>
     <template>
         <div class="toolbar">[[menuItem.title]]</div>
-        <tg-element-loader id="elementToLoad" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+        <tg-element-loader id="elementToLoad" auto import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
     </template>
 </dom-module>
 <script>
