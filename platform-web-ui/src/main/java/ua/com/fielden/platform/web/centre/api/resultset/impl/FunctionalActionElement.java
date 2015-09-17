@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
+import static java.lang.String.format;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -7,6 +9,7 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.ShowViewInDialogFunctionalEntity;
+import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
@@ -214,10 +217,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         sb.append("attrs: {\n");
         if (showDetailAction && conf().entityCentre.get().isRunAutomatically()) {
-            sb.append("    autoRun:true");
+            sb.append("    autoRun:true,\n");
         } else {
-            sb.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid\n");
+            sb.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid,\n");
         }
+        if (conf().prefDimForView.isPresent()) {
+        	final PrefDim prefDim = conf().prefDimForView.get();
+        	sb.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
+        }
+        
         sb.append("},\n");
 
         sb.append("postActionError: function () {\n");

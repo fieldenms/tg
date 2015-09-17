@@ -12,9 +12,17 @@
             insertElement = function (insertToElement, elementName, attributes) {
                 if (elementName && elementName.toString().length > 0) {
                     var customElement = document.createElement(elementName);
+                    
+                    // need to clear prefDim just in case the same loader was alredy used to load some different element
+                    insertToElement.prefDim = null; 
+                    
+                    // assign element properties
                     if (attributes && typeof attributes === "object") {
                         for (attr in attributes) {
                             customElement[attr] = attributes[attr];
+                            if (attr === 'prefDim') {
+                            	insertToElement.prefDim = customElement[attr]; 
+                            }
                         }
                         // removing node is faster than to empty innerHTML
                         var child = Polymer.dom(insertToElement).firstChild;
@@ -55,6 +63,20 @@
 
                 attrs: {
                     type: String
+                },
+                
+                /** 
+                 * JSON object representing preferred dimensions for the view being imported. This property could be null.
+                 *  The JSON struture is this:
+                 *  {
+                 * 		width: Function, 
+                 * 		height: Function, 
+                 *	 	unit: String
+                 *	 }
+                 */
+                prefDim: {
+                	type: Object,
+                	value: null
                 }
             },
 

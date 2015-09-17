@@ -32,7 +32,7 @@
     </style>
 
     <template>
-        <tg-element-loader id="loadMaster"></tg-element-loader>
+        <tg-element-loader id="elementLoader"></tg-element-loader>
         <tg-toast id="toaster"></tg-toast>
         <paper-icon-button icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
     </template>
@@ -109,10 +109,10 @@
                 } else {
                     var self = this;
                     if (!self.currentRunningAction) {
-                        self.$.loadMaster.import = customAction.componentUri;
-                        self.$.loadMaster.elementName = customAction.elementName;
-                        self.$.loadMaster.attrs = customAction.attrs;
-                        self.$.loadMaster.reload()
+                        self.$.elementLoader.import = customAction.componentUri;
+                        self.$.elementLoader.elementName = customAction.elementName;
+                        self.$.elementLoader.attrs = customAction.attrs;
+                        self.$.elementLoader.reload()
                             .then(function (element) {
                                 self._closeEventChannel = closeEventChannel;
                                 self._closeEventTopics = closeEventTopics;
@@ -153,13 +153,16 @@
                                 }));
                         }
                     }
-                    if (this.currentRunningAction.viewType === 'centre') {
-                        this.style.width = "500px";
-                        this.style.height = "300px";
+                    
+                    if (this.$.elementLoader.prefDim) {
+                    	var prefDim = this.$.elementLoader.prefDim;
+                    	this.style.width = prefDim.width() + prefDim.unit;
+                        this.style.height = prefDim.height() + prefDim.unit;
                     } else {
                         this.style.width = "auto";
                         this.style.height = "auto";
                     }
+                    this.updateStyles();
                     this.refit();
                     // let's open the dialog with magical async...
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done

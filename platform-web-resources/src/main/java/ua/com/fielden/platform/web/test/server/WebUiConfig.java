@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static ua.com.fielden.platform.web.PrefDim.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
@@ -53,6 +54,8 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -638,7 +641,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         ICentreTopLevelActions<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
         if (entityCentre != null) {
-            partialCentre = partialCentre.addTopAction(EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind")).also();
+            partialCentre = partialCentre.addTopAction(EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind", mkDim(95, 80, Unit.PRC))).also();
         }
 
         @SuppressWarnings("unchecked")
@@ -655,6 +658,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 icon("assignment-ind").
                                 shortDesc("Function 1").
                                 longDesc("Functional context-dependent action 1").
+                                prefDimForView(mkDim(300, 200)).
                                 build()
                 )
                 .also()
