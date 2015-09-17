@@ -7,27 +7,25 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.IAsloCentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup0;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 
 /**
- * A package private helper class to decompose the task of implementing the Entity Centre DSL.
- * It has direct access to protected fields in {@link EntityCentreBuilder}.
+ * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
  *
  * @author TG Team
  *
  * @param <T>
  */
 class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements
-        ICentreTopLevelActions<T>, ICentreTopLevelActionsInGroup<T>, ICentreTopLevelActionsInGroup0<T>, IAsloCentreTopLevelActions<T> {
+        ICentreTopLevelActionsWithRunConfig<T>, ICentreTopLevelActions<T>, ICentreTopLevelActionsInGroup<T>, ICentreTopLevelActionsInGroup0<T>, IAsloCentreTopLevelActions<T> {
 
     private final EntityCentreBuilder<T> builder;
-
 
     public TopLevelActionsBuilder(final EntityCentreBuilder<T> builder) {
         super(builder);
@@ -87,6 +85,12 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
         builder.currSelectionCrit = Optional.of(propName);
         builder.selectionCriteria.add(propName);
         return new SelectionCriteriaBuilder<T>(builder, this);
+    }
+
+    @Override
+    public ICentreTopLevelActions<T> runAutomatically() {
+        builder.runAutomatically = true;
+        return this;
     }
 
 }

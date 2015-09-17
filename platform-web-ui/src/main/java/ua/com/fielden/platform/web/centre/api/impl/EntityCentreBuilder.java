@@ -31,7 +31,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -120,12 +120,12 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     private EntityCentreBuilder() {
     }
 
-    public static <T extends AbstractEntity<?>> ICentreTopLevelActions<T> centreFor(final Class<T> type) {
+    public static <T extends AbstractEntity<?>> ICentreTopLevelActionsWithRunConfig<T> centreFor(final Class<T> type) {
         return new EntityCentreBuilder<T>().forEntity(type);
     }
 
     @Override
-    public ICentreTopLevelActions<T> forEntity(final Class<T> type) {
+    public ICentreTopLevelActionsWithRunConfig<T> forEntity(final Class<T> type) {
         this.entityType = type;
         return new TopLevelActionsBuilder<T>(this);
     }

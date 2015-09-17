@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static ua.com.fielden.platform.web.PrefDim.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
@@ -54,7 +54,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -63,13 +62,12 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
-import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -639,13 +637,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
 
-        ICentreTopLevelActions<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
+        final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
+        ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = runAutomatically ? partialCentre.runAutomatically() : partialCentre;
+
         if (entityCentre != null) {
-            partialCentre = partialCentre.addTopAction(EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind", mkDim(95, 80, Unit.PRC))).also();
+            actionConf = actionConf.addTopAction(EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind", mkDim(95, 80, Unit.PRC))).also();
         }
 
         @SuppressWarnings("unchecked")
-        final IAlsoCrit<TgPersistentEntityWithProperties> alsoCrit = partialCentre
+        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = actionConf
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
@@ -733,19 +733,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.setDefaultValue(single().text()./* TODO not applicable on query generation level not(). */setValue("DE*")./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
-                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value());
-
-        final ILayoutConfig<TgPersistentEntityWithProperties> layoutConfig = runAutomatically ? alsoCrit.runAutomatically() : alsoCrit;
-
-        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = layoutConfig.setLayoutFor(Device.DESKTOP, Optional.empty(),
-                //                        ("[['center-justified', 'start', mrLast]]")
-                ("[['center-justified', 'start', mr, mr, mrLast]," +
-                        "['center-justified', 'start', mr, mr, mrLast]," +
-                        "['center-justified', 'start', mr, mr, mrLast]," +
-                        "['center-justified', 'start', mr, mr, mrLast]," +
-                        "['center-justified', 'start', mr, mr, mrLast]," +
-                        "['center-justified', 'start', mrLast]]")
-                        .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
+                .setLayoutFor(Device.DESKTOP, Optional.empty(),
+                        //                        ("[['center-justified', 'start', mrLast]]")
+                        ("[['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mr, mr, mrLast]," +
+                                "['center-justified', 'start', mrLast]]")
+                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, Optional.empty(),
                         ("[['center-justified', 'start', mr, mrLast]," +

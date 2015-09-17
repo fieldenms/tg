@@ -5,7 +5,6 @@ import java.util.Optional;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
-import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfig;
 import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
@@ -45,11 +44,4 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
 
         return new SelectionCriteriaLayoutBuilder<T>(builder).setLayoutFor(device, orientation, flexString);
     }
-
-    @Override
-    public ILayoutConfig<T> runAutomatically() {
-        builder.runAutomatically = true;
-        return this;
-    }
-
 }
