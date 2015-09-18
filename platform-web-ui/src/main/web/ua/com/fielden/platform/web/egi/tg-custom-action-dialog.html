@@ -73,6 +73,16 @@
 
                 _closeEventTopics: {
                     type: Array
+                },
+                
+                /** 
+                 * An object that caches already loaded, created and already represented by this dialog elements.
+                 * It is used as an optimisation technique to prevent repeated instantiation of elements.
+                 * Properties represent element names and their values -- element instances.
+                 */
+                _cachedElements: {
+                	type: Object,
+                	value: function () { return {}; }
                 }
             },
 
@@ -92,6 +102,20 @@
             _handleCloseEvent: function (data, envelope) {
                 this.closeDialog();
             },
+            
+            /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
+            _getElement: function (customAction) {
+            	var self = this;
+            	if (self._cachedElements.hasOwnProperty(customAction.elementName)) {
+            		console.log("Reusing cached element:", customAction.elementName);
+            		return Promise.resolve(self._cachedElements[customAction.elementName]);
+            	} else {
+            		self.$.elementLoader.import = customAction.componentUri;
+                	self.$.elementLoader.elementName = customAction.elementName;
+                	self.$.elementLoader.attrs = customAction.attrs;
+                	return self.$.elementLoader.reload();
+            	}
+            },
 
             /*
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
@@ -109,11 +133,10 @@
                 } else {
                     var self = this;
                     if (!self.currentRunningAction) {
-                        self.$.elementLoader.import = customAction.componentUri;
-                        self.$.elementLoader.elementName = customAction.elementName;
-                        self.$.elementLoader.attrs = customAction.attrs;
-                        self.$.elementLoader.reload()
+                    	self._getElement(customAction)
                             .then(function (element) {
+                            	self._cachedElements[customAction.elementName] = element;
+                            	
                                 self._closeEventChannel = closeEventChannel;
                                 self._closeEventTopics = closeEventTopics;
                                 self._setIsRunning(true);
