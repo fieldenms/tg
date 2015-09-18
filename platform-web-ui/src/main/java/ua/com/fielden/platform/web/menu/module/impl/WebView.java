@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
+import static java.lang.String.*;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -43,29 +44,34 @@ public class WebView implements IExecutable {
                     : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : (customView.getClass().getSimpleName() + "-view"));
             final String elementName = "\"tg-" + typeName + "\"";
             final String viewType = entityMaster != null ? "\"master\"" : (entityCentre != null ? "\"centre\"" : "\"view\"");
-            String attrs;
+            final StringBuilder attrs = new StringBuilder();
             if (entityMaster != null) {
                 // TODO the next piece of code was provided analogously to tg-mobile-app's hardcoded stuff.
-                attrs = "{"
-                        + "entityId: \"new\","
-                        + "centreUuid: \"menu\","
-                        + "currentState: \"EDIT\","
-                        + "entityType: \"" + entityMaster.getEntityType().getName() + "\","
-                        + "uuid: \"" + entityMaster.getEntityType().getSimpleName() + "\","
-                        + "}";
+                attrs
+                .append("{")
+                .append("entityId: \"new\",")
+                .append("centreUuid: \"menu\",")
+                .append("currentState: \"EDIT\",")
+                .append("entityType: \"" + entityMaster.getEntityType().getName() + "\",")
+                .append("uuid: \"" + entityMaster.getEntityType().getSimpleName() + "\",")
+                .append("}");
             } else if (entityCentre != null) {
+            	attrs.append("{");
+            	attrs.append(format("uuid: \"%s\",", entityCentre.getName()));
                 if (entityCentre.isRunAutomatically()) {
-                    attrs = "{autoRun: true, uuid: \"" + entityCentre.getName() + "\"}";
-                } else {
-                    attrs = "{uuid: \"" + entityCentre.getName() + "\"}";
+                    attrs.append("autoRun: true,");
                 }
+                if (entityCentre.eventSourceUri().isPresent()) {
+                	attrs.append(format("uri: \"%s\",", entityCentre.eventSourceUri().get()));
+                }
+                attrs.append("}");
             } else {
-                attrs = "null";
+                attrs.append("null");
             }
             final String code = "{ import: " + importUrl + ", "
                     + "elementName: " + elementName + ", "
                     + "type: " + viewType + ", "
-                    + "attrs: " + attrs + "}";
+                    + "attrs: " + attrs.toString() + "}";
             return new JsCode(code);
         }
     }

@@ -134,6 +134,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     private final boolean runAutomatically;
 
+    /** Identifies URI for the Server-Side Eventing. If <code>null</code> is set then no SSE is required. */
+    private final String sseUri;
+    
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
     /////////////////////////////////////////////
@@ -293,6 +296,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
 
             final boolean runAutomatically,
+            
+            final String sseUri,
 
             final FlexLayout selectionCriteriaLayout,
             final FlexLayout resultsetCollapsedCardLayout,
@@ -347,6 +352,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultsetSummaryCardLayout = resultsetSummaryCardLayout;
 
         this.runAutomatically = runAutomatically;
+        
+        this.sseUri = sseUri;
 
         this.resultSetProperties.addAll(resultSetProperties);
         this.summaryExpressions.putAll(summaryExpressions);
@@ -627,5 +634,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableList(topLevelActions));
+    }
+    
+    public Optional<String> getSseUri() {
+    	return Optional.ofNullable(sseUri);
     }
 }

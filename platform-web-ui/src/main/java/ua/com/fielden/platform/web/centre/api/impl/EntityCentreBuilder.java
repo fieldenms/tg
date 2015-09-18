@@ -116,6 +116,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected IFetchProvider<T> fetchProvider = null;
 
     protected boolean runAutomatically = false;
+    protected String sseUri;
 
     private EntityCentreBuilder() {
     }
@@ -169,6 +170,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 valueMatchersForSelectionCriteria,
                 additionalPropsForAutocompleter,
                 runAutomatically,
+                sseUri,
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,
                 resultsetExpansionCardLayout,

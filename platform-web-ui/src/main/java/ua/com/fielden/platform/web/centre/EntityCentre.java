@@ -552,6 +552,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public boolean isRunAutomatically() {
         return dslDefaultConfig.isRunAutomatically();
     }
+    
+    /**
+     * Return an optional Event Source URI.
+     * @return
+     */
+    public Optional<String> eventSourceUri() {
+    	return dslDefaultConfig.getSseUri();
+    }
 
     /**
      * Returns the instance of rendering customiser for this entity centre.

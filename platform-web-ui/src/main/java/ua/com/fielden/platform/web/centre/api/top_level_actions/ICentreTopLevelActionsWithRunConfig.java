@@ -9,13 +9,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface ICentreTopLevelActionsWithRunConfig<T extends AbstractEntity<?>> extends ICentreTopLevelActions<T> {
+public interface ICentreTopLevelActionsWithRunConfig<T extends AbstractEntity<?>> extends ICentreTopLevelActionsWithSse<T> {
 
     /**
      * Forces centre to run automatically after it was loaded.
      *
      * @return
      */
-    ICentreTopLevelActions<T> runAutomatically();
+	ICentreTopLevelActionsWithSse<T> runAutomatically();
 
 }

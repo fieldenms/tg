@@ -638,7 +638,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String centreMrLast = "['flex']";
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
-        ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = runAutomatically ? partialCentre.runAutomatically() : partialCentre;
+        ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre).hasEventSourceAt("/entity-centre-events");
 
         if (entityCentre != null) {
             actionConf = actionConf.addTopAction(EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind", mkDim(95, 80, Unit.PRC))).also();

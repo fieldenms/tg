@@ -10,6 +10,7 @@ import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalE
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.ShowViewInDialogFunctionalEntity;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
@@ -197,43 +198,50 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * @return
      */
     public String createActionObject() {
-        final StringBuilder sb = new StringBuilder("{\n");
+        final StringBuilder attrs = new StringBuilder("{\n");
 
-        sb.append("preAction: function () {\n");
-        sb.append("    console.log('preAction: " + conf().shortDesc.get() + "');\n");
+        attrs.append("preAction: function () {\n");
+        attrs.append("    console.log('preAction: " + conf().shortDesc.get() + "');\n");
         if (conf().preAction.isPresent()) {
-            sb.append(conf().preAction.get().build().toString());
+            attrs.append(conf().preAction.get().build().toString());
         } else {
-            sb.append("    return true;\n");
+            attrs.append("    return true;\n");
         }
-        sb.append("},\n");
+        attrs.append("},\n");
 
-        sb.append("postActionSuccess: function () {\n");
-        sb.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "');\n");
+        attrs.append("postActionSuccess: function () {\n");
+        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "');\n");
         if (conf().successPostAction.isPresent()) {
-            sb.append(conf().successPostAction.get().build().toString());
+            attrs.append(conf().successPostAction.get().build().toString());
         }
-        sb.append("},\n");
+        attrs.append("},\n");
 
-        sb.append("attrs: {\n");
-        if (showDetailAction && conf().entityCentre.get().isRunAutomatically()) {
-            sb.append("    autoRun:true,\n");
+        attrs.append("attrs: {\n");
+        if (showDetailAction) {
+        	final EntityCentre<?> entityCentre = conf().entityCentre.get();
+        	if (entityCentre.isRunAutomatically()) {
+        		attrs.append("    autoRun:true,\n");
+        	}
+        	if (entityCentre.eventSourceUri().isPresent()) {
+        		attrs.append("    autoRun:true,\n");
+        		attrs.append(format("    uri: \"%s\",", entityCentre.eventSourceUri().get()));
+        	}
         } else {
-            sb.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid,\n");
+            attrs.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid,\n");
         }
         if (conf().prefDimForView.isPresent()) {
         	final PrefDim prefDim = conf().prefDimForView.get();
-        	sb.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
+        	attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
         }
 
-        sb.append("},\n");
+        attrs.append("},\n");
 
-        sb.append("postActionError: function () {\n");
-        sb.append("    console.log('postActionError: " + conf().shortDesc.get() + "');\n");
+        attrs.append("postActionError: function () {\n");
+        attrs.append("    console.log('postActionError: " + conf().shortDesc.get() + "');\n");
         if (conf().errorPostAction.isPresent()) {
-            sb.append(conf().errorPostAction.get().build().toString());
+            attrs.append(conf().errorPostAction.get().build().toString());
         }
-        sb.append("}\n");
-        return sb.append("}\n").toString();
+        attrs.append("}\n");
+        return attrs.append("}\n").toString();
     }
 }

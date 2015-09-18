@@ -14,6 +14,7 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup0;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithSse;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -88,9 +89,18 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
     }
 
     @Override
-    public ICentreTopLevelActions<T> runAutomatically() {
+    public ICentreTopLevelActionsWithSse<T> runAutomatically() {
         builder.runAutomatically = true;
         return this;
     }
+
+	@Override
+	public ICentreTopLevelActions<T> hasEventSourceAt(final String uri) {
+		if (StringUtils.isEmpty(uri)) {
+			throw new IllegalArgumentException("Server-Side Eventing URI should not be empty.");
+		}
+        builder.sseUri = uri;
+        return this;
+	}
 
 }
