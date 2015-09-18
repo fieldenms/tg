@@ -24,14 +24,8 @@
                             	insertToElement.prefDim = customElement[attr]; 
                             }
                         }
-                        // removing node is faster than to empty innerHTML
-                        var child = Polymer.dom(insertToElement).firstChild;
-                        while (child) {
-                            Polymer.dom(insertToElement).removeChild(child);
-                            child = Polymer.dom(insertToElement).firstChild;
-                        }
-                        Polymer.dom(insertToElement).appendChild(customElement);
-                        Polymer.dom.flush();
+                        // insert the loaded and instantiated custom element
+                        insertToElement.insert(customElement);
                     }
                     return customElement;
                 }
@@ -87,6 +81,20 @@
                         self.load();
                     }
                 });
+            },
+
+            /** Inserts the provided element with prior removal of any existing children. */
+            insert: function (element) {
+                // remove all childrent before appending a new element
+                var child = Polymer.dom(this).firstChild;
+                while (child) {
+                    Polymer.dom(this).removeChild(child);
+                    child = Polymer.dom(this).firstChild;
+                }
+                
+                // append the provided element
+                Polymer.dom(this).appendChild(element);
+                Polymer.dom.flush();
             },
             
             /** 
