@@ -20,31 +20,38 @@
             --paper-item-min-height: 40px;
             --paper-fab: {
                 color: #666464;
-            };
+                position: absolute;
+                top: 16px;
+                right:16px;
+                z-index: 1;
+            }
+            ;
             --paper-menu: {
                 padding: 0;
                 margin: 0;
-            };
+            }
+            ;
             --paper-item: {
                 padding-left: 22px;
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
-            };
+            }
+            ;
         }
         neon-animated-pages {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            top: 100px;
+            top: 44px;
         }
         .menu-item-view {
             overflow: auto;
         }
         .tool-bar {
             padding: 0 16px;
-            height: 100px;
+            height: 44px;
             font-size: 18px;
             color: white;
             background-color: #0288D1
@@ -61,7 +68,7 @@
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
-        <paper-drawer-panel id="drawerPanel" disableSwipe responsive-width="[[_calcResponsiveWidth()]]">
+        <paper-drawer-panel id="drawerPanel" disable-swipe force-narrow>
 
             <div class="layout vertical" drawer>
 
@@ -187,6 +194,7 @@
                         if (self.$.menu.selected) {
                             newState.push(self.$.menu.selected);
                         }
+                        self._initDrawerPanel();
                         history.pushState(newState, "");
                         postal.publish({
                             channel: "app",
@@ -211,6 +219,7 @@
                             self.restoringState = true;
                             self.$.menu.selected = data.state[1];
                         }
+                        self._initDrawerPanel();
                     }
                 });
                 postal.subscribe({
@@ -222,6 +231,7 @@
                         } else {
                             self.$.menu.selected = data.state[1];
                         }
+                        self._initDrawerPanel();
                         postal.publish({
                             channel: "app",
                             topic: "state.pushed",
@@ -298,6 +308,14 @@
                 });
             },
 
+            _initDrawerPanel: function () {
+                if (this.$.menu.selected === '__empty__') {
+                    this.$.drawerPanel.selected = 'drawer';
+                } else {
+                    this.$.drawerPanel.selected = 'main';
+                }
+            },
+
             _showMenu: function (e, detail, source) {
                 this.fire("main-menu");
             },
@@ -306,8 +324,12 @@
                 this.pageSelected = detail.value;
             },
 
-            _calcResponsiveWidth: function () {
-                return this.$.app_config.minDesktopWidth + "px";
+            _calcSelectedView: function (selectedPage) {
+                if (selectedPage == '__empty__') {
+                    return 'drawer';
+                } else {
+                    return 'main';
+                }
             },
 
             _togglePanel: function (e, detail, source) {
@@ -339,7 +361,8 @@
                         });
                     } else {
                         history.pushState(state, "");
-                        this.$.drawerPanel.closeDrawer();
+                        this._initDrawerPanel();
+                        //this.$.drawerPanel.closeDrawer();
                     }
                 }
             },
