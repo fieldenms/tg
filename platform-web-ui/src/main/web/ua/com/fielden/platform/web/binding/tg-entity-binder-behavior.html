@@ -380,6 +380,8 @@
                     
                     // console.timeEnd('criteria-entity-retrieval');
                     console.timeEnd('loading-all');
+                    
+                    return true;
                 }).bind(self);
                 
                 self._postRetrievedDefaultError = (function (errorResult) {

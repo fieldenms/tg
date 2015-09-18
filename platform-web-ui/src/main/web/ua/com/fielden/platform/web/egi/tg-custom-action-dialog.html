@@ -119,12 +119,12 @@
                                 self._setIsRunning(true);
                                 self.currentRunningAction = customAction;
 								
-                                self.currentRunningAction._onExecuted(null, element, null);
-                                if (self.currentRunningAction._masterComponent.noUI === true) {
-                                    self.currentRunningAction = null;
+                                var promise = self.currentRunningAction._onExecuted(null, element, null);
+                                if (promise) {
+                                	return promise.then(function () {self._showMaster();});
+                                } else {
+                                    return Promise.resolve().then(function () {self._showMaster();});
                                 }
-
-                                self._showMaster();
                             })
                             .catch(function (error) {
                                 self.$.toaster.text = 'There was an error displaying the dialog.';
@@ -139,6 +139,10 @@
             },
 
             _showMaster: function (e) {
+            	if (this.currentRunningAction._masterComponent.noUI === true) {
+            	    this.currentRunningAction = null;
+                }
+
                 if (this.currentRunningAction && (!this.currentRunningAction._masterComponent.hasOwnProperty('noUI') || this.currentRunningAction._masterComponent.noUI === false)) {
                     var self = this;
                     // if there would be a master UI then need to subscribe for this dialog closing messages

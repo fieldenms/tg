@@ -149,12 +149,15 @@
                         console.log("postSaved");
                     };
 
-                    detail.retrieve();
+                    return detail.retrieve();
                 } else if (self.viewType === 'centre') {
-                    detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                        console.log("postRetrieved");
-                    };
-                    detail.retrieve();
+                    return detail.retrieve().then(function () {
+                        if (detail.autoRun) {
+                            return detail.run();
+                        } else {
+                            return Promise.resolve();
+                        }
+                    });
                 }
             }).bind(self);
         }

@@ -392,10 +392,11 @@
                 }).bind(self);
 
                 self.run = (function () {
-                    this.$.egi.clearSelection();
-                    this.$.egi.collapseAllCards();
-                    this.$.selection_criteria.run();
-                    this._triggerRun = true;
+                    var self = this;
+                    self.$.egi.clearSelection();
+                    self.$.egi.collapseAllCards();
+                    self._triggerRun = true;
+                    return self.$.selection_criteria.run();
                 }).bind(self);
 
                 self._showDialog = (function (action) {
@@ -473,7 +474,7 @@
                 // console.time("criteria-entity-retrieval");
                 // console.warn('actual-retrieval');
                 // console.time('actual-retrieval');
-                this.$.selection_criteria.retrieve();
+                return this.$.selection_criteria.retrieve();
             },
 
             /**
