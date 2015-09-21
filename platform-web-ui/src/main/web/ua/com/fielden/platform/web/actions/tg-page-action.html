@@ -1,10 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<!-- <link rel="import" href="/tg-reflector">
+<!-- <link rel="import" href="/app/tg-reflector.html">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html"> -->
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
-<!-- <link rel="import" href="/resources/polymer/paper-dialog/paper-action-dialog.html">
-<link rel="import" href="/resources/element_loader/load-element.html"> -->
 <!-- <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/components/postal-lib.html"> -->
 
@@ -16,70 +14,76 @@
 
 <script>
     Polymer({
-    	is: 'tg-page-action',
-    	
+        is: 'tg-page-action',
+
         properties: {
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	// These mandatory properties must be specified in attributes, when constructing the element instance. //
-        	// No default values are allowed in this case.														   //
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	/**
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing the element instance. //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /**
              * Shows the dialog relative to this 'tg-ui-action'.
              */
             action: {
-            	type: Function
+                type: Function
             },
-        	
-        	/**
-        	 * The context of this action.
-        	 */
-        	context: {
-        		type: Object
-        	},
-        	
+
+            /**
+             * The context of this action.
+             */
+            currentEntity: {
+                type: Object
+            },
+
             /**
              * The icon specificator (string id).
              */
             icon: {
-            	type: String
+                type: String
             },
-            
+
             /**
              * Short description.
              */
             shortDesc: {
-            	type: Function
+                type: Function
             },
-            
+
             elementName: {
-            	type: String
+                type: String
             },
             attrs: {
-            	type: Object
+                type: Object
             },
             /**
              * The URI of custom UI component to be loaded on run() action.
              */
             componentUri: {
-            	type: String
+                type: String
             },
-            
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-        	//   prefix. 																				           //
-        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
-        	//   populate their default values in ready callback (to have these values populated in children)!     //
-        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-           /**
-            * The reference to component that was opened.
-            */
+            /**
+             * The type of view to be opened.
+             */
+            viewType: {
+                type: String
+            },
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            //   prefix. 																				           //
+            // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+            //   populate their default values in ready callback (to have these values populated in children)!     //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /**
+             * The reference to component that was opened.
+             */
             _masterComponent: {
-            	type: Object,
-            	value: null
+                type: Object,
+                value: null
             },
             /**
              * Executes the action.
@@ -87,14 +91,14 @@
              * Please override this method in descendands to implement specific execution logic.
              */
             _run: {
-            	type: Function
+                type: Function
             },
-            
+
             /**
              * Analyzes and processes the result of executor response.
              */
             _onExecuted: {
-            	type: Function
+                type: Function
             }
         },
 
@@ -104,7 +108,7 @@
         ready: function () {
             var self = this;
 
-            self._run = (function (e, detail, source) {
+            self._run = (function () {
                 // this.enabled = false;
                 console.log(this.shortDesc + ": execute");
 
@@ -112,38 +116,49 @@
                 // var ser = this.$.serialiser.serialise(context);
                 // this.$.actionExecutor.body = JSON.stringify(ser);
                 this.async(function () {
-                    this.action(this, this.context);
+                    this.action(this, this.currentEntity);
                 }.bind(self), 100);
-                
+
             }).bind(self);
-            
+
             self._onExecuted = (function (e, detail, source) {
                 var self = this;
                 // console.log("_onExecuted: e", e, "egi", e.srcElement);
                 self._masterComponent = detail;
 
-                detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                    console.log("postRetrieved");
-                };
-                detail.postValidated = function (validatedEntity, bindingEntity, customObject) {
-                    console.log("postValidated");
-                };
+                if (self.viewType === 'master') {
 
-                detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {
-                    postal.publish({
-                        channel: "centre_" + detail.centreUuid,
-                        topic: "detail.saved",
-                        data: {
-                            entity: potentiallySavedEntity,
-                            // send selectedEntitiesInContext further to be able to update only them on EGI
-                            selectedEntitiesInContext: [potentiallySavedEntity]
+                    detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                        console.log("postRetrieved");
+                    };
+                    detail.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                        console.log("postValidated");
+                    };
+
+                    detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {
+                        postal.publish({
+                            channel: "centre_" + detail.centreUuid,
+                            topic: "detail.saved",
+                            data: {
+                                entity: potentiallySavedEntity,
+                                // send selectedEntitiesInContext further to be able to update only them on EGI
+                                selectedEntitiesInContext: [potentiallySavedEntity]
+                            }
+                        });
+
+                        console.log("postSaved");
+                    };
+
+                    return detail.retrieve();
+                } else if (self.viewType === 'centre') {
+                    return detail.retrieve().then(function () {
+                        if (detail.autoRun) {
+                            return detail.run();
+                        } else {
+                            return Promise.resolve();
                         }
                     });
-
-                    console.log("postSaved");
-                };
-
-                detail.retrieve();
+                }
             }).bind(self);
         }
     });

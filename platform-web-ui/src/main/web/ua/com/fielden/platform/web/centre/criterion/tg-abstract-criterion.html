@@ -1,6 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/tg-reflector">
+<link rel="import" href="/app/tg-reflector.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -28,10 +28,10 @@
     </style>
     <template>
         <tg-reflector id="reflector"></tg-reflector>
-        <tg-flex-layout when-desktop="[[_whenDesktop]]" when-tablet="[[_whenTablet]]" when-mobile="[[_whenMobile]]">
+        <div class="layout horizontal justified flex end">
             <content select=".criterion-editors" id="components"></content>
             <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert"></paper-icon-buton>
-        </tg-flex-layout>
+        </div>
     </template>
 </dom-module>
 
@@ -44,9 +44,6 @@
             _acceptMetaValues: Function,
             _showMetaValuesEditor: Function,
             _computeIconButtonStyle: Function,
-            _whenDesktop: Array,
-            _whenTablet: Array,
-            _whenMobile: Array,
             
         	_orNull: {
         		type: Boolean,

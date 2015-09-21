@@ -57,7 +57,17 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     }
 
     private DomElement[] editors() {
-        return editors0().stream().map(widget -> widget.render()).collect(Collectors.toList()).toArray(new DomElement[0]);
+        final List<AbstractWidget> editors = editors0();
+        final DomElement[] editorsDOM = new DomElement[editors.size()];
+        for (int editorIndex = 0; editorIndex < editors.size(); editorIndex++) {
+            final DomElement editorElement = editors.get(editorIndex).render();
+            editorElement.clazz("flex", true);
+            if (editors.size() > 1 && editorIndex == 0) {
+                editorElement.style("margin-right:20px");
+            }
+            editorsDOM[editorIndex] = editorElement;
+        }
+        return editorsDOM;
     }
 
     public List<String> editorsImportPaths() {

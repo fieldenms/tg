@@ -1,11 +1,16 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
+import static java.lang.String.format;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.ShowViewInDialogFunctionalEntity;
+import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
@@ -26,6 +31,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final FunctionalActionKind functionalActionKind;
     private final boolean masterInvocationAction;
     private final boolean masterInDialogInvocationAction;
+    private final boolean showDetailAction;
     private final String chosenProperty;
 
     /**
@@ -61,6 +67,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                 && MasterInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
         this.masterInDialogInvocationAction = this.entityActionConfig.functionalEntity.isPresent()
                 && MasterInDialogInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
+        // Indicates whether custom view should be shown in dialog.
+        this.showDetailAction = this.entityActionConfig.functionalEntity.isPresent()
+                && ShowViewInDialogFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
 
         this.chosenProperty = chosenProperty;
     }
@@ -125,11 +134,12 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     @Override
     public final DomElement render() {
-        final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
+        final DomElement uiActionElement = showDetailAction ?
+                new DomElement("tg-page-action").attrs(createShowCustomViewAttrs()) :
+                new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (masterInvocationAction) {
-            return FunctionalActionKind.PROP != functionalActionKind ? new DomElement("tg-page-action").attr("class", "primary-action").attr("action", masterInDialogInvocationAction ? "[[_showMasterInDialog]]"
-                    : "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit")
-                    : null;
+            return new DomElement("tg-page-action").attr("class", "primary-action").attr("action", masterInDialogInvocationAction ? "[[_showMasterInDialog]]"
+                    : "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit");
         } else if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
             // final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()
             //         : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
@@ -141,9 +151,29 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
     }
 
+    /**
+     * Creates custom attributes for custom view action.
+     *
+     * @return
+     */
+    private Map<String, Object> createShowCustomViewAttrs() {
+        final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("icon", (conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit"));
+        attrs.put("component-uri", "/centre_ui/" + conf().entityCentre.get().getMenuItemType().getName() + "");
+        attrs.put("element-name", "tg-" + conf().entityCentre.get().getMenuItemType().getSimpleName() + "-centre");
+        attrs.put("view-type", "centre");
+        attrs.put("action", "[[_showCustomViewInDialog]]");
+        final String actionsHolderName = functionalActionKind == FunctionalActionKind.TOP_LEVEL ? "topLevelActions" :
+                functionalActionKind == FunctionalActionKind.PRIMARY_RESULT_SET ? "primaryAction" :
+                        functionalActionKind == FunctionalActionKind.SECONDARY_RESULT_SET ? "secondaryActions" :
+                                "propActions";
+        attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");
+        return attrs;
+    }
+
     @Override
     public String importPath() {
-        return masterInvocationAction ? "actions/tg-page-action" : widgetPath;
+        return masterInvocationAction || showDetailAction ? "actions/tg-page-action" : widgetPath;
     }
 
     public FunctionalActionKind getFunctionalActionKind() {
@@ -168,34 +198,50 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      * @return
      */
     public String createActionObject() {
-        final StringBuilder sb = new StringBuilder("{\n");
+        final StringBuilder attrs = new StringBuilder("{\n");
 
-        sb.append("preAction: function () {\n");
-        sb.append("    console.log('preAction: " + conf().shortDesc.get() + "');\n");
+        attrs.append("preAction: function () {\n");
+        attrs.append("    console.log('preAction: " + conf().shortDesc.get() + "');\n");
         if (conf().preAction.isPresent()) {
-            sb.append(conf().preAction.get().build().toString());
+            attrs.append(conf().preAction.get().build().toString());
         } else {
-            sb.append("    return true;\n");
+            attrs.append("    return true;\n");
         }
-        sb.append("},\n");
+        attrs.append("},\n");
 
-        sb.append("postActionSuccess: function () {\n");
-        sb.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "');\n");
+        attrs.append("postActionSuccess: function () {\n");
+        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "');\n");
         if (conf().successPostAction.isPresent()) {
-            sb.append(conf().successPostAction.get().build().toString());
+            attrs.append(conf().successPostAction.get().build().toString());
         }
-        sb.append("},\n");
+        attrs.append("},\n");
 
-        sb.append("attrs: {\n");
-        sb.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid\n");
-        sb.append("},\n");
+        attrs.append("attrs: {\n");
+        if (showDetailAction) {
+        	final EntityCentre<?> entityCentre = conf().entityCentre.get();
+        	if (entityCentre.isRunAutomatically()) {
+        		attrs.append("    autoRun:true,\n");
+        	}
+        	if (entityCentre.eventSourceUri().isPresent()) {
+        		attrs.append("    autoRun:true,\n");
+        		attrs.append(format("    uri: \"%s\",", entityCentre.eventSourceUri().get()));
+        	}
+        } else {
+            attrs.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid,\n");
+        }
+        if (conf().prefDimForView.isPresent()) {
+        	final PrefDim prefDim = conf().prefDimForView.get();
+        	attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
+        }
 
-        sb.append("postActionError: function () {\n");
-        sb.append("    console.log('postActionError: " + conf().shortDesc.get() + "');\n");
+        attrs.append("},\n");
+
+        attrs.append("postActionError: function () {\n");
+        attrs.append("    console.log('postActionError: " + conf().shortDesc.get() + "');\n");
         if (conf().errorPostAction.isPresent()) {
-            sb.append(conf().errorPostAction.get().build().toString());
+            attrs.append(conf().errorPostAction.get().build().toString());
         }
-        sb.append("}\n");
-        return sb.append("}\n").toString();
+        attrs.append("}\n");
+        return attrs.append("}\n").toString();
     }
 }

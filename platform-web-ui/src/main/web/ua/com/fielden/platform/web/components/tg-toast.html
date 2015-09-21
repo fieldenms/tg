@@ -55,22 +55,7 @@
             <paper-spinner id="spinner" class="paper-spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
             <div hidden$="[[_skipShowMore(showProgress, hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
         </paper-toast>
-        <!-- class="scrolling" -->
-
-        <paper-dialog 
-        	id="msgDialog"
-            on-iron-overlay-closed="_dialogClosed" 
-        	with-backdrop
-        	entry-animation="scale-up-animation"
-        	exit-animation="fade-out-animation">
-        	<paper-dialog-scrollable>
-        	   <p style="padding: 10px" id="msgDialogText"></p>
-            </paper-dialog-scrollable>
-            <div class="buttons">
-                <paper-button dialog-confirm affirmative autofocus>Close</paper-button>
-            </div>
-        </paper-dialog>
-    </template>    
+    </template>
 </dom-module>
     
 <script>
@@ -94,7 +79,7 @@
             	
             	msgText: {
             		type: String,
-            		observer: '_msgTextChanged'
+            		value: ''
             	},
             	
                 showProgress: {
@@ -123,15 +108,54 @@
             _showMessageDlg: function (event) {
                 // need to open dialog asynchronously for it to open on mobile devices 
                 this.async(function () {
-                    this.$.msgDialog.open();
+                    // build and display the dialog
+                    var domBind = document.createElement('template', 'dom-bind');
+
+                    domBind._dialogClosed = function() {
+                        Polymer.dom(document.body).removeChild(this);
+                        Polymer.dom.flush();
+                    }.bind(domBind);
+                    
+                    var paperDialog = domBind.content.ownerDocument.createElement('paper-dialog');
+                    Polymer.dom(paperDialog).setAttribute("id", "msgDialog");
+                    Polymer.dom(paperDialog).setAttribute("on-iron-overlay-closed", "_dialogClosed");
+                    Polymer.dom(paperDialog).setAttribute("with-backdrop", "true");
+                    Polymer.dom(paperDialog).setAttribute("entry-animation", "scale-up-animation");
+                    Polymer.dom(paperDialog).setAttribute("exit-animation", "fade-out-animation");
+                    
+                    var paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
+                    var msgPar = domBind.content.ownerDocument.createElement('p');
+                    Polymer.dom(msgPar).setAttribute("style", "padding: 10px");
+                    Polymer.dom(msgPar).innerHTML = this.msgText;
+                    Polymer.dom(paperDialogScrollable).appendChild(msgPar);
+                    
+                    var buttonsDiv = domBind.content.ownerDocument.createElement('div');
+                    Polymer.dom(buttonsDiv).setAttribute("class", "buttons");
+                    
+                    var buttons = domBind.content.ownerDocument.createElement('paper-button');
+                    Polymer.dom(buttons).setAttribute("dialog-confirm", "dialog-confirm");
+                    Polymer.dom(buttons).setAttribute("affirmative", "affirmative");
+                    Polymer.dom(buttons).setAttribute("autofocus", "autofocus");
+                    
+                    var textSpan = domBind.content.ownerDocument.createElement('span');
+                    Polymer.dom(textSpan).innerHTML = 'Close';
+                    Polymer.dom(buttons).appendChild(textSpan);
+                    
+                    Polymer.dom(buttonsDiv).appendChild(buttons);
+                    
+                    Polymer.dom(paperDialog).appendChild(paperDialogScrollable);
+                    Polymer.dom(paperDialog).appendChild(buttonsDiv);
+                    
+                    Polymer.dom(domBind.content).appendChild(paperDialog);
+                    Polymer.dom(document.body).appendChild(domBind);
+                    Polymer.dom.flush();
+
+                    this.async(function () {
+                        domBind.$.msgDialog.open();
+                    }, 100);
+                    
                 }, 100);
                 
-            },
-
-            _dialogClosed: function() {
-                // this is also a good time to remove the toast itself if it has not been yet...
-                Polymer.dom(document.body).removeChild(this.$.toast);
-                Polymer.dom.flush();
             },
             
             _shouldSkipProgress: function (progress, more) {
@@ -140,11 +164,6 @@
 
             _skipShowMore: function (progress, more) {
                 return progress || !more;
-            },
-            
-            _msgTextChanged: function(newValue, oldValue) {
-            	Polymer.dom(this.$.msgDialogText).innerHTML = newValue;
-            	Polymer.dom.flush();
             },
             
             show: function () {

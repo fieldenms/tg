@@ -10,10 +10,7 @@
 			_cancel-meta-values="[[_cancelMetaValuesForBinding]]"
 			_accept-meta-values="[[_acceptMetaValuesForBinding]]"
 			_show-meta-values-editor="[[_showMetaValuesEditor]]"
-			_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]"
-            _when-desktop="[[_whenDesktop]]"
-            _when-tablet="[[_whenTablet]]"
-            _when-mobile="[[_whenMobile]]">
+			_compute-icon-button-style="[[_computeIconButtonStyleForBinding]]">
 			<content select=".criterion-editors"></content>
 		</tg-abstract-criterion>
 	</template>
@@ -32,11 +29,7 @@
     	_iconButtonVisible: function () {
     		return false;
     	},
-    	
-        _createWhenDesktopConfig: function () {
-        	return ['horizontal', 'justified', 'flex', 'end', ['flex'], []];
-        },
-        
+    	 
         _dom: function () {
         	return this.$.dom;
         }

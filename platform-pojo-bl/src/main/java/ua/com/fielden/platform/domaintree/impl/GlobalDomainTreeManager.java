@@ -17,6 +17,8 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -48,8 +50,6 @@ import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Inject;
 
 /**
  * The global domain tree manager implementation.
@@ -816,36 +816,38 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public IGlobalDomainTreeManager saveAsEntityCentreManager(final Class<?> menuItemType, final String originalName, final String newName) {
-        validateMenuItemType(menuItemType);
-        validateMenuItemTypeRootType(menuItemType);
+        synchronized (this) {
+            validateMenuItemType(menuItemType);
+            validateMenuItemTypeRootType(menuItemType);
 
-        if (isFreezedEntityCentreManager(menuItemType, originalName)) {
-            error("Unable to SaveAs the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, originalName)
-                    + "] for current user [" + currentUser() + "].");
+            if (isFreezedEntityCentreManager(menuItemType, originalName)) {
+                error("Unable to SaveAs the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, originalName)
+                        + "] for current user [" + currentUser() + "].");
+            }
+            final ICentreDomainTreeManagerAndEnhancer originationMgr = getEntityCentreManager(menuItemType, originalName);
+            validateBeforeSaving(originationMgr, menuItemType, originalName);
+            // create a copy of current instance of entity centre
+            final ICentreDomainTreeManagerAndEnhancer copyMgr = copyCentre(originationMgr);
+
+            // save an instance of EntityCentreConfig with overridden body, which should exist in DB
+            final String menuItemTypeName = menuItemType.getName();
+            final String newTitle = title(menuItemType, newName);
+
+            final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, newTitle);
+            // entityCentreConfigController.getAllEntities(from(model).model());
+
+            final int count = entityCentreConfigController.count(model);
+            if (count == 0) { // for current user or its base => there are no entity-centres, so persist a copy with a new title
+                final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, currentUser(), newTitle, mainMenuItemController.findByKey(menuItemTypeName));
+                ecc.setConfigBody(getSerialiser().serialise(copyMgr));
+                saveCentre(copyMgr, ecc);
+                init(menuItemType, newName, copyMgr, true);
+            } else { // > 1
+                error("There are at least one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser()
+                        + "] or its base [" + baseOfTheCurrentUser() + "].");
+            }
+            return this;
         }
-        final ICentreDomainTreeManagerAndEnhancer originationMgr = getEntityCentreManager(menuItemType, originalName);
-        validateBeforeSaving(originationMgr, menuItemType, originalName);
-        // create a copy of current instance of entity centre
-        final ICentreDomainTreeManagerAndEnhancer copyMgr = copyCentre(originationMgr);
-
-        // save an instance of EntityCentreConfig with overridden body, which should exist in DB
-        final String menuItemTypeName = menuItemType.getName();
-        final String newTitle = title(menuItemType, newName);
-
-        final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, newTitle);
-        // entityCentreConfigController.getAllEntities(from(model).model());
-
-        final int count = entityCentreConfigController.count(model);
-        if (count == 0) { // for current user or its base => there are no entity-centres, so persist a copy with a new title
-            final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, currentUser(), newTitle, mainMenuItemController.findByKey(menuItemTypeName));
-            ecc.setConfigBody(getSerialiser().serialise(copyMgr));
-            saveCentre(copyMgr, ecc);
-            init(menuItemType, newName, copyMgr, true);
-        } else { // > 1
-            error("There are at least one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser()
-                    + "] or its base [" + baseOfTheCurrentUser() + "].");
-        }
-        return this;
     }
 
     private void saveCentre(final ICentreDomainTreeManagerAndEnhancer copyMgr, final EntityCentreConfig ecc) {

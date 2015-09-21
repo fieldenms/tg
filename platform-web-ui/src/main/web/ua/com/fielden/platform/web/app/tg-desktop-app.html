@@ -1,0 +1,103 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
+<link rel="import" href="/resources/views/tg-app-menu.html">
+<link rel="import" href="/resources/views/tg-app-view.html">
+<link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/app/tg-view-manager.html">
+
+<dom-module id="tg-desktop-app">
+    <style>
+        :host {
+            overflow: hidden;
+        }
+    </style>
+    <template>
+        <tg-view-manager></tg-view-manager>
+        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
+            <template is="dom-repeat" items="[[menuConfig.items]]">
+                <tg-app-view class="fit hero-animatable" name$="[[item.title]]" menu-item="[[item]]"></tg-app-view>
+            </template>
+        </neon-animated-pages>
+    </template>
+</dom-module>
+
+<script>
+    (function () {
+        var pushState = function (state) {
+                if (state && Array.isArray(state) && state.length > 0) {
+                    postal.publish({
+                        channel: state[0],
+                        topic: "state.push",
+                        data: {
+                            state: state
+                        }
+                    });
+                }
+            },
+            popState = function (state) {
+                if (state && Array.isArray(state) && state.length > 0) {
+                    postal.publish({
+                        channel: state[0],
+                        topic: "state.pop",
+                        data: {
+                            state: state,
+                        }
+                    });
+                }
+            };
+        Polymer({
+
+            is: "tg-desktop-app",
+
+            listeners: {
+                "main-menu": "_showMainMenu",
+                "menu-item-selected": "_showView"
+            },
+            _showMainMenu: function (e) {
+                this._setSelected("menu");
+            },
+            _showView: function (e) {
+                pushState([e.detail]);
+            },
+            _setSelected: function (selected) {
+                var currentlySelected = this.$.pages.selected
+                if (currentlySelected) {
+                    this.$$("[name='" + currentlySelected + "']").configureExitAnimation(selected);
+                }
+                if (selected) {
+                    this.$$("[name='" + selected + "']").configureEntryAnimation(currentlySelected);
+                }
+                this.$.pages.selected = selected;
+            },
+            attached: function () {
+                var self = this;
+                this.menuConfig = @menuConfig;
+                postal.subscribe({
+                    channel: "app",
+                    topic: "state.pushed",
+                    callback: function (data, envelope) {
+                        self._setSelected(data.state[0]);
+                        //updateHash(data.state);
+                    }
+                });
+                postal.subscribe({
+                    channel: "app",
+                    topic: "state.poped",
+                    callback: function (data, envelope) {
+                        self._setSelected(data.state[0]);
+                    }
+                });
+                //Set up listener for history events
+                window.onpopstate = function (e) {
+                    popState(e.state);
+                };
+                //Selectes the first view
+                this.async(function () {
+                    self._setSelected("menu");
+                    history.pushState(["menu"], "");
+                }, 1);
+            }
+        });
+    })();
+</script>

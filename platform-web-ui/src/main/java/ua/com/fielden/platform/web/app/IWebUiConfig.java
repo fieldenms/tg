@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.app;
 
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -40,32 +41,46 @@ public interface IWebUiConfig {
     IWebUiBuilder configApp();
 
     /**
-     * Provides access to the application's main menu configuration object.
+     * Provides access to the desktop application's main menu configuration object.
      *
      * @return
      */
-    IMainMenuBuilder configMainMenu();
+    IMainMenuBuilder configDesktopMainMenu();
 
     /**
-     * Generates the web application.
+     * Provides access to the mobile application's main menu configuration object.
      *
      * @return
      */
-    String genAppIndex();
+    IMainMenuBuilder configMobileMainMenu();
 
     /**
-     * Generates the mobile web application.
+     * Generates the main html file of desktop web application.
+     *
+     * @return
+     */
+    String genDesktopAppIndex();
+
+    /**
+     * Generates the main html file of mobile web application.
      *
      * @return
      */
     String genMobileAppIndex();
 
     /**
-     * Generates the main menu component.
+     * Generates the main menu component for mobile application.
      *
      * @return
      */
-    String genMainWebUIComponent();
+    String genMobileMainWebUIComponent();
+
+    /**
+     * Generates the main menu component for desktop application.
+     *
+     * @return
+     */
+    String genDesktopMainWebUIComponent();
 
     /**
      * Generates the global configuration component.
@@ -92,4 +107,10 @@ public interface IWebUiConfig {
      * Implement this in order to provide custom configurations for entity centre, master and other views.
      */
     void initConfiguration();
+
+    /**
+     * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
+     * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
+     */
+    List<String> resourcePaths();
 }

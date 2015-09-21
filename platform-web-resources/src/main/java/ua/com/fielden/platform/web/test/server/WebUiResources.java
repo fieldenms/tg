@@ -2,10 +2,10 @@ package ua.com.fielden.platform.web.test.server;
 
 import org.restlet.Context;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
-
-import com.google.inject.Injector;
 
 /**
  * Custom {@link AbstractWebUiResources} descendant for Web UI Testing Server. Provided in order to configure entity centres, masters and other client specific stuff.
@@ -35,6 +35,6 @@ public class WebUiResources extends AbstractWebUiResources {
             final String owner,
             final String author,
             final IWebUiConfig webApp) {
-        super(context, injector, new String[0], name, desc, owner, author, webApp);
+        super(context, injector, name, desc, owner, author, webApp);
     }
 }

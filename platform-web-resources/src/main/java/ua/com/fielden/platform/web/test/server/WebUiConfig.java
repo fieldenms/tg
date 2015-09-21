@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.test.server;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -52,6 +54,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -63,6 +66,8 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssi
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -87,8 +92,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String domainName;
     private final String path;
 
-    public WebUiConfig(final String domainName, final String path) {
-        super("TG Test and Demo Application");
+    public WebUiConfig(final String domainName, final Workflows workflow, final String path) {
+        super("TG Test and Demo Application", workflow, new String[0]);
         if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }
@@ -124,11 +129,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
 
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig());
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig());
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig());
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig());
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig());
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(null, true));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(entityCentre1, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(null, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(null, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(null, false));
 
         configApp().addCentre(MiTgPersistentEntityWithProperties.class, entityCentre);
         configApp().addCentre(MiTgPersistentEntityWithProperties1.class, entityCentre1);
@@ -318,16 +323,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "]").replaceAll("actionMr", actionMr))
                 .done();
 
+        final EntityMaster<TgPersistentEntityWithProperties> entityMaster = new EntityMaster<TgPersistentEntityWithProperties>(
+                TgPersistentEntityWithProperties.class,
+                TgPersistentEntityWithPropertiesProducer.class,
+                masterConfig,
+                injector());
         configApp().
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
                         EntityWithInteger.class,
                         null,
                         injector())). // efs(EntityWithInteger.class).with("prop")
-                addMaster(TgPersistentEntityWithProperties.class, new EntityMaster<TgPersistentEntityWithProperties>(
-                        TgPersistentEntityWithProperties.class,
-                        TgPersistentEntityWithPropertiesProducer.class,
-                        masterConfig,
-                        injector())).
+                addMaster(TgPersistentEntityWithProperties.class, entityMaster).
                 addMaster(TgFunctionalEntityWithCentreContext.class, new EntityMaster<TgFunctionalEntityWithCentreContext>(
                         TgFunctionalEntityWithCentreContext.class,
                         TgFunctionalEntityWithCentreContextProducer.class,
@@ -371,19 +377,42 @@ public class WebUiConfig extends AbstractWebUiConfig {
         // here comes main menu configuration
         // it has two purposes -- one is to provide a high level navigation structure for the application,
         // another is to bind entity centre (and potentially other views) to respective menu items
-        configMainMenu()
+        configMobileMainMenu()
+                .addModule("Fleet Mobile")
+                .description("Fleet Mobile")
+                .icon("mobile-menu:fleet")
+                .detailIcon("menu-detailed:fleet")
+                .bgColor("#00D4AA")
+                .captionBgColor("#00AA88")
+                .master(entityMaster)
+                //.centre(entityCentre)
+                // .view(null)
+                .done()
+
+                .addModule("DDS Mobile")
+                .description("DDS Mobile")
+                .icon("mobile-menu:divisional-daily-management")
+                .detailIcon("menu-detailed:divisional-daily-management")
+                .bgColor("#00D4AA")
+                .captionBgColor("#00AA88")
+                //.master(entityMaster)
+                .centre(entityCentre)
+                //.view(null)
+                .done();
+
+        configDesktopMainMenu()
                 .addModule("Fleet")
                 .description("Fleet")
-                .icon("/resources/images/fleet.svg")
-                .detailIcon("/resources/images/detailed/fleet.svg")
+                .icon("menu:fleet")
+                .detailIcon("menu-detailed:fleet")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88")
                 .view(null)
                 .done()
                 .addModule("Import utilities")
                 .description("Import utilities")
-                .icon("/resources/images/importUtilities.svg")
-                .detailIcon("/resources/images/detailed/importUtilities.svg")
+                .icon("menu:import-utilities")
+                .detailIcon("menu-detailed:import-utilities")
                 .bgColor("#5FBCD3")
                 .captionBgColor("#2C89A0")
                 .menu().addMenuItem("First view").description("First view description").view(null).done()
@@ -398,8 +427,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done()
                 .addModule("Division daily management")
                 .description("Division daily management")
-                .icon("/resources/images/divisionalDailyManagment.svg")
-                .detailIcon("/resources/images/detailed/divisionalDailyManagment.svg")
+                .icon("menu:divisional-daily-management")
+                .detailIcon("menu-detailed:divisional-daily-management")
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
                 .menu()
@@ -407,56 +436,56 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
-                .icon("/resources/images/accidents.svg")
-                .detailIcon("/resources/images/detailed/accidents.svg")
+                .icon("menu:accidents")
+                .detailIcon("menu-detailed:accidents")
                 .bgColor("#FF9943")
                 .captionBgColor("#C87137")
                 .view(null)
                 .done()
                 .addModule("Maintenance")
                 .description("Maintenance")
-                .icon("/resources/images/maintanance.svg")
-                .detailIcon("/resources/images/detailed/maintanance.svg")
+                .icon("menu:maintenance")
+                .detailIcon("menu-detailed:maintenance")
                 .bgColor("#00AAD4")
                 .captionBgColor("#0088AA")
                 .view(null)
                 .done()
                 .addModule("User")
                 .description("User")
-                .icon("/resources/images/user.svg")
-                .detailIcon("/resources/images/detailed/user.svg")
+                .icon("menu:user")
+                .detailIcon("menu-detailed:user")
                 .bgColor("#FFE680")
                 .captionBgColor("#FFD42A")
                 .view(null)
                 .done()
                 .addModule("Online reports")
                 .description("Online reports")
-                .icon("/resources/images/onlineReports.svg")
-                .detailIcon("/resources/images/detailed/onlineReports.svg")
+                .icon("menu:online-reports")
+                .detailIcon("menu-detailed:online-reports")
                 .bgColor("#00D4AA")
                 .captionBgColor("#00AA88").
                 view(null)
                 .done()
                 .addModule("Fuel")
                 .description("Fuel")
-                .icon("/resources/images/fuel.svg")
-                .detailIcon("/resources/images/detailed/fuel.svg")
+                .icon("menu:fuel")
+                .detailIcon("menu-detailed:fuel")
                 .bgColor("#FFE680")
                 .captionBgColor("#FFD42A")
                 .view(null)
                 .done()
                 .addModule("Organisational")
                 .description("Organisational")
-                .icon("/resources/images/organisational.svg")
-                .detailIcon("/resources/images/detailed/organisational.svg")
+                .icon("menu:organisational")
+                .detailIcon("menu-detailed:organisational")
                 .bgColor("#2AD4F6")
                 .captionBgColor("#00AAD4")
                 .view(null)
                 .done()
                 .addModule("Preventive maintenance")
                 .description("Preventive maintenance")
-                .icon("/resources/images/preventiveMaintenence.svg")
-                .detailIcon("/resources/images/detailed/preventiveMaintenence.svg")
+                .icon("menu:preventive-maintenance")
+                .detailIcon("menu-detailed:preventive-maintenance")
                 .bgColor("#F6899A")
                 .captionBgColor("#D35F5F")
                 .view(null)
@@ -604,12 +633,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
-    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig() {
+    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final EntityCentre<?> entityCentre, final boolean runAutomatically) {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
 
+        final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
+        ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre).hasEventSourceAt("/entity-centre-events");
+
+        if (entityCentre != null) {
+            actionConf = actionConf.addTopAction(EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind", mkDim(95, 80, Unit.PRC))).also();
+        }
+
         @SuppressWarnings("unchecked")
-        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class)
+        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = actionConf
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
@@ -622,6 +658,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 icon("assignment-ind").
                                 shortDesc("Function 1").
                                 longDesc("Functional context-dependent action 1").
+                                prefDimForView(mkDim(300, 200)).
                                 build()
                 )
                 .also()
@@ -697,7 +734,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addCrit("status").asMulti().autocompleter(TgPersistentStatus.class)
                 /*    */.setDefaultValue(multi().string().not().canHaveNoValue().value())
-
                 .setLayoutFor(Device.DESKTOP, Optional.empty(),
                         //                        ("[['center-justified', 'start', mrLast]]")
                         ("[['center-justified', 'start', mr, mr, mrLast]," +
@@ -738,7 +774,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
-                .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInvocationActionConfig())
+                .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
                 .also()
                 .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
                         withContext(context().withSelectedEntities().build()).
@@ -911,6 +947,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iR", statusWidth);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "oN", statusWidth);
             centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "sR", statusWidth);
+
             return centre;
         });
         return entityCentre;

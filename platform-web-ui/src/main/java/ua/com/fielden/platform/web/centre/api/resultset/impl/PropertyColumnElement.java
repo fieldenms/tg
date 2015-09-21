@@ -108,9 +108,6 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         }
         attrs.put("property", this.propertyName()); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
         attrs.put("width", width + "px");
-        if (this.action.isPresent() && this.action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && this.action.get().isMasterInvocationAction()) {
-            attrs.put("action", "[[_showMaster]]");
-        }
         attrs.put("type", egiRepresentationFor(DynamicEntityClassLoader.getOriginalType(this.propertyType)));
         attrs.put("column-title", this.titleDesc.getKey());
         attrs.put("column-desc", this.titleDesc.getValue());
@@ -139,7 +136,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     @Override
     public final DomElement render() {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
-        if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && !this.action.get().isMasterInvocationAction()) {
+        if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP) {
             columnElement.add(action.get().render());
         }
         if (hasSummary()) {

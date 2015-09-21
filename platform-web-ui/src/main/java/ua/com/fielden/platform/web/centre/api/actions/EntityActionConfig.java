@@ -7,6 +7,9 @@ import java.util.Optional;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.ShowViewInDialogFunctionalEntity;
+import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
@@ -19,6 +22,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
  */
 public final class EntityActionConfig {
     public final Optional<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> functionalEntity;
+    public final Optional<EntityCentre<?>> entityCentre;
     public final Optional<CentreContextConfig> context;
     public final Optional<String> icon;
     public final Optional<String> shortDesc;
@@ -26,10 +30,12 @@ public final class EntityActionConfig {
     public final Optional<IPreAction> preAction;
     public final Optional<IPostAction> successPostAction;
     public final Optional<IPostAction> errorPostAction;
+    public final Optional<PrefDim> prefDimForView;
     private final boolean noAction;
 
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
+            final EntityCentre<?> entityCentre,
             final CentreContextConfig context,
             final String icon,
             final String shortDesc,
@@ -37,6 +43,7 @@ public final class EntityActionConfig {
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
+            final PrefDim prefDimForView,
             final boolean noAction) {
 
         if (!noAction && functionalEntity == null) {
@@ -48,6 +55,7 @@ public final class EntityActionConfig {
         }
 
         this.functionalEntity = Optional.ofNullable(functionalEntity);
+        this.entityCentre = Optional.ofNullable(entityCentre);
         this.context = Optional.ofNullable(context);
         this.icon = Optional.ofNullable(icon);
         this.shortDesc = Optional.ofNullable(shortDesc);
@@ -55,6 +63,7 @@ public final class EntityActionConfig {
         this.preAction = Optional.ofNullable(preAction);
         this.successPostAction = Optional.ofNullable(successPostAction);
         this.errorPostAction = Optional.ofNullable(errorPostAction);
+        this.prefDimForView = Optional.ofNullable(prefDimForView);
         this.noAction = noAction;
     }
 
@@ -64,7 +73,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createNoActionConfig() {
-        return new EntityActionConfig(null, null, null, null, null, null, null, null, true);
+        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, null, true);
     }
 
     /**
@@ -73,7 +82,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createMasterInvocationActionConfig() {
-        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, false);
+        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false);
     }
 
     /**
@@ -82,7 +91,26 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createMasterInDialogInvocationActionConfig() {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, false);
+        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false);
+    }
+    
+    /**
+     * Same as above, but with preferred dimensions.
+     *  
+     * @param dim
+     * @return
+     */
+    public static EntityActionConfig createMasterInDialogInvocationActionConfig(final PrefDim dim) {
+        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, dim, false);
+    }
+
+    /**
+     * A factory method for creating a configuration that indicates a need to invoke corresponding entity centre in dialog.
+     *
+     * @return
+     */
+    public static EntityActionConfig createShowViewInDialogAction(final EntityCentre<?> entityCentre, final String icon, final PrefDim dim) {
+        return new EntityActionConfig(ShowViewInDialogFunctionalEntity.class, entityCentre, context().withCurrentEntity().build(), icon, "Show detail view", null, null, null, null, dim, false);
     }
 
     /**
@@ -100,16 +128,19 @@ public final class EntityActionConfig {
      */
     public static EntityActionConfig createActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
+            final EntityCentre<?> entityCentre,
             final CentreContextConfig context,
             final String icon,
             final String shortDesc,
             final String longDesc,
             final IPreAction preAction,
             final IPostAction successPostAction,
-            final IPostAction errorPostAction
+            final IPostAction errorPostAction,
+            final PrefDim prefDimForView
             ) {
         return new EntityActionConfig(
                 functionalEntity,
+                entityCentre,
                 context,
                 icon,
                 shortDesc,
@@ -117,6 +148,7 @@ public final class EntityActionConfig {
                 preAction,
                 successPostAction,
                 errorPostAction,
+                prefDimForView,
                 false);
     }
 

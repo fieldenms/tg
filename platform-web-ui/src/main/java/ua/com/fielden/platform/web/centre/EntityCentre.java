@@ -32,6 +32,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -120,13 +121,28 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * Generates default centre from DSL config and postCentreCreated callback.
+     * Generates default centre from DSL config and postCentreCreated callback (user unspecific).
+     *
+     * @param dslDefaultConfig
+     * @param postCentreCreated
+     * @return
+     */
+    private ICentreDomainTreeManagerAndEnhancer createUserUnspecificDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
+        return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, false);
+    }
+
+    /**
+     * Generates default centre from DSL config and postCentreCreated callback (user specific).
      *
      * @param dslDefaultConfig
      * @param postCentreCreated
      * @return
      */
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
+        return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, true);
+    }
+
+    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
         final ICentreDomainTreeManagerAndEnhancer cdtmae = GlobalDomainTreeManager.createEmptyCentre(entityType, serialiser);
 
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
@@ -134,7 +150,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (final String property : selectionCriteria.get()) {
                 cdtmae.getFirstTick().check(entityType, treeName(property), true);
 
-                provideDefaultsFor(property, cdtmae, dslDefaultConfig);
+                if (userSpecific) {
+                    provideDefaultsFor(property, cdtmae, dslDefaultConfig);
+                }
             }
         }
 
@@ -527,6 +545,24 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
+     * Returns the value that indicates whether centre must run automatically or not.
+     *
+     * @return
+     */
+    public boolean isRunAutomatically() {
+        return dslDefaultConfig.isRunAutomatically();
+    }
+
+    /**
+     * Return an optional Event Source URI.
+     * 
+     * @return
+     */
+    public Optional<String> eventSourceUri() {
+        return dslDefaultConfig.getSseUri();
+    }
+
+    /**
      * Returns the instance of rendering customiser for this entity centre.
      *
      * @return
@@ -541,7 +577,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     @Override
     public IRenderable build() {
-        return createRenderableRepresentation();
+        logger.debug("Initiating fresh centre...");
+        final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
+        if (userSpecificGlobalManager == null) {
+            return createRenderableRepresentation(createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated));
+        } else {
+            return createRenderableRepresentation(CentreUtils.getFreshCentre(userSpecificGlobalManager, this.menuItemType));
+        }
     }
 
     /**
@@ -564,7 +606,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating fresh centre...");
 
         final ICentreDomainTreeManagerAndEnhancer centre = getAssociatedCentre();
-
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
         importPaths.add("master/tg-entity-master");
@@ -719,8 +760,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@entity_type", entityType.getSimpleName()).
                 replace("@gridLayout", gridLayoutConfig.getKey()).
                 replace("@full_entity_type", entityType.getName()).
-                replaceAll("@mi_type", miType.getName()).
-                replaceAll("@egiType", miType.getSimpleName()).
+                replace("@mi_type", miType.getSimpleName()).
+                replace("@full_mi_type", miType.getName()).
                 replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).
                 replace("<!--@criteria_editors-->", editorContainer.toString()).
                 replace("<!--@egi_columns-->", egiColumns.toString()).
@@ -806,7 +847,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     private IGlobalDomainTreeManager getUserSpecificGlobalManager() {
-        return injector.getInstance(IServerGlobalDomainTreeManager.class).get(injector.getInstance(IUserProvider.class).getUser().getKey());
+        final IServerGlobalDomainTreeManager serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
+        final User user = injector.getInstance(IUserProvider.class).getUser();
+        if (user == null) { // the user is unknown at this stage!
+            return null; // no user-specific global exists for unknown user!
+        }
+        final String userName = user.getKey();
+        return serverGdtm.get(userName);
     }
 
     private String queryEnhancerContextConfigString() {

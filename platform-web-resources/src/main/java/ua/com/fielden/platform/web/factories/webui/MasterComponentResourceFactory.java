@@ -5,7 +5,8 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
 
 /**
@@ -17,15 +18,17 @@ import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
  *
  */
 public class MasterComponentResourceFactory extends Restlet {
-    private final IWebUiConfig webUiConfig;
+    private final ISourceController sourceController;
+    private final RestServerUtil restUtil;
 
     /**
      * Creates the {@link MasterComponentResourceFactory} instance.
      *
      * @param centres
      */
-    public MasterComponentResourceFactory(final IWebUiConfig webUiConfig) {
-        this.webUiConfig = webUiConfig;
+    public MasterComponentResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil) {
+        this.sourceController = sourceController;
+        this.restUtil = restUtil;
     }
 
     @Override
@@ -34,7 +37,8 @@ public class MasterComponentResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod())) {
             new MasterComponentResource(
-                    ResourceFactoryUtils.getEntityMaster(request, webUiConfig),
+                    sourceController,
+                    restUtil,
                     getContext(),
                     request,
                     response //

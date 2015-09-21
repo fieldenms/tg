@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
+<link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
 <script>
@@ -61,6 +62,24 @@
                     type: String
                 },
 
+                /**
+                 * A dialog instance that is used for displaying entity (functional and not) masters as part of centre actions logic.
+                 * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
+                 * Right away it is appanded to document.body.
+                 */
+                actionDialog: {
+                  type: Object,
+                  value: null
+                },
+                
+                /**
+                 * Indcates whether the centre should load data immediately after it was loaded.
+                 */
+                autoRun: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,6 +174,13 @@
                 _showMasterInDialog: {
                     type: Function
                 },
+                
+                /**
+                 * Shows the custom view (centre, master, user defined view) in dialog.
+                 */
+                _showCustomViewInDialog: {
+                    type: Function
+                },
 
                 /**
                  * Starts the process of centre saving.
@@ -189,6 +215,13 @@
                  */
                 _getSelectedEntities: {
                     type: Function
+                },
+                
+                /**
+                 * Activate the view with the result set.
+                 */
+    			_activateResultSetView: {
+                	type: Function
                 }
             },
 
@@ -222,7 +255,7 @@
                             if (this._triggerRun && this._selectedView === 0) {
                                 this.async(function () {
                                     this._selectedView = 1;
-                                }, null, 100);
+                                }, 100);
                                 this._triggerRun = false;
                             }
                         }
@@ -317,7 +350,18 @@
                         currentState: 'EDIT',
                         centreUuid: self.uuid
                     };
-                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    action.viewType = 'master';
+                    
+                    this.async(function () {
+                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(this), 1);
+                    
+                }).bind(this);
+                
+                self._showCustomViewInDialog=(function(action, entity) {
+                    this.async(function () {
+                        this.actionDialog.showDialog(action);
+                    }.bind(this), 1);
                 }).bind(this);
 
                 self._getContext = (function () {
@@ -355,21 +399,41 @@
                 }).bind(self);
 
                 self.run = (function () {
-                    this.$.egi.clearSelection();
-                    this.$.egi.collapseAllCards();
-                    this.$.selection_criteria.run();
-                    this._triggerRun = true;
+                    var self = this;
+                    self.$.egi.clearSelection();
+                    self.$.egi.collapseAllCards();
+                    self._triggerRun = true;
+                    return self.$.selection_criteria.run();
                 }).bind(self);
 
                 self._showDialog = (function (action) {
                     var closeEventChannel = self.uuid;
                     var closeEventTopics = ['save.post.success', 'refresh.post.success'];
-                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    this.async(function () {
+                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(self), 1);
+                }).bind(self);
+                
+                /**
+                 * Activate the view with the result set.
+                 */
+    			self._activateResultSetView = (function () {
+                	self.async(function () {
+                        self._selectedView = 1;
+                     }, 100);
                 }).bind(self);
             },
 
             attached: function () {
                 var self = this;
+                
+                if (this.actionDialog == null) {
+                    this.actionDialog = document.createElement('tg-custom-action-dialog');
+                    Polymer.dom(this.actionDialog).setAttribute("id", self.uuid + '');
+                    Polymer.dom(document.body).appendChild(this.actionDialog);
+                    Polymer.dom.flush();
+                }
+
                 ///////////////////////Edit Listeners/////////////////////////////////////
                 this.masterCreatedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,
@@ -418,6 +482,17 @@
                 return this.entityType.substring(ind);
             },
 
+            
+            /**
+             * Activate the view with selection criteria.
+             */
+            _activateSelectionCriteriaView: function () {
+            	var self = this;
+            	self.async(function () {
+                     self._selectedView = 0;
+                 }, 100);
+            },
+            
             /**
              * Starts the process of criteria entity retrieval.
              */
@@ -426,7 +501,7 @@
                 // console.time("criteria-entity-retrieval");
                 // console.warn('actual-retrieval');
                 // console.time('actual-retrieval');
-                this.$.selection_criteria.retrieve();
+                return this.$.selection_criteria.retrieve();
             },
 
             /**

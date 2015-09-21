@@ -85,7 +85,7 @@
                  */
                 _pageCapacity: {
                 	type: Number,
-                	value: 10
+                	value: 20
                 },
                 
                 _centreChanged: {
@@ -138,7 +138,6 @@
                 	type: Number,
                 	notify: true
                 },
-
                 
                 /**
                  * Default implementation for postRun callback.
@@ -380,7 +379,7 @@
                 this._openToast(null, "Loading data", false, "", true);
                 this.pageNumber = 0;
                 this.pageCount = null;
-                this._execute(true);
+                return this._execute(true);
             },
 
             /**
@@ -391,37 +390,35 @@
 
                 if (self._runningInProgress()) {
                     console.warn("Refresh is already in progress...");
-                    return;
+                    return; // TODO if already in progress then the current promise should be returned...
                 }
 
-                this.async(function () {
-                    self._startRefreshCycleModeForEditors();
-    
-                    if (isRunAction) {
-                        self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                    }
-    
-                    // cancel previous validation before starting saving process -- it includes validation process internally!
-                    self._validator().abortValidationIfAny();
-    
-                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                    //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
-                    self._runModifiedProperties(
-                    	self._createContextHolderForRunning(function() {
-                    			return self._reset(self._persistedModifiedPropertiesHolder);
-                    		}, 
-                    		self.requireSelectedEntities, 
-                    		self.requireMasterEntity, 
-                    		entitiesToRefresh
-                    	)
-                    );
-                    // TODO What is this code commented below???
-                    // if (self._hasModified(holder)) {
-                    //     self._saveModifiedProperties(self._reset(holder));
-                    // } else {
-                    //     self._validator().validate(self._reset(holder));
-                    // }
-                }.bind(self), 100);
+                return new Promise(function(resolve, reject) {
+	                self.async(function () {
+	                    self._startRefreshCycleModeForEditors();
+	    
+	                    if (isRunAction) {
+	                        self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+	                    }
+	    
+	                    // cancel previous validation before starting saving process -- it includes validation process internally!
+	                    self._validator().abortValidationIfAny();
+	    
+	                    resolve(
+		                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+		                    //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
+	                    	self._runModifiedProperties(
+		                    	self._createContextHolderForRunning(function() {
+		                    			return self._reset(self._persistedModifiedPropertiesHolder);
+		                    		}, 
+		                    		self.requireSelectedEntities, 
+		                    		self.requireMasterEntity, 
+		                    		entitiesToRefresh
+		                    	)
+	                    	)
+	                    );
+	                }.bind(self), 100);
+                });
             },
 
             idsToRefresh: function (entities) {
@@ -439,7 +436,7 @@
              */
             _runModifiedProperties: function (contextHolder) {
                 this._ajaxRunner().body = JSON.stringify(this._serialiser().serialise(contextHolder));
-                this._ajaxRunner().generateRequest();
+                return this._ajaxRunner().generateRequest().completes;
             },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
