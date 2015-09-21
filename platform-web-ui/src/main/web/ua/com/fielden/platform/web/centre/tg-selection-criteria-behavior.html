@@ -390,7 +390,7 @@
 
                 if (self._runningInProgress()) {
                     console.warn("Refresh is already in progress...");
-                    return;
+                    return; // TODO if already in progress then the current promise should be returned...
                 }
 
                 return new Promise(function(resolve, reject) {

@@ -215,6 +215,13 @@
                  */
                 _getSelectedEntities: {
                     type: Function
+                },
+                
+                /**
+                 * Activate the view with the result set.
+                 */
+    			_activateResultSetView: {
+                	type: Function
                 }
             },
 
@@ -248,7 +255,7 @@
                             if (this._triggerRun && this._selectedView === 0) {
                                 this.async(function () {
                                     this._selectedView = 1;
-                                }, null, 100);
+                                }, 100);
                                 this._triggerRun = false;
                             }
                         }
@@ -406,6 +413,15 @@
                         this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                     }.bind(self), 1);
                 }).bind(self);
+                
+                /**
+                 * Activate the view with the result set.
+                 */
+    			self._activateResultSetView = (function () {
+                	self.async(function () {
+                        self._selectedView = 1;
+                     }, 100);
+                }).bind(self);
             },
 
             attached: function () {
@@ -466,6 +482,17 @@
                 return this.entityType.substring(ind);
             },
 
+            
+            /**
+             * Activate the view with selection criteria.
+             */
+            _activateSelectionCriteriaView: function () {
+            	var self = this;
+            	self.async(function () {
+                     self._selectedView = 0;
+                 }, 100);
+            },
+            
             /**
              * Starts the process of criteria entity retrieval.
              */

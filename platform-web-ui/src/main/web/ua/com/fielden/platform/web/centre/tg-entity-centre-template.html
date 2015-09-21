@@ -146,6 +146,7 @@
         	save="[[save]]"
         	discard="[[discard]]"
         	run="[[run]]"
+        	_activate-result-set-view="[[_activateResultSetView]]"
         	>
             <tg-@mi_type-selection-criteria
             	id="selection_criteria"
@@ -183,8 +184,11 @@
                 <!-- GENERATED FUNCTIONAL ACTIONS: -->
                 <!--@functional_actions-->
 
+
+				<!-- standard actions -->
+				<paper-icon-button icon="icons:settings" class="standart-action" on-tap="_activateSelectionCriteriaView"></paper-icon-button>
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                	<paper-icon-button icon="file-download" class="standart-action"></paper-icon-button>
+                	<!-- paper-icon-button icon="file-download" class="standart-action"></paper-icon-button-->
                 	<!-- <span class="span-tooltip" tip>Export to Excel</span>
                 </core-tooltip> -->
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
