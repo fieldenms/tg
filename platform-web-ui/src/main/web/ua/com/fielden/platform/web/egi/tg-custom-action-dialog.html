@@ -147,9 +147,13 @@
 								
                                 var promise = self.currentRunningAction._onExecuted(null, element, null);
                                 if (promise) {
-                                	return promise.then(function () {self._showMaster();});
+                                	return promise
+                                	.then(function () {self._showMaster();})
+                                	.catch(function () {self.currentRunningAction = null;});
                                 } else {
-                                    return Promise.resolve().then(function () {self._showMaster();});
+                                    return Promise.resolve()
+                                    .then(function () {self._showMaster();})
+                                    .catch(function () {self.currentRunningAction = null;});
                                 }
                             })
                             .catch(function (error) {
