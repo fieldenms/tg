@@ -555,7 +555,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     /**
      * Return an optional Event Source URI.
-     * 
+     *
      * @return
      */
     public Optional<String> eventSourceUri() {
@@ -598,14 +598,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return defaultCentre;
     }
 
-    public ICentreDomainTreeManagerAndEnhancer getAssociatedCentre() {
-        return CentreUtils.getFreshCentre(getUserSpecificGlobalManager(), this.menuItemType);
-    }
+    private IRenderable createRenderableRepresentation(final ICentreDomainTreeManagerAndEnhancer centre) {
 
-    private IRenderable createRenderableRepresentation() {
-        logger.debug("Initiating fresh centre...");
-
-        final ICentreDomainTreeManagerAndEnhancer centre = getAssociatedCentre();
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
         importPaths.add("master/tg-entity-master");
