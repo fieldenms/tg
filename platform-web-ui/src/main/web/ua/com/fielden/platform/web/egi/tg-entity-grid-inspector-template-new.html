@@ -1,10 +1,9 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/tg-app/tg-app-config.html">
-<link rel="import" href="/tg-reflector">
+<link rel="import" href="/app/tg-app-config.html">
+<link rel="import" href="/app/tg-reflector.html">
 <link rel="import" href="/resources/actions/tg-page-action.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
-<link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
@@ -98,6 +97,9 @@
             height: 4rem;
             margin: 0 0.6rem;
         }
+        paper-checkbox::shadow #checkboxLabel {
+            display: none;
+        }
         paper-checkbox.blue {
             --paper-checkbox-checked-color: #0288D1;
             --paper-checkbox-checked-ink-color: #0288D1;
@@ -186,11 +188,8 @@
         <iron-media-query id="tabletQuery" query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
         <iron-media-query id="desktopQuery" query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>
 
-        <!-- The dialog for tg-ui-action -->
-        <tg-custom-action-dialog id="actionDialog"></tg-custom-action-dialog>
-
         <!-- The dialog for summary when egi is in card layout -->
-        <paper-dialog id="summaryDialog" class="summary-dialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed" on-iron-resize="_fixSumaryDialog">
+        <paper-dialog id="summaryDialog" class="summary-dialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed">
             <template is="dom-if" if="[[totals]]">
                 <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
                     <template is="dom-repeat" items="[[_calcCardSummary(columns)]]">
@@ -198,10 +197,10 @@
                             <div class="data-label truncate">[[item.columnTitle]]</div>
                             <div class="data-value relative">
                                 <template is="dom-if" if="[[_isBooleanProp(totals, item)]]">
-                                    <iron-icon class="card-icon" icon="[[_getBooleanIcon(totals, item.property)]]"></iron-icon>
+                                    <iron-icon class="card-icon" icon="[[_getBooleanIcon(totals, item)]]"></iron-icon>
                                 </template>
                                 <template is="dom-if" if="[[_isNotBooleanProp(totals, item)]]">
-                                    <div class="truncate">[[_getValue(totals, item.property, item.type)]]</div>
+                                    <div class="truncate">[[_getValue(totals, item)]]</div>
                                 </template>
                             </div>
                         </div>
@@ -254,7 +253,7 @@
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <div class="table-cell layout horizontal center">
-                                    <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" context="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]"></tg-page-action>
+                                    <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]"></tg-page-action>
                                     <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]"></tg-ui-action>
                                 </div>
                             </template>
@@ -263,21 +262,21 @@
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
                                     </template>
                                     <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                        <div class="truncate relative" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                        <div class="truncate relative" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column)]]</div>
                                     </template>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                                 <div class="table-cell layout horizontal center">
                                     <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                        <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" context="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]"></tg-page-action>
+                                        <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]"></tg-page-action>
                                         <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]"></tg-ui-action>
                                     </template>
                                     <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                        <tg-secondary-action-button current-entity="[[entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
+                                        <tg-secondary-action-button current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
                                     </template>
                                 </div>
                             </template>
@@ -299,10 +298,10 @@
                                     <template is="dom-if" if="[[summary]]">
                                         <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
                                             <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary)]]"></iron-icon>
                                             </template>
                                             <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                <div class="truncate relative" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary.property, summary.type)]]</div>
+                                                <div class="truncate relative" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary)]]</div>
                                             </template>
                                         </div>
                                     </template>
@@ -343,14 +342,14 @@
                                 <paper-checkbox class="blue" style="margin-right:11px;" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
-                                <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" context="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]"></tg-page-action>
+                                <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]"></tg-page-action>
                                 <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]"></tg-ui-action>
                             </template>
                         </div>
                         <div class="layout horizontal center relative">
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                                 <template is="dom-repeat" items="[[secondaryActions]]">
-                                    <tg-page-action icon="[[item.icon]]" action="[[item.action]]" context="[[egiEntity.entity]]" hidden$="[[!item.action]]"></tg-page-action>
+                                    <tg-page-action icon="[[item.icon]]" action="[[item.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!item.action]]" element-name="[[item.elementName]]" attrs="[[item.attrs]]" component-uri="[[item.componentUri]]" view-type="[[item.viewType]]"></tg-page-action>
                                     <tg-ui-action show-dialog="[[item.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[item.action]]" short-desc="[[item.shortDesc]]" long-desc="[[item.longDesc]]" icon="[[item.icon]]" component-uri="[[item.componentUri]]" element-name="[[item.elementName]]" attrs="[[item.attrs]]" create-context-holder="[[item.createContextHolder]]" require-selection-criteria="[[item.requireSelectionCriteria]]" require-selected-entities="[[item.requireSelectedEntities]]" require-master-entity="[[item.requireMasterEntity]]" pre-action="[[item.preAction]]" post-action-success="[[item.postActionSuccess]]" post-action-error="[[item.postActionError]]"></tg-ui-action>
                                 </template>
                             </template>
@@ -385,8 +384,7 @@
                 return a.id === b.id;
             },
             _hasEntity = function (entity, entities) {
-                var i = 0;
-                for (i = 0; i < entities.length; i += 1) {
+                for (var i = 0; i < entities.length; i += 1) {
                     if (_areEqual(entity, entities[i])) {
                         return true;
                     }
@@ -394,8 +392,7 @@
                 return false;
             },
             _findEntity = function (entity, entities) {
-                var i = 0;
-                for (i = 0; i < entities.length; i += 1) {
+                for (var i = 0; i < entities.length; i += 1) {
                     if (_areEqual(entity, entities[i])) {
                         return i;
                     }
@@ -738,27 +735,27 @@
             /**
              * Returns the property value of the specified entity.
              */
-            _get: function (entity, property) {
-                return entity && entity.get(property);
+            _get: function (entity, column) {
+                return entity && entity.get(column.property);
             },
             /**
              * Returns the property value of the specified entity and converts it to string.
              */
-            _getValue: function (entity, property, type) {
-                if (entity === null || property === null || type === null || this._get(entity, property) === null) {
+            _getValue: function (entity, column) {
+                if (!entity || !column || this._get(entity, column) === null) {
                     return "";
-                } else if (this.$.reflector.findTypeByName(type)) {
-                    return this.$.reflector.convert(this._get(entity, property));
-                } else if (type === 'Date') {
-                    return moment(entity.get(property)).format("L LT");
-                } else if (typeof entity.get(property) === 'number') {
-                    if (type === 'BigDecimal') {
-                        return entity.get(property).toFixed(2);
+                } else if (this.$.reflector.findTypeByName(column.type)) {
+                    return this.$.reflector.convert(this._get(entity, column));
+                } else if (column.type === 'Date') {
+                    return moment(entity.get(column.property)).format("L LT");
+                } else if (typeof entity.get(column.property) === 'number') {
+                    if (column.type === 'BigDecimal') {
+                        return entity.get(column.property).toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2, minimumFractionDigits:2});
                     } else {
-                        return entity.get(property).toLocaleString(this.$.appConfig.locale);
+                        return entity.get(column.property).toLocaleString(this.$.appConfig.locale);
                     }
                 } else {
-                    return entity.get(property);
+                    return entity.get(column.property);
                 }
             },
             /**
@@ -801,7 +798,7 @@
              * Determines whether property is boolean or not.
              */
             _isBooleanProp: function (entity, column) {
-                return column.type === 'Boolean' && this._get(entity, column.property) !== null
+                return column.type === 'Boolean' && this._get(entity, column) !== null
             },
             /**
              * Determines whether property is not boolean property or is.
@@ -818,8 +815,8 @@
             /**
              * Returns icon that represents the boolean value.
              */
-            _getBooleanIcon: function (entity, property) {
-                return "icons:" + (this._get(entity, property) ? "check" : "clear");
+            _getBooleanIcon: function (entity, column) {
+                return "icons:" + (this._get(entity, column) ? "check" : "clear");
             },
             /**
              * Tap action on data column. TODO: implement this.
@@ -841,27 +838,18 @@
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.
              */
-            _showSummary: function (e, detail, source) {
-                var summaryDialog = this.$.summaryDialog;
+            _showSummary: function (e, detail, source) {                
                 //Openening dialog
                 if (this.cardLayout && this.totals) {
-                    Polymer.dom(Polymer.dom(summaryDialog).parentNode).removeChild(summaryDialog);
-                    Polymer.dom(document.body).appendChild(summaryDialog);
+                    var summaryDialog = Polymer.dom(document.body).appendChild(this.$.summaryDialog);
                     Polymer.dom.flush();
-
+                    
                     this.async(function () {
                         summaryDialog.open();
-                    }.bind(this), 200);
+                    }, 200);
                 }
             },
-            /**
-             * Responds on iron-resize event of summary dialog.
-             */
-            _fixSumaryDialog: function () {
-                if (this.$.summaryDialog.opened) {
-                    this.$.summaryDialog.fit();
-                }
-            },
+
             /**
              *  listener for summary dialog close dialog.
              */

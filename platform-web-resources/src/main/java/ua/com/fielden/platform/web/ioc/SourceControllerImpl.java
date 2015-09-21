@@ -12,9 +12,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import com.google.common.base.Charsets;
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -27,6 +24,9 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
+
+import com.google.common.base.Charsets;
+import com.google.inject.Inject;
 
 /**
  * {@link ISourceController} implementation.
@@ -164,7 +164,8 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private boolean isRelative(final String root) {
-        return !root.equals("#a") && !root.equals("#c") && !root.startsWith("/master_ui/") && !root.startsWith("/centre_ui/") && !root.startsWith("/app/") && !root.startsWith("/resources/") && !root.startsWith("http");
+        return !root.equals("#a") && !root.equals("#c") && !root.startsWith("/master_ui/") && !root.startsWith("/centre_ui/") && !root.startsWith("/app/")
+                && !root.startsWith("/resources/") && !root.startsWith("http");
     }
 
     @Override
@@ -186,7 +187,8 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     /**
-     * Returns <code>true</code> where the <code>filePath</code> represents the vulcanized resource (which is not needed to be analyzed for preloaded dependencies), <code>false</code> otherwise.
+     * Returns <code>true</code> where the <code>filePath</code> represents the vulcanized resource (which is not needed to be analyzed for preloaded dependencies),
+     * <code>false</code> otherwise.
      *
      * @param filePath
      * @return
@@ -274,7 +276,8 @@ public class SourceControllerImpl implements ISourceController {
         final LinkedHashSet<String> all = getAllDependenciesFor("/", startupResourcesOrigin, deviceProfile);
         logger.info("\t ==> " + all + ".");
         final Period pd = new Period(start, new DateTime());
-        logger.info("-------- Calculated " + deviceProfile + " preloaded resources [" + all.size() + "]. Duration [" + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms]. --------");
+        logger.info("-------- Calculated " + deviceProfile + " preloaded resources [" + all.size() + "]. Duration [" + pd.getMinutes() + " m " + pd.getSeconds() + " s "
+                + pd.getMillis() + " ms]. --------");
         return all;
     }
 
@@ -291,6 +294,8 @@ public class SourceControllerImpl implements ISourceController {
             return getElementLoaderSource(this, webUiConfig, deviceProfile);
         } else if (resourceURI.startsWith("/master_ui")) {
             return getMasterSource(resourceURI.replaceFirst("/master_ui/", ""), webUiConfig);
+        } else if (resourceURI.startsWith("/centre_ui/egi")) {
+            return getCentreEgiSource(resourceURI.replaceFirst("/centre_ui/egi/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
             return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/resources/")) {
@@ -310,8 +315,8 @@ public class SourceControllerImpl implements ISourceController {
      */
     private String merge(final String currentPath, final String uri) {
         return (currentPath == null || !isRelative(uri)) ? uri :
-            uri.startsWith("../") ? merge(currentPathWithoutLast(currentPath), uri.substring(3)) :
-                uri.contains("/") ? merge(currentPathWith(currentPath, uri.substring(0, uri.indexOf("/"))), uri.substring(uri.indexOf("/") + 1)) : currentPath + uri;
+                uri.startsWith("../") ? merge(currentPathWithoutLast(currentPath), uri.substring(3)) :
+                        uri.contains("/") ? merge(currentPathWith(currentPath, uri.substring(0, uri.indexOf("/"))), uri.substring(uri.indexOf("/") + 1)) : currentPath + uri;
     }
 
     private String currentPathWithoutLast(final String currentPath) {
@@ -344,7 +349,8 @@ public class SourceControllerImpl implements ISourceController {
 
     private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile) {
         final String source = getFileSource("/resources/element_loader/tg-element-loader.html", webUiConfig.resourcePaths());
-        return source.replace("importedURLs = {}", sourceControllerImpl.isPreloadedResourcesInitialised() ? generateImportUrlsFrom(sourceControllerImpl.getPreloadedResources(deviceProfile)) : "importedIrrelevantURLs = {}");
+        return source.replace("importedURLs = {}", sourceControllerImpl.isPreloadedResourcesInitialised() ? generateImportUrlsFrom(sourceControllerImpl.getPreloadedResources(deviceProfile))
+                : "importedIrrelevantURLs = {}");
     }
 
     private boolean isPreloadedResourcesInitialised() {
@@ -379,6 +385,10 @@ public class SourceControllerImpl implements ISourceController {
 
     private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
         return ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig).build().render().toString();
+    }
+
+    private String getCentreEgiSource(final String mitypeString, final IWebUiConfig webUiConfig) {
+        return ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig).buildEgi().render().toString();
     }
 
     ////////////////////////////////// Getting file source //////////////////////////////////

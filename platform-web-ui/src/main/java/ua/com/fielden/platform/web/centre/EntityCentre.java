@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 
@@ -578,12 +579,70 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     @Override
     public IRenderable build() {
         logger.debug("Initiating fresh centre...");
+        return createRenderableRepresentation(getAssociatedEntityCentreManager());
+    }
+
+    public IRenderable buildEgi() {
+        return createRenderableEgiRepresentaton(getAssociatedEntityCentreManager());
+    }
+
+    private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager() {
         final IGlobalDomainTreeManager userSpecificGlobalManager = getUserSpecificGlobalManager();
         if (userSpecificGlobalManager == null) {
-            return createRenderableRepresentation(createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated));
+            return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return createRenderableRepresentation(CentreUtils.getFreshCentre(userSpecificGlobalManager, this.menuItemType));
+            return CentreUtils.getFreshCentre(userSpecificGlobalManager, this.menuItemType);
         }
+    }
+
+    private IRenderable createRenderableEgiRepresentaton(final ICentreDomainTreeManagerAndEnhancer centre) {
+        final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
+                "<div class='data-label truncate'>@column-title</div>" +
+                "<div class='data-value relative' on-tap='_tapAction'>" +
+                "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
+                "<div class='truncate relative'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>" +
+                "</div>" +
+                "</div>";
+
+        final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
+                "<div class='data-label truncate'>@column-title</div>" +
+                "<div class='data-value relative' on-tap='_tapAction'>" +
+                "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
+                "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]'></iron-icon>" +
+                "</div>" +
+                "</div>";
+        final DomContainer domContainer = new DomContainer();
+        final Optional<List<ResultSetProp>> resultProps = getCustomPropertiesDefinitions();
+        final Class<?> managedType = centre.getEnhancer().getManagedType(getEntityType());
+        if (resultProps.isPresent()) {
+            for (final ResultSetProp resultProp : resultProps.get()) {
+                final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
+                final String resultPropName = propertyName.equals("this") ? "" : propertyName;
+                final Class<?> propertyType = "".equals(resultPropName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
+                final String typeTemplate = EntityUtils.isBoolean(propertyType) ? booleanValueString : simpleValueString;
+                domContainer.add(
+                        new InnerTextElement(typeTemplate
+                                .replaceAll("@calc-property-name", propertyName)
+                                .replaceAll("@property-name", resultPropName)
+                                .replaceAll("@column-title", CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName).getKey())
+                                .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
+            }
+        }
+        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
+        final String egiStr = text.
+                replaceAll("@miType", getMenuItemType().getSimpleName()).
+                replaceAll("@gridCardDom", Matcher.quoteReplacement(domContainer.toString()));
+        return new IRenderable() {
+
+            @Override
+            public DomElement render() {
+                return new InnerTextElement(egiStr);
+            }
+        };
+    }
+
+    private Object egiRepresentationFor(final Class<?> propertyType) {
+        return EntityUtils.isEntityType(propertyType) ? propertyType.getName() : (EntityUtils.isBoolean(propertyType) ? "Boolean" : propertyType.getSimpleName());
     }
 
     /**
@@ -648,7 +707,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), propertyType, CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
@@ -751,7 +810,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
                 replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths)).
-                replace("@entity_type", entityType.getSimpleName()).
+                //TODO It looks like that is not needed any longer.
+                //replace("@entity_type", entityType.getSimpleName()).
                 replace("@gridLayout", gridLayoutConfig.getKey()).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getSimpleName()).
