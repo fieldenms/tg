@@ -32,6 +32,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -642,7 +643,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     private Object egiRepresentationFor(final Class<?> propertyType) {
-        return EntityUtils.isEntityType(propertyType) ? propertyType.getName() : (EntityUtils.isBoolean(propertyType) ? "Boolean" : propertyType.getSimpleName());
+        final Class<?> type = DynamicEntityClassLoader.getOriginalType(propertyType);
+        return EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : type.getSimpleName());
     }
 
     /**
