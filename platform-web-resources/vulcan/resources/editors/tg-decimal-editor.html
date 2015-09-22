@@ -1,0 +1,57 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<dom-module id="tg-decimal-editor">
+    <template>
+        <tg-editor 
+    		id="editorDom" 
+    		prop-title="[[propTitle]]"
+    		_disabled="[[_disabled]]" 
+    		_editing-value="{{_editingValue}}" 
+    		action="[[action]]" 
+    		_error="[[_error]]" 
+    		_comm-value="[[_commValue]]" 
+    		_accepted-value="[[_acceptedValue]]" 
+    		debug="[[debug]]" 
+    		_on-change="[[_onChange]]"
+            _on-input="[[_onInput]]"
+    		_on-keydown="[[_onKeydown]]"
+    		current-state="[[currentState]]">
+    	</tg-editor>
+    </template>
+</dom-module>
+<script>
+    (function(){
+        Polymer({
+	    	is: 'tg-decimal-editor',
+	    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+	    	
+	    	ready: function () {
+	    		this.$.editorDom._editorKind = "DECIMAL";
+	    	},
+    	
+    	    /**
+             * Converts the value into string representation (which is used in editing / comm values).
+             */
+            convertToString: function (value) {
+                return value === null ? "" : "" + value;
+            },
+
+            /**
+             * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
+             */
+            convertFromString: function (strValue) {
+                if (strValue === '') {
+                    return null;
+                }
+                // var convertedNumber = (+strValue);
+                if (isNaN(strValue)) {
+                    throw "The entered number is incorrect.";
+                }
+                return (+strValue);
+            }
+	    });
+    })()
+</script>

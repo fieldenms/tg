@@ -1,0 +1,77 @@
+<!doctupe HTML>
+<html>
+
+<head>
+         <title>Color Picker</title>
+         <meta charset="utf-8">
+         <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+         <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+         <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+         <link rel="import" href="tg-colour-picker.html">
+
+         <link rel="import" href="/resources/editors/tg-integer-editor.html">
+         <link rel="import" href="/resources/editors/tg-decimal-editor.html">
+         <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
+         <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
+         <link rel="import" href="/resources/editors/tg-datetime-picker.html">
+         <link rel="import" href="/resources/editors/tg-boolean-editor.html">
+         <link rel="import" href="/resources/editors/tg-entity-editor.html">
+         <style is="custom-style">
+                  body {
+                           font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                           font-size: 10pt;
+                  }
+                  
+                  paper-toolbar {
+                           --paper-toolbar-background: #03a9f4;
+                           --paper-toolbar-color: white;
+                  }
+                  
+                  tg-colour-picker {
+                           margin-top: 5px;
+                  }
+         </style>
+</head>
+
+<body>
+         <template id="colorId" is="dom-bind">
+                  <div class="layout vertical">
+                           <!--			<paper-toolbar class="myToolbar" id="toolbar" style$="[[calcColorStyle(color)]]"></paper-toolbar>-->
+                           <paper-toolbar class="myToolbar" id="toolbar"></paper-toolbar>
+                           <!--			<tg-colour-picker color="{{color}}"></tg-colour-picker>-->
+                  </div>
+                  <div class="layout vertical">
+                           <div class="layout horizontal">
+                                    <tg-integer-editor style="margin-right: 20px" class="flex" entity="[[entity]]" property-name="integerProp" current-state="EDIT" prop-title="Integer property title" prop-desc="Integer property desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]">
+                                    </tg-integer-editor>
+                                    <tg-decimal-editor style="margin-right: 20px" class="flex" entity="[[entity]]" property-name="bigDecimalProp" current-state="EDIT" prop-title="Big decimal property title" prop-desc="Big decimal property desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]">
+                                    </tg-decimal-editor>
+                                    <tg-singleline-text-editor class="flex" entity="[[entity]]" property-name="stringProp" current-state="EDIT" prop-title="String property title" prop-desc="String property desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]">
+                                    </tg-singleline-text-editor>
+                           </div>
+                           <div class="layout horizontal">
+                                    <tg-multiline-text-editor style="margin-right: 20px" class="flex" entity="[[entity]]" property-name="stringProp" current-state="EDIT" prop-title="String property (area) title" prop-desc="String property (area) desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]" max-length="[[maxTextAreaLength]]">
+                                    </tg-multiline-text-editor>
+                                    <tg-boolean-editor class="flex" entity="[[entity]]" property-name="booleanProp" current-state="EDIT" prop-title="Boolean property title" prop-desc="Boolean property desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]">
+                                    </tg-boolean-editor>
+                           </div>
+                           <div class="layout horizontal">
+                                    <tg-colour-picker style="margin-right: 20px" color="{{color}}" colorRGB="{{colorRGB}}" class="flex"></tg-colour-picker>
+
+                                    <tg-datetime-picker class="flex" entity="[[entity]]" property-name="dateProp" current-state="EDIT" prop-title="Date property title" prop-desc="Date property desc" action="null" externalRefreshCycle="null" validation-callback="[[validationCallback]]">
+                                    </tg-datetime-picker>
+
+                           </div>
+
+                  </div>
+         </template>
+
+</body>
+<script>
+         var colorId = document.querySelector('#colorId');
+         //	colorId.calcColorStyle = function (color) {
+         //		return "background-color: " + color;
+         //	}
+</script>
+
+</html>

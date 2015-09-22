@@ -1,0 +1,137 @@
+<html>
+
+<head>
+
+    <title>Search Demo</title>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+    <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
+    <link rel="import" href="/resources/polymer/paper-styles/color.html">
+    <link rel="import" href="/resources/polymer/paper-styles/demo-pages.html">
+
+    <link rel="import" href="/resources/components/tg-autocompleter/tg-search-input.html">
+
+    <style is="custom-style">
+	.with-margin {
+		margin: 24px 40px;
+	}
+	
+	.full-height {
+		height: 100%;
+	}
+	
+	.scrollable {
+		overflow: auto;
+	}
+	
+	.horizontal-layout { @apply (--layout-horizontal);
+		
+	}
+	
+	hr.style-seven {
+		height: 30px;
+		border-style: solid;
+		border-color: black;
+		border-width: 1px 0 0 0;
+		border-radius: 20px;
+	}
+	
+	hr.style-seven:before { /* Not really supposed to work, but does */
+		display: block;
+		content: "";
+		height: 30px;
+		margin-top: -31px;
+		border-style: solid;
+		border-color: black;
+		border-width: 0 0 1px 0;
+		border-radius: 20px;
+	}
+	
+	hr.style-two {
+    	border: 0;
+    	height: 3px;
+    	background-image: linear-gradient(to right, rgba(0, 0, 100, 0), rgba(0, 0, 100, 0.75), rgba(0, 0, 100, 0));
+	}
+	
+	hr.style-four {
+    	height: 12px;
+    	border: 0;
+    	box-shadow: inset 0 12px 12px -12px rgba(0, 0, 0, 0.5);
+	}
+
+	hr.style-eight {
+	    padding: 0;
+	    border: none;
+	    border-top: medium double var(--paper-blue-700);
+	    color: var(--paper-blue-700);
+	    text-align: center;
+	}
+	hr.style-eight:after {
+	    content: "§";
+	    display: inline-block;
+	    position: relative;
+	    top: -0.7em;
+	    font-size: 1.0em;
+	    padding: 0 0.25em;
+	    background: white;
+	}	
+	
+	p.explanation {
+		color: var(--paper-blue-500);
+	}
+	
+</style>
+
+</head>
+
+<body unresolved>
+
+    <template is="dom-bind">
+    	<br/>
+        <hr class="style-eight"/>
+        <br/>
+        <p class="explanation">
+            Single selection with additional properties where <b>desc</b> and <b>prop1</b> should get processed for highlighting the matched parts.
+		</p>
+        <tg-search-input id="searchButton1" additional-properties='{"desc":true, "prop2":false, "prop1":true}'></tg-search-input>
+        <br/>
+        <p class="explanation">
+            Multi selection with additional property <b>prop1</b> that does not get processed for highlighting the matched parts.
+		</p>
+        <tg-search-input id="searchButton2" multi additional-properties='{"prop1":false}'></tg-search-input>
+        <br/>
+        <br/>
+        <hr class="style-eight"/>
+        <br/>
+        <p class="explanation">
+        Two horizontally layouted autocompleters. Their respective result overlays should use the horizontal window real estate 
+        to the best ability.
+        </p>
+        
+        <div class="horizontal-layout">
+        	<tg-search-input style="padding-right: 10px" class="flex" id="searchButton3" additional-properties='{"desc":true, "prop2":false, "prop1":true}'></tg-search-input>
+        	<tg-search-input class="flex" id="searchButton4" multi additional-properties='{"prop1":false}'></tg-search-input>
+        </div>
+        <br/>
+        <br/>
+        <hr class="style-eight"/>
+        <br/>
+        <p class="explanation">
+        Need some more test at the bottom...
+        </p>
+        
+    </template>
+
+    <script>
+    </script>
+
+</body>
+
+</html>

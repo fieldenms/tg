@@ -1,0 +1,92 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<script>
+    (function () {
+    	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    	Polymer.TgBehaviors.TgSseBehavior = {
+    			
+    		properties: {
+    		    /* A URI that should be connected to for listening to push events. */
+    		    uri: {
+    		        type: String,
+    		        observer: '_registerEventSource'
+    		    },
+    		    
+    		    /** Let's be defensive and try to prevent repeated initialisations of EventSource by
+    		     * assigning this property value true upon the very first initialisation and then validating against it. */
+    		    _initialised: {
+    		    	type: Boolean,
+    		    	value: false
+    		    },
+    		    
+    		    /* A function that takes a single String arugment representing the push event data. */
+    		    dataHandler: {
+    		        type: Function
+    		    },
+    		    
+    		    /* An optional function to react to SSE errors. Accepts error event as an argument. */
+    		    errorHandler: {
+    		        type: Function
+    		    }
+    		},
+            
+    		/** EventSource registration happens as the result of assiging the value to property uri. */
+    		_registerEventSource: function () {
+                var self = this;
+                if (self._initialised === true) {
+                	throw new Error('EventSource for URI "', self.uri, '" should not be initialised twice.');
+                }
+                // if uri value is missing then skip EvenSource registration
+                if (self.uri) {
+                	self._initialised = true;
+	                console.log('Determine if EventSrouce needs polyfilling: ', window.EventSource)
+	                if(window.EventSource == undefined) {
+	                    console.warn('EventSrouce polyfilling is in progress.');
+	                    var esPoly = document.createElement('script');
+	                    esPoly.src = '/resources/polyfills/eventsource.min.js';
+	                    esPoly.onload = self._registerEventSourceHandlers.bind(self);
+	                    document.head.appendChild(esPoly);
+	                } else {
+	                    self._registerEventSourceHandlers();
+	                }
+                }
+            },
+            
+            _registerEventSourceHandlers: function () {
+                var self = this;
+                console.log("Registering EventSrouce handlers for URI ", self.uri);
+                var source = new EventSource(self.uri);
+                source.addEventListener('message', function (e) {
+                    self.dataHandler(e.data);
+                }, false);
+
+                source.addEventListener('completed', function (e) {
+                    console.log('the observable at the server-side completed');
+                }, false);
+
+                source.addEventListener('connection', function (e) {
+                    console.log('connection message received from server');
+                }, false);
+
+                source.addEventListener('open', function (e) {
+                    console.log('opened connection');
+                }, false);
+
+                source.addEventListener('error', function (e) {
+                    // TODO Might need to implement some error recovery strategy to reconnect to the server-side observable
+                    console.log('an error occurred: ', e);
+
+                    if (e.readyState == EventSource.CLOSED) {
+                        // Connection was closed.
+                    }
+
+                    // invoke error handler if provided
+                    if (self.errorHandler) {
+                        self.errorHandler();
+                    }
+                    
+                }, false);
+            } 
+        }; // end of behaviour declaration
+    })();
+</script>

@@ -1,0 +1,181 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+<link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+
+<!-- <core-style id="toast-progress-indicator">
+    paper-spinner { position: absolute; top: 9px; right: 9px; padding: 0px; margin: 0px;}
+   
+    paper-spinner.blue::shadow .circle { border-color: {{g.paperInput.focusedColor}}; }
+</core-style> -->
+
+    <style is="custom-style">
+        .paper-toast {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* style to truncate the toast text */
+        body /deep/ paper-toast::shadow #label {
+            @apply(--layout-flex);
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .paper-spinner {
+            width: 1.5em;
+            height: 1.5em;
+            min-width: 1em;
+            min-height: 1em;
+            max-width: 2em;
+            max-height: 2em;
+            padding: 2px;
+            margin-left: 1em;
+            --paper-spinner-layer-1-color: var(--paper-blue-500);
+            --paper-spinner-layer-2-color: var(--paper-blue-500);
+            --paper-spinner-layer-3-color: var(--paper-blue-500);
+            --paper-spinner-layer-4-color: var(--paper-blue-500);
+        }
+    </style>
+
+<dom-module id="tg-toast">
+    <template>
+        <paper-toast id="toast" class="paper-toast" text="[[text]]"> <!-- TODO responsive-width="250px" -->
+            <paper-spinner id="spinner" class="paper-spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
+            <div hidden$="[[_skipShowMore(showProgress, hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
+        </paper-toast>
+    </template>
+</dom-module>
+    
+<script>
+    (function () {
+        Polymer({
+        	// attributes="msgHeading -- TODO was this ever needed?"
+        	
+        	is: 'tg-toast',
+        	
+        	properties: {
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+            	// No default values are allowed in this case.														   //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	
+            	text: {
+            		type: String
+            	},
+            	
+            	msgText: {
+            		type: String,
+            		value: ''
+            	},
+            	
+                showProgress: {
+                	type: Boolean
+                },
+                
+                hasMore: {
+                	type: Boolean
+                },
+                
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+             	//   prefix. 																				           //
+             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+             	//   populate their default values in ready callback (to have these values populated in children)!     //
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	
+                _skipShowProgress: {
+                	type: Boolean,
+                	computed: '_shouldSkipProgress(showProgress, hasMore)'
+                }
+        	},
+
+            _showMessageDlg: function (event) {
+                // need to open dialog asynchronously for it to open on mobile devices 
+                this.async(function () {
+                    // build and display the dialog
+                    var domBind = document.createElement('template', 'dom-bind');
+
+                    domBind._dialogClosed = function() {
+                        Polymer.dom(document.body).removeChild(this);
+                        Polymer.dom.flush();
+                    }.bind(domBind);
+                    
+                    var paperDialog = domBind.content.ownerDocument.createElement('paper-dialog');
+                    Polymer.dom(paperDialog).setAttribute("id", "msgDialog");
+                    Polymer.dom(paperDialog).setAttribute("on-iron-overlay-closed", "_dialogClosed");
+                    Polymer.dom(paperDialog).setAttribute("with-backdrop", "true");
+                    Polymer.dom(paperDialog).setAttribute("entry-animation", "scale-up-animation");
+                    Polymer.dom(paperDialog).setAttribute("exit-animation", "fade-out-animation");
+                    
+                    var paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
+                    var msgPar = domBind.content.ownerDocument.createElement('p');
+                    Polymer.dom(msgPar).setAttribute("style", "padding: 10px");
+                    Polymer.dom(msgPar).innerHTML = this.msgText;
+                    Polymer.dom(paperDialogScrollable).appendChild(msgPar);
+                    
+                    var buttonsDiv = domBind.content.ownerDocument.createElement('div');
+                    Polymer.dom(buttonsDiv).setAttribute("class", "buttons");
+                    
+                    var buttons = domBind.content.ownerDocument.createElement('paper-button');
+                    Polymer.dom(buttons).setAttribute("dialog-confirm", "dialog-confirm");
+                    Polymer.dom(buttons).setAttribute("affirmative", "affirmative");
+                    Polymer.dom(buttons).setAttribute("autofocus", "autofocus");
+                    
+                    var textSpan = domBind.content.ownerDocument.createElement('span');
+                    Polymer.dom(textSpan).innerHTML = 'Close';
+                    Polymer.dom(buttons).appendChild(textSpan);
+                    
+                    Polymer.dom(buttonsDiv).appendChild(buttons);
+                    
+                    Polymer.dom(paperDialog).appendChild(paperDialogScrollable);
+                    Polymer.dom(paperDialog).appendChild(buttonsDiv);
+                    
+                    Polymer.dom(domBind.content).appendChild(paperDialog);
+                    Polymer.dom(document.body).appendChild(domBind);
+                    Polymer.dom.flush();
+
+                    this.async(function () {
+                        domBind.$.msgDialog.open();
+                    }, 100);
+                    
+                }, 100);
+                
+            },
+            
+            _shouldSkipProgress: function (progress, more) {
+                return !progress || more;
+            },
+
+            _skipShowMore: function (progress, more) {
+                return progress || !more;
+            },
+            
+            show: function () {
+                var toast = document.querySelectorAll('#toast');
+                for (var index = 0; index < toast.length; index++) {
+                    Polymer.dom(document.body).removeChild(toast.item(index));
+                }
+                Polymer.dom(document.body).appendChild(this.$.toast);
+                Polymer.dom().flush();
+                this.$.toast.show();
+            }
+        })
+    })();
+</script>
+</polymer-element>

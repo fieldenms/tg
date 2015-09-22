@@ -1,0 +1,223 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/components/moment-component.html">
+<link rel="import" href="/resources/components/tg-calendar.html">
+
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+
+<link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+
+<style is="custom-style">
+    .date-picker paper-button {
+        color: var(--paper-light-blue-500);
+        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+    .date-picker paper-button:hover {
+        background: var(--paper-light-blue-50);
+    }
+    .date-picker > tg-calendar {
+        margin: 0;
+        padding: 0;
+    }
+    .date-picker {
+        line-height: normal;
+    }
+</style>
+<dom-module id="tg-datetime-picker">
+    <style>
+        .picker-button::shadow #ink {
+            width: 1.9rem;
+            height: 1.9rem;
+            top: -0.3rem;
+            left: -0.3rem;
+        }
+        .picker-button {
+            --iron-icon-height: 1.3rem;
+            --iron-icon-width: 1.3rem;
+            width: 1.3rem;
+            height: 1.3rem;
+            padding: 0;
+        }
+        /*
+        .date-picker paper-button {
+            color: var(--paper-light-blue-500);
+            --paper-button-flat-focus-color: var(--paper-light-blue-50);
+        }
+        .date-picker paper-button:hover {
+            background: var(--paper-light-blue-50);
+        }
+        .date-picker > tg-calendar {
+            margin: 0;
+            padding: 0;
+        }
+        .date-picker {
+            line-height: normal;
+        }
+*/
+    }
+    </style>
+
+    <template>
+        <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-change="[[_onChange]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" current-state="[[currentState]]">
+            <paper-icon-button class="custom-icon-buttons picker-button" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
+        </tg-editor>
+    </template>
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+            is: 'tg-datetime-picker',
+            behaviors: [Polymer.TgBehaviors.TgEditorBehavior, Polymer.IronResizableBehavior],
+
+            ready: function () {
+                this.$.editorDom._editorKind = 'DATE';
+            },
+
+            properties: {
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+                //   prefix and default values specified in 'value' specificator of the property definition (or,       //
+                //   alternatively, computing function needs to be specified). 									       //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                _isAcceptingDateFromPicker: {
+                    type: Boolean,
+                    value: false
+                },
+
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+                //   prefix. 																				           //
+                // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+                //   populate their default values in ready callback (to have these values populated in children)!     //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            },
+
+            /**
+             * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
+             */
+            convertFromString: function (strValue) {
+                // console.log(moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a"));
+                if (strValue) {
+                    var acceptedMoment = moment(strValue.trim(), "L LT", true);
+                    if (acceptedMoment.isValid()) {
+                        return acceptedMoment.valueOf();
+                    } else {
+                        throw "The entered date is incorrect."
+                    }
+                } else {
+                    return null;
+                }
+            },
+
+            /**
+             * Converts the value into string representation (which is used in editing / comm values).
+             */
+            convertToString: function (value) {
+                if (value === null) {
+                    return "";
+                } else {
+                    return moment(value).format("L LT");
+                }
+            },
+
+            _showCalendar: function (e) {
+                var mve = this._createCalendarDialog();
+                Polymer.dom(document.body).appendChild(mve);
+                Polymer.dom.flush();
+                
+                mve.open();
+            },
+            
+            /**
+             * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
+             */
+            _createCalendarDialog: function() {
+            	var self = this;
+            	var domBind = document.createElement('template', 'dom-bind');
+            	
+            	domBind._closedBind = function(e) {
+            		var dialog = this.$.dateDialog;
+            		Polymer.dom(document.body).removeChild(dialog);
+            		Polymer.dom(document.body).removeChild(this);
+            		Polymer.dom.flush();
+            	}.bind(domBind);
+            	
+            	domBind._cancelDateBind = function() {
+            		self.decoratedInput().focus();
+           		};
+           		
+            	domBind._acceptDateBind = function() {
+                    self._isAcceptingDateFromPicker = true;
+                    self._editingValue = moment(this.$.datePicker.selectedDate)
+                        .hour(this.$.datePicker.selectedHour)
+                        .minute(this.$.datePicker.selectedMinute)
+                        .format("L LT");
+                    self.decoratedInput().focus();
+           		}.bind(domBind);
+           		
+           		domBind.open = function () {
+           			var dialog = this.$.dateDialog;
+           			var datePicker = this.$.datePicker;
+           			datePicker.selectedDate = null;
+                	datePicker.selectedHour = 0;
+                	datePicker.selectedMinute = 0;
+                	
+                    if (self._editingValue  !== '') {
+                        var selectedMoment = moment(self._editingValue.trim(), "L LT", true);
+                        if (selectedMoment.isValid()) {
+                            datePicker.selectedDate = selectedMoment.valueOf();
+                            datePicker.selectedHour = selectedMoment.hour();
+                            datePicker.selectedMinute = selectedMoment.minute();
+                        }
+                    }
+           			
+                    Polymer.dom(document.body).appendChild(dialog);
+                    Polymer.dom.flush();
+                    // let's open the dialog with magical async...
+                    // this ensures that the dialog is opened after its relocation to body
+                    this.async(function () {
+                    	dialog.open();
+                    }.bind(this), 1);
+           		}.bind(domBind);
+           		
+            	var div = domBind.content.ownerDocument.createElement('div');
+            	div.innerHTML = 
+            	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
+	                '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
+	                '<div class="buttons">' +
+	                    '<paper-button dialog-dismiss affirmative on-tap="_cancelDateBind">Cancel</paper-button>' +
+	                    '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
+	                '</div>' +
+	            '</paper-dialog>';
+            	
+            	domBind.content.appendChild(div);
+            	return domBind;
+            },
+
+            _editingValueChanged: function (newValue, oldValue) {
+                Polymer.TgBehaviors.TgEditorBehavior._editingValueChanged.call(this, newValue, oldValue);
+
+                if (this._isAcceptingDateFromPicker) {
+                    this._isAcceptingDateFromPicker = false;
+
+                    this.commit();
+                }
+            }
+
+        });
+    })();
+</script>

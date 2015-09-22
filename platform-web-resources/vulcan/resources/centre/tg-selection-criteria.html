@@ -1,0 +1,112 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="/resources/centre/tg-criteria-validator.html">
+<link rel="import" href="/resources/binding/tg-entity-binder.html">
+
+<dom-module id="tg-selection-criteria">
+    <template>
+       	<tg-entity-binder id="binderDom">
+    	</tg-entity-binder>
+    	
+        <tg-criteria-validator id="validator" mi-type="[[miType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-criteria-validator>
+        
+        <iron-ajax id="ajaxRetriever" url="[[_url]]" method="GET" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
+        <iron-ajax id="ajaxRunner" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRunnerResponse" on-error="_processRunnerError"></iron-ajax>
+        
+        <content></content>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-selection-criteria',
+    	
+    	properties: {
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+        	// No default values are allowed in this case.														   //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	
+    		miType: String,
+    		_postValidatedDefault: Function,
+    		_postValidatedDefaultError: Function,
+    		_processResponse: Function,
+    		_processError: Function,
+    		
+    		_processRetrieverResponse: Function,
+    		_processRetrieverError: Function,
+    		_processRunnerResponse: Function,
+    		_processRunnerError: Function,
+    		
+         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+         	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+         	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+         	//   prefix. 																				           //
+         	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+         	//   populate their default values in ready callback (to have these values populated in children)!     //
+         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+         	_url: {
+         		type: String,
+         		computed: '_computeUrl(miType)'
+         	}
+    	},
+    	
+    	/**
+    	 * Computes URLs for 'ajaxRetriever' and 'ajaxRunner'.
+    	 */
+    	_computeUrl: function (miType) {
+    		return "/criteria/" + miType;
+    	},
+
+        /**
+         * The iron-ajax component for entity retrieval.
+         */
+        _ajaxRetriever: function () {
+            return this.$.ajaxRetriever;
+        },
+        
+        /**
+         * The iron-ajax component for entity running.
+         */
+        _ajaxRunner: function () {
+            return this.$.ajaxRunner;
+        },
+        
+        /**
+         * The validator component.
+         */
+        _validator: function () {
+            return this.$.validator;
+        },
+        
+        /**
+         * The component for entity serialisation.
+         */
+        _serialiser: function () {
+        	return this._binderDom()._serialiser();
+        },
+        
+        /**
+         * The reflector component.
+         */
+        _reflector: function () {
+        	return this._binderDom()._reflector();
+        },
+        
+        /**
+         * The toast component.
+         */
+        _toastGreeting: function () {
+        	return this._binderDom()._toastGreeting();
+        },
+        
+        _binderDom: function () {
+        	return this.$.binderDom;
+        }
+    });
+</script>

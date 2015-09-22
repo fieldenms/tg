@@ -1,0 +1,549 @@
+<link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
+
+<script>
+    (function () {
+        var SimultaneousRunException = function () {
+            Object.call(this);
+
+            this.message = "Simultaneous run exception: the run process has been already started before and not ended. Please, block UI until the run action completes.";
+        };
+        SimultaneousRunException.prototype = Object.create(Object.prototype);
+        SimultaneousRunException.prototype.constructor = SimultaneousRunException;
+
+        /**
+         * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+         *
+         */
+        SimultaneousRunException.prototype.toString = function () {
+            return this.message;
+        }
+
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    	Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl = {
+    			
+        	properties: {
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+            	// No default values are allowed in this case.														   //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	/**
+            	 * The external function to be bound from tg-entity-centre for retrieving 'selected entities as part of the context'.
+            	 */
+            	getSelectedEntities: Function,
+            	/**
+            	 * The external function to be bound from tg-entity-centre for retrieving 'master entity as part of the context'.
+            	 */
+            	getMasterEntity: Function,
+            	
+                /*
+                 * NOTE: there is no need to have 'requireSelectionCriteria' attribute (QueryEnhancer related) -- the selection criteria will be send every time, 
+                 *   because it is necessary for 'query' construction (see '_createContextHolderForRunning' method).
+                 */
+            	
+                /**
+                 * Determines whether the selected entities are required to be send inside the centre context during run() method (QueryEnhancer related).
+                 *
+                 * 'null' -- if not applicable, for e.g. in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
+                 */
+                requireSelectedEntities: String,
+                /**
+                 * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context during run() method (QueryEnhancer related).
+                 *
+                 * 'null' -- if not applicable, for e.g. in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
+                 */
+                requireMasterEntity: String,
+            	
+            	/**
+            	 * The menu item type, which identifies this centre.
+            	 */
+            	miType: {
+            		type: String
+            	},
+            	
+                /**
+                 * Custom callback that will be invoked after successfull run.
+                 *
+                 * arguments: entity, bindingEntity, customObject
+                 */
+                postRun: {
+                	type: Function
+                }, 
+                
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
+            	//   alternatively, computing function needs to be specified). 									       //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                /**
+                 * Currently immutable capacity of the page.
+                 */
+                _pageCapacity: {
+                	type: Number,
+                	value: 20
+                },
+                
+                _centreChanged: {
+                	type: Boolean,
+                	value: false,
+                	notify: true
+                },
+                
+                /**
+                 * The current modified properties holder to be used during pagination (it was "persisted" after run() action has been performed).
+                 */
+                _persistedModifiedPropertiesHolder: {
+                	type: Object,
+                	value: null
+                },
+                
+				////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
+            	
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+             	//   prefix. 																				           //
+             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+             	//   populate their default values in ready callback (to have these values populated in children)!     //
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	propertyModel: Object,
+             	
+             	/**
+                 * The current number of pages after the firstPage has been retrieved. To update this please invoke run() action one more time.
+                 */
+                pageCount: {
+                	type: Number,
+                	notify: true
+                },
+
+                /**
+                 * The current page number.
+                 */
+                pageNumber: {
+                	type: Number,
+                	notify: true
+                },
+
+                pageCountUpdated: {
+                	type: Number,
+                	notify: true
+                },
+                pageNumberUpdated: {
+                	type: Number,
+                	notify: true
+                },
+                
+                /**
+                 * Default implementation for postRun callback.
+                 */
+                _postRunDefault: {
+                	type: Function
+                },
+                
+                /**
+                 * Default implementation for unsuccessful postRun callback.
+                 */
+                _postRunDefaultError: {
+                	type: Function
+                },
+                
+                /**
+                 * Indicates whether the runner is loading.
+                 */
+                _runnerLoading: {
+                	type: Boolean,
+                	observer: '_runnerLoadingChanged'
+                }
+        	},
+
+            /**
+             * Initialisation block. It has all children web components already initialised.
+             */
+            ready: function () {
+                var self = this;
+                
+                this.propertyModel = null;
+                this.currentState = "EDIT";
+                
+                self._processRunnerResponse = function (e) {
+                	self._processResponse(e, "run", function (entityAndCustomObject) {
+                        var criteriaEntity = entityAndCustomObject[0];
+                        var customObject = self._reflector().customObject(entityAndCustomObject);
+                        var resultEntities = customObject.resultEntities || [];
+                        var pageCount = customObject.pageCount || null;
+                        var metaValues = customObject.metaValues;
+                        var centreChanged = customObject.isCentreChanged;
+                        var renderingHints = customObject.renderingHints || [];
+                        var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
+                        var summary = customObject.summary;
+
+                        self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary);
+                	});
+                };
+                
+                self._processRunnerError = function (e) {
+                	self._processError(e, "run", function (errorResult) {
+                        self._postRunDefaultError(errorResult);
+                    });
+                };
+				
+				// calbacks, that will potentially be augmented by tg-action child elements: 
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary) {
+	                this._setPropertyModel(metaValues);
+	                this._centreChanged = centreChanged;
+
+	                var msg = this._toastMsg("Running", criteriaEntity);
+	                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
+
+	                var newBindingEntity = this._postEntityReceived(criteriaEntity);
+
+	                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+	                // custom external action
+	                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+
+	                this.pageNumberUpdated = this.pageNumber;
+	                this.pageCountUpdated = this.pageCount;
+				}).bind(self);
+				
+                self._postRunDefaultError = (function (errorResult) {
+                	// This function will be invoked after server-side error appear.
+                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
+                	console.warn("SERVER ERROR: ", errorResult);
+                }).bind(self);
+                
+                self._postRunnerLoadingFinished = (function () {
+                	console.log("_postRunnerLoadingFinished");
+                }).bind(self);
+                
+                self.postValidated = (function (validatedEntity, bindingEntity, customObject) {
+                    this._setPropertyModel(customObject.metaValues);
+                    this._centreChanged = customObject.isCentreChanged;
+
+                    console.log("postValidated", customObject);
+                }).bind(self);
+            },
+            
+            /**
+             * Overridden to populate 'propertyModel' and '_isCentreChange' flag from arrived information.
+             */
+            _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
+            	Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+
+            	this._setPropertyModel(customObject.metaValues);
+                this._centreChanged = customObject.isCentreChanged;
+            },
+
+            _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
+                var modPropHolder = Polymer.TgBehaviors.TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
+                if (this._reflector().isEntity(bindingEntity)) {
+                    modPropHolder["@@metaValues"] = {};
+                    // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
+                    for (var property in this.propertyModel) {
+                        if (this.propertyModel.hasOwnProperty(property)) {
+                        	var prop = 'THIS' === property ? '' : property;
+                            modPropHolder["@@metaValues"][prop] = this._extractModifiedMetaValuesHolder(this.propertyModel[property]);
+                        }
+                    }
+                }
+                return modPropHolder;
+            },
+
+            _extractModifiedMetaValuesHolder: function (propertyMetaValues) {
+                var modifiedMetaValues = {};
+
+                if (propertyMetaValues["orNull"] !== false) {
+                    modifiedMetaValues["orNull"] = propertyMetaValues["orNull"];
+                }
+                if (propertyMetaValues["not"] !== false) {
+                    modifiedMetaValues["not"] = propertyMetaValues["not"];
+                }
+                if (propertyMetaValues["exclusive"] !== false) {
+                    modifiedMetaValues["exclusive"] = propertyMetaValues["exclusive"];
+                }
+                if (propertyMetaValues["exclusive2"] !== false) {
+                    modifiedMetaValues["exclusive2"] = propertyMetaValues["exclusive2"];
+                }
+                if (propertyMetaValues["datePrefix"] !== null) {
+                    modifiedMetaValues["datePrefix"] = propertyMetaValues["datePrefix"];
+                }
+                if (propertyMetaValues["dateMnemonic"] !== null) {
+                    modifiedMetaValues["dateMnemonic"] = propertyMetaValues["dateMnemonic"];
+                }
+                if (propertyMetaValues["andBefore"] !== null) {
+                    modifiedMetaValues["andBefore"] = propertyMetaValues["andBefore"];
+                }
+                return modifiedMetaValues;
+            },
+
+            _validatePageCount: function () {
+                if (this.pageCount === null) {
+                    throw "Do not execute methods firstPage(), nextPage() etc. before the method run().";
+                }
+            },
+
+            /**
+             * Starts the process of refreshing of the current page.
+             */
+            currentPage: function () {
+                this._validatePageCount();
+                this._execute(false);
+            },
+
+            /**
+             * Starts the process of refreshing the specified 'entities'.
+             *
+             * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
+             *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed
+             *     from the result-set if they became unmatchable to the selection criteria after modification).
+             */
+            refreshEntities: function (entities) {
+                this._validatePageCount();
+                this._execute(false, entities);
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            nextPage: function () {
+                this._validatePageCount();
+                if (!this._canNext()) {
+                    throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
+                }
+                this.pageNumber = this.pageNumber + 1;
+                this._execute(false);
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            prevPage: function () {
+                this._validatePageCount();
+                if (!this._canPrev()) {
+                    throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
+                }
+                this.pageNumber = this.pageNumber - 1;
+                this._execute(false);
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            firstPage: function () {
+                this._validatePageCount();
+                if (!this._canFirst()) {
+                    throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
+                }
+                this.pageNumber = 0;
+                this._execute(false);
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            lastPage: function () {
+                this._validatePageCount();
+                if (!this._canLast()) {
+                    throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
+                }
+                this.pageNumber = this.pageCount - 1;
+                this._execute(false);
+            },
+            
+            _canPrev: function (pageNumber) {
+                return !(pageNumber - 1 < 0);
+            },
+            _canNext: function (pageNumber, pageCount) {
+                return !(pageNumber + 1 > pageCount - 1);
+            },
+            _canFirst: function (pageNumber, pageCount) {
+                return !(pageNumber === 0 || pageCount <= 0);
+            },
+            _canLast: function (pageNumber, pageCount) {
+                return !(pageNumber + 1 >= pageCount);
+            },
+            _canCurrent: function (pageNumber, pageCount) {
+                return !(pageCount <= 0);
+            },
+
+            /**
+             * Starts the process of centre run.
+             */
+            run: function () {
+                var self = this;
+                this._openToast(null, "Loading data", false, "", true);
+                this.pageNumber = 0;
+                this.pageCount = null;
+                return this._execute(true);
+            },
+
+            /**
+             * Starts the process of centre execution. It does not alter
+             */
+            _execute: function (isRunAction, entitiesToRefresh) {
+                var self = this;
+
+                if (self._runningInProgress()) {
+                    console.warn("Refresh is already in progress...");
+                    return; // TODO if already in progress then the current promise should be returned...
+                }
+
+                return new Promise(function(resolve, reject) {
+	                self.async(function () {
+	                    self._startRefreshCycleModeForEditors();
+	    
+	                    if (isRunAction) {
+	                        self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+	                    }
+	    
+	                    // cancel previous validation before starting saving process -- it includes validation process internally!
+	                    self._validator().abortValidationIfAny();
+	    
+	                    resolve(
+		                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+		                    //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
+	                    	self._runModifiedProperties(
+		                    	self._createContextHolderForRunning(function() {
+		                    			return self._reset(self._persistedModifiedPropertiesHolder);
+		                    		}, 
+		                    		self.requireSelectedEntities, 
+		                    		self.requireMasterEntity, 
+		                    		entitiesToRefresh
+		                    	)
+	                    	)
+	                    );
+	                }.bind(self), 100);
+                });
+            },
+
+            idsToRefresh: function (entities) {
+                var ids = [];
+                for (var i = 0; i < entities.length; i = i + 1) {
+                    ids.push(entities[i].id);
+                }
+                return ids;
+            },
+
+            /**
+             * Starts the process of centre run.
+             *
+             * @param contextHolder -- the holder of the centre context, which contains the criteria entity's modif props holder
+             */
+            _runModifiedProperties: function (contextHolder) {
+                this._ajaxRunner().body = JSON.stringify(this._serialiser().serialise(contextHolder));
+                return this._ajaxRunner().generateRequest().completes;
+            },
+
+            //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
+            /**
+             * Creates and sets the property model from supplied 'metaValues'. Notifies the binding system of 'propertyModel' paths changes.
+             */
+            _setPropertyModel: function (metaValues) {
+                this.propertyModel = this._createPropertyModel(metaValues);
+                
+                for (var property in metaValues) {
+                    if (metaValues.hasOwnProperty(property)) {
+                    	var propertyName = property === '' ? 'THIS' : property;
+                    	var prop = this.propertyModel[propertyName];
+                    	this.notifyPath('propertyModel.' + propertyName + '.orNull', prop.orNull);
+                    	this.notifyPath('propertyModel.' + propertyName + '.not', prop.not);
+                    	this.notifyPath('propertyModel.' + propertyName + '.exclusive', prop.exclusive);
+                    	this.notifyPath('propertyModel.' + propertyName + '.exclusive2', prop.exclusive2);
+                    	this.notifyPath('propertyModel.' + propertyName + '.datePrefix', prop.datePrefix);
+                    	this.notifyPath('propertyModel.' + propertyName + '.dateMnemonic', prop.dateMnemonic);
+                    	this.notifyPath('propertyModel.' + propertyName + '.andBefore', prop.andBefore);
+                    }
+                }
+            },
+
+            /**
+             * Creates full property model, which can be binded to metaValue editors, from metaValues that have been arrived from the server.
+             * The metaValues contain only those ones that are different from default (see DefaultValueContract).
+             */
+            _createPropertyModel: function (metaValues) {
+                var propertyModel = {};
+
+                for (var property in metaValues) {
+                    if (metaValues.hasOwnProperty(property)) {
+                        var meta = metaValues[property];
+                        var model = {};
+                        model["orNull"] = typeof meta["orNull"] === 'undefined' ? false : meta["orNull"];
+                        model["not"] = typeof meta["not"] === 'undefined' ? false : meta["not"];
+                        model["exclusive"] = typeof meta["exclusive"] === 'undefined' ? false : meta["exclusive"];
+                        model["exclusive2"] = typeof meta["exclusive2"] === 'undefined' ? false : meta["exclusive2"];
+                        model["datePrefix"] = typeof meta["datePrefix"] === 'undefined' ? null : meta["datePrefix"];
+                        model["dateMnemonic"] = typeof meta["dateMnemonic"] === 'undefined' ? null : meta["dateMnemonic"];
+                        model["andBefore"] = typeof meta["andBefore"] === 'undefined' ? null : meta["andBefore"];
+                        var propertyName = property === '' ? 'THIS' : property;
+                        propertyModel[propertyName] = model;
+                    }
+                }
+                console.log("propertyModel", propertyModel);
+                return propertyModel;
+            },
+
+            /**
+             * Create context holder with custom '@@miType' property.
+             */
+            createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+            	return this._createContextHolder(this._createModifiedPropertiesHolder, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
+            },
+            
+            /**
+             * Create context holder with custom '@@miType' property.
+             */
+            _createContextHolder: function (modifHolderGetter, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+                var contextHolder = this._reflector().createContextHolder(
+    				requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
+    				modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
+                );
+                this._reflector().setCustomProperty(contextHolder, "@@miType", this.miType);
+                return contextHolder;
+            },
+            
+            /**
+             * Create context holder for running with custom '@@pageCapacity', "@@pageNumber" and other properties for running, page retrieval or 
+             *   concrete entities refresh processes.
+             *
+             * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
+             * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
+             */
+            _createContextHolderForRunning: function (modifHolderGetter, requireSelectedEntities, requireMasterEntity, entitiesToRefresh) {
+            	var self = this;
+            	var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
+            	
+            	self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self._pageCapacity);
+                if (self.pageCount !== null) {
+                	self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
+                	self._reflector().setCustomProperty(contextHolder, "@@pageCount", self.pageCount);
+
+                	if (entitiesToRefresh && entitiesToRefresh.length > 0) {
+                		self._reflector().setCustomProperty(contextHolder, "@@idsToRefresh", self.idsToRefresh(entitiesToRefresh));
+                    } else {
+                    	self._reflector().removeCustomProperty(contextHolder, "@@idsToRefresh");
+                    }
+                } else {
+                	self._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
+                	self._reflector().removeCustomProperty(contextHolder, "@@pageCount");
+                }
+            	
+            	return contextHolder;
+            },
+            
+            _runningInProgress: function () {
+                return this._ajaxRunner().loading;
+            }
+        };
+    	
+		Polymer.TgBehaviors.TgSelectionCriteriaBehavior = [
+			Polymer.TgBehaviors.TgEntityBinderBehavior,
+			Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl
+		];
+		
+    })();
+</script>

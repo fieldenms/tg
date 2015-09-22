@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>entity-centre</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/resources/polymer/polymer-test-tools/tools.html">
+    <script src="/resources/polymer/polymer-test-tools/htmltest.js"></script>
+
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity">
+</head>
+
+<body unresolved>
+    <tg-TgFetchProviderTestEntity-centre id="centre"></tg-TgFetchProviderTestEntity-centre>
+
+    <script>
+        document.addEventListener('polymer-ready', function() {
+            var centre = document.querySelector('#centre');
+            var self = this;
+
+            console.log("centre =", centre);
+            
+            centre.postRetrieved = function(entity, bindingEntity, customObject) {
+				var autocompleter = centre.$.selection_criteria.shadowRoot.getElementsByTagName('tg-flex-layout')[0].getElementsByTagName('tg-criterion')[0].getElementsByTagName('tg-entity-search-criteria')[0];
+
+                var oldOnFound = autocompleter.onFound;
+                autocompleter.onFound = function(entities) {
+                	console.log("onFound: ", entities);
+                	
+                	done();
+                }.bind(autocompleter);
+
+                autocompleter.onSearchButtonTap();
+            };
+
+ 			centre.retrieve();
+        });
+    </script>
+
+</body>
+
+</html>

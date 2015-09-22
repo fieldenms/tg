@@ -1,0 +1,339 @@
+<!--@imports-->
+
+<!-- <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html"> -->
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/hardware-icons.html">
+
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
+<link rel="import" href="/centre_ui/egi/@full_mi_type">
+<link rel="import" href="/resources/actions/tg-page-action.html">
+<link rel="import" href="/resources/centre/tg-selection-criteria.html">
+<link rel="import" href="/resources/centre/tg-selection-criteria-behavior.html">
+<link rel="import" href="/resources/centre/tg-entity-centre.html">
+<link rel="import" href="/resources/centre/tg-entity-centre-behavior.html">
+<link rel="import" href="/resources/sse/tg-sse-behavior.html">
+
+<dom-module id="tg-@mi_type-selection-criteria">
+    <template>
+    	<tg-selection-criteria
+    		id="dom"
+    		mi-type="[[miType]]" 
+    		_post-validated-default="[[_postValidatedDefault]]"
+    		_post-validated-default-error="[[_postValidatedDefaultError]]"
+    		_process-response="[[_processResponse]]"
+    		_process-error="[[_processError]]"
+    		_process-retriever-response="[[_processRetrieverResponse]]"
+    		_process-retriever-error="[[_processRetrieverError]]"
+    		_process-runner-response="[[_processRunnerResponse]]"
+    		_process-runner-error="[[_processRunnerError]]">
+   	        <!--CRITERIA EDITORS DOM (GENERATED)-->
+        	<!--@criteria_editors-->
+    	</tg-selection-criteria>
+    </template>
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+        	is: 'tg-@mi_type-selection-criteria',
+        	
+        	behaviors: [ Polymer.TgBehaviors.TgSelectionCriteriaBehavior ],
+        	
+        	ready: function () {
+                // LAYOUT CONFIG (GENERATED)
+                //@layoutConfig
+        	},
+            
+            _dom: function () {
+            	return this.$.dom;
+            },
+            
+            /**
+             * The iron-ajax component for entity retrieval.
+             */
+            _ajaxRetriever: function () {
+                return this._dom()._ajaxRetriever();
+            },
+            
+            /**
+             * The iron-ajax component for query running.
+             */
+            _ajaxRunner: function () {
+                return this._dom()._ajaxRunner();
+            },
+            
+            /**
+             * The validator component.
+             */
+            _validator: function () {
+                return this._dom()._validator();
+            },
+            
+            /**
+             * The component for entity serialisation.
+             */
+            _serialiser: function () {
+            	return this._dom()._serialiser();
+            },
+            
+            /**
+             * The reflector component.
+             */
+            _reflector: function () {
+            	return this._dom()._reflector();
+            },
+            
+            /**
+             * The toast component.
+             */
+            _toastGreeting: function () {
+            	return this._dom()._toastGreeting();
+            }
+        });
+    })();
+</script>
+
+<dom-module id="tg-@mi_type-centre">
+    <style>
+    	paper-icon-button.revers {
+            --paper-icon-button: {
+                transform: scale(-1, 1);
+            };
+        }
+        /* * /deep/ core-tooltip::shadow #tooltip {
+            white-space: normal;
+        }
+        * /deep/ core-tooltip .span-tooltip {
+            line-height: 15px;
+        }
+        core-tooltip.delayed:hover::shadow .core-tooltip,
+        core-tooltip.delayed:focus::shadow .core-tooltip {
+            opacity: 1;
+            -webkit-transition-delay: 1s;
+            transition-delay: 1s;
+            transform: translate3d(0px, 0px, 0px);
+        } */
+        .selection-criteria {
+            background-color: white;
+        }
+        .group {
+            margin-left: 30px;
+        }
+
+        /* core-icon-button,
+        tg-ui-action::shadow core-icon-button,
+        tg-page-action::shadow core-icon-button {
+            padding: 4px;
+            margin: 0px;
+        } */
+    </style>
+
+    <template>
+        <tg-entity-centre
+        	id="dom"
+        	_selected-view="{{_selectedView}}"
+        	_url="[[_url]]"
+        	_process-saver-response="[[_processSaverResponse]]"
+        	_process-saver-error="[[_processSaverError]]"
+        	_process-discarder-response="[[_processDiscarderResponse]]"
+        	_process-discarder-error="[[_processDiscarderError]]"
+        	_handle-scroll="[[_handleScroll]]"
+        	_saver-disabled="[[_saverDisabled]]"
+        	_discarder-disabled="[[_discarderDisabled]]"
+        	save="[[save]]"
+        	discard="[[discard]]"
+        	run="[[run]]"
+        	_activate-result-set-view="[[_activateResultSetView]]"
+        	>
+            <tg-@mi_type-selection-criteria
+            	id="selection_criteria"
+            	class="custom-selection-criteria"
+            	_centre-changed="{{_centreChanged}}"
+            	uuid="[[uuid]]"
+            	mi-type="@full_mi_type"
+            	post-run="[[_postRun]]"
+            	get-selected-entities="[[_getSelectedEntities]]"
+            	get-master-entity="[[getMasterEntity]]"
+            	post-retrieved="[[postRetrieved]]"
+            	page-number="{{pageNumber}}"
+            	page-count="{{pageCount}}"
+            	page-number-updated="{{pageNumberUpdated}}"
+            	page-count-updated="{{pageCountUpdated}}"
+            	@queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
+
+            <tg-@mi_type-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entity-type="@full_entity_type" @gridLayout>
+                <!-- EGI COLUMNS DOM (GENERATED) -->
+                <!--@egi_columns-->
+
+                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
+                    <core-icon-button icon="add-circle-outline"></core-icon-button> -->
+                    <tg-page-action class="delayed entity-specific-action" tabIndex="-1" icon="add-circle-outline" action="[[_newAction]]" short-desc="Create new entity"></tg-page-action>
+                    <!-- <span class="span-tooltip" tip>Create new entity</span>
+                </core-tooltip> -->
+                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1"> -->
+                    <tg-page-action class="delayed entity-specific-action" tabIndex="-1" icon="editor:mode-edit" action="[[_editAction]]" short-desc="Edit selected entity"></tg-page-action>
+                    <!-- <span class="span-tooltip" tip>Edit selected entity</span>
+                </core-tooltip> -->
+                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1"> -->
+                    <tg-page-action class="delayed entity-specific-action" tabIndex="-1" icon="remove-circle-outline" action="[[_deleteAction]]" short-desc="Delete selected entities"></tg-page-action>
+                    <!-- <span class="span-tooltip" tip>Delete selected entities</span>
+                </core-tooltip> -->
+                <!-- GENERATED FUNCTIONAL ACTIONS: -->
+                <!--@functional_actions-->
+
+
+				<!-- standard actions -->
+				<paper-icon-button icon="icons:settings" class="standart-action" on-tap="_activateSelectionCriteriaView"></paper-icon-button>
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                	<!-- paper-icon-button icon="file-download" class="standart-action"></paper-icon-button-->
+                	<!-- <span class="span-tooltip" tip>Export to Excel</span>
+                </core-tooltip> -->
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-tab" on-tap="firstPage" disabled$="[[canNotFirst(pageNumber, pageCount)]]"></paper-icon-button>
+                    <!-- <span class="span-tooltip" tip>First page</span>
+                </core-tooltip> -->
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button icon="hardware:keyboard-backspace" class="standart-action" on-tap="prevPage" disabled$="[[canNotPrev(pageNumber)]]"></paper-icon-button>
+                    <!-- <span class="span-tooltip" tip>Previous page</span>
+                </core-tooltip> -->
+                <span class="standart-action">[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]</span>
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-backspace" on-tap="nextPage" disabled$="[[canNotNext(pageNumber, pageCount)]]"></paper-icon-button>
+                    <!-- <span class="span-tooltip" tip>Next page</span>
+                </core-tooltip> -->
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button icon="hardware:keyboard-tab" class="standart-action" on-tap="lastPage" disabled$="[[canNotLast(pageNumber, pageCount)]]"></paper-icon-button>
+                    <!-- <span class="span-tooltip" tip>Last page</span>
+                </core-tooltip> -->
+                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
+                    <paper-icon-button class="standart-action" icon="refresh" on-tap="currentPage" disabled$="[[canNotCurrent(pageNumber, pageCount)]]"></paper-icon-button>
+                    <!-- <span class="span-tooltip" tip>Refresh</span>
+                </core-tooltip> -->
+                
+                <!--@primary_action-->
+                <!--@secondary_actions-->
+            </tg-@mi_type-grid-inspector>
+        </tg-entity-centre>
+    </template>
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+        	is: 'tg-@mi_type-centre',
+        	
+        	behaviors: [ Polymer.TgBehaviors.TgEntityCentreBehavior, Polymer.TgBehaviors.TgSseBehavior],
+        	
+            hostAttributes: {
+                "class": "layout vertical",
+               	"entity-type": "@full_entity_type",
+               	"mi-type": "@full_mi_type",
+               	"get-master-entity": "null"
+            },
+            
+            properties: {
+            	_handleScroll: {
+            		type: Function
+            	},
+            	pageNumber: Number,
+            	pageCount: Number,
+            	pageNumberUpdated: Number,
+            	pageCountUpdated: Number,
+            },
+            
+            created: function () {
+            	console.warn("tg-@mi_type-centre: created");
+            	console.time("created-to-ready");
+                console.warn("CREATED in TG-ENTITY-CENTRE-TAMPLATE");
+                this.dataHandler = function(data) {
+                    var self = this;
+                    var msg = JSON.parse(data);
+                    // let's search for an item to update... 
+                    // if the current EGI model does not contain an updated entity then there is no need for a refresh...
+                    // TODO such update strategy might need to be revisited in future...
+                    for (var index = 0; index < this.$.egi.egiModel.length; index++) {
+                        var entity = this.$.egi.egiModel[index].entity;
+                        if (entity.id === msg.id) {
+                            // let's give the browser a breathing chance...
+                            this.async(function () {
+                                try {
+                                    self.refreshEntities([entity]);
+                                } catch (e) {
+                                    console.warn(e);
+                                }
+                            }, 1);
+                            break;
+                        }
+                    } // endfor
+                }.bind(this);
+            },
+            
+            ready: function () {
+            	console.timeEnd("created-to-ready");
+            	console.warn("tg-@mi_type-centre: ready");
+            	console.time("ready-to-attached");
+            },
+        	
+            /**
+             * Initialisation block. It has all children web components already initialised.
+             */
+            attached: function () {
+            	console.timeEnd("ready-to-attached");
+            	console.warn("attached-to-attached-async");
+            	console.time("attached-to-attached-async");
+                var self = this;
+                self.async(function() {
+                    console.warn("tg-@mi_type-centre: attached async");
+                    console.timeEnd("attached-to-attached-async");
+                    
+                	self.postRetrieved = self.postRetrieved || function (entity, bindingEntity, customObject) {
+                        console.log("postRetrieved");
+                    }.bind(self);
+                    
+                    self._handleScroll = self._handleScroll || (function (e) {
+                        this.fire("scroll-container", e.target);
+                    }).bind(self);
+                    
+                    // TODO smth. like this should be generated here:
+                    self.topLevelActions = [
+                        //generatedActionObjects
+                    ];
+                    // TODO do we need to notify paths?
+               		// TODO do we need to notify paths?
+                    self.secondaryActions = [
+                        //generatedSecondaryActions
+                    ];
+                    self.primaryAction = [
+                        //generatedPrimaryAction
+                    ];
+                    self.propActions = [
+                        //generatedPropActions
+                    ];
+                    //gridLayoutConfig
+                }, 1);
+            },
+            
+            _dom: function () {
+            	return this.$.dom;
+            },
+            
+            /**
+             * The iron-ajax component for centre discarding.
+             */
+            _ajaxDiscarder: function () {
+            	return this._dom()._ajaxDiscarder();
+            },
+            
+            /**
+             * The iron-ajax component for centre saving.
+             */
+            _ajaxSaver: function () {
+            	return this._dom()._ajaxSaver();
+            }
+        });
+    })();
+</script>

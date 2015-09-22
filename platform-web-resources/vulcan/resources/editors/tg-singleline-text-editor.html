@@ -1,0 +1,52 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<dom-module id="tg-singleline-text-editor">
+    <style>
+    </style>
+
+    <template>
+    	<tg-editor 
+    		id="editorDom" 
+    		prop-title="[[propTitle]]"
+    		_disabled="[[_disabled]]" 
+    		_editing-value="{{_editingValue}}" 
+    		action="[[action]]" 
+    		_error="[[_error]]" 
+    		_comm-value="[[_commValue]]" 
+    		_accepted-value="[[_acceptedValue]]" 
+    		debug="[[debug]]" 
+    		_on-change="[[_onChange]]"
+    		_on-input="[[_onInput]]"
+    		_on-keydown="[[_onKeydown]]"
+        	current-state="[[currentState]]">
+    	</tg-editor>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-singleline-text-editor',
+    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+    	
+    	ready: function () {
+    		this.$.editorDom._editorKind = "SINGLELINE_TEXT";
+    	},
+    	
+        /**
+         * Converts the value into string representation (which is used in edititing / comm values).
+         */
+        convertToString: function (value) {
+            return value === null ? "" : "" + value;
+        },
+
+        /**
+         * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
+         */
+        convertFromString: function (strValue) {
+            return strValue === '' ? null : strValue;
+        }
+    });
+</script>

@@ -1,0 +1,134 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/paper-tabs/paper-tabs.html">
+<link rel="import" href="/resources/polymer/paper-tabs/paper-tab.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+
+<link rel="import" href="/resources/components/postal-lib.html">
+
+<link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
+
+<link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+
+<dom-module id="tg-entity-centre">
+    <style>
+        .tabs {
+            background-color: #0288D1;
+            color: #fff;
+            @apply(--layout-horizontal);
+			@apply(--layout-center-justified);
+        }
+        .selection-criteria {
+            background-color: white;
+        }
+        iron-pages {
+            overflow: auto;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            right: 0px;
+            bottom: 0px;
+        }
+        paper-material {
+            margin: 10px 30px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+    </style>
+
+    <template>
+        <tg-serialiser id="serialiser"></tg-serialiser>
+
+        <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
+        <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="DELETE" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
+
+        <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll">
+            <div class="fit">
+                <paper-material>
+                    <div class="selection-criteria layout vertical" style="padding: 24px;">
+                        <content select=".custom-selection-criteria"></content>
+                        
+                        <div class="layout horizontal justified" style="margin-top:24px;">
+                            <div class="layout horizontal">
+                                <paper-button id="saver" raised roll="button" on-tap="save" disabled$="[[_saverDisabled]]">Save</paper-button>
+                                <paper-button id="discarder" raised roll="button" on-tap="discard" disabled$="[[_discarderDisabled]]">Discard</paper-button>
+                            </div>
+                            <div class="layout horizontal">
+                            	<paper-button id="view" raised roll="button" on-tap="_activateResultSetView" style="margin-right: 0px;">View</paper-button>
+                            	<paper-button id="runner" raised roll="button" on-tap="run" style="margin-right: 0px;">Run</paper-button>
+                            </div>
+                        </div>
+                    </div>
+                </paper-material>
+            </div>
+            <div class="fit">
+                <div class="layout vertical center">
+                    <content select=".custom-egi"></content>
+                </div>
+            </div>
+        </iron-pages>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-entity-centre',
+
+        properties: {
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            _selectedView: {
+                type: Number,
+                notify: true
+            },
+            _url: Function,
+            _processSaverResponse: Function,
+            _processSaverError: Function,
+            _processDiscarderResponse: Function,
+            _processDiscarderError: Function,
+            _handleScroll: Function,
+            _saverDisabled: Boolean,
+            _discarderDisabled: Boolean,
+            save: Function,
+            discard: Function,
+            run: Function,
+            _activateResultSetView: Function
+        },
+
+        /**
+         * The core-ajax component for centre discarding.
+         */
+        _ajaxDiscarder: function () {
+            return this.$.ajaxDiscarder;
+        },
+
+        /**
+         * The core-ajax component for centre saving.
+         */
+        _ajaxSaver: function () {
+            return this.$.ajaxSaver;
+        },
+
+        /**
+         * The component for entity serialisation.
+         */
+        _serialiser: function () {
+            return this.$.serialiser;
+        },
+
+        /**
+         * The reflector component.
+         */
+        _reflector: function () {
+            return this.$.serialiser.$.reflector;
+        }
+    });
+</script>

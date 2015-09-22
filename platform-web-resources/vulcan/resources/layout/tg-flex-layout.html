@@ -1,0 +1,308 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/app/tg-app-config.html">
+
+<dom-module id="tg-flex-layout">
+
+    <template>
+        <tg-app-config id="appConfig"></tg-app-config>
+        <iron-media-query query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
+        <iron-media-query query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
+        <iron-media-query query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>
+        <content select=":not(text):not(template)" id="elements"></content>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        'use strict'
+        var setLayout = function (layout) {
+                var contentIndex = 0,
+                    selectedElements = [],
+                    orderedElements = [];
+                if (!Array.isArray(layout)) {
+                    throw "The layout must be an array";
+                }
+                if (!this.componentsToLayout) {
+                    this.componentsToLayout = [];
+                    Array.prototype.forEach.call(Polymer.dom(this.$.elements).getDistributedNodes(), function (item) {
+                        this.componentsToLayout.push(item);
+                    }.bind(this));
+                }
+                while (Polymer.dom(this).firstChild) {
+                    Polymer.dom(this).removeChild(Polymer.dom(this).firstChild);
+                }
+                Polymer.dom.flush();
+                removeStylesAndClasses.bind(this)(this);
+                this.toggleClass("layout", true);
+                this.toggleClass("vertical", true);
+                if (this.debug) {
+                    setDebugStyle(this);
+                } else {
+                    removeDebugStyle(this);
+                }
+                orderedElements = this.componentsToLayout.slice();
+                splitElements.bind(this)(selectedElements, orderedElements, layout);
+                layout.forEach((function (layoutElem) {
+                    contentIndex = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, true);
+                }).bind(this));
+                this.fire('layout-finished', layout);
+            },
+            splitElements = function (selectedElements, orderedElements, layout) {
+                var selectIndex, selectedElement;
+                if (hasArray(layout)) {
+                    layout.forEach(function (element) {
+                        if (Array.isArray(element)) {
+                            splitElements.bind(this)(selectedElements, orderedElements, element);
+                        }
+                    }.bind(this));
+                } else {
+                    selectIndex = getSelectIndex(layout);
+                    if (selectIndex >= 0) {
+                        selectedElement = spliceSelectedElement(orderedElements, layout[selectIndex]);
+                        if (selectedElement) {
+                            selectedElements.push(selectedElement);
+                        }
+                    }
+                }
+            },
+            spliceSelectedElement = function (orderedElements, layoutElement) {
+                var attribute, value, selectCondition, elementIndex, colonIndex, equalSignIndex;
+                colonIndex = layoutElement.indexOf(':');
+                equalSignIndex = layoutElement.indexOf('=');
+                if (colonIndex >= 0 && equalSignIndex >= 0 && colonIndex < equalSignIndex) {
+                    selectCondition = layoutElement.split(':')[1].split('=');
+                    attribute = selectCondition[0].trim();
+                    value = selectCondition[1].trim();
+                    for (elementIndex = 0; elementIndex < orderedElements.length; elementIndex += 1) {
+                        if (orderedElements[elementIndex].hasAttribute(attribute) && orderedElements[elementIndex].getAttribute(attribute) === value) {
+                            return orderedElements.splice(elementIndex, 1)[0];
+                        }
+                    }
+                } else {
+                    throw "Syntax error: the select condition must have ':' and '=' signs for example: 'select:propName=key.prop'";
+                }
+                return null;
+            },
+            setDebugStyle = function (element) {
+                element.style.border = "1px dashed red";
+            },
+            removeDebugStyle = function (element) {
+                element.style.removeProperty("border");
+            },
+            removeStylesAndClasses = function (element) {
+                if (element.stylesToRemove) {
+                    element.stylesToRemove.forEach(function (style) {
+                        element.style.removeProperty(style);
+                    });
+                    delete element.stylesToRemove;
+                }
+                if (element.classesToRemove) {
+                    element.classesToRemove.forEach(function (className) {
+                        this.toggleClass(className, false, element);
+                    }.bind(this));
+                    delete element.classesToRemove;
+                }
+            },
+            createFlexCell = function (container, layoutElem, selectedElements, orderedElements, horizontal) {
+                var rowElement, styleValues, trimmedLayoutElement;
+                if (typeof layoutElem === "string") {
+                    trimmedLayoutElement = layoutElem.trim();
+                    if (layoutElem.indexOf(':') >= 0) {
+                        styleValues = layoutElem.split(":");
+                        if (styleValues[0].trim() !== 'select') {
+                            container.style[styleValues[0].trim()] = styleValues[1].trim();
+                            container.stylesToRemove = container.stylesToRemove || [];
+                            container.stylesToRemove.push(styleValues[0].trim());
+                        }
+                    } else {
+                        container.classesToRemove = container.classesToRemove || [];
+                        container.classesToRemove.push(trimmedLayoutElement);
+                        if (trimmedLayoutElement === "horizontal" || trimmedLayoutElement === "vertical") {
+                            this.toggleClass(horizontal ? "vertical" : "horizontal", false, container);
+                        }
+                        this.toggleClass(trimmedLayoutElement, true, container);
+                    }
+                } else if (Array.isArray(layoutElem)) {
+                    if (!hasArray(layoutElem)) {
+                        rowElement = getNextElement(selectedElements, orderedElements, layoutElem);
+                        removeStylesAndClasses.bind(this)(rowElement);
+                    } else {
+                        rowElement = document.createElement("div");
+                        this.toggleClass("layout", true, rowElement);
+                        if (layoutElem.indexOf("horizontal") < 0 && layoutElem.indexOf("vertical") < 0) {
+                            this.toggleClass(horizontal ? "horizontal" : "vertical", true, rowElement);
+                        }
+                    }
+                    if (this.debug) {
+                        setDebugStyle(rowElement);
+                    } else {
+                        removeDebugStyle(rowElement);
+                    }
+                    layoutElem.forEach((function (columnLayout) {
+                        createFlexCell.bind(this)(rowElement, columnLayout, selectedElements, orderedElements, !horizontal);
+                    }).bind(this));
+                    Polymer.dom(container).appendChild(rowElement);
+                }
+            },
+            getNextElement = function (selectedElements, orderedElements, layoutElem) {
+                var notFoundElement, attribute, value, selectCondition, selectElem, selectIndex = getSelectIndex(layoutElem);
+                if (selectIndex >= 0) {
+                    selectElem = layoutElem[selectIndex];
+                    selectCondition = selectElem.split(':')[1].split('=');
+                    attribute = selectCondition[0].trim();
+                    value = selectCondition[1].trim();
+                    if (selectedElements.length > 0 && selectedElements[0].hasAttribute(attribute) && selectedElements[0].getAttribute(attribute) === value) {
+                        return selectedElements.splice(0, 1)[0];
+                    }
+                } else if (orderedElements.length > 0) {
+                    return orderedElements.splice(0, 1)[0];
+                }
+                notFoundElement = document.createElement('div');
+                Polymer.dom(notFoundElement).innerHTML = "element not found!"
+                return notFoundElement;
+            },
+            hasArray = function (layoutElem) {
+                var elemIndex;
+                for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
+                    if (Array.isArray(layoutElem[elemIndex])) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            getSelectIndex = function (layoutElem) {
+                var elemIndex;
+                for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
+                    if (typeof layoutElem[elemIndex] === 'string' && layoutElem[elemIndex].indexOf("select") >= 0) {
+                        return elemIndex;
+                    }
+                }
+                return -1;
+            };
+        Polymer({
+
+            is: "tg-flex-layout",
+
+            properties: {
+                whenDesktop: {
+                    type: Array,
+                    observer: "_whenDesktopChanged"
+                },
+                whenTablet: {
+                    type: Array,
+                    observer: "_whenTabletChanged"
+                },
+                whenMobile: {
+                    type: Array,
+                    observer: "_whenMobileChanged"
+                },
+                debug: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true,
+                    observer: "_debugChanged"
+                },
+                desktopScreen: {
+                    type: Boolean,
+                    readOnly: true,
+                    observer: "_handleDesktopScreen"
+                },
+                tabletScreen: {
+                    type: Boolean,
+                    readOnly: true,
+                    observer: "_handleTabletScreen"
+                },
+                mobileScreen: {
+                    type: Boolean,
+                    readOnly: true,
+                    observer: "_handleMobileScreen"
+                },
+                contentLoaded: {
+                    type: Boolean,
+                    readOnly: true,
+                    observer: "_handleContentLoading",
+                    value: false
+                }
+            },
+            attached: function () {
+                var self = this;
+                this.async(function () {
+                    this._setContentLoaded(true);
+                }, 1);
+            },
+            _handleMobileScreen: function (newValue, oldValue) {
+                if (newValue && this.whenMobile && this.contentLoaded) {
+                    setLayout.bind(this)(this.whenMobile);
+                }
+            },
+            _handleTabletScreen: function (newValue, oldValue) {
+                if (newValue && this.whenTablet && this.contentLoaded) {
+                    setLayout.bind(this)(this.whenTablet);
+                }
+            },
+            _handleDesktopScreen: function (newValue, oldValue) {
+                if (newValue && this.whenDesktop && this.contentLoaded) {
+                    setLayout.bind(this)(this.whenDesktop);
+                }
+            },
+            _handleContentLoading: function (newValue, oldValue) {
+                if (newValue) {
+                    if (this.desktopScreen && this.whenDesktop) {
+                        setLayout.bind(this)(this.whenDesktop);
+                    } else if (this.tabletScreen && this.whenTablet) {
+                        setLayout.bind(this)(this.whenTablet);
+                    } else if (this.mobileScreen && this.whenMobile) {
+                        setLayout.bind(this)(this.whenMobile);
+                    }
+                }
+            },
+            _mobileChanged: function (e, detail) {
+                this._setMobileScreen(detail.value);
+            },
+            _tabletChanged: function (e, detail) {
+                this._setTabletScreen(detail.value);
+            },
+            _desktopChanged: function (e, detail) {
+                this._setDesktopScreen(detail.value);
+            },
+            _whenMobileChanged: function (newValue, oldValue) {
+                if (this.mobileScreen && newValue && this.contentLoaded) {
+                    setLayout.bind(this)(this.whenMobile);
+                }
+            },
+            _whenTabletChanged: function (newValue, oldValue) {
+                if (this.tabletScreen && newValue && this.contentLoaded) {
+                    setLayout.bind(this)(this.whenTablet);
+                }
+            },
+            _whenDesktopChanged: function (newValue, oldValue) {
+                if (this.desktopScreen && newValue && this.contentLoaded) {
+                    setLayout.bind(this)(this.whenDesktop);
+                }
+            },
+            _debugChanged: function (newValue, oldValue) {
+                if (this.componentsToLayout) {
+                    this.componentsToLayout.forEach(function (element) {
+                        if (newValue) {
+                            setDebugStyle(element);
+                        } else {
+                            removeDebugStyle(element);
+                        }
+                    });
+                }
+            },
+            _calcMobileQuery: function () {
+                return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
+            },
+            _calcTabletQuery: function () {
+                return "(min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 1) + "px)";
+            },
+            _calcDesktopQuery: function () {
+                return "min-width: " + this.$.appConfig.minDesktopWidth + "px";
+            }
+        });
+    })();
+</script>

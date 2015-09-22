@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Entity Grid Inspector Example</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <meta http-equiv="Content-Language" content="en">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+
+    <link rel="import" href="/resources/serialisation/tg-serialiser.html">
+    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+    <link rel="import" href="/resources/polymer/iron-icons/hardware-icons.html">
+    <link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
+    <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+    <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+    <link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
+    <link rel="import" href="/resources/egi/tg-property-column.html">
+
+    <style is="custom-style">
+        html {
+            font-size: 12pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #EEEEEE;
+        }
+        paper-icon-button.revers {
+            --paper-icon-button: {
+                transform: scale(-1, 1);
+            };
+        }
+    </style>
+
+</head>
+
+<body unresolved class="fullbleed layout vertical center">
+
+    <template id="egi_example" is="dom-bind">
+        <tg-serialiser id="serialiser"></tg-serialiser>
+        <iron-ajax id="data_retriever" url="/test/egi" handle-as="json" on-response="_dataRetrieved"></iron-ajax>
+        <tg-entity-grid-inspector entity-type="[[entityType]]" entities="[[entities]]" rendering-hints="[[renderingHints]]" short-layout="[[shortLayout]]" long-layout="[[longLayout]]">
+            <tg-property-column property="" width="60px" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" column-title="Key" column-desc="Some key description"></tg-property-column>
+            <tg-property-column property="desc" width="200px" type="String" column-title="Desc" column-desc="Some desc description">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="bigDecimalProp" width="68px" type="BigDecimal" column-title="BigDecimal prop" column-desc="BigDecimal prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
+            <tg-property-column property="bigDecimalProp" width="68px" type="BigDecimal" column-title="BigDecimal prop" column-desc="BigDecimal prop desc">
+            </tg-property-column>
+            <tg-property-column property="bigDecimalProp" width="68px" type="BigDecimal" column-title="BigDecimal prop" column-desc="BigDecimal prop desc">
+            </tg-property-column>
+            <tg-property-column property="stringProp" width="50px" type="String" column-title="String prop" column-desc="String prop desc"></tg-property-column>
+            <tg-property-column property="integerProp" width="42px" type="Integer" column-title="Integer prop" column-desc="Integer prop desc">
+            </tg-property-column>
+            <paper-icon-button class="entity-specific-action" icon="add-circle-outline"></paper-icon-button>
+            <paper-icon-button class="entity-specific-action" icon="editor:mode-edit"></paper-icon-button>
+            <paper-icon-button class="entity-specific-action" icon="remove-circle-outline"></paper-icon-button>
+            <paper-icon-button class="standart-action" icon="file-download"></paper-icon-button>
+            <paper-icon-button class="standart-action revers" icon="hardware:keyboard-tab"></paper-icon-button>
+            <paper-icon-button class="standart-action" icon="hardware:keyboard-backspace"></paper-icon-button>
+            <paper-icon-button class="standart-action revers" icon="hardware:keyboard-backspace"></paper-icon-button>
+            <paper-icon-button class="standart-action" icon="hardware:keyboard-tab"></paper-icon-button>
+            <paper-icon-button class="standart-action" icon="refresh" on-tap="loadData"></paper-icon-button>
+            <!--<tg-primary-instance-action actionDesc="action description" icon="editor:mode-edit"></tg-primary-instance-action>-->
+        </tg-entity-grid-inspector>
+    </template>
+
+    <script>
+        (function () {
+            var egiExample = document.querySelector('#egi_example');
+            egiExample.entityType = "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties";
+            egiExample.entities = [];
+            egiExample.loadData = function (e, detail, source) {
+                egiExample.$.data_retriever.generateRequest();
+            };
+            egiExample.shortLayout = {
+                /*desktop: [
+                    [['flex', 'select:property=this'], ['flex', 'select:property=desc'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=integerProp']]
+                ],*/
+                tablet: [
+                    [['flex', 'select:property=this'], ['flex', 'select:property=desc'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]
+                ],
+                mobile: [
+                    [['flex', 'select:property=this'], ['flex', 'select:property=desc']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp']],
+                    [['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=integerProp']]
+                ]
+            };
+            egiExample.longLayout = {
+                /*desktop: [
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=stringProp'], ['flex', 'select:property=integerProp']]
+                ],*/
+                tablet: [
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],
+                    [['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=stringProp'], ['flex', 'select:property=integerProp']]
+                ],
+                mobile: [
+                    [['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],
+                    [['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=stringProp']],
+                    [['flex', 'select:property=integerProp']]
+                ]
+            };
+            egiExample._dataRetrieved = function (e, detail, source) {
+                egiExample.entities = egiExample.$.serialiser.deserialise(e.detail.response).instance;
+                egiExample.renderingHints = [];
+            };
+        })();
+    </script>
+
+</body>
+
+</html>
