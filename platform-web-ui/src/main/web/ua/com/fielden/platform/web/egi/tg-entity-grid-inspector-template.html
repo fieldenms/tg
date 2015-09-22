@@ -1,8 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/actions/tg-page-action.html">
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
-<link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
+<link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -14,30 +16,52 @@
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 
-<dom-module id="tg-entity-grid-spike">
+<style is="custom-style">
+    .summary-dialog paper-button {
+        color: var(--paper-light-blue-500);
+        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+    .summary-dialog paper-button:hover {
+        background: var(--paper-light-blue-50);
+    }
+</style>
+<dom-module id="tg-@miType-grid-inspector">
     <style>
         /*miscellanea styles*/
+        :host {
+            margin: 0 auto;
+        }
         .truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        paper-material {
+            border-radius: 2px;
+        }
         /*Table related styles*/
         .data-table {
             background-color: white;
+            border-radius: 2px;
         }
         .table-header-row {
             font-size: 0.9rem;
+            font-weight: 400;
             color: #757575;
             height: 3.5rem;
             cursor: default;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .table-data-row {
             font-size: 1rem;
+            font-weight: 400;
             color: #212121;
             height: 3rem;
             border-top: 1px solid #e3e3e3;
             cursor: default;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .table-data-row[selected] {
             background-color: #F5F5F5;
@@ -45,13 +69,26 @@
         .table-data-row:hover {
             background-color: #EEEEEE;
         }
+        .table-footer-row {
+            font-size: 0.9rem;
+            color: #757575;
+            height: 3.5rem;
+            cursor: default;
+            border-top: 1px solid #e3e3e3;
+        }
         .table-cell,
         .table-data-cell {
-            margin-right: 1.2rem;
+            padding: 0 0.6rem;
         }
-        .table-cell:first-child,
-        .table-data-cell:first-child {
-            margin-left: 1.2rem;
+        .table-cell:first-of-type,
+        .table-data-cell:first-of-type {
+            padding-right: 0.6rem;
+            padding-left: 1.2rem;
+        }
+        .table-cell:last-of-type,
+        .table-data-cell:last-of-type {
+            padding-left: 0.6rem;
+            padding-right: 1.2rem;
         }
         .table-data-cell {
             cursor: pointer;
@@ -59,6 +96,9 @@
         .grid-toolbar {
             height: 4rem;
             margin: 0 0.6rem;
+        }
+        paper-checkbox::shadow #checkboxLabel {
+            display: none;
         }
         paper-checkbox.blue {
             --paper-checkbox-checked-color: #0288D1;
@@ -72,18 +112,24 @@
             --paper-checkbox-unchecked-color: #212121;
             --paper-checkbox-unchecked-ink-color: #212121;
         }
+        .table-icon {
+            --iron-icon-width: 1.3rem;
+            --iron-icon-height: 1.3rem;
+        }
         /*Card related styles*/
-        .card {
+        .card-material {
             margin: 20px 30px;
-            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
         }
         .card-toolbar {
             background-color: white;
             margin: 0 30px;
         }
         .card-header {
-            padding: 10px;
             border-bottom: 1px solid #e5e5e5;
+        }
+        .card-header-background {
+            border-top-left-radius: 2px;
+            border-top-right-radius: 2px;
         }
         .card-header-background[selected] {
             background-color: #F5F5F5;
@@ -93,28 +139,43 @@
             background-color: white;
             opacity: 0.7;
         }
+        .card-body {
+            border-bottom-left-radius: 2px;
+            border-bottom-right-radius: 2px;
+        }
         .data-entry {
             padding: 0.75rem 1.5rem;
         }
         .data-label {
-            font-size: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 400;
             background: transparent;
             color: #757575;
             cursor: default;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .data-value {
-            height: 1.4rem;
-            margin: 0.5rem 0 0.25rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.8rem;
+            height: 1.8rem;
             border-bottom: 1px solid black;
             cursor: pointer;
-            color: #607D8B;
+            color: #212121;
             cursor: pointer;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .expand-button {
             position: absolute;
             bottom: 0;
             left: calc(50% - 14px);
             padding: 0;
+        }
+        .card-icon {
+            --iron-icon-width: 1.3rem;
+            --iron-icon-height: 1.3rem;
         }
     </style>
     <template>
@@ -127,26 +188,25 @@
         <iron-media-query id="tabletQuery" query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
         <iron-media-query id="desktopQuery" query="[[_calcDesktopQuery()]]" on-query-matches-changed="_desktopChanged"></iron-media-query>
 
-        <!-- The dialog for tg-ui-action -->
-        <tg-custom-action-dialog id="actionDialog"></tg-custom-action-dialog>
-
         <!-- The dialog for summary when egi is in card layout -->
-        <paper-dialog id="summaryDialog" modal entry-animation="slide-down-animation" exit-animation="slide-up-animation">
-            <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
-                <template is="dom-repeat" items="[[cardSummary]]">
-                    <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(item)]]">
-                        <div class="data-label truncate">[[item.columnTitle]]</div>
-                        <div class="data-value relative">
-                            <template is="dom-if" if="[[_isBooleanProp(totals, item)]]">
-                                <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(totals, item)]]"></iron-icon>
-                            </template>
-                            <template is="dom-if" if="[[_isNotBooleanProp(totals, item)]]">
-                                <div class="truncate">[[_getValue(totals, item)]]</div>
-                            </template>
+        <paper-dialog id="summaryDialog" class="summary-dialog" modal entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_summaryDialogClosed">
+            <template is="dom-if" if="[[totals]]">
+                <tg-flex-layout when-desktop="{{summaryLayout.desktop}}" when-tablet="{{summaryLayout.tablet}}" when-mobile="{{summaryLayout.mobile}}">
+                    <template is="dom-repeat" items="[[_calcCardSummary(columns)]]">
+                        <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(item)]]">
+                            <div class="data-label truncate">[[item.columnTitle]]</div>
+                            <div class="data-value relative">
+                                <template is="dom-if" if="[[_isBooleanProp(totals, item)]]">
+                                    <iron-icon class="card-icon" icon="[[_getBooleanIcon(totals, item.property)]]"></iron-icon>
+                                </template>
+                                <template is="dom-if" if="[[_isNotBooleanProp(totals, item)]]">
+                                    <div class="truncate">[[_getValue(totals, item.property, item.type)]]</div>
+                                </template>
+                            </div>
                         </div>
-                    </div>
-                </template>
-            </tg-flex-layout>
+                    </template>
+                </tg-flex-layout>
+            </template>
             <div class="buttons">
                 <paper-button dialog-confirm autofocus>Close</paper-button>
             </div>
@@ -170,17 +230,17 @@
                             <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                         </div>
                         <template is="dom-if" if="[[primaryAction]]">
-                            <div class="table-cell layout horizontal center">
-                                <!--Primary action header goes here-->
+                            <div class="table-cell layout horizontal center" style="width:40px">
+                                <!--Primary action stub header goes here-->
                             </div>
                         </template>
                         <template is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell layout horizontal center" style$="[[_calcColumnHeaderStyle(item)]]">
+                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
                                 <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
                             </div>
                         </template>
                         <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                            <div class="table-cell layout horizontal center">
+                            <div class="table-cell layout horizontal center" style="width:40px">
                                 <!--Secondary actions header goes here-->
                             </div>
                         </template>
@@ -193,102 +253,69 @@
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <div class="table-cell layout horizontal center">
-                                    <!--Primary actions goes here-->
+                                    <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]"></tg-page-action>
+                                    <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]"></tg-ui-action>
                                 </div>
                             </template>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.0)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:60px">[[_getValue(egiEntity.entity, columns.0)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.1)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:200px">[[_getValue(egiEntity.entity, columns.1)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.2)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.2)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.3)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.3)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.4)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.4)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.5)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.5)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.6)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.6)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.7)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.7)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.8)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:68px">[[_getValue(egiEntity.entity, columns.8)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.9)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.9)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.10)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.10)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.11)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:68px">[[_getValue(egiEntity.entity, columns.11)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.12)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:68px">[[_getValue(egiEntity.entity, columns.12)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.13)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:50px">[[_getValue(egiEntity.entity, columns.13)]]</div>
-                            </div>
-                            <div class="table-data-cell relative layout horizontal center" style$="[[_calcRenderingHintsStyle(entityIndex, columns.14)]]" on-tap="_tapAction">
-                                <div class="truncate" style="width:42px">[[_getValue(egiEntity.entity, columns.14)]]</div>
-                            </div>
-                            <!--<template is="dom-repeat" items="[[columns]]" as="column">
+                            <template is="dom-repeat" items="[[columns]]" as="column">
                                 <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
-                                    <div class="fit" style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]">
+                                    <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                        <iron-icon icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
+                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                     </template>
                                     <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                        <div class="truncate" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column)]]</div>
+                                        <div class="truncate relative" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
                                     </template>
                                 </div>
-                            </template>-->
+                            </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                <div class="table-cell">
-                                    <!--Secondary actions goes here-->
+                                <div class="table-cell layout horizontal center">
+                                    <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
+                                        <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]"></tg-page-action>
+                                        <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]"></tg-ui-action>
+                                    </template>
+                                    <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
+                                        <tg-secondary-action-button current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
+                                    </template>
                                 </div>
                             </template>
                         </div>
                     </template>
                     <!-- Table footer -->
                     <template is="dom-if" if="[[totals]]">
-                        <template is="dom-repeat" items="[[gridSummary]]" as="summaryRow" index-as="summaryRowIndex">
-                            <template is="dom-if" if="[[primaryAction]]">
-                                <div class="table-cell layout horizontal center">
-                                    <!--Primary action header goes here-->
+                        <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
+                            <div class="layout horizontal table-footer-row">
+                                <div class="table-cell layout horizontal center" style="width:18px">
+                                    <!-- checkbox stub for table footer -->
                                 </div>
-                            </template>
-                            <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
-                                <template is="dom-if" if="[[summary]]">
-                                    <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
-                                        <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                            <iron-icon icon="[[_getBooleanIcon(totals, summary)]]"></iron-icon>
-                                        </template>
-                                        <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                            <div class="truncate" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary)]]</div>
-                                        </template>
+                                <template is="dom-if" if="[[primaryAction]]">
+                                    <div class="table-cell layout horizontal center" style="width:40px">
+                                        <!--Primary action footer goes here-->
                                     </div>
                                 </template>
-                                <template is="dom-if" if="[[!summary]]">
-                                    <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns)]]">
+                                <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
+                                    <template is="dom-if" if="[[summary]]">
+                                        <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
+                                            <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
+                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                            </template>
+                                            <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                <div class="truncate relative" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary.property, summary.type)]]</div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template is="dom-if" if="[[!summary]]">
+                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns)]]">
+                                        </div>
+                                    </template>
+                                </template>
+                                <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]" style="width:40px">
+                                    <div class="table-cell layout horizontal center" style="width:40px">
+                                        <!--Secondary actions header goes here-->
                                     </div>
                                 </template>
-                            </template>
-                            <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                <div class="table-cell">
-                                    <!--Secondary actions header goes here-->
-                                </div>
-                            </template>
+                            </div>
                         </template>
                     </template>
                 </div>
@@ -300,128 +327,50 @@
                     <content select=".entity-specific-action"></content>
                 </div>
                 <div class="layout horizontal center">
-                    <paper-checkbox style="margin-left:10px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                    <paper-checkbox style="margin: 0 8px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                     <paper-icon-button icon="editor:functions" on-tap="_showSummary" disabled$="[[!_isSummaryEnabled(egiModel, cardLayout)]]"></paper-icon-button>
                     <content select=".standart-action"></content>
                 </div>
             </div>
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                <div class="card layout vertical">
-                    <div class="card-header layout horizontal center justified relative">
+                <paper-material elevation="1" class="card-material layout vertical">
+                    <div class="card-header layout horizontal center justified relative" style$="[[_calcCardHeaderStyle(primaryAction, secondaryActions)]]">
                         <div selected$="[[egiEntity.selected]]" class="card-header-background fit"></div>
                         <div class="layout horizontal center relative">
                             <div>
                                 <!-- this div might not be needed-->
-                                <paper-checkbox class="blue" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
+                                <paper-checkbox class="blue" style="margin-right:11px;" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
-                                <!--Primary actions goes here-->
+                                <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]"></tg-page-action>
+                                <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]"></tg-ui-action>
                             </template>
                         </div>
                         <div class="layout horizontal center relative">
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                <!--Secondary actions goes here-->
+                                <template is="dom-repeat" items="[[secondaryActions]]">
+                                    <tg-page-action icon="[[item.icon]]" action="[[item.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!item.action]]" element-name="[[item.elementName]]" attrs="[[item.attrs]]" component-uri="[[item.componentUri]]" view-type="[[item.viewType]]"></tg-page-action>
+                                    <tg-ui-action show-dialog="[[item.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[item.action]]" short-desc="[[item.shortDesc]]" long-desc="[[item.longDesc]]" icon="[[item.icon]]" component-uri="[[item.componentUri]]" element-name="[[item.elementName]]" attrs="[[item.attrs]]" create-context-holder="[[item.createContextHolder]]" require-selection-criteria="[[item.requireSelectionCriteria]]" require-selected-entities="[[item.requireSelectedEntities]]" require-master-entity="[[item.requireMasterEntity]]" pre-action="[[item.preAction]]" post-action-success="[[item.postActionSuccess]]" post-action-error="[[item.postActionError]]"></tg-ui-action>
+                                </template>
                             </template>
                         </div>
                     </div>
-                    <div class="layout vertical" style$="[[_calcCardStyle(collapsePanelVisible)]]">
-                        <!--                        <tg-flex-layout when-desktop="[[shortLayout.desktop]]" when-tablet="[[shortLayout.tablet]]" when-mobile="[[shortLayout.mobile]]">-->
-                        <div class="layout horizontal">
-                            <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.0)]]">
-                                <div class="data-label truncate">[[columns.0.columnTitle]]</div>
-                                <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.0.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.0)]]</div>
-                            </div>
-                            <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.1)]]">
-                                <div class="data-label truncate">[[columns.1.columnTitle]]</div>
-                                <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.1.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.1)]]</div>
-                            </div>
-                            <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.2)]]">
-                                <div class="data-label truncate">[[columns.2.columnTitle]]</div>
-                                <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.2.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.2)]]</div>
-                            </div>
-                        </div>
-                        <div class="layout horizontal">
-                            <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.3)]]">
-                                <div class="data-label truncate">[[columns.3.columnTitle]]</div>
-                                <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.3.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.3)]]</div>
-                            </div>
-                            <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.4)]]">
-                                <div class="data-label truncate">[[columns.4.columnTitle]]</div>
-                                <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.4.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.4)]]</div>
-                            </div>
-                            <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.5)]]">
-                                <div class="data-label truncate">[[columns.5.columnTitle]]</div>
-                                <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.5.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.5)]]</div>
-                            </div>
-                        </div>
-                        <div class="layout horizontal">
-                            <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.6)]]">
-                                <div class="data-label truncate">[[columns.6.columnTitle]]</div>
-                                <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.6.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.6)]]</div>
-                            </div>
-                            <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.7)]]">
-                                <div class="data-label truncate">[[columns.7.columnTitle]]</div>
-                                <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.7.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.7)]]</div>
-                            </div>
-                            <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.8)]]">
-                                <div class="data-label truncate">[[columns.8.columnTitle]]</div>
-                                <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.8.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.8)]]</div>
-                            </div>
-                        </div>
-                        <!--<template is="dom-repeat" items="[[columns]]" as="column">
-                                <div class="data-entry layout vertical" property$="[[_calcPropertyToSelect(column)]]">
-                                    <div class="data-label truncate">[[column.columnTitle]]</div>
-                                    <div class="data-value relative" on-tap="_tapAction">
-                                        <div style$="[[_calcRenderingHintsStyle(entityIndex, column.property)]]" class="fit">
-                                        </div>
-                                        <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                            <iron-icon style="height:1.1em" icon="[[_getBooleanIcon(egiEntity.entity, column)]]"></iron-icon>
-                                        </template>
-                                        <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                            <div class="truncate">[[_getValue(egiEntity.entity, column)]]</div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>-->
-                        <!--</tg-flex-layout>-->
+                    <div class="card-body" style$="[[_calcCardStyle(collapsePanelVisible)]]">
+                        <tg-flex-layout when-desktop="[[shortLayout.desktop]]" when-tablet="[[shortLayout.tablet]]" when-mobile="[[shortLayout.mobile]]">
+                            @gridCardDom
+                        </tg-flex-layout>
                         <!--Collapse panel that contains other components those weren't included into main view of card-->
                         <template is="dom-if" if="[[collapsePanelVisible]]">
-                            <iron-collapse opened="[[egiEntity.opened]]" class="layout vertical">
-                                <!--                                <tg-flex-layout when-desktop="[[longLayout.desktop]]" when-tablet="[[longLayout.tablet]]" when-mobile="[[longLayout.mobile]]">-->
-                                <div class="layout horizontal">
-                                    <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.9)]]">
-                                        <div class="data-label truncate">[[columns.9.columnTitle]]</div>
-                                        <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.9.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.9)]]</div>
-                                    </div>
-                                    <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.10)]]">
-                                        <div class="data-label truncate">[[columns.10.columnTitle]]</div>
-                                        <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.10.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.10)]]</div>
-                                    </div>
-                                    <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.11)]]">
-                                        <div class="data-label truncate">[[columns.11.columnTitle]]</div>
-                                        <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.11.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.11)]]</div>
-                                    </div>
-                                </div>
-                                <div class="layout horizontal">
-                                    <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.12)]]">
-                                        <div class="data-label truncate">[[columns.12.columnTitle]]</div>
-                                        <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.12.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.12)]]</div>
-                                    </div>
-                                    <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.13)]]">
-                                        <div class="data-label truncate">[[columns.13.columnTitle]]</div>
-                                        <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.13.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.13)]]</div>
-                                    </div>
-                                    <div class="data-entry layout vertical flex" property$="[[_calcPropertyToSelect(columns.14)]]">
-                                        <div class="data-label truncate">[[columns.14.columnTitle]]</div>
-                                        <div class="data-value truncate" style$="[[_calcCardRenderingHintsStyle(entityIndex, columns.14.property)]]" on-tap="_tapAction">[[_getValue(egiEntity.entity, columns.14)]]</div>
-                                    </div>
-                                </div>
-                                <!--                                </tg-flex-layout>-->
+                            <iron-collapse opened="[[egiEntity.opened]]">
+
+                                <tg-flex-layout when-desktop="[[longLayout.desktop]]" when-tablet="[[longLayout.tablet]]" when-mobile="[[longLayout.mobile]]">
+                                    @gridCardDom
+                                </tg-flex-layout>
                             </iron-collapse>
                         </template>
                         <paper-icon-button hidden$="[[!collapsePanelVisible]]" class="expand-button" icon="[[_calcCollapseIcon(egiEntity.opened)]]" on-tap="_toggleCollapsePanel"></paper-icon-button>
                     </div>
-                </div>
+                </paper-material>
             </template>
         </template>
     </template>
@@ -435,8 +384,7 @@
                 return a.id === b.id;
             },
             _hasEntity = function (entity, entities) {
-                var i = 0;
-                for (i = 0; i < entities.length; i += 1) {
+                for (var i = 0; i < entities.length; i += 1) {
                     if (_areEqual(entity, entities[i])) {
                         return true;
                     }
@@ -444,8 +392,7 @@
                 return false;
             },
             _findEntity = function (entity, entities) {
-                var i = 0;
-                for (i = 0; i < entities.length; i += 1) {
+                for (var i = 0; i < entities.length; i += 1) {
                     if (_areEqual(entity, entities[i])) {
                         return i;
                     }
@@ -465,10 +412,9 @@
                 }
             };
         Polymer({
-            is: "tg-entity-grid-spike",
+            is: "tg-@miType-grid-inspector",
 
             properties: {
-                entityType: String,
                 entities: {
                     type: Array,
                     observer: "_entitiesChanged"
@@ -497,8 +443,7 @@
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
             ready: function () {
-                var summaryRowsCount, summaryRowCounter, totalsRow,
-                    primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
+                var tempColumns, primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
 
                 //Initialising entities.
                 this.entities = [];
@@ -512,36 +457,15 @@
                 this.openedEntities = [];
 
                 //Initialising columns (property column mappings)
-                this.columns = [];
-                summaryRowsCount = 0;
+                tempColumns = [];
                 Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), function (item) {
-                    if (item.summary && item.summary.length > summaryRowsCount) {
-                        summaryRowsCount = item.summary.length;
-                    }
-                    this.columns.push(item);
-                }.bind(this));
-
-                //Initialising totals.
-                if (summaryRowsCount > 0) {
-                    this.gridSummary = [];
-                    this.cardSummary = [];
-                    for (summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
-                        totalsRow = [];
-                        this.columns.forEach(function (item) {
-                            if (item.summary && item.summary[propertyCounter]) {
-                                rowTotals.push(item.summary[propertyCounter]);
-                                this.cardSummary.push(item.summary[propertyCounter]);
-                            } else {
-                                rowTotals.push(null);
-                            }
-                        }.bind(this));
-                        this.gridSummary.push(rowTotals);
-                    }
-                }
+                    tempColumns.push(item);
+                });
+                this.columns = tempColumns;
 
                 //Initialising the primary action.
                 this.primaryAction = null;
-                this.primaryAction = primaryActions > 0 ? primaryActions[0] : null;
+                this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
                 //Initialising the secondary actions' list.
                 this.secondaryActions = [];
@@ -549,6 +473,67 @@
                     this.secondaryActions.push(item);
                 }.bind(this));
             },
+
+            /**
+             * Calcualtes the summary for grid.
+             */
+            _calcGridSummary: function (columns) {
+                var summaryRowsCount, summaryRowCounter, totalsRow, gridSummary;
+
+                summaryRowsCount = 0;
+                columns.forEach(function (item) {
+                    if (item.summary && item.summary.length > summaryRowsCount) {
+                        summaryRowsCount = item.summary.length;
+                    }
+                });
+
+                //Initialising totals.
+                if (summaryRowsCount > 0) {
+                    gridSummary = [];
+                    for (summaryRowCounter = 0; summaryRowCounter < summaryRowsCount; summaryRowCounter += 1) {
+                        totalsRow = [];
+                        columns.forEach(function (item) {
+                            if (item.summary && item.summary[summaryRowCounter]) {
+                                totalsRow.push(item.summary[summaryRowCounter]);
+                            } else {
+                                totalsRow.push(null);
+                            }
+                        });
+                        gridSummary.push(totalsRow);
+                    }
+                }
+
+                return gridSummary;
+            },
+
+            /**
+             * Calculates the card's header style.
+             */
+            _calcCardHeaderStyle: function (primaryAction, secondaryActions) {
+                if (primaryAction || secondaryActions.length > 0) {
+                    return "padding-left:8px;";
+                } else {
+                    return "padding: 8px;";
+                }
+            },
+
+            /**
+             * Calcualtes the summary for card layout.
+             */
+            _calcCardSummary: function (columns) {
+                var cardSummary = [];
+
+                columns.forEach(function (item) {
+                    if (item.summary) {
+                        item.summary.forEach(function (summary) {
+                            cardSummary.push(summary);
+                        });
+                    }
+                });
+
+                return cardSummary;
+            },
+
             //The following nine functions determine whenther EGI is in card layout or grid and whether callapsible panel of card is visible or not.////////
             _mobileChanged: function (e, detail) {
                 if (detail.value) {
@@ -609,7 +594,8 @@
              * Observs the changes to entities property.
              */
             _entitiesChanged: function (newValue, oldValue) {
-                var self = this;
+                var tempEgiModel = [],
+                    self = this;
                 newValue.forEach(function (newEntity) {
                     var selectEntInd = _findEntity(newEntity, self.selectedEntities),
                         openedEntInd = _findEntity(newEntity, self.openedEntities);
@@ -620,18 +606,22 @@
                         self.openedEntities[openedEntInd] = newEntity;
                     }
                 });
-                self.egiModel = [];
                 newValue.forEach(function (newEntity) {
                     var egiEntity = {
                         selected: self.selectedEntities.indexOf(newEntity) > -1,
                         opened: self.openedEntities.indexOf(newEntity) > -1,
                         entity: newEntity
                     }
-                    self.push('egiModel', egiEntity);
+                    tempEgiModel.push(egiEntity);
                 });
-                if (this.egiModel.every(function (elem) {return elem.selected})) {
-                    this.selectAll = true;
+                if (tempEgiModel.length > 0 && tempEgiModel.every(function (elem) {
+                    return elem.selected
+                })) {
+                    this.selectedAll = true;
+                } else {
+                    this.selectedAll = false;
                 }
+                self.egiModel = tempEgiModel;
             },
             /**
              * Event handler for select all checkbox
@@ -658,8 +648,10 @@
                     _processEntitySelection(this.selectedEntities, this.entities[index], e.srcElement.checked);
                     if (this.selectedAll && !e.srcElement.checked) {
                         this.selectedAll = false;
-                    } else if (this.egiModel.every(function (elem) {return elem.selected})) {
-                        this.selectAll = true;
+                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
+                        return elem.selected
+                    })) {
+                        this.selectedAll = true;
                     }
                 }
                 console.log("single checkbox: " + index, this.getSelectedRows());
@@ -689,27 +681,18 @@
              * Calculates the column's style.
              */
             _calcColumnStyle: function (column) {
-                return "width: " + column.width + ";";
+                var colStyle = "width: " + column.width + ";";
+                if (column.type === "Integer" || column.type === "BigDecimal") {
+                    colStyle += " text-align: right;"
+                }
+                return colStyle;
             },
             /**
              * Calculates the style for cell that represents rendering hints.
              */
-            _calcRenderingHintsStyle: function (entityIndex, column) {
-                var style = "width: " + column.width + ";",
-                    rendHints = (this.renderingHints && this.renderingHints[entityIndex][column.property]) || [];
-                for (var property in rendHints) {
-                    if (rendHints.hasOwnProperty(property)) {
-                        style += " " + property + ": " + rendHints[property] + ";";
-                    }
-                }
-                return style;
-            },
-            /**
-             * Calculates the style for card cell that represents rendering hints.
-             */
-            _calcCardRenderingHintsStyle: function (entityIndex, propertyName) {
-                var style = "",
-                    rendHints = (this.renderingHints && this.renderingHints[entityIndex][propertyName]) || [];
+            _calcRenderingHintsStyle: function (entity, entityIndex, property) {
+                var style = "opacity: 0.3;";
+                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property]) || [];
                 for (var property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";
@@ -748,26 +731,31 @@
             _isSummaryEnabled: function (entities, cardLayout) {
                 return !!this.totals;
             },
+
             /**
              * Returns the property value of the specified entity.
              */
-            _get: function (entity, column) {
-                return entity && entity.get(column.property);
+            _get: function (entity, property) {
+                return entity && entity.get(property);
             },
             /**
              * Returns the property value of the specified entity and converts it to string.
              */
-            _getValue: function (entity, column) {
-                if (!entity || !column || this._get(entity, column) === null) {
+            _getValue: function (entity, property, type) {
+                if (entity === null || property === null || type === null || this._get(entity, property) === null) {
                     return "";
-                } else if (this.$.reflector.findTypeByName(column.type)) {
-                    return this.$.reflector.convert(this._get(entity, column));
-                } else if (column.type === 'Date') {
-                    return moment(entity.get(column.property)).format("L LT");
-                } else if (typeof entity.get(column.property) === 'number') {
-                    return entity.get(column.property).toLocaleString(this.$.appConfig.locale);
+                } else if (this.$.reflector.findTypeByName(type)) {
+                    return this.$.reflector.convert(this._get(entity, property));
+                } else if (type === 'Date') {
+                    return moment(entity.get(property)).format("L LT");
+                } else if (typeof entity.get(property) === 'number') {
+                    if (type === 'BigDecimal') {
+                        return entity.get(property).toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2, minimumFractionDigits:2});
+                    } else {
+                        return entity.get(property).toLocaleString(this.$.appConfig.locale);
+                    }
                 } else {
-                    return entity.get(column.property);
+                    return entity.get(property);
                 }
             },
             /**
@@ -810,7 +798,7 @@
              * Determines whether property is boolean or not.
              */
             _isBooleanProp: function (entity, column) {
-                return column.type === 'Boolean' && _get(entity, column) !== null
+                return column.type === 'Boolean' && this._get(entity, column.property) !== null
             },
             /**
              * Determines whether property is not boolean property or is.
@@ -819,10 +807,16 @@
                 return column.type !== 'Boolean';
             },
             /**
+             * determines whether secondary actions is only one or not.
+             */
+            _isOnlyOneSecondaryActions: function (_secondaryActions) {
+                return _secondaryActions.length === 1;
+            },
+            /**
              * Returns icon that represents the boolean value.
              */
-            _getBooleanIcon: function (entity, column) {
-                return "icons:" + (_get(entity, column) ? "check" : "clear");
+            _getBooleanIcon: function (entity, property) {
+                return "icons:" + (this._get(entity, property) ? "check" : "clear");
             },
             /**
              * Tap action on data column. TODO: implement this.
@@ -844,10 +838,24 @@
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.
              */
-            _showSummary: function (e, detail, source) {
+            _showSummary: function (e, detail, source) {                
+                //Openening dialog
                 if (this.cardLayout && this.totals) {
-                    this.$.summaryDialog.open();
+                    var summaryDialog = Polymer.dom(document.body).appendChild(this.$.summaryDialog);
+                    Polymer.dom.flush();
+                    
+                    this.async(function () {
+                        summaryDialog.open();
+                    }, 200);
                 }
+            },
+
+            /**
+             *  listener for summary dialog close dialog.
+             */
+            _summaryDialogClosed: function (e, detail) {
+                Polymer.dom(document.body).removeChild(this.$.summaryDialog);
+                Polymer.dom.flush();
             },
             ///////////////////Next three functions are responsible for calculating media queries expressions for mobile tablet and desktop screens/////////
             _calcMobileQuery: function () {
@@ -894,7 +902,7 @@
              */
             clearSelection: function () {
                 var i;
-                for (i = 0; i < egiModel.length; i++) {
+                for (i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".selected", false);
                 }
                 this.selectedEntities = [];
@@ -904,7 +912,7 @@
              */
             collapseAllCards: function () {
                 var i;
-                for (i = 0; i < egiModel.length; i++) {
+                for (i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".opened", false);
                 }
                 this.openedEntities = [];

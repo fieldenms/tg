@@ -9,12 +9,11 @@ import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 import org.restlet.security.Authenticator;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.CentreEgiResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
@@ -31,6 +30,8 @@ import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceF
 import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
+
+import com.google.inject.Injector;
 
 /**
  * Represents the web application that is running on the server as a resource provider for browser client. Extend this abstract web application in order to provide custom entity
@@ -174,6 +175,7 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/criteria/{mitype}", new CriteriaResourceFactory(webUiConfig, injector));
         router.attach("/centre/{mitype}", new CentreResourceFactory(webUiConfig, injector));
         router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(sourceController, restUtil));
+        router.attach("/centre_ui/egi/{mitype}", new CentreEgiResourceFactory(sourceController, restUtil));
     }
 
     /**
