@@ -190,7 +190,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         return true;
     }
 
-    public void setLightweight(final boolean lightweight) {
-        this.lightweight = lightweight;
+    public void setLightweight() {
+        this.lightweight = true;
     }
 }
