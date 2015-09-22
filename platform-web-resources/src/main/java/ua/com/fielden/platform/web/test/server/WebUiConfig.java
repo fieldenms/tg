@@ -15,9 +15,16 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
@@ -25,12 +32,15 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
+import ua.com.fielden.platform.sample.domain.MiDetailsCentre;
 import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
+import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
+import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
@@ -64,12 +74,16 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
+import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.EntityResource;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
@@ -78,8 +92,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -129,17 +141,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
 
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(null, true));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(entityCentre1, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(null, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(null, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(null, false));
+        final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(null, true, true));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(detailsCentre, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(null, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(null, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(null, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(null, false, false));
 
         configApp().addCentre(MiTgPersistentEntityWithProperties.class, entityCentre);
         configApp().addCentre(MiTgPersistentEntityWithProperties1.class, entityCentre1);
         configApp().addCentre(MiTgPersistentEntityWithProperties2.class, entityCentre2);
         configApp().addCentre(MiTgPersistentEntityWithProperties3.class, entityCentre3);
         configApp().addCentre(MiTgPersistentEntityWithProperties4.class, entityCentre4);
+        configApp().addCentre(MiDetailsCentre.class, detailsCentre);
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
@@ -338,6 +352,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         TgFunctionalEntityWithCentreContext.class,
                         TgFunctionalEntityWithCentreContextProducer.class,
                         masterConfigForFunctionalEntity,
+                        injector())).
+                addMaster(TgCentreInvokerWithCentreContext.class, new EntityMaster<TgCentreInvokerWithCentreContext>(
+                        TgCentreInvokerWithCentreContext.class,
+                        TgCentreInvokerWithCentreContextProducer.class,
+                        null,
                         injector())).
                 addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(
                         TgPersistentCompositeEntity.class,
@@ -609,6 +628,40 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
+    private static class DetailsCentreQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
+        private final EntityFactory entityFactory;
+        private final RestServerUtil restUtil;
+        private final IWebUiConfig webUiConfig;
+        private final ICompanionObjectFinder companionFinder;
+        private final IServerGlobalDomainTreeManager serverGdtm;
+        private final IUserProvider userProvider;
+        private final ICriteriaGenerator critGenerator;
+
+        @Inject
+        public DetailsCentreQueryEnhancer(final EntityFactory entityFactory, final RestServerUtil restUtil, final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator) {
+            this.entityFactory = entityFactory;
+            this.restUtil = restUtil;
+            this.webUiConfig = webUiConfig;
+            this.companionFinder = companionFinder;
+            this.serverGdtm = serverGdtm;
+            this.userProvider = userProvider;
+            this.critGenerator = critGenerator;
+        }
+
+        @Override
+        public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
+            if (context.get().getMasterEntity() instanceof SavingInfoHolder) {
+                System.out.println("DetailsCentreQueryEnhancer: master entity holder == " + context.get().getMasterEntity());
+                final TgCentreInvokerWithCentreContext funcEntity = EntityResource.restoreEntityFrom((SavingInfoHolder) context.get().getMasterEntity(), TgCentreInvokerWithCentreContext.class, entityFactory, restUtil, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity: " + funcEntity);
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context): " + funcEntity.getContext());
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
+            }
+            return where.val(1).eq().val(1);
+        }
+    }
+
     private static class TgPersistentEntityWithPropertiesQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
         private final ITgPersistentStatus coStatus;
         private final ITgPersistentEntityWithProperties coEntity;
@@ -621,8 +674,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            System.err.println("CONTEXT IN QUERY ENHANCER == " + context.get().getSelectedEntities());
-
+            System.err.println("CONTEXT IN QUERY ENHANCER == " + context.get());
             if (!context.get().getSelectedEntities().isEmpty()) {
                 final Long id = (Long) context.get().getSelectedEntities().get(0).get("id");
                 final TgPersistentEntityWithProperties justUpdatedEntity = coEntity.findById(id, fetchOnly(TgPersistentEntityWithProperties.class).with("status"));
@@ -633,7 +685,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
-    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final EntityCentre<?> entityCentre, final boolean runAutomatically) {
+    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final EntityCentre<?> entityCentre, final boolean runAutomatically, final boolean withQueryEnhancer) {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
 
@@ -641,11 +693,26 @@ public class WebUiConfig extends AbstractWebUiConfig {
         ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre).hasEventSourceAt("/entity-centre-events");
 
         if (entityCentre != null) {
-            actionConf = actionConf.addTopAction(EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind", mkDim(95, 80, Unit.PRC))).also();
+            actionConf = actionConf.addTopAction(
+                    action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim(95, 80, Unit.PRC)).
+                        withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                        postActionSuccess(new IPostAction() {
+                                @Override
+                                public JsCode build() {
+                                    return new JsCode("    console.log('     ACTIIIIIIIIIIIIIION');\n");
+                                }
+                            }).
+                        icon("assignment-ind").
+                        shortDesc("Function 4").
+                        longDesc("Functional context-dependent action 4").
+                        build()
+                    ).also();
+
+                    // EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind", mkDim(95, 80, Unit.PRC))).also();
         }
 
         @SuppressWarnings("unchecked")
-        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = actionConf
+        final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConf = actionConf
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
@@ -906,9 +973,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 build()
                 )
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
-                .setRenderingCustomiser(TestRenderingCustomiser.class)
+                .setRenderingCustomiser(TestRenderingCustomiser.class);
+
+                final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
+                if (withQueryEnhancer) {
+                    afterQueryEnhancerConf = beforeEnhancerConf.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
+                } else {
+                    afterQueryEnhancerConf = beforeEnhancerConf;
+                }
                 // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
-                .setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
+
+                final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")

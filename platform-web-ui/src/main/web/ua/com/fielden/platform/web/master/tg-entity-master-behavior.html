@@ -370,13 +370,8 @@
             _savingInProgress: function () {
                 return this._ajaxSaver().loading;
             },
-
-            /**
-             * Starts the process of entity saving.
-             *
-             * @param modifiedPropertiesHolder -- the entity with modified properties
-             */
-            _saveModifiedProperties: function (modifiedPropertiesHolder) {
+            
+            _createSavingInfoHolder: function (modifiedPropertiesHolder) {
             	var reflector = this._reflector();
                 var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
                 savingInfoHolder.id = null;
@@ -385,8 +380,16 @@
             	if (this.savingContext) { // if saving context was defined (not 'undefined'):
                     savingInfoHolder["centreContextHolder"] = this.savingContext;
             	}
-            	
-                this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(savingInfoHolder));
+                return savingInfoHolder;
+            },
+
+            /**
+             * Starts the process of entity saving.
+             *
+             * @param modifiedPropertiesHolder -- the entity with modified properties
+             */
+            _saveModifiedProperties: function (modifiedPropertiesHolder) {
+                this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._createSavingInfoHolder(modifiedPropertiesHolder)));
                 return this._ajaxSaver().generateRequest().completes;
             },
 

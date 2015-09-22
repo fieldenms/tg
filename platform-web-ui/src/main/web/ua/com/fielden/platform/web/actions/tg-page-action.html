@@ -150,14 +150,8 @@
                     };
 
                     return detail.retrieve();
-                } else if (self.viewType === 'centre') {
-                    return detail.retrieve().then(function () {
-                        if (detail.autoRun) {
-                            return detail.run();
-                        } else {
-                            return Promise.resolve();
-                        }
-                    });
+                } else {
+                    throw "The view types other than 'master' is unsupported in 'tg-page-action'.";
                 }
             }).bind(self);
         }

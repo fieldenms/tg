@@ -41,6 +41,15 @@ public class ResourceFactoryUtils {
     }
 
     /**
+     * Returns the global manager for the user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
+     *
+     * @return
+     */
+    public static IGlobalDomainTreeManager getUserSpecificGlobalManager(final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider) {
+        return serverGdtm.get(userProvider.getUser().getKey());
+    }
+
+    /**
      * Finds the entity master using 'entityType' request attribute inside 'webUiConfig'.
      *
      * @param request

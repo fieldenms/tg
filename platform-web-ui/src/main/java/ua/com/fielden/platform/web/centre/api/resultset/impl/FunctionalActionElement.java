@@ -8,9 +8,7 @@ import java.util.Map;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.ShowViewInDialogFunctionalEntity;
 import ua.com.fielden.platform.web.PrefDim;
-import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
@@ -31,7 +29,6 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final FunctionalActionKind functionalActionKind;
     private final boolean masterInvocationAction;
     private final boolean masterInDialogInvocationAction;
-    private final boolean showDetailAction;
     private final String chosenProperty;
 
     /**
@@ -67,9 +64,6 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                 && MasterInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
         this.masterInDialogInvocationAction = this.entityActionConfig.functionalEntity.isPresent()
                 && MasterInDialogInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
-        // Indicates whether custom view should be shown in dialog.
-        this.showDetailAction = this.entityActionConfig.functionalEntity.isPresent()
-                && ShowViewInDialogFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
 
         this.chosenProperty = chosenProperty;
     }
@@ -98,8 +92,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                                 "propActions";
         attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
-        attrs.put("post-action", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
+        attrs.put("post-action-success", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
         attrs.put("post-action-error", "[[" + actionsHolderName + "." + numberOfAction + ".postActionError]]");
+        attrs.put("additional-action", "[[" + actionsHolderName + "." + numberOfAction + ".additionalAction]]");
         if (functionalActionKind == FunctionalActionKind.PROP) {
             attrs.put("chosen-property", chosenProperty);
         }
@@ -134,9 +129,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     @Override
     public final DomElement render() {
-        final DomElement uiActionElement = showDetailAction ?
-                new DomElement("tg-page-action").attrs(createShowCustomViewAttrs()) :
-                new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
+        final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (masterInvocationAction) {
             return new DomElement("tg-page-action").attr("class", "primary-action").attr("action", masterInDialogInvocationAction ? "[[_showMasterInDialog]]"
                     : "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit");
@@ -151,29 +144,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
     }
 
-    /**
-     * Creates custom attributes for custom view action.
-     *
-     * @return
-     */
-    private Map<String, Object> createShowCustomViewAttrs() {
-        final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("icon", (conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit"));
-        attrs.put("component-uri", "/centre_ui/" + conf().entityCentre.get().getMenuItemType().getName() + "");
-        attrs.put("element-name", "tg-" + conf().entityCentre.get().getMenuItemType().getSimpleName() + "-centre");
-        attrs.put("view-type", "centre");
-        attrs.put("action", "[[_showCustomViewInDialog]]");
-        final String actionsHolderName = functionalActionKind == FunctionalActionKind.TOP_LEVEL ? "topLevelActions" :
-                functionalActionKind == FunctionalActionKind.PRIMARY_RESULT_SET ? "primaryAction" :
-                        functionalActionKind == FunctionalActionKind.SECONDARY_RESULT_SET ? "secondaryActions" :
-                                "propActions";
-        attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");
-        return attrs;
-    }
-
     @Override
     public String importPath() {
-        return masterInvocationAction || showDetailAction ? "actions/tg-page-action" : widgetPath;
+        return masterInvocationAction ? "actions/tg-page-action" : widgetPath;
     }
 
     public FunctionalActionKind getFunctionalActionKind() {
@@ -216,19 +189,48 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
         attrs.append("},\n");
 
-        attrs.append("attrs: {\n");
-        if (showDetailAction) {
-        	final EntityCentre<?> entityCentre = conf().entityCentre.get();
-        	if (entityCentre.isRunAutomatically()) {
-        		attrs.append("    autoRun:true,\n");
-        	}
-        	if (entityCentre.eventSourceUri().isPresent()) {
-        		attrs.append("    autoRun:true,\n");
-        		attrs.append(format("    uri: \"%s\",", entityCentre.eventSourceUri().get()));
-        	}
-        } else {
-            attrs.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid,\n");
+        attrs.append("additionalAction: function (savingInfoHolder, savedEntity) {\n"); // context
+        attrs.append("    console.log('additionalAction:', savingInfoHolder, savedEntity);\n");
+        if (conf().entityCentre.isPresent()) {
+            attrs.append("    var centreDialogInvocationAction = {};\n");
+            attrs.append("    centreDialogInvocationAction.componentUri = '/centre_ui/" + conf().entityCentre.get().getMenuItemType().getName() + "';\n");
+            attrs.append("    centreDialogInvocationAction.elementName = 'tg-" + conf().entityCentre.get().getMenuItemType().getSimpleName() + "-centre';\n");
+            attrs.append("    centreDialogInvocationAction._onExecuted = function (e, detail, source) {\n"
+                        +"        console.log('ON_EXECUTED');\n"
+                        +"        centreDialogInvocationAction._masterComponent = detail;\n"
+                        +"        detail.postRetrieved = function (entity, bindingEntity, customObject) { console.log('postRetrieved'); };\n"
+                        +"        detail.getMasterEntity = function () {\n"
+                        +"            console.log('GET_MASTER_ENTITY!', savingInfoHolder);\n"
+                        +"            return savingInfoHolder;\n" // savedEntity, context
+                        +"        };\n"
+                        +"        detail.retrieve().then(function () {\n"
+                        +"            if (detail.autoRun) {\n"
+                        +"                return detail.run();\n"
+                        +"            } else {\n"
+                        +"                return Promise.resolve();\n"
+                        +"            }\n"
+                        +"        });\n"
+                        +"    };\n");
+            attrs.append("    centreDialogInvocationAction.attrs = {\n");
+            if (conf().entityCentre.get().isRunAutomatically()) {
+                attrs.append("        autoRun: true,\n");
+            }
+            if (conf().entityCentre.get().eventSourceUri().isPresent()) {
+                attrs.append(format("        uri: \"%s\",\n", conf().entityCentre.get().eventSourceUri().get()));
+            }
+
+            if (conf().entityCentrePrefDim.isPresent()) {
+                final PrefDim prefDim = conf().entityCentrePrefDim.get();
+                attrs.append(format("        prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
+            }
+            attrs.append("    };\n");
+            attrs.append("    self._showCustomViewInDialog(centreDialogInvocationAction);\n");
         }
+        attrs.append("},\n");
+
+        attrs.append("attrs: {\n");
+        attrs.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid,\n");
+
         if (conf().prefDimForView.isPresent()) {
         	final PrefDim prefDim = conf().prefDimForView.get();
         	attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));

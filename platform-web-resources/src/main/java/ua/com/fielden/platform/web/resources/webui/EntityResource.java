@@ -12,9 +12,12 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -23,9 +26,11 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
  * The web resource for entity serves as a back-end mechanism of entity retrieval, saving and deletion. It provides a base implementation for handling the following methods:
@@ -117,10 +122,45 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+        final T applied = restoreEntityFrom(savingInfoHolder, utils, this.entityId, companionFinder, gdtm, critGenerator);
+
+        final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
+        if (savingInfoHolder.getCentreContextHolder() != null) {
+            ((AbstractFunctionalEntityWithCentreContext) potentiallySaved).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
+        }
+        return restUtil.singleJSONRepresentation(potentiallySaved);
+    }
+
+    /**
+     * Restores the functional entity from the <code>savingInfoHolder</code>, that represents it. The <code>savingInfoHolder</code> could potentially contain <code>contreContextHolder</code> inside, which will be deserialised as well.
+     * <p>
+     * All parameters, except <code>savingInfoHolder</code> and <code>functionalEntityType</code>, could be taken from injector -- they are needed for centre context deserialisation.
+     *
+     * @param savingInfoHolder -- the actual holder of information about functional entity
+     * @param functionalEntityType -- the type of functional entity to be restored into
+     * @param entityFactory
+     * @param restUtil
+     * @param webUiConfig
+     * @param companionFinder
+     * @param serverGdtm
+     * @param userProvider
+     * @param critGenerator
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> T restoreEntityFrom(final SavingInfoHolder savingInfoHolder, final Class<T> functionalEntityType, final EntityFactory entityFactory, final RestServerUtil restUtil, final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator) {
+        final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
+        final Object id = savingInfoHolder.getModifHolder().get("id");
+        final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(functionalEntityType);
+        final EntityResourceUtils<T> utils = new EntityResourceUtils<T>(functionalEntityType, master.createEntityProducer(), entityFactory, restUtil, companionFinder);
+
+        return restoreEntityFrom(savingInfoHolder, utils, id == null ? null : Long.parseLong(id + ""), companionFinder, gdtm, critGenerator);
+    }
+
+    private static <T extends AbstractEntity<?>> T restoreEntityFrom(final SavingInfoHolder savingInfoHolder, final EntityResourceUtils<T> utils, final Long entityId, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
         final T applied;
         if (savingInfoHolder.getCentreContextHolder() == null) {
-            applied = utils.constructEntity(modifiedPropertiesHolder, this.entityId).getKey();
+            applied = utils.constructEntity(modifiedPropertiesHolder, entityId).getKey();
         } else {
             applied = utils.constructEntity(
                     modifiedPropertiesHolder,
@@ -130,12 +170,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     savingInfoHolder.getCentreContextHolder().getChosenProperty()
                     ).getKey();
         }
-
-        final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
-        if (savingInfoHolder.getCentreContextHolder() != null) {
-            ((AbstractFunctionalEntityWithCentreContext) potentiallySaved).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
-        }
-        return restUtil.singleJSONRepresentation(potentiallySaved);
+        return applied;
     }
 
     /**
