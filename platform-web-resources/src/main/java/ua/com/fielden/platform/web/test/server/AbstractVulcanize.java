@@ -13,14 +13,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import com.google.common.base.Charsets;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
-
-import com.google.common.base.Charsets;
-import com.google.inject.Injector;
 
 /**
  * A set of utilities to facilitate Web UI application vulcanization.
@@ -143,8 +143,10 @@ public class AbstractVulcanize {
     private static void vulcanizeStartupResourcesFor(final String prefix, final DeviceProfile deviceProfile, final ISourceController sourceController, final String targetAppSpecificPath) {
         logger.info("\t\tVulcanizing [" + prefix + "-startup-resources-origin.html]...");
         try {
-            final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "vulcanize", "-p", "'vulcan/'", "/" + prefix + "-startup-resources-origin.html", ">", prefix
-                    + "-startup-resources-origin-vulcanized.html");
+
+            final ProcessBuilder pb = new ProcessBuilder("C:/Users/Yuriy/AppData/Roaming/npm/vulcanize.cmd", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", ">", prefix + "-startup-resources-origin-vulcanized.html");
+            // final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "vulcanize", "-p", "'vulcan/'", "/" + prefix + "-startup-resources-origin.html", ">", prefix + "-startup-resources-origin-vulcanized.html");
+
             //            final ProcessBuilder pb = new ProcessBuilder("/bin/bash", prefix + "-script.sh");
             pb.redirectErrorStream(true);
             final Process process = pb.start();
