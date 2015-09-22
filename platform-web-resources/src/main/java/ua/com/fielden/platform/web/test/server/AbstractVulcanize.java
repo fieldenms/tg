@@ -128,6 +128,7 @@ public class AbstractVulcanize {
         }
         for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType: webUiConfig.getCentres().keySet()) {
             downloadSource("centre_ui", centreMiType.getName(), sourceController, null);
+            downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, null);
         }
         logger.info("\tDownloaded common generated resources.");
     }

@@ -8,7 +8,7 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 
-<link rel="import" href="/resources/egi/tg-entity-grid-inspector.html">
+<link rel="import" href="/centre_ui/egi/@full_mi_type">
 <link rel="import" href="/resources/actions/tg-page-action.html">
 <link rel="import" href="/resources/centre/tg-selection-criteria.html">
 <link rel="import" href="/resources/centre/tg-selection-criteria-behavior.html">
@@ -164,7 +164,7 @@
             	page-count-updated="{{pageCountUpdated}}"
             	@queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
 
-            <tg-entity-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entity-type="@full_entity_type" @gridLayout>
+            <tg-@mi_type-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entity-type="@full_entity_type" @gridLayout>
                 <!-- EGI COLUMNS DOM (GENERATED) -->
                 <!--@egi_columns-->
 
@@ -215,7 +215,7 @@
                 
                 <!--@primary_action-->
                 <!--@secondary_actions-->
-            </tg-entity-grid-inspector>
+            </tg-@mi_type-grid-inspector>
             
             <!-- @insertion-points  -->
             <div class="left-insertion-point">
