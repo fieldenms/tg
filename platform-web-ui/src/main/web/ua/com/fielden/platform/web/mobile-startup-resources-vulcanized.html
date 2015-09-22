@@ -27514,7 +27514,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <template>
     	<tg-entity-master id="masterDom" entity-type="[[entityType]]" entity-id="[[entityId]]" _post-validated-default="[[_postValidatedDefault]]" _post-validated-default-error="[[_postValidatedDefaultError]]" _process-response="[[_processResponse]]" _process-error="[[_processError]]" _process-retriever-response="[[_processRetrieverResponse]]" _process-retriever-error="[[_processRetrieverError]]" _process-saver-response="[[_processSaverResponse]]" _process-saver-error="[[_processSaverError]]" _saver-loading="{{_saverLoading}}">
    	        <!--EDITORS AND ENTITY ACTIONS DOM (GENERATED) -->
-   	        <tg-flex-layout when-desktop="[[_desktopLayout]]" when-mobile="[[_mobileLayout]]" when-tablet="[[_tabletLayout]]">
+   	        <tg-flex-layout when-mobile="[[_mobileLayout]]" when-tablet="[[_tabletLayout]]" when-desktop="[[_desktopLayout]]">
 <tg-entity-editor entity="[[_currBindingEntity]]" property-name="entityProp" validation-callback="[[validate]]" prop-title="Entity prop" prop-desc="Entity prop desc" current-state="[[currentState]]" action="[[_actions.#exportEntityProp]]" external-refresh-cycle="[[_refreshCycleMode]]" additional-properties="{&quot;desc&quot;: true,&quot;compositeProp&quot;: false,&quot;booleanProp&quot;: false}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[entityType]]" as-part-of-entity-master="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]"></tg-entity-editor>
 <tg-entity-editor entity="[[_currBindingEntity]]" property-name="entityProp.entityProp" validation-callback="[[validate]]" prop-title="Entity prop" prop-desc="Entity prop desc" current-state="[[currentState]]" action="[[_actions.#exportIntegerProp]]" external-refresh-cycle="[[_refreshCycleMode]]" additional-properties="{&quot;desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[entityType]]" as-part-of-entity-master="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]"></tg-entity-editor>
 <tg-singleline-text-editor entity="[[_currBindingEntity]]" property-name="key" validation-callback="[[validate]]" prop-title="Key" prop-desc="Some key description" current-state="[[currentState]]" action="[[_actions.#exportCritOnlyEntityProp]]" external-refresh-cycle="[[_refreshCycleMode]]"></tg-singleline-text-editor>
@@ -27558,9 +27558,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 var self = this;
                 
                 // LAYOUT CONFIG (GENERATED)
-                this._desktopLayout = ['padding:20px', [['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],['margin-top: 20px', 'wrap', ['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px']]];
-this._mobileLayout = ['padding:20px',[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],['margin-top: 20px', 'wrap', ['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px']]];
+                this._mobileLayout = ['padding:20px',[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex']],['margin-top: 20px', 'wrap', ['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px']]];
 this._tabletLayout = ['padding:20px',[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex']],['margin-top: 20px', 'wrap', ['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px']]];
+this._desktopLayout = ['padding:20px', [['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],[['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex', 'margin-right: 20px'], ['flex']],['margin-top: 20px', 'wrap', ['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px'],['margin-top: 20px', 'margin-left: 20px', 'width: 110px']]];
 
 
                 // ENTITY ACTIONS (GENERATED)
@@ -30189,7 +30189,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </paper-dialog>
 
         <template is="dom-if" if="[[!cardLayout]]" restamp="">
-            <paper-material elevation="1" style="margin: 10px 30px;">
+            <paper-material elevation="1" style="margin: 10px 10px;">
                 <div class="layout vertical data-table">
                     <!--Table toolbar-->
                     <div class="grid-toolbar layout horizontal justified">
@@ -30333,7 +30333,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     </div>
                     <div class="card-body" style$="[[_calcCardStyle(collapsePanelVisible)]]">
                         <tg-flex-layout when-desktop="[[shortLayout.desktop]]" when-tablet="[[shortLayout.tablet]]" when-mobile="[[shortLayout.mobile]]">
-                            <div class="data-entry layout vertical" property="this"><div class="data-label truncate">Key</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, '', 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties$$TgEntity_5672ca73b02f4987b79d3233150357c3')]]</div></div></div>
+                            <div class="data-entry layout vertical" property="this"><div class="data-label truncate">Key</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, '', 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties')]]</div></div></div>
 <div class="data-entry layout vertical" property="desc"><div class="data-label truncate">Desc</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;desc&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, 'desc', 'String')]]</div></div></div>
 <div class="data-entry layout vertical" property="dR"><div class="data-label truncate">DR</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;dR&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, 'dR', 'String')]]</div></div></div>
 <div class="data-entry layout vertical" property="iS"><div class="data-label truncate">IS</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;iS&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, 'iS', 'String')]]</div></div></div>
@@ -30353,7 +30353,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                             <iron-collapse opened="[[egiEntity.opened]]">
 
                                 <tg-flex-layout when-desktop="[[longLayout.desktop]]" when-tablet="[[longLayout.tablet]]" when-mobile="[[longLayout.mobile]]">
-                                    <div class="data-entry layout vertical" property="this"><div class="data-label truncate">Key</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, '', 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties$$TgEntity_5672ca73b02f4987b79d3233150357c3')]]</div></div></div>
+                                    <div class="data-entry layout vertical" property="this"><div class="data-label truncate">Key</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, '', 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties')]]</div></div></div>
 <div class="data-entry layout vertical" property="desc"><div class="data-label truncate">Desc</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;desc&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, 'desc', 'String')]]</div></div></div>
 <div class="data-entry layout vertical" property="dR"><div class="data-label truncate">DR</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;dR&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, 'dR', 'String')]]</div></div></div>
 <div class="data-entry layout vertical" property="iS"><div class="data-label truncate">IS</div><div class="data-value relative" on-tap="_tapAction"><div style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, &quot;iS&quot;)]]" class="fit"></div><div class="truncate relative">[[_getValue(egiEntity.entity, 'iS', 'String')]]</div></div></div>
@@ -31721,7 +31721,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             border-radius: 2px;
             overflow: hidden;
         }
-        
     </style>
 
     <template>
@@ -31742,7 +31741,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                 <paper-button id="discarder" raised="" roll="button" on-tap="discard" disabled$="[[_discarderDisabled]]">Discard</paper-button>
                             </div>
                             <div class="layout horizontal">
-                            	<paper-button id="view" raised="" roll="button" on-tap="_activateResultSetView" style="margin-right: 0px;">View</paper-button>
+                            	<paper-button id="view" raised="" roll="button" on-tap="_activateResultSetView">View</paper-button>
                             	<paper-button id="runner" raised="" roll="button" on-tap="run" style="margin-right: 0px;">Run</paper-button>
                             </div>
                         </div>
@@ -31750,9 +31749,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 </paper-material>
             </div>
             <div class="fit">
-                <div class="layout vertical center">
-                    <content select=".custom-egi"></content>
+                <div class="layout horizontal start">
+                	<div class="layout vertical start">
+	                    <content select=".left-insertion-point"></content>
+                    </div>
+                    
+                    <div class="layout vertical start">
+                    	<content select=".custom-egi"></content>
+                    	<content select=".bottom-insertion-point"></content>
+                    </div>
+                    
+                    <div class="layout vertical start">
+	                    <content select=".right-insertion-point"></content>
+                    </div>
                 </div>
+                
             </div>
         </iron-pages>
     </template>
@@ -32034,7 +32045,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <template>
     	<tg-selection-criteria id="dom" mi-type="[[miType]]" _post-validated-default="[[_postValidatedDefault]]" _post-validated-default-error="[[_postValidatedDefaultError]]" _process-response="[[_processResponse]]" _process-error="[[_processError]]" _process-retriever-response="[[_processRetrieverResponse]]" _process-retriever-error="[[_processRetrieverError]]" _process-runner-response="[[_processRunnerResponse]]" _process-runner-error="[[_processRunnerError]]">
    	        <!--CRITERIA EDITORS DOM (GENERATED)-->
-        	<tg-flex-layout when-desktop="[[_desktopLayout]]" when-mobile="[[_mobileLayout]]" when-tablet="[[_tabletLayout]]">
+        	<tg-flex-layout when-mobile="[[_mobileLayout]]" when-tablet="[[_tabletLayout]]" when-desktop="[[_desktopLayout]]">
 <tg-multi-criterion validation-callback="[[validate]]" or-null="{{propertyModel.THIS.orNull}}" not="{{propertyModel.THIS.not}}">
 <tg-entity-editor entity="[[_currBindingEntity]]" property-name="tgPersistentEntityWithProperties_" validation-callback="[[validate]]" prop-title="Key" prop-desc="Some key description" current-state="[[currentState]]" action="/centre_ui/null" external-refresh-cycle="[[_refreshCycleMode]]" class="criterion-editors flex" additional-properties="{&quot;desc&quot;: true,&quot;booleanProp&quot;: false,&quot;compositeProp&quot;: true,&quot;compositeProp.desc&quot;: true}" process-response="[[_processResponse]]" process-error="[[_processError]]" post-searched-default-error="[[_postSearchedDefaultError]]" autocompletion-type="[[miType]]" multi="true" create-modified-properties-holder="[[_createModifiedPropertiesHolder]]" require-selection-criteria="false" get-selected-entities="[[getSelectedEntities]]" require-selected-entities="ALL" get-master-entity="[[getMasterEntity]]" require-master-entity="false"></tg-entity-editor>
 </tg-multi-criterion>
@@ -32101,9 +32112,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         	
         	ready: function () {
                 // LAYOUT CONFIG (GENERATED)
-                this._desktopLayout = [['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['flex']]];
-this._mobileLayout = [['center-justified', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']]];
+                this._mobileLayout = [['center-justified', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']],['center-justified', 'start', ['flex']]];
 this._tabletLayout = [['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]];
+this._desktopLayout = [['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['margin-right: 40px', 'flex'], ['margin-right: 40px', 'flex'], ['flex']],['center-justified', 'start', ['flex']]];
 
         	},
             
@@ -32195,9 +32206,9 @@ this._tabletLayout = [['center-justified', 'start', ['margin-right: 40px', 'flex
         <tg-entity-centre id="dom" _selected-view="{{_selectedView}}" _url="[[_url]]" _process-saver-response="[[_processSaverResponse]]" _process-saver-error="[[_processSaverError]]" _process-discarder-response="[[_processDiscarderResponse]]" _process-discarder-error="[[_processDiscarderError]]" _handle-scroll="[[_handleScroll]]" _saver-disabled="[[_saverDisabled]]" _discarder-disabled="[[_discarderDisabled]]" save="[[save]]" discard="[[discard]]" run="[[run]]" _activate-result-set-view="[[_activateResultSetView]]">
             <tg-mitgpersistententitywithproperties-selection-criteria id="selection_criteria" class="custom-selection-criteria" _centre-changed="{{_centreChanged}}" uuid="[[uuid]]" mi-type="ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" require-selected-entities="NONE" require-master-entity="false"></tg-mitgpersistententitywithproperties-selection-criteria>
 
-            <tg-mitgpersistententitywithproperties-grid-inspector id="egi" class="entity-grid-inspector custom-egi" entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" short-layout="[[gridShortLayout]]" long-layout="[[gridLongLayout]]" summary-layout="[[summaryLayout]]">
+            <tg-mitgpersistententitywithproperties-grid-inspector id="egi" class="entity-grid-inspector custom-egi" short-layout="[[gridShortLayout]]" long-layout="[[gridLongLayout]]" summary-layout="[[summaryLayout]]">
                 <!-- EGI COLUMNS DOM (GENERATED) -->
-                <tg-property-column property="" width="60px" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties$$TgEntity_ffd8af3f151f49f78eab6dbbadc8e9e2" column-title="Key" column-desc="Some key description">
+                <tg-property-column property="" width="60px" type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" column-title="Key" column-desc="Some key description">
 <tg-page-action class="primary-action" action="[[_showMasterInDialog]]" short-desc="action description" icon="editor:mode-edit"></tg-page-action>
 <tg-summary-property property="kount" width="60px" type="Integer" column-title="Count" column-desc="Number of entities"></tg-summary-property>
 </tg-property-column>
@@ -32287,6 +32298,22 @@ this._tabletLayout = [['center-justified', 'start', ['margin-right: 40px', 'flex
                 <tg-ui-action short-desc="Function 3" long-desc="Functional context-dependent action 3" icon="assignment-turned-in" component-uri="/master_ui/ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext" show-dialog="[[_showDialog]]" element-name="tg-TgFunctionalEntityWithCentreContext-master" create-context-holder="[[_createContextHolder]]" attrs="[[secondaryActions.0.attrs]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" additional-action="[[secondaryActions.0.additionalAction]]" require-selection-criteria="false" require-selected-entities="ALL" require-master-entity="false" class="secondary-action" hidden=""></tg-ui-action>
 <tg-ui-action short-desc="Function 4" long-desc="Functional context-dependent action 4" icon="attachment" component-uri="/master_ui/ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext" show-dialog="[[_showDialog]]" element-name="tg-TgFunctionalEntityWithCentreContext-master" create-context-holder="[[_createContextHolder]]" attrs="[[secondaryActions.1.attrs]]" pre-action="[[secondaryActions.1.preAction]]" post-action-success="[[secondaryActions.1.postActionSuccess]]" post-action-error="[[secondaryActions.1.postActionError]]" additional-action="[[secondaryActions.1.additionalAction]]" require-selection-criteria="false" require-selected-entities="ALL" require-master-entity="false" class="secondary-action" hidden=""></tg-ui-action>
             </tg-mitgpersistententitywithproperties-grid-inspector>
+            
+            <!-- @insertion-points  -->
+            <div class="left-insertion-point">
+            	<paper-material style="margin: 10px; width:200px; height: 300px; background: white; border-radius: 2px;"></paper-material>
+            	<paper-material style="margin: 10px; width:200px; height: 300px; background: white; border-radius: 2px;"></paper-material>
+            	<paper-material style="margin: 10px; width:200px; height: 300px; background: white; border-radius: 2px;"></paper-material>
+            	<paper-material style="margin: 10px; width:200px; height: 300px; background: white; border-radius: 2px;"></paper-material>
+            </div>
+            <div class="right-insertion-point">
+            	<paper-material style="margin: 10px; width:400px; height: 500px; background: white; border-radius: 2px;"></paper-material>
+            	<paper-material style="margin: 10px; width:600px; height: 500px; background: white; border-radius: 2px;"></paper-material>
+            	<paper-material style="margin: 10px; width:400px; height: 500px; background: white; border-radius: 2px;"></paper-material>
+            </div>
+            <div class="bottom-insertion-point">
+            	<paper-material style="margin: 10px; width:800px; height: 500px; background: white; border-radius: 2px;"></paper-material>
+            </div>
         </tg-entity-centre>
     </template>
 </dom-module>

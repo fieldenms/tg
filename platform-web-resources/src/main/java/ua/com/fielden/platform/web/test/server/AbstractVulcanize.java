@@ -13,14 +13,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
-import com.google.common.base.Charsets;
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+
+import com.google.common.base.Charsets;
+import com.google.inject.Injector;
 
 /**
  * A set of utilities to facilitate Web UI application vulcanization.
@@ -123,10 +123,10 @@ public class AbstractVulcanize {
         logger.info("\tDownloading common generated resources...");
         downloadSource("app", "tg-app-config.html", sourceController, null);
         downloadSource("app", "tg-reflector.html", sourceController, null);
-        for (final Class<? extends AbstractEntity<?>> masterType: webUiConfig.getMasters().keySet()) {
+        for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
             downloadSource("master_ui", masterType.getName(), sourceController, null);
         }
-        for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType: webUiConfig.getCentres().keySet()) {
+        for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
             downloadSource("centre_ui", centreMiType.getName(), sourceController, null);
             downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, null);
         }
@@ -143,10 +143,16 @@ public class AbstractVulcanize {
     private static void vulcanizeStartupResourcesFor(final String prefix, final DeviceProfile deviceProfile, final ISourceController sourceController, final String targetAppSpecificPath) {
         logger.info("\t\tVulcanizing [" + prefix + "-startup-resources-origin.html]...");
         try {
-            final ProcessBuilder pb = new ProcessBuilder("C:/Users/Yuriy/AppData/Roaming/npm/vulcanize.cmd", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", ">", prefix + "-startup-resources-origin-vulcanized.html");
+            final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "vulcanize", "-p", "'vulcan/'", "/" + prefix + "-startup-resources-origin.html", ">", prefix
+                    + "-startup-resources-origin-vulcanized.html");
+            //            final ProcessBuilder pb = new ProcessBuilder("/bin/bash", prefix + "-script.sh");
             pb.redirectErrorStream(true);
             final Process process = pb.start();
             process.waitFor();
+
+            //            final Runtime r = Runtime.getRuntime();
+            //            r.exec("/home/oleh/.nvm/versions/v0.12.4/bin/vulcanize -p 'vulcan/' /" + prefix + "-startup-resources-origin.html > " + prefix
+            //                    + "-startup-resources-origin-vulcanized.html").waitFor();
         } catch (final IOException | InterruptedException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);
