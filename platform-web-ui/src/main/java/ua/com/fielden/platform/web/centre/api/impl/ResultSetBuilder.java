@@ -18,6 +18,8 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
@@ -334,5 +336,16 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             return ResultSetBuilder.this.setSummaryCardLayoutFor(device, orientation, flexString);
         }
 
+        @Override
+        public IInsertionPoints<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+            return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
+        }
+
+    }
+
+    @Override
+    public IInsertionPoints<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        this.builder.insertionPointActions.add(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView));
+        return this;
     }
 }

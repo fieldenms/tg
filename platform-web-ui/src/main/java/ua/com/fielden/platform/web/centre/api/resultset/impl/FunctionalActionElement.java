@@ -24,8 +24,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final String widgetName;
     private final String widgetPath;
     private boolean debug = false;
-    private final EntityActionConfig entityActionConfig;
-    private final int numberOfAction;
+    public final EntityActionConfig entityActionConfig;
+    public final int numberOfAction;
     private final FunctionalActionKind functionalActionKind;
     private final boolean masterInvocationAction;
     private final boolean masterInDialogInvocationAction;
@@ -79,6 +79,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("debug", "true");
         }
 
+        if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
+            attrs.put("class", "entity-specific-action");
+        }
+
         attrs.put("short-desc", conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED");
         attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
         attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
@@ -86,10 +90,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("show-dialog", "[[_showDialog]]");
         attrs.put("element-name", "tg-" + conf().functionalEntity.get().getSimpleName() + "-master");
         attrs.put("create-context-holder", "[[_createContextHolder]]");
-        final String actionsHolderName = functionalActionKind == FunctionalActionKind.TOP_LEVEL ? "topLevelActions" :
-                functionalActionKind == FunctionalActionKind.PRIMARY_RESULT_SET ? "primaryAction" :
-                        functionalActionKind == FunctionalActionKind.SECONDARY_RESULT_SET ? "secondaryActions" :
-                                "propActions";
+        final String actionsHolderName = functionalActionKind.holderName;
         attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
         attrs.put("post-action-success", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
@@ -129,18 +130,16 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     @Override
     public final DomElement render() {
-        final DomElement uiActionElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (masterInvocationAction) {
             return new DomElement("tg-page-action").attr("class", "primary-action").attr("action", masterInDialogInvocationAction ? "[[_showMasterInDialog]]"
                     : "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit");
-        } else if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
+        } else {
+            // TODO tooltips to be enabled when ready
             // final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()
             //         : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
 
             // return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
-            return uiActionElement.attr("class", "entity-specific-action");
-        } else {
-            return uiActionElement;
+            return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         }
     }
 
@@ -224,7 +223,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                 attrs.append(format("        prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
             }
             attrs.append("    };\n");
-            attrs.append("    self._showCustomViewInDialog(centreDialogInvocationAction);\n");
+            if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
+                attrs.append(format("    self._activateInsertionPoint('ip%s', centreDialogInvocationAction);\n", numberOfAction));
+            } else {
+                attrs.append("    self._showCustomViewInDialog(centreDialogInvocationAction);\n");
+            }
         }
         attrs.append("},\n");
 

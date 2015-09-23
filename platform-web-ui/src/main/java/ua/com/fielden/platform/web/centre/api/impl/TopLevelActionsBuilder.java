@@ -9,7 +9,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
-import ua.com.fielden.platform.web.centre.api.top_level_actions.IAsloCentreTopLevelActions;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.IAlsoCentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup0;
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
  * @param <T>
  */
 class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements
-        ICentreTopLevelActionsWithRunConfig<T>, ICentreTopLevelActions<T>, ICentreTopLevelActionsInGroup<T>, ICentreTopLevelActionsInGroup0<T>, IAsloCentreTopLevelActions<T> {
+        ICentreTopLevelActionsWithRunConfig<T>, ICentreTopLevelActions<T>, ICentreTopLevelActionsInGroup<T>, ICentreTopLevelActionsInGroup0<T>, IAlsoCentreTopLevelActions<T> {
 
     private final EntityCentreBuilder<T> builder;
 
@@ -34,7 +34,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
     }
 
     @Override
-    public IAsloCentreTopLevelActions<T> addTopAction(final EntityActionConfig actionConfig) {
+    public IAlsoCentreTopLevelActions<T> addTopAction(final EntityActionConfig actionConfig) {
         builder.topLevelActions.add(new Pair<>(actionConfig, builder.currGroup));
         return this;
     }
@@ -52,7 +52,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
     }
 
     @Override
-    public IAsloCentreTopLevelActions<T> endTopActionsGroup() {
+    public IAlsoCentreTopLevelActions<T> endTopActionsGroup() {
         builder.currGroup = Optional.empty();
         return this;
     }

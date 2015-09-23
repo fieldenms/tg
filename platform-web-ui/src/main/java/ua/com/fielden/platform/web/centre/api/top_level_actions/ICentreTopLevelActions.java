@@ -14,7 +14,7 @@ import ua.com.fielden.platform.web.centre.api.calc.IEnhanceEntityWithCalcProps;
  * @param <T>
  */
 public interface ICentreTopLevelActions<T extends AbstractEntity<?>> extends IEnhanceEntityWithCalcProps<T> {
-    IAsloCentreTopLevelActions<T> addTopAction(final EntityActionConfig actionConfig);
+    IAlsoCentreTopLevelActions<T> addTopAction(final EntityActionConfig actionConfig);
 
     ICentreTopLevelActionsInGroup<T> beginTopActionsGroup(final String desc);
 }

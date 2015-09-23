@@ -64,7 +64,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -76,8 +75,10 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssi
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -694,7 +695,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         if (entityCentre != null) {
             actionConf = actionConf.addTopAction(
-                    action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim(95, 80, Unit.PRC)).
+                    action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim("document.body.clientWidth / 4", "400")).
                         withContext(context().withSelectionCrit().withSelectedEntities().build()).
                         postActionSuccess(new IPostAction() {
                                 @Override
@@ -707,8 +708,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Functional context-dependent action 4").
                         build()
                     ).also();
-
-                    // EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind", mkDim(95, 80, Unit.PRC))).also();
         }
 
         @SuppressWarnings("unchecked")
@@ -983,10 +982,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 }
                 // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
 
-                final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
+                final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
-                .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
+                .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]");
 
                 //                .also()
                 //                .addProp("status").order(3).desc().withAction(null)
@@ -996,8 +995,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
                 //                .also()
                 //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
-                .build();
-        return ecc;
+
+                if (entityCentre != null) {
+                    return scl.addInsertionPoint(
+                            action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim("document.body.clientWidth / 4", "400")).
+                            withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                            postActionSuccess(new IPostAction() {
+                                    @Override
+                                    public JsCode build() {
+                                        return new JsCode("    console.log('     ACTIIIIIIIIIIIIIION');\n");
+                                    }
+                                }).
+                            icon("assignment-ind").
+                            shortDesc("Function 4").
+                            longDesc("Functional context-dependent action 4").
+                            build(),
+                            InsertionPoints.RIGHT)
+                            .build();
+                }
+                return scl.build();
     }
 
     private EntityCentre<TgPersistentEntityWithProperties> createEntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<TgPersistentEntityWithProperties> entityCentreConfig) {

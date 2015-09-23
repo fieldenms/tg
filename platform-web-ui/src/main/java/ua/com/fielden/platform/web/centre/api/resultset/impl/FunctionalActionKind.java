@@ -2,6 +2,12 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
 public enum FunctionalActionKind {
 
-    TOP_LEVEL, PRIMARY_RESULT_SET, SECONDARY_RESULT_SET, PROP
+    TOP_LEVEL("topLevelActions"), PRIMARY_RESULT_SET("primaryAction"), SECONDARY_RESULT_SET("secondaryActions"), PROP("propActions"), INSERTION_POINT("insertionPointActions");
+
+    public final String holderName;
+
+    private FunctionalActionKind(final String holderName) {
+        this.holderName = holderName;
+    }
 
 }

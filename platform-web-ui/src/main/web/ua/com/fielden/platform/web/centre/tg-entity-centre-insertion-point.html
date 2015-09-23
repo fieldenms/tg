@@ -1,0 +1,116 @@
+<link rel="import" href="/app/tg-element-loader.html">
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/components/tg-toast.html">
+
+<dom-module id="tg-entity-centre-insertion-point">
+    <template>
+    	<paper-material id="pm" style="margin: 10px;background: white; border-radius: 2px;">
+        	<tg-element-loader id="elementLoader"></tg-element-loader>
+        </paper-material>
+        <tg-toast id="toaster"></tg-toast>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-entity-centre-insertion-point",
+
+            behaviors: [Polymer.IronResizableBehavior],
+
+            listeners: {
+                'iron-resize': '_onIronResize'
+            },
+            
+            properties: {
+                activated: {
+                    type: Boolean,
+                    value: false
+                },
+                
+                _element: {
+                    type: Object,
+                    value: null
+                }
+            },
+
+            ready: function () {
+                //Initialising the action runner
+                this.currentActionRunning = null;
+            },
+
+            _getElement: function (customAction) {
+            	var self = this;
+            	if (self._element) {
+            	    return Promise.resolve(self._element);
+            	} else {
+           			self.$.elementLoader.import = customAction.componentUri;
+               		self.$.elementLoader.elementName = customAction.elementName;
+               		self.$.elementLoader.attrs = customAction.attrs;
+               		return self.$.elementLoader.reload();
+            	}
+            },
+
+            /**
+             * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
+             */
+            activate: function (customAction) {
+                var self = this;
+                if (this.activated === true) {
+                    // TODO Execute action
+                    return self._getElement(customAction)
+		                   .then(function (element) {
+		                   		return customAction._onExecuted(null, element, null);
+		                   });
+                } else { // else need to first load and create the element to be inserted
+                   	self._getElement(customAction)
+                           .then(function (element) {
+                            self.activated = true;
+                           	self._element = element;
+                           	
+                               var promise = customAction._onExecuted(null, element, null);
+                               if (promise) {
+                               	return promise
+                               	.then(function () {self._adjustView();});
+                               } else {
+                                   return Promise.resolve()
+                                   .then(function () {self._adjustView();});
+                               }
+                           })
+                           .catch(function (error) {
+                               self.$.toaster.text = 'There was an error displaying view ' + customAction.elementName;
+                               self.$.toaster.hasMore = true;
+                               self.$.toaster.msgText = 'There was an error displaying the view.<br><br> \
+                                                      <b>Error cause:</b><br>' + error.message;
+                               self.$.toaster.showProgress = false;
+                               self.$.toaster.show();
+                           });
+                }
+            },
+
+            _adjustView: function (e) {
+                var self = this;
+                
+                if (this.$.elementLoader.prefDim) {
+                	var prefDim = this.$.elementLoader.prefDim;
+                	this.$.pm.style.width = prefDim.width() + prefDim.unit;
+                	this.$.pm.style.height = prefDim.height() + prefDim.unit;
+                } else {
+                    this.$.pm.width = "auto";
+                    this.$.pm.height = "auto";
+                }
+                this.updateStyles();
+            },
+            
+            _onIronResize: function () {
+                this._adjustView(null);
+            }
+        });
+    })();
+</script>

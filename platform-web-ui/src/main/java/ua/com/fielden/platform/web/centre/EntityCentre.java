@@ -14,6 +14,9 @@ import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.ListMultimap;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -67,6 +70,7 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
@@ -78,9 +82,6 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
-
-import com.google.common.collect.ListMultimap;
-import com.google.inject.Injector;
 
 /**
  * Represents the entity centre.
@@ -801,8 +802,44 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             secondaryActionsObjects.append(prefix + createActionObject(el));
         }
 
+
+        logger.debug("Initiating insertion point actions...");
+
+        final List<FunctionalActionElement> insertionPointActionsElements = new ArrayList<>();
+        final Optional<List<EntityActionConfig>> insertionPointActions = this.dslDefaultConfig.getInsertionPointActions();
+        if (insertionPointActions.isPresent()) {
+            for (int index = 0; index < insertionPointActions.get().size(); index++) {
+                final FunctionalActionElement el = new FunctionalActionElement(insertionPointActions.get().get(index), index, FunctionalActionKind.INSERTION_POINT);
+                insertionPointActionsElements.add(el);
+            }
+        }
+
+        final DomContainer insertionPointActionsDom = new DomContainer();
+        final StringBuilder insertionPointActionsObjects = new StringBuilder();
+        for (final FunctionalActionElement el : insertionPointActionsElements) {
+            importPaths.add(el.importPath());
+            insertionPointActionsDom.add(el.render().clazz("insertion-point-action").attr("hidden", null));
+            insertionPointActionsObjects.append(prefix + createActionObject(el));
+        }
+
+        final DomContainer leftInsertionPointsDom = new DomContainer();
+        final DomContainer rightInsertionPointsDom = new DomContainer();
+        final DomContainer bottomInsertionPointsDom = new DomContainer();
+        for (final FunctionalActionElement el : insertionPointActionsElements) {
+            if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
+                leftInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction));
+            } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.RIGHT) {
+                rightInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction));
+            } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.BOTTOM) {
+                bottomInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction));
+            } else {
+                throw new IllegalArgumentException("Unexpected insertion point type.");
+            }
+        }
+
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
+        final String insertionPointActionsString = insertionPointActionsObjects.toString();
         final String primaryActionObjectString = primaryActionObject.toString();
         final String propActionsString = propActionsObject.toString();
         final Pair<String, String> gridLayoutConfig = generateGridLayoutConfig();
@@ -823,6 +860,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("<!--@egi_columns-->", egiColumns.toString()).
                 replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace("//generatedSecondaryActions", secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
+                replace("//generatedInsertionPointActions", insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength) : insertionPointActionsString).
                 replace("//generatedPrimaryAction", primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength)
                         : primaryActionObjectString).
                 replace("//generatedPropActions", propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
@@ -831,7 +869,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("//gridLayoutConfig", gridLayoutConfig.getValue()).
                 replace("<!--@functional_actions-->", functionalActionsDom.toString()).
                 replace("<!--@primary_action-->", primaryActionDom.toString()).
-                replace("<!--@secondary_actions-->", secondaryActionsDom.toString());
+                replace("<!--@secondary_actions-->", secondaryActionsDom.toString()).
+                replace("<!--@insertion_point_actions-->", insertionPointActionsDom.toString()).
+                replace("<!--@left_insertion_points-->", leftInsertionPointsDom.toString()).
+                replace("<!--@right_insertion_points-->", rightInsertionPointsDom.toString()).
+                replace("<!--@bottom_insertion_points-->", bottomInsertionPointsDom.toString());
         logger.debug("Finishing...");
         final IRenderable representation = new IRenderable() {
             @Override

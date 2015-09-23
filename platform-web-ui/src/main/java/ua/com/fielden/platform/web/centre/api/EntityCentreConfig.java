@@ -11,6 +11,10 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -31,10 +35,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
-
 /**
  *
  * Represents a final structure of an entity centre as produced by means of using Entity Centre DSL.
@@ -54,6 +54,16 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * is important and should be honoured when building their UI representation.
      */
     private final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
+
+    /////////////////////////////////////////////
+    /////////// INSERTION POINT ACTIONS /////////
+    /////////////////////////////////////////////
+    /**
+     * A list of functional actions that are associated with entity centre insertion points.
+     * <p>
+     * They do not have visual representation (such as an icon or a button) and are used only to instantiate insertion point views (action per view) and execute their own logic (method <code>save</code> of a corresponding functional entity).
+     */
+    private final List<EntityActionConfig> insertionPointActions = new ArrayList<>();
 
     /////////////////////////////////////////////
     ////////////// SELECTION CRIT ///////////////
@@ -136,7 +146,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     /** Identifies URI for the Server-Side Eventing. If <code>null</code> is set then no SSE is required. */
     private final String sseUri;
-    
+
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
     /////////////////////////////////////////////
@@ -263,6 +273,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////////////////////////////////
     public EntityCentreConfig(
             final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
+            final List<EntityActionConfig> insertionPointActions,
             final List<String> selectionCriteria,
             final Map<String, Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>>> defaultMultiValueAssignersForEntityAndStringSelectionCriteria,
             final Map<String, Class<? extends IValueAssigner<MultiCritBooleanValueMnemonic, T>>> defaultMultiValueAssignersForBooleanSelectionCriteria,
@@ -296,7 +307,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
 
             final boolean runAutomatically,
-            
+
             final String sseUri,
 
             final FlexLayout selectionCriteriaLayout,
@@ -314,6 +325,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final IFetchProvider<T> fetchProvider) {
         this.topLevelActions.addAll(topLevelActions);
+        this.insertionPointActions.addAll(insertionPointActions);
         this.selectionCriteria.addAll(selectionCriteria);
         this.defaultMultiValueAssignersForEntityAndStringSelectionCriteria.putAll(defaultMultiValueAssignersForEntityAndStringSelectionCriteria);
         this.defaultMultiValueAssignersForBooleanSelectionCriteria.putAll(defaultMultiValueAssignersForBooleanSelectionCriteria);
@@ -352,7 +364,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultsetSummaryCardLayout = resultsetSummaryCardLayout;
 
         this.runAutomatically = runAutomatically;
-        
+
         this.sseUri = sseUri;
 
         this.resultSetProperties.addAll(resultSetProperties);
@@ -630,12 +642,19 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     public Optional<List<Pair<EntityActionConfig, Optional<String>>>> getTopLevelActions() {
-        if (topLevelActions == null || topLevelActions.isEmpty()) {
+        if (topLevelActions.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableList(topLevelActions));
     }
-    
+
+    public Optional<List<EntityActionConfig>> getInsertionPointActions() {
+        if (insertionPointActions.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(Collections.unmodifiableList(insertionPointActions));
+    }
+
     public Optional<String> getSseUri() {
     	return Optional.ofNullable(sseUri);
     }
