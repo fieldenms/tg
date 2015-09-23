@@ -220,13 +220,20 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
         .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
         .with(createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider))//
-        .with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
+        .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
         if (getManagedType().equals(getEntityClass())) {
             return dao.getPage(resultQuery, pageNumber, pageCount, pageCapacity);
         } else {
             generatedEntityController.setEntityType(getManagedType());
             return generatedEntityController.getPage(resultQuery, pageNumber, pageCount, pageCapacity, getByteArrayForManagedType());
         }
+    }
+
+    private Map<String, Object> enhanceQueryParams(final Map<String, Object> buildParametersMap) {
+        if (additionalQueryEnhancer.isPresent()) {
+            return additionalQueryEnhancer.get().enhanceQueryParams(buildParametersMap, centreContextForQueryEnhancer);
+        }
+        return buildParametersMap;
     }
 
     /**
@@ -246,11 +253,11 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
         .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
         .with(createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider))//
-        .with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
+        .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
         if (!separatedFetch.getValue().isEmpty()) {
             final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = from(notOrderedQuery)//
             .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue()))//
-            .with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
+            .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
             return firstPage(resultQuery, totalQuery, pageSize);
         } else {
             return run(resultQuery, pageSize);
@@ -359,7 +366,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
         .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
         .with(createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider))//
-        .with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
+        .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
         export(fileName, resultQuery, propertyNames, propertyTitles);
     }
 

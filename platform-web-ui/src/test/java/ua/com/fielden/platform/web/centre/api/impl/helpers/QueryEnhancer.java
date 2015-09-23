@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.impl.helpers;
 
+import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -19,6 +20,11 @@ public class QueryEnhancer implements IQueryEnhancer<TgWorkOrder> {
     @Override
     public ICompleted<TgWorkOrder> enhanceQuery(final IWhere0<TgWorkOrder> where, final Optional<CentreContext<TgWorkOrder, ?>> context) {
         return where.prop("vehicle").eq().val(context.get().getMasterEntity());
+    }
+
+    @Override
+    public Map<String, Object> enhanceQueryParams(final Map<String, Object> queryParams, final Optional<CentreContext<TgWorkOrder, ?>> context) {
+        return queryParams;
     }
 
 }
