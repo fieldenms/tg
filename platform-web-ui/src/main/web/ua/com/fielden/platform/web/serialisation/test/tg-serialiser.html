@@ -143,6 +143,7 @@
 
 					// check EntityInstanceProp properties
 					assert.deepEqual(findProp(entities, "EntityWithString", "prop").stringLength(), 255, "EntityWithString property has incorrect stringLength.");
+
 					// assert.deepEqual(findProp(entities, "EntityWithString", "prop").integerMax(), undefined, "EntityWithString property has incorrect integerMax.");
 					// assert.deepEqual(findProp(entities, "EntityWithString", "prop").integerMin(), undefined, "EntityWithString property has incorrect integerMax.");
 					// assert.deepEqual(findProp(entities, "EntityWithInteger", "prop").stringLength(), undefined, "EntityWithInteger property has incorrect stringLength.");
@@ -175,6 +176,8 @@
 
 					assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").title(), "Special Prop", "EntityWithString property has incorrect title.");
 
+					assert.deepEqual(find(entities, "EntityWithColour").type().prop("prop").title(), "Colour prop", "EntityWithColour property has incorrect title.");
+
 					assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").desc(), "Special Prop desc", "EntityWithString property has incorrect desc.");
 					assert.deepEqual(find(entities, "EntityWithString").type().prop("key").title(), "Special Key", "EntityWithString property 'key' has incorrect title.");
 					assert.deepEqual(find(entities, "EntityWithString").type().prop("key").desc(), "Special Key desc", "EntityWithString property 'key' has incorrect desc.");
@@ -189,6 +192,9 @@
 					assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").isIgnore(), false, "EntityWithString property has incorrect 'ignore'.");
 
 					assert.deepEqual(find(entities, "EntityWithBigDecimal").type().prop("prop").length(), 10, "EntityWithBigDecimal property has incorrect length.");
+
+					assert.deepEqual(find(entities, "EntityWithColour").type().prop("prop").length(), 0, "EntityWithColour property has incorrect length.");
+
 					assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").length(), 0, "EntityWithString property has incorrect length.");
 					assert.deepEqual(find(entities, "EntityWithBigDecimal").type().prop("prop").precision(), 10, "EntityWithBigDecimal property has incorrect precision.");
 					assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").precision(), -1, "EntityWithString property has incorrect precision.");

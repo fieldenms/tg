@@ -289,6 +289,138 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .done();
+        
+        
+        //Entity master for Colour
+        
+        @SuppressWarnings("unchecked")
+		final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfigForColour = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
+                // PROPERTY EDITORS
+                .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
+                .withProps(pair("desc", true),
+                        pair("compositeProp", false),
+                        pair("booleanProp", false))
+                /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export entity prop")
+                /*      */.longDesc("Export entity property")
+                .also()
+                
+                .addProp("key").asSinglelineText()
+                /*      */.withAction("#exportCritOnlyEntityProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export crit only entity prop")
+                /*      */.longDesc("Export crit only entity property")
+                .also()
+                
+                .addProp("stringProp").asSinglelineText().skipValidation()
+                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export string prop")
+                /*      */.longDesc("Export string property")
+                .also()
+                .addProp("stringProp").asMultilineText()
+                /*      */.withAction("#exportMultiStringProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export multi string prop")
+                /*      */.longDesc("Export multi string property")
+                .also()
+                .addProp("dateProp").asDateTimePicker()
+                /*      */.withAction("#exportDateProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export date prop")
+                /*      */.longDesc("Export date property")
+                .also()
+                .addProp("booleanProp").asCheckbox()
+                /*      */.withAction("#exportBooleanProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export boolean prop")
+                /*      */.longDesc("Export boolean property")
+                .also()
+                .addProp("colourProp").asColour()
+                /*      */.withAction("#exportColourProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.shortDesc("Export colour prop")
+                /*      */.longDesc("Export colour property")
+                .also()
+                .addProp("requiredValidatedProp").asSpinner()
+                /*      */.withAction("#exportRequiredValidatedProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export requiredValidated prop")
+                /*      */.longDesc("Export requiredValidated prop")
+                .also()
+
+                .addAction(MasterActions.REFRESH)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("REFRESH2")
+                /*      */.longDesc("REFRESH2 action")
+
+                // ENTITY CUSTOM ACTIONS
+                .addAction("#export", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.EDIT)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("Export")
+                /*      */.longDesc("Export action")
+
+                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.EDIT)
+                .addAction(MasterActions.VIEW)
+
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
+                        + "[[fmr], [fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], [fmr], ['flex']],"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
+                        + "[[fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], ['flex']],"
+                        + "[['flex']],"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                .done();
+        
+        
 
         final ISimpleMasterConfig<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntity(TgFunctionalEntityWithCentreContext.class)
                 .addProp("valueToInsert").asSinglelineText()
@@ -355,7 +487,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         TgIRStatusActivationFunctionalEntity.class,
                         TgIRStatusActivationFunctionalEntityProducer.class,
                         null,
-                        injector())).
+                        injector())). 
                 addMaster(TgONStatusActivationFunctionalEntity.class, new EntityMaster<TgONStatusActivationFunctionalEntity>(
                         TgONStatusActivationFunctionalEntity.class,
                         TgONStatusActivationFunctionalEntityProducer.class,
@@ -368,6 +500,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         injector())).
                 done();
 
+                     
+        
         // here comes main menu configuration
         // it has two purposes -- one is to provide a high level navigation structure for the application,
         // another is to bind entity centre (and potentially other views) to respective menu items
