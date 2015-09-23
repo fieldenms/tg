@@ -88,7 +88,13 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
         attrs.put("show-dialog", "[[_showDialog]]");
-        attrs.put("element-name", "tg-" + conf().functionalEntity.get().getSimpleName() + "-master");
+        final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
+        attrs.put("element-name", elementName);
+        if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
+            attrs.put("element-alias", elementName + numberOfAction);
+        } else {
+            attrs.put("element-alias", elementName);
+        }
         attrs.put("create-context-holder", "[[_createContextHolder]]");
         final String actionsHolderName = functionalActionKind.holderName;
         attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");

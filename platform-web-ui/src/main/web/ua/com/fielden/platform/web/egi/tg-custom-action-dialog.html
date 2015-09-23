@@ -106,9 +106,9 @@
             _getElement: function (customAction) {
             	var self = this;
             	
-            	if (self._cachedElements.hasOwnProperty(customAction.elementName)) {
-            		console.log("Reusing cached element:", customAction.elementName);
-            		var element = self._cachedElements[customAction.elementName];
+            	if (self._cachedElements.hasOwnProperty(customAction.elementAlias)) {
+            		console.log("Reusing cached element:", customAction.elementAlias);
+            		var element = self._cachedElements[customAction.elementAlias];
             		self.$.elementLoader.insert(element);
             		return Promise.resolve(element);
             	} else {
@@ -137,8 +137,10 @@
                     if (!self.currentRunningAction) {
                     	self._getElement(customAction)
                             .then(function (element) {
-                            	self._cachedElements[customAction.elementName] = element;
-                            	
+                                if (!self._cachedElements.hasOwnProperty(customAction.elementAlias)) {
+                                	console.log("caching:", customAction.elementAlias);
+                            		self._cachedElements[customAction.elementAlias] = element;
+                                }
                                 self._closeEventChannel = closeEventChannel;
                                 self._closeEventTopics = closeEventTopics;
                                 self._setIsRunning(true);

@@ -89,7 +89,19 @@
             	type: String
             },
 
+            /**
+             * The name of the entity master element associated with this action.
+             */
             elementName: {
+            	type: String
+            },
+            /**
+             * The functional entity master element gets cached in tg-custom-action-dialog, which is responsible for its loading and instantiation.
+             * However, in cases where the same functional is used for different action (such as insertion points used for centres) there is a need 
+             * for several instances for the same entity master element. In order to facilitate caching of such instances they need to be provided 
+             * with different aliases.
+             */
+            elementAlias: {
             	type: String
             },
             attrs: {
