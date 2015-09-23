@@ -16,6 +16,8 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -92,8 +94,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -657,10 +657,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 final TgCentreInvokerWithCentreContext funcEntity = EntityResource.restoreEntityFrom((SavingInfoHolder) context.get().getMasterEntity(), TgCentreInvokerWithCentreContext.class, entityFactory, restUtil, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity: " + funcEntity);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context): " + funcEntity.getContext());
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): "
-                        + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): "
-                        + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
             }
             return where.val(1).eq().val(1);
         }
@@ -709,19 +707,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
         if (entityCentre != null) {
             actionConf = actionConf.addTopAction(
                     action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim("document.body.clientWidth / 4", "400")).
-                            withContext(context().withSelectionCrit().withSelectedEntities().build()).
-                            postActionSuccess(new IPostAction() {
+                        withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                        postActionSuccess(new IPostAction() {
                                 @Override
                                 public JsCode build() {
                                     return new JsCode("    console.log('     ACTIIIIIIIIIIIIIION');\n");
                                 }
                             }).
-                            icon("assignment-ind").
-                            shortDesc("Function 4").
-                            longDesc("Functional context-dependent action 4").
-                            build()
+                        icon("assignment-ind").
+                        shortDesc("Function 4").
+                        longDesc("Functional context-dependent action 4").
+                        build()
                     ).also();
-            // EntityActionConfig.createShowViewInDialogAction(entityCentre, "assignment-ind", mkDim(95, 80, Unit.PRC))).also();
         }
 
         @SuppressWarnings("unchecked")
@@ -988,15 +985,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class);
 
-        final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
-        if (withQueryEnhancer) {
-            afterQueryEnhancerConf = beforeEnhancerConf.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
-        } else {
-            afterQueryEnhancerConf = beforeEnhancerConf;
-        }
-        // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
+                final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
+                if (withQueryEnhancer) {
+                    afterQueryEnhancerConf = beforeEnhancerConf.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
+                } else {
+                    afterQueryEnhancerConf = beforeEnhancerConf;
+                }
+                // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
 
-        final EntityCentreConfig<TgPersistentEntityWithProperties> ecc = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
+                final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]");
