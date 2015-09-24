@@ -25,11 +25,13 @@ import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Ordering;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1OrderingDirection;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4SecondaryAction;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder6RenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7SecondaryAction;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
@@ -45,7 +47,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder<T>, IResultSetBuilder0Ordering<T>, IResultSetBuilder1OrderingDirection<T>, IResultSetBuilder4SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder0Checkbox<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -60,7 +62,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder0Ordering<T> addProp(final String propName) {
+    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
         if (StringUtils.isEmpty(propName)) {
             throw new IllegalArgumentException("Property name should not be null.");
         }
@@ -77,7 +79,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1OrderingDirection<T> order(final int orderSeq) {
+    public IResultSetBuilder4OrderingDirection<T> order(final int orderSeq) {
         if (builder.resultSetOrdering.containsKey(orderSeq)) {
             final Pair<String, EntityCentreConfig.OrderDirection> pair = builder.resultSetOrdering.get(orderSeq);
             throw new IllegalArgumentException(format("Ordering by property '%s' with sequence %s conflicts with ordering by property '%s'@'%s' (%s), which has the same sequence.",
@@ -137,7 +139,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder<T> also() {
+    public IResultSetBuilder2Properties<T> also() {
         completePropIfNeeded();
         return this;
     }
@@ -193,7 +195,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder6RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> handler) {
+    public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> handler) {
         if (handler == null) {
             throw new IllegalArgumentException("Assignment handler for custom properties should not be null.");
         }
@@ -297,7 +299,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private class ResultSetSecondaryActionsBuilder implements IAlsoSecondaryAction<T> {
 
         @Override
-        public IResultSetBuilder6RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> handler) {
+        public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> handler) {
             return ResultSetBuilder.this.setCustomPropsValueAssignmentHandler(handler);
         }
 
@@ -327,7 +329,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IResultSetBuilder4SecondaryAction<T> also() {
+        public IResultSetBuilder7SecondaryAction<T> also() {
             return ResultSetBuilder.this;
         }
 
@@ -348,4 +350,16 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.builder.insertionPointActions.add(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView));
         return this;
     }
+
+	@Override
+	public IResultSetBuilder2Properties<T> hideToolbar() {
+		this.builder.hideToolbar = true;
+		return this;
+	}
+
+	@Override
+	public IResultSetBuilder1Toolbar<T> hideCheckboxes() {
+		this.builder.hideCheckboxes = true;
+		return this;
+	}
 }

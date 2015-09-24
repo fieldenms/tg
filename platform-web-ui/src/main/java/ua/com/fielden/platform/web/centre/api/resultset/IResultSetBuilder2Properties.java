@@ -11,14 +11,14 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
  *
  * @param <T>
  */
-public interface IResultSetBuilder<T extends AbstractEntity<?>> {
+public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> {
 
     /**
      * Adds property of ant level to the result set.
      *
      * @param propName
      */
-    IResultSetBuilder0Ordering<T> addProp(final String propName);
+    IResultSetBuilder3Ordering<T> addProp(final String propName);
 
     IWithSummary<T> addProp(final PropDef<?> propDef);
 

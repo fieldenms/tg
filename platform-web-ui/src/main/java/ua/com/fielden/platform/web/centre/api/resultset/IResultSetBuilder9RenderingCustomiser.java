@@ -10,7 +10,7 @@ import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSette
  *
  * @param <T>
  */
-public interface IResultSetBuilder6RenderingCustomiser<T extends AbstractEntity<?>> extends IQueryEnhancerSetter<T> {
+public interface IResultSetBuilder9RenderingCustomiser<T extends AbstractEntity<?>> extends IQueryEnhancerSetter<T> {
 
     IQueryEnhancerSetter<T> setRenderingCustomiser(final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> type);
 }

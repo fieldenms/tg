@@ -48,7 +48,7 @@
             font-size: 0.9rem;
             font-weight: 400;
             color: #757575;
-            height: 3.5rem;
+            height: 3rem;
             cursor: default;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -57,7 +57,7 @@
             font-size: 1rem;
             font-weight: 400;
             color: #212121;
-            height: 3rem;
+            height: 1.5rem;
             border-top: 1px solid #e3e3e3;
             cursor: default;
             -webkit-font-smoothing: antialiased;
@@ -218,7 +218,7 @@
             <paper-material elevation="1" style="margin: 10px 10px;">
                 <div class="layout vertical data-table">
                     <!--Table toolbar-->
-                    <div class="grid-toolbar layout horizontal justified">
+                    <div class="grid-toolbar layout horizontal justified" hidden$="[[!toolbarVisible]]">
                         <div class="layout horizontal center">
                             <content select=".entity-specific-action"></content>
                         </div>
@@ -228,7 +228,7 @@
                     </div>
                     <!-- Table header -->
                     <div class="layout horizontal table-header-row">
-                        <div class="table-cell layout horizontal center">
+                        <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]">
                             <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                         </div>
                         <template is="dom-if" if="[[primaryAction]]">
@@ -250,7 +250,7 @@
                     <!-- Table body -->
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
-                            <div class="table-cell layout horizontal center">
+                            <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
@@ -430,6 +430,18 @@
                     type: Boolean,
                     readOnly: true,
                     observer: "_cardLayoutChanged"
+                },
+                
+                /** Controls visibility of the toolbar. */
+                toolbarVisible: {
+                	type: Boolean,
+                	value: @toolbarVisible
+                },
+                
+                /** Controls visiblity of checkboxes at the beginnig of the header and each data row */
+                checkboxVisible:  {
+                	type: Boolean,
+                	value: @checkboxVisible
                 }
             },
 

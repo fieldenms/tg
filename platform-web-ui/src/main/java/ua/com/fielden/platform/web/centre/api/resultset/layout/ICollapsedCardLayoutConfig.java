@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.centre.api.resultset.layout;
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3PrimaryAction;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder6PrimaryAction;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  * @param <T>
  */
-public interface ICollapsedCardLayoutConfig<T extends AbstractEntity<?>> extends IResultSetBuilder3PrimaryAction<T> {
+public interface ICollapsedCardLayoutConfig<T extends AbstractEntity<?>> extends IResultSetBuilder6PrimaryAction<T> {
     /**
      * A method to specify a card layout for its collapsed state.
      * This layout would be used as a default card-based representation of each entity in the resultset for the specified device.

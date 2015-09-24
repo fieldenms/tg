@@ -43,6 +43,11 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
  *
  */
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
+	
+    private final boolean hideCheckboxes;
+    private final boolean hideToolbar;
+
+	
     /////////////////////////////////////////////
     ///////////// TOP LEVEL ACTIONS /////////////
     /////////////////////////////////////////////
@@ -272,6 +277,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////// CONSTRUCTOR /////////////
     ///////////////////////////////////
     public EntityCentreConfig(
+    		final boolean hideCheckboxes,
+    		final boolean hideToolbar,
+    		
             final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
             final List<EntityActionConfig> insertionPointActions,
             final List<String> selectionCriteria,
@@ -324,6 +332,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final IFetchProvider<T> fetchProvider) {
+    	this.hideCheckboxes = hideCheckboxes;
+    	this.hideToolbar = hideToolbar;
+    	
         this.topLevelActions.addAll(topLevelActions);
         this.insertionPointActions.addAll(insertionPointActions);
         this.selectionCriteria.addAll(selectionCriteria);
@@ -657,5 +668,13 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<String> getSseUri() {
     	return Optional.ofNullable(sseUri);
+    }
+    
+    public boolean shouldHideCheckboxes() {
+    	return hideCheckboxes;
+    }
+    
+    public boolean shouldHideToolbar() {
+    	return hideToolbar;
     }
 }

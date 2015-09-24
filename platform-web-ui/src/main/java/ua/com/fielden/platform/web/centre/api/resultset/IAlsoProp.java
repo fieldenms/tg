@@ -11,5 +11,5 @@ import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLay
  * @param <T>
  */
 public interface IAlsoProp<T extends AbstractEntity<?>> extends ICollapsedCardLayoutConfig<T> {
-    IResultSetBuilder<T> also();
+    IResultSetBuilder2Properties<T> also();
 }

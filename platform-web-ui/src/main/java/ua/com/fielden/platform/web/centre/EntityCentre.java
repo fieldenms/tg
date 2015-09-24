@@ -632,6 +632,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
         final String egiStr = text.
+        		replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
+        		replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
                 replaceAll("@miType", getMenuItemType().getSimpleName()).
                 replaceAll("@gridCardDom", Matcher.quoteReplacement(domContainer.toString()));
         return new IRenderable() {

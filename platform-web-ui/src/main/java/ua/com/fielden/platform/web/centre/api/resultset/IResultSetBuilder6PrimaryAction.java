@@ -12,7 +12,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
  *
  * @param <T>
  */
-public interface IResultSetBuilder3PrimaryAction<T extends AbstractEntity<?>> extends IResultSetBuilder5CustomPropAssignment<T> {
+public interface IResultSetBuilder6PrimaryAction<T extends AbstractEntity<?>> extends IResultSetBuilder8CustomPropAssignment<T> {
 
     IAlsoSecondaryAction<T> addPrimaryAction(final EntityActionConfig actionConfig);
 }

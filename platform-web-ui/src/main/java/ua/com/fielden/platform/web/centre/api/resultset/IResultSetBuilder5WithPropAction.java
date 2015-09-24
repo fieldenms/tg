@@ -14,7 +14,7 @@ import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder;
  *
  * @param <T>
  */
-public interface IResultSetBuilder2WithPropAction<T extends AbstractEntity<?>> extends IAlsoProp<T> {
+public interface IResultSetBuilder5WithPropAction<T extends AbstractEntity<?>> extends IAlsoProp<T> {
 
     /**
      * Adds an instance of {@link EntityActionConfig} to the result set definition.

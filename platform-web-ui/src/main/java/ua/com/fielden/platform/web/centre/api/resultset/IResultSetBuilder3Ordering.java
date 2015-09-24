@@ -10,7 +10,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
  *
  * @param <T>
  */
-public interface IResultSetBuilder0Ordering<T extends AbstractEntity<?>> extends IWithSummary<T> {
+public interface IResultSetBuilder3Ordering<T extends AbstractEntity<?>> extends IWithSummary<T> {
 
 
     /**
@@ -21,5 +21,5 @@ public interface IResultSetBuilder0Ordering<T extends AbstractEntity<?>> extends
      * @param orderSeq
      * @return
      */
-    IResultSetBuilder1OrderingDirection<T> order(final int orderSeq);
+    IResultSetBuilder4OrderingDirection<T> order(final int orderSeq);
 }
