@@ -1,21 +1,19 @@
 package ua.com.fielden.platform.entity.query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 
 public class EntityRawResultConverter<E extends AbstractEntity<?>> {
     private final EntityFactory entityFactory;
-    private final ICompanionObjectFinder coFinder;
 
-    protected EntityRawResultConverter(final EntityFactory entityFactory, final ICompanionObjectFinder coFinder) {
+    protected EntityRawResultConverter(final EntityFactory entityFactory) {
         this.entityFactory = entityFactory;
-        this.coFinder = coFinder;
     }
 
     /**
@@ -30,7 +28,7 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
 
         for (final Object nativeEntry : nativeResult) {
             final Object[] nativeEntries = nativeEntry instanceof Object[] ? (Object[]) nativeEntry : new Object[] { nativeEntry };
-            result.add(transformTuple(nativeEntries, resultTree));
+            result.add(transformTupleIntoEntityContainer(nativeEntries, resultTree));
         }
 
         return result;
@@ -44,9 +42,9 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      * @param shouldBeFetched
      * @return
      */
-    private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTuple(final Object[] data, final EntityTree<ET> resultTree) {
+    private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTupleIntoEntityContainer(final Object[] data, final EntityTree<ET> resultTree) {
 
-        final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType(), coFinder);
+        final EntityContainer<ET> entCont = new EntityContainer<ET>(resultTree.getResultType());
 
         for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
             entCont.getPrimitives().put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));
@@ -57,22 +55,23 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
         }
 
         for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> entityEntry : resultTree.getComposites().entrySet()) {
-            final EntityContainer<? extends AbstractEntity<?>> entContainer = transformTuple(data, entityEntry.getValue());
+            final EntityContainer<? extends AbstractEntity<?>> entContainer = transformTupleIntoEntityContainer(data, entityEntry.getValue());
             entCont.getEntities().put(entityEntry.getKey(), entContainer);
         }
 
         return entCont;
     }
 
-    private ValueContainer transformTuple(final Object[] data, final ValueTree resultTree) {
-
-        final ValueContainer entCont = new ValueContainer(resultTree.getHibType());
-
+    private Map<String, Object> convertValuesForPrimitives (final Object[] data, final ValueTree resultTree) {
+        final Map<String, Object> primitives = new HashMap<String, Object>();
         for (final Map.Entry<ResultQueryYieldDetails, Integer> primEntry : resultTree.getSingles().entrySet()) {
-            entCont.primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));
+            primitives.put(primEntry.getKey().getName(), convertValue(data[(primEntry.getValue())], primEntry.getKey().getHibTypeAsUserType()));
         }
-
-        return entCont;
+        return primitives;
+    }
+    
+    private ValueContainer transformTuple(final Object[] data, final ValueTree resultTree) {
+        return new ValueContainer(resultTree.getHibType(), convertValuesForPrimitives(data, resultTree));
     }
 
     private Object convertValue(final Object rawValue, final IUserTypeInstantiate userType) {

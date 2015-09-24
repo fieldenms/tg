@@ -45,7 +45,7 @@ public class MainMenuItemControllerDao extends CommonEntityDao<MainMenuItem> imp
             // IMPORTANT : THIS IS DANGEROUS, ALL ITEMS IS TRYING TO BE DELETED!
 
             // perform deletion more effectively (not one by one, as defaultDelete() does, but in one bunch)
-            final List<MainMenuItem> withParents = getAllEntities(from(select(MainMenuItem.class).where().prop("parent").isNotNull().model()).lightweight(true).model());
+            final List<MainMenuItem> withParents = getAllEntities(from(select(MainMenuItem.class).where().prop("parent").isNotNull().model()).lightweight().model());
             for (final MainMenuItem mmi : withParents) {
                 mmi.setParent(null); // delete dependency
                 save(mmi);
