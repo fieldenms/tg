@@ -351,6 +351,7 @@
                     
                     action.componentUri = "/master_ui/" + fullTypeName;
                     action.elementName = "tg-" + simpleTypeName + "-master";
+                    action.elementAlias = action.elementName + "-" + entity.id;  
                     action.attrs = {
                         entityId: entity.id,
                         entityType: fullTypeName,
