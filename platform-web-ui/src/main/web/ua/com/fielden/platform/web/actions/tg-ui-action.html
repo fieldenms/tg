@@ -104,6 +104,7 @@
             elementAlias: {
             	type: String
             },
+            
             attrs: {
             	type: Object
             },
@@ -152,6 +153,15 @@
             	type: String
             },
             
+            /** 
+             * Property of this value gets passed into the data parameter for the details.saved topic of the event that is published after the functional entity has been saved.
+             * There are cases where it is desired to prevent unnecesary centre refreshes such as in case of some insertion points.
+             */
+            shouldRefreshParentCentreAfterSave: {
+				type: Boolean,
+				value: false /* should never be defaulted to true! */
+            },
+
             /**
              * Shows the dialog relative to this 'tg-ui-action'.
              */
@@ -213,7 +223,7 @@
              */
             _onExecuted: {
             	type: Function
-            }
+            },
         },
         
         /**
@@ -275,6 +285,7 @@
                         channel: "centre_" + detail.centreUuid,
                         topic: "detail.saved",
                         data: {
+                        	shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
                             entity: potentiallySavedEntity,
                             // send selectedEntitiesInContext further to be able to update only them on EGI
                             selectedEntitiesInContext: context.selectedEntities

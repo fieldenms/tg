@@ -86,6 +86,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("short-desc", conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED");
         attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
         attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
+        attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
         attrs.put("show-dialog", "[[_showDialog]]");
         final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";

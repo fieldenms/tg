@@ -17,6 +17,7 @@ import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder5;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder6;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8;
+import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder9;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
@@ -34,6 +35,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     private IPostAction errorPostAction;
     private PrefDim prefDimForView;
     private boolean returnNoAction;
+    private boolean shouldRefreshParentCentreAfterSave = true;
 
     /**
      * A starting point to entity action configuration.
@@ -88,7 +90,8 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
                     preAciton,
                     successPostAction,
                     errorPostAction,
-                    prefDimForView);
+                    prefDimForView,
+                    shouldRefreshParentCentreAfterSave);
         }
     }
 
@@ -181,6 +184,12 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 	@Override
 	public IEntityActionBuilder8<T> prefDimForView(final PrefDim dim) {
 		this.prefDimForView = dim;
+		return this;
+	}
+
+	@Override
+	public IEntityActionBuilder9<T> withNoParentCentreRefresh() {
+		this.shouldRefreshParentCentreAfterSave = false;
 		return this;
 	}
 

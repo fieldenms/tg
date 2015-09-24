@@ -34,6 +34,7 @@ public final class EntityActionConfig {
     public final Optional<PrefDim> prefDimForView;
     private final boolean noAction;
     public final Optional<InsertionPoints> whereToInsertView;
+	public final boolean shouldRefreshParentCentreAfterSave;
 
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
@@ -48,6 +49,7 @@ public final class EntityActionConfig {
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
             final boolean noAction,
+            final boolean shouldRefreshParentCentreAfterSave,
             final InsertionPoints whereToInsertView) {
 
         if (!noAction && functionalEntity == null) {
@@ -57,7 +59,8 @@ public final class EntityActionConfig {
         if (functionalEntity != null && context == null) {
             throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
-
+        
+        this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave; 
         this.functionalEntity = Optional.ofNullable(functionalEntity);
         this.entityCentre = Optional.ofNullable(entityCentre);
         this.entityCentrePrefDim = Optional.ofNullable(entityCentrePrefDim);
@@ -86,8 +89,9 @@ public final class EntityActionConfig {
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
-            final boolean noAction) {
-        this(functionalEntity, entityCentre, entityCentrePrefDim, context, icon, shortDesc, longDesc, preAction, successPostAction, errorPostAction, prefDimForView, noAction, null);
+            final boolean noAction,
+            final boolean shouldRefreshParentCentreAfterSave) {
+        this(functionalEntity, entityCentre, entityCentrePrefDim, context, icon, shortDesc, longDesc, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null);
     }
 
 
@@ -108,6 +112,7 @@ public final class EntityActionConfig {
                 ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
                 ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
                 ac.noAction,
+                ac.shouldRefreshParentCentreAfterSave,
                 ip);
     }
     /**
@@ -116,7 +121,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createNoActionConfig() {
-        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, null, null, true);
+        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, null, null, true, true);
     }
 
     /**
@@ -125,7 +130,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createMasterInvocationActionConfig() {
-        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, null, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false);
+        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, null, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
     }
 
     /**
@@ -134,7 +139,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createMasterInDialogInvocationActionConfig() {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, null, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false);
+        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, null, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
     }
 
     /**
@@ -144,7 +149,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createMasterInDialogInvocationActionConfig(final PrefDim dim) {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, null, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, dim, false);
+        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, null, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, dim, false, true);
     }
 
     /**
@@ -171,7 +176,8 @@ public final class EntityActionConfig {
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
-            final PrefDim prefDimForView
+            final PrefDim prefDimForView,
+            final boolean shouldRefreshParentCentreAfterSave
             ) {
         return new EntityActionConfig(
                 functionalEntity,
@@ -185,7 +191,8 @@ public final class EntityActionConfig {
                 successPostAction,
                 errorPostAction,
                 prefDimForView,
-                false);
+                false,
+                shouldRefreshParentCentreAfterSave);
     }
 
     /**

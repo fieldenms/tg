@@ -292,7 +292,7 @@
              */
             currentPage: function () {
                 this._validatePageCount();
-                this._execute(false);
+                return this._execute(false);
             },
 
             /**
@@ -304,7 +304,7 @@
              */
             refreshEntities: function (entities) {
                 this._validatePageCount();
-                this._execute(false, entities);
+                return this._execute(false, entities);
             },
 
             /**
@@ -316,7 +316,7 @@
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
                 }
                 this.pageNumber = this.pageNumber + 1;
-                this._execute(false);
+                return this._execute(false);
             },
 
             /**
@@ -328,7 +328,7 @@
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
                 }
                 this.pageNumber = this.pageNumber - 1;
-                this._execute(false);
+                return this._execute(false);
             },
 
             /**
@@ -340,7 +340,7 @@
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = 0;
-                this._execute(false);
+                return this._execute(false);
             },
 
             /**
@@ -352,7 +352,7 @@
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = this.pageCount - 1;
-                this._execute(false);
+                return this._execute(false);
             },
             
             _canPrev: function (pageNumber) {
@@ -390,7 +390,7 @@
 
                 if (self._runningInProgress()) {
                     console.warn("Refresh is already in progress...");
-                    return; // TODO if already in progress then the current promise should be returned...
+                    return Promise.resolve(); // TODO if already in progress then the current promise should be returned...
                 }
 
                 return new Promise(function(resolve, reject) {

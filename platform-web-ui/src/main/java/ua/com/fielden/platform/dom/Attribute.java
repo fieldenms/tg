@@ -33,7 +33,7 @@ public class Attribute<T> {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("The attribute name can not be null or emptty.");
         }
-        if (nameValueSeparator == null || nameValueSeparator.isEmpty()) {
+        if (value != null && (nameValueSeparator == null || nameValueSeparator.isEmpty())) {
             throw new IllegalArgumentException("The name-value attribute separotr can not be null");
         }
         this.name = name;

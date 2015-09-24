@@ -384,8 +384,8 @@
                     return null;
                 }).bind(self);
 
-                self._postFunctionalEntitySaved = (function (potentiallySavedEntity, selectedEntitiesInContext) {
-                    if (potentiallySavedEntity.isValid()) {
+                self._postFunctionalEntitySaved = (function (potentiallySavedEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
+                    if (potentiallySavedEntity.isValid() && shouldRefreshParentCentreAfterSave === true) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }
@@ -418,12 +418,7 @@
                     self._triggerRun = true;
                     return self.$.selection_criteria.run()
                     	.then(function () {
-                        	var actions = Polymer.dom(self.$.egi).querySelectorAll('.insertion-point-action');
-                        	if (actions) {
-                        	    actions.forEach(function (action) {
-                        	    	self.async(function(){action._run();}, 1);
-                        	    });
-                        	}
+                        	self.runInsertionPointActions();
                     	});
                 }).bind(self);
 
@@ -484,7 +479,7 @@
                     channel: "centre_" + self.$.selection_criteria.uuid,
                     topic: "detail.saved",
                     callback: function (data, envelope) {
-                        self._postFunctionalEntitySaved(data.entity, data.selectedEntitiesInContext);
+                        self._postFunctionalEntitySaved(data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
                     }
                 });
             },
@@ -529,7 +524,12 @@
              * Starts the process of refreshing the current page (only after run() has been already performed).
              */
             currentPage: function () {
-                this.$.selection_criteria.currentPage();
+            	var self = this;
+                this.$.selection_criteria.currentPage()
+                .then(function () {
+                	console.log("current page invocation");
+                	self.runInsertionPointActions();
+            	});
             },
 
             /**
@@ -615,12 +615,20 @@
              */
             _computeUrl: function (miType) {
                 return "/centre/" + miType;
+            },
+            
+            runInsertionPointActions: function () {
+            	var self = this;
+            	var actions = Polymer.dom(self.$.egi).querySelectorAll('.insertion-point-action');
+            	if (actions) {
+            	    actions.forEach(function (action) {
+            	    	self.async(function(){action._run();}, 1);
+            	    });
+            	}
             }
         };
 
-        Polymer.TgBehaviors.TgEntityCentreBehavior = [
-   Polymer.TgBehaviors.TgEntityCentreBehaviorImpl
-  ];
+        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl];
 
     })();
 </script>

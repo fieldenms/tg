@@ -265,9 +265,11 @@
                     // let's search for an item to update... 
                     // if the current EGI model does not contain an updated entity then there is no need for a refresh...
                     // TODO such update strategy might need to be revisited in future...
+                    var needsFullRefresh = true;
                     for (var index = 0; index < this.$.egi.egiModel.length; index++) {
                         var entity = this.$.egi.egiModel[index].entity;
                         if (entity.id === msg.id) {
+                        	needsFullRefresh = false;
                             // let's give the browser a breathing chance...
                             this.async(function () {
                                 try {
@@ -279,6 +281,9 @@
                             break;
                         }
                     } // endfor
+                    if (needsFullRefresh === true) {
+                    	self.refreshEntities([]);
+                    }
                 }.bind(this);
             },
             
