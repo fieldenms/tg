@@ -34,7 +34,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private QueryExecutionModel(final Builder<T, Q> builder) {
         queryModel = builder.queryModel;
         orderModel = builder.orderModel;
-        fetchModel = builder.fetchModel;// != null ? builder.fetchModel : (fetch<T>) fetch(queryModel.getResultType());
+        fetchModel = builder.fetchModel;
         paramValues = preprocessParamValues(builder.paramValues);
         lightweight = builder.lightweight;
         logger.debug(this);
@@ -89,6 +89,10 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         return new Builder<EntityAggregates, AggregatedResultQueryModel>(queryModel);
     }
 
+    public void lightweight() {
+        this.lightweight = true;
+    }
+    
     public static class Builder<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
         private Q queryModel;
         private OrderingModel orderModel;
@@ -128,8 +132,8 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
             return this;
         }
 
-        public Builder<T, Q> lightweight(final boolean val) {
-            lightweight = val;
+        public Builder<T, Q> lightweight() {
+            lightweight = true;
             return this;
         }
     }
@@ -188,9 +192,5 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
             return false;
         }
         return true;
-    }
-
-    public void setLightweight() {
-        this.lightweight = true;
     }
 }

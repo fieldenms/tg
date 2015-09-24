@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.proxy.EntityProxyFactory;
 import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityFromContainerInstantiator {
@@ -77,13 +78,17 @@ public class EntityFromContainerInstantiator {
             setPropertyValue(justAddedEntity, entityEntry.getKey(), instantiate(entityEntry.getValue().getContainers()), entityContainer.getResultType());
         }
 
-        if (!lightweight) {
+        if (!lightweight && !isGenerated(entityContainer.getResultType())) {
             EntityUtils.handleMetaProperties(justAddedEntity, proxiedProps);
         }
 
         justAddedEntity.endInitialising();
 
         return justAddedEntity;
+    }
+    
+    private <E extends AbstractEntity<?>> boolean isGenerated(final Class<E> resultType) {
+        return !resultType.equals(DynamicEntityClassLoader.getOriginalType(resultType));
     }
     
     private Object instantiate(final ValueContainer valueContainer) {
