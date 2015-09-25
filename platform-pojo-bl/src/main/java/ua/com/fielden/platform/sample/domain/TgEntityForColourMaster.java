@@ -46,6 +46,16 @@ public class TgEntityForColourMaster extends AbstractEntity<String> {
     @Title(value = "Colour prop", desc = "Colour prop description")
     private Colour colourProp;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Producer initialised prop", desc = "Producer initialised prop desc")
+    private TgEntityForColourMaster producerInitProp;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Domain initialised prop", desc = "The property that was initialised directly inside Entity type definition Java class")
+    private String domainInitProp = "ok";
+
     @Observable
     public TgEntityForColourMaster setColourProp(final Colour colourProp) {
         this.colourProp = colourProp;
@@ -84,6 +94,26 @@ public class TgEntityForColourMaster extends AbstractEntity<String> {
 
     public String getStringProp() {
         return stringProp;
+    }
+
+    @Observable
+    public TgEntityForColourMaster setDomainInitProp(final String domainInitProp) {
+        this.domainInitProp = domainInitProp;
+        return this;
+    }
+
+    public String getDomainInitProp() {
+        return domainInitProp;
+    }
+
+    @Observable
+    public TgEntityForColourMaster setProducerInitProp(final TgEntityForColourMaster producerInitProp) {
+        this.producerInitProp = producerInitProp;
+        return this;
+    }
+
+    public TgEntityForColourMaster getProducerInitProp() {
+        return producerInitProp;
     }
 
 }

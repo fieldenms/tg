@@ -29,6 +29,8 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
+import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
+import ua.com.fielden.platform.sample.domain.TgEntityForColourMasterProduser;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
@@ -289,35 +291,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .done();
-        
-        
+
         //Entity master for Colour
-        
+
         @SuppressWarnings("unchecked")
-		final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfigForColour = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
+        final ISimpleMasterConfig<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
                 // PROPERTY EDITORS
-                .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
-                .withProps(pair("desc", true),
-                        pair("compositeProp", false),
-                        pair("booleanProp", false))
-                /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export entity prop")
-                /*      */.longDesc("Export entity property")
-                .also()
-                
-                .addProp("key").asSinglelineText()
-                /*      */.withAction("#exportCritOnlyEntityProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export crit only entity prop")
-                /*      */.longDesc("Export crit only entity property")
-                .also()
-                
+
                 .addProp("stringProp").asSinglelineText().skipValidation()
                 /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
                 /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
@@ -367,16 +347,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.shortDesc("Export colour prop")
                 /*      */.longDesc("Export colour property")
                 .also()
-                .addProp("requiredValidatedProp").asSpinner()
-                /*      */.withAction("#exportRequiredValidatedProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export requiredValidated prop")
-                /*      */.longDesc("Export requiredValidated prop")
-                .also()
 
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
@@ -399,14 +369,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
-                        + "[[fmr], [fmr], [fmr], ['flex']],"
+                        + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], [fmr], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
-                        + "[[fmr], [fmr], ['flex']],"
+                        + "[[fmr], ['flex']],"
                         + "[['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
@@ -419,8 +389,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .done();
-        
-        
 
         final ISimpleMasterConfig<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntity(TgFunctionalEntityWithCentreContext.class)
                 .addProp("valueToInsert").asSinglelineText()
@@ -487,7 +455,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         TgIRStatusActivationFunctionalEntity.class,
                         TgIRStatusActivationFunctionalEntityProducer.class,
                         null,
-                        injector())). 
+                        injector())).
                 addMaster(TgONStatusActivationFunctionalEntity.class, new EntityMaster<TgONStatusActivationFunctionalEntity>(
                         TgONStatusActivationFunctionalEntity.class,
                         TgONStatusActivationFunctionalEntityProducer.class,
@@ -498,10 +466,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         TgSRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
+                addMaster(TgEntityForColourMaster.class, new EntityMaster<TgEntityForColourMaster>(
+                        TgEntityForColourMaster.class,
+                        TgEntityForColourMasterProduser.class,
+                        null,
+                        injector())).
                 done();
 
-                     
-        
         // here comes main menu configuration
         // it has two purposes -- one is to provide a high level navigation structure for the application,
         // another is to bind entity centre (and potentially other views) to respective menu items
