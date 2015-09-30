@@ -105,10 +105,10 @@
             /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
             _getElement: function (customAction) {
             	var self = this;
-            	
-            	if (self._cachedElements.hasOwnProperty(customAction.elementAlias)) {
-            		console.log("Reusing cached element:", customAction.elementAlias);
-            		var element = self._cachedElements[customAction.elementAlias];
+            	var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+            	if (self._cachedElements.hasOwnProperty(key)) {
+            		console.log("Reusing cached element:", key);
+            		var element = self._cachedElements[key];
             		self.$.elementLoader.insert(element);
             		return Promise.resolve(element);
             	} else {
@@ -137,9 +137,10 @@
                     if (!self.currentRunningAction) {
                     	self._getElement(customAction)
                             .then(function (element) {
-                                if (!self._cachedElements.hasOwnProperty(customAction.elementAlias)) {
-                                	console.log("caching:", customAction.elementAlias);
-                            		self._cachedElements[customAction.elementAlias] = element;
+                                var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                                if (!self._cachedElements.hasOwnProperty(key)) {
+                                	console.log("caching:", key);
+                            		self._cachedElements[key] = element;
                                 }
                                 self._closeEventChannel = closeEventChannel;
                                 self._closeEventTopics = closeEventTopics;
@@ -149,11 +150,11 @@
                                 var promise = self.currentRunningAction._onExecuted(null, element, null);
                                 if (promise) {
                                 	return promise
-                                	.then(function () {self._showMaster();})
+                                	.then(function () {self._showMaster(element);})
                                 	.catch(function () {self.currentRunningAction = null;});
                                 } else {
                                     return Promise.resolve()
-                                    .then(function () {self._showMaster();})
+                                    .then(function () {self._showMaster(element);})
                                     .catch(function () {self.currentRunningAction = null;});
                                 }
                             })
@@ -169,7 +170,7 @@
                 }
             },
 
-            _showMaster: function (e) {
+            _showMaster: function (element) {
             	if (this.currentRunningAction._masterComponent.noUI === true) {
             	    this.currentRunningAction = null;
                 }
@@ -189,8 +190,8 @@
                         }
                     }
                     
-                    if (this.$.elementLoader.prefDim) {
-                    	var prefDim = this.$.elementLoader.prefDim;
+                    if (element.prefDim) {
+                    	var prefDim = element.prefDim;
                     	this.style.width = prefDim.width() + prefDim.unit;
                         this.style.height = prefDim.height() + prefDim.unit;
                     } else {
