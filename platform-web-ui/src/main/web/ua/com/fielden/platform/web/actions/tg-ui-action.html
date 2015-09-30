@@ -169,6 +169,12 @@
             	type: Function
             },
             
+            
+            /** Sequential action number as provided by Java API. */
+            numberOfAction: {
+            	type: Number
+            },
+            
             additionalAction: {
             	type: Function
             },
@@ -255,12 +261,6 @@
                     if (self.postActionSuccess) {
                         self.postActionSuccess();
                     }
-                    
-                    console.log("postRetrieved: self._masterComponent.noUI ===", self._masterComponent.noUI);
-                    if (self._masterComponent.noUI === true) {
-                		// immediately save the functional entity in case when no UI exists
-             			self._masterComponent.save();
-                    }
                 };
 
                 detail.postValidated = function (validatedEntity, bindingEntity, customObject) {
@@ -302,10 +302,19 @@
 
                 detail.entityId = context.id === null ? "new" : (+(context.id));
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
-                detail.retrieve(context);
-
-                this._afterExecution();
-                //                this.$.entityMaster.updateTargetDimensions();
+                return detail.retrieve(context)
+                .then(function(value) {
+                    self._afterExecution();
+                    return value;
+                })
+                .then(function(value) {
+                    console.log("postRetrieved: self._masterComponent.noUI ===", self._masterComponent.noUI);
+                    if (self._masterComponent.noUI === true) {
+                		// immediately save the functional entity in case when no UI exists
+             			return self._masterComponent.save();
+                    }
+                    return Promise.resolve(value);
+                });
             }).bind(self);
         },
 

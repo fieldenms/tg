@@ -218,6 +218,13 @@
                 },
 
                 /**
+                 * Placeholder function for show-dialog attribute of tg-ui-action, which is used in case of insertion points
+                 */
+                _showInsertionPoint: {
+                    type: Function
+                },
+
+                /**
                  * The function to be bound inside selection criteria, to provide 'selected entities' part of context.
                  */
                 _getSelectedEntities: {
@@ -431,6 +438,11 @@
                     }.bind(self), 1);
                 }).bind(self);
                 
+                self._showInsertionPoint = (function (action) {
+                    this.async(function () {
+                    	this._activateInsertionPoint('ip' + action.numberOfAction, action);
+                    }.bind(self), 1);
+                }).bind(self);
                 /**
                  * Activate the view with the result set.
                  */
