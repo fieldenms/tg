@@ -380,7 +380,7 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
-        return ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig).build().render().toString();
+        return ResourceFactoryUtils.getEntityMaster(entityTypeString, webUiConfig).render().render().toString();
     }
 
     private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {

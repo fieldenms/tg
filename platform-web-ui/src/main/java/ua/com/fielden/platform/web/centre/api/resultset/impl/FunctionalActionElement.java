@@ -88,13 +88,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
-        attrs.put("show-dialog", "[[_showDialog]]");
         final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
         attrs.put("element-name", elementName);
+        attrs.put("number-of-action", numberOfAction);
         if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
             attrs.put("element-alias", elementName + numberOfAction);
+            attrs.put("show-dialog", "[[_showInsertionPoint]]");
         } else {
             attrs.put("element-alias", elementName);
+            attrs.put("show-dialog", "[[_showDialog]]");
         }
         attrs.put("create-context-holder", "[[_createContextHolder]]");
         final String actionsHolderName = functionalActionKind.holderName;
@@ -201,6 +203,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.append("    var centreDialogInvocationAction = {};\n");
             attrs.append("    centreDialogInvocationAction.componentUri = '/centre_ui/" + conf().entityCentre.get().getMenuItemType().getName() + "';\n");
             attrs.append("    centreDialogInvocationAction.elementName = 'tg-" + conf().entityCentre.get().getMenuItemType().getSimpleName() + "-centre';\n");
+            attrs.append("    centreDialogInvocationAction.elementAlias = 'tg-" + conf().entityCentre.get().getMenuItemType().getSimpleName() + "-centre';\n");
             attrs.append("    centreDialogInvocationAction._onExecuted = function (e, detail, source) {\n"
                         +"        console.log('ON_EXECUTED');\n"
                         +"        centreDialogInvocationAction._masterComponent = detail;\n"

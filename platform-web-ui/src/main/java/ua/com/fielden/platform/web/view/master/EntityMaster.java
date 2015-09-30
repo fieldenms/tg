@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.view.master;
 
-import java.util.Optional;
-
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -15,12 +13,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
-import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * Represents entity master.
@@ -31,39 +27,51 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     private final Class<T> entityType;
     private final Class<? extends IEntityProducer<T>> entityProducerType;
-    private final ISimpleMasterConfig<T> smConfig;
+    private final IMaster<T> masterConfig;
     private final ICompanionObjectFinder coFinder;
     private final Injector injector;
-    private final boolean noUIMaster;
 
     /**
      * Creates master for the specified <code>entityType</code>, <code>smConfig</code> and <code>entityProducerType</code>.
      *
      * @param entityType
      * @param entityProducerType
-     * @param smConfig
+     * @param masterConfig
      *
      */
     public EntityMaster(
             final Class<T> entityType,
             final Class<? extends IEntityProducer<T>> entityProducerType,
-            final ISimpleMasterConfig<T> smConfig,
+            final IMaster<T> masterConfig,
             final Injector injector) {
         this.entityType = entityType;
         this.entityProducerType = entityProducerType;
-        this.noUIMaster = smConfig == null;
-        this.smConfig = smConfig == null ? createDefaultConfig(entityType) : smConfig;
+        this.masterConfig = masterConfig == null ? createDefaultConfig(entityType) : masterConfig;
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.injector = injector;
     }
 
-    private ISimpleMasterConfig<T> createDefaultConfig(final Class<T> entityType) {
-        final ISimpleMasterConfig<T> master = new SimpleMasterBuilder<T>().forEntity(entityType)
-                .addAction(MasterActions.VALIDATE)
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("[]"))
-                .setLayoutFor(Device.TABLET, Optional.empty(), ("[]"))
-                .setLayoutFor(Device.MOBILE, Optional.empty(), ("[]"))
-                .done();
+    private IMaster<T> createDefaultConfig(final Class<T> entityType) {
+        final IMaster<T> master = new IMaster<T>() {
+            @Override
+            public IRenderable render() {
+                final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
+                        .replace("<!--@imports-->", "")
+                        .replace("@entity_type", entityType.getSimpleName())
+                        .replace("//@layoutConfig", "")
+                        .replace("<!--@editors_and_actions-->", "")
+                        .replace("//@entityActions", "")
+                        .replace("//@propertyActions", "")
+                        .replace("noUI:{type: Boolean,value:false}", "noUI:{type: Boolean,value:true}");
+
+                return new IRenderable() {
+                    @Override
+                    public DomElement render() {
+                        return new InnerTextElement(entityMasterStr);
+                    }
+                };
+            }
+        };
         return master;
     }
 
@@ -109,14 +117,14 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @return
      */
     public IValueMatcherWithContext<T, ?> createValueMatcher(final String propertyName) {
-        final Class<? extends IValueMatcherWithContext<T, ?>> matcherType = smConfig.matcherTypeFor(propertyName);
-        final IValueMatcherWithContext<T, ?> matcher;
-        if (matcherType != null) {
-            matcher = injector.getInstance(matcherType);
-        } else {
-            matcher = createDefaultValueMatcher(propertyName, entityType, coFinder);
+        if (masterConfig instanceof ISimpleMasterConfig) {
+            final Class<? extends IValueMatcherWithContext<T, ?>> matcherType = ((ISimpleMasterConfig<T>) masterConfig).matcherTypeFor(propertyName);
+            if (matcherType != null) {
+                return injector.getInstance(matcherType);
+            }
         }
-        return matcher;
+
+        return createDefaultValueMatcher(propertyName, entityType, coFinder);
     }
 
     /**
@@ -135,16 +143,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     }
 
     @Override
-    public IRenderable build() {
-        if (noUIMaster) {
-            return new IRenderable() {
-                @Override
-                public DomElement render() {
-                    return new InnerTextElement(smConfig.render().render().toString().replace("noUI:{type: Boolean,value:false}", "noUI:{type: Boolean,value:true}"));
-                }
-            };
-        } else {
-            return smConfig.render();
-        }
+    public IRenderable render() {
+        return masterConfig.render();
     }
 }

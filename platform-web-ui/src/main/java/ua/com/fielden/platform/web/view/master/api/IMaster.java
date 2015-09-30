@@ -18,6 +18,6 @@ public interface IMaster<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    IRenderable build();
+    IRenderable render();
 
 }
