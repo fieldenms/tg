@@ -15,6 +15,7 @@ import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
+import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.config.MainMenu;
 import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
@@ -139,6 +141,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgFetchProviderTestEntity.class, "FETCH1").setProperty(exampleEnt1).setAdditionalProperty(su));
 
         createDemoDomain(ent1, ent3, compositeEnt1);
+
+        final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setColourProp(Colour.BLACK).setRequiredValidatedProp(30);
+
+        final TgEntityForColourMaster defaultColourEnt = save(colourEntity);
+        System.out.println("defaultColourEnt.getId() == " + defaultColourEnt.getId());
+
         //
         //        final TgPersistentEntityWithProperties ent1WithCompositeProp = save(new_(TgPersistentEntityWithProperties.class, "KEY12").setCompositeProp(compositeEnt1));
         //        System.out.println("ent1WithCompositeProp.getId() == " + ent1WithCompositeProp.getId());

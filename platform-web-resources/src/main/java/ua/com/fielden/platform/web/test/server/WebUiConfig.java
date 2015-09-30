@@ -469,7 +469,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 addMaster(TgEntityForColourMaster.class, new EntityMaster<TgEntityForColourMaster>(
                         TgEntityForColourMaster.class,
                         TgEntityForColourMasterProduser.class,
-                        null,
+                        masterConfigForColour,
                         injector())).
                 done();
 

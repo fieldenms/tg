@@ -24,10 +24,12 @@ import ua.com.fielden.platform.web.view.master.api.widgets.ISpinnerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ITimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.CheckboxWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.colour.impl.ColourWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.CheckboxConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.ColourConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DateTimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DecimalConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.EntityAutocompletionConfig;
@@ -64,7 +66,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
-        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.entityType : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.entityType, propertyName);
+        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.entityType
+                : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.entityType, propertyName);
         widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName, propType);
         return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
     }
@@ -142,7 +145,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IColourConfig<T> asColour() {
-        throw new UnsupportedOperationException("ColourPicker widget is not yet supported.");
+        widget = new ColourWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.entityType), propertyName);
+        return new ColourConfig<>((ColourWidget) widget, smBuilder);
     }
 
     public AbstractWidget widget() {
