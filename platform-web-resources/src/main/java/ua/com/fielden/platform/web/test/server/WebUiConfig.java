@@ -1020,6 +1020,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             icon("assignment-ind").
                             shortDesc("Function 4").
                             longDesc("Functional context-dependent action 4").
+                            withNoParentCentreRefresh().
                             build(),
                             InsertionPoints.RIGHT)
                             .build();
