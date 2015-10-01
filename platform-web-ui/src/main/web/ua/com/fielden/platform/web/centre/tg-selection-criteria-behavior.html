@@ -396,11 +396,16 @@
                 var self = this;
 
                 if (self._runningInProgress()) {
-                    console.warn("Refresh is already in progress...");                    
-                    return Promise.resolve();
+                    console.warn("Refresh is already in progress...");
+                    self._refreshPromiseInProgress = self._refreshPromiseInProgress
+                    .then(function() {
+                        return self._createPromise(isRunAction, entitiesToRefresh, assignmentFun);
+                    });
+                    return self._refreshPromiseInProgress;
                 }
 
-                return self._createPromise(isRunAction, entitiesToRefresh, assignmentFun);
+                self._refreshPromiseInProgress = self._createPromise(isRunAction, entitiesToRefresh, assignmentFun);
+                return self._refreshPromiseInProgress;
             },
             
             _createPromise: function (isRunAction, entitiesToRefresh, assignmentFun) {
