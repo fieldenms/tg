@@ -91,11 +91,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
         attrs.put("element-name", elementName);
         attrs.put("number-of-action", numberOfAction);
+        attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
         if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
-            attrs.put("element-alias", elementName + numberOfAction);
             attrs.put("show-dialog", "[[_showInsertionPoint]]");
         } else {
-            attrs.put("element-alias", elementName);
             attrs.put("show-dialog", "[[_showDialog]]");
         }
         attrs.put("create-context-holder", "[[_createContextHolder]]");

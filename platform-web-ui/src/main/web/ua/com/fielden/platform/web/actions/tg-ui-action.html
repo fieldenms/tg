@@ -287,7 +287,9 @@
                     
                     if (potentiallySavedEntity.isValid()) {
 	                    var holder = master._extractModifiedPropertiesHolder(master._currBindingEntity, master._originalBindingEntity);
-    	                self.additionalAction(master._createSavingInfoHolder(master._reset(holder), potentiallySavedEntity));
+	                    if (self.additionalAction) {
+    	                	self.additionalAction(master._createSavingInfoHolder(master._reset(holder), potentiallySavedEntity));
+	                    }
                     }
 
                     console.log("postSaved");
