@@ -274,49 +274,51 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public IGlobalDomainTreeManager initEntityCentreManager(final Class<?> menuItemType, final String name) {
-        logger.info("Initialising entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user ["
-                + currentUser() + "]...");
-        validateMenuItemType(menuItemType);
-        final Class<?> root = validateMenuItemTypeRootType(menuItemType);
-        if (isFreezedEntityCentreManager(menuItemType, name)) {
-            error("Unable to Init the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
-                    + "] for current user [" + currentUser() + "].");
-        }
-        final CentreManagerConfigurator centreConfigurator = createEntityCentreConfigurator(menuItemType, root);
+        synchronized (this) {
+            logger.info("Initialising entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user ["
+                    + currentUser() + "]...");
+            validateMenuItemType(menuItemType);
+            final Class<?> root = validateMenuItemTypeRootType(menuItemType);
+            if (isFreezedEntityCentreManager(menuItemType, name)) {
+                error("Unable to Init the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
+                        + "] for current user [" + currentUser() + "].");
+            }
+            final CentreManagerConfigurator centreConfigurator = createEntityCentreConfigurator(menuItemType, root);
 
-        final String title = title(menuItemType, name);
-        final String menuItemTypeName = menuItemType.getName();
-        final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, title);
-        final int count = entityCentreConfigController.count(model);
-        if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
-            retrieveAndInit(menuItemType, name, root, centreConfigurator, model);
-        } else if (count < 1) { // there is no entity-centre
-            if (name == null) { // principle entity-centre
-                // Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
-                // But if base user haven't done that yet, it will be done by non-base user automatically.
-                final boolean owning = currentUser().isBase();
-                init(menuItemType, name, createDefaultCentre(centreConfigurator, root, menuItemType), owning);
+            final String title = title(menuItemType, name);
+            final String menuItemTypeName = menuItemType.getName();
+            final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentAndBaseUsers(menuItemTypeName, title);
+            final int count = entityCentreConfigController.count(model);
+            if (count == 1) { // the persistence layer contains a entity-centre, so it should be retrieved and deserialised
+                retrieveAndInit(menuItemType, name, root, centreConfigurator, model);
+            } else if (count < 1) { // there is no entity-centre
+                if (name == null) { // principle entity-centre
+                    // Principle entity-centre should be initialised and then saved. This can be done naturally by base user.
+                    // But if base user haven't done that yet, it will be done by non-base user automatically.
+                    final boolean owning = currentUser().isBase();
+                    init(menuItemType, name, createDefaultCentre(centreConfigurator, root, menuItemType), owning);
+                } else {
+                    error("Unable to initialise a non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
+                            + currentUser() + "].");
+                }
+            } else if (count == 2) {
+                final EntityResultQueryModel<EntityCentreConfig> model1 = modelForCurrentUser(menuItemTypeName, title);
+                final int count1 = entityCentreConfigController.count(model1);
+                if (count1 == 1) { // for current user => 1 entity-centre, for base => another one with same title
+                    // initialise an instance for current user (base configuration will be ignored)
+                    retrieveAndInit(menuItemType, name, root, centreConfigurator, model1);
+                } else {
+                    error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
+                            + currentUser() + "].");
+                }
             } else {
-                error("Unable to initialise a non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
-                        + currentUser() + "].");
+                error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser()
+                        + "].");
             }
-        } else if (count == 2) {
-            final EntityResultQueryModel<EntityCentreConfig> model1 = modelForCurrentUser(menuItemTypeName, title);
-            final int count1 = entityCentreConfigController.count(model1);
-            if (count1 == 1) { // for current user => 1 entity-centre, for base => another one with same title
-                // initialise an instance for current user (base configuration will be ignored)
-                retrieveAndInit(menuItemType, name, root, centreConfigurator, model1);
-            } else {
-                error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
-                        + currentUser() + "].");
-            }
-        } else {
-            error("There are more than one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user [" + currentUser()
-                    + "].");
+            logger.info("Initialised_ entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user ["
+                    + currentUser() + "]...done");
+            return this;
         }
-        logger.info("Initialised_ entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name) + "] for current user ["
-                + currentUser() + "]...done");
-        return this;
     }
 
     /**
