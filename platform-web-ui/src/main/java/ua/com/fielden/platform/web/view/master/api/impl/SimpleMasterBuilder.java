@@ -45,11 +45,20 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
-    public Class<T> entityType;
+    private Class<T> entityType;
+    private boolean saveOnActivation = false;
+
 
     @Override
     public IPropertySelector<T> forEntity(final Class<T> type) {
         this.entityType = type;
+        return this;
+    }
+
+    @Override
+    public IPropertySelector<T> forEntityWithSaveOnActivate(final Class<T> type) {
+        this.entityType = type;
+        this.saveOnActivation = true;
         return this;
     }
 
@@ -163,13 +172,15 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             }
         });
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html").
-                replace("<!--@imports-->", createImports(importPaths)).
-                replace("@entity_type", entityType.getSimpleName()).
-                replace("//@layoutConfig", layout.code().toString()).
-                replace("<!--@editors_and_actions-->", editorContainer.toString()).
-                replace("//@entityActions", entityActionsStr.toString()).
-                replace("//@propertyActions", propertyActionsStr.toString());
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
+                .replace("<!--@imports-->", createImports(importPaths))
+                .replace("@entity_type", entityType.getSimpleName())
+                .replace("//@layoutConfig", layout.code().toString())
+                .replace("<!--@editors_and_actions-->", editorContainer.toString())
+                .replace("//@entityActions", entityActionsStr.toString())
+                .replace("//@propertyActions", propertyActionsStr.toString())
+                .replace("@noUiValue", "false")
+                .replace("@saveOnActivationValue", saveOnActivation + "");
 
         final IRenderable representation = new IRenderable() {
             @Override
@@ -193,6 +204,10 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             sb.append("<link rel='import' href='/resources/" + path + ".html'>\n");
         });
         return sb.toString();
+    }
+
+    public Class<T> getEntityType() {
+        return entityType;
     }
 
     public static void main(final String[] args) {

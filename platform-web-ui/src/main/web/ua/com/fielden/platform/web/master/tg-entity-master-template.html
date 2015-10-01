@@ -38,7 +38,20 @@
         		/**
         		 * The property which indicates whether entity master is 'UI-less'.
         		 */
-	            noUI:{type: Boolean,value:false}
+	            noUI: {
+	                type: Boolean,
+	                value: @noUiValue
+	            },
+	            
+	            /** 
+	             * This property govenrs master behavior upon its activation for the first time (i.e. when master element was instantiated and bound to an entit instance).
+	             * If saveOnActivation is true then entity saving occurs automatically just before the master UI gets displayed.
+	             * It most conveniently used for masters that represent functional entities (i.e. actions).
+	             * */
+	            saveOnActivation: {
+	                type: Boolean,
+	                value: @saveOnActivationValue
+	            }
         	},
 
             /**

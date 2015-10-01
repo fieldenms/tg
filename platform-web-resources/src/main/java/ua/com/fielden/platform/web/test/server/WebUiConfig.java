@@ -311,7 +311,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .done();
 
-        final ISimpleMasterConfig<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntity(TgFunctionalEntityWithCentreContext.class)
+        final ISimpleMasterConfig<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntityWithSaveOnActivate(TgFunctionalEntityWithCentreContext.class)
                 .addProp("valueToInsert").asSinglelineText()
                 .also()
                 .addProp("withBrackets").asCheckbox()

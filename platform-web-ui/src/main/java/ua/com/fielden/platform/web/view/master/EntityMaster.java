@@ -7,13 +7,10 @@ import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithConte
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
-import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
@@ -52,27 +49,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     }
 
     private IMaster<T> createDefaultConfig(final Class<T> entityType) {
-        final IMaster<T> master = new IMaster<T>() {
-            @Override
-            public IRenderable render() {
-                final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                        .replace("<!--@imports-->", "")
-                        .replace("@entity_type", entityType.getSimpleName())
-                        .replace("//@layoutConfig", "")
-                        .replace("<!--@editors_and_actions-->", "")
-                        .replace("//@entityActions", "")
-                        .replace("//@propertyActions", "")
-                        .replace("noUI:{type: Boolean,value:false}", "noUI:{type: Boolean,value:true}");
-
-                return new IRenderable() {
-                    @Override
-                    public DomElement render() {
-                        return new InnerTextElement(entityMasterStr);
-                    }
-                };
-            }
-        };
-        return master;
+        return new NoUiMasterConfig<T>(entityType);
     }
 
     /**
