@@ -159,6 +159,11 @@
                 _runnerLoading: {
                 	type: Boolean,
                 	observer: '_runnerLoadingChanged'
+                },
+                
+                /** A promise pointing to the last (resolved or otherwise) entities refresh call. */
+                _refreshPromiseInProgress: {
+                    type: Object
                 }
         	},
 
