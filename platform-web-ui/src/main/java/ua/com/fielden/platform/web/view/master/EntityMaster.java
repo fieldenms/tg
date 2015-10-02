@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master;
 
+import java.util.Optional;
+
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -7,13 +9,13 @@ import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithConte
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.IMasterWithEntityMatchers;
 import ua.com.fielden.platform.web.view.master.api.NoUiMasterConfig;
 
 /**
@@ -22,7 +24,7 @@ import ua.com.fielden.platform.web.view.master.api.NoUiMasterConfig;
  * @author TG Team
  *
  */
-public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
+public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     private final Class<T> entityType;
     private final Class<? extends IEntityProducer<T>> entityProducerType;
     private final IMaster<T> masterConfig;
@@ -95,11 +97,9 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @return
      */
     public IValueMatcherWithContext<T, ?> createValueMatcher(final String propertyName) {
-        if (masterConfig instanceof IMasterWithEntityMatchers) {
-            final Class<? extends IValueMatcherWithContext<T, ?>> matcherType = ((IMasterWithEntityMatchers<T>) masterConfig).matcherTypeFor(propertyName);
-            if (matcherType != null) {
-                return injector.getInstance(matcherType);
-            }
+        final Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherType = masterConfig.matcherTypeFor(propertyName);
+        if (matcherType.isPresent()) {
+            return injector.getInstance(matcherType.get());
         }
 
         return createDefaultValueMatcher(propertyName, entityType, coFinder);
@@ -121,7 +121,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     }
 
     @Override
-    public IRenderable render() {
-        return masterConfig.render();
+    public DomElement render() {
+        return masterConfig.render().render();
     }
 }

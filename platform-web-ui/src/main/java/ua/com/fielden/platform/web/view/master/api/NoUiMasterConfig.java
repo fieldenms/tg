@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api;
 
+import java.util.Optional;
+
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -38,6 +41,11 @@ public class NoUiMasterConfig<T extends AbstractEntity<?>> implements IMaster<T>
     @Override
     public IRenderable render() {
         return renderable;
+    }
+
+    @Override
+    public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
+        return Optional.empty();
     }
 
 }

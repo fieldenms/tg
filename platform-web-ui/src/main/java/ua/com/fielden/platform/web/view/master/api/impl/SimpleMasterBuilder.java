@@ -20,7 +20,6 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.IMasterWithEntityMatchers;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -210,7 +209,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
 
-    private class SimpleMasterConfig implements IMasterWithEntityMatchers<T> {
+    private class SimpleMasterConfig implements IMaster<T> {
 
         private final IRenderable renderableRepresentation;
         private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps;
@@ -228,8 +227,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
 
         @Override
-        public Class<? extends IValueMatcherWithContext<T, ?>> matcherTypeFor(final String propName) {
-            return valueMatcherForProps.get(propName);
+        public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
+            return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
 
     }
