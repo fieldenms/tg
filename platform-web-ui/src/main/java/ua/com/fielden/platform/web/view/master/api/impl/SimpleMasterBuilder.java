@@ -20,6 +20,7 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.IMasterWithEntityMatchers;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -187,7 +188,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             }
         };
 
-        return new SimpleMasterConfig<T>(representation, valueMatcherForProps);
+        return new SimpleMasterConfig(representation, valueMatcherForProps);
     }
 
     /**
@@ -206,6 +207,31 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     public Class<T> getEntityType() {
         return entityType;
+    }
+
+
+    private class SimpleMasterConfig implements IMasterWithEntityMatchers<T> {
+
+        private final IRenderable renderableRepresentation;
+        private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps;
+
+        public SimpleMasterConfig(
+                final IRenderable renderableRepresentation,
+                final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps) {
+            this.renderableRepresentation = renderableRepresentation;
+            this.valueMatcherForProps = valueMatcherForProps;
+        }
+
+        @Override
+        public IRenderable render() {
+            return renderableRepresentation;
+        }
+
+        @Override
+        public Class<? extends IValueMatcherWithContext<T, ?>> matcherTypeFor(final String propName) {
+            return valueMatcherForProps.get(propName);
+        }
+
     }
 
     public static void main(final String[] args) {

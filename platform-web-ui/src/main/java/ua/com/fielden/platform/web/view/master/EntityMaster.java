@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
+import ua.com.fielden.platform.web.view.master.api.IMasterWithEntityMatchers;
 import ua.com.fielden.platform.web.view.master.api.NoUiMasterConfig;
 
 /**
@@ -57,11 +57,11 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * Creates master for the specified <code>entityType</code> and <code>smConfig</code> (no producer).
      *
      * @param entityType
-     * @param smConfig
+     * @param config
      *
      */
-    public EntityMaster(final Class<T> entityType, final ISimpleMasterConfig<T> smConfig, final Injector injector) {
-        this(entityType, null, smConfig, injector);
+    public EntityMaster(final Class<T> entityType, final IMaster<T> config, final Injector injector) {
+        this(entityType, null, config, injector);
     }
 
     public Class<T> getEntityType() {
@@ -95,8 +95,8 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @return
      */
     public IValueMatcherWithContext<T, ?> createValueMatcher(final String propertyName) {
-        if (masterConfig instanceof ISimpleMasterConfig) {
-            final Class<? extends IValueMatcherWithContext<T, ?>> matcherType = ((ISimpleMasterConfig<T>) masterConfig).matcherTypeFor(propertyName);
+        if (masterConfig instanceof IMasterWithEntityMatchers) {
+            final Class<? extends IValueMatcherWithContext<T, ?>> matcherType = ((IMasterWithEntityMatchers<T>) masterConfig).matcherTypeFor(propertyName);
             if (matcherType != null) {
                 return injector.getInstance(matcherType);
             }
