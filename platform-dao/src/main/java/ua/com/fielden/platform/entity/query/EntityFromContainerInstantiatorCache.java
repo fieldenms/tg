@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 
 public class EntityFromContainerInstantiatorCache {
-    private Map<Class<? extends AbstractEntity<?>>, Map<Long, Object>> map = new HashMap<>();
+    private Map<EntityContainer<? extends AbstractEntity<?>>, Object> map = new HashMap<>();
     private final EntityFromContainerInstantiator instantiator;
     
     public EntityFromContainerInstantiatorCache(final EntityFromContainerInstantiator instantiator) {
@@ -15,27 +15,14 @@ public class EntityFromContainerInstantiatorCache {
     }
     
     public <R extends AbstractEntity<?>> R getEntity(final EntityContainer<R> entityContainer) {
-        final Map<Long, Object> existingTypeCache = map.get(entityContainer.getResultType());
+        final AbstractEntity<?> existingEntity = (AbstractEntity<?>) map.get(entityContainer);
         
-        if (existingTypeCache == null) {
-            final Map<Long, Object> justAddedTypeCache = new HashMap<Long, Object>();
-            final R justAddedEntity = instantiateEntity(entityContainer); 
-            justAddedTypeCache.put(entityContainer.getId(), justAddedEntity);
-            map.put(entityContainer.getResultType(), justAddedTypeCache);
-            return instantiator.instantiateFully(entityContainer, justAddedEntity);
-        }
-        
-        final Object existingEntity = existingTypeCache.get(entityContainer.getId());
         if (existingEntity == null) {
-            final R justAddedEntity = instantiateEntity(entityContainer);
-            existingTypeCache.put(entityContainer.getId(), justAddedEntity);
+            final R justAddedEntity = instantiator.instantiateInitially(entityContainer); 
+            map.put(entityContainer, justAddedEntity);
             return instantiator.instantiateFully(entityContainer, justAddedEntity);
         }
      
         return (R) existingEntity;
-    }
-    
-    private <R extends AbstractEntity<?>> R instantiateEntity(final EntityContainer<R> entityContainer) {
-        return instantiator.instantiateInitially(entityContainer);
     }
 }
