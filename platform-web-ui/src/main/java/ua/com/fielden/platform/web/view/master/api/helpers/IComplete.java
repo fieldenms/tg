@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.helpers;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 
 /**
@@ -14,5 +15,5 @@ import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
  * @param <T>
  */
 public interface IComplete<T extends AbstractEntity<?>> {
-    ISimpleMasterConfig<T> done();
+    IMaster<T> done();
 }
