@@ -1,11 +1,10 @@
-package ua.com.fielden.platform.web.view.master;
+package ua.com.fielden.platform.web.view.master.api;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
-import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 /**
  * An entity master that has no UI. Its main purpose is to be used for functional entities that have no visual representation.

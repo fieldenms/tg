@@ -14,6 +14,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
+import ua.com.fielden.platform.web.view.master.api.NoUiMasterConfig;
 
 /**
  * Represents entity master.
