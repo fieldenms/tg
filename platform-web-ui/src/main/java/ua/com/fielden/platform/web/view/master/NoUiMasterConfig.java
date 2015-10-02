@@ -22,10 +22,8 @@ public class NoUiMasterConfig<T extends AbstractEntity<?>> implements IMaster<T>
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", "")
                 .replace("@entity_type", entityType.getSimpleName())
-                .replace("//@layoutConfig", "")
-                .replace("<!--@editors_and_actions-->", "")
-                .replace("//@entityActions", "")
-                .replace("//@propertyActions", "")
+                .replace("<!--@tg-entity-master-content-->", "")
+                .replace("//@ready-callback", "")
                 .replace("@noUiValue", "true")
                 .replace("@saveOnActivationValue", "true");
 
