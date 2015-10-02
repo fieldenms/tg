@@ -76,7 +76,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssi
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
@@ -93,6 +92,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
+import ua.com.fielden.platform.web.view.master.api.centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
@@ -359,7 +359,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 addMaster(TgCentreInvokerWithCentreContext.class, new EntityMaster<TgCentreInvokerWithCentreContext>(
                         TgCentreInvokerWithCentreContext.class,
                         TgCentreInvokerWithCentreContextProducer.class,
-                        null,
+                        new MasterWithCentreBuilder<TgCentreInvokerWithCentreContext>().forEntityWithSaveOnActivate(TgCentreInvokerWithCentreContext.class).withCentre(detailsCentre).done(),
                         injector())).
                 addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(
                         TgPersistentCompositeEntity.class,
@@ -706,8 +706,23 @@ public class WebUiConfig extends AbstractWebUiConfig {
         ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre).hasEventSourceAt("/entity-centre-events");
 
         if (entityCentre != null) {
+//            actionConf = actionConf.addTopAction(
+//                    action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim("document.body.clientWidth / 4", "400")).
+//                        withContext(context().withSelectionCrit().withSelectedEntities().build()).
+//                        postActionSuccess(new IPostAction() {
+//                                @Override
+//                                public JsCode build() {
+//                                    return new JsCode("    console.log('     ACTIIIIIIIIIIIIIION');\n");
+//                                }
+//                            }).
+//                        icon("assignment-ind").
+//                        shortDesc("Function 4").
+//                        longDesc("Functional context-dependent action 4").
+//                        build()
+//                    ).also();
+
             actionConf = actionConf.addTopAction(
-                    action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim("document.body.clientWidth / 4", "400")).
+                    action(TgCentreInvokerWithCentreContext.class).
                         withContext(context().withSelectionCrit().withSelectedEntities().build()).
                         postActionSuccess(new IPostAction() {
                                 @Override
@@ -718,8 +733,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("assignment-ind").
                         shortDesc("Function 4").
                         longDesc("Functional context-dependent action 4").
+                        prefDimForView(mkDim("document.body.clientWidth / 4", "400")).
                         build()
                     ).also();
+
         }
 
         @SuppressWarnings("unchecked")
@@ -1008,24 +1025,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
-                if (entityCentre != null) {
-                    return scl.addInsertionPoint(
-                            action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim("document.body.clientWidth / 4", "400")).
-                            withContext(context().withSelectionCrit().withSelectedEntities().build()).
-                            postActionSuccess(new IPostAction() {
-                                    @Override
-                                    public JsCode build() {
-                                        return new JsCode("    console.log('     ACTIIIIIIIIIIIIIION');\n");
-                                    }
-                                }).
-                            icon("assignment-ind").
-                            shortDesc("Function 4").
-                            longDesc("Functional context-dependent action 4").
-                            withNoParentCentreRefresh().
-                            build(),
-                            InsertionPoints.RIGHT)
-                            .build();
-                }
+                // TODO uncomment when ready
+//                if (entityCentre != null) {
+//                    return scl.addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim("document.body.clientWidth / 4", "400")).
+//                            withContext(context().withSelectionCrit().withSelectedEntities().build()).
+//                            postActionSuccess(new IPostAction() {
+//                                    @Override
+//                                    public JsCode build() {
+//                                        return new JsCode("    console.log('     ACTIIIIIIIIIIIIIION');\n");
+//                                    }
+//                                }).
+//                            icon("assignment-ind").
+//                            shortDesc("Function 4").
+//                            longDesc("Functional context-dependent action 4").
+//                            withNoParentCentreRefresh().
+//                            build(),
+//                            InsertionPoints.RIGHT)
+//                            .build();
+//                }
                 return scl.build();
     }
 

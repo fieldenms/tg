@@ -375,7 +375,9 @@
                     
                     this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
                     // custom external action
-                    this.postRetrieved(entity, newBindingEntity, customObject);
+                    if (this.postRetrieved) {
+	                    this.postRetrieved(entity, newBindingEntity, customObject);
+                    }
                     
                     // console.timeEnd('criteria-entity-retrieval');
                     console.timeEnd('loading-all');

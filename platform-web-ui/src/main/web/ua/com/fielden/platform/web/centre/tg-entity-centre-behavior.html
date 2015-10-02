@@ -38,10 +38,11 @@
                 },
 
                 /**
-                 * The function to return 'master' entity (if this entity centre is dependent, i.e. the part of some compound master).
+                 * The function to return 'master' entity (if this entity centre is dependent, e.g. the part of some compound master).
                  */
                 getMasterEntity: {
-                    type: Function
+                    type: Function,
+                    observer: '_getMasterEntityAssigned'
                 },
 
                 /**
@@ -238,6 +239,22 @@
                 	type: Function
                 }
             },
+            
+            _getMasterEntityAssigned: function (newValue, oldValue) {
+                var self = this;
+       	 		if (oldValue === undefined) {
+       	 			self.retrieve().then(function () {
+                        if (self.autoRun) {
+                            self.run();
+              			}
+              		});
+       	 		} else {
+                    if (self.autoRun) {
+                        self.run();
+          			}
+	       	    }
+            },
+            
 
             _computeSaverDisabled: function (_centreChanged) {
                 return !this.canSave(_centreChanged);
