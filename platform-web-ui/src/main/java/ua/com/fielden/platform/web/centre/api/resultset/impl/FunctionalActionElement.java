@@ -103,7 +103,6 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
         attrs.put("post-action-success", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
         attrs.put("post-action-error", "[[" + actionsHolderName + "." + numberOfAction + ".postActionError]]");
-        attrs.put("additional-action", "[[" + actionsHolderName + "." + numberOfAction + ".additionalAction]]");
         if (functionalActionKind == FunctionalActionKind.PROP) {
             attrs.put("chosen-property", chosenProperty);
         }
@@ -194,50 +193,6 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         if (conf().successPostAction.isPresent()) {
             attrs.append(conf().successPostAction.get().build().toString());
         }
-        attrs.append("},\n");
-
-        attrs.append("additionalAction: function (savingInfoHolder, savedEntity) {\n"); // context
-        attrs.append("    console.log('additionalAction:', savingInfoHolder, savedEntity);\n");
-//        if (conf().entityCentre.isPresent()) {
-//            attrs.append("    var centreDialogInvocationAction = {};\n");
-//            attrs.append("    centreDialogInvocationAction.componentUri = '/centre_ui/" + conf().entityCentre.get().getMenuItemType().getName() + "';\n");
-//            attrs.append("    centreDialogInvocationAction.elementName = 'tg-" + conf().entityCentre.get().getMenuItemType().getSimpleName() + "-centre';\n");
-//            attrs.append("    centreDialogInvocationAction.elementAlias = 'tg-" + conf().entityCentre.get().getMenuItemType().getSimpleName() + "-centre';\n");
-//            attrs.append("    centreDialogInvocationAction._onExecuted = function (e, detail, source) {\n"
-//                        +"        console.log('ON_EXECUTED');\n"
-//                        +"        centreDialogInvocationAction._masterComponent = detail;\n"
-//                        +"        detail.postRetrieved = function (entity, bindingEntity, customObject) { console.log('postRetrieved'); };\n"
-//                        +"        detail.getMasterEntity = function () {\n"
-//                        +"            console.log('GET_MASTER_ENTITY!', savingInfoHolder);\n"
-//                        +"            return savingInfoHolder;\n" // savedEntity, context
-//                        +"        };\n"
-//                        +"        detail.retrieve().then(function () {\n"
-//                        +"            if (detail.autoRun) {\n"
-//                        +"                return detail.run();\n"
-//                        +"            } else {\n"
-//                        +"                return Promise.resolve();\n"
-//                        +"            }\n"
-//                        +"        });\n"
-//                        +"    };\n");
-//            attrs.append("    centreDialogInvocationAction.attrs = {\n");
-//            if (conf().entityCentre.get().isRunAutomatically()) {
-//                attrs.append("        autoRun: true,\n");
-//            }
-//            if (conf().entityCentre.get().eventSourceUri().isPresent()) {
-//                attrs.append(format("        uri: \"%s\",\n", conf().entityCentre.get().eventSourceUri().get()));
-//            }
-//
-//            if (conf().entityCentrePrefDim.isPresent()) {
-//                final PrefDim prefDim = conf().entityCentrePrefDim.get();
-//                attrs.append(format("        prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
-//            }
-//            attrs.append("    };\n");
-//            if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
-//                attrs.append(format("    self._activateInsertionPoint('ip%s', centreDialogInvocationAction);\n", numberOfAction));
-//            } else {
-//                attrs.append("    self._showCustomViewInDialog(centreDialogInvocationAction);\n");
-//            }
-//        }
         attrs.append("},\n");
 
         attrs.append("attrs: {\n");

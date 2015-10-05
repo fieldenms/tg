@@ -175,10 +175,6 @@
             	type: Number
             },
             
-            additionalAction: {
-            	type: Function
-            },
-            
             ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
 			/**
 			 * The 'currentEntity' should contain the entity that was clicked (result-set actions)
@@ -284,13 +280,6 @@
                             selectedEntitiesInContext: context.selectedEntities
                         }
                     });
-                    
-                    /* if (potentiallySavedEntity.isValid()) {
-	                    if (self.additionalAction) {
-		                    var holder = master._extractModifiedPropertiesHolder(master._currBindingEntity, master._originalBindingEntity);
-    	                	self.additionalAction(master._createSavingInfoHolder(master._reset(holder), potentiallySavedEntity));
-	                    }
-                    } */
 
                     console.log("postSaved");
                 };

@@ -5,7 +5,6 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.PrefDim;
-import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder0;
@@ -24,8 +23,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
     private Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity;
-    private EntityCentre<?> entityCentre;
-    private PrefDim entityCentrePrefDim;
     private CentreContextConfig context;
     private String icon;
     private String shortDesc;
@@ -48,21 +45,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     }
 
     /**
-     * A starting point to entity action configuration for an action that should invoke centre details after execution.
-     *
-     * @param functionalEntity
-     * @param entityCentre
-     *
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> action(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity, final EntityCentre<?> entityCentre, final PrefDim entityCentrePrefDim) {
-        final EntityActionBuilder<T> entityActionBuilder = new EntityActionBuilder<T>();
-        entityActionBuilder.entityCentre = entityCentre;
-        entityActionBuilder.entityCentrePrefDim = entityCentrePrefDim;
-        return entityActionBuilder.addAction(functionalEntity);
-    }
-
-    /**
      * Constructs entity action configuration that indicates the need to remove the default action if any.
      *
      * @return
@@ -81,8 +63,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         } else {
             return EntityActionConfig.createActionConfig(
                     functionalEntity,
-                    entityCentre,
-                    entityCentrePrefDim,
                     context,
                     icon,
                     shortDesc,
