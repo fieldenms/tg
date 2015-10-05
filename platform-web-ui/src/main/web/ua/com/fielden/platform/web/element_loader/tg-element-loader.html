@@ -265,7 +265,8 @@
          	        	throw new Error("Loader for element " + this.elementName + " had context provided, but contextProperty is missing.");
          	    	}
            	    } else if (oldValue !== undefined) {
-           	        throw new Error("Loader context has changed... but there is no support for such situation currently!");
+           	        // simply reasign the modified context and let the actually loaded element to handle such change
+           	     	this.loadedElement[this.contextProperty] = newValue;
            	    }
            	}
         });
