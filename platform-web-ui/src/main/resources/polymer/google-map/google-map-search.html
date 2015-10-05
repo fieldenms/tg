@@ -2,10 +2,8 @@
 
 <link rel="import" href="../polymer/polymer.html">
 
-
-<script>
-/**
-Provides Google Maps Places API functionality.
+<!--
+`google-map-search` provides Google Maps Places API functionality.
 
 See https://developers.google.com/maps/documentation/javascript/places for more
 information on the API.
@@ -13,37 +11,27 @@ information on the API.
 #### Example:
 
     <template is="dom-bind">
-      <google-map-search map="{{map}}" query="Pizza" currentMapArea
-                         results="{{results}}"></google-map-search>
+      <google-map-search map="[[map]]" query="Pizza" results="{{results}}">
+      </google-map-search>
       <google-map map="{{map}}" latitude="37.779"
                   longitude="-122.3892">
-        <template repeat="{{results}}">
-          <google-map-marker latitude="{{latitude}}"
-                             longitude="{{longitude}}">
-            <h2>{{name}}</h2>
-            {{formatted_address}}
+        <template is="dom-repeat" items="{{results}}" as="marker">
+          <google-map-marker latitude="{{marker.latitude}}"
+                             longitude="{{marker.longitude}}">
+            <h2>{{marker.name}}</h2>
+            <span>{{marker.formatted_address}}</span>
           </google-map-marker>
         </template>
       </google-map>
     </template>
-    <script>
-      document.querySelector('google-map-search').search();
-    < /script>
+ -->
 
-*/
+<script>
+
   Polymer({
 
     is: 'google-map-search',
 
-/**
-Fired when the search element returns a result.
-
-@event google-map-search-results
-@param {Array} detail An array of search results
-  @param {number} detail.latitude Latitude of the result.
-  @param {number} detail.longitude Longitude of the result.
-  @param {bool} detail.show Whether to show the result on the map.
-*/
     properties: {
 
       /**
@@ -64,7 +52,7 @@ Fired when the search element returns a result.
 
       /**
        * Latitude of the center of the search area.
-       * Ignored if `currentMapArea` is true.
+       * Ignored if `globalSearch` is true.
        */
       latitude: {
         type: Number,
@@ -73,7 +61,7 @@ Fired when the search element returns a result.
 
       /**
        * Longitude of the center of the search area.
-       * Ignored if `currentMapArea` is true.
+       * Ignored if `globalSearch` is true.
        */
       longitude: {
         type: Number,
@@ -123,13 +111,39 @@ Fired when the search element returns a result.
         type: Array,
         value: function() { return []; },
         notify: true
+      },
+
+      /**
+       * The lat/lng location.
+       */
+      location: {
+        type: Object,
+        value: null,
+        readOnly: true
       }
     },
 
     observers: [
-      'search(query,map,location,radius,types,currentMapArea)',
+      'search(query,map,location,radius,types,globalSearch)',
       '_updateLocation(latitude,longitude)'
     ],
+
+    /**
+     * Fired when the details of a place are returned.
+     *
+     * @event google-map-search-place-detail
+     *   @param {google.maps.MarkerPlace} detail The place details.
+     */
+
+    /**
+     * Fired when the search element returns a result.
+     *
+     * @event google-map-search-results
+     *   @param {Array} detail An array of search results
+     *   @param {number} detail.latitude Latitude of the result.
+     *   @param {number} detail.longitude Longitude of the result.
+     *   @param {bool} detail.show Whether to show the result on the map.
+     */
 
     /**
      * Perform a search using for `query` for the search term.
@@ -159,12 +173,31 @@ Fired when the search element returns a result.
       }
     },
 
+    /**
+     * Fetches details for a given place.
+     * @param {String} placeId The place id.
+     * @return {Promise} place The place information.
+     */
+    getDetails: function(placeId) {
+      var places = new google.maps.places.PlacesService(this.map);
+
+      return new Promise(function(resolve, reject) {
+        places.getDetails({placeId: placeId}, function(place, status) {
+          if (status === google.maps.places.PlacesServiceStatus.OK) {
+            resolve(place);
+            this.fire('google-map-search-place-detail', place);
+          } else {
+            reject(status);
+          }
+        }.bind(this));
+      }.bind(this));
+    },
+
     _gotResults: function(results, status) {
       this.results = results.map(function(result) {
         // obtain lat/long from geometry
         result.latitude  = result.geometry.location.lat();
         result.longitude = result.geometry.location.lng();
-
         return result;
       });
       this.fire('google-map-search-results', this.results);
@@ -180,7 +213,7 @@ Fired when the search element returns a result.
       }
 
       // Update location. This will trigger a new search.
-      this.location = new google.maps.LatLng(this.latitude, this.longitude);
+      this._setLocation({lat: this.latitude, lng: this.longitude});
     }
   });
 </script>
