@@ -24,32 +24,24 @@ public class MasterWithCentreConfig<T extends AbstractEntity<?>> implements IMas
 
     private final IRenderable renderable;
 
-        public MasterWithCentreConfig(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre) {
-//            +"        detail.getMasterEntity = function () {\n"
-//            +"            console.log('GET_MASTER_ENTITY!', savingInfoHolder);\n"
-//            +"            return savingInfoHolder;\n" // savedEntity, context
-//            +"        };\n"
+    public MasterWithCentreConfig(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre) {
+        final StringBuilder attrs = new StringBuilder();
 
+        //////////////////////////////////////////////////////////////////////////////////////
+        //// attributes should always be added with comma and space at the end, i.e. ", " ////
+        //// this suffix is used to remove the last comma, which prevents JSON conversion ////
+        //////////////////////////////////////////////////////////////////////////////////////
+        attrs.append("{");
+        if (entityCentre.isRunAutomatically()) {
+            attrs.append("\"autoRun\": true, ");
+        }
+        if (entityCentre.eventSourceUri().isPresent()) {
+            attrs.append(format("\"uri\": \"%s\", ", entityCentre.eventSourceUri().get()));
+        }
 
+        attrs.append("}");
 
-
-
-
-
-            final StringBuilder attrs = new StringBuilder();
-            attrs.append("{");
-            if (entityCentre.isRunAutomatically()) {
-                attrs.append("\"autoRun\": true, ");
-            }
-            if (entityCentre.eventSourceUri().isPresent()) {
-                attrs.append(format("\"uri\": \"%s\"", entityCentre.eventSourceUri().get()));
-            }
-
-//            if (conf().entityCentrePrefDim.isPresent()) {
-//                final PrefDim prefDim = conf().entityCentrePrefDim.get();
-//                attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
-//            }
-            attrs.append("}");
+        final String attributes = attrs.toString().replace(", }", " }");
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
@@ -61,7 +53,7 @@ public class MasterWithCentreConfig<T extends AbstractEntity<?>> implements IMas
                         + "    element-name='tg-%s-centre' "
                         + "    attrs='%s'>"
                         + "</tg-element-loader>",
-                        entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName(), attrs.toString()))
+                        entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName(), attributes))
                 .replace("//@ready-callback", "")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivate + "");
