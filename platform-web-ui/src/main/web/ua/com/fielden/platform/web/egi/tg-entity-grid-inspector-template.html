@@ -15,6 +15,7 @@
 <link rel="import" href="/resources/polymer/neon-animation/neon-animations.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-tooltip/paper-tooltip.html">
 
 <style is="custom-style">
     .summary-dialog paper-button {
@@ -230,6 +231,7 @@
                     <div class="layout horizontal table-header-row">
                         <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]">
                             <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                            <paper-tooltip>[[_getSelectAllTooltip(selectedAll)]]</paper-tooltip>
                         </div>
                         <template is="dom-if" if="[[primaryAction]]">
                             <div class="table-cell layout horizontal center" style="width:40px">
@@ -239,6 +241,7 @@
                         <template is="dom-repeat" items="[[columns]]">
                             <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
                                 <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
+                                <paper-tooltip>[[item.columnDesc]]</paper-tooltip>
                             </div>
                         </template>
                         <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
@@ -252,6 +255,7 @@
                         <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
                             <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
+                                <paper-tooltip>[[_getSelectTooltip(egiEntity.selected)]]</paper-tooltip>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <div class="table-cell layout horizontal center">
@@ -269,6 +273,7 @@
                                     <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
                                         <div class="truncate relative" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
                                     </template>
+                                    <paper-tooltip>[[_getTooltip(egiEntity.entity, column.property, column.type)]]</paper-tooltip>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
@@ -486,6 +491,26 @@
                 Array.prototype.forEach.call(Polymer.dom(this.$.secondary_action_selector).getDistributedNodes(), function (item) {
                     this.secondaryActions.push(item);
                 }.bind(this));
+            },
+            
+            
+            /**
+             * Tooltip related functions
+             */
+            _getSelectAllTooltip: function (selectedAll) {
+                return (selectedAll ? 'Unselect': 'Select') + 'all entities';
+            },
+            
+            _getSelectTooltip: function(selected) {
+                return (selected ? 'Unselecct': 'Select') + 'this entity';
+            },
+            
+            _getTooltip: function(entity, property, type) {
+                if (this.$.reflector.findTypeByName(type)) {
+                    return entity.get(property === '' ? "desc" : (property + ".desc"));
+                } else {
+                    return this._getValue(entity, property, type);
+                }
             },
 
             /**

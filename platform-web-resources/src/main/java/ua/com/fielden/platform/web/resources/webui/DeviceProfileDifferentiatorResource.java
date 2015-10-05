@@ -39,7 +39,7 @@ public class DeviceProfileDifferentiatorResource extends ServerResource {
         // therefore, in case there would be a need to distinguish between tablets and mobiles the following condition would need to be enhanced
         // also, there was no testing done for iOS devices... Chrom on iOS would include word CriOS, but that is different for Safari...
         if (request.getClientInfo().getAgent().contains("Android") || request.getClientInfo().getAgent().contains("CriOS")) {
-            return DeviceProfile.MOBILE;
+            return DeviceProfile.DESKTOP;
         } else {
             return DeviceProfile.DESKTOP;
         }
