@@ -94,7 +94,7 @@
                 }
             },
 
-            _adjustView: function (e) {
+            _adjustView: function () {
                 var self = this;
                 
                 if (this.$.elementLoader.prefDim) {
@@ -109,7 +109,7 @@
             },
             
             _onIronResize: function () {
-                this._adjustView(null);
+                this._adjustView();
             }
         });
     })();

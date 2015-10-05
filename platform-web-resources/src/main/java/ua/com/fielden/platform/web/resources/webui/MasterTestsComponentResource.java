@@ -46,6 +46,6 @@ public class MasterTestsComponentResource extends ServerResource {
 
     @Override
     protected Representation get() throws ResourceException {
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(master.build().render().toString().getBytes(Charsets.UTF_8))));
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(master.render().toString().getBytes(Charsets.UTF_8))));
     }
 }

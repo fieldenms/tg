@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.PrefDim;
-import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
@@ -22,8 +21,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
  */
 public final class EntityActionConfig {
     public final Optional<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> functionalEntity;
-    public final Optional<EntityCentre<?>> entityCentre;
-    public final Optional<PrefDim> entityCentrePrefDim;
     public final Optional<CentreContextConfig> context;
     public final Optional<String> icon;
     public final Optional<String> shortDesc;
@@ -38,8 +35,6 @@ public final class EntityActionConfig {
 
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
-            final EntityCentre<?> entityCentre,
-            final PrefDim entityCentrePrefDim,
             final CentreContextConfig context,
             final String icon,
             final String shortDesc,
@@ -59,11 +54,9 @@ public final class EntityActionConfig {
         if (functionalEntity != null && context == null) {
             throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
-        
-        this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave; 
+
+        this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;
         this.functionalEntity = Optional.ofNullable(functionalEntity);
-        this.entityCentre = Optional.ofNullable(entityCentre);
-        this.entityCentrePrefDim = Optional.ofNullable(entityCentrePrefDim);
         this.context = Optional.ofNullable(context);
         this.icon = Optional.ofNullable(icon);
         this.shortDesc = Optional.ofNullable(shortDesc);
@@ -79,8 +72,6 @@ public final class EntityActionConfig {
 
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
-            final EntityCentre<?> entityCentre,
-            final PrefDim entityCentrePrefDim,
             final CentreContextConfig context,
             final String icon,
             final String shortDesc,
@@ -91,7 +82,7 @@ public final class EntityActionConfig {
             final PrefDim prefDimForView,
             final boolean noAction,
             final boolean shouldRefreshParentCentreAfterSave) {
-        this(functionalEntity, entityCentre, entityCentrePrefDim, context, icon, shortDesc, longDesc, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null);
+        this(functionalEntity, context, icon, shortDesc, longDesc, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null);
     }
 
 
@@ -101,8 +92,6 @@ public final class EntityActionConfig {
     public static EntityActionConfig mkInsertionPoint(final EntityActionConfig ac, final InsertionPoints ip) {
         return new EntityActionConfig(
                 ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
-                ac.entityCentre.isPresent() ? ac.entityCentre.get() : null,
-                ac.entityCentrePrefDim.isPresent() ? ac.entityCentrePrefDim.get() : null,
                 ac.context.isPresent() ? ac.context.get() : null,
                 ac.icon.isPresent() ? ac.icon.get() : null,
                 ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
@@ -121,7 +110,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createNoActionConfig() {
-        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, null, null, true, true);
+        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, true, true);
     }
 
     /**
@@ -130,7 +119,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createMasterInvocationActionConfig() {
-        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, null, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
+        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
     }
 
     /**
@@ -139,17 +128,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createMasterInDialogInvocationActionConfig() {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, null, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
-    }
-
-    /**
-     * Same as above, but with preferred dimensions.
-     *
-     * @param dim
-     * @return
-     */
-    public static EntityActionConfig createMasterInDialogInvocationActionConfig(final PrefDim dim) {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, null, null, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, dim, false, true);
+        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
     }
 
     /**
@@ -167,8 +146,6 @@ public final class EntityActionConfig {
      */
     public static EntityActionConfig createActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
-            final EntityCentre<?> entityCentre,
-            final PrefDim entityCentrePrefDim,
             final CentreContextConfig context,
             final String icon,
             final String shortDesc,
@@ -181,8 +158,6 @@ public final class EntityActionConfig {
             ) {
         return new EntityActionConfig(
                 functionalEntity,
-                entityCentre,
-                entityCentrePrefDim,
                 context,
                 icon,
                 shortDesc,

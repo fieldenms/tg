@@ -20,5 +20,6 @@ public interface ISimpleMasterBuilder<T extends AbstractEntity<?>> {
      * @return
      */
     IPropertySelector<T> forEntity(Class<T> type);
+    IPropertySelector<T> forEntityWithSaveOnActivate(Class<T> type);
 
 }

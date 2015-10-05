@@ -151,6 +151,13 @@
                 _saverLoading: {
                 	type: Boolean,
                 	observer: '_saverLoadingChanged'
+                },
+                
+                /**
+                 * The context holder creator (SavingInfoHolder) which is used for embedded views.
+                 */
+                _createContextHolderForEmbeddedViews: {
+                    type: Function
                 }
         	},
 
@@ -183,6 +190,15 @@
 				
 				    // custom external action
 				    this.postSaved(potentiallySavedEntity, newBindingEntity);
+				    
+				    // Context creator should assigned only after successful master entity saving.
+				    // In case of successful assignment it gets promoted to embedded views by means of binding.
+				    if (potentiallySavedEntity.isValid()) {
+					    this._createContextHolderForEmbeddedViews = (function () {
+			                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+			                return this._createSavingInfoHolder(this._reset(holder), potentiallySavedEntity);
+		                }).bind(this);
+				    }
 				    
 				    return potentiallySavedEntity.isValid();
 				}).bind(self);

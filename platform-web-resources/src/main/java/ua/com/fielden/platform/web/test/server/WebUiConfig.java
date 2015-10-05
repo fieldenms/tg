@@ -88,11 +88,12 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EntityResource;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
+import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
+import ua.com.fielden.platform.web.view.master.api.centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
@@ -143,12 +144,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
 
-        final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(null, true, true));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(detailsCentre, false, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(null, false, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(null, false, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(null, false, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(null, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(false, true, true));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(false, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false));
 
         configApp().addCentre(MiTgPersistentEntityWithProperties.class, entityCentre);
         configApp().addCentre(MiTgPersistentEntityWithProperties1.class, entityCentre1);
@@ -165,8 +166,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String fmr = "'flex', 'margin-right: 20px'";
         final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         // Add entity masters.
+        final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<TgPersistentEntityWithProperties>();
         @SuppressWarnings("unchecked")
-        final ISimpleMasterConfig<TgPersistentEntityWithProperties> masterConfig = new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class)
+        final IMaster<TgPersistentEntityWithProperties> masterConfig = smb.forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
                 .withProps(pair("desc", true),
@@ -311,7 +313,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .done();
 
-        final ISimpleMasterConfig<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntity(TgFunctionalEntityWithCentreContext.class)
+        final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntityWithSaveOnActivate(TgFunctionalEntityWithCentreContext.class)
                 .addProp("valueToInsert").asSinglelineText()
                 .also()
                 .addProp("withBrackets").asCheckbox()
@@ -358,7 +360,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 addMaster(TgCentreInvokerWithCentreContext.class, new EntityMaster<TgCentreInvokerWithCentreContext>(
                         TgCentreInvokerWithCentreContext.class,
                         TgCentreInvokerWithCentreContextProducer.class,
-                        null,
+                        new MasterWithCentreBuilder<TgCentreInvokerWithCentreContext>().forEntityWithSaveOnActivate(TgCentreInvokerWithCentreContext.class).withCentre(detailsCentre).done(),
                         injector())).
                 addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(
                         TgPersistentCompositeEntity.class,
@@ -697,28 +699,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
-    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final EntityCentre<?> entityCentre, final boolean runAutomatically, final boolean withQueryEnhancer) {
+    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final boolean isComposite, final boolean runAutomatically, final boolean withQueryEnhancer) {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
         ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre).hasEventSourceAt("/entity-centre-events");
 
-        if (entityCentre != null) {
+        if (isComposite) {
             actionConf = actionConf.addTopAction(
-                    action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim("document.body.clientWidth / 4", "400")).
-                        withContext(context().withSelectionCrit().withSelectedEntities().build()).
-                        postActionSuccess(new IPostAction() {
-                                @Override
-                                public JsCode build() {
-                                    return new JsCode("    console.log('     ACTIIIIIIIIIIIIIION');\n");
-                                }
-                            }).
-                        icon("assignment-ind").
-                        shortDesc("Function 4").
-                        longDesc("Functional context-dependent action 4").
-                        build()
+                    action(TgCentreInvokerWithCentreContext.class).
+                        withContext(context().withSelectionCrit().withSelectedEntities().build())
+                        .icon("assignment-ind")
+                        .shortDesc("Function 4")
+                        .longDesc("Functional context-dependent action 4")
+                        .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+                        .withNoParentCentreRefresh()
+                        .build()
                     ).also();
+
         }
 
         @SuppressWarnings("unchecked")
@@ -1007,20 +1006,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
-                if (entityCentre != null) {
+                if (isComposite) {
                     return scl.addInsertionPoint(
-                            action(TgCentreInvokerWithCentreContext.class, entityCentre, mkDim("document.body.clientWidth / 4", "400")).
-                            withContext(context().withSelectionCrit().withSelectedEntities().build()).
-                            postActionSuccess(new IPostAction() {
-                                    @Override
-                                    public JsCode build() {
-                                        return new JsCode("    console.log('     ACTIIIIIIIIIIIIIION');\n");
-                                    }
-                                }).
-                            icon("assignment-ind").
-                            shortDesc("Function 4").
-                            longDesc("Functional context-dependent action 4").
-                            build(),
+                            action(TgCentreInvokerWithCentreContext.class)
+                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                                .icon("assignment-ind")
+                                .shortDesc("Insertion Point")
+                                .longDesc("Functional context-dependent Insertion Point")
+                                .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+                                .withNoParentCentreRefresh()
+                                .build(),
                             InsertionPoints.RIGHT)
                             .build();
                 }

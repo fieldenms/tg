@@ -66,14 +66,6 @@
                     }
                 },
 
-                _closeEventChannel: {
-                    type: String
-                },
-
-                _closeEventTopics: {
-                    type: Array
-                },
-                
                 /** 
                  * An object that caches already loaded, created and already represented by this dialog elements.
                  * It is used as an optimisation technique to prevent repeated instantiation of elements.
@@ -90,8 +82,7 @@
                 this.noCancelOnOutsideClick = true;
                 this.noCancelOnEscKey = true;
 
-                //Initialising the action runner
-                this.currentActionRunning = null;
+                this._setIsRunning(false);
             },
 
             closeDialog: function () {
@@ -105,10 +96,10 @@
             /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
             _getElement: function (customAction) {
             	var self = this;
-            	
-            	if (self._cachedElements.hasOwnProperty(customAction.elementAlias)) {
-            		console.log("Reusing cached element:", customAction.elementAlias);
-            		var element = self._cachedElements[customAction.elementAlias];
+            	var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+            	if (self._cachedElements.hasOwnProperty(key)) {
+            		console.log("Reusing cached element:", key);
+            		var element = self._cachedElements[key];
             		self.$.elementLoader.insert(element);
             		return Promise.resolve(element);
             	} else {
@@ -134,27 +125,25 @@
                     console.log("The dialog is already opened and should be closed be being used again.");
                 } else {
                     var self = this;
-                    if (!self.currentRunningAction) {
+                    if (self.isRunning === false) {
+                        self._setIsRunning(true);
+                        
                     	self._getElement(customAction)
                             .then(function (element) {
-                                if (!self._cachedElements.hasOwnProperty(customAction.elementAlias)) {
-                                	console.log("caching:", customAction.elementAlias);
-                            		self._cachedElements[customAction.elementAlias] = element;
+                                var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                                if (!self._cachedElements.hasOwnProperty(key)) {
+                                	console.log("caching:", key);
+                            		self._cachedElements[key] = element;
                                 }
-                                self._closeEventChannel = closeEventChannel;
-                                self._closeEventTopics = closeEventTopics;
-                                self._setIsRunning(true);
-                                self.currentRunningAction = customAction;
-								
-                                var promise = self.currentRunningAction._onExecuted(null, element, null);
+                                var promise = customAction._onExecuted(null, element, null);
                                 if (promise) {
                                 	return promise
-                                	.then(function () {self._showMaster();})
-                                	.catch(function () {self.currentRunningAction = null;});
+                                	.then(function () {self._showMaster(element, closeEventChannel, closeEventTopics);})
+                                	.catch(function () {self._setIsRunning(false);});
                                 } else {
                                     return Promise.resolve()
-                                    .then(function () {self._showMaster();})
-                                    .catch(function () {self.currentRunningAction = null;});
+                                    .then(function () {self._showMaster(element, closeEventChannel, closeEventTopics);})
+                                    .catch(function () {self._setIsRunning(false);});
                                 }
                             })
                             .catch(function (error) {
@@ -169,28 +158,26 @@
                 }
             },
 
-            _showMaster: function (e) {
-            	if (this.currentRunningAction._masterComponent.noUI === true) {
-            	    this.currentRunningAction = null;
-                }
-
-                if (this.currentRunningAction && (!this.currentRunningAction._masterComponent.hasOwnProperty('noUI') || this.currentRunningAction._masterComponent.noUI === false)) {
+            _showMaster: function (element, closeEventChannel, closeEventTopics) {
+            	if (element.noUI === true) { // is this is the end of action execution?
+                     self._setIsRunning(false);
+                 } else { // otherwise show master in dialog
                     var self = this;
                     // if there would be a master UI then need to subscribe for this dialog closing messages
-                    if (self._closeEventChannel && self._closeEventTopics && self._closeEventTopics.length > 0) {
+                    if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
                         self._subscriptions = [];
-                        for (var index = 0; index < self._closeEventTopics.length; index++) {
+                        for (var index = 0; index < closeEventTopics.length; index++) {
                             self._subscriptions.push(
                                 postal.subscribe({
-                                    channel: self._closeEventChannel,
-                                    topic: self._closeEventTopics[index],
+                                    channel: closeEventChannel,
+                                    topic: closeEventTopics[index],
                                     callback: self._handleCloseEvent.bind(self)
                                 }));
                         }
                     }
                     
-                    if (this.$.elementLoader.prefDim) {
-                    	var prefDim = this.$.elementLoader.prefDim;
+                    if (element.prefDim) {
+                    	var prefDim = element.prefDim;
                     	this.style.width = prefDim.width() + prefDim.unit;
                         this.style.height = prefDim.height() + prefDim.unit;
                     } else {
@@ -208,7 +195,6 @@
             },
 
             _dialogOpened: function (e, detail, source) {
-                this.currentRunningAction = null;
                 this._setIsRunning(false);
             },
 

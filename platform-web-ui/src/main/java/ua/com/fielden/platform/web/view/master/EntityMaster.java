@@ -15,12 +15,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
-import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * Represents entity master.
@@ -28,54 +25,46 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  * @author TG Team
  *
  */
-public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
+public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     private final Class<T> entityType;
     private final Class<? extends IEntityProducer<T>> entityProducerType;
-    private final ISimpleMasterConfig<T> smConfig;
+    private final IMaster<T> masterConfig;
     private final ICompanionObjectFinder coFinder;
     private final Injector injector;
-    private final boolean noUIMaster;
 
     /**
      * Creates master for the specified <code>entityType</code>, <code>smConfig</code> and <code>entityProducerType</code>.
      *
      * @param entityType
      * @param entityProducerType
-     * @param smConfig
+     * @param masterConfig
      *
      */
     public EntityMaster(
             final Class<T> entityType,
             final Class<? extends IEntityProducer<T>> entityProducerType,
-            final ISimpleMasterConfig<T> smConfig,
+            final IMaster<T> masterConfig,
             final Injector injector) {
         this.entityType = entityType;
         this.entityProducerType = entityProducerType;
-        this.noUIMaster = smConfig == null;
-        this.smConfig = smConfig == null ? createDefaultConfig(entityType) : smConfig;
+        this.masterConfig = masterConfig == null ? createDefaultConfig(entityType) : masterConfig;
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.injector = injector;
     }
 
-    private ISimpleMasterConfig<T> createDefaultConfig(final Class<T> entityType) {
-        final ISimpleMasterConfig<T> master = new SimpleMasterBuilder<T>().forEntity(entityType)
-                .addAction(MasterActions.VALIDATE)
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("[]"))
-                .setLayoutFor(Device.TABLET, Optional.empty(), ("[]"))
-                .setLayoutFor(Device.MOBILE, Optional.empty(), ("[]"))
-                .done();
-        return master;
+    private IMaster<T> createDefaultConfig(final Class<T> entityType) {
+        return new NoUiMasterConfig<T>(entityType);
     }
 
     /**
      * Creates master for the specified <code>entityType</code> and <code>smConfig</code> (no producer).
      *
      * @param entityType
-     * @param smConfig
+     * @param config
      *
      */
-    public EntityMaster(final Class<T> entityType, final ISimpleMasterConfig<T> smConfig, final Injector injector) {
-        this(entityType, null, smConfig, injector);
+    public EntityMaster(final Class<T> entityType, final IMaster<T> config, final Injector injector) {
+        this(entityType, null, config, injector);
     }
 
     public Class<T> getEntityType() {
@@ -109,14 +98,12 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
      * @return
      */
     public IValueMatcherWithContext<T, ?> createValueMatcher(final String propertyName) {
-        final Class<? extends IValueMatcherWithContext<T, ?>> matcherType = smConfig.matcherTypeFor(propertyName);
-        final IValueMatcherWithContext<T, ?> matcher;
-        if (matcherType != null) {
-            matcher = injector.getInstance(matcherType);
-        } else {
-            matcher = createDefaultValueMatcher(propertyName, entityType, coFinder);
+        final Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherType = masterConfig.matcherTypeFor(propertyName);
+        if (matcherType.isPresent()) {
+            return injector.getInstance(matcherType.get());
         }
-        return matcher;
+
+        return createDefaultValueMatcher(propertyName, entityType, coFinder);
     }
 
     /**
@@ -135,16 +122,49 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
     }
 
     @Override
-    public IRenderable build() {
-        if (noUIMaster) {
-            return new IRenderable() {
+    public DomElement render() {
+        return masterConfig.render().render();
+    }
+
+    /**
+     * An entity master that has no UI. Its main purpose is to be used for functional entities that have no visual representation.
+     *
+     * @author TG Team
+     *
+     * @param <T>
+     */
+    private static class NoUiMasterConfig<T extends AbstractEntity<?>> implements IMaster<T> {
+
+        private final IRenderable renderable;
+
+        public NoUiMasterConfig(final Class<T> entityType) {
+            final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
+                    .replace("<!--@imports-->", "")
+                    .replace("@entity_type", entityType.getSimpleName())
+                    .replace("<!--@tg-entity-master-content-->", "")
+                    .replace("//@ready-callback", "")
+                    .replace("@noUiValue", "true")
+                    .replace("@saveOnActivationValue", "true");
+
+            renderable = new IRenderable() {
                 @Override
                 public DomElement render() {
-                    return new InnerTextElement(smConfig.render().render().toString().replace("noUI:{type: Boolean,value:false}", "noUI:{type: Boolean,value:true}"));
+                    return new InnerTextElement(entityMasterStr);
                 }
             };
-        } else {
-            return smConfig.render();
+
         }
+
+        @Override
+        public IRenderable render() {
+            return renderable;
+        }
+
+        @Override
+        public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
+            return Optional.empty();
+        }
+
     }
+
 }

@@ -20,8 +20,9 @@
     		_process-saver-response="[[_processSaverResponse]]"
     		_process-saver-error="[[_processSaverError]]"
     		_saver-loading="{{_saverLoading}}">
-   	        <!--EDITORS AND ENTITY ACTIONS DOM (GENERATED) -->
-   	        <!--@editors_and_actions-->
+   	        <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
+   	        <!--@tg-entity-master-content-->
+   	        <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
    	        
     	</tg-entity-master>
     </template>
@@ -38,7 +39,20 @@
         		/**
         		 * The property which indicates whether entity master is 'UI-less'.
         		 */
-	            noUI:{type: Boolean,value:false}
+	            noUI: {
+	                type: Boolean,
+	                value: @noUiValue
+	            },
+	            
+	            /** 
+	             * This property govenrs master behavior upon its activation for the first time (i.e. when master element was instantiated and bound to an entit instance).
+	             * If saveOnActivation is true then entity saving occurs automatically just before the master UI gets displayed.
+	             * It most conveniently used for masters that represent functional entities (i.e. actions).
+	             * */
+	            saveOnActivation: {
+	                type: Boolean,
+	                value: @saveOnActivationValue
+	            }
         	},
 
             /**
@@ -47,14 +61,10 @@
             ready: function () {
                 var self = this;
                 
-                // LAYOUT CONFIG (GENERATED)
-                //@layoutConfig
-
-                // ENTITY ACTIONS (GENERATED)
-                //@entityActions
-                // PROPERTY ACTIONS (GENERATED)
-                //@propertyActions
-            },
+                //START OF GENERATED JS LOGIC
+                //@ready-callback
+                //END OF GENERATED JS LOGIC
+            },// end of ready
             
             _masterDom: function () {
             	return this.$.masterDom;

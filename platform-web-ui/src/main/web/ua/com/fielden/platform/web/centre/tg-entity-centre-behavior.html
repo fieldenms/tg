@@ -38,10 +38,11 @@
                 },
 
                 /**
-                 * The function to return 'master' entity (if this entity centre is dependent, i.e. the part of some compound master).
+                 * The function to return 'master' entity (if this entity centre is dependent, e.g. the part of some compound master).
                  */
                 getMasterEntity: {
-                    type: Function
+                    type: Function,
+                    observer: '_getMasterEntityAssigned'
                 },
 
                 /**
@@ -218,6 +219,13 @@
                 },
 
                 /**
+                 * Placeholder function for show-dialog attribute of tg-ui-action, which is used in case of insertion points
+                 */
+                _showInsertionPoint: {
+                    type: Function
+                },
+
+                /**
                  * The function to be bound inside selection criteria, to provide 'selected entities' part of context.
                  */
                 _getSelectedEntities: {
@@ -231,6 +239,22 @@
                 	type: Function
                 }
             },
+            
+            _getMasterEntityAssigned: function (newValue, oldValue) {
+                var self = this;
+       	 		if (oldValue === undefined) {
+       	 			self.retrieve().then(function () {
+                        if (self.autoRun) {
+                            self.run();
+              			}
+              		});
+       	 		} else {
+                    if (self.autoRun) {
+                        self.run();
+          			}
+	       	    }
+            },
+            
 
             _computeSaverDisabled: function (_centreChanged) {
                 return !this.canSave(_centreChanged);
@@ -431,6 +455,11 @@
                     }.bind(self), 1);
                 }).bind(self);
                 
+                self._showInsertionPoint = (function (action) {
+                    this.async(function () {
+                    	this._activateInsertionPoint('ip' + action.numberOfAction, action);
+                    }.bind(self), 1);
+                }).bind(self);
                 /**
                  * Activate the view with the result set.
                  */
@@ -570,9 +599,8 @@
              */
             refreshEntities: function (entities) {
                 if (this.$.egi.egiModel.length > 0) {
-                    if (entities !== null && entities.length > 0) {
-                        this._entitiesThatShouldBeUpdated = entities;
-                        this.$.selection_criteria.refreshEntities(this._entitiesThatShouldBeUpdated);
+                    if (entities !== null && entities.length > 0) {                        
+                        this.$.selection_criteria.refreshEntities(entities, (function (entities) {this._entitiesThatShouldBeUpdated = entities;}).bind(this)); // this._entitiesThatShouldBeUpdated
                     } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
                         this.currentPage();
                     }

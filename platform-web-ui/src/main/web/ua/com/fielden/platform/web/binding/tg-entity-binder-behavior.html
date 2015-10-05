@@ -357,9 +357,8 @@
                         var ser = this._serialiser().serialise(context);
                         this._ajaxRetriever().body = JSON.stringify(ser);
                 	}
-                    var promise = this._ajaxRetriever().generateRequest().completes;
                     this._startRefreshCycleModeForEditors();
-                    return promise;
+                    return this._ajaxRetriever().generateRequest().completes;
                 }).bind(self);
                 
                 // calbacks, that will potentially be augmented by tg-action child elements:
@@ -376,7 +375,9 @@
                     
                     this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
                     // custom external action
-                    this.postRetrieved(entity, newBindingEntity, customObject);
+                    if (this.postRetrieved) {
+	                    this.postRetrieved(entity, newBindingEntity, customObject);
+                    }
                     
                     // console.timeEnd('criteria-entity-retrieval');
                     console.timeEnd('loading-all');
@@ -578,7 +579,7 @@
              * Initialises a special state for the editors called "refresh cycle". In this state
              * the editors promotes their values through the chain: entity => editingValue (commit) => commValue => acceptedValue.
              *
-             * If the state is simple -- the value promotes through the next chain: editingValue (commit) => commValue => acceptedValue =>
+             * If the state is simple -- the value promotes through the following chain: editingValue (commit) => commValue => acceptedValue =>
              * => entity prop value (validate) => new entity prop.
              */
             _startRefreshCycleModeForEditors: function () {
