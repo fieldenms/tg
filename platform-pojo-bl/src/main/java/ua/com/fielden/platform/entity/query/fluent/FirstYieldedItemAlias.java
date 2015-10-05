@@ -32,4 +32,14 @@ public class FirstYieldedItemAlias<T> extends AbstractQueryLink implements IFirs
     public PrimitiveResultQueryModel modelAsPrimitive() {
         return new PrimitiveResultQueryModel(getTokens().getValues());
     }
+
+    @Override
+    public T as(Enum alias) {
+        return as(alias.toString());
+    }
+
+    @Override
+    public T asRequired(Enum alias) {
+        return asRequired(alias.toString());
+    }
 }

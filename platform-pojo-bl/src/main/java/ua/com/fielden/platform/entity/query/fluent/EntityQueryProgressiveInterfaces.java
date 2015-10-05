@@ -291,8 +291,12 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IFirstYieldedItemAlias<T> {
         T as(String alias);
+        
+        T as(Enum alias);
 
         T asRequired(String alias);
+
+        T asRequired(Enum alias);
 
         <E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
 
@@ -302,7 +306,11 @@ public interface EntityQueryProgressiveInterfaces {
     interface ISubsequentYieldedItemAlias<T> /*extends ICompletedAndYielded*/{
         T as(String alias);
 
+        T as(Enum alias);
+
         T asRequired(String alias);
+
+        T asRequired(Enum alias);
     }
 
     interface IArithmeticalOperator<T> {

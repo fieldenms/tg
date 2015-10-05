@@ -21,4 +21,14 @@ public class SubsequentYieldedItemAlias<T, ET extends AbstractEntity<?>> extends
     public ISubsequentCompletedAndYielded<ET> asRequired(final String alias) {
         return new SubsequentCompletedAndYielded<ET>(getTokens().asRequired(alias));
     }
+
+    @Override
+    public ISubsequentCompletedAndYielded<ET> as(Enum alias) {
+        return as(alias.toString());
+    }
+
+    @Override
+    public ISubsequentCompletedAndYielded<ET> asRequired(Enum alias) {
+        return asRequired(alias.toString());
+    }
 }
