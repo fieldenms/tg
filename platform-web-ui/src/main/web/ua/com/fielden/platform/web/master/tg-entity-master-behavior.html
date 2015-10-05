@@ -194,12 +194,10 @@
 				    // Context creator should assigned only after successful master entity saving.
 				    // In case of successful assignment it gets promoted to embedded views by means of binding.
 				    if (potentiallySavedEntity.isValid()) {
-				        if (!this._createContextHolderForEmbeddedViews) {
-						    this._createContextHolderForEmbeddedViews = (function () {
-				                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-				                return this._createSavingInfoHolder(this._reset(holder), potentiallySavedEntity);
-			                }).bind(this);
-				        }
+					    this._createContextHolderForEmbeddedViews = (function () {
+			                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+			                return this._createSavingInfoHolder(this._reset(holder), potentiallySavedEntity);
+		                }).bind(this);
 				    }
 				    
 				    return potentiallySavedEntity.isValid();
