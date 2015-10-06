@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import java.util.Date;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -11,14 +9,10 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
-import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.markers.IColourType;
 
 /**
  * Master entity object.
@@ -40,35 +34,13 @@ public class TgEntityForColourMaster extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Boolean prop", desc = " Boolean prop description")
-    private Boolean booleanProp;
+    private boolean booleanProp;
 
     @IsProperty
     @MapTo
-    @Title(value = "Date prop", desc = "Date prop desc")
-    private Date dateProp;
-
-    @IsProperty
-    @MapTo
+    @PersistedType(userType = IColourType.class)
     @Title(value = "Colour prop", desc = "Colour prop description")
     private Colour colourProp;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Producer initialised prop", desc = "Producer initialised prop desc")
-    private TgEntityForColourMaster producerInitProp;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Domain initialised prop", desc = "The property that was initialised directly inside Entity type definition Java class")
-    private String domainInitProp = "ok";
-
-    @IsProperty
-    @MapTo
-    @Required
-    @BeforeChange(@Handler(RequiredValidatedPropValidator.class))
-    @AfterChange(RequirednessDefiner.class)
-    @Title(value = "Required validated prop", desc = "Required validated prop desc")
-    private Integer requiredValidatedProp;
 
     @Observable
     public TgEntityForColourMaster setColourProp(final Colour colourProp) {
@@ -81,22 +53,12 @@ public class TgEntityForColourMaster extends AbstractEntity<String> {
     }
 
     @Observable
-    public TgEntityForColourMaster setDateProp(final Date dateProp) {
-        this.dateProp = dateProp;
-        return this;
-    }
-
-    public Date getDateProp() {
-        return dateProp;
-    }
-
-    @Observable
-    public TgEntityForColourMaster setBooleanProp(final Boolean booleanProp) {
+    public TgEntityForColourMaster setBooleanProp(final boolean booleanProp) {
         this.booleanProp = booleanProp;
         return this;
     }
 
-    public Boolean getBooleanProp() {
+    public boolean getBooleanProp() {
         return booleanProp;
     }
 
@@ -108,36 +70,6 @@ public class TgEntityForColourMaster extends AbstractEntity<String> {
 
     public String getStringProp() {
         return stringProp;
-    }
-
-    @Observable
-    public TgEntityForColourMaster setDomainInitProp(final String domainInitProp) {
-        this.domainInitProp = domainInitProp;
-        return this;
-    }
-
-    public String getDomainInitProp() {
-        return domainInitProp;
-    }
-
-    @Observable
-    public TgEntityForColourMaster setProducerInitProp(final TgEntityForColourMaster producerInitProp) {
-        this.producerInitProp = producerInitProp;
-        return this;
-    }
-
-    public TgEntityForColourMaster getProducerInitProp() {
-        return producerInitProp;
-    }
-
-    @Observable
-    public TgEntityForColourMaster setRequiredValidatedProp(final Integer requiredValidatedProp) {
-        this.requiredValidatedProp = requiredValidatedProp;
-        return this;
-    }
-
-    public Integer getRequiredValidatedProp() {
-        return requiredValidatedProp;
     }
 
 }

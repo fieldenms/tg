@@ -98,15 +98,21 @@
 			this.$.editorDom._editorKind = "COLOUR";
 		},
 
+    
 		convertToString: function (value) {
-			return "" + value;
+            if(value === null){
+                return "";
+            } else {
+			return value.hashlessUppercasedColourValue;
+            }
 		},
-
+        
 		convertFromString: function (strValue) {
 			if (strValue.length !== 3 && strValue.length !== 6 && strValue !== "") {
 				throw "The entered check value is incorrect [" + strValue + "].";
+			} else { 
+				return {hashlessUppercasedColourValue: strValue};
 			}
-			return strValue;
 		},
 
 		_createDialog: function () {
