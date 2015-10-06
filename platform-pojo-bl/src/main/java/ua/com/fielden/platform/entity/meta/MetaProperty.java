@@ -19,11 +19,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javassist.util.proxy.ProxyFactory;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -787,11 +786,18 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                     return currValue == null || !currValue.equals(getOriginalValue());
                 }
             } else {
-                final Integer currentSize = ((Collection<?>) getter.invoke(entity)).size();
-                return !currentSize.equals(getCollectionPrevSize());
+                if (getCollectionPrevSize() == null){
+                    // if getCollectionPrevSize() == null this means that the property value was not assigned via setter
+                    // this in turn means that if the property has a non-null value then it is a default one, assigned in class definition
+                    // and should be ignored in determining "changed from original" condition
+                    return false;
+                } else {
+                    final Integer currentSize = ((Collection<?>) getter.invoke(entity)).size();
+                    return !currentSize.equals(getCollectionPrevSize());
+                }
             }
         } catch (final Exception e) {
-            // TODO change to logging
+            logger.error(e.getMessage(), e);
         }
         return false;
     }
