@@ -2,7 +2,7 @@ package ua.com.fielden.platform.sample.domain;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducer;
+import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
  * @author TG Team
  *
  */
-public class TgEntityForColourMasterProducer extends DefaultEntityProducer<TgEntityForColourMaster>implements IEntityProducer<TgEntityForColourMaster> {
+public class TgEntityForColourMasterProducer extends DefaultEntityProducerWithContext<TgEntityForColourMaster, TgEntityForColourMaster>implements IEntityProducer<TgEntityForColourMaster> {
     private final ITgEntityForColourMaster coTgEntityForColourMaster;
 
     @Inject
