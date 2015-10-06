@@ -8,7 +8,7 @@
 <link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
-<dom-module id="tg-colour-picker1">
+<dom-module id="tg-colour-picker">
 	<style>
 		.color-box {
 			position: relative;
@@ -72,12 +72,12 @@
 	<template>
 		<paper-input-container always-float-label>
 			<div class="layout horizontal center">
-				<div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(colorString)]]">
-					<iron-icon class="small-icon" icon="close" style$="[[_calcSmallIconStyle(colorString)]]"></iron-icon>
+				<div on-tap="open" class="small-box" style$="[[_calcColorBoxStyle(color, colorString)]]">
+					<iron-icon class="small-icon" icon="icons:close" style$="[[_calcSmallIconStyle(colorString)]]"></iron-icon>
 				</div>
-				<label>Hex code colour value (use only 0-9, a-f, A-F)</label>
-				<div style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
-				<input bind-value="{{colorString}}" value="{{colorString::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
+				<label>Hex code colour value (use only 0-9, A-F)</label>
+				<div prefix style$="[[_calcColorPrefixStyle(colorString)]]">#</div>
+				<input bind-value="{{colorString}}" value="{{color::input}}" is="iron-input" style$="[[_calcColorTextStyle(colorString)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" id='inputWithButton'>
 			</div>
 		</paper-input-container>
 		<iron-dropdown positionTarget="fab" id="dropdown">
@@ -90,16 +90,16 @@
 							</div>
 							<iron-icon class="icon" icon="icons:close"></iron-icon>
 						</div>
-						<template is="dom-repeat" items="{{firstLineColors}}" as="colorString">
-							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(colorString)]]">
-								<div class="dummy-box" style$="[[_returnBackgroundColor(colorString)]]"></div>
+						<template is="dom-repeat" items="{{firstLineColors}}" as="color">
+							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">
+								<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>
 							</div>
 						</template>
 					</div>
 					<div class="layout horizontal">
-						<template class="layout horizontal" is="dom-repeat" items="{{secondLineColors}}" as="colorString">
-							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(colorString)]]">
-								<div class="dummy-box" style$="[[_returnBackgroundColor(colorString)]]"></div>
+						<template class="layout horizontal" is="dom-repeat" items="{{secondLineColors}}" as="color">
+							<div class="color-box" on-tap="colorSelected" style$="[[_returnBackgroundColor(color)]]">
+								<div class="dummy-box" style$="[[_returnBackgroundColor(color)]]"></div>
 							</div>
 						</template>
 					</div>
@@ -110,42 +110,42 @@
 </dom-module>
 <script>
 	Polymer({
-		is: "tg-colour-picker1",
+		is: "tg-colour-picker",
 		ready: function () {
-			this.firstLineColors = ['F44336', 'FF9800', 'FFEB3B', '4CAF50', '009688', '00BCD4', '3F51B5', '9C27B0'];
-			this.secondLineColors = ['D7CCC8', 'EF9A9A', 'FFCC80', 'FFF59D', 'A5D6A7', '80CBC4', '80DEEA', '9FA8DA', 'CE93D8'];
+			this.firstLineColors = ['#F44336', '#FF9800', '#FFEB3B', '#4CAF50', '#009688', '#00BCD4', '#3F51B5', '#9C27B0'];
+			this.secondLineColors = ['#D7CCC8', '#EF9A9A', '#FFCC80', '#FFF59D', '#A5D6A7', ' #80CBC4', '#80DEEA', '#9FA8DA', '#CE93D8'];
 		},
 		properties: {
-			//			color: {
-			//				type: String,
-			//				notify: true
-			//			},
+			color: {
+				type: String,
+				notify: true
+			},
 			colorString: {
 				type: String,
 				notify: true,
 				value: null
 			},
 		},
-		_returnBackgroundColor(colorString) {
-			return "background-color: #" + colorString;
+		_returnBackgroundColor(color) {
+			return "background-color:" + color;
 		},
 		colorSelected: function (e, detail) {
-			this.colorString = (rgbToHex(e.srcElement.style['background-color'])).substring(1);
-			//			this.colorString = this.color.substring(1);
+			this.color = rgbToHex(e.srcElement.style['background-color']);
+			this.colorString = this.color.substring(1);
 			this.$.dropdown.close();
 		},
 		nonColorSelected: function (e, detail) {
-			//			this.color = null;
+			this.color = null;
 			this.colorString = null;
 			this.$.dropdown.close();
 
 		},
-		_calcColorBoxStyle: function (colorString) {
+		_calcColorBoxStyle: function (color, colorString) {
 			if (colorString === null) {
 				return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
 			}
 			if (colorString.length === 3 || colorString.length === 6) {
-				return "  border: 2px solid " + ColorLuminance('#' + colorString, -0.1) + ";background-color: #" + colorString;
+				return "  border: 2px solid " + ColorLuminance(color, -0.1) + ";background-color: " + color;
 			} else {
 				return "background-color: #FAFAFA; border: 2px solid #BDBDBD;";
 			}
@@ -185,14 +185,14 @@
 		},
 	});
 
-	function rgbToHex(colorString) {
-		if (colorString === null) {
-			return colorString;
+	function rgbToHex(color) {
+		if (color === null) {
+			return color;
 		}
-		if (colorString.length === 3 || colorString.length === 6) {
-			return colorString;
+		if (color.substr(0, 1) === "#") {
+			return color;
 		}
-		var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(colorString),
+		var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(color),
 			r = parseInt(nums[2], 10).toString(16),
 			g = parseInt(nums[3], 10).toString(16),
 			b = parseInt(nums[4], 10).toString(16);
