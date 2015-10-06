@@ -44,5 +44,4 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
 
         return new SelectionCriteriaLayoutBuilder<T>(builder).setLayoutFor(device, orientation, flexString);
     }
-
 }

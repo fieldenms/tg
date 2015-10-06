@@ -1,9 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/components/tg-time.html">
-<link rel="import" href="/tg-web-app/tg-app-config.html">
+<link rel="import" href="/app/tg-app-config.html">
 
 <dom-module id="tg-calendar">
 	<style>
@@ -266,9 +267,7 @@
 			 */
 			_adjustShownMonth: function (shownDate) {
 				if (this.shownMonth !== shownDate.getMonth() || this.shownYear !== shownDate.getFullYear()) {
-					this.shownMonthName = shownDate.toLocaleString(this.$.appConfig.locale, {
-						month: "long"
-					});
+					this.shownMonthName = moment(shownDate).format("MMMM");
 					this.shownMonth = shownDate.getMonth();
 					this.shownYear = shownDate.getFullYear();
 					this.weeks = createMonth(this.shownYear, this.shownMonth);
@@ -286,12 +285,8 @@
 			 * Updates the calendar information according to specified date.
 			 */
 			_adjustDate: function (date) {
-				this.dayName = date.toLocaleString(this.$.appConfig.locale, {
-					weekday: "long"
-				});
-				this.monthName = date.toLocaleString(this.$.appConfig.locale, {
-					month: "short"
-				}).toUpperCase();
+				this.dayName = moment(date).format("dddd");
+				this.monthName = moment(date).format("MMM").toUpperCase();
 				this.day = date.getDate();
 				this.year = date.getFullYear();
 			},

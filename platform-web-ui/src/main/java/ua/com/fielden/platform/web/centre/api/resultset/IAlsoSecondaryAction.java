@@ -9,8 +9,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IAlsoSecondaryAction<T extends AbstractEntity<?>> extends IResultSetBuilder5CustomPropAssignment<T> {
+public interface IAlsoSecondaryAction<T extends AbstractEntity<?>> extends IResultSetBuilder8CustomPropAssignment<T> {
 
 
-    IResultSetBuilder4SecondaryAction<T> also();
+    IResultSetBuilder7SecondaryAction<T> also();
 }

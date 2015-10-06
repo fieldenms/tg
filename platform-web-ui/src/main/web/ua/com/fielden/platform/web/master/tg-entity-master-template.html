@@ -4,7 +4,6 @@
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 
 <!-- TODO this import should be generated <link rel="import" href="/resources/master/actions/tg-action.html"> -->
-<!-- <link rel="import" href="/resources/components/tg-scroll-container.html"> -->
 
 <dom-module id="tg-@entity_type-master"> <!-- TODO layout vertical -->
     <template>
@@ -21,11 +20,10 @@
     		_process-saver-response="[[_processSaverResponse]]"
     		_process-saver-error="[[_processSaverError]]"
     		_saver-loading="{{_saverLoading}}">
-   	        <!--EDITORS AND ENTITY ACTIONS DOM (GENERATED) -->
-   	        <!--@editors_and_actions-->
+   	        <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
+   	        <!--@tg-entity-master-content-->
+   	        <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
    	        
-	        <!--<tg-scroll-container fit on-scroll="{{_handleScroll}}">-->
-	        <!--</tg-scroll-container>-->
     	</tg-entity-master>
     </template>
 </dom-module>
@@ -41,7 +39,20 @@
         		/**
         		 * The property which indicates whether entity master is 'UI-less'.
         		 */
-	            noUI:{type: Boolean,value:false}
+	            noUI: {
+	                type: Boolean,
+	                value: @noUiValue
+	            },
+	            
+	            /** 
+	             * This property govenrs master behavior upon its activation for the first time (i.e. when master element was instantiated and bound to an entit instance).
+	             * If saveOnActivation is true then entity saving occurs automatically just before the master UI gets displayed.
+	             * It most conveniently used for masters that represent functional entities (i.e. actions).
+	             * */
+	            saveOnActivation: {
+	                type: Boolean,
+	                value: @saveOnActivationValue
+	            }
         	},
 
             /**
@@ -50,14 +61,10 @@
             ready: function () {
                 var self = this;
                 
-                // LAYOUT CONFIG (GENERATED)
-                //@layoutConfig
-
-                // ENTITY ACTIONS (GENERATED)
-                //@entityActions
-                // PROPERTY ACTIONS (GENERATED)
-                //@propertyActions
-            },
+                //START OF GENERATED JS LOGIC
+                //@ready-callback
+                //END OF GENERATED JS LOGIC
+            },// end of ready
             
             _masterDom: function () {
             	return this.$.masterDom;

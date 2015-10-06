@@ -85,7 +85,7 @@
                  */
                 _pageCapacity: {
                 	type: Number,
-                	value: 10
+                	value: 30
                 },
                 
                 _centreChanged: {
@@ -138,7 +138,6 @@
                 	type: Number,
                 	notify: true
                 },
-
                 
                 /**
                  * Default implementation for postRun callback.
@@ -160,6 +159,11 @@
                 _runnerLoading: {
                 	type: Boolean,
                 	observer: '_runnerLoadingChanged'
+                },
+                
+                /** A promise pointing to the last (resolved or otherwise) entities refresh call. */
+                _refreshPromiseInProgress: {
+                    type: Object
                 }
         	},
 
@@ -293,19 +297,26 @@
              */
             currentPage: function () {
                 this._validatePageCount();
-                this._execute(false);
+                return this._execute(false);
             },
 
             /**
-             * Starts the process of refreshing the specified 'entities'.
+             * Starts the process of refreshing the specified 'entities', but only in case of there is no other refresh request in progress.
              *
              * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
              *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed
              *     from the result-set if they became unmatchable to the selection criteria after modification).
+             *
+             * @param entities -- entities to be refreshed and be replaced or removed from EGI model. 
+             * @param assignmntFun -- assignment function, which ensures that any state related changes happen in correct order during async execution. 
+             *                        For example, tg-entity-centre-behavior needs to have its property _entitiesThatShouldBeUpdated assigned for proper refresh execution.
+             *                        However, where there are several refresh calls and the assignment of that property would happens outside of the execution context for those calls than refresh would not work correctly 
+             *                        (i.e. the first refresh call would potentially use values assigned in some subsequent call.).
+             *                        The use of this assignment function should be thought of as a way to implement parameter stack, but at an object level rather than just at the function call level.
              */
-            refreshEntities: function (entities) {
+            refreshEntities: function (entities, assignmentFun) {
                 this._validatePageCount();
-                this._execute(false, entities);
+                return this._execute(false, entities, assignmentFun);
             },
 
             /**
@@ -317,7 +328,7 @@
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
                 }
                 this.pageNumber = this.pageNumber + 1;
-                this._execute(false);
+                return this._execute(false);
             },
 
             /**
@@ -329,7 +340,7 @@
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
                 }
                 this.pageNumber = this.pageNumber - 1;
-                this._execute(false);
+                return this._execute(false);
             },
 
             /**
@@ -341,7 +352,7 @@
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = 0;
-                this._execute(false);
+                return this._execute(false);
             },
 
             /**
@@ -353,7 +364,7 @@
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = this.pageCount - 1;
-                this._execute(false);
+                return this._execute(false);
             },
             
             _canPrev: function (pageNumber) {
@@ -380,45 +391,57 @@
                 this._openToast(null, "Loading data", false, "", true);
                 this.pageNumber = 0;
                 this.pageCount = null;
-                this._execute(true);
+                return this._execute(true);
             },
 
             /**
              * Starts the process of centre execution. It does not alter
              */
-            _execute: function (isRunAction, entitiesToRefresh) {
+            _execute: function (isRunAction, entitiesToRefresh, assignmentFun) {
                 var self = this;
 
                 if (self._runningInProgress()) {
                     console.warn("Refresh is already in progress...");
-                    return;
+                    self._refreshPromiseInProgress = self._refreshPromiseInProgress
+                    .then(function() {
+                        return self._createPromise(isRunAction, entitiesToRefresh, assignmentFun);
+                    });
+                    return self._refreshPromiseInProgress;
                 }
 
-                self._startRefreshCycleModeForEditors();
-
-                if (isRunAction) {
-                    self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                }
-
-                // cancel previous validation before starting saving process -- it includes validation process internally!
-                self._validator().abortValidationIfAny();
-
-                // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
-                self._runModifiedProperties(
-                	self._createContextHolderForRunning(function() {
-                			return self._reset(self._persistedModifiedPropertiesHolder);
-                		}, 
-                		self.requireSelectedEntities, 
-                		self.requireMasterEntity, 
-                		entitiesToRefresh
-                	)
-                );
-                // if (self._hasModified(holder)) {
-                //     self._saveModifiedProperties(self._reset(holder));
-                // } else {
-                //     self._validator().validate(self._reset(holder));
-                // }
+                self._refreshPromiseInProgress = self._createPromise(isRunAction, entitiesToRefresh, assignmentFun);
+                return self._refreshPromiseInProgress;
+            },
+            
+            _createPromise: function (isRunAction, entitiesToRefresh, assignmentFun) {
+                var self = this;
+            
+                return new Promise(function(resolve, reject) {
+                    self._startRefreshCycleModeForEditors();
+    
+                    if (isRunAction) {
+                        self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                    }
+    
+                    // cancel previous validation before starting saving process -- it includes validation process internally!
+                    self._validator().abortValidationIfAny();
+                    if (assignmentFun) {
+                        assignmentFun(entitiesToRefresh);
+                    }
+                    resolve(
+	                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+	                    //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
+                    	self._runModifiedProperties(
+	                    	self._createContextHolderForRunning(function() {
+	                    			return self._reset(self._persistedModifiedPropertiesHolder);
+	                    		}, 
+	                    		self.requireSelectedEntities, 
+	                    		self.requireMasterEntity, 
+	                    		entitiesToRefresh
+	                    	)
+                    	)
+                    );
+                });
             },
 
             idsToRefresh: function (entities) {
@@ -436,7 +459,7 @@
              */
             _runModifiedProperties: function (contextHolder) {
                 this._ajaxRunner().body = JSON.stringify(this._serialiser().serialise(contextHolder));
-                this._ajaxRunner().generateRequest();
+                return this._ajaxRunner().generateRequest().completes;
             },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
@@ -536,7 +559,7 @@
             },
             
             _runningInProgress: function () {
-                return this._ajaxRunner().loading;
+                return this._ajaxRunner().loading === true;
             }
         };
     	

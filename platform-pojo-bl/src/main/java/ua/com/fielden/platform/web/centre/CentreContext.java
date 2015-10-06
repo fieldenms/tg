@@ -51,10 +51,14 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         return Collections.unmodifiableList(selectedEntities);
     }
 
-    public void setSelectedEntities(final List<T> selectedEntities) {
+    @SuppressWarnings("unchecked")
+	public void setSelectedEntities(final List<T> selectedEntities) {
         this.selectedEntities.clear();
         if (selectedEntities != null) {
-            this.selectedEntities.addAll(selectedEntities);
+        	for (AbstractEntity<?> el: selectedEntities) {
+        		// let's be smart about types and try to handle the situation with generated types
+        		this.selectedEntities.add((T) el.copy(el.getDerivedFromType()));
+        	}
         }
     }
 

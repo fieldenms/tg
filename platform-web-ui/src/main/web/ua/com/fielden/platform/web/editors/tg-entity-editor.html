@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
@@ -74,7 +75,7 @@
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
     	</tg-editor>
-        <tg-entity-editor-result id="result" on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed"></tg-entity-editor-result>
+        <tg-entity-editor-result id="result" no-auto-focus on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed"></tg-entity-editor-result>
         
         <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -450,9 +451,8 @@
                 if (this._searchQuery /*&& this.hasFocus === true*/ ) {
 
                     self.async((function () {
-                        // close the result overlay, but prevent on-change firing
-                        self.opened = false;
-                        result.close();
+                        // clear previous search result
+                        result.clearSelection();
                     }).bind(self), 1);
 
                     // prepare the AJAX request based on the raw search string
@@ -461,6 +461,7 @@
                     this.$.ajaxSearcher.generateRequest();
                 } else if (result.opened) { // make sure overlay is closed is no search is performed
                     result.close();
+                    this._focusInput();
                 }
             },
             
@@ -472,9 +473,8 @@
                 var result = self.$.result;
                 // make sure to assign reflector to the result object
                 result.reflector = this.reflector();
-
+                
                 result.clearSelection();
-                //self.searching = false;
                 
                 for (var index = 0; index < entities.length; index++) {
                     // Entity is converted to a string representation of its key.
@@ -483,12 +483,24 @@
                     entities[index].key = key;
                     result.pushValue(entities[index]);
                 }
-                
-                if (entities.length > 0) {
-                    document.body.appendChild(this.$.result);
-                    result.open();
-                    this.async(this.notifyResize, 1);
+
+                // There is a need to check whether element already exists before appending it to document.body.
+                // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
+                var elementExists = Polymer.dom(document.body).querySelector("#result");
+                if (!elementExists) {
+                    Polymer.dom(document.body).appendChild(this.$.result);
+                    Polymer.dom.flush();
                 }
+                var self = this;
+                this.async(function () {
+                    if (result.opened) {
+                        self._resultOpened();
+                    } else {                        
+                        result.open();
+                    }
+                    self.notifyResize();
+                    //self.async(self.notifyResize, 1);
+                }, 100);
             },
             
             /**
@@ -520,7 +532,10 @@
             
             _resultOpened: function(e) {
             	this.opened = true;
-            	this.$.result.highlightMatchedParts();
+            	this.async(function () {
+            	    this.$.result.highlightMatchedParts();
+            	}.bind(this), 100);
+            	
             },
             
             _resultClosed: function(e) {
@@ -530,7 +545,6 @@
             		this.opened = false;
             		this._onChange();
             	}
-                
             	Polymer.dom(document.body).removeChild(this.$.result);
             	Polymer.dom.flush();
             },

@@ -1,17 +1,18 @@
 package ua.com.fielden.platform.web.ioc;
 
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
-import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
-import ua.com.fielden.platform.web.test.server.WebGlobalDomainTreeManager;
-
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.binder.AnnotatedBindingBuilder;
+
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
+import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
+import ua.com.fielden.platform.web.test.server.WebGlobalDomainTreeManager;
 
 /**
  * This interface defines <code>Web UI</code> specific IoC binding contract,
@@ -39,6 +40,9 @@ public interface IBasicWebApplicationServerModule {
 
         // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
         bindType(IWebUiConfig.class).toInstance(webApp);
+
+        // bind ISourceController to its implementation as singleton
+        bindType(ISourceController.class).to(SourceControllerImpl.class).in(Scopes.SINGLETON);
     }
 
     /**

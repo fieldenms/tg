@@ -251,7 +251,13 @@ public class DomElement {
             style(value.toString());
             break;
         default:
-            attrs.put(name, new SingleValueAttribute(name, value));
+        	if (value != null && (Boolean.class == value.getClass() || boolean.class == value.getClass())) {
+        		if (Boolean.TRUE.equals(value)) {
+        			attrs.put(name, new NoValueAttribute(name));
+        		}
+        	} else {  
+        		attrs.put(name, new SingleValueAttribute(name, value));
+        	}
             break;
         }
         return this;

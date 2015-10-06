@@ -7,28 +7,77 @@
 </dom-module>
 <script>
     (function () {
-        var importedURLs = {},
-            //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
-            insertElement = function (insertToElement, elementName, attributes) {
-                if (elementName && elementName.toString().length > 0) {
-                    console.time("create-element");
-                    var customElement = document.createElement(elementName);
-                    if (attributes && typeof attributes === "object") {
-                        console.time("attrs-and-append");
-                        for (attr in attributes) {
-                            customElement[attr] = attributes[attr];
-                        }
-                        Polymer.dom(insertToElement).innerHTML = "";
-                        Polymer.dom(insertToElement).appendChild(customElement);
-                    }
-                    return customElement;
+        var importedURLs = {};
+        //Creates the element with specified elementName and attributes and inserts it into insertToElement element.
+        var insertElement = function (insertToElement, elementName, attributes) {
+            if (elementName && elementName.toString().length > 0) {
+                var customElement = document.createElement(elementName);
+                
+                // need to clear prefDim just in case the same loader was alredy used to load some different element
+                insertToElement.prefDim = null; 
+                
+                // assign element properties
+                // but first make sure it is an object as could have been assegned as tg-element-loader attribute instead of property assignment
+                if (attributes && typeof attributes === "string") {
+                    attributes = JSON.parse(attributes);
                 }
-            };
+                
+                if (attributes && typeof attributes === "object") {
+                    for (attr in attributes) {
+                        customElement[attr] = attributes[attr];
+                        if (attr === 'prefDim') {
+                        	insertToElement.prefDim = customElement[attr]; 
+                        }
+                    }
+                }
+                // insert the loaded and instantiated custom element
+                insertToElement.insert(customElement);
+                
+                if (insertToElement.context === undefined) {
+                    return customElement;
+            	} else {
+            	    if (insertToElement.contextProperty) {
+            	        customElement[insertToElement.contextProperty] = insertToElement.context;
+            	        return customElement;
+            	    } else {
+            	        throw new Error("Loader for element " + elementName + " had context provided, but contextProperty is missing.");
+            	    }
+            	}
+            }
+        };
         Polymer({
 
             is: "tg-element-loader",
 
             properties: {
+                /**
+                 * The context for the loaded (into this tg-element-loader) element.
+                 *
+                 * This context gets assigned to the loaded element as soon as: 
+                 *   1. the element is loaded
+                 *   2. context is bound
+                 */
+                context: {
+                    type: Object,
+                    observer: 'contextAssigned'
+                },
+                
+                /**
+                 * Different elements may have different properties that represent a context.
+                 * This property provides a way to specify what element property should be used for context assignment.
+                 */
+                contextProperty: {
+                    type: String
+                },
+                
+				/**
+				 * The element that was loaded by this loader. 
+				 */
+                loadedElement: {
+                    type: Object,
+                    value: null
+                },
+                
                 auto: {
                     type: Boolean,
                     value: false,
@@ -51,6 +100,20 @@
 
                 attrs: {
                     type: String
+                },
+                
+                /** 
+                 * JSON object representing preferred dimensions for the view being imported. This property could be null.
+                 *  The JSON struture is this:
+                 *  {
+                 * 		width: Function, 
+                 * 		height: Function, 
+                 *	 	unit: String
+                 *	 }
+                 */
+                prefDim: {
+                	type: Object,
+                	value: null
                 }
             },
 
@@ -62,41 +125,150 @@
                     }
                 });
             },
-            //Loads the custom element and fires after-load event with loaded element.
+
+            /** Inserts the provided element with prior removal of any existing children. */
+            insert: function (element) {
+                // remove all childrent before appending a new element
+                var child = Polymer.dom(this).firstChild;
+                while (child) {
+                    Polymer.dom(this).removeChild(child);
+                    child = Polymer.dom(this).firstChild;
+                }
+                
+                // append the provided element
+                Polymer.dom(this).appendChild(element);
+                Polymer.dom.flush();
+                
+                this.loadedElement = element;
+            },
+            
+            /** 
+             * Loads a custom element and returns a Promise that could be used to porvide custom loginc upon successful (then) or unsuccessful (catch) result.
+             * For backward compatibility reasons, an "after-load" event is fired in loading was successful.
+             */ 
             load: function () {
-                var self = this,
-                    attributes = this.attrs || {},
-                    elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
-                if (!this.wasLoaded) {
-                    if (this.import && !importedURLs.hasOwnProperty(this.import)) {
-                        console.warn("loading");
-                        console.time("loading");
-                    	console.warn("loading-all");
-                        console.time("loading-all");
-                        this.importHref(this.import, function (e) {
-                            console.timeEnd("loading");
-                            console.warn("inserting-after-load");
-                            console.time("inserting-after-load");
-                            importedURLs[this.import] = "imported";
-                            self.fire('after-load', insertElement(self, elementName, attributes));
-                            // console.timeEnd("create-and-append-element");
-                            // e.target.import is the import document.
-                        }, function (e) {
-                            console.timeEnd("loading");
-                            // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
-                            console.log("error happened", e);
-                            // loading error
-                        });
+                var self = this;
+                var attributes = this.attrs || {};
+                var elementName = this.elementName || (this.import && this.import.split('/').slice(-1)[0].replace('.html', ''));
+
+                console.warn("loading");
+                console.time("loading");
+                console.warn("loading-all");
+                console.time("loading-all");
+                
+                if (this.wasLoaded === true) {
+                	// in case of already loaded an inserted element the only sensible thing to do is to 
+                	// return a resolved Promise with the value of actually loaded element...
+                	return Promise.resolve(self.loadedElement);
+                } else {
+                    self.loadedElement = null;
+                    if (self.import && (!importedURLs.hasOwnProperty(self.import) || importedURLs[self.import] !== "imported")) {
+                        
+                        var promise = new Promise(function (resolve, reject) {
+                        	var href = self.import;
+                        	// check if URI mutation is needed and mutate URI for repeated import if required
+                        	if (importedURLs.hasOwnProperty(self.import)) {
+                        		var mutation = importedURLs[self.import];
+                        		href = href + '?' + mutation;
+                        	}
+                        	
+                        	// proceed with import
+                            var link = self.importHref(href,
+                                // link.onload
+                                function (event) {
+                                    console.timeEnd("loading");
+                                    importedURLs[self.import] = "imported";
+                                    
+                                    // insert the element
+                                    var insertedElement = insertElement(self, elementName, attributes);
+                                    self.wasLoaded = true;
+                                    // resolve the pormise
+                                    resolve(insertedElement);
+
+                                    // fire event for backward compatibility
+                                    self.fire('after-load', insertedElement);
+                                }, 
+                                // link.onerror
+                                function (event) {
+                                    console.timeEnd("loading");
+                             
+                                    // prepare mutation for the repeated invocation of import
+                                    if (!importedURLs.hasOwnProperty(self.import)) {
+                                    	importedURLs[self.import] = 1;
+                                	} else {
+                                		importedURLs[self.import] = importedURLs[self.import] + 1;
+                                	}
+                                    
+                                    Polymer.dom(document.head).removeChild(link);
+                                    Polymer.dom.flush();
+                                    // reject the promise
+                                    reject(new Error('Could not load element <tt>' + elementName + '</tt>.'));
+                                    
+                                    // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
+                                    console.warn("error happened", event);
+                                    // loading error
+                                });
+                        }); // end of promise 
+                        
+                        return promise;
                     } else {
-                        this.fire('after-load', insertElement(this, elementName, attributes));
+                    	return new Promise(function (resolve, reject) {
+                    		
+                    		// insert the element
+                    		var insertedElement = insertElement(self, elementName, attributes);
+                    		self.wasLoaded = true;
+                    		
+                    		// resolve the promise
+                    		resolve(insertedElement);
+                    		
+                    		self.fire('after-load', insertedElement);
+                    	});
                     }
-                    this.wasLoaded = true;
+                    
                 }
             },
+            
+            /** 
+             * Enforces reloading of a resource that has failed to load during previous attampts.
+             * Thsi method should not be confused with the actual element reloading, which would require deregistering of the element and handling of already existing instances.
+             */
             reload: function () {
                 this.wasLoaded = false;
-                this.load();
-            }
+                return this.load();
+            },
+            
+            importHref: function (href, onload, onerror) {
+            	var link = document.createElement('link');
+            	link.rel = 'import';
+            	link.href = href;
+            	if (onload) {
+            		link.onload = onload.bind(this);
+            	}
+            	if (onerror) {
+            		link.onerror = onerror.bind(this);
+            	}
+            	try {
+            		document.head.appendChild(link);
+            	} catch (ex) {
+            		console.warn(ex);
+            	}
+            	return link;
+           	},
+           	
+           	contextAssigned: function (newValue, oldValue) {
+           	 	if (oldValue === undefined && !this.loadedElement) {
+           	 		this.load();
+           	 	} else if (oldValue === undefined && this.loadedElement) {
+           	    	if (this.contextProperty) {
+           	    		this.loadedElement[this.contextProperty] = newValue;
+         	    	} else {
+         	        	throw new Error("Loader for element " + this.elementName + " had context provided, but contextProperty is missing.");
+         	    	}
+           	    } else if (oldValue !== undefined) {
+           	        // simply reasign the modified context and let the actually loaded element to handle such change
+           	     	this.loadedElement[this.contextProperty] = newValue;
+           	    }
+           	}
         });
     })();
 </script>

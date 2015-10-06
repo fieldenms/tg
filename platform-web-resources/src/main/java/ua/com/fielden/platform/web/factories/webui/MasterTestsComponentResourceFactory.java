@@ -5,11 +5,11 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.web.resources.webui.MasterComponentResource;
-import ua.com.fielden.platform.web.view.master.EntityMaster;
-
 import com.google.inject.Injector;
+
+import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.web.resources.webui.MasterTestsComponentResource;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
  * The server resource factory for entity masters testing (entityType is {@link TgPersistentEntityWithProperties}).
@@ -34,7 +34,7 @@ public class MasterTestsComponentResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new MasterComponentResource(
+            new MasterTestsComponentResource(
                     new EntityMaster<TgPersistentEntityWithProperties>(
                             TgPersistentEntityWithProperties.class,
                             null,

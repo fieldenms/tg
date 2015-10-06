@@ -5,17 +5,16 @@ import java.io.ByteArrayInputStream;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.MediaType;
+import org.restlet.data.Encoding;
+import org.restlet.engine.application.EncodeRepresentation;
+import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
-
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
-import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 import com.google.common.base.Charsets;
+
+import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Resource for tg-reflector component.
@@ -25,14 +24,9 @@ import com.google.common.base.Charsets;
  * @param <T>
  * @param <DAO>
  */
-public class TgReflectorComponentResource extends ServerResource {
-    private final RestServerUtil restUtil;
-    private final TgJackson tgJackson;
-
-    public TgReflectorComponentResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final TgJackson tgJackson) {
-        init(context, request, response);
-        this.restUtil = restUtil;
-        this.tgJackson = tgJackson;
+public class TgReflectorComponentResource extends DeviceProfileDifferentiatorResource {
+    public TgReflectorComponentResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+        super(sourceController, restUtil, context, request, response);
     }
 
     /**
@@ -40,10 +34,7 @@ public class TgReflectorComponentResource extends ServerResource {
      */
     @Override
     protected Representation get() throws ResourceException {
-        final String typeTableRepresentation = new String(restUtil.getSerialiser().serialise(tgJackson.getTypeTable(), SerialiserEngines.JACKSON), Charsets.UTF_8);
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/reflection/tg-reflector.html");
-        final byte[] reflectorComponent = text.
-                replace("@typeTable", typeTableRepresentation).getBytes(Charsets.UTF_8);
-        return RestServerUtil.encodedRepresentation(new ByteArrayInputStream(reflectorComponent), MediaType.TEXT_HTML);
+        final String source = sourceController().loadSource("/app/tg-reflector.html", deviceProfile());
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }
 }

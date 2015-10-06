@@ -179,7 +179,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     public T lazyLoad(final Long id) {
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants);
-
         final List<T> result = new EntityFetcher(queryExecutionContext).getLazyEntitiesOnPage(from(select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model()).model(), 0, 1);
 
         return !result.isEmpty() ? result.get(0) : null;
@@ -821,7 +820,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
         final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ? select((EntityResultQueryModel<T>) model).yield().countAll().as("count").modelAsAggregate()
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
-        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchAggregates().with("count")).lightweight(true).model();
+        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchAggregates().with("count")).lightweight().model();
+
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
         final List<EntityAggregates> counts = new EntityFetcher(queryExecutionContext).getEntities(countModel);
 
@@ -886,7 +886,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new Result(new IllegalArgumentException("Null is not an acceptable value for eQuery model."));
         }
 
-        final List<T> toBeDeleted = getAllEntities(from(model).with(paramValues).lightweight(true).model());
+        final List<T> toBeDeleted = getAllEntities(from(model).with(paramValues).lightweight().model());
 
         for (final T entity : toBeDeleted) {
             defaultDelete(entity);

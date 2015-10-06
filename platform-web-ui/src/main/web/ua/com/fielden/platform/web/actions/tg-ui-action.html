@@ -1,6 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/tg-reflector">
+<link rel="import" href="/app/tg-reflector.html">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <!-- <link rel="import" href="/resources/polymer/paper-button/paper-button.html">  -->
@@ -89,9 +89,22 @@
             	type: String
             },
 
+            /**
+             * The name of the entity master element associated with this action.
+             */
             elementName: {
             	type: String
             },
+            /**
+             * The functional entity master element gets cached in tg-custom-action-dialog, which is responsible for its loading and instantiation.
+             * However, in cases where the same functional is used for different action (such as insertion points used for centres) there is a need 
+             * for several instances for the same entity master element. In order to facilitate caching of such instances they need to be provided 
+             * with different aliases.
+             */
+            elementAlias: {
+            	type: String
+            },
+            
             attrs: {
             	type: Object
             },
@@ -140,11 +153,26 @@
             	type: String
             },
             
+            /** 
+             * Property of this value gets passed into the data parameter for the details.saved topic of the event that is published after the functional entity has been saved.
+             * There are cases where it is desired to prevent unnecesary centre refreshes such as in case of some insertion points.
+             */
+            shouldRefreshParentCentreAfterSave: {
+				type: Boolean,
+				value: false /* should never be defaulted to true! */
+            },
+
             /**
              * Shows the dialog relative to this 'tg-ui-action'.
              */
             showDialog: {
             	type: Function
+            },
+            
+            
+            /** Sequential action number as provided by Java API. */
+            numberOfAction: {
+            	type: Number
             },
             
             ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
@@ -164,11 +192,6 @@
         	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
         	//   alternatively, computing function needs to be specified). 									       //
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            _masterComponent: {
-            	type: Object,
-            	value: null
-            },
-            
             /**
              * This inner state is triggered by the action itself after the action button has been pressed (enabled:=false) and after the action
              * has been executed (enabled:=true).
@@ -197,7 +220,7 @@
              */
             _onExecuted: {
             	type: Function
-            }
+            },
         },
         
         /**
@@ -219,25 +242,17 @@
                 }
             }).bind(self);
             
-            self._onExecuted = (function (e, detail, source) {
+            self._onExecuted = (function (e, master, source) {
                 var self = this;
-                // console.log("_onExecuted: e", e, "egi", e.srcElement);
-                self._masterComponent = detail;
 
-                detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
                     console.log("postRetrieved");
                     if (self.postActionSuccess) {
                         self.postActionSuccess();
                     }
-                    
-                    console.log("postRetrieved: self._masterComponent.noUI ===", self._masterComponent.noUI);
-                    if (self._masterComponent.noUI === true) {
-                		// immediately save the functional entity in case when no UI exists
-             			self._masterComponent.save();
-                    }
                 };
 
-                detail.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     console.log("postValidated");
                 };
                 
@@ -252,13 +267,14 @@
                 	self._enhanceContextWithChosenProperty(context, self.chosenProperty);
                 }
                 // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
-                detail.savingContext = context;
+                master.savingContext = context;
 
-                detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {
+                master.postSaved = function (potentiallySavedEntity, newBindingEntity) {
                     postal.publish({
-                        channel: "centre_" + detail.centreUuid,
+                        channel: "centre_" + master.centreUuid,
                         topic: "detail.saved",
                         data: {
+                        	shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
                             entity: potentiallySavedEntity,
                             // send selectedEntitiesInContext further to be able to update only them on EGI
                             selectedEntitiesInContext: context.selectedEntities
@@ -268,12 +284,19 @@
                     console.log("postSaved");
                 };
 
-                detail.entityId = context.id === null ? "new" : (+(context.id));
+                master.entityId = context.id === null ? "new" : (+(context.id));
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
-                detail.retrieve(context);
-
-                this._afterExecution();
-                //                this.$.entityMaster.updateTargetDimensions();
+                return master.retrieve(context)
+                .then(function(value) {
+                    self._afterExecution();
+                    return value;
+                })
+                .then(function(value) {
+                    if (master.saveOnActivation === true) {
+             			return master.save();
+                    }
+                    return Promise.resolve(value);
+                });
             }).bind(self);
         },
 

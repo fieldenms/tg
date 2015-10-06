@@ -13,13 +13,13 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 /**
  * A replacement for the system class loader, which has the ability to register derived loaders, and uses them in an attempt to find requested classes.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class TgSystemClassLoader extends URLClassLoader {
 
-    private List<WeakReference<DynamicEntityClassLoader>> derivedClassLoaders = Collections.synchronizedList(new ArrayList<WeakReference<DynamicEntityClassLoader>>());
+    private final List<WeakReference<DynamicEntityClassLoader>> derivedClassLoaders = Collections.synchronizedList(new ArrayList<WeakReference<DynamicEntityClassLoader>>());
 
     public TgSystemClassLoader(final ClassLoader parent) {
         super(((URLClassLoader) parent).getURLs(), parent);
@@ -39,7 +39,7 @@ public class TgSystemClassLoader extends URLClassLoader {
 
     /**
      * Registers and instance of {@link DynamicEntityClassLoader} with this loader, and purges released weak references to previously registered class loaders.
-     * 
+     *
      * @param classLoader
      * @return
      */
@@ -58,10 +58,12 @@ public class TgSystemClassLoader extends URLClassLoader {
      * Purge nulled weak references.
      */
     private void purge() {
-        for (final Iterator<WeakReference<DynamicEntityClassLoader>> iter = derivedClassLoaders.iterator(); iter.hasNext();) {
-            final WeakReference<DynamicEntityClassLoader> ref = iter.next();
-            if (ref.get() == null) {
-                iter.remove();
+        synchronized (derivedClassLoaders) {
+            for (final Iterator<WeakReference<DynamicEntityClassLoader>> iter = derivedClassLoaders.iterator(); iter.hasNext();) {
+                final WeakReference<DynamicEntityClassLoader> ref = iter.next();
+                if (ref.get() == null) {
+                    iter.remove();
+                }
             }
         }
     }
@@ -74,12 +76,14 @@ public class TgSystemClassLoader extends URLClassLoader {
             }
             return super.findClass(name);
         } catch (final ClassNotFoundException ex) {
-            for (final WeakReference<DynamicEntityClassLoader> classLoaderRef : derivedClassLoaders) {
-                final DynamicEntityClassLoader cl = classLoaderRef.get();
-                if (cl != null) {
-                    try {
-                        return cl.findClass(name);
-                    } catch (final ClassNotFoundException e) {
+            synchronized (derivedClassLoaders) {
+                for (final WeakReference<DynamicEntityClassLoader> classLoaderRef : derivedClassLoaders) {
+                    final DynamicEntityClassLoader cl = classLoaderRef.get();
+                    if (cl != null) {
+                        try {
+                            return cl.findClass(name);
+                        } catch (final ClassNotFoundException e) {
+                        }
                     }
                 }
             }

@@ -7,7 +7,9 @@ import java.util.Optional;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
+import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
@@ -26,7 +28,10 @@ public final class EntityActionConfig {
     public final Optional<IPreAction> preAction;
     public final Optional<IPostAction> successPostAction;
     public final Optional<IPostAction> errorPostAction;
+    public final Optional<PrefDim> prefDimForView;
     private final boolean noAction;
+    public final Optional<InsertionPoints> whereToInsertView;
+	public final boolean shouldRefreshParentCentreAfterSave;
 
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
@@ -37,7 +42,10 @@ public final class EntityActionConfig {
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
-            final boolean noAction) {
+            final PrefDim prefDimForView,
+            final boolean noAction,
+            final boolean shouldRefreshParentCentreAfterSave,
+            final InsertionPoints whereToInsertView) {
 
         if (!noAction && functionalEntity == null) {
             throw new IllegalArgumentException("A functional entity type should be provided.");
@@ -47,6 +55,7 @@ public final class EntityActionConfig {
             throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
 
+        this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;
         this.functionalEntity = Optional.ofNullable(functionalEntity);
         this.context = Optional.ofNullable(context);
         this.icon = Optional.ofNullable(icon);
@@ -55,16 +64,53 @@ public final class EntityActionConfig {
         this.preAction = Optional.ofNullable(preAction);
         this.successPostAction = Optional.ofNullable(successPostAction);
         this.errorPostAction = Optional.ofNullable(errorPostAction);
+        this.prefDimForView = Optional.ofNullable(prefDimForView);
         this.noAction = noAction;
+        this.whereToInsertView = Optional.ofNullable(whereToInsertView);
     }
 
+
+    private EntityActionConfig(
+            final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
+            final CentreContextConfig context,
+            final String icon,
+            final String shortDesc,
+            final String longDesc,
+            final IPreAction preAction,
+            final IPostAction successPostAction,
+            final IPostAction errorPostAction,
+            final PrefDim prefDimForView,
+            final boolean noAction,
+            final boolean shouldRefreshParentCentreAfterSave) {
+        this(functionalEntity, context, icon, shortDesc, longDesc, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null);
+    }
+
+
+    /**
+     * Makes a new configuration based on the passed in configuration to become as associated with the specified insertion point.
+     */
+    public static EntityActionConfig mkInsertionPoint(final EntityActionConfig ac, final InsertionPoints ip) {
+        return new EntityActionConfig(
+                ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
+                ac.context.isPresent() ? ac.context.get() : null,
+                ac.icon.isPresent() ? ac.icon.get() : null,
+                ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
+                ac.longDesc.isPresent() ? ac.longDesc.get() : null,
+                ac.preAction.isPresent() ? ac.preAction.get() : null,
+                ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
+                ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
+                ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
+                ac.noAction,
+                ac.shouldRefreshParentCentreAfterSave,
+                ip);
+    }
     /**
      * A factory method for creating a configuration that indicates a need to skip creation of any action.
      *
      * @return
      */
     public static EntityActionConfig createNoActionConfig() {
-        return new EntityActionConfig(null, null, null, null, null, null, null, null, true);
+        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, true, true);
     }
 
     /**
@@ -73,7 +119,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createMasterInvocationActionConfig() {
-        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, false);
+        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
     }
 
     /**
@@ -82,7 +128,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createMasterInDialogInvocationActionConfig() {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, false);
+        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
     }
 
     /**
@@ -106,7 +152,9 @@ public final class EntityActionConfig {
             final String longDesc,
             final IPreAction preAction,
             final IPostAction successPostAction,
-            final IPostAction errorPostAction
+            final IPostAction errorPostAction,
+            final PrefDim prefDimForView,
+            final boolean shouldRefreshParentCentreAfterSave
             ) {
         return new EntityActionConfig(
                 functionalEntity,
@@ -117,7 +165,9 @@ public final class EntityActionConfig {
                 preAction,
                 successPostAction,
                 errorPostAction,
-                false);
+                prefDimForView,
+                false,
+                shouldRefreshParentCentreAfterSave);
     }
 
     /**
@@ -142,6 +192,7 @@ public final class EntityActionConfig {
         result = prime * result + ((preAction == null) ? 0 : preAction.hashCode());
         result = prime * result + ((shortDesc == null) ? 0 : shortDesc.hashCode());
         result = prime * result + ((successPostAction == null) ? 0 : successPostAction.hashCode());
+        result = prime * result + ((whereToInsertView == null) ? 0 : whereToInsertView.hashCode());
         return result;
     }
 
@@ -212,6 +263,13 @@ public final class EntityActionConfig {
                 return false;
             }
         } else if (!successPostAction.equals(other.successPostAction)) {
+            return false;
+        }
+        if (whereToInsertView == null) {
+            if (other.whereToInsertView != null) {
+                return false;
+            }
+        } else if (!whereToInsertView.equals(other.whereToInsertView)) {
             return false;
         }
         return true;

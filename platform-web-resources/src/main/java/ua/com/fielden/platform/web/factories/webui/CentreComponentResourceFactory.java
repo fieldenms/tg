@@ -5,11 +5,9 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreComponentResource;
-
-import com.google.inject.Injector;
 
 /**
  * The server resource factory for entity centres.
@@ -20,7 +18,7 @@ import com.google.inject.Injector;
  *
  */
 public class CentreComponentResourceFactory extends Restlet {
-    private final IWebUiConfig webUiConfig;
+    private final ISourceController sourceController;
     private final RestServerUtil restUtil;
 
     /**
@@ -28,9 +26,9 @@ public class CentreComponentResourceFactory extends Restlet {
      *
      * @param centres
      */
-    public CentreComponentResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
-        this.webUiConfig = webUiConfig;
-        this.restUtil = injector.getInstance(RestServerUtil.class);
+    public CentreComponentResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil) {
+        this.sourceController = sourceController;
+        this.restUtil = restUtil;
     }
 
     /**
@@ -42,8 +40,8 @@ public class CentreComponentResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod())) {
             new CentreComponentResource(
+                    sourceController,
                     restUtil,
-                    ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
                     getContext(),
                     request,
                     response //

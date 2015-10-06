@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
@@ -25,7 +23,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private final String widgetName;
     private final String widgetPath;
     private final int width;
-    private final Class<?> propertyType;
+    private final Object propertyType;
     private final Pair<String, String> titleDesc;
     private final Optional<FunctionalActionElement> action;
     private final List<SummaryElement> summary;
@@ -37,7 +35,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param criteriaType
      * @param propertyName
      */
-    public PropertyColumnElement(final String propertyName, final int width, final Class<?> propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
+    public PropertyColumnElement(final String propertyName, final int width, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
@@ -108,17 +106,10 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         }
         attrs.put("property", this.propertyName()); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
         attrs.put("width", width + "px");
-        if (this.action.isPresent() && this.action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && this.action.get().isMasterInvocationAction()) {
-            attrs.put("action", "[[_showMaster]]");
-        }
-        attrs.put("type", egiRepresentationFor(DynamicEntityClassLoader.getOriginalType(this.propertyType)));
+        attrs.put("type", this.propertyType);
         attrs.put("column-title", this.titleDesc.getKey());
         attrs.put("column-desc", this.titleDesc.getValue());
         return attrs;
-    }
-
-    private Object egiRepresentationFor(final Class<?> propertyType) {
-        return EntityUtils.isEntityType(propertyType) ? propertyType.getName() : (EntityUtils.isBoolean(propertyType) ? "Boolean" : propertyType.getSimpleName());
     }
 
     /**
@@ -139,7 +130,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     @Override
     public final DomElement render() {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
-        if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP && !this.action.get().isMasterInvocationAction()) {
+        if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP) {
             columnElement.add(action.get().render());
         }
         if (hasSummary()) {

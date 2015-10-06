@@ -19,12 +19,11 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
-import ua.com.fielden.platform.web.view.master.api.ISimpleMasterConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig4;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
@@ -46,11 +45,20 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
-    public Class<T> entityType;
+    private Class<T> entityType;
+    private boolean saveOnActivation = false;
+
 
     @Override
     public IPropertySelector<T> forEntity(final Class<T> type) {
         this.entityType = type;
+        return this;
+    }
+
+    @Override
+    public IPropertySelector<T> forEntityWithSaveOnActivate(final Class<T> type) {
+        this.entityType = type;
+        this.saveOnActivation = true;
         return this;
     }
 
@@ -137,7 +145,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public ISimpleMasterConfig<T> done() {
+    public IMaster<T> done() {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
 
@@ -164,13 +172,13 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             }
         });
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html").
-                replace("<!--@imports-->", createImports(importPaths)).
-                replace("@entity_type", entityType.getSimpleName()).
-                replace("//@layoutConfig", layout.code().toString()).
-                replace("<!--@editors_and_actions-->", editorContainer.toString()).
-                replace("//@entityActions", entityActionsStr.toString()).
-                replace("//@propertyActions", propertyActionsStr.toString());
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
+                .replace("<!--@imports-->", createImports(importPaths))
+                .replace("@entity_type", entityType.getSimpleName())
+                .replace("<!--@tg-entity-master-content-->", editorContainer.toString())
+                .replace("//@ready-callback", layout.code().toString() + "\n" + entityActionsStr.toString() + "\n" + propertyActionsStr.toString())
+                .replace("@noUiValue", "false")
+                .replace("@saveOnActivationValue", saveOnActivation + "");
 
         final IRenderable representation = new IRenderable() {
             @Override
@@ -179,7 +187,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             }
         };
 
-        return new SimpleMasterConfig<T>(representation, valueMatcherForProps);
+        return new SimpleMasterConfig(representation, valueMatcherForProps);
     }
 
     /**
@@ -196,9 +204,38 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         return sb.toString();
     }
 
+    public Class<T> getEntityType() {
+        return entityType;
+    }
+
+
+    private class SimpleMasterConfig implements IMaster<T> {
+
+        private final IRenderable renderableRepresentation;
+        private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps;
+
+        public SimpleMasterConfig(
+                final IRenderable renderableRepresentation,
+                final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps) {
+            this.renderableRepresentation = renderableRepresentation;
+            this.valueMatcherForProps = valueMatcherForProps;
+        }
+
+        @Override
+        public IRenderable render() {
+            return renderableRepresentation;
+        }
+
+        @Override
+        public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
+            return Optional.ofNullable(valueMatcherForProps.get(propName));
+        }
+
+    }
+
     public static void main(final String[] args) {
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> sm = new SimpleMasterBuilder<>();
-        final ISimpleMasterConfig<TgPersistentEntityWithProperties> smConfig = sm.forEntity(TgPersistentEntityWithProperties.class)
+        final IMaster<TgPersistentEntityWithProperties> smConfig = sm.forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
                 .addProp("stringProp").asSinglelineText()
                 .withAction("#validateDesc", TgPersistentEntityWithProperties.class)

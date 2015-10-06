@@ -412,7 +412,7 @@ public final class RestClientUtil implements IUserProvider {
         // Doing so, causes two issues:
         // 1. Presentation, and thus the request envelope, grows significantly in size.
         // 2. Conversion of entities into XML (serialisation) is a time consuming operation;
-        query.setLightweight(true);
+        query.lightweight();
         final byte[] bytes = serialiser.serialise(query);
         return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
@@ -425,7 +425,7 @@ public final class RestClientUtil implements IUserProvider {
      * @return
      */
     public Representation represent(final QueryExecutionModel<?, ?> query, final List<byte[]> dynamicTypes) {
-        query.setLightweight(true);
+        query.lightweight();
 
         final DynamicallyTypedQueryContainer container = new DynamicallyTypedQueryContainer(dynamicTypes, query);
 
@@ -485,7 +485,7 @@ public final class RestClientUtil implements IUserProvider {
         // need to ensure that elements of type IQueryOrderedModel are provided with additional attributes
         for (final Object el : list) {
             if (el instanceof QueryExecutionModel) {
-                ((QueryExecutionModel<?, ?>) el).setLightweight(true);
+                ((QueryExecutionModel<?, ?>) el).lightweight();
             }
         }
         // now serialise and make a representation

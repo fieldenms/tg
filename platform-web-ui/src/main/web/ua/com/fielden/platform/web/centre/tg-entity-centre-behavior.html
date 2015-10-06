@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
+<link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
 <script>
@@ -37,10 +38,11 @@
                 },
 
                 /**
-                 * The function to return 'master' entity (if this entity centre is dependent, i.e. the part of some compound master).
+                 * The function to return 'master' entity (if this entity centre is dependent, e.g. the part of some compound master).
                  */
                 getMasterEntity: {
-                    type: Function
+                    type: Function,
+                    observer: '_getMasterEntityAssigned'
                 },
 
                 /**
@@ -61,6 +63,24 @@
                     type: String
                 },
 
+                /**
+                 * A dialog instance that is used for displaying entity (functional and not) masters as part of centre actions logic.
+                 * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
+                 * Right away it is appanded to document.body.
+                 */
+                actionDialog: {
+                  type: Object,
+                  value: null
+                },
+                
+                /**
+                 * Indcates whether the centre should load data immediately after it was loaded.
+                 */
+                autoRun: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,7 +172,21 @@
                 /**
                  * Shows the master for current entity in dialog.
                  */
-                _showMasterInDailog: {
+                _showMasterInDialog: {
+                    type: Function
+                },
+                
+                /**
+                 * Shows the custom view (centre, master, user defined view) in dialog.
+                 */
+                _showCustomViewInDialog: {
+                    type: Function
+                },
+                
+                /**
+                 * Activates the insertion point
+                 */
+                _activateInsertionPoint: {
                     type: Function
                 },
 
@@ -185,12 +219,42 @@
                 },
 
                 /**
+                 * Placeholder function for show-dialog attribute of tg-ui-action, which is used in case of insertion points
+                 */
+                _showInsertionPoint: {
+                    type: Function
+                },
+
+                /**
                  * The function to be bound inside selection criteria, to provide 'selected entities' part of context.
                  */
                 _getSelectedEntities: {
                     type: Function
+                },
+                
+                /**
+                 * Activate the view with the result set.
+                 */
+    			_activateResultSetView: {
+                	type: Function
                 }
             },
+            
+            _getMasterEntityAssigned: function (newValue, oldValue) {
+                var self = this;
+       	 		if (oldValue === undefined) {
+       	 			self.retrieve().then(function () {
+                        if (self.autoRun) {
+                            self.run();
+              			}
+              		});
+       	 		} else {
+                    if (self.autoRun) {
+                        self.run();
+          			}
+	       	    }
+            },
+            
 
             _computeSaverDisabled: function (_centreChanged) {
                 return !this.canSave(_centreChanged);
@@ -222,7 +286,7 @@
                             if (this._triggerRun && this._selectedView === 0) {
                                 this.async(function () {
                                     this._selectedView = 1;
-                                }, null, 100);
+                                }, 100);
                                 this._triggerRun = false;
                             }
                         }
@@ -303,20 +367,39 @@
                     });
                 }).bind(self);
 
-                self._showMasterInDailog = (function (action, entity) {
-                    var fullTypeName = entity.type().notEnhancedFullClassName(),
-                        simpleTypeName = entity.type()._notEnhancedSimpleClassName(),
-                        closeEventChannel = self.uuid,
-                        closeEventTopics = ['save.post.success', 'refresh.post.success'];
+                self._showMasterInDialog = (function (action, entity) {
+                    var fullTypeName = entity.type().notEnhancedFullClassName();
+                    var simpleTypeName = entity.type()._notEnhancedSimpleClassName();
+                    var closeEventChannel = self.uuid;
+                    var closeEventTopics = ['save.post.success', 'refresh.post.success'];
+                    
                     action.componentUri = "/master_ui/" + fullTypeName;
                     action.elementName = "tg-" + simpleTypeName + "-master";
+                    action.elementAlias = action.elementName + "-" + entity.id;  
                     action.attrs = {
                         entityId: entity.id,
                         entityType: fullTypeName,
                         currentState: 'EDIT',
                         centreUuid: self.uuid
                     };
-                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    action.viewType = 'master';
+                    
+                    this.async(function () {
+                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(this), 1);
+                    
+                }).bind(this);
+                
+                self._showCustomViewInDialog = (function(action) {
+                    this.async(function () {
+                        this.actionDialog.showDialog(action);
+                    }.bind(this), 1);
+                }).bind(this);
+                
+                self._activateInsertionPoint = (function(insertionPointId, action) {
+                    this.async(function () {
+                        this.$[insertionPointId].activate(action);
+                    }.bind(this), 1);
                 }).bind(this);
 
                 self._getContext = (function () {
@@ -326,8 +409,8 @@
                     return null;
                 }).bind(self);
 
-                self._postFunctionalEntitySaved = (function (potentiallySavedEntity, selectedEntitiesInContext) {
-                    if (potentiallySavedEntity.isValid()) {
+                self._postFunctionalEntitySaved = (function (potentiallySavedEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
+                    if (potentiallySavedEntity.isValid() && shouldRefreshParentCentreAfterSave === true) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }
@@ -354,21 +437,49 @@
                 }).bind(self);
 
                 self.run = (function () {
-                    this.$.egi.clearSelection();
-                    this.$.egi.collapseAllCards();
-                    this.$.selection_criteria.run();
-                    this._triggerRun = true;
+                    var self = this;
+                    self.$.egi.clearSelection();
+                    self.$.egi.collapseAllCards();
+                    self._triggerRun = true;
+                    return self.$.selection_criteria.run()
+                    	.then(function () {
+                        	self.runInsertionPointActions();
+                    	});
                 }).bind(self);
 
                 self._showDialog = (function (action) {
                     var closeEventChannel = self.uuid;
                     var closeEventTopics = ['save.post.success', 'refresh.post.success'];
-                    this.$.egi.$.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    this.async(function () {
+                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(self), 1);
+                }).bind(self);
+                
+                self._showInsertionPoint = (function (action) {
+                    this.async(function () {
+                    	this._activateInsertionPoint('ip' + action.numberOfAction, action);
+                    }.bind(self), 1);
+                }).bind(self);
+                /**
+                 * Activate the view with the result set.
+                 */
+    			self._activateResultSetView = (function () {
+                	self.async(function () {
+                        self._selectedView = 1;
+                     }, 100);
                 }).bind(self);
             },
 
             attached: function () {
                 var self = this;
+                
+                if (this.actionDialog == null) {
+                    this.actionDialog = document.createElement('tg-custom-action-dialog');
+                    Polymer.dom(this.actionDialog).setAttribute("id", self.uuid + '');
+                    Polymer.dom(document.body).appendChild(this.actionDialog);
+                    Polymer.dom.flush();
+                }
+
                 ///////////////////////Edit Listeners/////////////////////////////////////
                 this.masterCreatedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,
@@ -398,7 +509,7 @@
                     channel: "centre_" + self.$.selection_criteria.uuid,
                     topic: "detail.saved",
                     callback: function (data, envelope) {
-                        self._postFunctionalEntitySaved(data.entity, data.selectedEntitiesInContext);
+                        self._postFunctionalEntitySaved(data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
                     }
                 });
             },
@@ -417,6 +528,17 @@
                 return this.entityType.substring(ind);
             },
 
+            
+            /**
+             * Activate the view with selection criteria.
+             */
+            _activateSelectionCriteriaView: function () {
+            	var self = this;
+            	self.async(function () {
+                     self._selectedView = 0;
+                 }, 100);
+            },
+            
             /**
              * Starts the process of criteria entity retrieval.
              */
@@ -425,14 +547,19 @@
                 // console.time("criteria-entity-retrieval");
                 // console.warn('actual-retrieval');
                 // console.time('actual-retrieval');
-                this.$.selection_criteria.retrieve();
+                return this.$.selection_criteria.retrieve();
             },
 
             /**
              * Starts the process of refreshing the current page (only after run() has been already performed).
              */
             currentPage: function () {
-                this.$.selection_criteria.currentPage();
+            	var self = this;
+                this.$.selection_criteria.currentPage()
+                .then(function () {
+                	console.log("current page invocation");
+                	self.runInsertionPointActions();
+            	});
             },
 
             /**
@@ -472,9 +599,8 @@
              */
             refreshEntities: function (entities) {
                 if (this.$.egi.egiModel.length > 0) {
-                    if (entities !== null && entities.length > 0) {
-                        this._entitiesThatShouldBeUpdated = entities;
-                        this.$.selection_criteria.refreshEntities(this._entitiesThatShouldBeUpdated);
+                    if (entities !== null && entities.length > 0) {                        
+                        this.$.selection_criteria.refreshEntities(entities, (function (entities) {this._entitiesThatShouldBeUpdated = entities;}).bind(this)); // this._entitiesThatShouldBeUpdated
                     } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
                         this.currentPage();
                     }
@@ -518,12 +644,20 @@
              */
             _computeUrl: function (miType) {
                 return "/centre/" + miType;
+            },
+            
+            runInsertionPointActions: function () {
+            	var self = this;
+            	var actions = Polymer.dom(self.$.egi).querySelectorAll('.insertion-point-action');
+            	if (actions) {
+            	    actions.forEach(function (action) {
+            	    	self.async(function(){action._run();}, 1);
+            	    });
+            	}
             }
         };
 
-        Polymer.TgBehaviors.TgEntityCentreBehavior = [
-   Polymer.TgBehaviors.TgEntityCentreBehaviorImpl
-  ];
+        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl];
 
     })();
 </script>

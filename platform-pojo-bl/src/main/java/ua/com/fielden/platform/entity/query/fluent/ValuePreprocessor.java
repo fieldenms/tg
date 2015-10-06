@@ -29,7 +29,7 @@ public class ValuePreprocessor {
     /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */
     private Object convertValue(final Object value) {
         final Object result;
-        if (value instanceof PropertyDescriptor || value instanceof Class || value instanceof Colour) {
+        if (value instanceof PropertyDescriptor || value instanceof Class || value instanceof Colour || value instanceof Enum) {
             result = value.toString();
         } else if (value instanceof AbstractEntity) {
             result = ((AbstractEntity<?>) value).getId();

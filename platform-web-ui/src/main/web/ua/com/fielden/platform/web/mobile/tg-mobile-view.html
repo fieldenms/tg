@@ -1,13 +1,24 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
-<link rel="import" href="/resources/element_loader/tg-element-loader.html">
+<link rel="import" href="/app/tg-element-loader.html">
 
 <dom-module id="tg-mobile-view">
     <style>
+        :host {
+            background-color: #f1f1f1;
+        }
         .toolbar {
             padding: 10px;
             color: white;
+            height: 35px;
             background-color: var(--paper-light-blue-700);
+        }
+        tg-element-loader {
+            position: absolute;
+            top: 35px;
+            bottom: 0;
+            right: 0;
+            left: 0;
         }
     </style>
     <template>
@@ -23,34 +34,53 @@
 
             properties: {
                 menuItem: Object,
-                loadedView: Object,
-                firstTimeRetrieved: Boolean
+                loadedView: Object
             },
 
             hostAttributes: {
                 "class": "layout vertical"
             },
 
-            ready: function () {
-                this.firstTimeRetrieved = true;
-            },
-
             reload: function () {
-                if (this.loadedView) {
-                    this.loadedView.entityId = 'new';
-                    this.loadedView.retrieve();
+                if (this.$.elementToLoad.wasLoaded) {
+                    if (this.menuItem.view.type === 'master' && this.loadedView) {
+                        this.loadedView.entityId = 'new';
+                        this.loadedView.retrieve();
+                    } else if (this.menuItem.view.type === 'centre') {
+                        this.fire("menu-item-loaded", this.menuItem.title);
+                    } else {
+                        // Nothing to do.
+                    }
+                } else {
+                    this.$.elementToLoad.load();
                 }
             },
 
-            _afterLoadListener: function (e, detail, view) {
+            _afterLoadListener: function (e, detail) {
                 var self = this;
                 this.loadedView = detail;
                 if (e.target === this.$.elementToLoad) {
-                    detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                        self.fire("menu-item-loaded", self.menuItem.title);
-                    };
-                    detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
-                    detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                    if (this.menuItem.view.type === 'centre') {
+                        console.warn("TG-MOBILE-VIEW: this.menuItem.view.type === centre");
+                        detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                            if (!self.$.elementToLoad.auto) {
+                                self.fire("menu-item-loaded", self.menuItem.title);
+                            }
+                        };
+                        detail.retrieve();
+                    } else if (this.menuItem.view.type === 'master') {
+                        detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                            self.fire("menu-item-loaded", self.menuItem.title);
+                        };
+                        detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+                        detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                        if (!self.$.elementToLoad.auto) {
+                            detail.entityId = 'new';
+                            detail.retrieve();
+                        }
+                    } else {
+                        // TODO unknown view
+                    }
                 }
             }
         });
