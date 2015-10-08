@@ -601,8 +601,11 @@
                     self.entityId = self._idConvert(entity.id);
                 }
                 // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
-                var previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                self._reset(previousModifiedPropertiesHolder);
+                var previousModifiedPropertiesHolder = null;
+                if (self._currBindingEntity !== null) {
+                    previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                	self._reset(previousModifiedPropertiesHolder);
+                }
                 // New entity should be promoted to the local cache:
                 self._currEntity = entity;
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
@@ -615,6 +618,13 @@
                 return self._currBindingEntity;
             },
 
+            /**
+             * Creates a binding view of the entity from its fully fledged representation.
+             *
+             * @param entity -- a fully fledged entity representation
+             * @param previousModifiedPropertiesHolder -- a container holding original and current value for all entity properties used to represent invalid properties to the user; 
+             *                                            this container is always null for brand new entity instances that arrive from the sever for the first time (i.e. further client-server conversation re new instances should populate this container). 
+            */
             _extractBindingView: function (entity, previousModifiedPropertiesHolder) {
                 var self = this;
                 var bindingView = self._reflector().newEntity(entity.type().fullClassName());
@@ -626,16 +636,14 @@
 
                 entity.traverseProperties(function (propertyName) {
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
-                        // There could a case where entity represents a brand new instance just received from server, but already invalid.
-                        // This means there will be no value for it in previousModifiedPropertiesHolder...
-                        if (typeof previousModifiedPropertiesHolder[propertyName] === 'undefined') {
+                        if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
                             // bind the received from server property value
                             bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
                         } else { // otherwise, this entity instance has already been received before and should be handled accordingly
                             if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
                                 // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
                                 //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
-                                //   invalid 'attempted value' -- but originalVal exists for this case!
+                                //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
                                 bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
                             } else {
                                 bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
