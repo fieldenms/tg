@@ -7,6 +7,11 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -17,11 +22,6 @@ import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
     private final Class<T> type;
@@ -118,11 +118,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         }
                         if (!defaultValueContract.isChangedFromOriginalDefault(metaProperty)) {
                             existingMetaProps.put("_cfo", defaultValueContract.getChangedFromOriginal(metaProperty));
-                            if (entity.isPersisted()) {
-                                // if (!defaultValueContract.isOriginalValueDefault(metaProperty)) {
-                                existingMetaProps.put("_originalVal", defaultValueContract.getOriginalValue(metaProperty));
-                                // }
-                            }
+                            existingMetaProps.put("_originalVal", defaultValueContract.getOriginalValue(metaProperty));
                         }
                         if (!defaultValueContract.isRequiredDefault(metaProperty)) {
                             existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, defaultValueContract.getRequired(metaProperty));
