@@ -186,7 +186,7 @@
 				    var msg = this._toastMsg("Saving", potentiallySavedEntity);
 				    this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
 				
-				    var newBindingEntity = this._postEntityReceived(potentiallySavedEntity);
+				    var newBindingEntity = this._postEntityReceived(potentiallySavedEntity, false);
 				
 				    // custom external action
 				    this.postSaved(potentiallySavedEntity, newBindingEntity);
@@ -196,7 +196,7 @@
 				    if (potentiallySavedEntity.isValid()) {
 					    this._createContextHolderForEmbeddedViews = (function () {
 			                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-			                return this._createSavingInfoHolder(this._reset(holder), potentiallySavedEntity);
+			                return this._reflector().createSavingInfoHolder(this._reset(holder), this.savingContext);
 		                }).bind(this);
 				    }
 				    
@@ -382,30 +382,26 @@
              * The function for binding property desc -- entity.type().prop(property).desc(). The argument 'entity' will be changed in future. Polymer will listen to that change.
              */
 
+             //////////////////////////////////////// VALIDATION ////////////////////////////////////////
+             /**
+              * Overridden to reuse this.savingContext. It is not empty for tg-ui-action's functional entities, which is assigned in its method _onExecuted.
+              */
+             _validateForDescendants: function (preparedModifHolder) {
+                 this._validator().validate(preparedModifHolder, this.savingContext);
+             },
+
             //////////////////////////////////////// SAVING ////////////////////////////////////////
             _savingInProgress: function () {
                 return this._ajaxSaver().loading;
             },
             
-            _createSavingInfoHolder: function (modifiedPropertiesHolder) {
-            	var reflector = this._reflector();
-                var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
-                savingInfoHolder.id = null;
-                savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
-            	
-            	if (this.savingContext) { // if saving context was defined (not 'undefined'):
-                    savingInfoHolder["centreContextHolder"] = this.savingContext;
-            	}
-                return savingInfoHolder;
-            },
-
             /**
              * Starts the process of entity saving.
              *
              * @param modifiedPropertiesHolder -- the entity with modified properties
              */
             _saveModifiedProperties: function (modifiedPropertiesHolder) {
-                this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._createSavingInfoHolder(modifiedPropertiesHolder)));
+                this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, this.savingContext)));
                 return this._ajaxSaver().generateRequest().completes;
             },
 

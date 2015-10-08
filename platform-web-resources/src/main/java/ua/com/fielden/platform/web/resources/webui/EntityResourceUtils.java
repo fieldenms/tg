@@ -490,7 +490,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder) {
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
+        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
         return constructEntity(modifiedPropertiesHolder, id);
     }

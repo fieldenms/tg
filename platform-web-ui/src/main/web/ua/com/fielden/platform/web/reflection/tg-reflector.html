@@ -976,6 +976,21 @@
         },
         
         /**
+         * Creates the holder of modified properties and some savingContext.
+         */
+        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext) {
+        	var reflector = this;
+            var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
+            savingInfoHolder.id = null;
+            savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
+        	
+        	if (savingContext) { // if saving context was defined (not 'undefined'):
+                savingInfoHolder["centreContextHolder"] = savingContext;
+        	}
+            return savingInfoHolder;
+        },
+        
+        /**
          * Provides custom property into 'centreContextHolder' internals.
          */
         setCustomProperty: function(centreContextHolder, name, value) {

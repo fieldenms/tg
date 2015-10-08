@@ -243,6 +243,15 @@
                 	type: Array
                 }
     		},
+    		
+    		/**
+    		 * Nullifies previously bound to this master entity in preparation to rebind a brand new instance. 
+    		 */
+    		_resetState: function () {
+                this._currEntity = null;
+                this._currBindingEntity = null;
+                this._originalBindingEntity = null;
+    		},
             
             /**
              * Initialisation block. It has all children web components already initialised.
@@ -251,7 +260,7 @@
                 var self = this;
                 
                 this._resetRefreshCycleModeForEditors(); // init the value for '_refreshCycleMode'
-                this._currBindingEntity = null; // TODO previously, was {} -- empty object. Please, use more safe form ('null'). And check, if 'null' is appropriately working with editors.
+                self._resetState();
                 
                 self._createModifiedPropertiesHolder = (function () {
 	                var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
@@ -344,7 +353,7 @@
 
         	            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
             	        // (if the entity was not modified -- _validate(holder) will start the error recovery process)
-                    	slf._validator().validate(slf._reset(holder));
+                    	slf._validateForDescendants(slf._reset(holder));
                 	}, 50);
                 }).bind(self);
              	
@@ -371,7 +380,7 @@
 				    var msg = this._toastMsg("Refreshing", entity);
 				    this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
 
-                    var newBindingEntity = this._postEntityReceived(entity);
+                    var newBindingEntity = this._postEntityReceived(entity, true);
                     
                     this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
                     // custom external action
@@ -400,7 +409,7 @@
                         this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
                     }
 
-                    var newBindingEntity = this._postEntityReceived(validatedEntity);
+                    var newBindingEntity = this._postEntityReceived(validatedEntity, false);
                     // custom external action
                     this.postValidated(validatedEntity, newBindingEntity, customObject);
                 }).bind(self);
@@ -441,6 +450,13 @@
                     }
                 }
                 this._toastGreeting().show();
+            },
+            
+            /**
+             * The inner function for validation to be overridden in descendants (for e.g. context-dependent validation in tg-entity-master)
+             */
+            _validateForDescendants: function (preparedModifHolder) {
+                this._validator().validate(preparedModifHolder);
             },
 
             /**
@@ -592,10 +608,17 @@
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             /**
-             * Provides default action after fresh entity has been received. Rebinds the entity.
+             * Implements the default action to (re)bind freshly received entity. Entity receival is the result of actions Refresh, Validate, Save and Run.
+             *
+             * @param isRefreshingProcess -- value true indicates that the call happens as part of refresh lifecycle, which requires resetting the state.
+             *                               In all other cases (validate, save, run) value false should be provided.
              */
-            _postEntityReceived: function (entity) {
+            _postEntityReceived: function (entity, isRefreshingProcess) {
                 var self = this;
+                // in case entity is being retrieved need to reset the state, so that the master would behave as if it was created for the first time
+                if (isRefreshingProcess) {
+                    self._resetState();
+                }
                 // After the entity has received, potentially its id has been updated:
                 if (self._idConvert(entity.id) !== self.entityId) {
                     self.entityId = self._idConvert(entity.id);

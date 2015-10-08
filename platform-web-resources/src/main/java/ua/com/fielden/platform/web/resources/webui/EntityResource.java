@@ -149,11 +149,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     public static <T extends AbstractEntity<?>> T restoreEntityFrom(final SavingInfoHolder savingInfoHolder, final Class<T> functionalEntityType, final EntityFactory entityFactory, final RestServerUtil restUtil, final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator) {
         final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
-        final Object id = savingInfoHolder.getModifHolder().get("id");
         final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(functionalEntityType);
         final EntityResourceUtils<T> utils = new EntityResourceUtils<T>(functionalEntityType, master.createEntityProducer(), entityFactory, restUtil, companionFinder);
+        final Map<String, Object> modifHolder = savingInfoHolder.getModifHolder();
 
-        return restoreEntityFrom(savingInfoHolder, utils, id == null ? null : Long.parseLong(id + ""), companionFinder, gdtm, critGenerator);
+        final Object arrivedIdVal = modifHolder.get(AbstractEntity.ID);
+        final Long longId = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
+
+        return restoreEntityFrom(savingInfoHolder, utils, longId, companionFinder, gdtm, critGenerator);
     }
 
     private static <T extends AbstractEntity<?>> T restoreEntityFrom(final SavingInfoHolder savingInfoHolder, final EntityResourceUtils<T> utils, final Long entityId, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
