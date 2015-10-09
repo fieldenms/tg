@@ -59,7 +59,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private final IEntityProducer<T> entityProducer;
     private final ICompanionObjectFinder companionFinder;
 
-    public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder) {
+    public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final ICompanionObjectFinder companionFinder) {
         this.entityType = entityType;
         this.companionFinder = companionFinder;
         this.dao = companionFinder.<IEntityDao<T>, T> find(this.entityType);
@@ -441,7 +441,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * All normal properties will be applied in 'validationPrototype'.
      *
      * @param envelope
-     * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
     public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final Long id) {
@@ -457,7 +456,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * All normal properties will be applied in 'validationPrototype'.
      *
      * @param envelope
-     * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
     public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {

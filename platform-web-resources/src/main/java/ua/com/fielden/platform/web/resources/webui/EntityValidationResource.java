@@ -71,7 +71,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
             // throw new IllegalStateException("Illegal state during entity validation.");
             final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
 
-            final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, entityType, entityFactory, restUtil, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+            final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
 
             if (savingInfoHolder.getCentreContextHolder() != null) {
                 ((AbstractFunctionalEntityWithCentreContext) applied).setContext(null); // it is necessary to reset centreContext not to send it back to the client!

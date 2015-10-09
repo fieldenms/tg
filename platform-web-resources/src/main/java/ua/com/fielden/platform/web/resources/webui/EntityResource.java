@@ -60,7 +60,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         this.companionFinder = companionFinder;
         this.gdtm = gdtm;
         this.critGenerator = critGenerator;
-        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, restUtil, this.companionFinder);
+        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, this.companionFinder);
         this.restUtil = restUtil;
 
         final String entityIdString = request.getAttributes().get("entity-id").toString();
@@ -139,7 +139,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @param savingInfoHolder -- the actual holder of information about functional entity
      * @param functionalEntityType -- the type of functional entity to be restored into
      * @param entityFactory
-     * @param restUtil
      * @param webUiConfig
      * @param companionFinder
      * @param serverGdtm
@@ -147,10 +146,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @param critGenerator
      * @return
      */
-    public static <T extends AbstractEntity<?>> T restoreEntityFrom(final SavingInfoHolder savingInfoHolder, final Class<T> functionalEntityType, final EntityFactory entityFactory, final RestServerUtil restUtil, final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator) {
+    public static <T extends AbstractEntity<?>> T restoreEntityFrom(final SavingInfoHolder savingInfoHolder, final Class<T> functionalEntityType, final EntityFactory entityFactory, final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator) {
         final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
         final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(functionalEntityType);
-        final EntityResourceUtils<T> utils = new EntityResourceUtils<T>(functionalEntityType, master.createEntityProducer(), entityFactory, restUtil, companionFinder);
+        final EntityResourceUtils<T> utils = new EntityResourceUtils<T>(functionalEntityType, master.createEntityProducer(), entityFactory, companionFinder);
         final Map<String, Object> modifHolder = savingInfoHolder.getModifHolder();
 
         final Object arrivedIdVal = modifHolder.get(AbstractEntity.ID);
