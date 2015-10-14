@@ -150,6 +150,10 @@
         	console.log("ROUTE HAS CHANGED TO", newRoute, oldRoute);
         	// TODO check and load menu item section if not loaded already
         	//      otherwise trigger validation... may not be applicable to all masters
+        	var menuItem = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
+        	if (menuItem) {
+        		menuItem._run();
+        	}
         }
 
     });
