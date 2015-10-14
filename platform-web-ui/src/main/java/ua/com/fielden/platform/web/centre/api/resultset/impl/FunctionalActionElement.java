@@ -81,7 +81,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
             attrs.put("class", "entity-specific-action");
+        } else if (FunctionalActionKind.MENU_ITEM == functionalActionKind) {
+            attrs.put("class", "menu-item");
+            attrs.put("data-route", conf().functionalEntity.get().getSimpleName());
         }
+
 
         attrs.put("short-desc", conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED");
         attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
@@ -94,6 +98,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
         if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
             attrs.put("show-dialog", "[[_showInsertionPoint]]");
+        } else if (FunctionalActionKind.MENU_ITEM == functionalActionKind) {
+            attrs.put("show-dialog", "[[_showMenuItemView]]");
         } else {
             attrs.put("show-dialog", "[[_showDialog]]");
         }

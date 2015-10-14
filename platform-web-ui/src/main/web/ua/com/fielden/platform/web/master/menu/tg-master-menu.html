@@ -1,0 +1,156 @@
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
+<link rel="import" href="/resources/polymer/iron-selector/iron-selector.html">
+<!-- Paper elements -->
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
+<link rel="import" href="/resources/polymer/paper-scroll-header-panel/paper-scroll-header-panel.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+<link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
+<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+
+<dom-module id="tg-master-menu">
+    <style>
+        :root {
+            --dark-primary-color: var(--paper-blue-grey-700);
+            --default-primary-color: var(--paper-blue-grey-500);
+            --light-primary-color: var(--paper-blue-grey-200);
+            --text-primary-color: #ffffff;
+            /*text/icons*/
+            --accent-color: var(--paper-pink-a200);
+            --primary-background-color: #c5cae9;
+            --primary-text-color: var(--paper-blue-grey-500);
+            --secondary-text-color: #727272;
+            --disabled-text-color: var(--paper-grey-400);
+            --divider-color: #B6B6B6;
+            /* Components */
+            /* paper-drawer-panel */
+            --drawer-menu-color: #ffffff;
+            --drawer-border-color: 1px solid #ccc;
+            --drawer-toolbar-border-color: 1px solid rgba(0, 0, 0, 0.22);
+            /* paper-menu */
+            --paper-menu-background-color: #fff;
+            --menu-link-color: #111111;
+        }
+        
+        :host {
+            display: inline-block;
+        }
+        
+        paper-scroll-header-panel {
+            height: 100%;
+        }
+        
+        paper-menu {
+            padding: 0px;
+        }
+        
+        paper-menu iron-icon {
+            margin-right: 33px;
+            opacity: 0.54;
+        }
+        
+        .paper-menu > .iron-selected {
+            color: var(--default-primary-color);
+        }
+        
+        .tool-bar {
+            padding: 0 16px;
+            height: 44px;
+            font-size: 18px;
+        }
+        
+        paper-material {
+            border-radius: 2px;
+            height: 100%;
+            margin: 16px auto;
+            background: white;
+            width: calc(98% - 46px);
+            margin-bottom: 32px;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+        
+        #drawer {
+            border-right: 1px solid rgba(0, 0, 0, 0.14);
+        }
+        
+        #drawerToolbar {
+            color: var(--secondary-text-color);
+            background-color: var(--drawer-menu-color);
+            border-bottom: var(--drawer-toolbar-border-color);
+        }
+        
+        iron-pages {
+            padding: 8px 8px;
+        }
+    </style>
+    <template>
+
+        <paper-drawer-panel id="paperDrawerPanel" disable-swipe>
+
+            <!-- Drawer Scroll Header Panel -->
+            <paper-scroll-header-panel drawer fixed id="drawer">
+
+                <!-- Drawer Toolbar -->
+                <paper-toolbar id="drawerToolbar" class="tool-bar">
+                    <span style="font-size: 18px; height: 44px;">Vehicle Master</span>
+                </paper-toolbar>
+
+                <!-- Drawer Content -->
+                <paper-menu attr-for-selected="data-route" selected="{{route}}">
+	            	<content select=".menu-item"></content>        
+	            </paper-menu>
+            </paper-scroll-header-panel>
+
+            <!-- Main Area -->
+            <paper-scroll-header-panel main fixed>
+
+                <!-- Main Toolbar -->
+                <paper-toolbar id="mainToolbar" style="height: 44px;">
+                    <!-- Application name -->
+                    <span style="font-size: 18px; height: 44px;">Vehicle Number: decription</span>
+                </paper-toolbar>
+
+                <!-- Main Content -->
+                <div>
+                    <iron-pages attr-for-selected="data-route" selected="{{route}}">
+                        <content select=".menu-item-section"></content>
+                    </iron-pages>
+                </div>
+            </paper-scroll-header-panel>
+        </paper-drawer-panel>
+
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-master-menu',
+
+        properties: {
+        	/* active menu item */
+            route: {
+                type: String,
+                observer: '_showMenuItemView'
+            },
+            
+            menuActions: {
+            	type: Object
+            }
+        },
+
+        attached: function () {},
+
+        _showMenuItemView: function (newRoute, oldRoute) {
+        	console.log("ROUTE HAS CHANGED TO", newRoute, oldRoute);
+        	// TODO check and load menu item section if not loaded already
+        	//      otherwise trigger validation... may not be applicable to all masters
+        }
+
+    });
+</script>
