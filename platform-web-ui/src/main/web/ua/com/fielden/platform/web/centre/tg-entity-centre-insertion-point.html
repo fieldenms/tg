@@ -41,11 +41,6 @@
                 }
             },
 
-            ready: function () {
-                //Initialising the action runner
-                this.currentActionRunning = null;
-            },
-
             _getElement: function (customAction) {
             	var self = this;
             	if (self._element) {
@@ -64,7 +59,6 @@
             activate: function (customAction) {
                 var self = this;
                 if (this.activated === true) {
-                    // TODO Execute action
                     return self._getElement(customAction)
 		                   .then(function (element) {
 		                   		return customAction._onExecuted(null, element, null);
