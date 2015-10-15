@@ -29,5 +29,7 @@ public interface IQueryEnhancer<T extends AbstractEntity<?>> {
      * @param queryParams
      * @return
      */
-    Map<String, Object> enhanceQueryParams(Map<String, Object> queryParams, final Optional<CentreContext<T, ?>> context);
+    default Map<String, Object> enhanceQueryParams(Map<String, Object> queryParams, final Optional<CentreContext<T, ?>> context) {
+        return queryParams;
+    }
 }
