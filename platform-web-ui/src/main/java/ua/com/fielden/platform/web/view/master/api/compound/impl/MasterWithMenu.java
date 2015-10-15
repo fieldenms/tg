@@ -16,9 +16,7 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -42,7 +40,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
     private final IRenderable renderable;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public MasterWithMenu(final Class<T> entityType, final Class<F> functionalEntityType, final boolean saveOnActivate, final List<EntityActionConfig> menuItemActions) {
+    public MasterWithMenu(final Class<T> entityType, final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions) {
         logger.debug("Initiating insertion point actions...");
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("master/menu/tg-master-menu");
@@ -81,7 +79,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                         this.menuItemActions.get(0).functionalEntity.get().getSimpleName()))
                 .replace("//@ready-callback", format("this.menuItemActions = [%s];\n", jsMenuItemActionObjects)) // 
                 .replace("@noUiValue", "false")
-                .replace("@saveOnActivationValue", saveOnActivate + "");
+                .replace("@saveOnActivationValue", "true");
 
         renderable = new IRenderable() {
             @Override
