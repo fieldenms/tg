@@ -661,11 +661,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
             }
             return where.val(1).eq().val(1);
         }
-
-        @Override
-        public Map<String, Object> enhanceQueryParams(final Map<String, Object> queryParams, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            return queryParams;
-        }
     }
 
     private static class TgPersistentEntityWithPropertiesQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
@@ -688,11 +683,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
             }
 
             return where.prop("status").eq().val(coStatus.findByKey("IS"));
-        }
-
-        @Override
-        public Map<String, Object> enhanceQueryParams(final Map<String, Object> queryParams, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            return queryParams;
         }
     }
 
