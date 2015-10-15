@@ -1,20 +1,11 @@
-<link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
-<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
-<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
-<link rel="import" href="/resources/polymer/paper-styles/color.html">
-<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="/resources/components/postal-lib.html">
-<link rel="import" href="/resources/components/tg-toast.html">
-<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/app/tg-element-loader.html">
+<!-- >link rel="import" href="/resources/components/tg-toast.html"-->
 
 <dom-module id="tg-master-menu-item-section">
     <template>
-    	<paper-material id="pm" style="margin: 10px; background: white; border-radius: 2px;">
-        	<tg-element-loader id="elementLoader"></tg-element-loader>
-        </paper-material>
-        <tg-toast id="toaster"></tg-toast>
+        <tg-element-loader id="elementLoader"></tg-element-loader>
+        <!-- >tg-toast id="toaster"></tg-toast -->
     </template>
 </dom-module>
 <script>
@@ -23,16 +14,6 @@
 
             is: "tg-master-menu-item-section",
 
-            behaviors: [Polymer.IronResizableBehavior],
-
-            listeners: {
-                'iron-resize': '_onIronResize'
-            },
-            
-            hostAttributes: {
-                "class": "menu-item-section"
-            },
-            
             properties: {
                 activated: {
                     type: Boolean,
@@ -75,19 +56,20 @@
                 } else { // else need to first load and create the element to be inserted
                    	self._getElement(customAction)
                            .then(function (element) {
-                            self.activated = true;
-                           	self._element = element;
+                               self.activated = true;
+                               self._element = element;
                            	
                                var promise = customAction._onExecuted(null, element, null);
                                if (promise) {
-                               	return promise
-                               	.then(function () {self._adjustView();});
+                                   return promise;
                                } else {
-                                   return Promise.resolve()
-                                   .then(function () {self._adjustView();});
+                                   return Promise.resolve();
                                }
-                           })
-                           .catch(function (error) {
+                           });
+                		// TODO/FIXME: the following promise error handling was hiding properly reported error by the binder login in its own toast
+                		//             the error that gets passed into catch here does not contain the necessar information to display the same error message with details (MORE)
+                        //             at this stage let's simply prevent error displaying here with a belief that it should get handled earlier 
+/*                            .catch(function (error) {
                                self.$.toaster.text = 'There was an error displaying view ' + customAction.elementName;
                                self.$.toaster.hasMore = true;
                                self.$.toaster.msgText = 'There was an error displaying the view.<br><br> \
@@ -95,26 +77,9 @@
                                self.$.toaster.showProgress = false;
                                self.$.toaster.show();
                            });
-                }
-            },
-
-            _adjustView: function () {
-                var self = this;
-                
-                if (this.$.elementLoader.prefDim) {
-                	var prefDim = this.$.elementLoader.prefDim;
-                	this.$.pm.style.width = prefDim.width() + prefDim.unit;
-                	this.$.pm.style.height = prefDim.height() + prefDim.unit;
-                } else {
-                    this.$.pm.width = "auto";
-                    this.$.pm.height = "auto";
-                }
-                this.updateStyles();
-            },
-            
-            _onIronResize: function () {
-                this._adjustView();
+ */                }
             }
+
         });
     })();
 </script>

@@ -63,7 +63,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
             importPaths.add(el.importPath());
             menuItemActionsDom.add(el.render());
             jsMenuItemActionObjects.append(el.createActionObject() + ",\n");
-            menuItemViewsDom.add(new DomElement("tg-master-menu-item-section").attr("id", "mi" + el.numberOfAction).attr("data-route", el.conf().functionalEntity.get().getSimpleName()));
+            menuItemViewsDom.add(new DomElement("tg-master-menu-item-section").attr("id", "mi" + el.numberOfAction).attr("class", "menu-item-section").attr("data-route", el.conf().functionalEntity.get().getSimpleName()));
         }
 
         // generate the final master with menu
