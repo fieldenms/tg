@@ -96,14 +96,20 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("element-name", elementName);
         attrs.put("number-of-action", numberOfAction);
         attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
+        
+        // in case of an menu item action show-dialog assignment happens within tg-master-menu
         if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
             attrs.put("show-dialog", "[[_showInsertionPoint]]");
-        } else if (FunctionalActionKind.MENU_ITEM == functionalActionKind) {
-            attrs.put("show-dialog", "[[_showMenuItemView]]");
-        } else {
+        } else if (FunctionalActionKind.MENU_ITEM != functionalActionKind) {
             attrs.put("show-dialog", "[[_showDialog]]");
         }
-        attrs.put("create-context-holder", "[[_createContextHolder]]");
+        
+        // in case of an action that models a menu item for an entity master with menu, context gets assigned 
+        // only after the main entity is saved at the client side as part of tg-master-menu logic.
+        if (FunctionalActionKind.MENU_ITEM != functionalActionKind) {
+            attrs.put("create-context-holder", "[[_createContextHolder]]");
+        }
+        
         final String actionsHolderName = functionalActionKind.holderName;
         attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");

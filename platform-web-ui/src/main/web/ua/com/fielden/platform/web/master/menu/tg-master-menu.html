@@ -13,6 +13,8 @@
 <link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
 <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 
+<link rel="import" href="/app/tg-reflector.html">
+
 <dom-module id="tg-master-menu">
     <style>
         :root {
@@ -90,7 +92,7 @@
         }
     </style>
     <template>
-
+		<tg-reflector id="reflector"></tg-reflector>
         <paper-drawer-panel id="paperDrawerPanel" disable-swipe>
 
             <!-- Drawer Scroll Header Panel -->
@@ -103,7 +105,7 @@
 
                 <!-- Drawer Content -->
                 <paper-menu attr-for-selected="data-route" selected="{{route}}">
-	            	<content select=".menu-item"></content>        
+	            	<content id="menuItems" select=".menu-item"></content>        
 	            </paper-menu>
             </paper-scroll-header-panel>
 
@@ -136,25 +138,78 @@
         	/* active menu item */
             route: {
                 type: String,
-                observer: '_showMenuItemView'
+                observer: '_routeChanged'
             },
             
             menuActions: {
             	type: Object
+            },
+            
+            /* A menu route that should be activated when the master gets shoe*/
+        	defaultRoute: {
+        		type: String
+        	},
+        	
+            /**
+			 * A context holder creator that is used for tg-ui-action instances serving as menu items for compound masters.                
+             */
+            _createContextHolderForMenu: {
+            	type: Function
+            },
+            
+            /**
+             * A function that return a master entity instance from the master where this menu is embedded into.
+             */
+            getMasterEntity: {
+                type: Function,
+                observer: '_masterEntityChanged'
             }
+
         },
 
-        attached: function () {},
+        ready: function () {
+        	var self = this;
+            self._createContextHolderForMenu = (function () {
+                var contextHolder = this.$.reflector.createContextHolder(
+    				null, null, 'true',
+    				null, null, this.getMasterEntity);
+                return contextHolder;
+            }).bind(self);
+	
+        }, // end of ready 
+        
+        attached: function () {
+        	// Assign _createContextHolderForMenu to all tg-ui-action instances
+        	var tgUiActions = Polymer.dom(this.$.menuItems).getDistributedNodes();
+        	if (tgUiActions && tgUiActions.length > 0) {
+        		for (var index = 0; index < tgUiActions.length; index++) {
+        			tgUiActions[index].createContextHolder = this._createContextHolderForMenu;
+        			tgUiActions[index].showDialog = this._showMenuItemView.bind(this);
+        		}
+        	}
+        },
 
-        _showMenuItemView: function (newRoute, oldRoute) {
+        _masterEntityChanged: function (newValue, oldValue) {
+        	console.log('_masterEntityChanged', newValue);
+        	// TODO run default root
+        },
+        
+        /**
+         * A function for show-dialog attribute of tg-ui-action, which is used in case of master with menu to load and display a corresponding menu item view.
+         */
+        _showMenuItemView: function (action) {
+        	this.route = action.getAttribute('data-route');
+        },
+        
+        _routeChanged: function (newRoute, oldRoute) {
         	console.log("ROUTE HAS CHANGED TO", newRoute, oldRoute);
         	// TODO check and load menu item section if not loaded already
         	//      otherwise trigger validation... may not be applicable to all masters
-        	var menuItem = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
-        	if (menuItem) {
-        		menuItem._run();
+        	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
+        	if (action) {
+        		var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + newRoute + ']');
+        		section.activate(action);
         	}
         }
-
     });
 </script>

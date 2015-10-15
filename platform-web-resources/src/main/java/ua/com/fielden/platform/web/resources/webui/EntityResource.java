@@ -84,6 +84,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     public Representation put(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             if (envelope != null) {
+                //final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+                //System.out.println(savingInfoHolder);
                 final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
                 final T entity = utils.createValidationPrototypeWithCentreContext(
                         CentreResourceUtils.createCentreContext(
