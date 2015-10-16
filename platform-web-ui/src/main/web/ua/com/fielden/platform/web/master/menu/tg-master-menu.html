@@ -115,7 +115,7 @@
                 <!-- Main Toolbar -->
                 <paper-toolbar id="mainToolbar" style="height: 44px;">
                     <!-- Application name -->
-                    <span style="font-size: 18px; height: 44px;">Vehicle Number: decription</span>
+                    <span style="font-size: 18px; height: 44px;">Vehicle Number: description</span>
                 </paper-toolbar>
 
                 <!-- Main Content -->
@@ -202,18 +202,16 @@
          * A function for show-dialog attribute of tg-ui-action, which is used in case of master with menu to load and display a corresponding menu item view.
          */
         _showMenuItemView: function (action) {
-        	this.route = action.getAttribute('data-route');
+        	var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
+        	section.activate(action);
         },
         
         _routeChanged: function (newRoute, oldRoute) {
         	console.log("ROUTE HAS CHANGED TO", newRoute, oldRoute);
         	// TODO check and load menu item section if not loaded already
         	//      otherwise trigger validation... may not be applicable to all masters
-        	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
-        	if (action) {
-        		var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + newRoute + ']');
-        		section.activate(action);
-        	}
-        }
+         	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
+ 			action._run();
+ 		}
     });
 </script>
