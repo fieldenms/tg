@@ -191,7 +191,10 @@
 
         _masterEntityChanged: function (newValue, oldValue) {
         	console.log('_masterEntityChanged', newValue);
-        	// TODO run default root
+        	if (this.route) {
+        		this._routeChanged(this.route, this.route);
+        	}
+        	// TODO run default route
         },
         
         /**
