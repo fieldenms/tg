@@ -62,12 +62,18 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
         final StringBuilder jsMenuItemActionObjects = new StringBuilder();
         final DomContainer menuItemActionsDom = new DomContainer();
         final DomContainer menuItemViewsDom = new DomContainer();
+        final DomContainer menuItemsDom = new DomContainer();
         
         for (final FunctionalActionElement el : menuItemActionsElements) {
             importPaths.add(el.importPath());
             menuItemActionsDom.add(el.render());
             jsMenuItemActionObjects.append(el.createActionObject() + ",\n");
-            menuItemViewsDom.add(new DomElement("tg-master-menu-item-section").attr("id", "mi" + el.numberOfAction).attr("class", "menu-item-section").attr("data-route", el.conf().functionalEntity.get().getSimpleName()));
+            menuItemViewsDom.add(new DomElement("tg-master-menu-item-section").attr("id", "mi" + el.numberOfAction).attr("class", "menu-item-section").attr("data-route", el.getDataRoute()));
+            menuItemsDom.add(
+                    new DomElement("paper-item").attr("class", "menu-item").attr("data-route", el.getDataRoute())
+                    .add(new DomElement("iron-icon").attr("icon", el.getIcon()))
+                    .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc())))
+                    );
         }
 
         // generate the final master with menu
@@ -78,6 +84,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                         format(""
                         + "<tg-master-menu id='menu' default-route='%s' menu-actions='[[menuItemActions]]' get-master-entity='[[_createContextHolderForEmbeddedViews]]'>"
                         + menuItemActionsDom
+                        + menuItemsDom
                         + menuItemViewsDom
                         + "</tg-master-menu>",
                         this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))

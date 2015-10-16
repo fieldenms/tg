@@ -82,14 +82,14 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
             attrs.put("class", "entity-specific-action");
         } else if (FunctionalActionKind.MENU_ITEM == functionalActionKind) {
-            attrs.put("class", "menu-item");
-            attrs.put("data-route", conf().functionalEntity.get().getSimpleName());
+            attrs.put("class", "menu-item-action");
+            attrs.put("data-route", getDataRoute());
         }
 
 
-        attrs.put("short-desc", conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED");
+        attrs.put("short-desc", getShortDesc());
         attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
-        attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
+        attrs.put("icon", getIcon());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
         final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
@@ -130,6 +130,18 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
 
         return attrs;
+    }
+
+    public String getDataRoute() {
+        return conf().functionalEntity.get().getSimpleName();
+    }
+
+    public String getIcon() {
+        return conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit";
+    }
+
+    public String getShortDesc() {
+        return conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED";
     }
 
     /**

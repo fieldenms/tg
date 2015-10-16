@@ -93,6 +93,8 @@
     </style>
     <template>
 		<tg-reflector id="reflector"></tg-reflector>
+		<content id="menuItemActions" select=".menu-item-action"></content>        
+		
         <paper-drawer-panel id="paperDrawerPanel" disable-swipe>
 
             <!-- Drawer Scroll Header Panel -->
@@ -180,7 +182,7 @@
         
         attached: function () {
         	// Assign _createContextHolderForMenu to all tg-ui-action instances
-        	var tgUiActions = Polymer.dom(this.$.menuItems).getDistributedNodes();
+        	var tgUiActions = Polymer.dom(this.$.menuItemActions).getDistributedNodes();
         	if (tgUiActions && tgUiActions.length > 0) {
         		for (var index = 0; index < tgUiActions.length; index++) {
         			tgUiActions[index].createContextHolder = this._createContextHolderForMenu;
