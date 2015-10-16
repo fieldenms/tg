@@ -40,8 +40,12 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
     private final IRenderable renderable;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public MasterWithMenu(final Class<T> entityType, final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions) {
-        logger.debug("Initiating insertion point actions...");
+    public MasterWithMenu(final Class<T> entityType, final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions, final int defaultMenuItemIndex) {
+        logger.debug(format("Generating master with menu for entity %s, invoked by functional entity %s.", entityType.getSimpleName(), functionalEntityType.getSimpleName()));
+        if (defaultMenuItemIndex < 0 || defaultMenuItemIndex >= menuItemActions.size()) {
+            throw new IllegalArgumentException(format("The default menu item index %s is outside of the range for the provided menu items.", defaultMenuItemIndex));
+        }
+        
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("master/menu/tg-master-menu");
         importPaths.add("master/menu/tg-master-menu-item-section");
@@ -76,7 +80,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                         + menuItemActionsDom
                         + menuItemViewsDom
                         + "</tg-master-menu>",
-                        this.menuItemActions.get(0).functionalEntity.get().getSimpleName()))
+                        this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
                 .replace("//@ready-callback", format("this.menuItemActions = [%s];\n", jsMenuItemActionObjects)) // 
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
