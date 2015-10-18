@@ -34,7 +34,7 @@ public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentr
 
     @Override
     public IMaster<T> done() {
-        return new MasterWithCentreConfig<T>(type, saveOnActivate, entityCentre);
+        return new MasterWithCentre<T>(type, saveOnActivate, entityCentre);
     }
 
 }

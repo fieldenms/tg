@@ -187,7 +187,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             }
         };
 
-        return new SimpleMasterConfig(representation, valueMatcherForProps);
+        return new SimpleMaster(representation, valueMatcherForProps);
     }
 
     /**
@@ -209,12 +209,12 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
 
-    private class SimpleMasterConfig implements IMaster<T> {
+    private class SimpleMaster implements IMaster<T> {
 
         private final IRenderable renderableRepresentation;
         private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps;
 
-        public SimpleMasterConfig(
+        public SimpleMaster(
                 final IRenderable renderableRepresentation,
                 final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps) {
             this.renderableRepresentation = renderableRepresentation;
