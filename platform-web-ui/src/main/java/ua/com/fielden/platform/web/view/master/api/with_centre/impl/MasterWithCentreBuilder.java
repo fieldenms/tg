@@ -14,12 +14,6 @@ public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentr
     private boolean saveOnActivate = false;
 
     @Override
-    public IMasterWithCentre0<T> forEntity(final Class<T> type) {
-        this.type = type;
-        return this;
-    }
-
-    @Override
     public IMasterWithCentre0<T> forEntityWithSaveOnActivate(final Class<T> type) {
         this.type = type;
         this.saveOnActivate = true;

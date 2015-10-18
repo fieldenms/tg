@@ -11,7 +11,6 @@ import ua.com.fielden.platform.web.view.master.api.with_centre.IMasterWithCentre
  */
 public interface IMasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentreContext<?>> {
 
-    IMasterWithCentre0<T> forEntity(final Class<T> type);
     IMasterWithCentre0<T> forEntityWithSaveOnActivate(final Class<T> type);
 
 }
