@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.view.master.api.centre.impl;
+package ua.com.fielden.platform.web.view.master.api.with_centre.impl;
 
 import static java.lang.String.format;
 

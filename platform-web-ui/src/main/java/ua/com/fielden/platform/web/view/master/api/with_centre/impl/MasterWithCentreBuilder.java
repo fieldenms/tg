@@ -1,11 +1,11 @@
-package ua.com.fielden.platform.web.view.master.api.centre.impl;
+package ua.com.fielden.platform.web.view.master.api.with_centre.impl;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.IMasterWithCentreBuilder;
-import ua.com.fielden.platform.web.view.master.api.centre.IMasterWithCentre0;
 import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
+import ua.com.fielden.platform.web.view.master.api.with_centre.IMasterWithCentre0;
 
 public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentreContext<?>> implements IMasterWithCentreBuilder<T>, IMasterWithCentre0<T>, IComplete<T> {
 

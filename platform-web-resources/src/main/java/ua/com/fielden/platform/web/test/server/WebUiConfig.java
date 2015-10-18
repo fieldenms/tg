@@ -92,8 +92,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
-import ua.com.fielden.platform.web.view.master.api.centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
