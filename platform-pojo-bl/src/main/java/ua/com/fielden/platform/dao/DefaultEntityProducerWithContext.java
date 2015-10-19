@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -20,6 +21,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
     private final IEntityDao<T> companion;
     // optional centre context for context-dependent entity producing logic
     private CentreContext<C, AbstractEntity<?>> centreContext;
+    private AbstractFunctionalEntityWithCentreContext<?> contextAsFunctionalEntity;
     private String chosenProperty;
 
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType) {
@@ -69,6 +71,19 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
 
     protected IEntityDao<T> companion() {
         return companion;
+    }
+
+    /**
+     * Use this method in case when the master context (as functional entity) is required for entity instantiation.
+     *
+     * @return
+     */
+    protected AbstractFunctionalEntityWithCentreContext<?> getContextAsFunctionalEntity() {
+        return contextAsFunctionalEntity;
+    }
+
+    public void setContextAsFunctionalEntity(AbstractFunctionalEntityWithCentreContext<?> contextAsFunctionalEntity) {
+        this.contextAsFunctionalEntity = contextAsFunctionalEntity;
     }
 
     /**

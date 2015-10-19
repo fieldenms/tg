@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.*;
+
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -27,6 +29,7 @@ import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
@@ -49,23 +52,67 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     private final EntityResourceUtils<T> utils;
     private final RestServerUtil restUtil;
     private final Long entityId;
+    private final EntityIdKind entityIdKind;
     private final Logger logger = Logger.getLogger(getClass());
 
     private final ICompanionObjectFinder companionFinder;
-    private final IGlobalDomainTreeManager gdtm;
     private final ICriteriaGenerator critGenerator;
+    private final IWebUiConfig webUiConfig;
+    private final IServerGlobalDomainTreeManager serverGdtm;
+    private final IUserProvider userProvider;
 
-    public EntityResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator, final Context context, final Request request, final Response response) {
+
+    public enum EntityIdKind {
+        NEW("new"), ID("id"), FIND_OR_NEW("find_or_new");
+        
+        private final String value;
+
+        private EntityIdKind(final String value) {
+            this.value = value;
+        }
+        
+        boolean matches(final String value) {
+            return this.value.equalsIgnoreCase(value);
+        }
+    }
+    
+    public EntityResource(
+            final Class<T> entityType, 
+            final IEntityProducer<T> entityProducer, 
+            final EntityFactory entityFactory, 
+            final RestServerUtil restUtil, 
+            final ICriteriaGenerator critGenerator, 
+            final ICompanionObjectFinder companionFinder, 
+
+            final IWebUiConfig webUiConfig,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            
+            final Context context, 
+            final Request request, 
+            final Response response) {
         init(context, request, response);
 
         this.companionFinder = companionFinder;
-        this.gdtm = gdtm;
         this.critGenerator = critGenerator;
         utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, this.companionFinder);
         this.restUtil = restUtil;
+        this.webUiConfig = webUiConfig;
+        this.serverGdtm = serverGdtm;
+        this.userProvider = userProvider;
 
         final String entityIdString = request.getAttributes().get("entity-id").toString();
-        this.entityId = entityIdString.equalsIgnoreCase("new") ? null : Long.parseLong(entityIdString);
+        
+        if (NEW.matches(entityIdString)) {
+            this.entityIdKind = NEW;
+            this.entityId = null;
+        } else if (FIND_OR_NEW.matches(entityIdString)) {
+            this.entityIdKind = FIND_OR_NEW;
+            this.entityId = null;
+        } else {
+            this.entityIdKind = ID;
+            this.entityId = Long.parseLong(entityIdString);
+        }
     }
 
     /**
@@ -85,16 +132,31 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     public Representation put(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             if (envelope != null) {
-                final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
-                final T entity = utils.createValidationPrototypeWithCentreContext(
-                        CentreResourceUtils.createCentreContext(
-                                centreContextHolder,
-                                CentreResourceUtils.createCriteriaEntity(centreContextHolder, companionFinder, gdtm, critGenerator)//
-                        ),
-                        centreContextHolder.getChosenProperty()
-                        );
-                ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
-                return restUtil.rawListJSONRepresentation(entity);
+                if (FIND_OR_NEW == entityIdKind) {
+                    final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+                    
+                    final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcEntityType;
+                    try {
+                        funcEntityType = (Class<? extends AbstractFunctionalEntityWithCentreContext<?>>) Class.forName((String) savingInfoHolder.getCentreContextHolder().getCustomObject().get("@@funcEntityType"));
+                    } catch (final ClassNotFoundException e) {
+                        throw new IllegalStateException(e);
+                    }
+                    
+                    final AbstractFunctionalEntityWithCentreContext<?> funcEntity = EntityResource.restoreEntityFrom(savingInfoHolder, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+                    final T entity = utils.createValidationPrototypeWithMasterContext(funcEntity);
+                    return restUtil.rawListJSONRepresentation(entity);
+                } else {
+                    final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+                    final T entity = utils.createValidationPrototypeWithCentreContext(
+                            CentreResourceUtils.createCentreContext(
+                                    centreContextHolder,
+                                    CentreResourceUtils.createCriteriaEntity(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator)//
+                            ),
+                            centreContextHolder.getChosenProperty()
+                            );
+                    ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
+                    return restUtil.rawListJSONRepresentation(entity);
+                }
             } else {
                 return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
             }
@@ -123,7 +185,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
-        final T applied = restoreEntityFrom(savingInfoHolder, utils, this.entityId, companionFinder, gdtm, critGenerator);
+        final T applied = restoreEntityFrom(savingInfoHolder, utils, this.entityId, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator);
 
         final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
         if (savingInfoHolder.getCentreContextHolder() != null) {

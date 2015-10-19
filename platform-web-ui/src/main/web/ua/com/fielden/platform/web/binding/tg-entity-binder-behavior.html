@@ -13,6 +13,15 @@
             	// No default values are allowed in this case.														   //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	
+            	/**
+            	 * The id of the currently bound entity (or 'new' in case of entity without id, aka 'not yet persisted' one, or 'find_or_new' in case of one-2-one associations).
+            	 *
+            	 * Sets initially during tg-entity-binder (master or selection criteria) generation phase and then updates accordingly.
+            	 */
+            	entityId: {
+            		type: String
+            	},
+            	
                 /**
                  * The state for the entity master.
                  *
@@ -365,6 +374,8 @@
                 	if (context) {
                         var ser = this._serialiser().serialise(context);
                         this._ajaxRetriever().body = JSON.stringify(ser);
+                	} else {
+                		this._ajaxRetriever().body = null;
                 	}
                     this._startRefreshCycleModeForEditors();
                     return this._ajaxRetriever().generateRequest().completes;
@@ -411,7 +422,9 @@
 
                     var newBindingEntity = this._postEntityReceived(validatedEntity, false);
                     // custom external action
-                    this.postValidated(validatedEntity, newBindingEntity, customObject);
+                    if (this.postValidated) {
+                    	this.postValidated(validatedEntity, newBindingEntity, customObject);
+                    }
                 }).bind(self);
                 
                 self._postValidatedDefaultError = (function (errorResult) {

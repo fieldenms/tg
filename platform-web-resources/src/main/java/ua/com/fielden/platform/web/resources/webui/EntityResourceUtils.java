@@ -24,6 +24,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -100,6 +101,20 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         return entityProducer.newEntity();
     }
 
+    /**
+     * Initialises the entity for master-context-dependent retrieval.
+     *
+     * @param context
+     *            the context for entity creation
+     *
+     * @return
+     */
+    public T createValidationPrototypeWithMasterContext(final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
+        final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
+        defProducer.setContextAsFunctionalEntity(masterContext);
+        return entityProducer.newEntity();
+    }
+    
     public Class<T> getEntityType() {
         return entityType;
     }
