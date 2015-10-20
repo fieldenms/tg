@@ -82,13 +82,13 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                 .replace("@entity_type", functionalEntityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->",
                         format(""
-                        + "<tg-master-menu id='menu' default-route='%s' menu-actions='[[menuItemActions]]' get-master-entity='[[_createContextHolderForEmbeddedViews]]'>"
+                        + "<tg-master-menu id='menu' default-route='%s' menu-actions='[[menuItemActions]]' uuid='[[uuid]]' get-master-entity='[[_createContextHolderForEmbeddedViews]]'>"
                         + menuItemActionsDom
                         + menuItemsDom
                         + menuItemViewsDom
                         + "</tg-master-menu>",
                         this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
-                .replace("//@ready-callback", format("this.menuItemActions = [%s];\n", jsMenuItemActionObjects)) // 
+                .replace("//@ready-callback", format("this.menuItemActions = [%s];\nthis.uuid = this.is + '/'+ this._reflector().generateUUID();\n", jsMenuItemActionObjects)) // 
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 

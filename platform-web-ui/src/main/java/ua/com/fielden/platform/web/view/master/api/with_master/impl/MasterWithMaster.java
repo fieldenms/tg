@@ -32,7 +32,7 @@ public class MasterWithMaster<T extends AbstractEntity<?>> implements IMaster<T>
         //// this suffix is used to remove the last comma, which prevents JSON conversion ////
         //////////////////////////////////////////////////////////////////////////////////////
         attrs.append("{");
-        attrs.append("\"entityType\":\"" + entityMaster.getEntityType().getName() + "\", \"currentState\":\"EDIT\"");
+        attrs.append("\"entityType\":\"" + entityMaster.getEntityType().getName() + "\", \"currentState\":\"EDIT\", \"centreUuid\": this.centreUuid");
         attrs.append("}");
 
         final String attributes = attrs.toString();
@@ -45,10 +45,11 @@ public class MasterWithMaster<T extends AbstractEntity<?>> implements IMaster<T>
                         + "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
                         + "    import='/master_ui/%s' "
                         + "    element-name='tg-%s-master' "
-                        + "    attrs='%s'>"
+                        + "    >"
                         + "</tg-element-loader>",
-                        entityMaster.getEntityType().getName(), entityMaster.getEntityType().getSimpleName(), attributes))
+                        entityMaster.getEntityType().getName(), entityMaster.getEntityType().getSimpleName()))
                 .replace("//@ready-callback", "")
+                .replace("//@attached-callback", format("this.$.loader.attrs = %s;", attributes))
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 

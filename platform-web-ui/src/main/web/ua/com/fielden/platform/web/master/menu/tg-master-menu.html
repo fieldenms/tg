@@ -164,9 +164,15 @@
              */
             getMasterEntity: {
                 type: Function,
-                observer: '_masterEntityChanged'
-            }
-
+                observer: '_getMasterEntityChanged'
+            },
+            
+            /**
+             * UUID that gets assigned by the owning entity master in order to assign it to the tg-ui-action.attrs (that represent menu items) on attached callback.
+             */
+			uuid: {
+				type: String
+			}
         },
 
         ready: function () {
@@ -187,12 +193,13 @@
         		for (var index = 0; index < tgUiActions.length; index++) {
         			tgUiActions[index].createContextHolder = this._createContextHolderForMenu;
         			tgUiActions[index].showDialog = this._showMenuItemView.bind(this);
+        			tgUiActions[index].attrs.centreUuid = this.uuid;
         		}
         	}
         },
 
-        _masterEntityChanged: function (newValue, oldValue) {
-        	console.log('_masterEntityChanged', newValue);
+        _getMasterEntityChanged: function (newValue, oldValue) {
+        	console.log('_getMasterEntityChanged', newValue);
         	if (this.route !== this.defaultRoute) {
         		this.route = this.defaultRoute;
         	} else {
@@ -209,7 +216,6 @@
         },
         
         _routeChanged: function (newRoute, oldRoute) {
-        	console.log("ROUTE HAS CHANGED TO", newRoute, oldRoute);
         	// TODO check and load menu item section if not loaded already
         	//      otherwise trigger validation... may not be applicable to all masters
          	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
