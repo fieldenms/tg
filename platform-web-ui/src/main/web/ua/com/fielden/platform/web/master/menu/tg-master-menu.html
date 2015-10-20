@@ -13,6 +13,7 @@
 <link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
 <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
 
+<link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/app/tg-reflector.html">
 
 <dom-module id="tg-master-menu">
@@ -102,7 +103,7 @@
 
                 <!-- Drawer Toolbar -->
                 <paper-toolbar id="drawerToolbar" class="tool-bar">
-                    <span style="font-size: 18px; height: 44px;">Vehicle Master</span>
+                    <span style="font-size: 18px; height: 44px;">[[menuTitle]]</span>
                 </paper-toolbar>
 
                 <!-- Drawer Content -->
@@ -117,7 +118,7 @@
                 <!-- Main Toolbar -->
                 <paper-toolbar id="mainToolbar" style="height: 44px;">
                     <!-- Application name -->
-                    <span style="font-size: 18px; height: 44px;">Vehicle Number: description</span>
+                    <span style="font-size: 18px; height: 44px;">[[sectionTitle]]</span>
                 </paper-toolbar>
 
                 <!-- Main Content -->
@@ -137,6 +138,16 @@
         is: 'tg-master-menu',
 
         properties: {
+        	menuTitle: {
+        		type: String,
+        		value: '[[menuTitle]]'
+        	},
+        	
+        	sectionTitle: {
+        		type: String,
+        		value: '[[sectionTitle]]'
+        	},
+        	
         	/* active menu item */
             route: {
                 type: String,
@@ -172,7 +183,32 @@
              */
 			uuid: {
 				type: String
-			}
+			},
+			
+            /* Postal subscription to events that trigger compound master entity refreshing.
+             * It gets populated in attahced callback only once, even though the same master instance gets used several time.
+             */
+            _subscriptions: {
+                type: Array,
+                value: function () {
+                    return [];
+                }
+            },
+            
+            /**
+             * An externally bound function to perfrom compound master refresh upon changes instigated from embedded masters.
+             */
+            refreshCompoundMaster: {
+            	type: Function
+            },
+            
+            /**
+             * A helper flag to differentiate between setting of new context upon the openning of the master and the refresh cycle.
+             */
+            _isRefreshCycle: {
+            	type: Boolean,
+            	value: false
+            }
         },
 
         ready: function () {
@@ -183,28 +219,60 @@
     				null, null, this.getMasterEntity);
                 return contextHolder;
             }).bind(self);
-	
         }, // end of ready 
         
         attached: function () {
-        	// Assign _createContextHolderForMenu to all tg-ui-action instances
-        	var tgUiActions = Polymer.dom(this.$.menuItemActions).getDistributedNodes();
+        	var self = this;
+        	// assign _createContextHolderForMenu to all tg-ui-action instances
+        	var tgUiActions = Polymer.dom(self.$.menuItemActions).getDistributedNodes();
         	if (tgUiActions && tgUiActions.length > 0) {
         		for (var index = 0; index < tgUiActions.length; index++) {
-        			tgUiActions[index].createContextHolder = this._createContextHolderForMenu;
-        			tgUiActions[index].showDialog = this._showMenuItemView.bind(this);
-        			tgUiActions[index].attrs.centreUuid = this.uuid;
+        			tgUiActions[index].createContextHolder = self._createContextHolderForMenu;
+        			tgUiActions[index].showDialog = self._showMenuItemView.bind(self);
+        			tgUiActions[index].attrs.centreUuid = self.uuid;
         		}
         	}
+        	
+        	// subscribe to the channel and topics used by embedded masters (views for menu items) in order to 
+        	// refresh the master entity that is bound to the top-most functional entity that is used for compound master header and gets propagated downwards to all menu items
+        	// this ensures that changes to the master entity on any embedded master are correctly reflected everywhere else on the compound master
+        	var eventChannel = self.uuid;
+            var eventTopics = ['save.post.success', 'refresh.post.success'];
+			// subscrive if needed
+            if (self._subscriptions.length === 0) {
+	            for (var index = 0; index < eventTopics.length; index++) {
+	                self._subscriptions.push(
+	                    postal.subscribe({
+	                        channel: eventChannel,
+	                        topic: eventTopics[index],
+	                        callback: self._refreshCompoundMaster.bind(self)
+	                    }));
+	            }
+            }
+
         },
 
+        _refreshCompoundMaster: function (data, envelope) {
+        	this._isRefreshCycle = true;
+        	this.refreshCompoundMaster();
+        },
+        
         _getMasterEntityChanged: function (newValue, oldValue) {
         	console.log('_getMasterEntityChanged', newValue);
-        	if (this.route !== this.defaultRoute) {
-        		this.route = this.defaultRoute;
-        	} else {
-        		this._routeChanged(this.defaultRoute, this.route);
-        	}
+        	
+        	var context = newValue();
+        	this.menuTitle = context.modifHolder.menuTitle.origVal;
+        	this.sectionTitle = context.modifHolder.sectionTitle.origVal; 
+        	
+ 			if (this._isRefreshCycle === false) {      	
+	        	if (this.route !== this.defaultRoute) {
+	        		this.route = this.defaultRoute;
+	        	} else {
+	        		this._routeChanged(this.defaultRoute, this.route);
+	        	}
+ 			}
+ 			
+ 			this._isRefreshCycle = false;
         },
         
         /**

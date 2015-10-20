@@ -82,7 +82,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                 .replace("@entity_type", functionalEntityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->",
                         format(""
-                        + "<tg-master-menu id='menu' default-route='%s' menu-actions='[[menuItemActions]]' uuid='[[uuid]]' get-master-entity='[[_createContextHolderForEmbeddedViews]]'>"
+                        + "<tg-master-menu id='menu' default-route='%s' menu-actions='[[menuItemActions]]' uuid='[[uuid]]' get-master-entity='[[_createContextHolderForEmbeddedViews]]' refresh-compound-master='[[save]]'>"
                         + menuItemActionsDom
                         + menuItemsDom
                         + menuItemViewsDom
