@@ -43,7 +43,8 @@
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	/* Indicates what entity property this action is associated with. */
         	chosenProperty: {
-        	    type: String
+        	    type: String,
+        	    value: null
         	},
             /**
              * Custom action to be invoked before 'tg-ui-action' will be run.
@@ -299,7 +300,7 @@
             	self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
             }
             // enhances it with information of what 'property' was chosen (property result-set actions)
-            if (self.chosenProperty) {
+            if (self.chosenProperty !== null) {
             	self._enhanceContextWithChosenProperty(context, self.chosenProperty);
             }
 			return context;
