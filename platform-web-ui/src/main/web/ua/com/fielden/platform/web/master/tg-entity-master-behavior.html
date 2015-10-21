@@ -421,7 +421,15 @@
              * @param modifiedPropertiesHolder -- the entity with modified properties
              */
             _saveModifiedProperties: function (modifiedPropertiesHolder) {
-                this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, this.savingContext)));
+            	if (this.getMasterEntity && !this.savingContext) {
+            		var contextHolder = this._reflector().createContextHolder(
+            				null, null, 'true',
+            				null, null, this.getMasterEntity);
+            		
+            		this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, contextHolder)));
+            	} else {
+                	this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, this.savingContext)));
+            	}
                 return this._ajaxSaver().generateRequest().completes;
             },
 

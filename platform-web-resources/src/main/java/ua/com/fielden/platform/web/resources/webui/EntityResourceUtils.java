@@ -94,26 +94,17 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    public T createValidationPrototypeWithCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty, final Long compoundMasterEntityId) {
+    public T createValidationPrototypeWithContext(
+            final CentreContext<T, AbstractEntity<?>> centreContext, 
+            final String chosenProperty, 
+            final Long compoundMasterEntityId, 
+            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
         final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
         defProducer.setCentreContext(centreContext);
         defProducer.setChosenProperty(chosenProperty);
         defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
-        return entityProducer.newEntity();
-    }
-
-    /**
-     * Initialises the entity for master-context-dependent retrieval.
-     *
-     * @param context
-     *            the context for entity creation
-     *
-     * @return
-     */
-    public T createValidationPrototypeWithMasterContext(final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
-        final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
         defProducer.setContextAsFunctionalEntity(masterContext);
-        return entityProducer.newEntity();
+        return defProducer.newEntity();
     }
     
     public Class<T> getEntityType() {
@@ -474,8 +465,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param envelope
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty, final Long compoundMasterEntityId) {
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithCentreContext(centreContext, chosenProperty, compoundMasterEntityId), getCompanionFinder());
+    public Pair<T, Map<String, Object>> constructEntity(
+            final Map<String, Object> modifiedPropertiesHolder, 
+            final CentreContext<T, AbstractEntity<?>> centreContext, 
+            final String chosenProperty, 
+            final Long compoundMasterEntityId,
+            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
+        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithContext(centreContext, chosenProperty, compoundMasterEntityId, masterContext), getCompanionFinder());
     }
 
     /**

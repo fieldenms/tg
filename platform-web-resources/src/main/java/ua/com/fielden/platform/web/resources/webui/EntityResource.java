@@ -119,8 +119,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * Handles POST requests resulting from tg-entity-master <code>save()</code> method (persisted entity).
      */
     @Post
-    @Override
-    public Representation post(final Representation envelope) {
+    public Representation save(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> tryToSave(envelope), restUtil);
     }
 
@@ -128,8 +127,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * Handles PUT requests resulting from tg-entity-master <code>retrieve(context)</code> method (new or persisted entity).
      */
     @Put
-    @Override
-    public Representation put(final Representation envelope) {
+    public Representation retrieve(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             if (envelope != null) {
                 if (FIND_OR_NEW == entityIdKind) {
@@ -143,17 +141,18 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     }
                     
                     final AbstractFunctionalEntityWithCentreContext<?> funcEntity = EntityResource.restoreEntityFrom(savingInfoHolder, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
-                    final T entity = utils.createValidationPrototypeWithMasterContext(funcEntity);
+                    final T entity = utils.createValidationPrototypeWithContext(null, null, null, funcEntity);
                     return restUtil.rawListJSONRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
-                    final T entity = utils.createValidationPrototypeWithCentreContext(
+                    final T entity = utils.createValidationPrototypeWithContext(
                             CentreResourceUtils.createCentreContext(
                                     centreContextHolder,
                                     CentreResourceUtils.createCriteriaEntity(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator)//
                             ),
                             centreContextHolder.getChosenProperty(),
-                            null /* compound master entity id */
+                            null /* compound master entity id */,
+                            null /* master context */
                     );
                     ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
                     return restUtil.rawListJSONRepresentation(entity);
@@ -186,10 +185,32 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
-        final T applied = restoreEntityFrom(savingInfoHolder, utils, this.entityId, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator);
 
+        AbstractFunctionalEntityWithCentreContext<?> funcEntity = null;
+        if (savingInfoHolder.getCentreContextHolder() != null && savingInfoHolder.getCentreContextHolder().getMasterEntity() instanceof SavingInfoHolder) {
+            final SavingInfoHolder outerContext = (SavingInfoHolder) savingInfoHolder.getCentreContextHolder().getMasterEntity();
+            final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcEntityType;
+            try {
+                final CentreContextHolder cch = outerContext.getCentreContextHolder();
+                if (cch != null && cch.getCustomObject().get("@@funcEntityType") != null) {
+                    funcEntityType = (Class<? extends AbstractFunctionalEntityWithCentreContext<?>>) Class.forName((String) cch.getCustomObject().get("@@funcEntityType"));
+                } else {
+                    funcEntityType = null;
+                }
+            } catch (final ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
+    
+            if (funcEntityType != null) {
+                funcEntity = EntityResource.restoreEntityFrom(outerContext, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+            }
+        }
+        
+        final T applied = restoreEntityFrom(savingInfoHolder, utils, this.entityId, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator, funcEntity);
+
+        
         final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
-        if (savingInfoHolder.getCentreContextHolder() != null) {
+        if (savingInfoHolder.getCentreContextHolder() != null && potentiallySaved instanceof AbstractFunctionalEntityWithCentreContext) {
             ((AbstractFunctionalEntityWithCentreContext) potentiallySaved).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
         }
         return restUtil.singleJSONRepresentation(potentiallySaved);
@@ -219,10 +240,17 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         final Object arrivedIdVal = modifHolder.get(AbstractEntity.ID);
         final Long longId = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
-        return restoreEntityFrom(savingInfoHolder, utils, longId, companionFinder, gdtm, critGenerator);
+        return restoreEntityFrom(savingInfoHolder, utils, longId, companionFinder, gdtm, critGenerator, null /* master context */);
     }
 
-    private static <T extends AbstractEntity<?>> T restoreEntityFrom(final SavingInfoHolder savingInfoHolder, final EntityResourceUtils<T> utils, final Long entityId, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
+    private static <T extends AbstractEntity<?>> T restoreEntityFrom(
+            final SavingInfoHolder savingInfoHolder, 
+            final EntityResourceUtils<T> utils, 
+            final Long entityId, 
+            final ICompanionObjectFinder companionFinder, 
+            final IGlobalDomainTreeManager gdtm, 
+            final ICriteriaGenerator critGenerator,
+            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
         final T applied;
         if (savingInfoHolder.getCentreContextHolder() == null) {
@@ -237,7 +265,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             savingInfoHolder.getCentreContextHolder(),
                             CentreResourceUtils.createCriteriaEntity(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator)),
                     savingInfoHolder.getCentreContextHolder().getChosenProperty(),
-                    compoundMasterEntityId
+                    compoundMasterEntityId,
+                    masterContext
            ).getKey();
         }
         return applied;
