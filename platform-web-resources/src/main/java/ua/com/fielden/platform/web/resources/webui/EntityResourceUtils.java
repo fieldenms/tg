@@ -94,10 +94,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    public T createValidationPrototypeWithCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
+    public T createValidationPrototypeWithCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty, final Long compoundMasterEntityId) {
         final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
         defProducer.setCentreContext(centreContext);
         defProducer.setChosenProperty(chosenProperty);
+        defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
         return entityProducer.newEntity();
     }
 
@@ -473,8 +474,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param envelope
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithCentreContext(centreContext, chosenProperty), getCompanionFinder());
+    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty, final Long compoundMasterEntityId) {
+        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithCentreContext(centreContext, chosenProperty, compoundMasterEntityId), getCompanionFinder());
     }
 
     /**

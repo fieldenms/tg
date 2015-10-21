@@ -82,10 +82,17 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                 .replace("@entity_type", functionalEntityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->",
                         format(""
-                        + "<tg-master-menu id='menu' default-route='%s' menu-actions='[[menuItemActions]]' uuid='[[uuid]]' get-master-entity='[[_createContextHolderForEmbeddedViews]]' refresh-compound-master='[[save]]'>"
-                        + menuItemActionsDom
-                        + menuItemsDom
-                        + menuItemViewsDom
+                        + "<tg-master-menu\n"
+                        + "    id='menu'\n"
+                        + "    default-route='%s'\n"
+                        + "    menu-actions='[[menuItemActions]]'\n"
+                        + "    uuid='[[uuid]]'\n"
+                        + "    get-master-entity='[[_createContextHolderForEmbeddedViews]]'\n"
+                        + "    refresh-compound-master='[[save]]'\n"
+                        + "    augment-context-with-saved-entity='[[augmentContextWithSavedEntity]]'>\n"
+                        + menuItemActionsDom + "\n"
+                        + menuItemsDom + "\n"
+                        + menuItemViewsDom + "\n"
                         + "</tg-master-menu>",
                         this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
                 .replace("//@ready-callback", format("this.menuItemActions = [%s];\nthis.uuid = this.is + '/'+ this._reflector().generateUUID();\n", jsMenuItemActionObjects)) // 

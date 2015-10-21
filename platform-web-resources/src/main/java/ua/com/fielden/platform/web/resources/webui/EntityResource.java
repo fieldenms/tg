@@ -152,8 +152,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                                     centreContextHolder,
                                     CentreResourceUtils.createCriteriaEntity(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator)//
                             ),
-                            centreContextHolder.getChosenProperty()
-                            );
+                            centreContextHolder.getChosenProperty(),
+                            null /* compound master entity id */
+                    );
                     ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
                     return restUtil.rawListJSONRepresentation(entity);
                 }
@@ -227,13 +228,17 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         if (savingInfoHolder.getCentreContextHolder() == null) {
             applied = utils.constructEntity(modifiedPropertiesHolder, entityId).getKey();
         } else {
+            final Object compoundMasterEntityIdRaw = savingInfoHolder.getCentreContextHolder().getCustomObject().get("@@compoundMasterEntityId");
+            final Long compoundMasterEntityId = compoundMasterEntityIdRaw == null ? null : Long.parseLong(compoundMasterEntityIdRaw.toString());
+
             applied = utils.constructEntity(
                     modifiedPropertiesHolder,
                     CentreResourceUtils.createCentreContext(
                             savingInfoHolder.getCentreContextHolder(),
                             CentreResourceUtils.createCriteriaEntity(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator)),
-                    savingInfoHolder.getCentreContextHolder().getChosenProperty()
-                    ).getKey();
+                    savingInfoHolder.getCentreContextHolder().getChosenProperty(),
+                    compoundMasterEntityId
+           ).getKey();
         }
         return applied;
     }

@@ -22,6 +22,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
     // optional centre context for context-dependent entity producing logic
     private CentreContext<C, AbstractEntity<?>> centreContext;
     private AbstractFunctionalEntityWithCentreContext<?> contextAsFunctionalEntity;
+    private Long compoundMasterEntityId;
     private String chosenProperty;
 
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType) {
@@ -110,5 +111,13 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
 
     public void setChosenProperty(final String chosenProperty) {
         this.chosenProperty = chosenProperty;
+    }
+
+    public Long getCompoundMasterEntityId() {
+        return compoundMasterEntityId;
+    }
+
+    public void setCompoundMasterEntityId(Long compoundMasterEntityId) {
+        this.compoundMasterEntityId = compoundMasterEntityId;
     }
 }

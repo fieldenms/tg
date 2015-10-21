@@ -117,7 +117,7 @@
                                         postal.publish({
                                             channel: self.eventChannel,
                                             topic: self.role + '.post.success',
-                                            data: {}
+                                            data: {id: ironRequest.entityId}
                                         });
                                     } else {
                                         postal.publish({

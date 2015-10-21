@@ -208,6 +208,15 @@
             _isRefreshCycle: {
             	type: Boolean,
             	value: false
+            }, 
+            
+            /**
+             * In case when the new entity has been just saved, there is a need to augment the context of this compound master functional entity to take into account newly created main entity.
+             *
+             * @param compoundMasterEntityId -- the id of just saved main entity to be promoted into the the context of this compound master functional entity
+             */
+            augmentContextWithSavedEntity: {
+            	type: Function
             }
         },
 
@@ -254,6 +263,12 @@
 
         _refreshCompoundMaster: function (data, envelope) {
         	this._isRefreshCycle = true;
+        	
+        	var context = this.getMasterEntity();
+        	if (context.modifHolder.forNew.origVal === true && envelope.topic === 'save.post.success') {
+        		this.augmentContextWithSavedEntity(data.id);
+        	}
+        	
         	this.refreshCompoundMaster();
         },
         

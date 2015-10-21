@@ -138,6 +138,15 @@
                 save: {
                 	type: Function
                 },
+
+                /**
+                 * In case when this master represents a compound master and a new main entity has been just persisted, there is a need to augment the context of this master (i.e. this.savingContext) to be able to refresh the same context, but with just persisted entity (instead of only id).
+                 *
+                 * @param compoundMasterEntityId -- the id of just persisted main entity to be promoted into the context
+                 */
+                augmentContextWithSavedEntity: {
+                	type: Function
+                },
                 
                 /**
                  * The callback to strictly use for testing -- invokes after _ajaxSaver() has finished loading ('loading' property becomes 'false').
@@ -253,10 +262,15 @@
                     
                 }).bind(self);
                 
+                self.augmentContextWithSavedEntity = (function (compoundMasterEntityId) {
+                	this._reflector().setCustomProperty(this.savingContext, "@@compoundMasterEntityId", compoundMasterEntityId);
+                	console.log("augmentContextWithSavedEntity", compoundMasterEntityId);
+                }).bind(self);
+                
                 self._postSaverLoadingFinished = (function () {
                 	console.log("_postSaverLoadingFinished");
                 }).bind(self);
-                
+                	
             }, // end of ready callback
             
             attached: function() {

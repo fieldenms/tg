@@ -305,6 +305,9 @@
                     		// in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
                     		if (e.detail.successful !== false) {
                     		    e.detail.successful = true;
+                    		    if (typeof deserialisedResult.instance.id !== 'undefined') {
+                    		    	e.detail.entityId = deserialisedResult.instance.id;
+                    		    }
                     		}
                     	}
                     } else { // other codes
