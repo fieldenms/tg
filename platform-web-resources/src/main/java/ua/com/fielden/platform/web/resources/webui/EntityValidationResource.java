@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.util.Map;
-
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -9,10 +7,15 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -24,14 +27,37 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class EntityValidationResource<T extends AbstractEntity<?>> extends ServerResource {
-    private final EntityResourceUtils<T> utils;
+    private final Class<T> entityType;
+    private final EntityFactory entityFactory;
     private final RestServerUtil restUtil;
+    private final ICriteriaGenerator critGenerator;
+    private final ICompanionObjectFinder companionFinder;
+    private final IWebUiConfig webUiConfig;
+    private final IServerGlobalDomainTreeManager serverGdtm;
+    private final IUserProvider userProvider;
 
-    public EntityValidationResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
+    public EntityValidationResource(
+            final Class<T> entityType,
+            final EntityFactory entityFactory,
+            final RestServerUtil restUtil,
+            final ICriteriaGenerator critGenerator,
+            final ICompanionObjectFinder companionFinder,
+            final IWebUiConfig webUiConfig,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final Context context,
+            final Request request,
+            final Response response) {
         init(context, request, response);
 
+        this.entityType = entityType;
+        this.entityFactory = entityFactory;
         this.restUtil = restUtil;
-        utils = new EntityResourceUtils<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
+        this.critGenerator = critGenerator;
+        this.companionFinder = companionFinder;
+        this.webUiConfig = webUiConfig;
+        this.serverGdtm = serverGdtm;
+        this.userProvider = userProvider;
     }
 
     /**
@@ -43,8 +69,13 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             // NOTE: the following line can be the example how 'entity validation' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during entity validation.");
-            final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-            final T applied = utils.constructEntity(modifiedPropertiesHolder).getKey();
+            final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+
+            final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+
+            if (savingInfoHolder.getCentreContextHolder() != null) {
+                ((AbstractFunctionalEntityWithCentreContext) applied).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
+            }
             return restUtil.rawListJSONRepresentation(applied);
         }, restUtil);
     }

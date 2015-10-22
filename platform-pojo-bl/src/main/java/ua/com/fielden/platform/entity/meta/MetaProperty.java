@@ -679,9 +679,8 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      */
     public final MetaProperty<T> setOriginalValue(final T value) {
         if (value != null) {
-            if (isCollectional() && value instanceof Collection) {
-                // possibly at this stage the "value" is the Hibernate proxy.
-                collectionOrigSize = MetaProperty.ORIGINAL_VALUE_NOT_INIT_COLL;
+            if (isCollectional()) {
+                collectionOrigSize = ((Collection<?>) value).size();
             } else { // The single property (proxied or not!!!)
                 originalValue = value;
             }

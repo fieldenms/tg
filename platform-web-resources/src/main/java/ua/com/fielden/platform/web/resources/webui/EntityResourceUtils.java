@@ -37,7 +37,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
-import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
@@ -60,7 +59,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private final IEntityProducer<T> entityProducer;
     private final ICompanionObjectFinder companionFinder;
 
-    public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder) {
+    public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final ICompanionObjectFinder companionFinder) {
         this.entityType = entityType;
         this.companionFinder = companionFinder;
         this.dao = companionFinder.<IEntityDao<T>, T> find(this.entityType);
@@ -349,18 +348,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Integer taxPercentage = (Integer) map.get("taxPercent");
 
             return taxPercentage == null ? new Money(amount, Currency.getInstance(currencyStr)) : new Money(amount, taxPercentage, Currency.getInstance(currencyStr));
-        } else if (Colour.class.isAssignableFrom(propertyType)) {
-            if (reflectedValue == null) {
-                return null;
-            }
-            final Map<String, Object> map = (Map<String, Object>) reflectedValue;
-
-            //            final BigDecimal amount = map.get("amount") instanceof Integer ? new BigDecimal((Integer) map.get("amount")) : new BigDecimal((Double) map.get("amount"));
-            //            final String currencyStr = (String) map.get("currency");
-            //            final Integer taxPercentage = (Integer) map.get("taxPercent");
-
-            final String hashlessUppercasedColourValue = (String) map.get("hashlessUppercasedColourValue");
-            return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
         } else {
             throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s].", type.getSimpleName(), propertyName, reflectedValue));
         }
@@ -454,7 +441,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * All normal properties will be applied in 'validationPrototype'.
      *
      * @param envelope
-     * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
     public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final Long id) {
@@ -470,7 +456,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * All normal properties will be applied in 'validationPrototype'.
      *
      * @param envelope
-     * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
     public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
@@ -503,7 +488,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder) {
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
+        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
         return constructEntity(modifiedPropertiesHolder, id);
     }

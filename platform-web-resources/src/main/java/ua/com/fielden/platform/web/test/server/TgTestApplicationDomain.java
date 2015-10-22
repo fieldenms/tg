@@ -6,7 +6,6 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
@@ -51,8 +50,7 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(TgPersistentStatus.class);
         add(TgFetchProviderTestEntity.class);
         add(TgCentreInvokerWithCentreContext.class);
-	add(TgEntityForColourMaster.class);
-   }
+    }
 
     @Override
     public List<Class<? extends AbstractEntity<?>>> entityTypes() {

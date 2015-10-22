@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 <link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
@@ -56,8 +57,9 @@
             height: 44px;
             font-size: 18px;
             color: white;
-            background-color: #0288D1
+            background-color: var(--paper-light-blue-700);
         }
+        
         #drawerPanel:not([narrow]) #menuButton {
             display: none;
         }

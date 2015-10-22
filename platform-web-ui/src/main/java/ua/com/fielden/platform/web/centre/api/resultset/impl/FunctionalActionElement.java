@@ -139,7 +139,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public final DomElement render() {
         if (masterInvocationAction) {
             return new DomElement("tg-page-action").attr("class", "primary-action").attr("action", masterInDialogInvocationAction ? "[[_showMasterInDialog]]"
-                    : "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit");
+                    : "[[_showMaster]]").attr("short-desc", "action description").attr("icon", "editor:mode-edit").attr("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
         } else {
             // TODO tooltips to be enabled when ready
             // final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()

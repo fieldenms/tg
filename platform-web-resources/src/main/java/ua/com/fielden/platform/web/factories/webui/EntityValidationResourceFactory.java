@@ -5,16 +5,18 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.dao.IEntityProducer;
+import com.google.inject.Injector;
+
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-
-import com.google.inject.Injector;
 
 /**
  * A factory for entity validation resources which instantiate resources based on entity type.
@@ -29,6 +31,9 @@ public class EntityValidationResourceFactory extends Restlet {
     private final RestServerUtil restUtil;
     private final EntityFactory factory;
     private final ICompanionObjectFinder coFinder;
+    private final ICriteriaGenerator critGenerator;
+    private final IServerGlobalDomainTreeManager serverGdtm;
+    private final IUserProvider userProvider;
 
     /**
      * Instantiates a factory for entity validation resources.
@@ -42,6 +47,9 @@ public class EntityValidationResourceFactory extends Restlet {
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.factory = injector.getInstance(EntityFactory.class);
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
+        this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
+        this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
+        this.userProvider = injector.getInstance(IUserProvider.class);
     }
 
     @Override
@@ -53,10 +61,13 @@ public class EntityValidationResourceFactory extends Restlet {
 
             final EntityValidationResource<AbstractEntity<?>> resource = new EntityValidationResource<>(
                     (Class<AbstractEntity<?>>) master.getEntityType(),
-                    (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(),
                     factory,
                     restUtil,
+                    critGenerator,
                     coFinder,
+                    webUiConfig,
+                    serverGdtm,
+                    userProvider,
                     getContext(),
                     request,
                     response //

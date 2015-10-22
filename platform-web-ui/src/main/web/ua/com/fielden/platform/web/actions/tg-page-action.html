@@ -99,7 +99,17 @@
              */
             _onExecuted: {
                 type: Function
+            },
+            
+            /** 
+             * Property of this value gets passed into the data parameter for the details.saved topic of the event that is published after the functional entity has been saved.
+             * There are cases where it is desired to prevent unnecesary centre refreshes such as in case of some insertion points.
+             */
+            shouldRefreshParentCentreAfterSave: {
+				type: Boolean,
+				value: false /* should never be defaulted to true! */
             }
+
         },
 
         /**
@@ -140,6 +150,7 @@
                             channel: "centre_" + detail.centreUuid,
                             topic: "detail.saved",
                             data: {
+                            	shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
                                 entity: potentiallySavedEntity,
                                 // send selectedEntitiesInContext further to be able to update only them on EGI
                                 selectedEntitiesInContext: [potentiallySavedEntity]

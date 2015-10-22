@@ -9,6 +9,8 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.entities.EntityWithBce;
@@ -16,8 +18,6 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
-
-import com.google.inject.Injector;
 
 /**
  *
@@ -46,7 +46,7 @@ public class MetaPropertyTest {
     }
 
     @Test
-    public void original_value_for_property_with_default_should_be_null_none_the_less() {
+    public void original_value_for_property_with_default_should_be_null_none_the_less_as_this_is_critical_for_persisting_new_entities() {
         assertNotNull(entity.getProperty("propWithBce").getValue());
         assertNull(entity.getProperty("propWithBce").getOriginalValue());
     }

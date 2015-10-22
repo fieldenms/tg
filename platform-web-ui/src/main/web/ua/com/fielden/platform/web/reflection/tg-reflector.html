@@ -153,9 +153,11 @@
             if (!this.isChangedFromOriginal()) {
                 throw "No one should access originalValue for not changed from original property.";
             }
-            if (!this.entity().isPersisted()) {
-                throw "No one should access originalValue for not persisted entity.";
+            
+            if (typeof this['_originalVal'] === 'undefined') {
+                throw "instanceMetaProperty has no _originalVal when it is crucial!";
             }
+
             return this._originalVal;
         }
 
@@ -294,18 +296,11 @@
          */
         Entity.prototype.getOriginal = function (propName) {
             var value = this.get(propName);
-            if (this.isPersisted()) {
-                var instanceMetaProperty = this.constructor.prototype.prop.call(this, propName);
-                if (instanceMetaProperty.isChangedFromOriginal()) {
-                    if (typeof instanceMetaProperty['_originalVal'] === 'undefined') {
-                        throw "instanceMetaProperty has no _originalVal when it is crucial!";
-                    }
-                    return instanceMetaProperty._originalVal;
-                } else {
-                    return value;
-                }
+            var instanceMetaProperty = this.constructor.prototype.prop.call(this, propName);
+            if (instanceMetaProperty.isChangedFromOriginal()) {
+                return instanceMetaProperty.originalValue();
             } else {
-                return null;
+                return value;
             }
         }
 
@@ -856,8 +851,6 @@
                 return value;
             } else if (value.constructor === Array) { // for Array value -- return the same value for tg-entity-search-criteria editor
                 return value;
-            } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
-                return value;
             } else {
                 throw new _UCEPrototype(value);
             }
@@ -980,6 +973,21 @@
             } else {
             	throw "Unknown value for attribute 'requireSelectionCriteria': " + requireSelectionCriteria;
             }
+        },
+        
+        /**
+         * Creates the holder of modified properties and some savingContext.
+         */
+        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext) {
+        	var reflector = this;
+            var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
+            savingInfoHolder.id = null;
+            savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
+        	
+        	if (savingContext) { // if saving context was defined (not 'undefined'):
+                savingInfoHolder["centreContextHolder"] = savingContext;
+        	}
+            return savingInfoHolder;
         },
         
         /**

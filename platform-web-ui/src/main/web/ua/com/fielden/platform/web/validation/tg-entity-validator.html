@@ -62,11 +62,14 @@
              * Starts the process of entity validation.
              *
              * @param modifiedPropertiesHolder -- the entity with modified properties
+             * @param context -- optional centre context (intended first of all for validation of newly created entities where validation prototypes at the server side requre context to be instantiated)
              */
-            validate: function (modifiedPropertiesHolder) {
-                // console.log("validate: modifiedPropertiesHolder", modifiedPropertiesHolder);
-                var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
-                // console.log("validate: serialised modifiedPropertiesHolder", ser);
+            validate: function (modifiedPropertiesHolder, context) {
+            	if (context) {
+                    console.log('VALIDATE: CONTEXT PROVIDED = ', context);
+            	}
+            	// previous implementation ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
+                var ser = this.$.serialiser.serialise(this.$.serialiser.$.reflector.createSavingInfoHolder(modifiedPropertiesHolder, context));
                 this.$.ajaxSender.body = JSON.stringify(ser);
                 this.$.ajaxSender.generateRequest();
             },

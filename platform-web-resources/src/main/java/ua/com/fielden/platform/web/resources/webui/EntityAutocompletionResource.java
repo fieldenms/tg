@@ -48,7 +48,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final Response response) {
         init(context, request, response);
 
-        utils = new EntityResourceUtils<CONTEXT>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
+        utils = new EntityResourceUtils<CONTEXT>(entityType, entityProducer, entityFactory, companionFinder);
         this.entityType = entityType;
         this.propertyName = propertyName;
         this.valueMatcher = valueMatcher;
