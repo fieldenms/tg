@@ -16,6 +16,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBigDecimal;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBoolean;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithColour;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithCompositeKey;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDefiner;
@@ -209,7 +210,9 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
                 SubBaseEntity2.class,
                 EntityWithCompositeKey.class,
                 EntityWithMoney.class,
-                EntityWithPolymorphicAEProp.class
+                EntityWithPolymorphicAEProp.class,
+                EntityWithColour.class
+                               
                 );
     }
 

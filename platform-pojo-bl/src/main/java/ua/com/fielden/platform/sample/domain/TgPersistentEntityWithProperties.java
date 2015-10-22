@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
@@ -24,7 +25,9 @@ import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
 import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IColourType;
 
 /**
  * Master entity object.
@@ -70,6 +73,14 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Date prop", desc = "Date prop desc")
     private Date dateProp;
+    
+    @IsProperty
+    @MapTo
+    @Title(value ="Colour prop")
+    @PersistedType(userType = IColourType.class)
+    @UpperCase
+    private Colour colourProp;
+    
 
     @IsProperty
     @MapTo
@@ -344,6 +355,16 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
 
     public Money getMoneyProp() {
         return moneyProp;
+    }
+    
+    @Observable
+    public TgPersistentEntityWithProperties setColourProp( final Colour colourProp) {
+		this.colourProp = colourProp;
+		return this;
+	}
+        
+    public Colour getColourProp(){
+    	return colourProp;
     }
 
     @Observable

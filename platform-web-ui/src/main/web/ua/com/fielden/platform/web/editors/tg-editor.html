@@ -5,6 +5,8 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input-char-counter.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html">
 <link rel="import" href="/resources/master/actions/tg-property-action.html">
 
@@ -41,6 +43,26 @@
         #input-container {
             @apply(--layout-flex);
         }
+        /* Colour-picker related styles*/
+		
+		.small-box {
+			max-width: 14px;
+			max-height: 14px;
+			background-color: #FAFAFA;
+			border: 2px solid #BDBDBD;
+			border-radius: 2px;
+			cursor: pointer;
+		}
+		
+		.small-icon {
+			max-width: 14px;
+			max-height: 14px;
+			color: #757575;
+			opacity: 1;
+			margin-top: -6px;
+		}
+		/*-----------------------------*/
+
         /* Styles for boolean property editors. */
         paper-checkbox {
             -moz-user-select: none;
@@ -163,166 +185,245 @@
         }
     </style>
 
-    <template>
-        <paper-input-container id="decorator" attr-for-value="editing-value" always-float-label>
-            <!-- flex auto  for textarea! -->
-            <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
-            <div class="main-container">
-                <div id="input-container" style$="[[_calcDecoratorPartStyle(_disabled)]]">
-                    <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
+	<template>
+		<paper-input-container id="decorator" attr-for-value="editing-value" always-float-label>
+			<!-- flex auto  for textarea! -->
+			<label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
+			<div class="main-container">
+				<div on-tap="_openColourPicker" class="small-box" hidden$="[[!_isColourEditor(_editorKind)]]" style$="[[_calcColourBoxStyle(_editingValue)]]">
+					<iron-icon class="small-icon" icon="close" style$="[[_calcColourSmallIconStyle(_editingValue)]]"></iron-icon>
+				</div>
+				<div hidden$="[[!_isColourEditor(_editorKind)]]" style$="[[_calcColourPrefixStyle(_editingValue)]]">#</div>
+				<div id="input-container" style$="[[_calcDecoratorPartStyle(_disabled)]]">
+					<!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
 
-                    <!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
-                    <input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
-                    <!-- </template> -->
+					<!-- <template is="dom-if" if="[[_isInteger(_editorKind)]]"> -->
+					<input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+					<!-- </template> -->
 
-                    <input id="input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled}}">
+					<input id="input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled}}">
 
-                    <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+					<input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
 
-                    <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
-                        <!--  flex -->
-                        <textarea id="input" disabled$="[[_disabled]]"></textarea>
-                    </iron-autogrow-textarea>
+					<iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+						<!--  flex -->
+						<textarea id="input" disabled$="[[_disabled]]"></textarea>
+					</iron-autogrow-textarea>
 
-                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
+					<paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
 
-                    <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
-                </div>
-                <!-- CONTENT HERE: -->
-                <content select=".custom-icon-buttons"></content>
-                
-                <div id="icon" hidden$="[[_actionDoesNotExist(action)]]">
-        			<tg-property-action entity-type="[[action.entityType]]" pre-action="[[action.preAction]]" post-action="[[action.postAction]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action>
-        		</div>
-            </div>
+					<input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
 
-            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]">[[_error]]</paper-input-error>
+					<input id="input" is="iron-input" hidden$="[[!_isColourEditor(_editorKind)]]" bind-value="{{_editingValue}}" style$="[[_calcColourTextStyle(_editingValue)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+				</div>
+				<!-- CONTENT HERE: -->
+				<content select=".custom-icon-buttons"></content>
 
-            <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]"></paper-input-char-counter>
-        </paper-input-container>
-        
-        <tg-reflector id="reflector"></tg-reflector>
+				<div id="icon" hidden$="[[_actionDoesNotExist(action)]]">
+					<tg-property-action entity-type="[[action.entityType]]" pre-action="[[action.preAction]]" post-action="[[action.postAction]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action>
+				</div>
+			</div>
 
-        <template is="dom-if" if="[[debug]]">
-            <p>_editingValue: <i>[[_editingValue]]</i>
-            </p>
-            <p>_commValue: <i>[[_commValue]]</i>
-            </p>
-            <p>_acceptedValue: <i>[[_acceptedValue]]</i>
-            </p>
-        </template>
-    </template>
+			<paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]">[[_error]]</paper-input-error>
+
+			<paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]"></paper-input-char-counter>
+		</paper-input-container>
+
+		<tg-reflector id="reflector"></tg-reflector>
+
+		<template is="dom-if" if="[[debug]]">
+			<p>_editingValue: <i>[[_editingValue]]</i>
+			</p>
+			<p>_commValue: <i>[[_commValue]]</i>
+			</p>
+			<p>_acceptedValue: <i>[[_acceptedValue]]</i>
+			</p>
+		</template>
+	</template>
 </dom-module>
 
 <script>
-    Polymer({
-        is: 'tg-editor',
+	(function () {
+		var colorLuminance = function (hex, lum) {
+			if (hex != null) {
+				hex = String(hex).replace(/[^0-9a-f]/gi, '');
+				if (hex.length < 6) {
+					hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+				}
+				lum = lum || 0;
 
-        properties: {
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////
-            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
-            // No default values are allowed in this case.														   //
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////
-            propTitle: String,
-            _disabled: {
-            	type: Boolean,
-            	observer: '_disabledChanged'
-            },
-            _editingValue: {
-                type: String,
-                notify: true
-            },
-            action: Object,
-            _error: String,
-            _commValue: String,
-            _acceptedValue: String,
-            debug: Boolean,
-            _editorKind: String,
-            _onChange: Function,
-            _onKeydown: Function,
-            _onInput: Function,
-            _maxLength: Number,
-            _autocompleterBlurEventHandler: Function,
-            currentState: String
-        },
+				var rgb = "#",
+					c, i;
+				for (i = 0; i < 3; i++) {
+					c = parseInt(hex.substr(i * 2, 2), 16);
+					c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+					rgb += ("00" + c).substr(c.length);
+				}
+				return rgb;
+			} else {
+				return hex;
+			}
+		};
+		Polymer({
+			is: 'tg-editor',
 
-        _isDecimal: function (editorKind) {
-            return 'DECIMAL' === editorKind;
-        },
+			properties: {
+				/////////////////////////////////////////////////////////////////////////////////////////////////////////
+				////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+				/////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+				// No default values are allowed in this case.														   //
+				/////////////////////////////////////////////////////////////////////////////////////////////////////////
+				propTitle: String,
+				_disabled: {
+					type: Boolean,
+					observer: '_disabledChanged'
+				},
+				_editingValue: {
+					type: String,
+					notify: true
+				},
+				action: Object,
+				_error: String,
+				_commValue: String,
+				_acceptedValue: String,
+				debug: Boolean,
+				_editorKind: String,
+				_onChange: Function,
+				_onKeydown: Function,
+				_onInput: Function,
+				_maxLength: Number,
+				_autocompleterBlurEventHandler: Function,
+				_openColourPicker: Function,
+				currentState: String
+			},
 
-        _isInteger: function (editorKind) {
-            return 'INTEGER' === editorKind;
-        },
+			_isDecimal: function (editorKind) {
+				return 'DECIMAL' === editorKind;
+			},
 
-        _isSinglelineTextOrDate: function (editorKind) {
-            return 'SINGLELINE_TEXT' === editorKind || 'DATE' === editorKind;
-        },
+			_isInteger: function (editorKind) {
+				return 'INTEGER' === editorKind;
+			},
 
-        _isMultilineText: function (editorKind) {
-            return 'MULTILINE_TEXT' === editorKind;
-        },
+			_isSinglelineTextOrDate: function (editorKind) {
+				return 'SINGLELINE_TEXT' === editorKind || 'DATE' === editorKind;
+			},
 
-        _isBooleanEditor: function (editorKind) {
-            return "BOOLEAN" === editorKind;
-        },
+			_isMultilineText: function (editorKind) {
+				return 'MULTILINE_TEXT' === editorKind;
+			},
 
-        _isAutocompleter: function (editorKind) {
-            return "AUTOCOMPLETER" === editorKind;
-        },
+			_isBooleanEditor: function (editorKind) {
+				return "BOOLEAN" === editorKind;
+			},
 
-        /**
-         * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
-         *
-         * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
-         */
-        _actionDoesNotExist: function (action) {
-            return action === null;
-        },
+			_isAutocompleter: function (editorKind) {
+				return "AUTOCOMPLETER" === editorKind;
+			},
 
-        /**
-         * Calculates the style for container's label.
-         */
-        _calcLabelStyle: function (editorKind, _disabled) {
-            var style = "";
-            if ("BOOLEAN" === editorKind) {
-                style += "visibility: hidden;"
-            }
-            if (_disabled === true) {
-                style += "opacity: 0.6;"
-            }
-            return style;
-        },
-        
-        /**
-         * Calculates the style for decorator inner parts, based on '_disabled' property.
-         */
-        _calcDecoratorPartStyle: function (_disabled) {
-            var style = "";
-            if (_disabled === true) {
-                style += "opacity: 0.6;"
-            }
-            return style;
-        },
-        
-        /**
-         * Returns value that indicates whether boolean editor is checked or not.
-         */
-        _isBooleanChecked: function (editingValue) {
-            return editingValue === 'true';
-        },
-        
-        /**
-         * The observer to the '_disabled' property, which maintains appropriately the class list of the decorator (regarding the class 'decorator-disabled').
-         */
-        _disabledChanged: function (newValue, oldValue) {
-        	if (newValue === true) {
-            	this.$.decorator.classList.add("decorator-disabled");
-        	} else {
-        		this.$.decorator.classList.remove("decorator-disabled");
-        	}
-            this.updateStyles();
-        }
-    });
+			_isColourEditor: function (editorKind) {
+				return "COLOUR" === editorKind;
+			},
+
+			/**
+			 * Colour picker related functions.
+			 */
+			_calcColourBoxStyle: function (editingValue) {
+				if (editingValue === "") {
+					return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
+				}
+				if (editingValue.length === 3 || editingValue.length === 6) {
+					return "  border: 2px solid " + colorLuminance('#' + editingValue, -0.1) + ";background-color: " + '#' + editingValue;
+				} else {
+					return "background-color: #FAFAFA; border: 2px solid #BDBDBD;";
+				}
+			},
+
+			_calcColourSmallIconStyle: function (editingValue) {
+				if (editingValue === "") {
+					return " opacity: 1 ";
+				} else if (editingValue.length === 3 || editingValue.length === 6) {
+					return "opacity: 0 ";
+				}
+			},
+
+			_calcColourPrefixStyle: function (editingValue) {
+				if (editingValue === "") {
+					return "opacity: 0; color: #212121";
+				}
+				if (editingValue.length === 3 || editingValue.length === 6) {
+					return "margin-left: 1px; color: #212121;font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px ";
+				} else {
+					return "margin-left: 1px; color: #DD2C00; font-family: , 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px";
+				}
+			},
+
+			_calcColourTextStyle: function (editingValue) {
+				if (editingValue === "") {
+					return "margin-left: 1px; color: #212121";
+				}
+				if (editingValue.length === 3 || editingValue.length === 6) {
+					return "margin-left: 1px; color: #212121; ";
+
+				} else {
+					return "margin-left: 1px; color: #DD2C00";
+				}
+			},
+			/* */
+
+			/**
+			 * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
+			 *
+			 * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
+			 */
+			_actionDoesNotExist: function (action) {
+				return action === null;
+			},
+
+			/**
+			 * Calculates the style for container's label.
+			 */
+			_calcLabelStyle: function (editorKind, _disabled) {
+				var style = "";
+				if ("BOOLEAN" === editorKind) {
+					style += "visibility: hidden;"
+				}
+				if (_disabled === true) {
+					style += "opacity: 0.6;"
+				}
+				return style;
+			},
+
+			/**
+			 * Calculates the style for decorator inner parts, based on '_disabled' property.
+			 */
+			_calcDecoratorPartStyle: function (_disabled) {
+				var style = "";
+				if (_disabled === true) {
+					style += "opacity: 0.6;"
+				}
+				return style;
+			},
+
+			/**
+			 * Returns value that indicates whether boolean editor is checked or not.
+			 */
+			_isBooleanChecked: function (editingValue) {
+				return editingValue === 'true';
+			},
+
+			/**
+			 * The observer to the '_disabled' property, which maintains appropriately the class list of the decorator (regarding the class 'decorator-disabled').
+			 */
+			_disabledChanged: function (newValue, oldValue) {
+				if (newValue === true) {
+					this.$.decorator.classList.add("decorator-disabled");
+				} else {
+					this.$.decorator.classList.remove("decorator-disabled");
+				}
+				this.updateStyles();
+			}
+		});
+	})();
 </script>

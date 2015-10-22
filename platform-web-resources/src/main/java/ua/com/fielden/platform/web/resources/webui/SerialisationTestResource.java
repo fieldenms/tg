@@ -23,6 +23,7 @@ import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -157,10 +158,14 @@ public class SerialisationTestResource extends ServerResource {
                                     return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, e1.get(propName), e2, e2.getType().getSimpleName(), propName, e2.get(propName)));
                                 }
                             } else if (!EntityUtils.equalsEx(e1.get(propName), e2.get(propName))) { // prop equality
-                                final String value1 = e1.get(propName) != null && e1.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e1.get(propName)).getTime()) + "" : e1.get(propName);
-                                final String value2 = e2.get(propName) != null && e2.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e2.get(propName)).getTime()) + "" : e2.get(propName);
+                            	final String value1 = e1.get(propName) != null && e1.get(propName).getClass().isAssignableFrom(Colour.class)?(((Colour) e1.get(propName)).getColourValue()) + "":(e1.get(propName) != null && e1.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e1.get(propName)).getTime()) + "" : e1.get(propName));
+                                final String value2 = e2.get(propName) != null && e2.get(propName).getClass().isAssignableFrom(Colour.class)?(((Colour) e2.get(propName)).getColourValue()) + "":(e2.get(propName) != null && e2.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e2.get(propName)).getTime()) + "" : e2.get(propName));
+//                                final String value1 = e1.get(propName) != null && e1.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e1.get(propName)).getTime()) + "" : e1.get(propName);
+//                                final String value2 = e2.get(propName) != null && e2.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e2.get(propName)).getTime()) + "" : e2.get(propName);
                                 return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to e2 [%s] (type = %s) prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
                             }
+                            
+                            
                         }
                     }
                 }
@@ -254,6 +259,7 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithBoolean(),
                 factory.createEntityWithDate(),
                 factory.createEntityWithMoney(),
+                factory.createEntityWithColour(),
                 factory.createEntityWithOtherEntity(),
                 factory.createEntityWithSameEntity(),
                 factory.createEntityWithSameEntityCircularlyReferencingItself(),
