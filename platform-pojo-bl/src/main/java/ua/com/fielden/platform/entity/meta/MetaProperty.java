@@ -798,7 +798,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                 }
             }
         } catch (final Exception e) {
-            logger.error(e.getMessage(), e);
+            logger.debug(e.getMessage(), e);
         }
         return false;
     }
