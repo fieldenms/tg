@@ -168,6 +168,7 @@
             <!-- flex auto  for textarea! -->
             <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
             <div class="main-container">
+				<content select=".prefix-custom-attributes"></content>
                 <div id="input-container" style$="[[_calcDecoratorPartStyle(_disabled)]]">
                     <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
 
@@ -187,7 +188,10 @@
                     <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
 
                     <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
-                </div>
+					
+					<input id="input" is="iron-input" hidden$="[[!_isColourEditor(_editorKind)]]" bind-value="{{_editingValue}}" style$="[[_calcColourTextStyle(_editingValue)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+				</div>
+
                 <!-- CONTENT HERE: -->
                 <content select=".custom-icon-buttons"></content>
                 
@@ -245,6 +249,7 @@
             _onInput: Function,
             _maxLength: Number,
             _autocompleterBlurEventHandler: Function,
+				_calcColourTextStyle: Function,
             currentState: String
         },
 
@@ -272,14 +277,18 @@
             return "AUTOCOMPLETER" === editorKind;
         },
 
-        /**
-         * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
-         *
-         * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
-         */
-        _actionDoesNotExist: function (action) {
-            return action === null;
-        },
+			_isColourEditor: function (editorKind) {
+				return "COLOUR" === editorKind;
+			},
+
+			/**
+			 * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
+			 *
+			 * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
+			 */
+			_actionDoesNotExist: function (action) {
+				return action === null;
+			},
 
         /**
          * Calculates the style for container's label.
