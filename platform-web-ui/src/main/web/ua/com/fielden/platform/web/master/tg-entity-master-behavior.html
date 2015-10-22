@@ -407,7 +407,15 @@
               * Overridden to reuse this.savingContext. It is not empty for tg-ui-action's functional entities, which is assigned in its method _onExecuted.
               */
              _validateForDescendants: function (preparedModifHolder) {
-                 this._validator().validate(preparedModifHolder, this.savingContext);
+            	 if (this.getMasterEntity && !this.savingContext) {
+             		var contextHolder = this._reflector().createContextHolder(
+             				null, null, 'true',
+             				null, null, this.getMasterEntity);
+             		
+             		this._validator().validate(preparedModifHolder, contextHolder);
+            	 } else {
+             		this._validator().validate(preparedModifHolder, this.savingContext);
+             	}
              },
 
             //////////////////////////////////////// SAVING ////////////////////////////////////////
