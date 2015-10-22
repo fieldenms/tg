@@ -139,12 +139,16 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     } catch (final ClassNotFoundException e) {
                         throw new IllegalStateException(e);
                     }
-                    
                     final AbstractFunctionalEntityWithCentreContext<?> funcEntity = EntityResource.restoreEntityFrom(savingInfoHolder, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+
                     final T entity = utils.createValidationPrototypeWithContext(null, null, null, funcEntity);
                     return restUtil.rawListJSONRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
+                    
+                    final AbstractFunctionalEntityWithCentreContext<?> funcEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, utils, centreContextHolder);
+
+                    
                     final T entity = utils.createValidationPrototypeWithContext(
                             CentreResourceUtils.createCentreContext(
                                     centreContextHolder,
@@ -152,7 +156,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             ),
                             centreContextHolder.getChosenProperty(),
                             null /* compound master entity id */,
-                            null /* master context */
+                            funcEntity /* master context */
                     );
                     ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
                     return restUtil.rawListJSONRepresentation(entity);
@@ -185,28 +189,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
-
-        AbstractFunctionalEntityWithCentreContext<?> funcEntity = null;
-        if (savingInfoHolder.getCentreContextHolder() != null && savingInfoHolder.getCentreContextHolder().getMasterEntity() instanceof SavingInfoHolder) {
-            final SavingInfoHolder outerContext = (SavingInfoHolder) savingInfoHolder.getCentreContextHolder().getMasterEntity();
-            final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcEntityType;
-            try {
-                final CentreContextHolder cch = outerContext.getCentreContextHolder();
-                if (cch != null && cch.getCustomObject().get("@@funcEntityType") != null) {
-                    funcEntityType = (Class<? extends AbstractFunctionalEntityWithCentreContext<?>>) Class.forName((String) cch.getCustomObject().get("@@funcEntityType"));
-                } else {
-                    funcEntityType = null;
-                }
-            } catch (final ClassNotFoundException e) {
-                throw new IllegalStateException(e);
-            }
-    
-            if (funcEntityType != null) {
-                funcEntity = EntityResource.restoreEntityFrom(outerContext, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
-            }
-        }
-        
-        final T applied = restoreEntityFrom(savingInfoHolder, utils, this.entityId, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator, funcEntity);
+        final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
 
         
         final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
@@ -240,7 +223,35 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         final Object arrivedIdVal = modifHolder.get(AbstractEntity.ID);
         final Long longId = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
-        return restoreEntityFrom(savingInfoHolder, utils, longId, companionFinder, gdtm, critGenerator, null /* master context */);
+        
+        final CentreContextHolder centreContextHolder = savingInfoHolder.getCentreContextHolder();
+        final AbstractFunctionalEntityWithCentreContext<?> funcEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, utils, centreContextHolder);
+        
+        
+        return restoreEntityFrom(savingInfoHolder, utils, longId, companionFinder, gdtm, critGenerator, funcEntity /* master context */);
+    }
+
+    public static <T extends AbstractEntity<?>> AbstractFunctionalEntityWithCentreContext<?> restoreMasterFunctionalEntity(final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator, final EntityResourceUtils<T> utils, final CentreContextHolder centreContextHolder) {
+        AbstractFunctionalEntityWithCentreContext<?> funcEntity = null;
+        if (centreContextHolder != null && centreContextHolder.getMasterEntity() instanceof SavingInfoHolder) {
+            final SavingInfoHolder outerContext = (SavingInfoHolder) centreContextHolder.getMasterEntity();
+            final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcEntityType;
+            try {
+                final CentreContextHolder cch = outerContext.getCentreContextHolder();
+                if (cch != null && cch.getCustomObject().get("@@funcEntityType") != null) {
+                    funcEntityType = (Class<? extends AbstractFunctionalEntityWithCentreContext<?>>) Class.forName((String) cch.getCustomObject().get("@@funcEntityType"));
+                } else {
+                    funcEntityType = null;
+                }
+            } catch (final ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
+    
+            if (funcEntityType != null) {
+                funcEntity = EntityResource.restoreEntityFrom(outerContext, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+            }
+        }
+        return funcEntity;
     }
 
     private static <T extends AbstractEntity<?>> T restoreEntityFrom(
