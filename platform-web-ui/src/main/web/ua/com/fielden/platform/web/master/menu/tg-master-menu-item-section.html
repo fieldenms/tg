@@ -31,6 +31,14 @@
                 }
             },
 
+            canLeave: function () {
+            	if (this._element !== null && typeof this._element.canLeave !== 'undefined') {
+            		return this._element.canLeave();
+            	}
+            	
+            	return true;
+            },
+            
             _getElement: function (customAction) {
             	var self = this;
             	if (self._element) {

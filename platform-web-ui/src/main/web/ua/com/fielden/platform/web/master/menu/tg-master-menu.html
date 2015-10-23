@@ -123,7 +123,7 @@
 
                 <!-- Main Content -->
                 <div>
-                    <iron-pages attr-for-selected="data-route" selected="{{route}}">
+                    <iron-pages attr-for-selected="data-route" selected="[[sectionRoute]]">
                         <content select=".menu-item-section"></content>
                     </iron-pages>
                 </div>
@@ -152,6 +152,15 @@
             route: {
                 type: String,
                 observer: '_routeChanged'
+            },
+            
+            /* active section that corresponds to value of this.route (i.e menu item)... in most cases...
+             * in case where the current section cannot be left (e.g. due to unsaved changes) and another route is selected, the section route remains unchanged
+             * under the same conditions the selected this.route (i.e. menu item) immediately gets changed back to correspond to unchanged this.sectionRoute.
+             */
+            sectionRoute: {
+                type: String,
+                observer: '_sectionRouteChanged'
             },
             
             menuActions: {
@@ -299,6 +308,17 @@
         },
         
         _routeChanged: function (newRoute, oldRoute) {
+        	if (this.route !== this.sectionRoute) {
+	        	var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+	        	if (section === undefined || section.canLeave()) {        	
+	        		this.sectionRoute = newRoute;
+	        	} else {
+	        		this.route = this.sectionRoute;
+	        	} 
+        	}
+ 		},
+        
+        _sectionRouteChanged: function (newRoute, oldRoute) {
         	// TODO check and load menu item section if not loaded already
         	//      otherwise trigger validation... may not be applicable to all masters
          	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');

@@ -452,6 +452,32 @@
                 return modifiedPropertiesHolder["@modified"];
             },
 
+            /**
+             * Method implementing .canLeave contract as disignated in classList.
+             * It is used to identify whether master can be "left/closed" without any adverse effect on the data it represents (i.e. there was no unsaved changes).
+             */
+            canLeave: function () {
+            	// check all the child nodes with canLeave contract if they can be left...
+            	var nodesWithCanLeave = this.querySelectorAll('.canLeave');
+            	if (nodesWithCanLeave.length > 0) {
+            		for (var index = 0; index < nodesWithCanLeave.length; index++) {
+						if (nodesWithCanLeave[index].canLeave() === false) {
+							return false;
+						}            			
+            		}
+            	} 
+            	
+            	// if all child nodes can be left, then check self if required
+            	if (this.classList.contains('canLeave')) {
+	            	// create modif holder to analyze the currently bound entity on subject of its modifications
+	            	var modifHolder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+	            	// the master can be left in case where there is no modifications and the entity is not new
+	            	return modifHolder.id !== null && !this._hasModified(modifHolder);
+            	} else {
+            		return true;
+            	}
+            },
+            
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             _getSimultaneousSaveExceptionType: function () {
                 return SimultaneousSaveException;

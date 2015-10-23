@@ -54,7 +54,7 @@ public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T>
                         + "    attrs='%s'>"
                         + "</tg-element-loader>",
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName(), attributes))
-                .replace("//@ready-callback", "")
+                .replace("//@ready-callback", "self.classList.remove('canLeave');")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivate + "");
 
