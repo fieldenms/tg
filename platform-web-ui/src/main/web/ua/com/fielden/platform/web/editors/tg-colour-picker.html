@@ -10,7 +10,7 @@
 		min-width: 40px;
 		min-height: 40px;
 	}
-	
+		
 	.dummy-box {
 		position: absolute;
 		top: -3px;
@@ -64,10 +64,12 @@
 <dom-module id="tg-colour-picker">
 	<template>
 		<tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" _on-change="[[_onChange]]" current-state="[[currentState]]" _calc-colour-text-style="[[_calcColourTextStyle]]">
-			<div on-tap="_openColourPicker" class="small-box prefix-custom-attributes" hidden$="[[!_isColourEditor(_editorKind)]]" style$="[[_calcColourBoxStyle(_editingValue)]]">
-				<iron-icon class="small-icon" icon="close" style$="[[_calcColourSmallIconStyle(_editingValue)]]"></iron-icon>
+			<div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
+			<div disabled$="[[_disabled]]" on-tap="_openColourPicker" class="small-box prefix-custom-attributes" hidden$="[[!_isColourEditor(_editorKind)]]" style$="[[_calcColourBoxStyle(_editingValue)]]" >
+				<iron-icon class="small-icon" icon="close" style$="[[_calcColourSmallIconStyle(_editingValue)]]" disabled$="[[_disabled]]"></iron-icon>
 			</div>
-			<div hidden$="[[!_isColourEditor(_editorKind)]]" class="prefix-custom-attributes" style$="[[_calcColourPrefixStyle(_editingValue)]]">#</div>
+			<div hidden$="[[!_isColourEditor(_editorKind)]]" class="prefix-custom-attributes" style$="[[_calcColourPrefixStyle(_editingValue)]]" disabled$="[[_disabled]">#</div>
+			</div>
 		</tg-editor>
 	</template>
 </dom-module>
@@ -104,19 +106,7 @@
 				type: Boolean,
 				value: false
 			},
-			_openColourPicker: {
-				type: Function,
-				value: function () {
-					return (function (e) {
-						if (!this.$.colourTemplate) {
-							var mve = this._createDialog();
-							Polymer.dom(this.root).appendChild(mve);
-							Polymer.dom.flush();
-						}
-						this.$.colourTemplate.open();
-					}).bind(this);
-				}
-			},
+
 			_calcColourTextStyle:{
 				type: Function,
 				value: function(){
@@ -136,6 +126,16 @@
 			
 				
 		},
+		_openColourPicker:function () {
+			if(this._disabled === false){
+					if(!this.$.colourTemplate){
+						var mve = this._createDialog();
+						Polymer.dom(this.root).appendChild(mve);
+						Polymer.dom.flush();
+					}
+					this.$.colourTemplate.open();	
+				}
+			},
 
 		ready: function () {
 			this.$.editorDom._editorKind = "COLOUR";
@@ -299,6 +299,13 @@
 				} else {
 					return "margin-left: 1px; color: #DD2C00; font-family: , 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px";
 				}
+			},
+		_calcDecoratorPartStyle: function (_disabled) {
+				var style = "";
+				if (_disabled === true) {
+					style += "opacity: 0.6;"
+				}
+				return style;
 			},
 		
 //		_calcColourTextStyle: function (editingValue) {
