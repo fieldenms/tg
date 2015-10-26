@@ -13,7 +13,6 @@ public class Colour {
     }
 
     private void validateColourValue(final String colourValue) {
-        System.out.println("--------------------- colour: " + colourValue);
         if (!colourValue.matches("\\p{XDigit}{3}|\\p{XDigit}{6}")) {
             if (!(colourValue == "")) {
                 throw new IllegalArgumentException("Colour value string must be composed of either 3 or 6 hexadecimal chars");

@@ -355,10 +355,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             }
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
 
-            //            final BigDecimal amount = map.get("amount") instanceof Integer ? new BigDecimal((Integer) map.get("amount")) : new BigDecimal((Double) map.get("amount"));
-            //            final String currencyStr = (String) map.get("currency");
-            //            final Integer taxPercentage = (Integer) map.get("taxPercent");
-
             final String hashlessUppercasedColourValue = (String) map.get("hashlessUppercasedColourValue");
             return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
         } else {
