@@ -87,7 +87,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         // populate testing entities
-        final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for entity with key 1. This is a relatively long description to demonstrate how well does is behave during value autocompletion."));
+        final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30)
+                .setDesc("Description for entity with key 1. This is a relatively long description to demonstrate how well does is behave during value autocompletion."));
         System.out.println("ent1.getId() == " + ent1.getId());
         final TgPersistentEntityWithProperties ent2 = save(new_(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14).setDesc("Description for entity with key 2.").setRequiredValidatedProp(30));
         System.out.println("ent2.getId() == " + ent2.getId());
@@ -113,7 +114,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
         // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
         // .setProducerInitProp(ent1)
-        .setIntegerProp(7).setMoneyProp(new Money(new BigDecimal(7))).setBigDecimalProp(new BigDecimal(7.7)).setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30);
+                .setIntegerProp(7).setMoneyProp(new Money(new BigDecimal(7))).setBigDecimalProp(new BigDecimal(7.7))
+                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30);
         de.setDesc("Default entity description");
         final TgPersistentEntityWithProperties defaultEnt = save(de);
         System.out.println("defaultEnt.getId() == " + defaultEnt.getId());
@@ -139,17 +141,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgFetchProviderTestEntity.class, "FETCH1").setProperty(exampleEnt1).setAdditionalProperty(su));
 
         createDemoDomain(ent1, ent3, compositeEnt1);
-
-        final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
-
-        final TgEntityForColourMaster defaultColourEnt = save(colourEntity);
-        System.out.println("defaultColourEnt.getId() == " + defaultColourEnt.getId());
-
-        //System.out.println(defaultColourEnt.getColourProp());
-
         //
         //        final TgPersistentEntityWithProperties ent1WithCompositeProp = save(new_(TgPersistentEntityWithProperties.class, "KEY12").setCompositeProp(compositeEnt1));
         //        System.out.println("ent1WithCompositeProp.getId() == " + ent1WithCompositeProp.getId());
+
+        final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
+        final TgEntityForColourMaster defaultColourEnt = save(colourEntity);
+        System.out.println("defaultColourEnt.getId() == " + defaultColourEnt.getId());
 
         final User demo = ((IUser) ao(User.class)).findByKey("DEMO");
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
@@ -185,8 +183,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentStatus sr = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "SR").setDesc("Defect Smash Repair"));
 
         for (int i = 0; i < 30; i++) {
-            save(new_(TgPersistentEntityWithProperties.class, "DEMO"
-                    + convert(i)).setStringProp(random("poor", "average", "good", "great", "superb", "excelent", "classic")).setIntegerProp(random(43, 67, 24, 35, 18, 99, 23)).setEntityProp(random(ent1, null, ent2)).setBigDecimalProp(random(new BigDecimal(23).setScale(5), new BigDecimal(4).setScale(5), new BigDecimal(99).setScale(5))).setDateProp(new DateTime(random(1000000000000L, 1100000000000L)).toDate()).setBooleanProp(random(true, false)).setCompositeProp(random(compEnt1, null)).setDesc("Description for demo entity with key "
+            save(new_(TgPersistentEntityWithProperties.class, "DEMO" + convert(i))
+                    .setStringProp(random("poor", "average", "good", "great", "superb", "excelent", "classic"))
+                    .setIntegerProp(random(43, 67, 24, 35, 18, 99, 23)).setEntityProp(random(ent1, null, ent2))
+                    .setBigDecimalProp(random(new BigDecimal(23).setScale(5), new BigDecimal(4).setScale(5), new BigDecimal(99).setScale(5)))
+                    .setDateProp(new DateTime(random(1000000000000L, 1100000000000L)).toDate())
+                    .setBooleanProp(random(true, false)).setCompositeProp(random(compEnt1, null)).setDesc("Description for demo entity with key "
                             + ("DEMO" + convert(i)) + ".").setRequiredValidatedProp(random(30, 56, 82)).setStatus(random(dr, is, ir, on, sr)));
         }
     }
