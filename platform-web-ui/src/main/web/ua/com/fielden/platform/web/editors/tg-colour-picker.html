@@ -34,8 +34,8 @@
         max-height: 14px;
         color: #757575;
     }
-	.hiden{
-		visibility: hidden;
+	.hidden-icon{
+        visibility: hidden;
 	}
     .color-box:hover > .dummy-box {
         display: block;
@@ -60,9 +60,7 @@
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" _on-change="[[_onChange]]" current-state="[[currentState]]" _calc-colour-text-style="[[_calcColourTextStyle]]">
             <div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
                 <div on-tap="_openColourPicker" class="small-box prefix-custom-attributes" style$="[[_calcColourBoxStyle(_editingValue)]]">
-                    <iron-icon class$="[[_calcColourSmallIconStyle(_editingValue)]]" icon="close" 
-<!--							   style$="[[_calcColourSmallIconStyle(_editingValue)]]"-->
-							   ></iron-icon>
+                    <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="close"></iron-icon>
                 </div>
                 <div class="prefix-custom-attributes" style$="[[_calcColourPrefixStyle(_editingValue)]]">#</div>
             </div>
@@ -179,10 +177,7 @@
                 }.bind(domBind);
 
                 domBind.open = function () {
-                    var dropdown = this.$.dropdown;
-                    this.async(function () {
-                        dropdown.open();
-                    }.bind(this), 1);
+                    this.$.dropdown.open();
                 }.bind(domBind);
 
                 var div = domBind.content.ownerDocument.createElement('div');
@@ -278,23 +273,22 @@
                 }
             },
 
-            _calcColourSmallIconStyle: function (editingValue) {
+            _calcColourSmallIconClass: function (editingValue) {
                 if (editingValue.length === 3 || editingValue.length === 6) {
-                    return "hiden";
+                    return "hidden-icon";
                 } else  {
     
-					return " small-icon ";
+					return "small-icon";
                 }
             },
 
             _calcColourPrefixStyle: function (editingValue) {
                 if (editingValue === "") {
                     return "visibility: hidden; color: #212121";
-                }
-                if (editingValue.length === 3 || editingValue.length === 6) {
+                }else if (editingValue.length === 3 || editingValue.length === 6) {
                     return "margin-left: 1px; color: #212121;font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px ";
                 } else {
-                    return "margin-left: 1px; color: #DD2C00; font-family: , 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px";
+                    return "margin-left: 1px; color: #DD2C00; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;margin-left: 10px; font-size: 16px";
                 }
             },
             _calcDecoratorPartStyle: function (_disabled) {
