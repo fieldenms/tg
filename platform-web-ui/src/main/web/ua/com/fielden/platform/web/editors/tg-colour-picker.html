@@ -55,9 +55,9 @@
     }
 	.prefix{
 		margin-left: 1px; 
-		font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+		font-family: 'Roboto', 'Noto', sans-serif;
 		margin-left: 10px; 
-		font-size: 16px;
+		font-size: 1rem;
 	}
 </style>
 
@@ -262,13 +262,10 @@
             },
 
             _calcColourBoxStyle: function (editingValue) {
-                if (editingValue === "") {
-                    return " background-color: #FAFAFA; border: 2px solid #BDBDBD;";
-                } else if (editingValue.length === 3 || editingValue.length === 6) {
-                    return "  border: 2px solid " + colorLuminance('#' + editingValue, -0.1) + ";background-color: " + '#' + editingValue;
-                } else {
-                    return "background-color: #FAFAFA; border: 2px solid #BDBDBD;";
-                }
+                if (editingValue.length === 3 || editingValue.length === 6) {
+                    return "border-color: " + colorLuminance('#' + editingValue, -0.1) + ";background-color: " + '#' + editingValue;
+                } 
+                return "";
             },
 
             _calcColourSmallIconClass: function (editingValue) {
