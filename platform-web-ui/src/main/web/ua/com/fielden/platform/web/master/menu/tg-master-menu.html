@@ -226,6 +226,13 @@
              */
             augmentContextWithSavedEntity: {
             	type: Function
+            },
+            
+            /**
+             * A master that contains this menu. It is used to access utility functions such as showing of toasts.
+             */
+            parent: {
+            	type: Object
             }
         },
 
@@ -309,11 +316,13 @@
         
         _routeChanged: function (newRoute, oldRoute) {
         	if (this.route !== this.sectionRoute) {
-	        	var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-	        	if (section === undefined || section.canLeave()) {        	
+	        	var section = this.sectionRoute === undefined ? undefined : Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+	        	var cannotLeaveReason = section === undefined ? undefined : section.canLeave(); 
+	        	if (section === undefined || cannotLeaveReason === undefined) {        	
 	        		this.sectionRoute = newRoute;
 	        	} else {
 	        		this.route = this.sectionRoute;
+	        		this.parent._openToastForError('Cannot leave "' + section.title + '".', cannotLeaveReason);
 	        	} 
         	}
  		},

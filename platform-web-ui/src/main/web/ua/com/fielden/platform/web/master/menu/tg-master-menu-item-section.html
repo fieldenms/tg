@@ -28,6 +28,10 @@
                 dataRoute: {
                 	type: String,
                 	reflectToAttribute: true /* used for attribure attr-for-selected of iron-pages that wraps menu item views */
+                },
+                
+                title: {
+                	type: String
                 }
             },
 
@@ -36,7 +40,7 @@
             		return this._element.canLeave();
             	}
             	
-            	return true;
+            	return undefined;
             },
             
             _getElement: function (customAction) {

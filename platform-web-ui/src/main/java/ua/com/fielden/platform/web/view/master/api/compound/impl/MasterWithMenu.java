@@ -68,7 +68,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
             importPaths.add(el.importPath());
             menuItemActionsDom.add(el.render());
             jsMenuItemActionObjects.append(el.createActionObject() + ",\n");
-            menuItemViewsDom.add(new DomElement("tg-master-menu-item-section").attr("id", "mi" + el.numberOfAction).attr("class", "menu-item-section").attr("data-route", el.getDataRoute()));
+            menuItemViewsDom.add(new DomElement("tg-master-menu-item-section").attr("id", "mi" + el.numberOfAction).attr("class", "menu-item-section").attr("data-route", el.getDataRoute()).attr("title", el.getShortDesc()));
             menuItemsDom.add(
                     new DomElement("paper-item").attr("class", "menu-item").attr("data-route", el.getDataRoute())
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()))
@@ -95,7 +95,10 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                         + menuItemViewsDom + "\n"
                         + "</tg-master-menu>",
                         this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
-                .replace("//@ready-callback", format("this.menuItemActions = [%s];\nthis.uuid = this.is + '/'+ this._reflector().generateUUID();\n", jsMenuItemActionObjects)) // 
+                .replace("//@ready-callback", 
+                        format("self.menuItemActions = [%s];\n"
+                             + "self.uuid = self.is + '/'+ self._reflector().generateUUID();\n"
+                             + "self.$.menu.parent = self;\n", jsMenuItemActionObjects)) // 
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 

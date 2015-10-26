@@ -461,8 +461,9 @@
             	var nodesWithCanLeave = this.querySelectorAll('.canLeave');
             	if (nodesWithCanLeave.length > 0) {
             		for (var index = 0; index < nodesWithCanLeave.length; index++) {
-						if (nodesWithCanLeave[index].canLeave() === false) {
-							return false;
+            			var reason = nodesWithCanLeave[index].canLeave(); 
+						if (reason !== undefined) {
+							return reason;
 						}            			
             		}
             	} 
@@ -472,9 +473,16 @@
 	            	// create modif holder to analyze the currently bound entity on subject of its modifications
 	            	var modifHolder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
 	            	// the master can be left in case where there is no modifications and the entity is not new
-	            	return modifHolder.id !== null && !this._hasModified(modifHolder);
+	            	if (modifHolder.id === null) {
+	            		return "A new entity is being created. Please save your changes.";
+	            	} 
+	            	if (this._hasModified(modifHolder)) {
+	            		return "Please save or cancel your changes.";
+	            	}
+	            	
+	            	return undefined;
             	} else {
-            		return true;
+            		return undefined;
             	}
             },
             
