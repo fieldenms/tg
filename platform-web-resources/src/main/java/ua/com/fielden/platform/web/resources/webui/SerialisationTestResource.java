@@ -158,20 +158,29 @@ public class SerialisationTestResource extends ServerResource {
                                     return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, e1.get(propName), e2, e2.getType().getSimpleName(), propName, e2.get(propName)));
                                 }
                             } else if (!EntityUtils.equalsEx(e1.get(propName), e2.get(propName))) { // prop equality
-                            	final String value1 = e1.get(propName) != null && e1.get(propName).getClass().isAssignableFrom(Colour.class)?(((Colour) e1.get(propName)).getColourValue()) + "":(e1.get(propName) != null && e1.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e1.get(propName)).getTime()) + "" : e1.get(propName));
-                                final String value2 = e2.get(propName) != null && e2.get(propName).getClass().isAssignableFrom(Colour.class)?(((Colour) e2.get(propName)).getColourValue()) + "":(e2.get(propName) != null && e2.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e2.get(propName)).getTime()) + "" : e2.get(propName));
-//                                final String value1 = e1.get(propName) != null && e1.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e1.get(propName)).getTime()) + "" : e1.get(propName);
-//                                final String value2 = e2.get(propName) != null && e2.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e2.get(propName)).getTime()) + "" : e2.get(propName);
+                                final String value1 = getValue(e1, propName);
+                                final String value2 = getValue(e2, propName);
                                 return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to e2 [%s] (type = %s) prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
                             }
-                            
-                            
+
                         }
                     }
                 }
                 return Result.successful(e1);
             }
         }
+    }
+
+    private static String getValue(final AbstractEntity<?> e1, final String propName) {
+        if (e1.get(propName) != null) {
+            final Object tempValue1 = e1.get(propName);
+            if (tempValue1.getClass().isAssignableFrom(Colour.class)) {
+                return ((Colour) e1.get(propName)).getColourValue();
+            } else if (tempValue1.getClass().isAssignableFrom(Date.class)) {
+                return Long.toString(((Date) e1.get(propName)).getTime());
+            }
+        }
+        return e1.get(propName);
     }
 
     private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2, final DefaultValueContract dvc) {
