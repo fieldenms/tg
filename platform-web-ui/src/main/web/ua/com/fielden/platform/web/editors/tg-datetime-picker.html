@@ -7,47 +7,57 @@
 <link rel="import" href="/resources/editors/tg-editor.html">
 
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
-<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
-<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import"
+	href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import"
+	href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 
-<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+<link rel="import"
+	href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import"
+	href="/resources/polymer/paper-dialog/paper-dialog.html">
 
-<link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
-<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+<link rel="import"
+	href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
+<link rel="import"
+	href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
 <style is="custom-style">
-    .date-picker paper-button {
-        color: var(--paper-light-blue-500);
-        --paper-button-flat-focus-color: var(--paper-light-blue-50);
-    }
-    .date-picker paper-button:hover {
-        background: var(--paper-light-blue-50);
-    }
-    .date-picker > tg-calendar {
-        margin: 0;
-        padding: 0;
-    }
-    .date-picker {
-        line-height: normal;
-    }
+.date-picker paper-button {
+	color: var(- -paper-light-blue-500); -
+	-paper-button-flat-focus-color: var(- -paper-light-blue-50);
+}
+
+.date-picker paper-button:hover {
+	background: var(- -paper-light-blue-50);
+}
+
+.date-picker>tg-calendar {
+	margin: 0;
+	padding: 0;
+}
+
+.date-picker {
+	line-height: normal;
+}
 </style>
 <dom-module id="tg-datetime-picker">
-    <style>
-        .picker-button::shadow #ink {
-            width: 1.9rem;
-            height: 1.9rem;
-            top: -0.3rem;
-            left: -0.3rem;
-        }
-        .picker-button {
-            --iron-icon-height: 1.3rem;
-            --iron-icon-width: 1.3rem;
-            width: 1.3rem;
-            height: 1.3rem;
-            padding: 0;
-        }
-        /*
+<style>
+.picker-button::shadow #ink {
+	width: 1.9rem;
+	height: 1.9rem;
+	top: -0.3rem;
+	left: -0.3rem;
+}
+
+.picker-button { -
+	-iron-icon-height: 1.3rem; -
+	-iron-icon-width: 1.3rem;
+	width: 1.3rem;
+	height: 1.3rem;
+	padding: 0;
+}
+/*
         .date-picker paper-button {
             color: var(--paper-light-blue-500);
             --paper-button-flat-focus-color: var(--paper-light-blue-50);
@@ -63,15 +73,19 @@
             line-height: normal;
         }
 */
-    }
-    </style>
+}
+</style>
 
-    <template>
-        <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-change="[[_onChange]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" current-state="[[currentState]]">
-            <paper-icon-button class="custom-icon-buttons picker-button" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
-        </tg-editor>
-    </template>
-</dom-module>
+<template> <tg-editor id="editorDom"
+	prop-title="[[propTitle]]" _disabled="[[_disabled]]"
+	_editing-value="{{_editingValue}}" action="[[action]]"
+	_error="[[_error]]" _comm-value="[[_commValue]]"
+	_accepted-value="[[_acceptedValue]]" debug="[[debug]]"
+	_on-change="[[_onChange]]" _on-input="[[_onInput]]"
+	_on-keydown="[[_onKeydown]]" current-state="[[currentState]]">
+<paper-icon-button class="custom-icon-buttons picker-button"
+	on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]">
+</paper-icon-buton></tg-editor> </template> </dom-module>
 
 <script>
     (function () {

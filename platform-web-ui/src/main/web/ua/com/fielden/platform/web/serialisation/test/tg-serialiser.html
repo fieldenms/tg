@@ -2,28 +2,32 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <title>tg-serialiser basic tests</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta charset="UTF-8">
+<title>tg-serialiser basic tests</title>
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="/resources/polymer/web-component-tester/browser.js"></script>
-    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+<script src="/resources/polymer/web-component-tester/browser.js"></script>
+<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
 
-    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+<link rel="import"
+	href="/resources/polymer/test-fixture/test-fixture.html">
 
-    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-    <link rel="import" href="/resources/serialisation/tg-serialiser.html">
+<link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
 </head>
 
 <body>
-    <iron-ajax id="entities_retriever" url="/test/serialisation" handle-as="json" auto></iron-ajax>
-    <iron-ajax id="entities_sender" url="/test/serialisation" method="POST" handle-as="json"></iron-ajax>
+	<iron-ajax id="entities_retriever" url="/test/serialisation"
+		handle-as="json" auto></iron-ajax>
+	<iron-ajax id="entities_sender" url="/test/serialisation" method="POST"
+		handle-as="json"></iron-ajax>
 
-    <tg-serialiser id="serialiser"></tg-serialiser>
+	<tg-serialiser id="serialiser"></tg-serialiser>
 
-    <script>
+	<script>
         suite('serialisation', function () {
             var serialiser, reflector;
 
