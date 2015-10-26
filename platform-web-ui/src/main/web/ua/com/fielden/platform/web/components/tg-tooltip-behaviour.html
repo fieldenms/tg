@@ -1,0 +1,36 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/tg-tooltip.html">
+
+<script>
+    var toolTipEleemnt = document.createElement("tg-tooltip");
+    Polymer.dom(document.body).appendChild(toolTipEleemnt);
+    Polymer.dom.flush();
+
+    Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    Polymer.TgBehaviors.TgTooltipBehaviour = {
+        properties: {
+            _tooltipTimer: Number
+        },
+
+        showTooltipAtMousePos: function (event) {
+            if (this._tooltipTimer) {
+                this.cancelAsync(this._tooltipTimer);
+                this._tooltipTimer = null;
+            }
+            this._tooltipTimer = this.async(function () {
+                Polymer.dom(toolTipEleemnt).innerHTML = this.getTooltipText(event);
+                toolTipEleemnt.showAt(event.pageX, event.pageY + 14);
+            }, 1000);
+        },
+
+        hideTooltip: function (event) {
+            if (toolTipEleemnt._showing) {
+                toolTipEleemnt.hide();
+            }
+            if (this._tooltipTimer) {
+                this.cancelAsync(this._tooltipTimer);
+                this._tooltipTimer = null;
+            }
+        }
+    };
+</script>

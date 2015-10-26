@@ -1,0 +1,27 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/tg-tooltip-behaviour.html">
+
+
+<dom-module id="tg-component-with-tooltip">
+    <style>
+        div {
+            cursor: default;
+        }
+    </style>
+    <template>
+        <div on-mousemove="showTooltipAtMousePos" on-mouseleave="hideTooltip">Component with activated tooltip</div>
+        <div on-mousemove="showTooltipAtMousePos" on-mouseleave="hideTooltip">Another Component with activated tooltip</div>
+    </template>
+    <script>
+        
+        Polymer({
+            is: 'tg-component-with-tooltip',
+
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehaviour],
+
+            getTooltipText: function(event) {
+                return "Tooltip example";
+            }
+        })
+    </script>
+</dom-module>

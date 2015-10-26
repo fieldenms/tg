@@ -1,0 +1,117 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animation-runner-behavior.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+
+
+<dom-module id="tg-tooltip">
+    <style>
+        :host {
+            display: block;
+            position: absolute;
+            outline: none;
+            z-index: 1002;
+        }
+        #tooltip {
+            display: block;
+            outline: none;
+            font-size: 10px;
+            background-color: #616161;
+            opacity: 0.9;
+            color: white;
+            padding: 8px;
+            border-radius: 2px;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+    <template>
+        <div id="tooltip" class="hidden">
+            <content></content>
+        </div>
+    </template>
+    <script>
+        
+        Polymer({
+            is: 'tg-tooltip',
+
+            hostAttributes: {
+                role: 'tooltip',
+                tabindex: -1
+            },
+
+            behaviors: [Polymer.NeonAnimationRunnerBehavior],
+
+            properties: {
+
+                animationConfig: {
+                    type: Object,
+                    value: function () {
+                        return {
+                            'entry': [{
+                                name: 'fade-in-animation',
+                                node: this
+                            }],
+                            'exit': [{
+                                name: 'fade-out-animation',
+                                node: this
+                            }]
+                        }
+                    }
+                },
+
+                _showing: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+
+            listeners: {
+                'neon-animation-finish': '_onAnimationFinish'
+            },
+            
+            showFor: function(element) {
+                if (!element) {
+                    return;
+                }
+                
+                var parentRect = this.offsetParent.getBoundingClientRect();
+                var targetRect = element.getBoundingClientRect();
+                var thisRect = this.getBoundingClientRect();
+
+                var centerOffset = (targetRect.width - thisRect.width) / 2;
+                
+                this.showAt(targetRect.left - parentRect.left + centerOffset, targetRect.top - parentRect.top + targetRect.height + this.marginTop);
+            },
+
+            showAt: function (x, y) {
+                if (this._showing)
+                    return;
+
+                this.cancelAnimation();
+
+                this.toggleClass('hidden', false, this.$.tooltip);
+                this.style.left = x + 'px';
+                this.style.top = y + 'px';
+                this._showing = true;
+
+                this.playAnimation('entry');
+            },
+
+            hide: function () {
+                if (!this._showing)
+                    return;
+
+                this._showing = false;
+                this.playAnimation('exit');
+            },
+
+            _onAnimationFinish: function () {
+                if (!this._showing) {
+                    this.toggleClass('hidden', true, this.$.tooltip);
+                }
+            },
+        })
+    </script>
+</dom-module>
