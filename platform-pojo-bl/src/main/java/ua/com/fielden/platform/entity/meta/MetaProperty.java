@@ -37,6 +37,7 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 
 /**
@@ -181,10 +182,11 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.isEntity = AbstractEntity.class.isAssignableFrom(type);
         this.retrievable = entity.isPersistent() &&
                 (
-                field.isAnnotationPresent(Calculated.class) ||
-                        (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
-                        (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
-                (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
+                  field.isAnnotationPresent(Calculated.class) ||
+                  (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                  (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                  (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class)) ||
+                  (Finder.isOne2One_association(this.entity.getType(), this.name))
                 );
         // let's identify whether property represents an activatable entity in the current context
         final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
@@ -796,7 +798,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                 }
             }
         } catch (final Exception e) {
-            logger.error(e.getMessage(), e);
+            logger.debug(e.getMessage(), e);
         }
         return false;
     }

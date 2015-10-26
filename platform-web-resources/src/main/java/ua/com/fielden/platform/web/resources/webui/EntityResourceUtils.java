@@ -24,6 +24,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -93,13 +94,19 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    public T createValidationPrototypeWithCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
+    public T createValidationPrototypeWithContext(
+            final CentreContext<T, AbstractEntity<?>> centreContext, 
+            final String chosenProperty, 
+            final Long compoundMasterEntityId, 
+            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
         final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
         defProducer.setCentreContext(centreContext);
         defProducer.setChosenProperty(chosenProperty);
-        return entityProducer.newEntity();
+        defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
+        defProducer.setContextAsFunctionalEntity(masterContext);
+        return defProducer.newEntity();
     }
-
+    
     public Class<T> getEntityType() {
         return entityType;
     }
@@ -458,8 +465,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param envelope
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithCentreContext(centreContext, chosenProperty), getCompanionFinder());
+    public Pair<T, Map<String, Object>> constructEntity(
+            final Map<String, Object> modifiedPropertiesHolder, 
+            final CentreContext<T, AbstractEntity<?>> centreContext, 
+            final String chosenProperty, 
+            final Long compoundMasterEntityId,
+            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
+        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithContext(centreContext, chosenProperty, compoundMasterEntityId, masterContext), getCompanionFinder());
     }
 
     /**

@@ -73,7 +73,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
 
             final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
 
-            if (savingInfoHolder.getCentreContextHolder() != null) {
+            if (savingInfoHolder.getCentreContextHolder() != null && applied instanceof AbstractFunctionalEntityWithCentreContext) {
                 ((AbstractFunctionalEntityWithCentreContext) applied).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
             }
             return restUtil.rawListJSONRepresentation(applied);

@@ -1,0 +1,337 @@
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
+<link rel="import" href="/resources/polymer/iron-selector/iron-selector.html">
+<!-- Paper elements -->
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
+<link rel="import" href="/resources/polymer/paper-scroll-header-panel/paper-scroll-header-panel.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+<link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
+<link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+
+<link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/app/tg-reflector.html">
+
+<dom-module id="tg-master-menu">
+    <style>
+        :root {
+            --dark-primary-color: var(--paper-blue-grey-700);
+            --default-primary-color: var(--paper-blue-grey-500);
+            --light-primary-color: var(--paper-blue-grey-200);
+            --text-primary-color: #ffffff;
+            /*text/icons*/
+            --accent-color: var(--paper-pink-a200);
+            --primary-background-color: #c5cae9;
+            --primary-text-color: var(--paper-blue-grey-500);
+            --secondary-text-color: #727272;
+            --disabled-text-color: var(--paper-grey-400);
+            --divider-color: #B6B6B6;
+            /* Components */
+            /* paper-drawer-panel */
+            --drawer-menu-color: #ffffff;
+            --drawer-border-color: 1px solid #ccc;
+            --drawer-toolbar-border-color: 1px solid rgba(0, 0, 0, 0.22);
+            /* paper-menu */
+            --paper-menu-background-color: #fff;
+            --menu-link-color: #111111;
+        }
+        
+        :host {
+            display: inline-block;
+        }
+        
+        paper-scroll-header-panel {
+            height: 100%;
+        }
+        
+        paper-menu {
+            padding: 0px;
+        }
+        
+        paper-menu iron-icon {
+            margin-right: 33px;
+            opacity: 0.54;
+        }
+        
+        .paper-menu > .iron-selected {
+            color: var(--default-primary-color);
+        }
+        
+        .tool-bar {
+            padding: 0 16px;
+            height: 44px;
+            font-size: 18px;
+        }
+        
+        paper-material {
+            border-radius: 2px;
+            height: 100%;
+            margin: 16px auto;
+            background: white;
+            width: calc(98% - 46px);
+            margin-bottom: 32px;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+        
+        #drawer {
+            border-right: 1px solid rgba(0, 0, 0, 0.14);
+        }
+        
+        #drawerToolbar {
+            color: var(--secondary-text-color);
+            background-color: var(--drawer-menu-color);
+            border-bottom: var(--drawer-toolbar-border-color);
+        }
+        
+        iron-pages {
+            padding: 8px 8px;
+        }
+    </style>
+    <template>
+		<tg-reflector id="reflector"></tg-reflector>
+		<content id="menuItemActions" select=".menu-item-action"></content>        
+		
+        <paper-drawer-panel id="paperDrawerPanel" disable-swipe>
+
+            <!-- Drawer Scroll Header Panel -->
+            <paper-scroll-header-panel drawer fixed id="drawer">
+
+                <!-- Drawer Toolbar -->
+                <paper-toolbar id="drawerToolbar" class="tool-bar">
+                    <span style="font-size: 18px; height: 44px;">[[menuTitle]]</span>
+                </paper-toolbar>
+
+                <!-- Drawer Content -->
+                <paper-menu attr-for-selected="data-route" selected="{{route}}">
+	            	<content id="menuItems" select=".menu-item"></content>        
+	            </paper-menu>
+            </paper-scroll-header-panel>
+
+            <!-- Main Area -->
+            <paper-scroll-header-panel main fixed>
+
+                <!-- Main Toolbar -->
+                <paper-toolbar id="mainToolbar" style="height: 44px;">
+                    <!-- Application name -->
+                    <span style="font-size: 18px; height: 44px;">[[sectionTitle]]</span>
+                </paper-toolbar>
+
+                <!-- Main Content -->
+                <div>
+                    <iron-pages attr-for-selected="data-route" selected="[[sectionRoute]]">
+                        <content select=".menu-item-section"></content>
+                    </iron-pages>
+                </div>
+            </paper-scroll-header-panel>
+        </paper-drawer-panel>
+
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-master-menu',
+
+        properties: {
+        	menuTitle: {
+        		type: String,
+        		value: '[[menuTitle]]'
+        	},
+        	
+        	sectionTitle: {
+        		type: String,
+        		value: '[[sectionTitle]]'
+        	},
+        	
+        	/* active menu item */
+            route: {
+                type: String,
+                observer: '_routeChanged'
+            },
+            
+            /* active section that corresponds to value of this.route (i.e menu item)... in most cases...
+             * in case where the current section cannot be left (e.g. due to unsaved changes) and another route is selected, the section route remains unchanged
+             * under the same conditions the selected this.route (i.e. menu item) immediately gets changed back to correspond to unchanged this.sectionRoute.
+             */
+            sectionRoute: {
+                type: String,
+                observer: '_sectionRouteChanged'
+            },
+            
+            menuActions: {
+            	type: Object
+            },
+            
+            /* A menu route that should be activated when the master gets shoe*/
+        	defaultRoute: {
+        		type: String
+        	},
+        	
+            /**
+			 * A context holder creator that is used for tg-ui-action instances serving as menu items for compound masters.                
+             */
+            _createContextHolderForMenu: {
+            	type: Function
+            },
+            
+            /**
+             * A function that return a master entity instance from the master where this menu is embedded into.
+             */
+            getMasterEntity: {
+                type: Function,
+                observer: '_getMasterEntityChanged'
+            },
+            
+            /**
+             * UUID that gets assigned by the owning entity master in order to assign it to the tg-ui-action.attrs (that represent menu items) on attached callback.
+             */
+			uuid: {
+				type: String
+			},
+			
+            /* Postal subscription to events that trigger compound master entity refreshing.
+             * It gets populated in attahced callback only once, even though the same master instance gets used several time.
+             */
+            _subscriptions: {
+                type: Array,
+                value: function () {
+                    return [];
+                }
+            },
+            
+            /**
+             * An externally bound function to perfrom compound master refresh upon changes instigated from embedded masters.
+             */
+            refreshCompoundMaster: {
+            	type: Function
+            },
+            
+            /**
+             * A helper flag to differentiate between setting of new context upon the openning of the master and the refresh cycle.
+             */
+            _isRefreshCycle: {
+            	type: Boolean,
+            	value: false
+            }, 
+            
+            /**
+             * In case when the new entity has been just saved, there is a need to augment the context of this compound master functional entity to take into account newly created main entity.
+             *
+             * @param compoundMasterEntityId -- the id of just saved main entity to be promoted into the the context of this compound master functional entity
+             */
+            augmentContextWithSavedEntity: {
+            	type: Function
+            },
+            
+            /**
+             * A master that contains this menu. It is used to access utility functions such as showing of toasts.
+             */
+            parent: {
+            	type: Object
+            }
+        },
+
+        ready: function () {
+        	var self = this;
+            self._createContextHolderForMenu = (function () {
+                var contextHolder = this.$.reflector.createContextHolder(
+    				null, null, 'true',
+    				null, null, this.getMasterEntity);
+                return contextHolder;
+            }).bind(self);
+        }, // end of ready 
+        
+        attached: function () {
+        	var self = this;
+        	// assign _createContextHolderForMenu to all tg-ui-action instances
+        	var tgUiActions = Polymer.dom(self.$.menuItemActions).getDistributedNodes();
+        	if (tgUiActions && tgUiActions.length > 0) {
+        		for (var index = 0; index < tgUiActions.length; index++) {
+        			tgUiActions[index].createContextHolder = self._createContextHolderForMenu;
+        			tgUiActions[index].showDialog = self._showMenuItemView.bind(self);
+        			tgUiActions[index].attrs.centreUuid = self.uuid;
+        		}
+        	}
+        	
+        	// subscribe to the channel and topics used by embedded masters (views for menu items) in order to 
+        	// refresh the master entity that is bound to the top-most functional entity that is used for compound master header and gets propagated downwards to all menu items
+        	// this ensures that changes to the master entity on any embedded master are correctly reflected everywhere else on the compound master
+        	var eventChannel = self.uuid;
+            var eventTopics = ['save.post.success', 'refresh.post.success'];
+			// subscrive if needed
+            if (self._subscriptions.length === 0) {
+	            for (var index = 0; index < eventTopics.length; index++) {
+	                self._subscriptions.push(
+	                    postal.subscribe({
+	                        channel: eventChannel,
+	                        topic: eventTopics[index],
+	                        callback: self._refreshCompoundMaster.bind(self)
+	                    }));
+	            }
+            }
+
+        },
+
+        _refreshCompoundMaster: function (data, envelope) {
+        	this._isRefreshCycle = true;
+        	
+        	var context = this.getMasterEntity();
+        	if (context.modifHolder.forNew.origVal === true && envelope.topic === 'save.post.success') {
+        		this.augmentContextWithSavedEntity(data.id);
+        	}
+        	
+        	this.refreshCompoundMaster();
+        },
+        
+        _getMasterEntityChanged: function (newValue, oldValue) {
+        	console.log('_getMasterEntityChanged', newValue);
+        	
+        	var context = newValue();
+        	this.menuTitle = context.modifHolder.menuTitle.origVal;
+        	this.sectionTitle = context.modifHolder.sectionTitle.origVal; 
+        	
+ 			if (this._isRefreshCycle === false) {      	
+	        	if (this.route !== this.defaultRoute) {
+	        		this.route = this.defaultRoute;
+	        	} else {
+	        		this._routeChanged(this.defaultRoute, this.route);
+	        	}
+ 			}
+ 			
+ 			this._isRefreshCycle = false;
+        },
+        
+        /**
+         * A function for show-dialog attribute of tg-ui-action, which is used in case of master with menu to load and display a corresponding menu item view.
+         */
+        _showMenuItemView: function (action) {
+        	var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
+        	section.activate(action);
+        },
+        
+        _routeChanged: function (newRoute, oldRoute) {
+        	if (this.route !== this.sectionRoute) {
+	        	var section = this.sectionRoute === undefined ? undefined : Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+	        	var cannotLeaveReason = section === undefined ? undefined : section.canLeave(); 
+	        	if (section === undefined || cannotLeaveReason === undefined) {        	
+	        		this.sectionRoute = newRoute;
+	        	} else {
+	        		this.route = this.sectionRoute;
+	        		this.parent._openToastForError('Cannot leave "' + section.title + '".', cannotLeaveReason);
+	        	} 
+        	}
+ 		},
+        
+        _sectionRouteChanged: function (newRoute, oldRoute) {
+        	// TODO check and load menu item section if not loaded already
+        	//      otherwise trigger validation... may not be applicable to all masters
+         	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
+ 			action._run();
+ 		}
+    });
+</script>

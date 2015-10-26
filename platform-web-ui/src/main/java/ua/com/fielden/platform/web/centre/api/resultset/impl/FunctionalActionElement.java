@@ -81,23 +81,35 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
             attrs.put("class", "entity-specific-action");
+        } else if (FunctionalActionKind.MENU_ITEM == functionalActionKind) {
+            attrs.put("class", "menu-item-action");
+            attrs.put("data-route", getDataRoute());
         }
 
-        attrs.put("short-desc", conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED");
+
+        attrs.put("short-desc", getShortDesc());
         attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
-        attrs.put("icon", conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit");
+        attrs.put("icon", getIcon());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
         final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
         attrs.put("element-name", elementName);
         attrs.put("number-of-action", numberOfAction);
         attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
+        
+        // in case of an menu item action show-dialog assignment happens within tg-master-menu
         if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
             attrs.put("show-dialog", "[[_showInsertionPoint]]");
-        } else {
+        } else if (FunctionalActionKind.MENU_ITEM != functionalActionKind) {
             attrs.put("show-dialog", "[[_showDialog]]");
         }
-        attrs.put("create-context-holder", "[[_createContextHolder]]");
+        
+        // in case of an action that models a menu item for an entity master with menu, context gets assigned 
+        // only after the main entity is saved at the client side as part of tg-master-menu logic.
+        if (FunctionalActionKind.MENU_ITEM != functionalActionKind) {
+            attrs.put("create-context-holder", "[[_createContextHolder]]");
+        }
+        
         final String actionsHolderName = functionalActionKind.holderName;
         attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
@@ -118,6 +130,18 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
 
         return attrs;
+    }
+
+    public String getDataRoute() {
+        return conf().functionalEntity.get().getSimpleName();
+    }
+
+    public String getIcon() {
+        return conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit";
+    }
+
+    public String getShortDesc() {
+        return conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED";
     }
 
     /**

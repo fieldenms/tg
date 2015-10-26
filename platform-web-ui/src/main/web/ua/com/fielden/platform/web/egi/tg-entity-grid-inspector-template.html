@@ -840,14 +840,7 @@
             },
 
             tap: function (entity, property, column) {
-                var value = entity.get(property);
-                if (this.$.reflector.isEntity(value)) {
-                    column.runAction(value);
-                } else if (property.indexOf(".") > -1) {
-                    this.tap(entity, property.substring(0, property.lastIndexOf(".")), column);
-                } else {
-                    column.runAction(entity);
-                }
+	        	column.runAction(entity);
             },
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.

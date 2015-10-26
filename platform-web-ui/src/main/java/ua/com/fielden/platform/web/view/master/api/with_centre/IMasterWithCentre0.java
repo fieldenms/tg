@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.view.master.api.centre;
+package ua.com.fielden.platform.web.view.master.api.with_centre;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
