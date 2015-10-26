@@ -2,144 +2,140 @@
 <html>
 
 <head>
-<meta charset="UTF-8">
-<title>tg-serialiser basic tests</title>
-<meta name="viewport"
-	content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-
-<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-<script src="/resources/polymer/web-component-tester/browser.js"></script>
-<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-
-<link rel="import"
-	href="/resources/polymer/test-fixture/test-fixture.html">
-
-<link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+	<meta charset="UTF-8">
+	<title>tg-serialiser basic tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="/resources/polymer/web-component-tester/browser.js"></script>
+	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+	
+	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+  
+    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+    <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 </head>
 
 <body>
-	<iron-ajax id="entities_retriever" url="/test/serialisation"
-		handle-as="json" auto></iron-ajax>
-	<iron-ajax id="entities_sender" url="/test/serialisation" method="POST"
-		handle-as="json"></iron-ajax>
+    <iron-ajax id="entities_retriever" url="/test/serialisation" handle-as="json" auto></iron-ajax>
+    <iron-ajax id="entities_sender" url="/test/serialisation" method="POST" handle-as="json"></iron-ajax>
 
 	<tg-serialiser id="serialiser"></tg-serialiser>
 
 	<script>
-        suite('serialisation', function () {
-            var serialiser, reflector;
-
-            setup(function () {
-                serialiser = document.querySelector('#serialiser');
-                reflector = serialiser.$.reflector;
-            });
-
-            test('works for client-side circle', function (done) {
+		suite('serialisation', function() {
+		    var serialiser, reflector;
+		
+		    setup(function() {
+		      	serialiser = document.querySelector('#serialiser');
+		      	reflector = serialiser.$.reflector;
+		    });
+		
+		    test('works for client-side circle', function (done) {
                 var EntityInstanceProp = reflector.getEntityInstancePropPrototype(),
-                    Entity = reflector.getEntityPrototype(),
-                    keyProp1 = new EntityInstanceProp(),
-                    descProp1 = new EntityInstanceProp(),
-                    keyProp2 = new EntityInstanceProp(),
-                    detailProp1 = new EntityInstanceProp(),
-                    keyProp3 = new EntityInstanceProp(),
-                    descProp2 = new EntityInstanceProp(),
-                    detailProp2 = new EntityInstanceProp(),
-                    keyProp4 = new EntityInstanceProp(),
-                    type10 = reflector.getType("4"),
-                    type11 = reflector.getType("11"),
-                    type12 = reflector.getType("12"),
-                    type13 = reflector.getType("13"),
-                    inst1 = new Entity({
-                        id: 1,
-                        _type: type12,
-                        key: "entity key",
-                        "@key": keyProp1,
-                        desc: "entity description",
-                        "@desc": descProp1,
-                        detail: new Entity({
-                            id: 2,
-                            _type: type13,
-                            "@key": keyProp2
-                        }),
-                        "@detail": detailProp1
+                Entity = reflector.getEntityPrototype(),
+                keyProp1 = new EntityInstanceProp(),
+                descProp1 = new EntityInstanceProp(),
+                keyProp2 = new EntityInstanceProp(),
+                detailProp1 = new EntityInstanceProp(),
+                keyProp3 = new EntityInstanceProp(),
+                descProp2 = new EntityInstanceProp(),
+                detailProp2 = new EntityInstanceProp(),
+                keyProp4 = new EntityInstanceProp(),
+                type10 = reflector.getType("4"),
+                type11 = reflector.getType("11"),
+                type12 = reflector.getType("12"),
+                type13 = reflector.getType("13"),
+                inst1 = new Entity({
+                    id: 1,
+                    _type: type12,
+                    key: "entity key",
+                    "@key": keyProp1,
+                    desc: "entity description",
+                    "@desc": descProp1,
+                    detail: new Entity({
+                        id: 2,
+                        _type: type13,
+                        "@key": keyProp2
                     }),
-                    inst2 = new Entity({
-                        id: 3,
-                        _type: type12,
-                        key: "entity key1",
-                        "@key": keyProp3,
-                        desc: "entity description1",
-                        "@desc": descProp2,
-                        detail: new Entity({
-                            id: 4,
-                            _type: type13,
-                            "@key": keyProp4
-                        }),
-                        "@detail": detailProp2
+                    "@detail": detailProp1
+                }),
+                inst2 = new Entity({
+                    id: 3,
+                    _type: type12,
+                    key: "entity key1",
+                    "@key": keyProp3,
+                    desc: "entity description1",
+                    "@desc": descProp2,
+                    detail: new Entity({
+                        id: 4,
+                        _type: type13,
+                        "@key": keyProp4
                     }),
-                    objToSerialise = {
-                        cause: "Testing purposes",
-                        ex: "No exception",
-                        instance: new Entity({
+                    "@detail": detailProp2
+                }),
+                objToSerialise = {
+                    cause: "Testing purposes",
+                    ex: "No exception",
+                    instance: new Entity({
+                        id: null,
+                        _type: type11,
+                        key: "QueryRunner",
+                        desc: "QueryRunner description",
+                        page: new Entity({
                             id: null,
-                            _type: type11,
-                            key: "QueryRunner",
-                            desc: "QueryRunner description",
-                            page: new Entity({
-                                id: null,
-                                _type: type10,
-                                key: "Page",
-                                desc: "Page description",
-                                numberOfPages: 1,
-                                pageNo: 0,
-                                results: [
+                            _type: type10,
+                            key: "Page",
+                            desc: "Page description",
+                            numberOfPages: 1,
+                            pageNo: 0,
+                            results: [
                                 inst1,
                                 inst2
                             ],
-                                summary: new Entity({
-                                    id: null,
-                                    _type: type12,
-                                    total: 2
-                                })
-                            }),
-                            pageCapacity: 25,
-                            query: null
-                        })
-                    },
-                    restoredObj = null;
-                inst1.detail.key = inst1;
-                inst2.detail.key = inst2;
-                restoredObj = serialiser.deserialise(serialiser.serialise(objToSerialise));
-                assert.deepEqual(restoredObj, objToSerialise, "object after serialisation-deserialisation process is not equal to ");
-                done();
-            });
-
-            test('works for client-server-client circle', function (done) {
-                var entityRetriever = document.querySelector('#entities_retriever');
-                var entitySender = document.querySelector('#entities_sender');
-                var serialiser = document.querySelector('#serialiser');
-                var onError = function (e, detail, sender) {
-                    assert.fail(null, null, "The error has happened.");
-                    done();
+                            summary: new Entity({
+                                id: null,
+                                _type: type12,
+                                total: 2
+                            })
+                        }),
+                        pageCapacity: 25,
+                        query: null
+                    })
+                },                
+                restoredObj = null;
+            	inst1.detail.key = inst1;
+            	inst2.detail.key = inst2;
+            	restoredObj = serialiser.deserialise(serialiser.serialise(objToSerialise));
+            	assert.deepEqual(restoredObj, objToSerialise, "object after serialisation-deserialisation process is not equal to ");
+            	done();
+		    });
+		    
+		    test('works for client-server-client circle', function (done) {
+	            var entityRetriever = document.querySelector('#entities_retriever');
+	            var entitySender = document.querySelector('#entities_sender');
+	            var serialiser = document.querySelector('#serialiser');
+	            var onError = function(e, detail, sender) {
+	            	assert.fail(null, null, "The error has happened.");
+                	done();
                 };
-                var find = function (entities, simpleTypeName) {
+                var find = function(entities, simpleTypeName) {
                     for (var i = 0; i < entities.length; i++) {
-                        var entity = entities[i];
-                        if (entity && entity.type().fullClassName().indexOf(simpleTypeName) > -1) {
+                       	var entity = entities[i];
+                       	if (entity && entity.type().fullClassName().indexOf(simpleTypeName) > -1) {
                             return entity;
-                        }
-                    }
-                    return null;
-                };
-                var findProp = function (entities, simpleTypeName, propName) {
+                       	}
+                   	}
+                   	return null;
+               	};
+                var findProp = function(entities, simpleTypeName, propName) {
                     var entity = find(entities, simpleTypeName);
-                    return entity.constructor.prototype.prop.call(entity, propName);
-                    // return entity.prop(propName); -- this is problem for this test because the field name 'prop' equals to prototype function 'prop'
-                };
-
-                entityRetriever.addEventListener('response', function (e) {
+                   	return entity.constructor.prototype.prop.call(entity, propName);
+                   	// return entity.prop(propName); -- this is problem for this test because the field name 'prop' equals to prototype function 'prop'
+               	};
+                
+                entityRetriever.addEventListener('response', function(e) {
                     // console.log("not deserialised: ", JSON.stringify(e.detail.response));
                     var resultWithEntities = serialiser.deserialise(e.detail.response);
 
@@ -147,7 +143,6 @@
 
                     // check EntityInstanceProp properties
                     assert.deepEqual(findProp(entities, "EntityWithString", "prop").stringLength(), 255, "EntityWithString property has incorrect stringLength.");
-
                     // assert.deepEqual(findProp(entities, "EntityWithString", "prop").integerMax(), undefined, "EntityWithString property has incorrect integerMax.");
                     // assert.deepEqual(findProp(entities, "EntityWithString", "prop").integerMin(), undefined, "EntityWithString property has incorrect integerMax.");
                     // assert.deepEqual(findProp(entities, "EntityWithInteger", "prop").stringLength(), undefined, "EntityWithInteger property has incorrect stringLength.");
@@ -156,7 +151,6 @@
                     // assert.deepEqual(findProp(entities, "EntityWithMoney", "prop").stringLength(), undefined, "EntityWithMoney property has incorrect stringLength.");
                     assert.deepEqual(findProp(entities, "EntityWithMoney", "prop").integerMax(), null, "EntityWithMoney property has incorrect integerMax.");
                     assert.deepEqual(findProp(entities, "EntityWithMoney", "prop").integerMin(), 34, "EntityWithMoney property has incorrect integerMax.");
-
 
                     // check EntityType properties
                     assert.deepEqual(find(entities, "EmptyEntity").type().isCompositeEntity(), false, "EmptyEntity should not be composite.");
@@ -168,6 +162,7 @@
                     assert.deepEqual(find(entities, "EmptyEntity").type().entityDesc(), "The entity without any properties for testing", "EmptyEntity has incorrect desc.");
                     assert.deepEqual(find(entities, "EntityWithInteger").type().entityTitle(), "Entity With Integer", "EntityWithInteger has incorrect title.");
                     assert.deepEqual(find(entities, "EntityWithInteger").type().entityDesc(), "Entity With Integer entity", "EntityWithInteger has incorrect desc.");
+                    assert.deepEqual(find(entities, "EntityWithColour").type().prop("prop").title(), "Colour prop", "EntityWithColour property has incorrect title.");
 
                     // check EntityTypeProp properties
                     assert.deepEqual(find(entities, "EntityWithBigDecimal").type().prop("prop").isSecrete(), true, "EntityWithBigDecimal property should be secrete.");
@@ -179,9 +174,6 @@
                     assert.deepEqual(find(entities, "EntityWithString").type().prop("desc").isUpperCase(), false, "EntityWithString property 'desc' should not be upperCase.");
 
                     assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").title(), "Special Prop", "EntityWithString property has incorrect title.");
-
-                    assert.deepEqual(find(entities, "EntityWithColour").type().prop("prop").title(), "Colour prop", "EntityWithColour property has incorrect title.");
-
                     assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").desc(), "Special Prop desc", "EntityWithString property has incorrect desc.");
                     assert.deepEqual(find(entities, "EntityWithString").type().prop("key").title(), "Special Key", "EntityWithString property 'key' has incorrect title.");
                     assert.deepEqual(find(entities, "EntityWithString").type().prop("key").desc(), "Special Key desc", "EntityWithString property 'key' has incorrect desc.");
@@ -195,10 +187,8 @@
                     assert.deepEqual(find(entities, "EntityWithMoney").type().prop("prop").isIgnore(), true, "EntityWithMoney property has incorrect 'ignore'.");
                     assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").isIgnore(), false, "EntityWithString property has incorrect 'ignore'.");
 
-                    assert.deepEqual(find(entities, "EntityWithBigDecimal").type().prop("prop").length(), 10, "EntityWithBigDecimal property has incorrect length.");
-
                     assert.deepEqual(find(entities, "EntityWithColour").type().prop("prop").length(), 0, "EntityWithColour property has incorrect length.");
-
+                    assert.deepEqual(find(entities, "EntityWithBigDecimal").type().prop("prop").length(), 10, "EntityWithBigDecimal property has incorrect length.");
                     assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").length(), 0, "EntityWithString property has incorrect length.");
                     assert.deepEqual(find(entities, "EntityWithBigDecimal").type().prop("prop").precision(), 10, "EntityWithBigDecimal property has incorrect precision.");
                     assert.deepEqual(find(entities, "EntityWithString").type().prop("prop").precision(), -1, "EntityWithString property has incorrect precision.");
@@ -212,16 +202,16 @@
                     entitySender.generateRequest();
                 });
 
-                entitySender.addEventListener('response', function (e) {
+                entitySender.addEventListener('response', function(e) {
                     assert.equal(e.detail.response.message, 'okay', "The sended entities are not equal.");
                     done();
                 });
 
                 entityRetriever.addEventListener('error', onError);
                 entitySender.addEventListener('error', onError);
-            });
-        });
-    </script>
+		    });
+		});
+	</script>
 </body>
 
 </html>

@@ -227,6 +227,12 @@ paper-input-container.decorator-disabled::shadow .add-on-content::content
 			bind-value="{{_editingValue}}" style$="" prevent-invalid-input
 			allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange"
 			on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+			
+		<input id="input" is="iron-input"
+			hidden$="[[!_isColourEditor(_editorKind)]]"
+			bind-value="{{_editingValue}}" style$="" prevent-invalid-input
+			allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange"
+			on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
 	</div>
 
 	<!-- CONTENT HERE: -->
