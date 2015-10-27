@@ -3,43 +3,68 @@
 <link rel="import" href="/resources/components/tg-tooltip-text.html">
 
 <script>
-    var toolTipElement = document.createElement("tg-tooltip");
-    Polymer.dom(document.body).appendChild(toolTipElement);
-    Polymer.dom.flush();
+    (function () {
+        var toolTipElement = document.createElement("tg-tooltip");
+        Polymer.dom(document.body).appendChild(toolTipElement);
+        Polymer.dom.flush();
 
-    Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-    Polymer.TgBehaviors.TgTooltipBehavior = {
-        properties: {
-            _tooltipTimer: Number
-        },
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgTooltipBehavior = {
+            properties: {
+                /**
+                 * The handle for tooltip timer can be used to cancel tooltip timer. (Tooltip timer - the timer for tooltip to be shown).
+                 */
+                _tooltipTimer: Number
+            },
+            
+            ready: function() {
+                this.showTooltipAtMousePos = this.showTooltipAtMousePos.bind(this);
+                this.hideTooltip = this.hideTooltip.bind(this);
+            },
 
-        showTooltipAtMousePos: function (event) {
-            if (this._tooltipTimer) {
-                this.cancelAsync(this._tooltipTimer);
-                this._tooltipTimer = null;
-            }
-            this._tooltipTimer = this.async(function () {
-                var toolTipTextElement = Polymer.dom(event.target).querySelector("tg-tooltip-text")
-                Polymer.dom(toolTipElement).innerHTML = this.getTooltipText(event);
-                toolTipElement.showAt(event.pageX, event.pageY + 14);
-            }, 1000);
-        },
+            attached: function () {
+                this.async(function () {
+                    var elementsWithTooltips = Polymer.dom(this.root).querySelectorAll("[enable-tooltip]");
+                    elementsWithTooltips.forEach(function (element) {
+                        element.addEventListener('mousemove', this.showTooltipAtMousePos);
+                        element.addEventListener('mouseleave', this.hideTooltip);
+                    }.bind(this));
+                }, 1);
+            },
 
-        hideTooltip: function (event) {
-            if (toolTipElement._showing) {
-                toolTipElement.hide();
+            /**
+             * Returns the tooltip text based on mouse move event. Override this method to provide custom tooltip text.
+             */
+            getTooltipText: function (event) {
+                return "";
+            },
+            
+            /**
+             * Handler that determines when to show tooltip on mouse move event.
+             */
+            _showTooltipAtMousePos: function (event) {
+                if (this._tooltipTimer) {
+                    this.cancelAsync(this._tooltipTimer);
+                    this._tooltipTimer = null;
+                }
+                this._tooltipTimer = this.async(function () {
+                    Polymer.dom(toolTipElement).innerHTML = this.getTooltipText(event);
+                    toolTipElement.showAt(event.pageX, event.pageY + 14);
+                }, 1000);
+            },
+
+            /**
+             * Handler that hides the tooltip.
+             */
+            _hideTooltip: function (event) {
+                if (toolTipElement._showing) {
+                    toolTipElement.hide();
+                }
+                if (this._tooltipTimer) {
+                    this.cancelAsync(this._tooltipTimer);
+                    this._tooltipTimer = null;
+                }
             }
-            if (this._tooltipTimer) {
-                this.cancelAsync(this._tooltipTimer);
-                this._tooltipTimer = null;
-            }
-        },
-        
-        /**
-         * Returns the tooltip text based on mouse move event. Override this method to provide custom tooltip text.
-         */
-        getTooltipText: function(event) {
-            return "";
-        }
-    };
+        };
+    })();
 </script>

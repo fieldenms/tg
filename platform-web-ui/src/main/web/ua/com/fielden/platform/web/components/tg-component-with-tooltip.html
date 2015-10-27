@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
 
 
 <dom-module id="tg-component-with-tooltip">
@@ -14,22 +15,35 @@
         }
     </style>
     <template>
-        <div id="div_text" on-mousemove="showTooltipAtMousePos" on-mouseleave="hideTooltip">Component with activated tooltip</div>
-        <div id="div_html_text" on-mousemove="showTooltipAtMousePos" on-mouseleave="hideTooltip">Another Component with activated tooltip</div>
+        <tg-flex-layout when-desktop="[[_whenDesktop]]" , when-tablet="[[_whenDesktop]]" , when-mobile="[[_whenDesktop]]">
+            <div id="div_text" enable-tooltip>Component with activated tooltip</div>
+            <template is="dom-repeat" items="[[_tooltipItems]]">
+                <div id="[[item.id]]" enable-tooltip>[[item.text]]</div>
+            </template>
+        </tg-flex-layout>
     </template>
     <script>
-        
         Polymer({
             is: 'tg-component-with-tooltip',
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
-            getTooltipText: function(event) {
+            properties: {
+                _whenDesktop: Array,
+                _tooltipItems: Array
+            },
+
+            ready: function () {
+                this._whenDesktop = ['horizontal', ['flex'], ['flex']];
+                this._tooltipItems = [{id: "div_html_text", text: "Another componsnt with activated tooltips"}];
+            },
+
+            getTooltipText: function (event) {
                 var element_id = event.target.getAttribute("id");
                 if (element_id === 'div_text') {
                     return "Tooltip text for div";
                 } else if (element_id === 'div_html_text') {
-                    return "<iron-icon icon='attachment'></iron-icon><i>Test italic</i> html tooltip text";
+                    return '<iron-icon icon="attachment"></iron-icon><i>Test italic</i> html tooltip text';
                 }
                 return "Tooltip example";
             }
