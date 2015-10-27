@@ -215,16 +215,15 @@
 
 				self._createActions();
 				
-			    self._createContextHolder = (function () {
-	                var masterEntityContainer = function () { 
+			    self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+	                var getThisMasterEntity = function () { 
 		                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
 	                	return this._reflector().createSavingInfoHolder(this._reset(holder), undefined /* always undefined non-functional entities */);
 	                }.bind(self);
 	                
-	                
                 	var contextHolder = this._reflector().createContextHolder(
-        				null, null, 'true',
-        				null, null, masterEntityContainer
+        				null, null, requireMasterEntity,
+        				null, null, getThisMasterEntity
                     );
                     return contextHolder;
                 }).bind(self);
