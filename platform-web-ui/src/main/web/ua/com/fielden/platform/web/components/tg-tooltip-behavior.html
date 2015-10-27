@@ -1,7 +1,11 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/components/tg-tooltip.html">
 <link rel="import" href="/resources/components/tg-tooltip-text.html">
-
+<!--
+Provides tooltip support for component that uses this behaviour. In order to set  tooltip behaviour for specific element in the component, one should
+mark element with enable-tooltip attribute. And then override getTooltipText that receives the event with this element. The event element has target property
+that holds the reference to this element.
+-->
 <script>
     (function () {
         var toolTipElement = document.createElement("tg-tooltip");
@@ -16,18 +20,18 @@
                  */
                 _tooltipTimer: Number
             },
-            
-            ready: function() {
-                this.showTooltipAtMousePos = this.showTooltipAtMousePos.bind(this);
-                this.hideTooltip = this.hideTooltip.bind(this);
+
+            ready: function () {
+                this._showTooltipAtMousePos = this._showTooltipAtMousePos.bind(this);
+                this._hideTooltip = this._hideTooltip.bind(this);
             },
 
             attached: function () {
                 this.async(function () {
                     var elementsWithTooltips = Polymer.dom(this.root).querySelectorAll("[enable-tooltip]");
                     elementsWithTooltips.forEach(function (element) {
-                        element.addEventListener('mousemove', this.showTooltipAtMousePos);
-                        element.addEventListener('mouseleave', this.hideTooltip);
+                        element.addEventListener('mousemove', this._showTooltipAtMousePos);
+                        element.addEventListener('mouseleave', this._hideTooltip);
                     }.bind(this));
                 }, 1);
             },
@@ -38,31 +42,35 @@
             getTooltipText: function (event) {
                 return "";
             },
-            
+
             /**
              * Handler that determines when to show tooltip on mouse move event.
              */
             _showTooltipAtMousePos: function (event) {
-                if (this._tooltipTimer) {
-                    this.cancelAsync(this._tooltipTimer);
-                    this._tooltipTimer = null;
+                if (event.target === event.currentTarget) {
+                    if (this._tooltipTimer) {
+                        this.cancelAsync(this._tooltipTimer);
+                        this._tooltipTimer = null;
+                    }
+                    this._tooltipTimer = this.async(function () {
+                        Polymer.dom(toolTipElement).innerHTML = this.getTooltipText(event);
+                        toolTipElement.showAt(event.pageX, event.pageY + 14);
+                    }, 1000);
                 }
-                this._tooltipTimer = this.async(function () {
-                    Polymer.dom(toolTipElement).innerHTML = this.getTooltipText(event);
-                    toolTipElement.showAt(event.pageX, event.pageY + 14);
-                }, 1000);
             },
 
             /**
              * Handler that hides the tooltip.
              */
             _hideTooltip: function (event) {
-                if (toolTipElement._showing) {
-                    toolTipElement.hide();
-                }
-                if (this._tooltipTimer) {
-                    this.cancelAsync(this._tooltipTimer);
-                    this._tooltipTimer = null;
+                if (event.target == event.currentTarget) {
+                    if (toolTipElement._showing) {
+                        toolTipElement.hide();
+                    }
+                    if (this._tooltipTimer) {
+                        this.cancelAsync(this._tooltipTimer);
+                        this._tooltipTimer = null;
+                    }
                 }
             }
         };

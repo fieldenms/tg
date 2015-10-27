@@ -1,10 +1,13 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/actions/tg-page-action.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
+
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -15,7 +18,7 @@
 <link rel="import" href="/resources/polymer/neon-animation/neon-animations.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/polymer/paper-tooltip/paper-tooltip.html">
+
 
 <style is="custom-style">
     .summary-dialog paper-button {
@@ -229,7 +232,7 @@
                     </div>
                     <!-- Table header -->
                     <div class="layout horizontal table-header-row">
-                        <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" on-mouseenter="_allCheckboxTooltip" on-mouseleave="_itemLeave">
+                        <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" on-mousemove="_showTooltipAtMousePos" on-mouseleave="_hideTooltip" role="selectAllCheckbox">
                             <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                         </div>
                         <template is="dom-if" if="[[primaryAction]]">
@@ -238,7 +241,7 @@
                             </div>
                         </template>
                         <template is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]" on-mouseenter="_columnHeaderTooltip" on-mouseleave="_itemLeave">
+                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]" on-mousemove="_showTooltipAtMousePos" on-mouseleave="_hideTooltip" role="columnHeader">
                                 <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
                             </div>
                         </template>
@@ -251,7 +254,7 @@
                     <!-- Table body -->
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
-                            <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" on-mouseenter="_checkboxTooltip" on-mouseleave="_itemLeave">
+                            <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" on-mousemove="_showTooltipAtMousePos" on-mouseleave="_hideTooltip" role="selectCheckbox">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
@@ -261,7 +264,7 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" on-mouseenter="_cellTooltip" on-mouseleave="_itemLeave">
+                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" on-mousemove="_showTooltipAtMousePos" on-mouseleave="_hideTooltip" role="tableCell">
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
@@ -462,6 +465,8 @@
                 '_tabletLongLayoutChanged(longLayout.tablet)',
                 '_mobileLongLayoutChanged(longLayout.mobile)'
             ],
+            
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
             /**
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
@@ -500,53 +505,43 @@
                 this._tooltip = document.createElement('paper-tooltip');
             },
             
-            
             /**
-             * Mouse related events for showing and hiding tooltips.
+             * Tooltip related functions
              */
+            getTooltipText: function(event) {
+                var role = event.target.getAttribute("role");
+                if (role === 'selectAllCheckbox') {
+                    return this._allCheckboxTooltip(event);
+                } else if (role === 'columnHeader') {
+                    return this._columnHeaderTooltip(event);
+                } else if (role === 'selectCheckbox') {
+                    return this._checkboxTooltip(event);
+                } else if (role === 'tableCell') {
+                    return this._cellTooltip(event);
+                } else {
+                    return "";
+                }
+            },
+           
             _allCheckboxTooltip: function(e) {
-                this._itemEnter(e.target, (this.selectedAll ? 'Unselect': 'Select') + ' all entities');
+                return (this.selectedAll ? 'Unselect': 'Select') + ' all entities';
             },
             
             _columnHeaderTooltip: function(e) {
                 var model = e.model;
-                this._itemEnter(e.target, model.item.columnDesc);
+                return model.item.columnDesc;
             },
             
             _checkboxTooltip: function(e) {
                 var model = e.model;
-                this._itemEnter(e.target, (model.egiEntity.selected ? 'Unselecct': 'Select') + ' this entity' );
+                return (model.egiEntity.selected ? 'Unselecct': 'Select') + ' this entity' ;
             },
             
             _cellTooltip: function(e) {
                 var model = e.model;
-                this._itemEnter(e.target, this._getTooltip(model.egiEntity.entity, model.column.property, model.column.type));
+                return this._getTooltip(model.egiEntity.entity, model.column.property, model.column.type);
             },
-            
-            _itemEnter: function(target, toolTipText) {
-                this._timer = this.async(function() {
-                    Polymer.dom(this._tooltip).innerHTML = toolTipText;
-                    Polymer.dom(target).appendChild(this._tooltip);
-                    Polymer.dom.flush()
-                    this._tooltip.show();
-                }.bind(this), 500);
-            },
-            
-            _itemLeave: function(e) {
-                var tooltipParent = Polymer.dom(this._tooltip).parentNode;
-                this.cancelAsync(this._timer);
-                this._tooltip.hide();
-                if (tooltipParent) {
-                    Polymer.dom(tooltipParent).removeChild(this._tooltip);
-                    Polymer.dom.flush();
-                }
-            },
-            
-            
-            /**
-             * Tooltip related functions
-             */
-            
+           
             _getTooltip: function(entity, property, type) {
                 if (this.$.reflector.findTypeByName(type)) {
                     return entity.get(property === '' ? "desc" : (property + ".desc"));
@@ -554,6 +549,7 @@
                     return this._getValue(entity, property, type);
                 }
             },
+            //End of Tooltip related functions
 
             /**
              * Calcualtes the summary for grid.
