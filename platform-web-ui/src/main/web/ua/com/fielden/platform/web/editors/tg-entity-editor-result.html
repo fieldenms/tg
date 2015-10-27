@@ -196,8 +196,10 @@
              * Returns an array of objects representing matched and non-matched parts of the str in sequential order.
              * It is used to identify those parts that needs to be highlighted during rendering.
              */
-            _matchedParts: function (str) {
+            _matchedParts: function (matchBy) {
                 var parts = [];
+                // there are cases where matchBy is actuall a number... so need to convert it to string before uppercasing
+                var str = (matchBy + '');
                 var text = str.toUpperCase();
                 // if all is matched then return a single value
                 if ("\\w*" == this.searchQuery) {
@@ -352,7 +354,9 @@
 				var value = event.detail.item.getAttribute("value");
 				console.log(value);
 				this.selectedValues[value] = _.find(this._values, function (obj) {
-                    return obj.key === value;
+					// type coersion is expected here to support numbers and strings
+					// that's why "==" is used instead of "==="
+                    return obj.key == value;
                 });
 				
 				
