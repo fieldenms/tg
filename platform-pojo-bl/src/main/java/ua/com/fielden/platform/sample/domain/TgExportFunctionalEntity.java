@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 @KeyType(String.class)
 @KeyTitle(value = "Export Functional Entity", desc = "Export Functional Entity description")
 @CompanionObject(ITgExportFunctionalEntity.class)
-public class TgExportFunctionalEntity extends AbstractEntity<String> {
+public class TgExportFunctionalEntity extends AbstractFunctionalEntityWithCentreContext<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty

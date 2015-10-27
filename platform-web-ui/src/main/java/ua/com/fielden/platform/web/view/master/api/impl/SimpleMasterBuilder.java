@@ -13,6 +13,8 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
@@ -24,6 +26,7 @@ import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
@@ -37,7 +40,7 @@ import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
-public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T> {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T>, IEntityActionConfig7<T> {
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<EntityActionConfig<T>> entityActions = new ArrayList<>();
@@ -47,6 +50,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     private Class<T> entityType;
     private boolean saveOnActivation = false;
+    
+    private final List<ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig> actions = new ArrayList<>();
 
 
     @Override
@@ -69,6 +74,12 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         return entityAction;
     }
 
+    @Override
+    public IEntityActionConfig7<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
+        actions.add(action);
+        return this;
+    }
+    
     @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
         final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction)), this);
@@ -171,12 +182,31 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 entityActionsStr.append(((IExecutable) action.action()).code().toString());
             }
         });
+        final String prefix = ",\n";
+        final int prefixLength = prefix.length();
 
+        final StringBuilder primaryActionObjects = new StringBuilder();
+        for (int index = 0; index < actions.size(); index++) {
+            ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action = actions.get(index);
+            if (!action.isNoAction()) {
+                final FunctionalActionElement el = new FunctionalActionElement(action, index, FunctionalActionKind.PRIMARY_RESULT_SET);
+
+                importPaths.add(el.importPath());
+                editorContainer.add(el.render().clazz("primary-action"));
+                primaryActionObjects.append(prefix + el.createActionObject());
+            }
+        }
+        
+        final String primaryActionObjectsString = primaryActionObjects.toString();
+        
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", createImports(importPaths))
                 .replace("@entity_type", entityType.getSimpleName())
-                .replace("<!--@tg-entity-master-content-->", editorContainer.toString())
+                .replace("<!--@tg-entity-master-content-->", editorContainer.toString()) // TODO should contain prop actions
                 .replace("//@ready-callback", layout.code().toString() + "\n" + entityActionsStr.toString() + "\n" + propertyActionsStr.toString())
+                .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
+                        : primaryActionObjectsString)
+                
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivation + "");
 

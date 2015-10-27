@@ -738,7 +738,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         });
 
         logger.debug("Initiating top-level actions...");
-        final List<FunctionalActionElement> functionalActions = new ArrayList<>();
         final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
 
         final List<List<FunctionalActionElement>> actionGroups = new ArrayList<>();

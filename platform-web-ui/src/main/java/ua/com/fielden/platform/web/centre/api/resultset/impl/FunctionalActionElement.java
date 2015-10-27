@@ -30,6 +30,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final boolean masterInvocationAction;
     private final boolean masterInDialogInvocationAction;
     private final String chosenProperty;
+    /** Should be <code>true</code> in case where functional action element is inside entity master, otherwise it is inside entity centre. */
+    private boolean forMaster = false;
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
@@ -47,6 +49,19 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind) {
         this(entityActionConfig, numberOfAction, functionalActionKind, null);
+    }
+
+    /**
+     * Creates entity (aka primary) action for master.
+     * 
+     * @param entityActionConfig
+     * @param numberOfAction
+     * @return
+     */
+    public static FunctionalActionElement newEntityActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction) {
+        final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET);
+        el.setForMaster(true);
+        return el;
     }
 
     /**
@@ -236,5 +251,13 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
         attrs.append("}\n");
         return attrs.append("}\n").toString();
+    }
+
+    public boolean isForMaster() {
+        return forMaster;
+    }
+
+    public void setForMaster(boolean forMaster) {
+        this.forMaster = forMaster;
     }
 }

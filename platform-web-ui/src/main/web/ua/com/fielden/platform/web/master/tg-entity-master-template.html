@@ -68,6 +68,16 @@
             },// end of ready
             
             attached: function () {
+                var self = this;
+                self.async(function() {
+                    self.primaryAction = [
+                        //generatedPrimaryActions
+                    ];
+                    self.propActions = [
+                        //generatedPropActions
+                    ];
+                }, 1);
+            	
             	//@attached-callback
             },
             

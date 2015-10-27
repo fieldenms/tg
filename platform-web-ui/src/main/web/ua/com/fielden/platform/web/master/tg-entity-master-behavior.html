@@ -168,8 +168,31 @@
                  */
                 _createContextHolderForEmbeddedViews: {
                     type: Function
-                }
+                },
                 
+                /**
+                 * The context holder creator (SavingInfoHolder) which is used for entity and property actions in the context of non-functional entity master.
+                 */
+                _createContextHolder: {
+                    type: Function
+                }, 
+                
+                /**
+                 * A dialog instance that is used for displaying entity (functional and not) masters as part of master actions logic.
+                 * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
+                 * Right away it is appended to document.body.
+                 */
+                _actionDialog: {
+                  type: Object,
+                  value: null
+                }, 
+                
+                /**
+                 * The function that shows dialog for functional action masters.
+                 */
+                _showDialog: {
+                	type: Function
+                }
         	},
 
             /**
@@ -191,6 +214,20 @@
                 };
 
 				self._createActions();
+				
+			    self._createContextHolder = (function () {
+	                var masterEntityContainer = function () { 
+		                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+	                	return this._reflector().createSavingInfoHolder(this._reset(holder), undefined /* always undefined non-functional entities */);
+	                }.bind(self);
+	                
+	                
+                	var contextHolder = this._reflector().createContextHolder(
+        				null, null, 'true',
+        				null, null, masterEntityContainer
+                    );
+                    return contextHolder;
+                }).bind(self);
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 
                 self._postSavedDefault = (function (potentiallySavedEntity) {
@@ -270,11 +307,36 @@
                 self._postSaverLoadingFinished = (function () {
                 	console.log("_postSaverLoadingFinished");
                 }).bind(self);
-                	
+
+                self._showDialog = (function (action) {
+                    var closeEventChannel = self.uuid;
+                    var closeEventTopics = ['save.post.success', 'refresh.post.success'];
+                    this.async(function () {
+                        this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(self), 1);
+                }).bind(self);
             }, // end of ready callback
             
             attached: function() {
                 var self = this;
+                
+                // we'd like to limit the number of dialogs created per entity master type
+                // this way the same instance is reused by different master instances of the same type
+                // that is why dialogs ID is defined as the master entity type
+                // the dialog is never removed from document.body
+                if (self._actionDialog == null) {
+                	var dialog = document.body.querySelector('tg-custom-action-dialog[id="' + self.entityType + '"]');
+                	if (dialog) {
+                		self._actionDialog = dialog;
+                	} else {
+                		self._actionDialog = document.createElement('tg-custom-action-dialog');
+	                    Polymer.dom(self._actionDialog).setAttribute("id", self.entityType);
+	                    Polymer.dom(document.body).appendChild(self._actionDialog);
+	                    Polymer.dom.flush();
+                	}
+                }
+
+                
                 self.saveListener = postal.subscribe({
                     channel: "master_"  + self.uuid,
                     topic: "save.finish",

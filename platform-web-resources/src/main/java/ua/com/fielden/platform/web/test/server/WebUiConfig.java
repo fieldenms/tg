@@ -11,7 +11,6 @@ import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
@@ -43,6 +42,7 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
@@ -276,14 +276,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.longDesc("REFRESH2 action")
 
                 // ENTITY CUSTOM ACTIONS
-                .addAction("#export", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.EDIT)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("Export")
-                /*      */.longDesc("Export action")
+//                .addAction("#export", TgExportFunctionalEntity.class)
+//                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+//                /*      */.postActionSuccess(new PostActionSuccess(""))
+//                /*      */.postActionError(new PostActionError(""))
+//                /*      */.enabledWhen(EnabledState.EDIT)
+//                //      */.icon("trending-up") SHORT-CUT
+//                /*      */.shortDesc("Export")
+//                /*      */.longDesc("Export action")
+                .addAction(
+                        action(TgExportFunctionalEntity.class)
+                        .withContext(context().withMasterEntity().build())
+                        .icon("trending-up")
+                        .shortDesc("Export")
+                        .longDesc("Export action")
+                        .build())
 
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
@@ -367,6 +374,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         injector())).
                 addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(
                         TgExportFunctionalEntity.class,
+                        TgExportFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(TgStatusActivationFunctionalEntity.class, new EntityMaster<TgStatusActivationFunctionalEntity>(

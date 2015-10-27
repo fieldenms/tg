@@ -92,4 +92,9 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     public AbstractAction action() {
         return action;
     }
+
+    @Override
+    public IEntityActionConfig7<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig) {
+        return simpleMasterBuilder.addAction(actionConfig);
+    }
 }
