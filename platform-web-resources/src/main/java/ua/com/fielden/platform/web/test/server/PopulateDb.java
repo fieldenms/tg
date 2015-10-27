@@ -112,8 +112,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         System.out.println("dateEnt1.getId() == " + dateEnt1.getId());
 
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
-        // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
-        // .setProducerInitProp(ent1)
+                // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
+                // .setProducerInitProp(ent1)
                 .setIntegerProp(7).setMoneyProp(new Money(new BigDecimal(7))).setBigDecimalProp(new BigDecimal(7.7))
                 .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30);
         de.setDesc("Default entity description");
@@ -185,11 +185,15 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         for (int i = 0; i < 30; i++) {
             save(new_(TgPersistentEntityWithProperties.class, "DEMO" + convert(i))
                     .setStringProp(random("poor", "average", "good", "great", "superb", "excelent", "classic"))
-                    .setIntegerProp(random(43, 67, 24, 35, 18, 99, 23)).setEntityProp(random(ent1, null, ent2))
+                    .setIntegerProp(random(43, 67, 24, 35, 18, 99, 23))
+                    .setEntityProp(random(ent1, null, ent2))
                     .setBigDecimalProp(random(new BigDecimal(23).setScale(5), new BigDecimal(4).setScale(5), new BigDecimal(99).setScale(5)))
                     .setDateProp(new DateTime(random(1000000000000L, 1100000000000L)).toDate())
-                    .setBooleanProp(random(true, false)).setCompositeProp(random(compEnt1, null)).setDesc("Description for demo entity with key "
-                            + ("DEMO" + convert(i)) + ".").setRequiredValidatedProp(random(30, 56, 82)).setStatus(random(dr, is, ir, on, sr)));
+                    .setBooleanProp(random(true, false))
+                    .setCompositeProp(random(compEnt1, null))
+                    .setDesc("Description for demo entity with key " + ("DEMO" + convert(i)) + ".")
+                    .setRequiredValidatedProp(random(30, 56, 82))
+                    .setStatus(random(dr, is, ir, on, sr)));
         }
     }
 

@@ -34,9 +34,9 @@
         max-height: 14px;
         color: #757575;
     }
-	.hidden-icon{
+    .hidden-icon {
         visibility: hidden;
-	}
+    }
     .color-box:hover > .dummy-box {
         display: block;
     }
@@ -53,12 +53,12 @@
         box-shadow: 0px 2px 6px #ccc;
         margin-top: 1em;
     }
-	.prefix{
-		margin-left: 1px; 
-		font-family: 'Roboto', 'Noto', sans-serif;
-		margin-left: 10px; 
-		font-size: 1rem;
-	}
+    .prefix {
+    	margin-left: 1px;
+    	font-family: 'Roboto', 'Noto', sans-serif;
+    	margin-left: 10px;
+    	font-size: 1rem;
+    }
 </style>
 
 <dom-module id="tg-colour-picker">
@@ -93,8 +93,9 @@
             } else {
                 return hex;
             }
-        }, 
-		rgbToHex = function (colorString) {
+        };
+        
+        var rgbToHex = function (colorString) {
 			if (colorString === null||colorString.length === 3 || colorString.length === 6) {
 				return colorString;
 			}
@@ -107,6 +108,7 @@
 				(g.length == 1 ? "0" + g : g) +
 				(b.length == 1 ? "0" + b : b));
 		};
+		
         Polymer({
             is: 'tg-colour-picker',
             behaviors: [Polymer.TgBehaviors.TgEditorBehavior],
@@ -116,7 +118,8 @@
                     type: Boolean,
                     value: false
                 },
-
+                _colourTemplate:Object,
+                
                 _calcColourTextStyle: {
                     type: Function,
                     value: function () {
@@ -155,21 +158,19 @@
             
             _openColourPicker: function () {
                 if (this._disabled === false) {
-                    if (!this.$.colourTemplate) {
-                        var mve = this._createDialog();
-                        Polymer.dom(this.root).appendChild(mve);
+                    if (!this._colourTemplate) {
+                    	this._colourTemplate = this._createDialog();
+                        Polymer.dom(this.root).appendChild(this._colourTemplate);
                         Polymer.dom.flush();
                     }
-                    this.$.colourTemplate.open();
+                    this._colourTemplate.open();
                 }
             },
 
             _createDialog: function () {
-                var self = this,
-                    domBind = document.createElement('template', 'dom-bind');
-
-                self.$.colourTemplate = domBind;
-
+                var self = this;
+                var domBind = document.createElement('template', 'dom-bind');
+                
                 domBind.colorSelected = function (e, detail) {
                     this._acceptColourBind();
                     self._editingValue = (rgbToHex(e.srcElement.style['background-color'])).substring(1);

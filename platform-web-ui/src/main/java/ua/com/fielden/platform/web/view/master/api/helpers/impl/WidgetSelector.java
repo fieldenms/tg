@@ -49,20 +49,24 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     private final SimpleMasterBuilder<T>.WithMatcherCallback withMatcherCallbank;
 
-    public WidgetSelector(final SimpleMasterBuilder<T> simpleMaster, final String propertyName, final SimpleMasterBuilder<T>.WithMatcherCallback withMatcherCallbank) {
+    public WidgetSelector(
+            final SimpleMasterBuilder<T> simpleMaster,
+            final String propertyName,
+            final SimpleMasterBuilder<T>.WithMatcherCallback withMatcherCallbank) {
         this.smBuilder = simpleMaster;
         this.propertyName = propertyName;
         this.withMatcherCallbank = withMatcherCallbank;
     }
 
-    public WidgetSelector(final SimpleMasterBuilder<T> simpleMaster, final String propertyName) {
+    public WidgetSelector(
+            final SimpleMasterBuilder<T> simpleMaster,
+            final String propertyName) {
         this(simpleMaster, propertyName, null);
     }
 
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
-        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.getEntityType()
-                : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.getEntityType(), propertyName);
+        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.getEntityType(): (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.getEntityType(), propertyName);
         widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, propType);
         return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
     }

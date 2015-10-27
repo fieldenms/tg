@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.types.Colour;
 
-/** 
+/**
  * Master entity object.
- * 
+ *
  * @author Developers
  *
  */
@@ -27,7 +27,7 @@ public class EntityWithColour extends AbstractEntity<String> {
     private Colour prop;
 
     @Observable
-      public EntityWithColour setProp(final Colour prop) {
+    public EntityWithColour setProp(final Colour prop) {
         this.prop = prop;
         return this;
     }
@@ -35,5 +35,4 @@ public class EntityWithColour extends AbstractEntity<String> {
     public Colour getProp() {
         return prop;
     }
-
 }

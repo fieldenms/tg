@@ -193,12 +193,12 @@ public class FactoryForTestingEntities {
         entity.setProp(testingDate);
         return finalise(entity);
     }
-    
+
     public EntityWithColour createEntityWithColour() {
-    	final EntityWithColour entity = createPersistedEntity(EntityWithColour.class, 1L, "key", "description");
-    	entity.setProp(Colour.WHITE);		
-		return finalise(entity);
-	}
+        final EntityWithColour entity = createPersistedEntity(EntityWithColour.class, 1L, "key", "description");
+        entity.setProp(Colour.WHITE);
+        return finalise(entity);
+    }
 
     public EntityWithMoney createEntityWithMoney() {
         final EntityWithMoney entity = createPersistedEntity(EntityWithMoney.class, 1L, "key", "description");
@@ -277,5 +277,5 @@ public class FactoryForTestingEntities {
         entity.setKey2(key2);
         return finalise(entity);
     }
-	
+
 }
