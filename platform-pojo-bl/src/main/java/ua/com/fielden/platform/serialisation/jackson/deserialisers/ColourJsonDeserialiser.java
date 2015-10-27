@@ -12,19 +12,14 @@ import ua.com.fielden.platform.types.Colour;
 
 public class ColourJsonDeserialiser extends StdDeserializer<Colour> {
 
-	public ColourJsonDeserialiser() {
+    public ColourJsonDeserialiser() {
 		super(Colour.class);
 	}
 
-	@Override
+    @Override
     public Colour deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
         final JsonNode node = jp.readValueAsTree();
-
-		final String hashlessUppercasedColourValue = node.get(
-				"hashlessUppercasedColourValue").isNull() ? null : node.get(
-				"hashlessUppercasedColourValue").textValue();
-
-		return hashlessUppercasedColourValue == null ? null : new Colour(
-				hashlessUppercasedColourValue);
-	}
+        final String hashlessUppercasedColourValue = node.get("hashlessUppercasedColourValue").isNull() ? null : node.get("hashlessUppercasedColourValue").textValue();
+        return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
+    }
 }

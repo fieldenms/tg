@@ -36,31 +36,28 @@
     <!-- uuid centre-uuid -->
 
     <script>
-        (function () {            
-        	window.addEventListener('WebComponentsReady', function(e) {
-        		// imports are loaded and elements have been registered
-        		console.log('Components are ready');
-        		
-        		/* var editor = document.querySelector('#editor'); */
-        		
-                var master = document.querySelector('#master'); 
-
+        (function () {
+            window.addEventListener('WebComponentsReady', function(e) {
+                // imports are loaded and elements have been registered
+                
+                console.log('Components are ready');
+                
+                /* var editor = document.querySelector('#editor'); */
+                
+                var master = document.querySelector('#master');
                 master.postRetrieved = function(entity, bindingEntity, customObject) {
                     console.log("postRetrieved");
                 };
-
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     console.log("postValidated");
                 };
-
                 master.postSaved = function(potentiallySavedEntity, newBindingEntity) {
                     console.log("postSaved");
                 };
-
                 master.retrieve();
-        	});
-        })();
-    </script>
+            });
+         })()
+   </script>
 </body>
 
 </html>
