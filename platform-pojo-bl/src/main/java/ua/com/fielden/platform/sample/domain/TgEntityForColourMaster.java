@@ -37,9 +37,9 @@ public class TgEntityForColourMaster extends AbstractEntity<String> {
     private boolean booleanProp;
 
     @IsProperty
-    @MapTo
     @PersistedType(userType = IColourType.class)
     @Title(value = "Colour prop", desc = "Colour prop description")
+    @MapTo("COLOUR")
     private Colour colourProp;
 
     @Observable

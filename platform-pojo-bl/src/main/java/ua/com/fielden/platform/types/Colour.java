@@ -33,10 +33,7 @@ public class Colour {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime
-                * result
-                + ((hashlessUppercasedColourValue == null) ? 0
-                        : hashlessUppercasedColourValue.hashCode());
+        result = prime * result + ((hashlessUppercasedColourValue == null) ? 0 : hashlessUppercasedColourValue.hashCode());
         return result;
     }
 

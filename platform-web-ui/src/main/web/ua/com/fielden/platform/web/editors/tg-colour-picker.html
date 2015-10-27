@@ -3,65 +3,63 @@
 <link rel="import" href="/resources/editors/tg-editor.html">
 <link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
 
-
-<style>
-    .color-box {
-        position: relative;
-        min-width: 40px;
-        min-height: 40px;
-    }
-    .dummy-box {
-        position: absolute;
-        top: -3px;
-        left: -3px;
-        min-width: 40px;
-        min-height: 40px;
-        border: 3px solid white;
-        background-color: none;
-        box-shadow: 0px 2px 6px #ccc;
-        z-index: 1;
-        display: none;
-        cursor: pointer;
-    }
-    .icon {
-        min-width: 40px;
-        min-height: 40px;
-        color: #757575;
-    }
-    .small-icon {
-        margin-top: -6px;
-        max-width: 14px;
-        max-height: 14px;
-        color: #757575;
-    }
-    .hidden-icon {
-        visibility: hidden;
-    }
-    .color-box:hover > .dummy-box {
-        display: block;
-    }
-    .small-box {
-        max-width: 14px;
-        max-height: 14px;
-        background-color: #FAFAFA;
-        border: 2px solid #BDBDBD;
-        border-radius: 2px;
-        cursor: pointer;
-    }
-    iron-dropdown {
-        background-color: #FAFAFA;
-        box-shadow: 0px 2px 6px #ccc;
-        margin-top: 1em;
-    }
-    .prefix {
-    	margin-left: 1px;
-    	font-family: 'Roboto', 'Noto', sans-serif;
-    	margin-left: 10px;
-    	font-size: 1rem;
-    }
-</style>
-
 <dom-module id="tg-colour-picker">
+    <style>
+        .color-box {
+             position: relative;
+             min-width: 40px;
+             min-height: 40px;
+         }
+         .dummy-box {
+             position: absolute;
+             top: -3px;
+             left: -3px;
+             min-width: 40px;
+             min-height: 40px;
+             border: 3px solid white;
+             background-color: none;
+             box-shadow: 0px 2px 6px #ccc;
+             z-index: 1;
+             display: none;
+             cursor: pointer;
+         }
+         .icon {
+             min-width: 40px;
+             min-height: 40px;
+             color: #757575;
+         }
+         .small-icon {
+             margin-top: -6px;
+             max-width: 14px;
+             max-height: 14px;
+             color: #757575;
+         }
+         .hidden-icon {
+             visibility: hidden;
+         }
+         .color-box:hover > .dummy-box {
+             display: block;
+         }
+         .small-box {
+             max-width: 14px;
+             max-height: 14px;
+             background-color: #FAFAFA;
+             border: 2px solid #BDBDBD;
+             border-radius: 2px;
+             cursor: pointer;
+         }
+         iron-dropdown {
+             background-color: #FAFAFA;
+             box-shadow: 0px 2px 6px #ccc;
+             margin-top: 1em;
+         }
+         .prefix {
+             margin-left: 1px;
+             font-family: 'Roboto', 'Noto', sans-serif;
+             margin-left: 10px;
+             font-size: 1rem;
+         }
+    </style>
     <template>
         <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" _on-change="[[_onChange]]" current-state="[[currentState]]" _calc-colour-text-style="[[_calcColourTextStyle]]">
             <div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
@@ -72,9 +70,7 @@
             </div>
         </tg-editor>
     </template>
-</dom-module>
-
-<script>
+    <script>
     (function () {
         var colorLuminance = function (hex, lum) {
             if (hex != null) {
@@ -306,6 +302,7 @@
                 }
                 return style;
             }
-        });
-    })();
-</script>
+          });
+        })();
+    </script>
+</dom-module>
