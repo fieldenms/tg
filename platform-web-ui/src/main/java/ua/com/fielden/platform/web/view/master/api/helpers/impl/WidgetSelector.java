@@ -66,7 +66,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
-        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.getEntityType(): (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.getEntityType(), propertyName);
+        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.getEntityType() : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.getEntityType(), propertyName);
         widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, propType);
         return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
     }

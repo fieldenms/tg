@@ -190,8 +190,8 @@
                     <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
 
                     <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
-                
-                	<input id="input" is="iron-input" hidden$="[[!_isColourEditor(_editorKind)]]" bind-value="{{_editingValue}}" style$="[[_calcColourTextStyle(_editingValue)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
+                    
+                    <input id="input" is="iron-input" hidden$="[[!_isColourEditor(_editorKind)]]" bind-value="{{_editingValue}}" style$="[[_calcColourTextStyle(_editingValue)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]">
                 </div>
                 <!-- CONTENT HERE: -->
                 <content select=".custom-icon-buttons"></content>
