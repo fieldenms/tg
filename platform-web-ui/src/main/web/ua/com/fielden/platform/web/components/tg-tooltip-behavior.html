@@ -1,13 +1,14 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/components/tg-tooltip.html">
+<link rel="import" href="/resources/components/tg-tooltip-text.html">
 
 <script>
-    var toolTipEleemnt = document.createElement("tg-tooltip");
-    Polymer.dom(document.body).appendChild(toolTipEleemnt);
+    var toolTipElement = document.createElement("tg-tooltip");
+    Polymer.dom(document.body).appendChild(toolTipElement);
     Polymer.dom.flush();
 
     Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-    Polymer.TgBehaviors.TgTooltipBehaviour = {
+    Polymer.TgBehaviors.TgTooltipBehavior = {
         properties: {
             _tooltipTimer: Number
         },
@@ -18,19 +19,27 @@
                 this._tooltipTimer = null;
             }
             this._tooltipTimer = this.async(function () {
-                Polymer.dom(toolTipEleemnt).innerHTML = this.getTooltipText(event);
-                toolTipEleemnt.showAt(event.pageX, event.pageY + 14);
+                var toolTipTextElement = Polymer.dom(event.target).querySelector("tg-tooltip-text")
+                Polymer.dom(toolTipElement).innerHTML = this.getTooltipText(event);
+                toolTipElement.showAt(event.pageX, event.pageY + 14);
             }, 1000);
         },
 
         hideTooltip: function (event) {
-            if (toolTipEleemnt._showing) {
-                toolTipEleemnt.hide();
+            if (toolTipElement._showing) {
+                toolTipElement.hide();
             }
             if (this._tooltipTimer) {
                 this.cancelAsync(this._tooltipTimer);
                 this._tooltipTimer = null;
             }
+        },
+        
+        /**
+         * Returns the tooltip text based on mouse move event. Override this method to provide custom tooltip text.
+         */
+        getTooltipText: function(event) {
+            return "";
         }
     };
 </script>

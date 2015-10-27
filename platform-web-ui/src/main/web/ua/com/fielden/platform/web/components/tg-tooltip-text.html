@@ -1,0 +1,21 @@
+<script>
+(function() {
+    
+    Polymer({
+        is: 'tg-tooltip-text',
+        
+        properties: {
+            /**
+             * Contains the innerHtml
+             */
+            tooltipText: Object
+        },
+        
+        attached: function() {
+            this.async(function() {
+                this.tooltipText = Polymer.dom(this).innerHTML;
+            }, 1);
+        }
+    })
+})();
+</script>

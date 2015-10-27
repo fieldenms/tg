@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/components/tg-tooltip-behaviour.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 
 <dom-module id="tg-component-with-tooltip">
@@ -7,19 +9,28 @@
         div {
             cursor: default;
         }
+        iron-icon {
+            color: black;
+        }
     </style>
     <template>
-        <div on-mousemove="showTooltipAtMousePos" on-mouseleave="hideTooltip">Component with activated tooltip</div>
-        <div on-mousemove="showTooltipAtMousePos" on-mouseleave="hideTooltip">Another Component with activated tooltip</div>
+        <div id="div_text" on-mousemove="showTooltipAtMousePos" on-mouseleave="hideTooltip">Component with activated tooltip</div>
+        <div id="div_html_text" on-mousemove="showTooltipAtMousePos" on-mouseleave="hideTooltip">Another Component with activated tooltip</div>
     </template>
     <script>
         
         Polymer({
             is: 'tg-component-with-tooltip',
 
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehaviour],
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
             getTooltipText: function(event) {
+                var element_id = event.target.getAttribute("id");
+                if (element_id === 'div_text') {
+                    return "Tooltip text for div";
+                } else if (element_id === 'div_html_text') {
+                    return "<iron-icon icon='attachment'></iron-icon><i>Test italic</i> html tooltip text";
+                }
                 return "Tooltip example";
             }
         })
