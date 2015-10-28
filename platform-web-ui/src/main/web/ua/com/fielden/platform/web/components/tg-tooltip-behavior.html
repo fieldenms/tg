@@ -46,12 +46,12 @@ mark element with tooltip-text attribute.
                 this._handleTooltipAtMousePos = this._handleTooltipAtMousePos.bind(this);
                 this._hideTooltip = this._hideTooltip.bind(this);
             },
-            
+
             attached: function () {
                 this.addEventListener('mousemove', this._handleTooltipAtMousePos);
                 this.addEventListener('mouseleave', this._hideTooltip);
             },
-            
+
             detached: function () {
                 this.removeEventListener('mousemove', this._handleTooltipAtMousePos);
                 this.removeEventListener('mouseleave', this._hideTooltip);
@@ -62,6 +62,7 @@ mark element with tooltip-text attribute.
              */
             _handleTooltipAtMousePos: function (event) {
                 var currentActiveElement = extractActiveElement(event.target);
+
                 if (currentActiveElement !== this._activeComponent) {
                     this._hideTooltip();
                     this._activeComponent = currentActiveElement;
@@ -74,7 +75,7 @@ mark element with tooltip-text attribute.
                     }
                     this._tooltipTimer = this.async(function () {
                         Polymer.dom(toolTipElement).innerHTML = tooltipText;
-                        toolTipElement.showAt(event.pageX, event.pageY + 14);
+                        toolTipElement.showAt(event.pageX, event.pageY);
                     }, 1000);
                 }
             },

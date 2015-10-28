@@ -264,7 +264,7 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" tooltip-text$="[[_tableCellTooltip(column, egiEntity)]]">
+                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column.property, column.type)]]">
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
@@ -333,7 +333,7 @@
                     <content select=".entity-specific-action"></content>
                 </div>
                 <div class="layout horizontal center">
-                    <paper-checkbox style="margin: 0 8px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                    <paper-checkbox style="margin: 0 8px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged" tooltip-text$="[[_selectAllTooltip(selectedAll)]]"></paper-checkbox>
                     <paper-icon-button icon="editor:functions" on-tap="_showSummary" disabled$="[[!_isSummaryEnabled(egiModel, cardLayout)]]"></paper-icon-button>
                     <content select=".standart-action"></content>
                 </div>
@@ -343,10 +343,7 @@
                     <div class="card-header layout horizontal center justified relative" style$="[[_calcCardHeaderStyle(primaryAction, secondaryActions)]]">
                         <div selected$="[[egiEntity.selected]]" class="card-header-background fit"></div>
                         <div class="layout horizontal center relative">
-                            <div>
-                                <!-- this div might not be needed-->
-                                <paper-checkbox class="blue" style="margin-right:11px;" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
-                            </div>
+                            <paper-checkbox class="blue" style="margin-right:11px;" checked="[[egiEntity.selected]]" on-change="_selectionChanged" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]"></paper-checkbox>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]"></tg-page-action>
                                 <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]"></tg-ui-action>
@@ -435,26 +432,18 @@
                     readOnly: true,
                     observer: "_cardLayoutChanged"
                 },
-                
+
                 /** Controls visibility of the toolbar. */
                 toolbarVisible: {
-                	type: Boolean,
-                	value: @toolbarVisible
+                    type: Boolean,
+                    value: @toolbarVisible
                 },
-                
+
                 /** Controls visiblity of checkboxes at the beginnig of the header and each data row */
-                checkboxVisible:  {
-                	type: Boolean,
-                	value: @checkboxVisible
+                checkboxVisible: {
+                    type: Boolean,
+                    value: @checkboxVisible
                 },
-                
-                /** 
-                 * Private properrties of the Entity Grid Inspector.
-                 */
-                //Tooltip element.
-                _tooltip: Object,
-                //Timer identifier.
-                _timer: Number
             },
 
             observers: [
@@ -465,7 +454,7 @@
                 '_tabletLongLayoutChanged(longLayout.tablet)',
                 '_mobileLongLayoutChanged(longLayout.mobile)'
             ],
-            
+
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
             /**
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
@@ -500,24 +489,20 @@
                 Array.prototype.forEach.call(Polymer.dom(this.$.secondary_action_selector).getDistributedNodes(), function (item) {
                     this.secondaryActions.push(item);
                 }.bind(this));
-                
-                //Create dynamic tool tip
-                this._tooltip = document.createElement('paper-tooltip');
             },
-            
-            _selectAllTooltip: function(selectedAll) {
-                return (selectedAll ? 'Unselect': 'Select') + ' all entities';
+
+            /**
+             * Tooltip related functions.
+             */
+            _selectAllTooltip: function (selectedAll) {
+                return (selectedAll ? 'Unselect' : 'Select') + ' all entities';
             },
-            
-            _selectTooltip: function(selected) {
-                return (selected ? 'Unselecct': 'Select') + ' this entity' ;
+
+            _selectTooltip: function (selected) {
+                return (selected ? 'Unselecct' : 'Select') + ' this entity';
             },
-            
-            _tableCellTooltip: function(column, egiEntity) {
-                return this._getTooltip(egiEntity.entity, column.property, column.type);
-            },
-           
-            _getTooltip: function(entity, property, type) {
+
+            _getTooltip: function (entity, property, type) {
                 if (this.$.reflector.findTypeByName(type)) {
                     return entity.get(property === '' ? "desc" : (property + ".desc"));
                 } else {
@@ -802,7 +787,10 @@
                     return moment(entity.get(property)).format("L LT");
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
-                        return entity.get(property).toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2, minimumFractionDigits:2});
+                        return entity.get(property).toLocaleString(this.$.appConfig.locale, {
+                            maximumFractionDigits: 2,
+                            minimumFractionDigits: 2
+                        });
                     } else {
                         return entity.get(property).toLocaleString(this.$.appConfig.locale);
                     }
@@ -890,12 +878,12 @@
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.
              */
-            _showSummary: function (e, detail, source) {                
+            _showSummary: function (e, detail, source) {
                 //Openening dialog
                 if (this.cardLayout && this.totals) {
                     var summaryDialog = Polymer.dom(document.body).appendChild(this.$.summaryDialog);
                     Polymer.dom.flush();
-                    
+
                     this.async(function () {
                         summaryDialog.open();
                     }, 200);
