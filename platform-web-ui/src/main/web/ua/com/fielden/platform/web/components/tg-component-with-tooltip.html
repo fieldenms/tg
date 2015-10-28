@@ -16,9 +16,9 @@
     </style>
     <template>
         <tg-flex-layout when-desktop="[[_whenDesktop]]" , when-tablet="[[_whenDesktop]]" , when-mobile="[[_whenDesktop]]">
-            <div id="div_text" enable-tooltip>Component with activated tooltip</div>
+            <div id="div_text" tooltip-text="Tooltip text for div">Component with activated tooltip</div>
             <template is="dom-repeat" items="[[_tooltipItems]]">
-                <div id="[[item.id]]" enable-tooltip>[[item.text]]</div>
+                <div id="[[item.id]]" tooltip-text$="[[item.tooltip]]">[[item.text]]</div>
             </template>
         </tg-flex-layout>
     </template>
@@ -35,17 +35,7 @@
 
             ready: function () {
                 this._whenDesktop = ['horizontal', ['flex'], ['flex']];
-                this._tooltipItems = [{id: "div_html_text", text: "Another componsnt with activated tooltips"}];
-            },
-
-            getTooltipText: function (event) {
-                var element_id = event.target.getAttribute("id");
-                if (element_id === 'div_text') {
-                    return "Tooltip text for div";
-                } else if (element_id === 'div_html_text') {
-                    return '<iron-icon icon="attachment"></iron-icon><i>Test italic</i> html tooltip text';
-                }
-                return "Tooltip example";
+                this._tooltipItems = [{id: "div_html_text", text: "Another componsnt with activated tooltips", tooltip: '<iron-icon icon="attachment"></iron-icon><i>Test italic</i> html tooltip text'}];
             }
         })
     </script>

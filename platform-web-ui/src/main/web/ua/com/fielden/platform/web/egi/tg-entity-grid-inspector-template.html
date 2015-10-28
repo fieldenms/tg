@@ -232,7 +232,7 @@
                     </div>
                     <!-- Table header -->
                     <div class="layout horizontal table-header-row">
-                        <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" on-mousemove="_showTooltipAtMousePos" on-mouseleave="_hideTooltip" role="selectAllCheckbox">
+                        <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                             <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                         </div>
                         <template is="dom-if" if="[[primaryAction]]">
@@ -241,7 +241,7 @@
                             </div>
                         </template>
                         <template is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]" on-mousemove="_showTooltipAtMousePos" on-mouseleave="_hideTooltip" role="columnHeader">
+                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]" tooltip-text$="[[item.columnDesc]]">
                                 <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
                             </div>
                         </template>
@@ -254,7 +254,7 @@
                     <!-- Table body -->
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
-                            <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" on-mousemove="_showTooltipAtMousePos" on-mouseleave="_hideTooltip" role="selectCheckbox">
+                            <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
@@ -264,7 +264,7 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" on-mousemove="_showTooltipAtMousePos" on-mouseleave="_hideTooltip" role="tableCell">
+                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" tooltip-text$="[[_tableCellTooltip(column, egiEntity)]]">
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
@@ -505,48 +505,23 @@
                 this._tooltip = document.createElement('paper-tooltip');
             },
             
-            /**
-             * Tooltip related functions
-             */
-            getTooltipText: function(event) {
-                var role = event.target.getAttribute("role");
-                if (role === 'selectAllCheckbox') {
-                    return this._allCheckboxTooltip(event);
-                } else if (role === 'columnHeader') {
-                    return this._columnHeaderTooltip(event);
-                } else if (role === 'selectCheckbox') {
-                    return this._checkboxTooltip(event);
-                } else if (role === 'tableCell') {
-                    return this._cellTooltip(event);
-                } else {
-                    return "";
-                }
-            },
-           
-            _allCheckboxTooltip: function(e) {
-                return (this.selectedAll ? 'Unselect': 'Select') + ' all entities';
+            _selectAllTooltip: function(selectedAll) {
+                return (selectedAll ? 'Unselect': 'Select') + ' all entities';
             },
             
-            _columnHeaderTooltip: function(e) {
-                var model = e.model;
-                return model.item.columnDesc;
+            _selectTooltip: function(selected) {
+                return (selected ? 'Unselecct': 'Select') + ' this entity' ;
             },
             
-            _checkboxTooltip: function(e) {
-                var model = e.model;
-                return (model.egiEntity.selected ? 'Unselecct': 'Select') + ' this entity' ;
-            },
-            
-            _cellTooltip: function(e) {
-                var model = e.model;
-                return this._getTooltip(model.egiEntity.entity, model.column.property, model.column.type);
+            _tableCellTooltip: function(column, egiEntity) {
+                return this._getTooltip(egiEntity.entity, column.property, column.type);
             },
            
             _getTooltip: function(entity, property, type) {
                 if (this.$.reflector.findTypeByName(type)) {
                     return entity.get(property === '' ? "desc" : (property + ".desc"));
                 } else {
-                    return this._getValue(entity, property, type);
+                    return this._getValue(entity, property, type).toString();
                 }
             },
             //End of Tooltip related functions
