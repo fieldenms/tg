@@ -93,12 +93,12 @@
         
         var rgbToHex = function (colorString) {
             if (colorString === null||colorString.length === 3 || colorString.length === 6) {
-                return colorString;
+                return colorString.toUpperCase();
             }
             var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(colorString);
             var r = parseInt(nums[2], 10).toString(16);
             var g = parseInt(nums[3], 10).toString(16);
-            var b = parseInt(nums[4], 10).toString(16);
+            var b = parseInt(nums[4], 10).toString(16);    
             return "#" + ((r.length == 1 ? "0" + r : r) +(g.length == 1 ? "0" + g : g) + (b.length == 1 ? "0" + b : b));
         };
 		
@@ -111,7 +111,12 @@
                     type: Boolean,
                     value: false
                 },
-                _colourTemplate:Object,
+                /*
+                 * This published property specifies to dialog with colour should be bound.
+                 */
+                _colourPalette: {
+                    type: Object
+                },
                 
                 _calcColourTextStyle: {
                     type: Function,
@@ -141,7 +146,7 @@
 
             convertFromString: function (strValue) {
                 if (strValue.length !== 3 && strValue.length !== 6 && strValue !== "") {
-                    throw "The entered check value is incorrect [ #" + strValue + "].";
+                    throw "The entered value [ #" + strValue + "] is incorrect.";
                 } else {
                     return {
                         hashlessUppercasedColourValue: strValue
@@ -151,12 +156,12 @@
             
             _openColourPicker: function () {
                 if (this._disabled === false) {
-                    if (!this._colourTemplate) {
-                        this._colourTemplate = this._createDialog();
-                        Polymer.dom(this.root).appendChild(this._colourTemplate);
+                    if (!this._colourPalette) {
+                        this._colourPalette = this._createDialog();
+                        Polymer.dom(this.root).appendChild(this._colourPalette);
                         Polymer.dom.flush();
                     }
-                    this._colourTemplate.open();
+                    this._colourPalette.open();
                 }
             },
 
@@ -166,7 +171,7 @@
                 
                 domBind.colorSelected = function (e, detail) {
                     this._acceptColourBind();
-                    self._editingValue = (rgbToHex(e.srcElement.style['background-color'])).substring(1);
+                    self._editingValue = ((rgbToHex(e.srcElement.style['background-color'])).substring(1)).toUpperCase();
                     this.$.dropdown.close();
                 }.bind(domBind);
 
