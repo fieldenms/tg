@@ -655,10 +655,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 final TgCentreInvokerWithCentreContext funcEntity = EntityResource.restoreEntityFrom((SavingInfoHolder) context.get().getMasterEntity(), TgCentreInvokerWithCentreContext.class, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity: " + funcEntity);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context): " + funcEntity.getContext());
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): "
-                        + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): "
-                        + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
             }
             return where.val(1).eq().val(1);
         }

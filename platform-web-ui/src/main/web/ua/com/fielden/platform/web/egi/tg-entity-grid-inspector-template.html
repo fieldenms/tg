@@ -787,7 +787,7 @@
                     return moment(entity.get(property)).format("L LT");
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
-                        return entity.get(property).toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2,minimumFractionDigits: 2});
+                        return entity.get(property).toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2, minimumFractionDigits: 2});
                     } else {
                         return entity.get(property).toLocaleString(this.$.appConfig.locale);
                     }
