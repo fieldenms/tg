@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Generated Master</title>
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    
+    <!-- <link rel="import" href="/resources/editors/tg-integer-editor.html"> -->
+
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgEntityForColourMaster">
+</head>
+
+<body>
+    <tg-TgEntityForColourMaster-master 
+    	id="master" 
+    	entity-type="ua.com.fielden.platform.sample.domain.TgEntityForColourMaster" 
+    	entity-id="52" 
+    	current-state="EDIT">
+    </tg-TgEntityForColourMaster-master>
+    
+        <!-- <tg-integer-editor
+      	    id="editor" 
+  	    	entity="null" 
+  	    	property-name="integerProp" 
+  	    	current-state="EDIT" 
+  	    	debug 
+  	    	prop-title="Integer property title" 
+  	    	prop-desc="Integer property desc"
+  	    	action="null" 
+  	    	externalRefreshCycle="null"  	    	
+  	    	validation-callback="null">
+  	    </tg-integer-editor> -->
+    
+    <!-- uuid centre-uuid -->
+
+    <script>
+        (function () {
+            window.addEventListener('WebComponentsReady', function(e) {
+                // imports are loaded and elements have been registered
+                
+                console.log('Components are ready');
+                
+                /* var editor = document.querySelector('#editor'); */
+                
+                var master = document.querySelector('#master');
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    console.log("postRetrieved");
+                };
+                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                    console.log("postValidated");
+                };
+                master.postSaved = function(potentiallySavedEntity, newBindingEntity) {
+                    console.log("postSaved");
+                };
+                master.retrieve();
+            });
+         })()
+   </script>
+</body>
+
+</html>

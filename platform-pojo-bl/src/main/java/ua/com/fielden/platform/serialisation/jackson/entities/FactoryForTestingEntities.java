@@ -17,6 +17,7 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -193,6 +194,12 @@ public class FactoryForTestingEntities {
         return finalise(entity);
     }
 
+    public EntityWithColour createEntityWithColour() {
+        final EntityWithColour entity = createPersistedEntity(EntityWithColour.class, 1L, "key", "description");
+        entity.setProp(Colour.WHITE);
+        return finalise(entity);
+    }
+
     public EntityWithMoney createEntityWithMoney() {
         final EntityWithMoney entity = createPersistedEntity(EntityWithMoney.class, 1L, "key", "description");
         entity.setProp(new Money("54.00", 20, Currency.getInstance("AUD")));
@@ -270,4 +277,5 @@ public class FactoryForTestingEntities {
         entity.setKey2(key2);
         return finalise(entity);
     }
+
 }

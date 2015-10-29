@@ -42,6 +42,8 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
+import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
+import ua.com.fielden.platform.sample.domain.TgEntityForColourMasterProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
@@ -312,6 +314,69 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .done();
 
+        final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
+                // PROPERTY EDITORS
+
+                .addProp("stringProp").asSinglelineText().skipValidation()
+                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export string prop")
+                /*      */.longDesc("Export string property").also()
+
+                .addProp("booleanProp").asCheckbox()
+                /*      */.withAction("#exportBooleanProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export boolean prop")
+                /*      */.longDesc("Export boolean property").also()
+
+                .addProp("colourProp").asColour()
+                /*      */.withAction("#exportColourProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.shortDesc("Export colour prop")
+                /*      */.longDesc("Export colour property").also()
+
+                .addAction(MasterActions.REFRESH)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("REFRESH2")
+                /*      */.longDesc("REFRESH2 action")
+
+                // ENTITY CUSTOM ACTIONS
+                .addAction("#export", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.EDIT)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("Export")
+                /*      */.longDesc("Export action")
+
+                .addAction(MasterActions.VALIDATE).addAction(MasterActions.SAVE).addAction(MasterActions.EDIT).addAction(MasterActions.VIEW)
+
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
+                        + "[[fmr], ['flex']],"
+                        + "[['flex']],"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
+                                + "[[fmr],['flex']],"
+                                + "[['flex']],"
+                                + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                                + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
+                                        + "[['flex']],"
+                                        + "[['flex']],"
+                                        + "[['flex']],"
+                                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntityWithSaveOnActivate(TgFunctionalEntityWithCentreContext.class)
                 .addProp("valueToInsert").asSinglelineText()
                 .also()
@@ -345,7 +410,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 TgPersistentEntityWithPropertiesProducer.class,
                 masterConfig,
                 injector());
+        final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
         configApp().
+            addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
+            addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
+            addMaster(TgEntityForColourMaster.class, clourMaster).//
+
+
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
                         EntityWithInteger.class,
                         null,
