@@ -1,0 +1,48 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/layout/tg-flex-layout.html">
+
+
+<dom-module id="tg-component-with-tooltip">
+    <style>
+        div, span {
+            cursor: default;
+            border: 1px dashed black;
+        }
+    </style>
+    <template>
+        <tg-flex-layout when-desktop="[[_whenDesktop]]" , when-tablet="[[_whenDesktop]]" , when-mobile="[[_whenDesktop]]">
+            <div id="div_text" tooltip-text="Tooltip text for div">
+                <span tooltip-text="Tooltip text for embeded span">Embeded component</span>
+                Component with activated tooltip
+            </div>
+            <template is="dom-repeat" items="[[_tooltipItems]]">
+                <div id="[[item.id]]" tooltip-text$="[[item.tooltip]]">[[item.text]]</div>
+            </template>
+        </tg-flex-layout>
+        <div>Component's tooltip goes here.</div>
+    </template>
+    <script>
+        Polymer({
+            is: 'tg-component-with-tooltip',
+
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+
+            properties: {
+                _whenDesktop: Array,
+                _tooltipItems: Array
+            },
+            
+            hostAttributes: {
+                'tooltip-text': "The component's tooltip works!"
+            },
+
+            ready: function () {
+                this._whenDesktop = ['horizontal', ['flex'], ['flex']];
+                this._tooltipItems = [{id: "div_html_text", text: "Another componsnt with activated tooltips", tooltip: '<iron-icon icon="attachment"></iron-icon><i>Test italic</i> html tooltip text'}];
+            }
+        })
+    </script>
+</dom-module>

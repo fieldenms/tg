@@ -599,16 +599,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private IRenderable createRenderableEgiRepresentaton(final ICentreDomainTreeManagerAndEnhancer centre) {
         final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction'>" +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, \"@property-name\", \"@property-type\")]]'>" +
                 "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
                 "<div class='truncate relative'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>" +
                 "</div>" +
                 "</div>";
 
         final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction'>" +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, \"@property-name\", \"@property-type\")]]'>" +
                 "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
                 "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]'></iron-icon>" +
                 "</div>" +
@@ -622,18 +622,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final String resultPropName = propertyName.equals("this") ? "" : propertyName;
                 final Class<?> propertyType = "".equals(resultPropName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
                 final String typeTemplate = EntityUtils.isBoolean(propertyType) ? booleanValueString : simpleValueString;
+                final Pair<String, String> columnTitileAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName);
                 domContainer.add(
                         new InnerTextElement(typeTemplate
                                 .replaceAll("@calc-property-name", propertyName)
                                 .replaceAll("@property-name", resultPropName)
-                                .replaceAll("@column-title", CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName).getKey())
+                                .replaceAll("@column-title", columnTitileAndDesc.getKey())
+                                .replaceAll("@column-desc", columnTitileAndDesc.getValue())
                                 .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
             }
         }
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
         final String egiStr = text.
-        		replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
-        		replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
+                replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
+                replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
                 replaceAll("@miType", getMenuItemType().getSimpleName()).
                 replaceAll("@gridCardDom", Matcher.quoteReplacement(domContainer.toString()));
         return new IRenderable() {
@@ -803,7 +805,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
             secondaryActionsObjects.append(prefix + createActionObject(el));
         }
-
 
         logger.debug("Initiating insertion point actions...");
 

@@ -1,10 +1,13 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/actions/tg-page-action.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
+
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -15,6 +18,7 @@
 <link rel="import" href="/resources/polymer/neon-animation/neon-animations.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+
 
 <style is="custom-style">
     .summary-dialog paper-button {
@@ -228,7 +232,7 @@
                     </div>
                     <!-- Table header -->
                     <div class="layout horizontal table-header-row">
-                        <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]">
+                        <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                             <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                         </div>
                         <template is="dom-if" if="[[primaryAction]]">
@@ -237,7 +241,7 @@
                             </div>
                         </template>
                         <template is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
+                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]" tooltip-text$="[[item.columnDesc]]">
                                 <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
                             </div>
                         </template>
@@ -250,7 +254,7 @@
                     <!-- Table body -->
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
-                            <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]">
+                            <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                             </div>
                             <template is="dom-if" if="[[primaryAction]]">
@@ -260,7 +264,7 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
+                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column.property, column.type)]]">
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
@@ -329,7 +333,7 @@
                     <content select=".entity-specific-action"></content>
                 </div>
                 <div class="layout horizontal center">
-                    <paper-checkbox style="margin: 0 8px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                    <paper-checkbox style="margin: 0 8px;" class="blue" checked="[[selectedAll]]" on-change="_allSelectionChanged" tooltip-text$="[[_selectAllTooltip(selectedAll)]]"></paper-checkbox>
                     <paper-icon-button icon="editor:functions" on-tap="_showSummary" disabled$="[[!_isSummaryEnabled(egiModel, cardLayout)]]"></paper-icon-button>
                     <content select=".standart-action"></content>
                 </div>
@@ -339,10 +343,7 @@
                     <div class="card-header layout horizontal center justified relative" style$="[[_calcCardHeaderStyle(primaryAction, secondaryActions)]]">
                         <div selected$="[[egiEntity.selected]]" class="card-header-background fit"></div>
                         <div class="layout horizontal center relative">
-                            <div>
-                                <!-- this div might not be needed-->
-                                <paper-checkbox class="blue" style="margin-right:11px;" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
-                            </div>
+                            <paper-checkbox class="blue" style="margin-right:11px;" checked="[[egiEntity.selected]]" on-change="_selectionChanged" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]"></paper-checkbox>
                             <template is="dom-if" if="[[primaryAction]]">
                                 <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]"  should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]"></tg-page-action>
                                 <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]"></tg-ui-action>
@@ -431,17 +432,17 @@
                     readOnly: true,
                     observer: "_cardLayoutChanged"
                 },
-                
+
                 /** Controls visibility of the toolbar. */
                 toolbarVisible: {
-                	type: Boolean,
-                	value: @toolbarVisible
+                    type: Boolean,
+                    value: @toolbarVisible
                 },
-                
+
                 /** Controls visiblity of checkboxes at the beginnig of the header and each data row */
-                checkboxVisible:  {
-                	type: Boolean,
-                	value: @checkboxVisible
+                checkboxVisible: {
+                    type: Boolean,
+                    value: @checkboxVisible
                 }
             },
 
@@ -453,6 +454,8 @@
                 '_tabletLongLayoutChanged(longLayout.tablet)',
                 '_mobileLongLayoutChanged(longLayout.mobile)'
             ],
+
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
             /**
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
@@ -487,6 +490,26 @@
                     this.secondaryActions.push(item);
                 }.bind(this));
             },
+
+            /**
+             * Tooltip related functions.
+             */
+            _selectAllTooltip: function (selectedAll) {
+                return (selectedAll ? 'Unselect' : 'Select') + ' all entities';
+            },
+
+            _selectTooltip: function (selected) {
+                return (selected ? 'Unselecct' : 'Select') + ' this entity';
+            },
+
+            _getTooltip: function (entity, property, type) {
+                if (this.$.reflector.findTypeByName(type)) {
+                    return entity.get(property === '' ? "desc" : (property + ".desc"));
+                } else {
+                    return this._getValue(entity, property, type).toString();
+                }
+            },
+            //End of Tooltip related functions
 
             /**
              * Calcualtes the summary for grid.
@@ -764,7 +787,7 @@
                     return moment(entity.get(property)).format("L LT");
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
-                        return entity.get(property).toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2, minimumFractionDigits:2});
+                        return entity.get(property).toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2, minimumFractionDigits: 2});
                     } else {
                         return entity.get(property).toLocaleString(this.$.appConfig.locale);
                     }
@@ -845,12 +868,12 @@
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.
              */
-            _showSummary: function (e, detail, source) {                
+            _showSummary: function (e, detail, source) {
                 //Openening dialog
                 if (this.cardLayout && this.totals) {
                     var summaryDialog = Polymer.dom(document.body).appendChild(this.$.summaryDialog);
                     Polymer.dom.flush();
-                    
+
                     this.async(function () {
                         summaryDialog.open();
                     }, 200);

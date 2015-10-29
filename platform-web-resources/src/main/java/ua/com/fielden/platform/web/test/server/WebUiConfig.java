@@ -11,12 +11,9 @@ import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
-
-import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
@@ -96,6 +93,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
+
+import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -766,14 +765,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         if (isComposite) {
             actionConf = actionConf.addTopAction(
-                    action(TgCentreInvokerWithCentreContext.class).
-                        withContext(context().withSelectionCrit().withSelectedEntities().build())
-                        .icon("assignment-ind")
-                        .shortDesc("Function 4")
-                        .longDesc("Functional context-dependent action 4")
-                        .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
-                        .withNoParentCentreRefresh()
-                        .build()
+                    action(TgCentreInvokerWithCentreContext.class)
+                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                            .icon("assignment-ind")
+                            .shortDesc("Function 4")
+                            .longDesc("Functional context-dependent action 4")
+                            .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+                            .withNoParentCentreRefresh()
+                            .build()
                     ).also();
 
         }
@@ -1042,42 +1041,42 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class);
 
-                final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
-                if (withQueryEnhancer) {
-                    afterQueryEnhancerConf = beforeEnhancerConf.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
-                } else {
-                    afterQueryEnhancerConf = beforeEnhancerConf;
-                }
-                // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
+        final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
+        if (withQueryEnhancer) {
+            afterQueryEnhancerConf = beforeEnhancerConf.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
+        } else {
+            afterQueryEnhancerConf = beforeEnhancerConf;
+        }
+        // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
 
-                final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
+        final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]");
 
-                //                .also()
-                //                .addProp("status").order(3).desc().withAction(null)
-                //                .also()
-                //                .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
-                //                .also()
-                //                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
-                //                .also()
-                //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
+        //                .also()
+        //                .addProp("status").order(3).desc().withAction(null)
+        //                .also()
+        //                .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
+        //                .also()
+        //                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
+        //                .also()
+        //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
-                if (isComposite) {
-                    return scl.addInsertionPoint(
-                            action(TgCentreInvokerWithCentreContext.class)
-                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                                .icon("assignment-ind")
-                                .shortDesc("Insertion Point")
-                                .longDesc("Functional context-dependent Insertion Point")
-                                .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
-                                .withNoParentCentreRefresh()
-                                .build(),
-                            InsertionPoints.RIGHT)
-                            .build();
-                }
-                return scl.build();
+        if (isComposite) {
+            return scl.addInsertionPoint(
+                    action(TgCentreInvokerWithCentreContext.class)
+                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                            .icon("assignment-ind")
+                            .shortDesc("Insertion Point")
+                            .longDesc("Functional context-dependent Insertion Point")
+                            .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+                            .withNoParentCentreRefresh()
+                            .build(),
+                    InsertionPoints.RIGHT)
+                    .build();
+        }
+        return scl.build();
     }
 
     private EntityCentre<TgPersistentEntityWithProperties> createEntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<TgPersistentEntityWithProperties> entityCentreConfig) {
