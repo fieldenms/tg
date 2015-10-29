@@ -11,7 +11,6 @@ import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
@@ -697,8 +696,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         if (isComposite) {
             actionConf = actionConf.addTopAction(
-                    action(TgCentreInvokerWithCentreContext.class).
-                            withContext(context().withSelectionCrit().withSelectedEntities().build())
+                    action(TgCentreInvokerWithCentreContext.class)
+                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
                             .icon("assignment-ind")
                             .shortDesc("Function 4")
                             .longDesc("Functional context-dependent action 4")
@@ -909,16 +908,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                        "["
                 //                                + "[['flex', 'select:property=stringProp']]"
                 //                                + "]")
-                //                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
-                //                        "["
-                //                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
-                //                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
-                //                                + "]")
-                //                .withExpansionLayout(
-                //                        "["
-                //                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
-                //                                + "[['flex', 'select:property=stringProp']]"
-                //                                + "]")
+                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
+                        "["
+                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
+                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
+                                + "]")
+                .withExpansionLayout(
+                        "["
+                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
+                                + "[['flex', 'select:property=stringProp']]"
+                                + "]")
                 .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(),
                         "["
                                 + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
