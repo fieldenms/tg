@@ -324,12 +324,12 @@
                 // that is why dialogs ID is defined as the master entity type
                 // the dialog is never removed from document.body
                 if (self._actionDialog == null) {
-                	var dialog = document.body.querySelector('tg-custom-action-dialog[id="' + self.entityType + '"]');
+                	var dialog = document.body.querySelector('tg-custom-action-dialog[id="' + self.uuid + '"]');
                 	if (dialog) {
                 		self._actionDialog = dialog;
                 	} else {
                 		self._actionDialog = document.createElement('tg-custom-action-dialog');
-	                    Polymer.dom(self._actionDialog).setAttribute("id", self.entityType);
+	                    Polymer.dom(self._actionDialog).setAttribute("id", self.uuid);
 	                    Polymer.dom(document.body).appendChild(self._actionDialog);
 	                    Polymer.dom.flush();
                 	}
@@ -564,7 +564,7 @@
        	 		
                 self.entityId = 'find_or_new';
 				self.retrieve(self.getMasterEntity());
-            }
+            }            
         };
     	
 		Polymer.TgBehaviors.TgEntityMasterBehavior = [
