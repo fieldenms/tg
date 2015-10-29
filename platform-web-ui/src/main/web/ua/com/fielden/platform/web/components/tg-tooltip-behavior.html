@@ -1,6 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/components/tg-tooltip.html">
-<link rel="import" href="/resources/components/tg-tooltip-text.html">
 <!--
 Provides tooltip support for component that uses this behaviour. In order to set tooltip for specific element in the component, one should
 mark element with tooltip-text attribute.
@@ -11,12 +10,12 @@ mark element with tooltip-text attribute.
         /**
          * Returns the element in hierarchy that has tooltip-id attribute set otherwise returns null.
          */
-        var extractActiveElement = function (currentElement) {
-            if (currentElement !== null) {
+        var extractActiveElement = function (currentElement, thisElement) {
+            if (currentElement !== thisElement.parentElement) {
                 if (currentElement.hasAttribute("tooltip-text")) {
                     return currentElement;
                 } else {
-                    return extractActiveElement(currentElement.parentElement);
+                    return extractActiveElement(currentElement.parentElement, thisElement);
                 }
             }
             return null;
@@ -61,7 +60,7 @@ mark element with tooltip-text attribute.
              * Handler that determines when to show tooltip on mouse move event amd when to hide it.
              */
             _handleTooltipAtMousePos: function (event) {
-                var currentActiveElement = extractActiveElement(event.target);
+                var currentActiveElement = extractActiveElement(event.target, this);
 
                 if (currentActiveElement !== this._activeComponent) {
                     this._hideTooltip();

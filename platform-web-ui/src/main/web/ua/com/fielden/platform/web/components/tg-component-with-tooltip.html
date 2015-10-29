@@ -7,20 +7,22 @@
 
 <dom-module id="tg-component-with-tooltip">
     <style>
-        div {
+        div, span {
             cursor: default;
-        }
-        iron-icon {
-            color: black;
+            border: 1px dashed black;
         }
     </style>
     <template>
         <tg-flex-layout when-desktop="[[_whenDesktop]]" , when-tablet="[[_whenDesktop]]" , when-mobile="[[_whenDesktop]]">
-            <div id="div_text" tooltip-text="Tooltip text for div">Component with activated tooltip</div>
+            <div id="div_text" tooltip-text="Tooltip text for div">
+                <span tooltip-text="Tooltip text for embeded span">Embeded component</span>
+                Component with activated tooltip
+            </div>
             <template is="dom-repeat" items="[[_tooltipItems]]">
                 <div id="[[item.id]]" tooltip-text$="[[item.tooltip]]">[[item.text]]</div>
             </template>
         </tg-flex-layout>
+        <div>Component's tooltip goes here.</div>
     </template>
     <script>
         Polymer({
@@ -31,6 +33,10 @@
             properties: {
                 _whenDesktop: Array,
                 _tooltipItems: Array
+            },
+            
+            hostAttributes: {
+                'tooltip-text': "The component's tooltip works!"
             },
 
             ready: function () {
