@@ -5,7 +5,7 @@
 
 <dom-module id="tg-colour-picker">
     <style>
-        .color-box {
+        .colour-box {
              position: relative;
              min-width: 40px;
              min-height: 40px;
@@ -37,7 +37,7 @@
          .hidden-icon {
              visibility: hidden;
          }
-         .color-box:hover > .dummy-box {
+         .colour-box:hover > .dummy-box {
              display: block;
          }
          .small-box {
@@ -72,7 +72,7 @@
     </template>
     <script>
     (function () {
-        var colorLuminance = function (hex, lum) {
+        var colourLuminance = function (hex, lum) {
             if (hex != null) {
                 hex = String(hex).replace(/[^0-9a-f]/gi, '');
                 if (hex.length < 6) {
@@ -91,11 +91,11 @@
             }
         };
         
-        var rgbToHex = function (colorString) {
-            if (colorString === null||colorString.length === 3 || colorString.length === 6) {
-                return colorString.toUpperCase();
+        var rgbToHex = function (colourString) {
+            if (colourString === null||colourString.length === 3 || colourString.length === 6) {
+                return colourString.toUpperCase();
             }
-            var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(colorString);
+            var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(colourString);
             var r = parseInt(nums[2], 10).toString(16);
             var g = parseInt(nums[3], 10).toString(16);
             var b = parseInt(nums[4], 10).toString(16);    
@@ -146,7 +146,7 @@
 
             convertFromString: function (strValue) {
                 if (strValue.length !== 3 && strValue.length !== 6 && strValue !== "") {
-                    throw "The entered value [ #" + strValue + "] is incorrect.";
+                    throw "The entered value [ #" + strValue + "] is not a valid colour (use only [0-9;A-F], 3 or 6 length).";
                 } else {
                     return {
                         hashlessUppercasedColourValue: strValue
@@ -169,13 +169,13 @@
                 var self = this;
                 var domBind = document.createElement('template', 'dom-bind');
                 
-                domBind.colorSelected = function (e, detail) {
+                domBind.colourSelected = function (e, detail) {
                     this._acceptColourBind();
                     self._editingValue = ((rgbToHex(e.srcElement.style['background-color'])).substring(1)).toUpperCase();
                     this.$.dropdown.close();
                 }.bind(domBind);
 
-                domBind.nonColorSelected = function () {
+                domBind.nonColourSelected = function () {
                     this._acceptColourBind();
                     self._editingValue = "";
                     this.$.dropdown.close();
@@ -197,63 +197,63 @@
                     '<div class="dropdown-content">' +
                     '<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
                     '<div class="layout horizontal">' +
-                    '<div class="color-box" on-tap="nonColorSelected" style="background-color:#F5F5F5">' +
+                    '<div class="colour-box" on-tap="nonColourSelected" style="background-color:#F5F5F5">' +
                     '<div class="dummy-box" style="background-color:#F5F5F5">' +
                     '<iron-icon class="icon" icon="icons:close"></iron-icon>' +
                     '</div>' +
                     '<iron-icon class="icon" icon="icons:close"></iron-icon>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#F44336">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#F44336">' +
                     '<div class="dummy-box" style="background-color:#F44336"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#FF9800">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#FF9800">' +
                     '<div class="dummy-box" style="background-color:#FF9800"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#FFEB3B">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#FFEB3B">' +
                     '<div class="dummy-box" style="background-color:#FFEB3B"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#4CAF50;">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#4CAF50;">' +
                     '<div class="dummy-box" style="background-color:#4CAF50;"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#009688">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#009688">' +
                     '<div class="dummy-box" style="background-color:#009688"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#00BCD4">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#00BCD4">' +
                     '<div class="dummy-box" style="background-color:#00BCD4"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#3F51B5">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#3F51B5">' +
                     '<div class="dummy-box" style="background-color:#3F51B5"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#9C27B0">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#9C27B0">' +
                     '<div class="dummy-box" style="background-color:#9C27B0"></div>' +
                     '</div>' +
                     '</div>' +
                     '<div class="layout horizontal">' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#D7CCC8">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#D7CCC8">' +
                     '<div class="dummy-box" style="background-color:#D7CCC8"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#EF9A9A">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#EF9A9A">' +
                     '<div class="dummy-box" style="background-color:#EF9A9A"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#FFCC80">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#FFCC80">' +
                     '<div class="dummy-box" style="background-color:#FFCC80"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#FFF59D">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#FFF59D">' +
                     '<div class="dummy-box" style="background-color:#FFF59D"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#A5D6A7;">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#A5D6A7;">' +
                     '<div class="dummy-box" style="background-color:#A5D6A7;"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#80CBC4">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#80CBC4">' +
                     '<div class="dummy-box" style="background-color:#80CBC4"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#80DEEA">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#80DEEA">' +
                     '<div class="dummy-box" style="background-color:#80DEEA"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#9FA8DA">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#9FA8DA">' +
                     '<div class="dummy-box" style="background-color:#9FA8DA"></div>' +
                     '</div>' +
-                    '<div class="color-box" on-tap="colorSelected" style="background-color:#CE93D8">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#CE93D8">' +
                     '<div class="dummy-box" style="background-color:#CE93D8"></div>' +
                     '</div>' +
                     '</div>' +
@@ -275,7 +275,7 @@
 
             _calcColourBoxStyle: function (editingValue) {
                 if (editingValue.length === 3 || editingValue.length === 6) {
-                    return "border-color: " + colorLuminance('#' + editingValue, -0.1) + ";background-color: " + '#' + editingValue;
+                    return "border-color: " + colourLuminance('#' + editingValue, -0.1) + ";background-color: " + '#' + editingValue;
                 } 
                 return "";
             },
