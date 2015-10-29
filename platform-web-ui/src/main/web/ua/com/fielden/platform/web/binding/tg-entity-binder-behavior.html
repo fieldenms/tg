@@ -41,10 +41,14 @@
                 /**
                  * Universal identifier of this element instance (used for pub / sub communication).
                  *
-                 * Should be given from the outside of the element.
+                 * It is either assigned from the outside or could be defined internally. 
+                 * For example, entity masters have this property assigned in their ready callback, which can be replaced later with a different value if required.
+                 *
+                 * Property observer is used to report value changes in case one needs to chais undesired assignment side-effect.
                  */
                 uuid: {
-                	type: String
+                	type: String,
+                	observer: "_uuidChanged"
                 },
                 
                 /**
@@ -735,6 +739,17 @@
 
                 // console.log("       entity + originalBindingView", entity, bindingView);
                 return originalBindingView;
+            },
+            
+            /** 
+             * This uuid property observer has only an assistive role at this stage -- to track uuid changes if needed.
+             * However, it has a potential to be used for subscribing to various message topics associated with a channel that has the same value as uuid.
+             * In this case changes to uuid should handle unsubscribing to previously subscribed channels (i.e. oldValue). 
+             */
+            _uuidChanged: function (newValue, oldValue) {
+            	if (oldValue !== undefined) {
+            		console.warn('Property uuid for element <', this.is, '> has changed from "', oldValue, '" to "', newValue, '".');
+            	}
             }
         };
     })();

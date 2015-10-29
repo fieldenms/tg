@@ -97,7 +97,6 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                         this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
                 .replace("//@ready-callback", 
                         format("self.menuItemActions = [%s];\n"
-                             + "self.uuid = self.is + '/'+ self._reflector().generateUUID();\n"
                              + "self.$.menu.parent = self;\n", jsMenuItemActionObjects)) // 
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
