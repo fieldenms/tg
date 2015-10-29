@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.web.view.master.api.centre.IMasterWithCentre0;
+import ua.com.fielden.platform.web.view.master.api.with_centre.IMasterWithCentre0;
 
 /**
  * This contract is an entry point for Master with Centre API.
@@ -11,7 +11,6 @@ import ua.com.fielden.platform.web.view.master.api.centre.IMasterWithCentre0;
  */
 public interface IMasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentreContext<?>> {
 
-    IMasterWithCentre0<T> forEntity(final Class<T> type);
     IMasterWithCentre0<T> forEntityWithSaveOnActivate(final Class<T> type);
 
 }

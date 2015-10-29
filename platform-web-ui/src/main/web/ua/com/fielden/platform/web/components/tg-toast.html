@@ -171,6 +171,8 @@
                 for (var index = 0; index < toast.length; index++) {
                     Polymer.dom(document.body).removeChild(toast.item(index));
                 }
+                
+                this.$.toast.style['z-index'] = 1000;
                 Polymer.dom(document.body).appendChild(this.$.toast);
                 Polymer.dom().flush();
                 this.$.toast.show();

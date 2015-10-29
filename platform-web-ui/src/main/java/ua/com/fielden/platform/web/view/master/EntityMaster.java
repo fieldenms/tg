@@ -53,7 +53,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     }
 
     private IMaster<T> createDefaultConfig(final Class<T> entityType) {
-        return new NoUiMasterConfig<T>(entityType);
+        return new NoUiMaster<T>(entityType);
     }
 
     /**
@@ -133,11 +133,11 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      *
      * @param <T>
      */
-    private static class NoUiMasterConfig<T extends AbstractEntity<?>> implements IMaster<T> {
+    private static class NoUiMaster<T extends AbstractEntity<?>> implements IMaster<T> {
 
         private final IRenderable renderable;
 
-        public NoUiMasterConfig(final Class<T> entityType) {
+        public NoUiMaster(final Class<T> entityType) {
             final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                     .replace("<!--@imports-->", "")
                     .replace("@entity_type", entityType.getSimpleName())

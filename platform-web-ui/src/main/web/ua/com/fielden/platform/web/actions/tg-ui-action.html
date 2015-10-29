@@ -43,7 +43,8 @@
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	/* Indicates what entity property this action is associated with. */
         	chosenProperty: {
-        	    type: String
+        	    type: String,
+        	    value: null
         	},
             /**
              * Custom action to be invoked before 'tg-ui-action' will be run.
@@ -256,18 +257,8 @@
                     console.log("postValidated");
                 };
                 
-                // creates the context and
-                var context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity);
-                // enhances it with the information of 'currentEntity' (primary / secondary actions) and
-                if (self.currentEntity) {
-                	self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
-                }
-                // enhances it with information of what 'property' was chosen (property result-set actions)
-                if (self.chosenProperty) {
-                	self._enhanceContextWithChosenProperty(context, self.chosenProperty);
-                }
                 // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
-                master.savingContext = context;
+                master.savingContext = self._createContextHolderForAction();
 
                 master.postSaved = function (potentiallySavedEntity, newBindingEntity) {
                     postal.publish({
@@ -277,16 +268,16 @@
                         	shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
                             entity: potentiallySavedEntity,
                             // send selectedEntitiesInContext further to be able to update only them on EGI
-                            selectedEntitiesInContext: context.selectedEntities
+                            selectedEntitiesInContext: master.savingContext.selectedEntities
                         }
                     });
 
                     console.log("postSaved");
                 };
 
-                master.entityId = context.id === null ? "new" : (+(context.id));
+                master.entityId = master.savingContext.id === null ? "new" : (+(master.savingContext.id));
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
-                return master.retrieve(context)
+                return master.retrieve(master.savingContext)
                 .then(function(value) {
                     self._afterExecution();
                     return value;
@@ -298,6 +289,21 @@
                     return Promise.resolve(value);
                 });
             }).bind(self);
+        },
+        
+        _createContextHolderForAction: function () {
+        	var self = this;
+            // creates the context and
+            var context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity);
+            // enhances it with the information of 'currentEntity' (primary / secondary actions) and
+            if (self.currentEntity) {
+            	self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
+            }
+            // enhances it with information of what 'property' was chosen (property result-set actions)
+            if (self.chosenProperty !== null) {
+            	self._enhanceContextWithChosenProperty(context, self.chosenProperty);
+            }
+			return context;
         },
 
         // /**

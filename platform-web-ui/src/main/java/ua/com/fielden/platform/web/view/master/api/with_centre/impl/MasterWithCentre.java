@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.view.master.api.centre.impl;
+package ua.com.fielden.platform.web.view.master.api.with_centre.impl;
 
 import static java.lang.String.format;
 
@@ -20,11 +20,11 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
  *
  * @param <T>
  */
-public class MasterWithCentreConfig<T extends AbstractEntity<?>> implements IMaster<T> {
+public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
 
     private final IRenderable renderable;
 
-    public MasterWithCentreConfig(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre) {
+    public MasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre) {
         final StringBuilder attrs = new StringBuilder();
 
         //////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ public class MasterWithCentreConfig<T extends AbstractEntity<?>> implements IMas
                         + "    attrs='%s'>"
                         + "</tg-element-loader>",
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName(), attributes))
-                .replace("//@ready-callback", "")
+                .replace("//@ready-callback", "self.classList.remove('canLeave');")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivate + "");
 
