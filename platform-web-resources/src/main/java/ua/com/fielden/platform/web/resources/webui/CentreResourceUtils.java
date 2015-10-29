@@ -460,7 +460,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
-        Class<? extends MiWithConfigurationSupport<?>> miType;
+        if (centreContextHolder.getCustomObject().get("@@miType") == null) {
+            return null;
+        }
+        final Class<? extends MiWithConfigurationSupport<?>> miType;
         try {
             miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
         } catch (final ClassNotFoundException e) {

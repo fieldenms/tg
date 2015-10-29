@@ -23,6 +23,9 @@ import java.util.Set;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+import com.google.inject.Module;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
@@ -56,9 +59,6 @@ import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
-
-import com.google.inject.Injector;
-import com.google.inject.Module;
 
 /**
  * Unit tests to ensure correct {@link AbstractEntity} descendants serialisation / deserialisation using JACKSON engine.
@@ -514,7 +514,7 @@ public class EntitySerialisationWithJacksonTest {
     public void entity_with_the_set_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
         final EntityWithSetOfEntities entity = factory.createEntityWithSetOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
-        assertTrue("Incorrect prop changedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
+        assertFalse("Incorrect prop changedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
 
         final EntityWithSetOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSetOfEntities.class);
 
@@ -536,15 +536,15 @@ public class EntitySerialisationWithJacksonTest {
             assertFalse("Incorrect collection element.", propEntity == restoredPropEntity);
         }
 
-        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
-        assertTrue("Incorrect prop changedFromOriginal.", restoredEntity.getProperty("prop").isChangedFromOriginal());
+        assertFalse("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+        assertFalse("Incorrect prop changedFromOriginal.", restoredEntity.getProperty("prop").isChangedFromOriginal());
     }
 
     @Test
     public void entity_with_the_list_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
         final EntityWithListOfEntities entity = factory.createEntityWithListOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
-        assertTrue("Incorrect prop changedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
+        assertFalse("Incorrect prop changedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
 
         final EntityWithListOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithListOfEntities.class);
 
@@ -566,15 +566,15 @@ public class EntitySerialisationWithJacksonTest {
             assertFalse("Incorrect collection element.", propEntity == restoredPropEntity);
         }
 
-        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
-        assertTrue("Incorrect prop changedFromOriginal.", restoredEntity.getProperty("prop").isChangedFromOriginal());
+        assertFalse("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+        assertFalse("Incorrect prop changedFromOriginal.", restoredEntity.getProperty("prop").isChangedFromOriginal());
     }
 
     @Test
     public void entity_with_the_ARRAYS_ASLIST_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
         final EntityWithListOfEntities entity = factory.createEntityWithArraysAsListOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
-        assertTrue("Incorrect prop changedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
+        assertFalse("Incorrect prop changedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
 
         final EntityWithListOfEntities restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithListOfEntities.class);
 
@@ -596,8 +596,8 @@ public class EntitySerialisationWithJacksonTest {
             assertFalse("Incorrect collection element.", propEntity == restoredPropEntity);
         }
 
-        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
-        assertTrue("Incorrect prop changedFromOriginal.", restoredEntity.getProperty("prop").isChangedFromOriginal());
+        assertFalse("Incorrect prop dirtiness.", restoredEntity.getProperty("prop").isDirty());
+        assertFalse("Incorrect prop changedFromOriginal.", restoredEntity.getProperty("prop").isChangedFromOriginal());
     }
 
     @Test

@@ -85,7 +85,7 @@
                  */
                 _pageCapacity: {
                 	type: Number,
-                	value: 20
+                	value: 30
                 },
                 
                 _centreChanged: {
@@ -206,7 +206,7 @@
 	                var msg = this._toastMsg("Running", criteriaEntity);
 	                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
-	                var newBindingEntity = this._postEntityReceived(criteriaEntity);
+	                var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
 
 	                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
 	                // custom external action

@@ -19,11 +19,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javassist.util.proxy.ProxyFactory;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -38,6 +37,7 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 
 /**
@@ -182,10 +182,11 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.isEntity = AbstractEntity.class.isAssignableFrom(type);
         this.retrievable = entity.isPersistent() &&
                 (
-                field.isAnnotationPresent(Calculated.class) ||
-                        (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
-                        (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
-                (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
+                  field.isAnnotationPresent(Calculated.class) ||
+                  (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                  (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                  (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class)) ||
+                  (Finder.isOne2One_association(this.entity.getType(), this.name))
                 );
         // let's identify whether property represents an activatable entity in the current context
         final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
@@ -680,9 +681,8 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      */
     public final MetaProperty<T> setOriginalValue(final T value) {
         if (value != null) {
-            if (isCollectional() && value instanceof Collection) {
-                // possibly at this stage the "value" is the Hibernate proxy.
-                collectionOrigSize = MetaProperty.ORIGINAL_VALUE_NOT_INIT_COLL;
+            if (isCollectional()) {
+                collectionOrigSize = ((Collection<?>) value).size();
             } else { // The single property (proxied or not!!!)
                 originalValue = value;
             }
@@ -787,11 +787,18 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                     return currValue == null || !currValue.equals(getOriginalValue());
                 }
             } else {
-                final Integer currentSize = ((Collection<?>) getter.invoke(entity)).size();
-                return !currentSize.equals(getCollectionPrevSize());
+                if (getCollectionPrevSize() == null){
+                    // if getCollectionPrevSize() == null this means that the property value was not assigned via setter
+                    // this in turn means that if the property has a non-null value then it is a default one, assigned in class definition
+                    // and should be ignored in determining "changed from original" condition
+                    return false;
+                } else {
+                    final Integer currentSize = ((Collection<?>) getter.invoke(entity)).size();
+                    return !currentSize.equals(getCollectionPrevSize());
+                }
             }
         } catch (final Exception e) {
-            // TODO change to logging
+            logger.debug(e.getMessage(), e);
         }
         return false;
     }

@@ -82,7 +82,6 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.EntityResource;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -91,8 +90,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
-import ua.com.fielden.platform.web.view.master.api.centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 
 import com.google.inject.Inject;
 
@@ -634,7 +633,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
     private static class DetailsCentreQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
         private final EntityFactory entityFactory;
-        private final RestServerUtil restUtil;
         private final IWebUiConfig webUiConfig;
         private final ICompanionObjectFinder companionFinder;
         private final IServerGlobalDomainTreeManager serverGdtm;
@@ -642,9 +640,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
         private final ICriteriaGenerator critGenerator;
 
         @Inject
-        public DetailsCentreQueryEnhancer(final EntityFactory entityFactory, final RestServerUtil restUtil, final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator) {
+        public DetailsCentreQueryEnhancer(final EntityFactory entityFactory, final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final IServerGlobalDomainTreeManager serverGdtm, final IUserProvider userProvider, final ICriteriaGenerator critGenerator) {
             this.entityFactory = entityFactory;
-            this.restUtil = restUtil;
             this.webUiConfig = webUiConfig;
             this.companionFinder = companionFinder;
             this.serverGdtm = serverGdtm;
@@ -656,7 +653,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
             if (context.get().getMasterEntity() instanceof SavingInfoHolder) {
                 System.out.println("DetailsCentreQueryEnhancer: master entity holder == " + context.get().getMasterEntity());
-                final TgCentreInvokerWithCentreContext funcEntity = EntityResource.restoreEntityFrom((SavingInfoHolder) context.get().getMasterEntity(), TgCentreInvokerWithCentreContext.class, entityFactory, restUtil, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+                final TgCentreInvokerWithCentreContext funcEntity = EntityResource.restoreEntityFrom((SavingInfoHolder) context.get().getMasterEntity(), TgCentreInvokerWithCentreContext.class, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity: " + funcEntity);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context): " + funcEntity.getContext());
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): "
@@ -665,11 +662,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
             }
             return where.val(1).eq().val(1);
-        }
-
-        @Override
-        public Map<String, Object> enhanceQueryParams(final Map<String, Object> queryParams, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            return queryParams;
         }
     }
 
@@ -693,11 +685,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
             }
 
             return where.prop("status").eq().val(coStatus.findByKey("IS"));
-        }
-
-        @Override
-        public Map<String, Object> enhanceQueryParams(final Map<String, Object> queryParams, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            return queryParams;
         }
     }
 

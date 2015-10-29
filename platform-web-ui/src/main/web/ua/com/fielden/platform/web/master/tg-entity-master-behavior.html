@@ -37,15 +37,6 @@
             		type: String
             	},
 
-            	/**
-            	 * The id of the curently bound entity (or 'new' in case of entity without id, aka 'not yet persisted' one).
-            	 *
-            	 * Sets initially during tg-entity-master generation phase and then updates accordingly.
-            	 */
-            	entityId: {
-            		type: String
-            	},
-            	
                 /**
                  * Custom callback that will be invoked after successfull retrieval.
                  *
@@ -62,6 +53,16 @@
                  */
                 centreUuid: {
                 	type: String
+                },
+                
+                /**
+                 * The function to return 'master' entity (in case of this master being embedded into some other master).
+                 *
+                 * This 'master' entity is mainly used as a carrier of an entity id to be loaded by this master (this happens on observer).          
+                 */
+                getMasterEntity: {
+                    type: Function,
+                    observer: '_getMasterEntityAssigned'
                 },
                 
 				////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
@@ -137,6 +138,15 @@
                 save: {
                 	type: Function
                 },
+
+                /**
+                 * In case when this master represents a compound master and a new main entity has been just persisted, there is a need to augment the context of this master (i.e. this.savingContext) to be able to refresh the same context, but with just persisted entity (instead of only id).
+                 *
+                 * @param compoundMasterEntityId -- the id of just persisted main entity to be promoted into the context
+                 */
+                augmentContextWithSavedEntity: {
+                	type: Function
+                },
                 
                 /**
                  * The callback to strictly use for testing -- invokes after _ajaxSaver() has finished loading ('loading' property becomes 'false').
@@ -159,6 +169,7 @@
                 _createContextHolderForEmbeddedViews: {
                     type: Function
                 }
+                
         	},
 
             /**
@@ -186,17 +197,20 @@
 				    var msg = this._toastMsg("Saving", potentiallySavedEntity);
 				    this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
 				
-				    var newBindingEntity = this._postEntityReceived(potentiallySavedEntity);
+				    var newBindingEntity = this._postEntityReceived(potentiallySavedEntity, false);
 				
 				    // custom external action
-				    this.postSaved(potentiallySavedEntity, newBindingEntity);
+				    if (this.postSaved) {
+				    	this.postSaved(potentiallySavedEntity, newBindingEntity);
+				    }
 				    
 				    // Context creator should assigned only after successful master entity saving.
 				    // In case of successful assignment it gets promoted to embedded views by means of binding.
 				    if (potentiallySavedEntity.isValid()) {
 					    this._createContextHolderForEmbeddedViews = (function () {
 			                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-			                return this._createSavingInfoHolder(this._reset(holder), potentiallySavedEntity);
+			                this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
+			                return this._reflector().createSavingInfoHolder(this._reset(holder), this.savingContext);
 		                }).bind(this);
 				    }
 				    
@@ -248,10 +262,16 @@
                     
                 }).bind(self);
                 
+                self.augmentContextWithSavedEntity = (function (compoundMasterEntityId) {
+                	this._reflector().setCustomProperty(this.savingContext, "@@compoundMasterEntityId", compoundMasterEntityId);
+                	console.log("augmentContextWithSavedEntity", compoundMasterEntityId);
+                }).bind(self);
+                
                 self._postSaverLoadingFinished = (function () {
                 	console.log("_postSaverLoadingFinished");
                 }).bind(self);
-            },
+                	
+            }, // end of ready callback
             
             attached: function() {
                 var self = this;
@@ -382,30 +402,42 @@
              * The function for binding property desc -- entity.type().prop(property).desc(). The argument 'entity' will be changed in future. Polymer will listen to that change.
              */
 
+             //////////////////////////////////////// VALIDATION ////////////////////////////////////////
+             /**
+              * Overridden to reuse this.savingContext. It is not empty for tg-ui-action's functional entities, which is assigned in its method _onExecuted.
+              */
+             _validateForDescendants: function (preparedModifHolder) {
+            	 if (this.getMasterEntity && !this.savingContext) {
+             		var contextHolder = this._reflector().createContextHolder(
+             				null, null, 'true',
+             				null, null, this.getMasterEntity);
+             		
+             		this._validator().validate(preparedModifHolder, contextHolder);
+            	 } else {
+             		this._validator().validate(preparedModifHolder, this.savingContext);
+             	}
+             },
+
             //////////////////////////////////////// SAVING ////////////////////////////////////////
             _savingInProgress: function () {
                 return this._ajaxSaver().loading;
             },
             
-            _createSavingInfoHolder: function (modifiedPropertiesHolder) {
-            	var reflector = this._reflector();
-                var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
-                savingInfoHolder.id = null;
-                savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
-            	
-            	if (this.savingContext) { // if saving context was defined (not 'undefined'):
-                    savingInfoHolder["centreContextHolder"] = this.savingContext;
-            	}
-                return savingInfoHolder;
-            },
-
             /**
              * Starts the process of entity saving.
              *
              * @param modifiedPropertiesHolder -- the entity with modified properties
              */
             _saveModifiedProperties: function (modifiedPropertiesHolder) {
-                this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._createSavingInfoHolder(modifiedPropertiesHolder)));
+            	if (this.getMasterEntity && !this.savingContext) {
+            		var contextHolder = this._reflector().createContextHolder(
+            				null, null, 'true',
+            				null, null, this.getMasterEntity);
+            		
+            		this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, contextHolder)));
+            	} else {
+                	this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, this.savingContext)));
+            	}
                 return this._ajaxSaver().generateRequest().completes;
             },
 
@@ -420,6 +452,40 @@
                 return modifiedPropertiesHolder["@modified"];
             },
 
+            /**
+             * Method implementing .canLeave contract as disignated in classList.
+             * It is used to identify whether master can be "left/closed" without any adverse effect on the data it represents (i.e. there was no unsaved changes).
+             */
+            canLeave: function () {
+            	// check all the child nodes with canLeave contract if they can be left...
+            	var nodesWithCanLeave = this.querySelectorAll('.canLeave');
+            	if (nodesWithCanLeave.length > 0) {
+            		for (var index = 0; index < nodesWithCanLeave.length; index++) {
+            			var reason = nodesWithCanLeave[index].canLeave(); 
+						if (reason !== undefined) {
+							return reason;
+						}            			
+            		}
+            	} 
+            	
+            	// if all child nodes can be left, then check self if required
+            	if (this.classList.contains('canLeave')) {
+	            	// create modif holder to analyze the currently bound entity on subject of its modifications
+	            	var modifHolder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+	            	// the master can be left in case where there is no modifications and the entity is not new
+	            	if (modifHolder.id === null) {
+	            		return "A new entity is being created. Please save your changes.";
+	            	} 
+	            	if (this._hasModified(modifHolder)) {
+	            		return "Please save or cancel your changes.";
+	            	}
+	            	
+	            	return undefined;
+            	} else {
+            		return undefined;
+            	}
+            },
+            
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             _getSimultaneousSaveExceptionType: function () {
                 return SimultaneousSaveException;
@@ -430,6 +496,13 @@
             	if (oldValue === true && newValue === false) {
             		this._postSaverLoadingFinished();
             	}
+            },
+            
+            _getMasterEntityAssigned: function () {
+                var self = this;
+       	 		
+                self.entityId = 'find_or_new';
+				self.retrieve(self.getMasterEntity());
             }
         };
     	

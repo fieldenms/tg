@@ -24,6 +24,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -59,7 +60,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private final IEntityProducer<T> entityProducer;
     private final ICompanionObjectFinder companionFinder;
 
-    public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder) {
+    public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final ICompanionObjectFinder companionFinder) {
         this.entityType = entityType;
         this.companionFinder = companionFinder;
         this.dao = companionFinder.<IEntityDao<T>, T> find(this.entityType);
@@ -93,13 +94,19 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    public T createValidationPrototypeWithCentreContext(final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
+    public T createValidationPrototypeWithContext(
+            final CentreContext<T, AbstractEntity<?>> centreContext, 
+            final String chosenProperty, 
+            final Long compoundMasterEntityId, 
+            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
         final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
         defProducer.setCentreContext(centreContext);
         defProducer.setChosenProperty(chosenProperty);
-        return entityProducer.newEntity();
+        defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
+        defProducer.setContextAsFunctionalEntity(masterContext);
+        return defProducer.newEntity();
     }
-
+    
     public Class<T> getEntityType() {
         return entityType;
     }
@@ -441,7 +448,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * All normal properties will be applied in 'validationPrototype'.
      *
      * @param envelope
-     * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
     public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final Long id) {
@@ -457,11 +463,15 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * All normal properties will be applied in 'validationPrototype'.
      *
      * @param envelope
-     * @param restUtil
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
-    public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder, final CentreContext<T, AbstractEntity<?>> centreContext, final String chosenProperty) {
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithCentreContext(centreContext, chosenProperty), getCompanionFinder());
+    public Pair<T, Map<String, Object>> constructEntity(
+            final Map<String, Object> modifiedPropertiesHolder, 
+            final CentreContext<T, AbstractEntity<?>> centreContext, 
+            final String chosenProperty, 
+            final Long compoundMasterEntityId,
+            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
+        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithContext(centreContext, chosenProperty, compoundMasterEntityId, masterContext), getCompanionFinder());
     }
 
     /**
@@ -490,7 +500,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public Pair<T, Map<String, Object>> constructEntity(final Map<String, Object> modifiedPropertiesHolder) {
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
+        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
         return constructEntity(modifiedPropertiesHolder, id);
     }

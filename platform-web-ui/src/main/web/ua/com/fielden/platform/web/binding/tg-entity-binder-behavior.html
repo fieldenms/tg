@@ -13,6 +13,15 @@
             	// No default values are allowed in this case.														   //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	
+            	/**
+            	 * The id of the currently bound entity (or 'new' in case of entity without id, aka 'not yet persisted' one, or 'find_or_new' in case of one-2-one associations).
+            	 *
+            	 * Sets initially during tg-entity-binder (master or selection criteria) generation phase and then updates accordingly.
+            	 */
+            	entityId: {
+            		type: String
+            	},
+            	
                 /**
                  * The state for the entity master.
                  *
@@ -243,6 +252,15 @@
                 	type: Array
                 }
     		},
+    		
+    		/**
+    		 * Nullifies previously bound to this master entity in preparation to rebind a brand new instance. 
+    		 */
+    		_resetState: function () {
+                this._currEntity = null;
+                this._currBindingEntity = null;
+                this._originalBindingEntity = null;
+    		},
             
             /**
              * Initialisation block. It has all children web components already initialised.
@@ -251,7 +269,7 @@
                 var self = this;
                 
                 this._resetRefreshCycleModeForEditors(); // init the value for '_refreshCycleMode'
-                this._currBindingEntity = null; // TODO previously, was {} -- empty object. Please, use more safe form ('null'). And check, if 'null' is appropriately working with editors.
+                self._resetState();
                 
                 self._createModifiedPropertiesHolder = (function () {
 	                var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
@@ -287,6 +305,9 @@
                     		// in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
                     		if (e.detail.successful !== false) {
                     		    e.detail.successful = true;
+                    		    if (typeof deserialisedResult.instance.id !== 'undefined') {
+                    		    	e.detail.entityId = deserialisedResult.instance.id;
+                    		    }
                     		}
                     	}
                     } else { // other codes
@@ -344,7 +365,7 @@
 
         	            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
             	        // (if the entity was not modified -- _validate(holder) will start the error recovery process)
-                    	slf._validator().validate(slf._reset(holder));
+                    	slf._validateForDescendants(slf._reset(holder));
                 	}, 50);
                 }).bind(self);
              	
@@ -356,6 +377,8 @@
                 	if (context) {
                         var ser = this._serialiser().serialise(context);
                         this._ajaxRetriever().body = JSON.stringify(ser);
+                	} else {
+                		this._ajaxRetriever().body = null;
                 	}
                     this._startRefreshCycleModeForEditors();
                     return this._ajaxRetriever().generateRequest().completes;
@@ -371,7 +394,7 @@
 				    var msg = this._toastMsg("Refreshing", entity);
 				    this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
 
-                    var newBindingEntity = this._postEntityReceived(entity);
+                    var newBindingEntity = this._postEntityReceived(entity, true);
                     
                     this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
                     // custom external action
@@ -400,9 +423,11 @@
                         this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
                     }
 
-                    var newBindingEntity = this._postEntityReceived(validatedEntity);
+                    var newBindingEntity = this._postEntityReceived(validatedEntity, false);
                     // custom external action
-                    this.postValidated(validatedEntity, newBindingEntity, customObject);
+                    if (this.postValidated) {
+                    	this.postValidated(validatedEntity, newBindingEntity, customObject);
+                    }
                 }).bind(self);
                 
                 self._postValidatedDefaultError = (function (errorResult) {
@@ -441,6 +466,13 @@
                     }
                 }
                 this._toastGreeting().show();
+            },
+            
+            /**
+             * The inner function for validation to be overridden in descendants (for e.g. context-dependent validation in tg-entity-master)
+             */
+            _validateForDescendants: function (preparedModifHolder) {
+                this._validator().validate(preparedModifHolder);
             },
 
             /**
@@ -592,17 +624,27 @@
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             /**
-             * Provides default action after fresh entity has been received. Rebinds the entity.
+             * Implements the default action to (re)bind freshly received entity. Entity receival is the result of actions Refresh, Validate, Save and Run.
+             *
+             * @param isRefreshingProcess -- value true indicates that the call happens as part of refresh lifecycle, which requires resetting the state.
+             *                               In all other cases (validate, save, run) value false should be provided.
              */
-            _postEntityReceived: function (entity) {
+            _postEntityReceived: function (entity, isRefreshingProcess) {
                 var self = this;
+                // in case entity is being retrieved need to reset the state, so that the master would behave as if it was created for the first time
+                if (isRefreshingProcess) {
+                    self._resetState();
+                }
                 // After the entity has received, potentially its id has been updated:
                 if (self._idConvert(entity.id) !== self.entityId) {
                     self.entityId = self._idConvert(entity.id);
                 }
                 // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
-                var previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                self._reset(previousModifiedPropertiesHolder);
+                var previousModifiedPropertiesHolder = null;
+                if (self._currBindingEntity !== null) {
+                    previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                	self._reset(previousModifiedPropertiesHolder);
+                }
                 // New entity should be promoted to the local cache:
                 self._currEntity = entity;
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
@@ -615,6 +657,13 @@
                 return self._currBindingEntity;
             },
 
+            /**
+             * Creates a binding view of the entity from its fully fledged representation.
+             *
+             * @param entity -- a fully fledged entity representation
+             * @param previousModifiedPropertiesHolder -- a container holding original and current value for all entity properties used to represent invalid properties to the user; 
+             *                                            this container is always null for brand new entity instances that arrive from the sever for the first time (i.e. further client-server conversation re new instances should populate this container). 
+            */
             _extractBindingView: function (entity, previousModifiedPropertiesHolder) {
                 var self = this;
                 var bindingView = self._reflector().newEntity(entity.type().fullClassName());
@@ -626,16 +675,14 @@
 
                 entity.traverseProperties(function (propertyName) {
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
-                        // There could a case where entity represents a brand new instance just received from server, but already invalid.
-                        // This means there will be no value for it in previousModifiedPropertiesHolder...
-                        if (typeof previousModifiedPropertiesHolder[propertyName] === 'undefined') {
+                        if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
                             // bind the received from server property value
                             bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
                         } else { // otherwise, this entity instance has already been received before and should be handled accordingly
                             if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
                                 // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
                                 //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
-                                //   invalid 'attempted value' -- but originalVal exists for this case!
+                                //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
                                 bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
                             } else {
                                 bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
