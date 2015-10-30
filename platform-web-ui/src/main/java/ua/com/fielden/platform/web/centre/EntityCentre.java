@@ -14,9 +14,6 @@ import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 
-import com.google.common.collect.ListMultimap;
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -82,6 +79,9 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
+
+import com.google.common.collect.ListMultimap;
+import com.google.inject.Injector;
 
 /**
  * Represents the entity centre.
@@ -173,6 +173,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     } else {
                         throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
                     }
+                }
+                if (property.tooltipProp.isPresent()) {
+                    cdtmae.getSecondTick().check(entityType, treeName(property.tooltipProp.get()), true);
                 }
             }
         }
@@ -701,6 +704,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
                 final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
+                final String tooltipProp = resultProp.tooltipProp.isPresent() ? resultProp.tooltipProp.get() : null;
 
                 final String resultPropName = propertyName.equals("this") ? "" : propertyName;
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
@@ -714,7 +718,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, tooltipProp, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
@@ -863,7 +867,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("<!--@egi_columns-->", egiColumns.toString()).
                 replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace("//generatedSecondaryActions", secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
-                replace("//generatedInsertionPointActions", insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength) : insertionPointActionsString).
+                replace("//generatedInsertionPointActions", insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)
+                        : insertionPointActionsString).
                 replace("//generatedPrimaryAction", primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength)
                         : primaryActionObjectString).
                 replace("//generatedPropActions", propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)

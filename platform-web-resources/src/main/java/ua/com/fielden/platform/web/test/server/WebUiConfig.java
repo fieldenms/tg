@@ -367,15 +367,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "[['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
-                                + "[[fmr],['flex']],"
-                                + "[['flex']],"
-                                + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                                + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
-                                        + "[['flex']],"
-                                        + "[['flex']],"
-                                        + "[['flex']],"
-                                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
+                        + "[[fmr],['flex']],"
+                        + "[['flex']],"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
+                        + "[['flex']],"
+                        + "[['flex']],"
+                        + "[['flex']],"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntityWithSaveOnActivate(TgFunctionalEntityWithCentreContext.class)
                 .addProp("valueToInsert").asSinglelineText()
                 .also()
@@ -411,10 +411,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 injector());
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
         configApp().
-            addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
-            addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
-            addMaster(TgEntityForColourMaster.class, clourMaster).//
-
+                addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
+                addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
+                addMaster(TgEntityForColourMaster.class, clourMaster).//
 
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
                         EntityWithInteger.class,
@@ -726,8 +725,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 final TgCentreInvokerWithCentreContext funcEntity = EntityResource.restoreEntityFrom((SavingInfoHolder) context.get().getMasterEntity(), TgCentreInvokerWithCentreContext.class, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity: " + funcEntity);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context): " + funcEntity.getContext());
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
-                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): "
+                        + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
+                System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): "
+                        + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_bigDecimalProp_from"));
             }
             return where.val(1).eq().val(1);
         }
@@ -953,7 +954,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
 
                 .also()
-                .addProp("integerProp").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
+                .addProp("integerProp").withTooltip("desc").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
                 .also()
                 .addProp("bigDecimalProp").withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")

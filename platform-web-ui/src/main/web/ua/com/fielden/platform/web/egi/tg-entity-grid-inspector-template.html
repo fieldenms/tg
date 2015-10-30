@@ -264,7 +264,7 @@
                                 </div>
                             </template>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column.property, column.type)]]">
+                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
                                     <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                     </div>
                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
@@ -502,11 +502,13 @@
                 return (selected ? 'Unselecct' : 'Select') + ' this entity';
             },
 
-            _getTooltip: function (entity, property, type) {
-                if (this.$.reflector.findTypeByName(type)) {
-                    return entity.get(property === '' ? "desc" : (property + ".desc"));
+            _getTooltip: function (entity, column) {
+                if (column.tooltipProperty) {
+                    return this._getValue(entity, column.tooltipProperty, "String").toString()
+                } else if (this.$.reflector.findTypeByName(column.type)) {
+                    return entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
                 } else {
-                    return this._getValue(entity, property, type).toString();
+                    return this._getValue(entity, column.property, column.type).toString();
                 }
             },
             //End of Tooltip related functions
