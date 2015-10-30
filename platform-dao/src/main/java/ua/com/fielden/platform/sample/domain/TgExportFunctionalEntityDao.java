@@ -36,8 +36,16 @@ public class TgExportFunctionalEntityDao extends CommonEntityDao<TgExportFunctio
         // TODO restore master entity, which is represented by SavingInfoHolder
         System.out.println(context.getMasterEntity());
         
-        entity.setParentEntity(co.findByKeyAndFetch(fetchAll(TgPersistentEntityWithProperties.class), "DEMO01"));
-        entity.setValue(300);
+        final TgPersistentEntityWithProperties me = (TgPersistentEntityWithProperties) context.getMasterEntity();
+        if (me.getRequiredValidatedProp() != null && me.getRequiredValidatedProp() < 300) {
+            entity.setValue(300);
+            entity.setParentEntity(co.findByKeyAndFetch(fetchAll(TgPersistentEntityWithProperties.class), "DEMO01"));
+        } else if (me.getRequiredValidatedProp() == null) {
+            entity.setValue(99);
+        } else {
+            entity.setValue(me.getRequiredValidatedProp());
+            entity.setParentEntity(me.getEntityProp());
+        }
         
         return entity;
     }
