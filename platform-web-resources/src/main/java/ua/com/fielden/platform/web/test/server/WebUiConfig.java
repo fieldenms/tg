@@ -15,6 +15,8 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -93,8 +95,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -316,15 +316,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
                 // PROPERTY EDITORS
 
-                .addProp("stringProp").asSinglelineText().skipValidation()
-                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
+                .addProp("colourProp").asColour()
+                /*      */.withAction("#exportColourProp", TgExportFunctionalEntity.class)
                 /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
                 /*      */.postActionSuccess(new PostActionSuccess(""))
                 /*      */.postActionError(new PostActionError(""))
                 /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export string prop")
-                /*      */.longDesc("Export string property").also()
+                /*      */.shortDesc("Export colour prop")
+                /*      */.longDesc("Export colour property").also()
 
                 .addProp("booleanProp").asCheckbox()
                 /*      */.withAction("#exportBooleanProp", TgExportFunctionalEntity.class)
@@ -336,14 +335,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.shortDesc("Export boolean prop")
                 /*      */.longDesc("Export boolean property").also()
 
-                .addProp("colourProp").asColour()
-                /*      */.withAction("#exportColourProp", TgExportFunctionalEntity.class)
+                .addProp("stringProp").asSinglelineText().skipValidation()
+                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
                 /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
                 /*      */.postActionSuccess(new PostActionSuccess(""))
                 /*      */.postActionError(new PostActionError(""))
                 /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.shortDesc("Export colour prop")
-                /*      */.longDesc("Export colour property").also()
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export string prop")
+                /*      */.longDesc("Export string property").also()
 
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
