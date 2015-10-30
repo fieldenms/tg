@@ -603,7 +603,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private IRenderable createRenderableEgiRepresentaton(final ICentreDomainTreeManagerAndEnhancer centre) {
         final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
                 "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, \"@property-name\", \"@property-type\")]]'>" +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
                 "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
                 "<div class='truncate relative'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>" +
                 "</div>" +
@@ -611,7 +611,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
                 "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, \"@property-name\", \"@property-type\")]]'>" +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
                 "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
                 "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]'></iron-icon>" +
                 "</div>" +
@@ -620,7 +620,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<ResultSetProp>> resultProps = getCustomPropertiesDefinitions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(getEntityType());
         if (resultProps.isPresent()) {
-            for (final ResultSetProp resultProp : resultProps.get()) {
+            for (int columnIndex = 0; columnIndex < resultProps.get().size(); columnIndex++) {
+                final ResultSetProp resultProp = resultProps.get().get(columnIndex);
                 final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
                 final String resultPropName = propertyName.equals("this") ? "" : propertyName;
                 final Class<?> propertyType = "".equals(resultPropName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
@@ -632,6 +633,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 .replaceAll("@property-name", resultPropName)
                                 .replaceAll("@column-title", columnTitileAndDesc.getKey())
                                 .replaceAll("@column-desc", columnTitileAndDesc.getValue())
+                                .replaceAll("@column-index", Integer.toString(columnIndex))
                                 .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
             }
         }
