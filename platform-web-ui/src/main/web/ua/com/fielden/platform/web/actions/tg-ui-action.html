@@ -248,9 +248,6 @@
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
                     console.log("postRetrieved");
-                    if (self.postActionSuccess) {
-                        self.postActionSuccess();
-                    }
                 };
 
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
@@ -271,8 +268,16 @@
                             selectedEntitiesInContext: master.savingContext.selectedEntities
                         }
                     });
-
-                    console.log("postSaved");
+                    
+                    if (potentiallySavedEntity.isValid()) {
+                    	if (self.postActionSuccess) {
+	                        self.postActionSuccess(potentiallySavedEntity);
+                    	}
+                    } else {
+                    	if (self.postActionError) {
+	                        self.postActionError(potentiallySavedEntity);
+                    	}
+                    }
                 };
 
                 master.entityId = master.savingContext.id === null ? "new" : (+(master.savingContext.id));
