@@ -218,7 +218,15 @@
 			    self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
 	                var getThisMasterEntity = function () { 
 		                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-	                	return this._reflector().createSavingInfoHolder(this._reset(holder), undefined /* always undefined non-functional entities */);
+		                
+	                	// @@funcEntityType is really a master entity type, which in this case is not functional!!!
+	                	var masterTypeCarrier = this._reflector().createContextHolder(
+	            				null, null, null,
+	            				null, null, null
+	                        );
+	                	this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
+	                	
+	                	return this._reflector().createSavingInfoHolder(this._reset(holder), masterTypeCarrier);
 	                }.bind(self);
 	                
                 	var contextHolder = this._reflector().createContextHolder(
