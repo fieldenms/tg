@@ -14,6 +14,9 @@ import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.ListMultimap;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -79,9 +82,6 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
-
-import com.google.common.collect.ListMultimap;
-import com.google.inject.Injector;
 
 /**
  * Represents the entity centre.
