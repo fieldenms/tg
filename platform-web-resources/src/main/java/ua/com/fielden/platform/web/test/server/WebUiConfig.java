@@ -287,6 +287,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(
                         action(TgExportFunctionalEntity.class)
                         .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "self.setEditorValue4Property('requiredValidatedProp', functionalEntity, 'value');\n"
+                                + "self.setEditorValue4Property('entityProp', functionalEntity, 'parentEntity');\n"
+                                )) // self.retrieve()
+                        .postActionError(new PostActionError(""))
                         .icon("trending-up")
                         .shortDesc("Export")
                         .longDesc("Export action")
@@ -659,9 +664,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            if (context.get().getMasterEntity() instanceof SavingInfoHolder) {
+            if (context.get().getMasterEntity() != null) {
                 System.out.println("DetailsCentreQueryEnhancer: master entity holder == " + context.get().getMasterEntity());
-                final TgCentreInvokerWithCentreContext funcEntity = EntityResource.restoreEntityFrom((SavingInfoHolder) context.get().getMasterEntity(), TgCentreInvokerWithCentreContext.class, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+                final TgCentreInvokerWithCentreContext funcEntity = (TgCentreInvokerWithCentreContext) context.get().getMasterEntity();
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity: " + funcEntity);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context): " + funcEntity.getContext());
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
@@ -1001,19 +1006,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
-                if (isComposite) {
-                    return scl.addInsertionPoint(
-                            action(TgCentreInvokerWithCentreContext.class)
-                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                                .icon("assignment-ind")
-                                .shortDesc("Insertion Point")
-                                .longDesc("Functional context-dependent Insertion Point")
-                                .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
-                                .withNoParentCentreRefresh()
-                                .build(),
-                            InsertionPoints.RIGHT)
-                            .build();
-                }
+//                if (isComposite) {
+//                    return scl.addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                                .icon("assignment-ind")
+//                                .shortDesc("Insertion Point")
+//                                .longDesc("Functional context-dependent Insertion Point")
+//                                .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+//                                .withNoParentCentreRefresh()
+//                                .build(),
+//                            InsertionPoints.RIGHT)
+//                            .build();
+//                }
                 return scl.build();
     }
 

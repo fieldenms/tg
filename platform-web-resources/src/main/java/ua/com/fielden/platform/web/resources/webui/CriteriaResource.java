@@ -20,14 +20,18 @@ import org.restlet.resource.ServerResource;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -36,6 +40,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -53,18 +58,23 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
 
-    private final IGlobalDomainTreeManager gdtm;
     private final ICriteriaGenerator critGenerator;
     private final EntityCentre<T> centre;
-
+    
+    private final IWebUiConfig webUiConfig; 
+    private final IServerGlobalDomainTreeManager serverGdtm; 
+    private final IUserProvider userProvider;
+    private final EntityFactory entityFactory; 
+    
     public CriteriaResource(
             final RestServerUtil restUtil,
-            final ICompanionObjectFinder companionFinder,
-
             final EntityCentre<T> centre,
-            final IGlobalDomainTreeManager gdtm,
-            final ICriteriaGenerator critGenerator,
-
+            final IWebUiConfig webUiConfig, 
+            final ICompanionObjectFinder companionFinder, 
+            final IServerGlobalDomainTreeManager serverGdtm, 
+            final IUserProvider userProvider, 
+            final ICriteriaGenerator critGenerator, 
+            final EntityFactory entityFactory, 
             final Context context,
             final Request request,
             final Response response) {
@@ -74,8 +84,12 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
         this.companionFinder = companionFinder;
 
         this.centre = centre;
-        this.gdtm = gdtm;
         this.critGenerator = critGenerator;
+        
+        this.webUiConfig = webUiConfig; 
+        this.serverGdtm = serverGdtm; 
+        this.userProvider = userProvider;
+        this.entityFactory = entityFactory; 
     }
 
     /**
@@ -86,6 +100,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
     public Representation get() throws ResourceException {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
+            final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
             // NOTE: the following line can be the example how 'criteria retrieval' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during criteria retrieval.");
@@ -107,6 +122,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
     public Representation post(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
+            final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
             final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
@@ -135,6 +151,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
+            final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
             final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
 
@@ -146,7 +163,16 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                             appliedCriteriaEntity,
                             CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
                             centre.getAdditionalFetchProvider(),
-                            createQueryEnhancerAndContext(centreContextHolder, centre.getQueryEnhancerConfig(), appliedCriteriaEntity));
+                            createQueryEnhancerAndContext(
+                                    webUiConfig, 
+                                    companionFinder, 
+                                    serverGdtm, 
+                                    userProvider, 
+                                    critGenerator, 
+                                    entityFactory, 
+                                    centreContextHolder, 
+                                    centre.getQueryEnhancerConfig(), 
+                                    appliedCriteriaEntity));
             if (pair.getValue() == null) {
                 return restUtil.rawListJSONRepresentation(appliedCriteriaEntity, pair.getKey());
             }
@@ -180,11 +206,29 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
         }, restUtil);
     }
 
-    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> createQueryEnhancerAndContext(final CentreContextHolder centreContextHolder, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> queryEnhancerConfig, final M criteriaEntity) {
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> createQueryEnhancerAndContext(
+            final IWebUiConfig webUiConfig, 
+            final ICompanionObjectFinder companionFinder, 
+            final IServerGlobalDomainTreeManager serverGdtm, 
+            final IUserProvider userProvider, 
+            final ICriteriaGenerator critGenerator, 
+            final EntityFactory entityFactory, 
+            final CentreContextHolder centreContextHolder, 
+            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> queryEnhancerConfig, 
+            final M criteriaEntity) {
         if (queryEnhancerConfig.isPresent()) {
             return Optional.of(new Pair<>(
                     queryEnhancerConfig.get().getKey(),
-                    CentreResourceUtils.<T, M> createCentreContext(centreContextHolder, criteriaEntity, queryEnhancerConfig.get().getValue())//
+                    CentreResourceUtils.<T, M> createCentreContext(
+                            webUiConfig, 
+                            companionFinder, 
+                            serverGdtm, 
+                            userProvider, 
+                            critGenerator, 
+                            entityFactory, 
+                            centreContextHolder, 
+                            criteriaEntity, 
+                            queryEnhancerConfig.get().getValue())//
             ));
         } else {
             return Optional.empty();

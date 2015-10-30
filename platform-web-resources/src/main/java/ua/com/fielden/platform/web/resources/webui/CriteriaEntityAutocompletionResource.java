@@ -16,16 +16,21 @@ import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -39,28 +44,43 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     private final String criterionPropertyName;
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder coFinder;
-    private final IGlobalDomainTreeManager gdtm;
     private final ICriteriaGenerator critGenerator;
     private final EntityCentre<T> centre;
+    
+    private final IWebUiConfig webUiConfig; 
+    private final IServerGlobalDomainTreeManager serverGdtm; 
+    private final IUserProvider userProvider;
+    private final EntityFactory entityFactory; 
+    
     private final Logger logger = Logger.getLogger(getClass());
 
     public CriteriaEntityAutocompletionResource(
+            final IWebUiConfig webUiConfig, 
+            final ICompanionObjectFinder companionFinder, 
+            final IServerGlobalDomainTreeManager serverGdtm, 
+            final IUserProvider userProvider, 
+            final ICriteriaGenerator critGenerator, 
+            final EntityFactory entityFactory, 
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final String criterionPropertyName,
             final EntityCentre<T> centre,
-            final ICompanionObjectFinder companionFinder,
-            final IGlobalDomainTreeManager gdtm,
-            final ICriteriaGenerator critGenerator,
-            final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+            final RestServerUtil restUtil, 
+            final Context context, 
+            final Request request, 
+            final Response response) {
         init(context, request, response);
 
         this.miType = miType;
         this.criterionPropertyName = criterionPropertyName;
         this.restUtil = restUtil;
         this.coFinder = companionFinder;
-        this.gdtm = gdtm;
         this.critGenerator = critGenerator;
         this.centre = centre;
+        
+        this.webUiConfig = webUiConfig; 
+        this.serverGdtm = serverGdtm; 
+        this.userProvider = userProvider;
+        this.entityFactory = entityFactory; 
     }
 
     /**
@@ -74,6 +94,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             //            throw new IllegalStateException("Illegal state during criteria entity searching.");
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
+            final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
 
             final M criteriaEntity;
@@ -105,7 +126,16 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final Optional<CentreContextConfig> contextConfig = valueMatcherAndContextConfig.getValue();
 
             // create context, if any
-            final Optional<CentreContext<T, ?>> context = CentreResourceUtils.createCentreContext(centreContextHolder, criteriaEntity, contextConfig);
+            final Optional<CentreContext<T, ?>> context = CentreResourceUtils.createCentreContext(
+                    webUiConfig, 
+                    coFinder, 
+                    serverGdtm, 
+                    userProvider, 
+                    critGenerator, 
+                    entityFactory, 
+                    centreContextHolder, 
+                    criteriaEntity, 
+                    contextConfig);
             if (context.isPresent()) {
                 logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
                 valueMatcher.setContext(context.get());

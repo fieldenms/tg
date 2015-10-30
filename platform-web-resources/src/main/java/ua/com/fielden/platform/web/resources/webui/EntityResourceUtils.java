@@ -98,12 +98,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final CentreContext<T, AbstractEntity<?>> centreContext, 
             final String chosenProperty, 
             final Long compoundMasterEntityId, 
-            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
+            final AbstractEntity<?> masterContext) {
         final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
         defProducer.setCentreContext(centreContext);
         defProducer.setChosenProperty(chosenProperty);
         defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
-        defProducer.setContextAsFunctionalEntity(masterContext);
+        defProducer.setMasterEntity(masterContext);
         return defProducer.newEntity();
     }
     
@@ -470,7 +470,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final CentreContext<T, AbstractEntity<?>> centreContext, 
             final String chosenProperty, 
             final Long compoundMasterEntityId,
-            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
+            final AbstractEntity<?> masterContext) {
         return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithContext(centreContext, chosenProperty, compoundMasterEntityId, masterContext), getCompanionFinder());
     }
 

@@ -16,12 +16,14 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -31,6 +33,7 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.swing.menu.MiType;
 import ua.com.fielden.platform.swing.menu.MiTypeAnnotation;
@@ -38,6 +41,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -411,7 +415,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param centreContextHolder
      * @return
      */
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Optional<CentreContext<T, ?>> createCentreContext(final CentreContextHolder centreContextHolder, final M criteriaEntity, final Optional<CentreContextConfig> contextConfig) {
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Optional<CentreContext<T, ?>> createCentreContext(
+            final IWebUiConfig webUiConfig, 
+            final ICompanionObjectFinder companionFinder, 
+            final IServerGlobalDomainTreeManager serverGdtm, 
+            final IUserProvider userProvider, 
+            final ICriteriaGenerator critGenerator, 
+            final EntityFactory entityFactory, 
+            final CentreContextHolder centreContextHolder, 
+            final M criteriaEntity, 
+            final Optional<CentreContextConfig> contextConfig) {
         if (contextConfig.isPresent()) {
             final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
             final CentreContextConfig config = contextConfig.get();
@@ -424,7 +437,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
             }
             if (config.withMasterEntity) {
-                context.setMasterEntity(centreContextHolder.getMasterEntity());
+                context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder));
             }
             return Optional.of(context);
         } else {
@@ -443,11 +456,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param centreContextHolder
      * @return
      */
-    public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(final CentreContextHolder centreContextHolder, final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity) {
+    public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(
+            final IWebUiConfig webUiConfig, 
+            final ICompanionObjectFinder companionFinder, 
+            final IServerGlobalDomainTreeManager serverGdtm, 
+            final IUserProvider userProvider, 
+            final ICriteriaGenerator critGenerator, 
+            final EntityFactory entityFactory, 
+            final CentreContextHolder centreContextHolder, 
+            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
         context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
-        context.setMasterEntity(centreContextHolder.getMasterEntity());
+        context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder));
         return context;
     }
 

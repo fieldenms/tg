@@ -892,6 +892,33 @@
         },
 
         /**
+         * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+         *
+         * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
+         */
+        getBindingValue: function(bindingEntity, dotNotatedName) {
+        	return this.isDotNotated(dotNotatedName) ? this.convert(this._getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
+        },
+        
+        /**
+         * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+         *
+         * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
+         */
+        getPropertyValue: function(fullyFledgedEntity, dotNotatedName) {
+        	return this.convert(fullyFledgedEntity.get(dotNotatedName));
+        },
+        
+        /**
+         * Returns the full value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+         *
+         * This method does no conversion of the value to 'binding' representation.
+         */
+        _getValueFor: function(bindingEntity, dotNotatedName) {
+      		return bindingEntity["@@origin"].get(dotNotatedName);
+        },
+
+        /**
          * Convenient method for retrieving of 'customObject' from deserialised array.
          */
         customObject: function (arrayOfEntityAndCustomObject) {

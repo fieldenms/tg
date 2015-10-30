@@ -27,8 +27,22 @@ public class TgExportFunctionalEntity extends AbstractFunctionalEntityWithCentre
     @Title(value = "Parent Entity", desc = "Master entity for this functional entity")
     private TgPersistentEntityWithProperties parentEntity;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Title", desc = "Desc")
+    private Integer value;
+
     @Observable
-    @EntityExists(TgPersistentEntityWithProperties.class)
+    public TgExportFunctionalEntity setValue(final Integer value) {
+        this.value = value;
+        return this;
+    }
+
+    public Integer getValue() {
+        return value;
+    }
+    
+    @Observable
     public TgExportFunctionalEntity setParentEntity(final TgPersistentEntityWithProperties parentEntity) {
         this.parentEntity = parentEntity;
         return this;

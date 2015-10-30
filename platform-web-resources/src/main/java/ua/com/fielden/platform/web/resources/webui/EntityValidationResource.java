@@ -64,8 +64,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
      * Handles POST request resulting from RAO call to method save.
      */
     @Post
-    @Override
-    public Representation post(final Representation envelope) {
+    public Representation validate(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             // NOTE: the following line can be the example how 'entity validation' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during entity validation.");

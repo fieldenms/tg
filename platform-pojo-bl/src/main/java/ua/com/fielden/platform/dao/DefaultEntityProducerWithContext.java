@@ -21,7 +21,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
     private final IEntityDao<T> companion;
     // optional centre context for context-dependent entity producing logic
     private CentreContext<C, AbstractEntity<?>> centreContext;
-    private AbstractFunctionalEntityWithCentreContext<?> contextAsFunctionalEntity;
+    private AbstractEntity<?> masterEntity;
     private Long compoundMasterEntityId;
     private String chosenProperty;
 
@@ -79,12 +79,12 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
      *
      * @return
      */
-    protected AbstractFunctionalEntityWithCentreContext<?> getContextAsFunctionalEntity() {
-        return contextAsFunctionalEntity;
+    protected AbstractEntity<?> getMasterEntity() {
+        return masterEntity;
     }
 
-    public void setContextAsFunctionalEntity(AbstractFunctionalEntityWithCentreContext<?> contextAsFunctionalEntity) {
-        this.contextAsFunctionalEntity = contextAsFunctionalEntity;
+    public void setMasterEntity(AbstractEntity<?> masterEntity) {
+        this.masterEntity = masterEntity;
     }
 
     /**
