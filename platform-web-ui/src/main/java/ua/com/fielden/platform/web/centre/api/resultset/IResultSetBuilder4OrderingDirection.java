@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
+import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 
 /**
  * This contract provides a way for specifying result set ordering.
@@ -13,6 +13,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 public interface IResultSetBuilder4OrderingDirection<T extends AbstractEntity<?>> {
 
 
-    IWithSummary<T> desc();
-    IWithSummary<T> asc();
+    IWithTooltip<T> desc();
+    IWithTooltip<T> asc();
 }

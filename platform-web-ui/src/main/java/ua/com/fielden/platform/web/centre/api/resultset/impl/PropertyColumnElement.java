@@ -20,6 +20,7 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
  */
 public class PropertyColumnElement implements IRenderable, IImportable {
     private final String propertyName;
+    private final Optional<String> tooltipProp;
     private final String widgetName;
     private final String widgetPath;
     private final int width;
@@ -35,10 +36,11 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param criteriaType
      * @param propertyName
      */
-    public PropertyColumnElement(final String propertyName, final int width, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
+    public PropertyColumnElement(final String propertyName, final String tooltipProp, final int width, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
+        this.tooltipProp = Optional.ofNullable(tooltipProp);
         this.width = width;
         this.propertyType = propertyType;
         this.titleDesc = titleDesc;
@@ -103,6 +105,9 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
         if (isDebug()) {
             attrs.put("debug", "true");
+        }
+        if (this.tooltipProp.isPresent()) {
+            attrs.put("tooltip-property", this.tooltipProp.get());
         }
         attrs.put("property", this.propertyName()); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
         attrs.put("width", width + "px");

@@ -415,7 +415,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
             addMaster(TgEntityForColourMaster.class, clourMaster).//
 
-
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
                         EntityWithInteger.class,
                         null,
@@ -953,7 +952,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
 
                 .also()
-                .addProp("integerProp").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
+                .addProp("integerProp").withTooltip("desc").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
                 .also()
                 .addProp("bigDecimalProp").withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")

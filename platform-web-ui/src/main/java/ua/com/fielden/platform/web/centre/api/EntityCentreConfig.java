@@ -43,11 +43,10 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
  *
  */
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
-	
+
     private final boolean hideCheckboxes;
     private final boolean hideToolbar;
 
-	
     /////////////////////////////////////////////
     ///////////// TOP LEVEL ACTIONS /////////////
     /////////////////////////////////////////////
@@ -66,7 +65,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * A list of functional actions that are associated with entity centre insertion points.
      * <p>
-     * They do not have visual representation (such as an icon or a button) and are used only to instantiate insertion point views (action per view) and execute their own logic (method <code>save</code> of a corresponding functional entity).
+     * They do not have visual representation (such as an icon or a button) and are used only to instantiate insertion point views (action per view) and execute their own logic
+     * (method <code>save</code> of a corresponding functional entity).
      */
     private final List<EntityActionConfig> insertionPointActions = new ArrayList<>();
 
@@ -178,19 +178,21 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     public static class ResultSetProp {
         public final Optional<String> propName;
+        public final Optional<String> tooltipProp;
         public final Optional<PropDef<?>> propDef;
         public final Optional<EntityActionConfig> propAction;
 
-        public static ResultSetProp propByName(final String propName, final EntityActionConfig propAction) {
-            return new ResultSetProp(propName, null, propAction);
+        public static ResultSetProp propByName(final String propName, final String tooltipProp, final EntityActionConfig propAction) {
+            return new ResultSetProp(propName, tooltipProp, null, propAction);
         }
 
-        public static ResultSetProp propByDef(final PropDef<?> propDef, final EntityActionConfig propAction) {
-            return new ResultSetProp(null, propDef, propAction);
+        public static ResultSetProp propByDef(final PropDef<?> propDef, final String tooltipProp, final EntityActionConfig propAction) {
+            return new ResultSetProp(null, tooltipProp, propDef, propAction);
         }
 
         private ResultSetProp(
                 final String propName,
+                final String tooltipProp,
                 final PropDef<?> propDef,
                 final EntityActionConfig propAction) {
 
@@ -203,6 +205,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             }
 
             this.propName = Optional.ofNullable(propName);
+            this.tooltipProp = Optional.ofNullable(tooltipProp);
             this.propDef = Optional.ofNullable(propDef);
             this.propAction = Optional.ofNullable(propAction);
         }
@@ -277,9 +280,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////// CONSTRUCTOR /////////////
     ///////////////////////////////////
     public EntityCentreConfig(
-    		final boolean hideCheckboxes,
-    		final boolean hideToolbar,
-    		
+            final boolean hideCheckboxes,
+            final boolean hideToolbar,
+
             final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
             final List<EntityActionConfig> insertionPointActions,
             final List<String> selectionCriteria,
@@ -332,9 +335,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final IFetchProvider<T> fetchProvider) {
-    	this.hideCheckboxes = hideCheckboxes;
-    	this.hideToolbar = hideToolbar;
-    	
+        this.hideCheckboxes = hideCheckboxes;
+        this.hideToolbar = hideToolbar;
+
         this.topLevelActions.addAll(topLevelActions);
         this.insertionPointActions.addAll(insertionPointActions);
         this.selectionCriteria.addAll(selectionCriteria);
@@ -667,14 +670,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     public Optional<String> getSseUri() {
-    	return Optional.ofNullable(sseUri);
+        return Optional.ofNullable(sseUri);
     }
-    
+
     public boolean shouldHideCheckboxes() {
-    	return hideCheckboxes;
+        return hideCheckboxes;
     }
-    
+
     public boolean shouldHideToolbar() {
-    	return hideToolbar;
+        return hideToolbar;
     }
 }
