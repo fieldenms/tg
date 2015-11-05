@@ -40,6 +40,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -68,6 +69,8 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.EntityCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.MoneyCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.MoneySingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
@@ -1021,8 +1024,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         criterionWidget = new BooleanSingleCriterionWidget(root, managedType, critProp);
                     } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
                         criterionWidget = new IntegerSingleCriterionWidget(root, managedType, critProp);
-                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
+                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
                         criterionWidget = new DecimalSingleCriterionWidget(root, managedType, critProp);
+                    } else if (Money.class.isAssignableFrom(propertyType)) {
+                        criterionWidget = new MoneySingleCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isDate(propertyType)) {
                         criterionWidget = new DateSingleCriterionWidget(root, managedType, critProp);
                     } else {
@@ -1040,6 +1045,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         criterionWidget = new IntegerCriterionWidget(root, managedType, critProp);
                     } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
                         criterionWidget = new DecimalCriterionWidget(root, managedType, critProp);
+                    } else if (Money.class.isAssignableFrom(propertyType)) {
+                        criterionWidget = new MoneyCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isDate(propertyType)) {
                         criterionWidget = new DateCriterionWidget(root, managedType, critProp);
                     } else {
