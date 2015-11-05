@@ -634,8 +634,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         new InnerTextElement(typeTemplate
                                 .replaceAll("@calc-property-name", propertyName)
                                 .replaceAll("@property-name", resultPropName)
-                                .replaceAll("@column-title", columnTitileAndDesc.getKey())
-                                .replaceAll("@column-desc", columnTitileAndDesc.getValue())
+                                .replace("@column-title", columnTitileAndDesc.getKey())
+                                .replace("@column-desc", columnTitileAndDesc.getValue())
                                 .replaceAll("@column-index", Integer.toString(columnIndex))
                                 .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
             }

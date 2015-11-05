@@ -721,7 +721,7 @@
              */
             _calcColumnStyle: function (column) {
                 var colStyle = "width: " + column.width + ";";
-                if (column.type === "Integer" || column.type === "BigDecimal") {
+                if (column.type === 'Integer' || column.type === 'BigDecimal' || column.type === 'Money') {
                     colStyle += " text-align: right;"
                 }
                 return colStyle;
@@ -794,7 +794,11 @@
                         return entity.get(property).toLocaleString(this.$.appConfig.locale);
                     }
                 } else {
-                    return entity.get(property);
+                	if (type === 'Money') {
+                		return '$' + entity.get(property).amount.toLocaleString(this.$.appConfig.locale, {maximumFractionDigits: 2, minimumFractionDigits: 2});
+                	} else {
+                    	return entity.get(property);
+                	}
                 }
             },
             /**
