@@ -33,9 +33,11 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.ColourConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DateTimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DecimalConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.EntityAutocompletionConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.MoneyConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.MultilineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.SinglelineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.SpinnerConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl.MultilineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
@@ -123,7 +125,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IMoneyConfig<T> asMoney() {
-        throw new UnsupportedOperationException("Money widget is not yet supported.");
+        widget = new MoneyWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
+        return new MoneyConfig<>((MoneyWidget) widget, smBuilder);
     }
 
     @Override
