@@ -172,8 +172,11 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         //        }
         //        return generatedProperties;
 
-        final Pair<String, String> firstTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName); // TODO
-        final Pair<String, String> secondTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName); // TODO
+        final Pair<String, String> _firstTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
+        final Pair<String, String> firstTitleDesc = Pair.pair(_firstTitleDesc.getKey() + " (From)", _firstTitleDesc.getValue());
+
+        final Pair<String, String> _secondTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
+        final Pair<String, String> secondTitleDesc = Pair.pair(_secondTitleDesc.getKey() + " (To)", _secondTitleDesc.getValue());
 
         return new Pair<>(firstTitleDesc, secondTitleDesc);
     }
@@ -183,6 +186,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     }
 
     public static Pair<String, String> generateSingleTitleDesc(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        return generateTitleDesc(root, managedType, propertyName).getKey();
+        final Pair<String, String> _first = generateTitleDesc(root, managedType, propertyName).getKey();
+        final String title = _first.getKey();
+        final Pair<String, String> first = Pair.pair(title.substring(0, title.length() - 7), _first.getValue());
+        return first;
     }
 }
