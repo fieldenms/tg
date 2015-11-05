@@ -30,6 +30,10 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  *
  */
 public abstract class AbstractCriterionWidget implements IRenderable, IImportable {
+    
+    private static final String sufixFrom = " (From)";
+    private static final String sufixTo = " (To)";
+    
     private final String propertyName;
     private final String widgetName;
     private final String widgetPath;
@@ -173,10 +177,10 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         //        return generatedProperties;
 
         final Pair<String, String> _firstTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
-        final Pair<String, String> firstTitleDesc = Pair.pair(_firstTitleDesc.getKey() + " (From)", _firstTitleDesc.getValue());
+        final Pair<String, String> firstTitleDesc = Pair.pair(_firstTitleDesc.getKey() + sufixFrom, _firstTitleDesc.getValue());
 
         final Pair<String, String> _secondTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
-        final Pair<String, String> secondTitleDesc = Pair.pair(_secondTitleDesc.getKey() + " (To)", _secondTitleDesc.getValue());
+        final Pair<String, String> secondTitleDesc = Pair.pair(_secondTitleDesc.getKey() + sufixTo, _secondTitleDesc.getValue());
 
         return new Pair<>(firstTitleDesc, secondTitleDesc);
     }
@@ -188,7 +192,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     public static Pair<String, String> generateSingleTitleDesc(final Class<?> root, final Class<?> managedType, final String propertyName) {
         final Pair<String, String> _first = generateTitleDesc(root, managedType, propertyName).getKey();
         final String title = _first.getKey();
-        final Pair<String, String> first = Pair.pair(title.substring(0, title.length() - 7), _first.getValue());
+        final Pair<String, String> first = Pair.pair(title.substring(0, title.length() - sufixFrom.length()), _first.getValue());
         return first;
     }
 }
