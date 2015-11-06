@@ -108,6 +108,14 @@
             shouldRefreshParentCentreAfterSave: {
 				type: Boolean,
 				value: false /* should never be defaulted to true! */
+            },
+            
+            /**
+             * Preferred dimensions for the master that is invoked by this action.
+             * The value is of type String as it is passed by attribute bindings.
+             */
+            prefDim: {
+            	type: String
             }
 
         },

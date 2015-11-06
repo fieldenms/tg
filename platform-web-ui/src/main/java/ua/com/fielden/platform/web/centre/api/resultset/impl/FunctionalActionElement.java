@@ -170,7 +170,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                     .attr("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
             if (conf().prefDimForView.isPresent()) {
                 final PrefDim prefDim = conf().prefDimForView.get();
-                pageAction = pageAction.attr("prefDim", format("{'width': function() {return %s}, 'height': function() {return %s}, 'unit': '%s'},\n", prefDim.width, prefDim.height, prefDim.unit.value));
+                pageAction = pageAction.attr("pref-dim", format("{\"width\": %s, \"height\": %s, \"unit\": \"%s\"}", prefDim.width, prefDim.height, prefDim.unit.value));
             }
             return pageAction;
         } else {

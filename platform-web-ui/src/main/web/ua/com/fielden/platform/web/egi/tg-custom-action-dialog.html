@@ -178,8 +178,8 @@
                     
                     if (element.prefDim) {
                     	var prefDim = element.prefDim;
-                    	this.style.width = prefDim.width() + prefDim.unit;
-                        this.style.height = prefDim.height() + prefDim.unit;
+                    	this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.unit;
+                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.unit;
                     } else {
                         this.style.width = "auto";
                         this.style.height = "auto";
