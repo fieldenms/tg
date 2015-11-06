@@ -136,8 +136,8 @@ public final class EntityActionConfig {
      *
      * @return
      */
-    public static EntityActionConfig createMasterInDialogInvocationActionConfig(final PrefDim prefDimForView) {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, prefDimForView, false, true);
+    public static EntityActionConfig createMasterInDialogInvocationActionConfig(final int width, final int height, final PrefDim.Unit unit) {
+        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, PrefDim.mkDim(width, height, unit), false, true);
     }
 
 
