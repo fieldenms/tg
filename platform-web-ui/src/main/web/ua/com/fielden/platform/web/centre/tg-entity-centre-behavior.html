@@ -375,12 +375,23 @@
                     
                     action.componentUri = "/master_ui/" + fullTypeName;
                     action.elementName = "tg-" + simpleTypeName + "-master";
-                    action.elementAlias = action.elementName + "-" + entity.id;  
+                    action.elementAlias = action.elementName + "-" + entity.id;
+                    
+                    var prefDim = null;
+                    if (action.prefDim) {
+                    	if (typeof action.prefDim === 'string') {
+                    		prefDim = JSON.parse(action.prefDim);
+                    	} else {
+                    		prefDim = action.prefDim;
+                    	}
+                    }
+                    
                     action.attrs = {
                         entityId: entity.id,
                         entityType: fullTypeName,
                         currentState: 'EDIT',
-                        centreUuid: self.uuid
+                        centreUuid: self.uuid,
+                        prefDim: prefDim
                     };
                     action.viewType = 'master';
                     

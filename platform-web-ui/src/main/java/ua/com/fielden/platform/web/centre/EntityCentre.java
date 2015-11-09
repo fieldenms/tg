@@ -40,6 +40,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -68,6 +69,8 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.EntityCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.EntitySingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.IntegerSingleCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.MoneyCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.crit.impl.MoneySingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.crit.impl.StringSingleCriterionWidget;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
@@ -173,6 +176,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     } else {
                         throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
                     }
+                }
+                if (property.tooltipProp.isPresent()) {
+                    cdtmae.getSecondTick().check(entityType, treeName(property.tooltipProp.get()), true);
                 }
             }
         }
@@ -599,16 +605,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private IRenderable createRenderableEgiRepresentaton(final ICentreDomainTreeManagerAndEnhancer centre) {
         final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction'>" +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
                 "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
                 "<div class='truncate relative'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>" +
                 "</div>" +
                 "</div>";
 
         final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction'>" +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
                 "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
                 "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]'></iron-icon>" +
                 "</div>" +
@@ -617,23 +623,27 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<ResultSetProp>> resultProps = getCustomPropertiesDefinitions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(getEntityType());
         if (resultProps.isPresent()) {
-            for (final ResultSetProp resultProp : resultProps.get()) {
+            for (int columnIndex = 0; columnIndex < resultProps.get().size(); columnIndex++) {
+                final ResultSetProp resultProp = resultProps.get().get(columnIndex);
                 final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
                 final String resultPropName = propertyName.equals("this") ? "" : propertyName;
                 final Class<?> propertyType = "".equals(resultPropName) ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
                 final String typeTemplate = EntityUtils.isBoolean(propertyType) ? booleanValueString : simpleValueString;
+                final Pair<String, String> columnTitileAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName);
                 domContainer.add(
                         new InnerTextElement(typeTemplate
                                 .replaceAll("@calc-property-name", propertyName)
                                 .replaceAll("@property-name", resultPropName)
-                                .replaceAll("@column-title", CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName).getKey())
+                                .replace("@column-title", columnTitileAndDesc.getKey())
+                                .replace("@column-desc", columnTitileAndDesc.getValue())
+                                .replaceAll("@column-index", Integer.toString(columnIndex))
                                 .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
             }
         }
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
         final String egiStr = text.
-        		replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
-        		replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
+                replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
+                replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
                 replaceAll("@miType", getMenuItemType().getSimpleName()).
                 replaceAll("@gridCardDom", Matcher.quoteReplacement(domContainer.toString()));
         return new IRenderable() {
@@ -699,6 +709,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             int actionIndex = 0;
             for (final ResultSetProp resultProp : resultProps.get()) {
                 final String propertyName = resultProp.propDef.isPresent() ? CalculatedProperty.generateNameFrom(resultProp.propDef.get().title) : resultProp.propName.get();
+                final String tooltipProp = resultProp.tooltipProp.isPresent() ? resultProp.tooltipProp.get() : null;
 
                 final String resultPropName = propertyName.equals("this") ? "" : propertyName;
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
@@ -712,7 +723,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, tooltipProp, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
@@ -803,7 +814,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             secondaryActionsObjects.append(prefix + createActionObject(el));
         }
 
-
         logger.debug("Initiating insertion point actions...");
 
         final List<FunctionalActionElement> insertionPointActionsElements = new ArrayList<>();
@@ -861,7 +871,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("<!--@egi_columns-->", egiColumns.toString()).
                 replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace("//generatedSecondaryActions", secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
-                replace("//generatedInsertionPointActions", insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength) : insertionPointActionsString).
+                replace("//generatedInsertionPointActions", insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)
+                        : insertionPointActionsString).
                 replace("//generatedPrimaryAction", primaryActionObjectString.length() > prefixLength ? primaryActionObjectString.substring(prefixLength)
                         : primaryActionObjectString).
                 replace("//generatedPropActions", propActionsString.length() > prefixLength ? propActionsString.substring(prefixLength)
@@ -1012,8 +1023,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         criterionWidget = new BooleanSingleCriterionWidget(root, managedType, critProp);
                     } else if (Integer.class.isAssignableFrom(propertyType) || Long.class.isAssignableFrom(propertyType)) {
                         criterionWidget = new IntegerSingleCriterionWidget(root, managedType, critProp);
-                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
+                    } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
                         criterionWidget = new DecimalSingleCriterionWidget(root, managedType, critProp);
+                    } else if (Money.class.isAssignableFrom(propertyType)) {
+                        criterionWidget = new MoneySingleCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isDate(propertyType)) {
                         criterionWidget = new DateSingleCriterionWidget(root, managedType, critProp);
                     } else {
@@ -1031,6 +1044,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         criterionWidget = new IntegerCriterionWidget(root, managedType, critProp);
                     } else if (BigDecimal.class.isAssignableFrom(propertyType)) { // TODO do not forget about Money later (after Money widget will be available)
                         criterionWidget = new DecimalCriterionWidget(root, managedType, critProp);
+                    } else if (Money.class.isAssignableFrom(propertyType)) {
+                        criterionWidget = new MoneyCriterionWidget(root, managedType, critProp);
                     } else if (EntityUtils.isDate(propertyType)) {
                         criterionWidget = new DateCriterionWidget(root, managedType, critProp);
                     } else {

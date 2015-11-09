@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
+import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 
 /**
  *
@@ -20,6 +20,6 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> {
      */
     IResultSetBuilder3Ordering<T> addProp(final String propName);
 
-    IWithSummary<T> addProp(final PropDef<?> propDef);
+    IWithTooltip<T> addProp(final PropDef<?> propDef);
 
 }

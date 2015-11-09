@@ -41,6 +41,8 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
+import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
+import ua.com.fielden.platform.sample.domain.TgEntityForColourMasterProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
@@ -324,6 +326,69 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
                 .done();
 
+        final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
+                // PROPERTY EDITORS
+
+                .addProp("colourProp").asColour()
+                /*      */.withAction("#exportColourProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.shortDesc("Export colour prop")
+                /*      */.longDesc("Export colour property").also()
+
+                .addProp("booleanProp").asCheckbox()
+                /*      */.withAction("#exportBooleanProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export boolean prop")
+                /*      */.longDesc("Export boolean property").also()
+
+                .addProp("stringProp").asSinglelineText().skipValidation()
+                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.VIEW)
+                /*      */.icon("trending-up")
+                /*      */.shortDesc("Export string prop")
+                /*      */.longDesc("Export string property").also()
+
+                .addAction(MasterActions.REFRESH)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("REFRESH2")
+                /*      */.longDesc("REFRESH2 action")
+
+                // ENTITY CUSTOM ACTIONS
+                .addAction("#export", TgExportFunctionalEntity.class)
+                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
+                /*      */.postActionSuccess(new PostActionSuccess(""))
+                /*      */.postActionError(new PostActionError(""))
+                /*      */.enabledWhen(EnabledState.EDIT)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("Export")
+                /*      */.longDesc("Export action")
+
+                .addAction(MasterActions.VALIDATE).addAction(MasterActions.SAVE).addAction(MasterActions.EDIT).addAction(MasterActions.VIEW)
+
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
+                        + "[[fmr], ['flex']],"
+                        + "[['flex']],"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
+                                + "[[fmr],['flex']],"
+                                + "[['flex']],"
+                                + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                                + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
+                                        + "[['flex']],"
+                                        + "[['flex']],"
+                                        + "[['flex']],"
+                                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntityWithSaveOnActivate(TgFunctionalEntityWithCentreContext.class)
                 .addProp("valueToInsert").asSinglelineText()
                 .also()
@@ -357,7 +422,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 TgPersistentEntityWithPropertiesProducer.class,
                 masterConfig,
                 injector());
+        final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
         configApp().
+            addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
+            addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
+            addMaster(TgEntityForColourMaster.class, clourMaster).//
+
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
                         EntityWithInteger.class,
                         null,
@@ -708,14 +778,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         if (isComposite) {
             actionConf = actionConf.addTopAction(
-                    action(TgCentreInvokerWithCentreContext.class).
-                        withContext(context().withSelectionCrit().withSelectedEntities().build())
-                        .icon("assignment-ind")
-                        .shortDesc("Function 4")
-                        .longDesc("Functional context-dependent action 4")
-                        .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
-                        .withNoParentCentreRefresh()
-                        .build()
+                    action(TgCentreInvokerWithCentreContext.class)
+                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                            .icon("assignment-ind")
+                            .shortDesc("Function 4")
+                            .longDesc("Functional context-dependent action 4")
+                            .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+                            .withNoParentCentreRefresh()
+                            .build()
                     ).also();
 
         }
@@ -896,7 +966,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
 
                 .also()
-                .addProp("integerProp").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
+                .addProp("integerProp").withTooltip("desc").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
                 .also()
                 .addProp("bigDecimalProp").withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
@@ -984,27 +1054,27 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
                 .setRenderingCustomiser(TestRenderingCustomiser.class);
 
-                final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
-                if (withQueryEnhancer) {
-                    afterQueryEnhancerConf = beforeEnhancerConf.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
-                } else {
-                    afterQueryEnhancerConf = beforeEnhancerConf;
-                }
-                // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
+        final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
+        if (withQueryEnhancer) {
+            afterQueryEnhancerConf = beforeEnhancerConf.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
+        } else {
+            afterQueryEnhancerConf = beforeEnhancerConf;
+        }
+        // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
 
-                final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
+        final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.TABLET, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
                 .setSummaryCardLayoutFor(Device.MOBILE, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]");
 
-                //                .also()
-                //                .addProp("status").order(3).desc().withAction(null)
-                //                .also()
-                //                .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
-                //                .also()
-                //                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
-                //                .also()
-                //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
+        //                .also()
+        //                .addProp("status").order(3).desc().withAction(null)
+        //                .also()
+        //                .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
+        //                .also()
+        //                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
+        //                .also()
+        //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
 //                if (isComposite) {
 //                    return scl.addInsertionPoint(
@@ -1019,7 +1089,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                            InsertionPoints.RIGHT)
 //                            .build();
 //                }
-                return scl.build();
+        return scl.build();
     }
 
     private EntityCentre<TgPersistentEntityWithProperties> createEntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<TgPersistentEntityWithProperties> entityCentreConfig) {

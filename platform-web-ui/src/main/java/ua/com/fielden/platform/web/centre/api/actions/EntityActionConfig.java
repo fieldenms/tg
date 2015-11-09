@@ -132,6 +132,16 @@ public final class EntityActionConfig {
     }
 
     /**
+     * A factory method for creating a configuration that indicates a need to invoke corresponding master in dialog for row entity - convenience version, which allows setting preferred dimensions.
+     *
+     * @return
+     */
+    public static EntityActionConfig createMasterInDialogInvocationActionConfig(final int width, final int height, final PrefDim.Unit unit) {
+        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, PrefDim.mkDim(width, height, unit), false, true);
+    }
+
+
+    /**
      * A factory method that creates a configuration for the required action.
      *
      * @param functionalEntity

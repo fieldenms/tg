@@ -1,0 +1,62 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<dom-module id="tg-money-editor">
+    <template>
+        <tg-editor 
+    		id="editorDom" 
+    		prop-title="[[propTitle]]"
+    		_disabled="[[_disabled]]" 
+    		_editing-value="{{_editingValue}}" 
+    		action="[[action]]" 
+    		_error="[[_error]]" 
+    		_comm-value="[[_commValue]]" 
+    		_accepted-value="[[_acceptedValue]]" 
+    		debug="[[debug]]" 
+    		_on-change="[[_onChange]]"
+            _on-input="[[_onInput]]"
+    		_on-keydown="[[_onKeydown]]"
+    		current-state="[[currentState]]">
+    	</tg-editor>
+    </template>
+</dom-module>
+<script>
+    (function(){
+        Polymer({
+	    	is: 'tg-money-editor',
+	    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+	    	
+	    	ready: function () {
+	    		// in effect editor for money is of the decimal kind... at least at this stage
+	    		this.$.editorDom._editorKind = "DECIMAL";
+	    	},
+    	
+    	    /**
+             * Converts the value into string representation (which is used in editing / comm values).
+             */
+            convertToString: function (value) {
+                return value === null ? "" : "" + value.amount;
+            },
+
+            /**
+             * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
+             */
+            convertFromString: function (strValue) {
+                if (strValue === '') {
+                    return null;
+                }
+                // var convertedNumber = (+strValue);
+                if (isNaN(strValue)) {
+                    throw "The entered amount is not a valid number.";
+                }
+                
+                // TODO currency and tax are ignored at this stage, but their support should most likely be implemented at some
+                //      there is a need to have a better more general understanding of the role for currency and tax at the platfrom level
+                var amount = (+strValue) 
+                return {'amount': amount};
+            }
+	    });
+    })()
+</script>

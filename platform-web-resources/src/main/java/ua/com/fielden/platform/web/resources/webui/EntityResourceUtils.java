@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Locale.getDefault;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restlet.Response;
 import org.restlet.data.Status;
@@ -38,6 +40,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
@@ -355,11 +358,32 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             }
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
 
-            final BigDecimal amount = map.get("amount") instanceof Integer ? new BigDecimal((Integer) map.get("amount")) : new BigDecimal((Double) map.get("amount"));
+            final BigDecimal amount = new BigDecimal(map.get("amount").toString());
             final String currencyStr = (String) map.get("currency");
             final Integer taxPercentage = (Integer) map.get("taxPercent");
 
-            return taxPercentage == null ? new Money(amount, Currency.getInstance(currencyStr)) : new Money(amount, taxPercentage, Currency.getInstance(currencyStr));
+            if (taxPercentage == null) {
+                if (StringUtils.isEmpty(currencyStr)) {
+                    return new Money(amount);
+                } else {
+                    return new Money(amount, Currency.getInstance(currencyStr));
+                }
+            } else {
+                if (StringUtils.isEmpty(currencyStr)) {
+                    return new Money(amount, taxPercentage,  Currency.getInstance(getDefault()));
+                } else {
+                    return new Money(amount, taxPercentage, Currency.getInstance(currencyStr));
+                }
+            }
+                        
+        } else if (Colour.class.isAssignableFrom(propertyType)) {
+            if (reflectedValue == null) {
+                return null;
+            }
+            final Map<String, Object> map = (Map<String, Object>) reflectedValue;
+
+            final String hashlessUppercasedColourValue = (String) map.get("hashlessUppercasedColourValue");
+            return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
         } else {
             throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s].", type.getSimpleName(), propertyName, reflectedValue));
         }

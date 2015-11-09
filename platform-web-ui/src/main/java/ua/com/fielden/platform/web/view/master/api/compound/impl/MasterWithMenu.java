@@ -71,7 +71,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
             menuItemViewsDom.add(new DomElement("tg-master-menu-item-section").attr("id", "mi" + el.numberOfAction).attr("class", "menu-item-section").attr("data-route", el.getDataRoute()).attr("title", el.getShortDesc()));
             menuItemsDom.add(
                     new DomElement("paper-item").attr("class", "menu-item").attr("data-route", el.getDataRoute())
-                    .add(new DomElement("iron-icon").attr("icon", el.getIcon()))
+                    .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 10px"))
                     .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc())))
                     );
         }

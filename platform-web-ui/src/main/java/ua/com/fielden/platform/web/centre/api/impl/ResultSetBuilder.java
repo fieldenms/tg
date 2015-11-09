@@ -37,6 +37,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLay
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
+import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
@@ -53,6 +54,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
 
     protected Optional<String> propName = Optional.empty();
+    protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
     private EntityActionConfig entityActionConfig;
     private Integer orderSeq;
@@ -72,6 +74,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         this.propName = Optional.of(propName);
+        this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
         this.entityActionConfig = null;
@@ -90,27 +93,34 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IWithSummary<T> desc() {
+    public IWithTooltip<T> desc() {
         this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.DESC));
         return this;
     }
 
     @Override
-    public IWithSummary<T> asc() {
+    public IWithTooltip<T> asc() {
         this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.ASC));
         return this;
     }
 
     @Override
-    public IWithSummary<T> addProp(final PropDef<?> propDef) {
+    public IWithTooltip<T> addProp(final PropDef<?> propDef) {
         if (propDef == null) {
             throw new IllegalArgumentException("Custom property should not be null.");
         }
 
         this.propName = Optional.empty();
+        this.tooltipProp = Optional.empty();
         this.propDef = Optional.of(propDef);
         this.orderSeq = null;
         this.entityActionConfig = null;
+        return this;
+    }
+
+    @Override
+    public IWithSummary<T> withTooltip(final String propertyName) {
+        this.tooltipProp = Optional.ofNullable(propertyName);
         return this;
     }
 
@@ -125,7 +135,6 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.builder.summaryExpressions.put(propName.get(), new SummaryPropDef(alias, expression, title, desc));
         return this;
     }
-
 
     @Override
     public IAlsoProp<T> withAction(final EntityActionConfig actionConfig) {
@@ -144,10 +153,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this;
     }
 
-
     private Optional<Device> lastResultsetLayoutDevice = Optional.empty();
     private Optional<Orientation> lastResultsetLayoutOrientation = Optional.empty();
-
 
     @Override
     public IExpandedCardLayoutConfig<T> setCollapsedCardLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
@@ -166,7 +173,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         if (!lastResultsetLayoutDevice.isPresent()) {
             throw new IllegalStateException("Resultset card layout cannot be set if no device is specified.");
         }
-        this.builder.resultsetExpansionCardLayout.whenMedia(lastResultsetLayoutDevice.get(), lastResultsetLayoutOrientation.isPresent() ? lastResultsetLayoutOrientation.get() : null).set(flexString);
+        this.builder.resultsetExpansionCardLayout.whenMedia(lastResultsetLayoutDevice.get(), lastResultsetLayoutOrientation.isPresent() ? lastResultsetLayoutOrientation.get()
+                : null).set(flexString);
         this.lastResultsetLayoutDevice = Optional.empty();
         this.lastResultsetLayoutOrientation = Optional.empty();
         return this;
@@ -268,15 +276,16 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp prop = ResultSetProp.propByName(propName.get(), entityActionConfig);
+            final ResultSetProp prop = ResultSetProp.propByName(propName.get(), (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.resultSetProperties.add(prop);
         } else if (propDef.isPresent()) {
-            final ResultSetProp prop = ResultSetProp.propByDef(propDef.get(), entityActionConfig);
+            final ResultSetProp prop = ResultSetProp.propByDef(propDef.get(), (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.resultSetProperties.add(prop);
         }
 
         // clear things up for the next property to be added if any
         this.propName = Optional.empty();
+        this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
         this.entityActionConfig = null;
@@ -291,7 +300,6 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.builder.resultsetSummaryCardLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
     }
-
 
     /**
      * A helper class to assist in name collision resolution.
@@ -351,15 +359,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this;
     }
 
-	@Override
-	public IResultSetBuilder2Properties<T> hideToolbar() {
-		this.builder.hideToolbar = true;
-		return this;
-	}
+    @Override
+    public IResultSetBuilder2Properties<T> hideToolbar() {
+        this.builder.hideToolbar = true;
+        return this;
+    }
 
-	@Override
-	public IResultSetBuilder1Toolbar<T> hideCheckboxes() {
-		this.builder.hideCheckboxes = true;
-		return this;
-	}
+    @Override
+    public IResultSetBuilder1Toolbar<T> hideCheckboxes() {
+        this.builder.hideCheckboxes = true;
+        return this;
+    }
 }
