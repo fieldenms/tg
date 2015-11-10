@@ -5,23 +5,25 @@
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
 <!-- <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html"> -->
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 
 <dom-module id="tg-action">
-    <style>
-        paper-spinner {
-            position: absolute;
-            top: 0px;
-            padding: 2px;
-            margin: 0px;
-            width: 24px;
-            height: 24px;
-            --paper-spinner-layer-1-color: blue;
-            --paper-spinner-layer-2-color: blue;
-            --paper-spinner-layer-3-color: blue;
-            --paper-spinner-layer-4-color: blue;
-        }
-    </style>
     <template>
+	    <style>
+	        paper-spinner {
+	            position: absolute;
+	            top: 0px;
+	            padding: 2px;
+	            margin: 0px;
+	            width: 24px;
+	            height: 24px;
+	            --paper-spinner-layer-1-color: var(--paper-blue-500);
+	            --paper-spinner-layer-2-color: var(--paper-blue-500);
+	            --paper-spinner-layer-3-color: var(--paper-blue-500);
+	            --paper-spinner-layer-4-color: var(--paper-blue-500);
+	        }
+	    </style>
+
         <tg-abstract-action id="abstractActionDom">
         </tg-abstract-action>
 
