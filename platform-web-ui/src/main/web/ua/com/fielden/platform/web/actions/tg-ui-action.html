@@ -26,7 +26,6 @@
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
         <paper-icon-button id="actionButton" icon="[[icon]]" on-tap="_run"></paper-icon-button>
-        <!-- disabled?="{{!isEnabled(enabledStates, currentState, enabled)}}" -->
     </template>
 </polymer-element>
 
@@ -123,16 +122,6 @@
             	type: String
             },
 
-            // /**
-            //  * A list of the states in which the action can be enabled.
-            //  */
-            // enabledStates: null,
-
-            // /**
-            //  * The state of the parent view.
-            //  */
-            // currentState: null,
-
             /**
              * Short description for the action (for e.g. it can be used as button title).
              */
@@ -179,8 +168,8 @@
             ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
 			/**
 			 * The 'currentEntity' should contain the entity that was clicked (result-set actions)
-			 * or the entity on which primary / secondary action was chosen. In case when no of the above cases
-			 * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
+			 * or the entity on which primary/secondary action was chosen. 
+			 * Otherwise, as in case of a Top Level action, the 'currentEntity' should be empty.
 			*/
             currentEntity: {
             	type: Object
@@ -231,7 +220,6 @@
             var self = this;
             
             self._run = (function () {
-                // this.enabled = false;
                 console.log(this.shortDesc + ": execute");
 
                 if (this.preAction) {
@@ -284,7 +272,7 @@
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
                 return master.retrieve(master.savingContext)
                 .then(function(value) {
-                    self._afterExecution();
+                    self._afterRetrieval();
                     return value;
                 })
                 .then(function(value) {
@@ -311,25 +299,11 @@
 			return context;
         },
 
-        // /**
-        //  * Returns whether the action is enabled in current moment.
-        //  */
-        // isEnabled: function (enabledStates, currentState, enabled) {
-        //     if (enabledStates) {
-        //         // console.log("isEnabled successful: enabledStates == ", enabledStates, "currentState == ", currentState, "enabled == ", enabled);
-        //         return enabledStates.indexOf(currentState) >= 0 && enabled;
-        //     } else {
-        //         console.warn("isEnabled: enabledStates is not ready at this stage! enabledStates == ", enabledStates);
-        //         return false;
-        //     }
-        // },
-
         /**
-         * The function that is invoked after the action has completed (error or success).
+         * The function that is invoked after the retrieval of the functional entity instance has occurred (successful or otherwise).
          */
-        _afterExecution: function () {
-            console.log(this.shortDesc + ": after execution");
-            // this.enabled = true;
+        _afterRetrieval: function () {
+            console.log(this.shortDesc + ": after functional entity retireval");
         },
         
         _enhanceContextWithChosenProperty: function(context, chosenProperty) {
