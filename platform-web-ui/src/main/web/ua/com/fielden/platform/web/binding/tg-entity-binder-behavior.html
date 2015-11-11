@@ -77,6 +77,15 @@
                 },
                 
                 /**
+                 * Custom callback that will be invoked in case retrieval fails.
+                 *
+                 * arguments: errorResult
+                 */
+                postRetrievedError: {
+                	type: Function
+                },
+                
+                /**
                  * Custom callback that will be invoked after successfull validation.
                  *
                  * arguments: validatedEntity, bindingEntity, customObject
@@ -315,8 +324,12 @@
                     		}
                     	}
                     } else { // other codes
-                        console.warn('Request could not be dispatched.');
-                        this._openToastForError('Request could not be dispatched.', 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.');
+                    	var error = 'Request could not be dispatched.';
+                        console.warn(error);
+                        this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.');
+                        // this is equivalent to server side error
+                        // threfore, this._postRetrievedDefaultError should be invoked
+                        this._postRetrievedDefaultError(error);
                     }
                 }).bind(self);
                 
@@ -416,6 +429,12 @@
                 	// This function will be invoked after server-side error appear.
                 	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
                 	console.warn("SERVER ERROR: ", errorResult);
+                	
+                	// custom external action
+                	if (this.postRetrievedError) {
+	                    this.postRetrievedError(errorResult);
+                    }
+                	
                 }).bind(self);
              	// 				validation:
                 self._postValidatedDefault = (function (entityAndCustomObject) {
