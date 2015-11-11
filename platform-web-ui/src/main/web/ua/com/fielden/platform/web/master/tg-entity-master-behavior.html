@@ -557,10 +557,10 @@
 	            	var modifHolder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
 	            	// the master can be left in case where there is no modifications and the entity is not new
 	            	if (modifHolder.id === null) {
-	            		return "A new entity is being created. Please save your changes.";
+	            		return {isNew: true, msg: "A new entity is being created. Please save your changes."};
 	            	} 
 	            	if (this._hasModified(modifHolder)) {
-	            		return "Please save or cancel your changes.";
+	            		return {isNew: false, msg: "Please save or cancel your changes."};
 	            	}
 	            	
 	            	return undefined;

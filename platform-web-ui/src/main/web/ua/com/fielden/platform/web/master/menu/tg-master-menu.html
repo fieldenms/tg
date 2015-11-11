@@ -323,14 +323,24 @@
 	        		this.sectionRoute = newRoute;
 	        	} else {
 	        		this.route = this.sectionRoute;
-	        		this.parent._openToastForError('Cannot leave "' + section.title + '".', cannotLeaveReason);
+	        		this.parent._openToastForError('Cannot leave "' + section.title + '".', cannotLeaveReason.msg);
 	        	} 
         	}
  		},
+ 		
+ 		/** Used by the master, which incorporates this menu to check if it can be closed. */
+ 		canClose: function () {
+ 			var section = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
+ 			var reason = section.canLeave();
+ 			if (reason) {
+ 				if (reason.isNew === true && this.route === this.defaultRoute) {
+ 					return undefined; // allow closing for new entity on the default route... i.e. like Main
+ 				}
+ 			}
+ 			return reason;
+ 		},
         
         _sectionRouteChanged: function (newRoute, oldRoute) {
-        	// TODO check and load menu item section if not loaded already
-        	//      otherwise trigger validation... may not be applicable to all masters
          	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
  			action._run();
  		}
