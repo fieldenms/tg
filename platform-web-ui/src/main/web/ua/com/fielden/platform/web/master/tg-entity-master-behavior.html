@@ -38,11 +38,20 @@
             	},
 
                 /**
-                 * Custom callback that will be invoked after successfull retrieval.
+                 * Custom callback that will be invoked after successfull saving.
                  *
                  * arguments: entity, bindingEntity, customObject
                  */
                 postSaved: {
+                	type: Function                	
+                }, 
+
+                /**
+                 * Custom callback that will be invoked in case saving resulted in error.
+                 *
+                 * arguments: errorResult
+                 */
+                postSavedError: {
                 	type: Function                	
                 }, 
                 
@@ -265,6 +274,11 @@
                 	// This function will be invoked after server-side error appear.
                 	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
                 	console.warn("SERVER ERROR: ", errorResult);
+                	
+                	// custom external action
+                	if (this.postSavedError) {
+				    	this.postSavedError(errorResult);
+				    }
                 }).bind(self);
                 
                 self.edit = (function () {
