@@ -35,6 +35,12 @@ public class TgExportFunctionalEntityDao extends CommonEntityDao<TgExportFunctio
     public TgExportFunctionalEntity save(final TgExportFunctionalEntity entity) {
         final CentreContext<?,?> context = entity.getContext();
 
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
         final TgPersistentEntityWithProperties me = (TgPersistentEntityWithProperties) context.getMasterEntity();
         System.out.println(format("IS MASTER ENTITY DIRTY? %s", me.isDirty()));
         if (me.isDirty()) {

@@ -5,6 +5,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.mixin.TgFunctionalEntityWithCentreContextMixin;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
@@ -41,6 +42,11 @@ public class TgFunctionalEntityWithCentreContextDao extends CommonEntityDao<TgFu
     @Override
     @SessionRequired
     public TgFunctionalEntityWithCentreContext save(final TgFunctionalEntityWithCentreContext entity) {
+        // let's fail attempts to execute the action without selecting any entities to be processed
+        if (entity.getContext().getSelectedEntities().isEmpty()) {
+            throw Result.failure("There are no entities to process. Please select some and try again.");
+        }
+        
         for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
             final TgPersistentEntityWithProperties selected = dao.findById(selectedEntity.getId()); // (TgPersistentEntityWithProperties) selectedEntity;
             final Object user = entity.getContext().getSelectionCrit() != null ? entity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_userParam.key") : "UNKNOWN_USER";

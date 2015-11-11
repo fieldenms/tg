@@ -389,7 +389,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                         + "[['flex']],"
                                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
-        final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntityWithSaveOnActivate(TgFunctionalEntityWithCentreContext.class)
+        final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>()
+                .forEntity(TgFunctionalEntityWithCentreContext.class) // forEntityWithSaveOnActivate
                 .addProp("valueToInsert").asSinglelineText()
                 .also()
                 .addProp("withBrackets").asCheckbox()
