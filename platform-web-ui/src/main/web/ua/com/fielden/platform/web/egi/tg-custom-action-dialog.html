@@ -74,6 +74,11 @@
                 _cachedElements: {
                 	type: Object,
                 	value: function () { return {}; }
+                },
+                
+                /** Captures the last action that has been executed by this dialog or is currently in progress. */
+                _lastAction: {
+                	type: Object
                 }
             },
 
@@ -86,11 +91,18 @@
             },
 
             closeDialog: function () {
-                this.close();
+            	this._closeDialogAndIndicateActionCompletion(this._lastAction);
             },
 
-            _handleCloseEvent: function (data, envelope) {
-                this.closeDialog();
+            _closeDialogAndIndicateActionCompletion: function (action) {
+            	if (this._lastAction) {
+            		this._lastAction.isActionInProgress = false;
+            	}
+            	this.close();
+            },
+            
+            _handleCloseEvent: function (action, data, envelope) {
+                this._closeDialogAndIndicateActionCompletion(action);
             },
             
             /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
@@ -126,6 +138,7 @@
                 } else {
                     var self = this;
                     if (self.isRunning === false) {
+                    	self._lastAction = customAction;
                         self._setIsRunning(true);
                         
                     	self._getElement(customAction)
@@ -138,11 +151,11 @@
                                 var promise = customAction._onExecuted(null, element, null);
                                 if (promise) {
                                 	return promise
-                                	.then(function () {self._showMaster(element, closeEventChannel, closeEventTopics);})
+                                	.then(function () {self._showMaster(customAction, element, closeEventChannel, closeEventTopics);})
                                 	.catch(function () {self._setIsRunning(false);});
                                 } else {
                                     return Promise.resolve()
-                                    .then(function () {self._showMaster(element, closeEventChannel, closeEventTopics);})
+                                    .then(function () {self._showMaster(customAction, element, closeEventChannel, closeEventTopics);})
                                     .catch(function () {self._setIsRunning(false);});
                                 }
                             })
@@ -158,7 +171,7 @@
                 }
             },
 
-            _showMaster: function (element, closeEventChannel, closeEventTopics) {
+            _showMaster: function (action, element, closeEventChannel, closeEventTopics) {
             	if (element.noUI === true) { // is this is the end of action execution?
                      self._setIsRunning(false);
                  } else { // otherwise show master in dialog
@@ -171,7 +184,7 @@
                                 postal.subscribe({
                                     channel: closeEventChannel,
                                     topic: closeEventTopics[index],
-                                    callback: self._handleCloseEvent.bind(self)
+                                    callback: self._handleCloseEvent.bind(self,  action /* bind the first argument */)
                                 }));
                         }
                     }
