@@ -48,7 +48,7 @@ public class MasterWithMaster<T extends AbstractEntity<?>> implements IMaster<T>
                         + "    >"
                         + "</tg-element-loader>",
                         entityMaster.getEntityType().getName(), entityMaster.getEntityType().getSimpleName()))
-                .replace("//@ready-callback", "self.classList.remove('canLeave');")
+                .replace("//@ready-callback", "")
                 .replace("//@attached-callback", format(""
                         + "this.$.loader.attrs = %s;\n"
                         + "this.canLeave = function () {"
