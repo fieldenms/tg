@@ -42,6 +42,12 @@ public class TgFunctionalEntityWithCentreContextDao extends CommonEntityDao<TgFu
     @Override
     @SessionRequired
     public TgFunctionalEntityWithCentreContext save(final TgFunctionalEntityWithCentreContext entity) {
+        
+        // let's introduce some delay for demonstration purposes
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+        }
         // let's fail attempts to execute the action without selecting any entities to be processed
         if (entity.getContext().getSelectedEntities().isEmpty()) {
             throw Result.failure("There are no entities to process. Please select some and try again.");
