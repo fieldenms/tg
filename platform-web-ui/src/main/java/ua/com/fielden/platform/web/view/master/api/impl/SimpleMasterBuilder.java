@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
+import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -13,6 +15,7 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -28,7 +31,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
@@ -68,15 +70,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IEntityActionConfig0<T> addAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new EntityAction(name, functionalEntity), this);
-        entityActions.add(entityAction);
-        return entityAction;
-    }
-
-    @Override
     public IEntityActionConfig7<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
-        actions.add(action);
+        actions.add(setRole(action, UI_ROLE.BUTTON));
         return this;
     }
     
@@ -299,7 +294,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 .also()
 
                 // ENTITY CUSTOM ACTIONS
-                .addAction("#export", TgPersistentEntityWithProperties.class)
+                .addAction(MasterActions.REFRESH)
                 .preAction(new IPreAction() {
                     @Override
                     public JsCode build() {

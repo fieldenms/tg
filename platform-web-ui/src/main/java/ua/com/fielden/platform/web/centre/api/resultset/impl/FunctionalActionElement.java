@@ -101,7 +101,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("data-route", getDataRoute());
         }
 
-
+        attrs.put("ui-role", conf().role.toString());
         attrs.put("short-desc", getShortDesc());
         attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
         attrs.put("icon", getIcon());

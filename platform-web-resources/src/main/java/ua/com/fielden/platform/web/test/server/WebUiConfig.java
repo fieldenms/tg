@@ -274,18 +274,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("REFRESH2")
-                /*      */.longDesc("REFRESH2 action")
+                /*      */.shortDesc("CANCEL")
+                /*      */.longDesc("Cancels any changes and closes the master (if in dialog)")
 
                 // ENTITY CUSTOM ACTIONS
-//                .addAction("#export", TgExportFunctionalEntity.class)
-//                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-//                /*      */.postActionSuccess(new PostActionSuccess(""))
-//                /*      */.postActionError(new PostActionError(""))
-//                /*      */.enabledWhen(EnabledState.EDIT)
-//                //      */.icon("trending-up") SHORT-CUT
-//                /*      */.shortDesc("Export")
-//                /*      */.longDesc("Export action")
                 .addAction(
                         action(TgExportFunctionalEntity.class)
                         .withContext(context().withMasterEntity().build())
@@ -364,15 +356,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.longDesc("REFRESH2 action")
 
                 // ENTITY CUSTOM ACTIONS
-                .addAction("#export", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.EDIT)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("Export")
-                /*      */.longDesc("Export action")
-
+                .addAction(
+                        action(TgExportFunctionalEntity.class)
+                        .withContext(context().withMasterEntity().build())
+                        .icon("trending-up")
+                        .shortDesc("Export")
+                        .longDesc("Export action")
+                        .build())
                 .addAction(MasterActions.VALIDATE).addAction(MasterActions.SAVE).addAction(MasterActions.EDIT).addAction(MasterActions.VIEW)
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "

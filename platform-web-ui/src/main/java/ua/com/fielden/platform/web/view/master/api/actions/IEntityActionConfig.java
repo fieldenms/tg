@@ -17,7 +17,5 @@ public interface IEntityActionConfig<T extends AbstractEntity<?>> {
     
     IEntityActionConfig7<T> addAction(final EntityActionConfig actionConfig);
     
-    IEntityActionConfig0<T> addAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity);
-
     IEntityActionConfig0<T> addAction(final MasterActions masterAction);
 }

@@ -33,11 +33,6 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IEntityActionConfig0<T> addAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
-        return simpleMasterBuilder.addAction(name, functionalEntity);
-    }
-
-    @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
         return simpleMasterBuilder.addAction(masterAction);
     }
