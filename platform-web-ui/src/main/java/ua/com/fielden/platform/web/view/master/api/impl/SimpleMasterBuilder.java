@@ -45,7 +45,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T>, IEntityActionConfig7<T> {
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
-    private final List<EntityActionConfig<T>> entityActions = new ArrayList<>();
+    private final List<Object> entityActions = new ArrayList<>();
+    
     private final FlexLayout layout = new FlexLayout();
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
@@ -53,7 +54,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private Class<T> entityType;
     private boolean saveOnActivation = false;
     
-    private final List<ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig> actions = new ArrayList<>();
 
 
     @Override
@@ -71,7 +71,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IEntityActionConfig7<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
-        actions.add(setRole(action, UI_ROLE.BUTTON));
+        entityActions.add(setRole(action, UI_ROLE.BUTTON));
         return this;
     }
     
@@ -167,30 +167,34 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             }
         });
 
+        // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions 
         final StringBuilder entityActionsStr = new StringBuilder();
-        entityActions.forEach(action -> {
-            importPaths.add(action.action().importPath());
-            if (action.action() instanceof IRenderable) {
-                editorContainer.add(((IRenderable) action.action()).render());
-            }
-            if (action.action() instanceof IExecutable) {
-                entityActionsStr.append(((IExecutable) action.action()).code().toString());
-            }
-        });
         final String prefix = ",\n";
         final int prefixLength = prefix.length();
-
         final StringBuilder primaryActionObjects = new StringBuilder();
-        for (int index = 0; index < actions.size(); index++) {
-            ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action = actions.get(index);
-            if (!action.isNoAction()) {
-                final FunctionalActionElement el = new FunctionalActionElement(action, index, FunctionalActionKind.PRIMARY_RESULT_SET);
-
-                importPaths.add(el.importPath());
-                editorContainer.add(el.render().clazz("primary-action"));
-                primaryActionObjects.append(prefix + el.createActionObject());
+        int funcActionSeq = 0;
+        for (final Object action: entityActions) {
+            if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
+                final ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?> config = (ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?>) action;
+                importPaths.add(config.action().importPath());
+                if (config.action() instanceof IRenderable) {
+                    editorContainer.add(((IRenderable) config.action()).render());
+                }
+                if (config.action() instanceof IExecutable) {
+                    entityActionsStr.append(((IExecutable) config.action()).code().toString());
+                }
+            } else {
+                final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = (ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig) action;
+                if (!config.isNoAction()) {
+                    final FunctionalActionElement el = new FunctionalActionElement(config, funcActionSeq++, FunctionalActionKind.PRIMARY_RESULT_SET);
+                    importPaths.add(el.importPath());
+                    editorContainer.add(el.render().clazz("primary-action"));
+                    primaryActionObjects.append(prefix + el.createActionObject());
+                }
             }
+
         }
+        
         
         final String primaryActionObjectsString = primaryActionObjects.toString();
         
