@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api.actions;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.view.master.api.actions.property.IPropertyActionConfig0;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.view.master.api.helpers.IAlso;
 
 /**
  * A top level contract for declaring a single property action that is associated with a specific property and its widget.
@@ -11,5 +12,5 @@ import ua.com.fielden.platform.web.view.master.api.actions.property.IPropertyAct
  * @param <T>
  */
 public interface IPropertyActionConfig<T extends AbstractEntity<?>> {
-    IPropertyActionConfig0<T> withAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity);
+    IAlso<T> withAction(final EntityActionConfig actionConfig);
 }

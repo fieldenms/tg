@@ -74,6 +74,7 @@
 	    	<paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
+            <content class=".property-action"></content>
     	</tg-editor>
         <tg-entity-editor-result id="result" no-auto-focus on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed"></tg-entity-editor-result>
         

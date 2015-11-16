@@ -8,7 +8,6 @@
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html">
-<link rel="import" href="/resources/master/actions/tg-property-action.html">
 
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 
@@ -31,15 +30,16 @@
             transition-delay: 1s;
             transform: translate3d(0px, 0px, 0px);
         }*/
+        
         #input.upper-case {
             text-transform: uppercase;
         }
         
-        /*  */
         .main-container {
             @apply(--layout-horizontal);
             @apply(--layout-center);
         }
+        
         #input-container {
             @apply(--layout-flex);
         }
@@ -195,10 +195,8 @@
                 </div>
                 <!-- CONTENT HERE: -->
                 <content select=".custom-icon-buttons"></content>
-                
-                <div id="icon" hidden$="[[_actionDoesNotExist(action)]]">
-        			<tg-property-action entity-type="[[action.entityType]]" pre-action="[[action.preAction]]" post-action="[[action.postAction]]" post-action-error="[[action.postActionError]]" enabled-states="[[action.enabledStates]]" long-desc="[[action.longDesc]]" short-desc="[[action.shortDesc]]" icon="[[action.icon]]" current-state="[[currentState]]"></tg-property-action>
-        		</div>
+
+				<content select=".property-action"></content>
             </div>
 
             <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]">[[_error]]</paper-input-error>
@@ -239,7 +237,6 @@
                 type: String,
                 notify: true
             },
-            action: Object,
             _error: String,
             _commValue: String,
             _acceptedValue: String,
@@ -280,15 +277,6 @@
         
         _isColourEditor : function(editorKind) {
             return "COLOUR" === editorKind;
-        },
-
-        /**
-         * The function for binding 'hidden' attribute of <div>, which contain icon button for action.
-         *
-         * If action does not exist -- 'action' is 'null', otherwise -- 'action' contains some object.
-         */
-        _actionDoesNotExist: function (action) {
-            return action === null;
         },
 
         /**

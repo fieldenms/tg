@@ -155,24 +155,33 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
 
-        final StringBuilder propertyActionsStr = new StringBuilder();
-        final DomElement editorContainer = layout.render();
-
-        importPaths.add(layout.importPath());
-        widgets.forEach(widget -> {
-            importPaths.add(widget.widget().importPath());
-            editorContainer.add(widget.widget().render());
-            if (widget.widget().action() != null) {
-                propertyActionsStr.append(widget.widget().action().code().toString());
-            }
-        });
-
-        // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions 
-        final StringBuilder entityActionsStr = new StringBuilder();
+        int funcActionSeq = 0; // used for both entity and property level functional actions
         final String prefix = ",\n";
         final int prefixLength = prefix.length();
         final StringBuilder primaryActionObjects = new StringBuilder();
-        int funcActionSeq = 0;
+
+        final StringBuilder propertyActionsStr = new StringBuilder();
+        final DomElement editorContainer = layout.render();
+        importPaths.add(layout.importPath());
+        for (final WidgetSelector<T> widget : widgets) {
+            importPaths.add(widget.widget().importPath());
+
+            if (!widget.widget().action().isPresent()) {
+                editorContainer.add(widget.widget().render());
+            } else {
+                final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = widget.widget().action().get();
+                if (!config.isNoAction()) {
+                    final FunctionalActionElement el = new FunctionalActionElement(config, funcActionSeq++, FunctionalActionKind.PRIMARY_RESULT_SET);
+                    importPaths.add(el.importPath());
+                    editorContainer.add(widget.widget().render()
+                            .add(el.render().clazz("property-action", "property-action-icon")));
+                    primaryActionObjects.append(prefix + el.createActionObject());
+                }
+            }
+        }
+
+        // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions 
+        final StringBuilder entityActionsStr = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
                 final ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?> config = (ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?>) action;
@@ -202,7 +211,10 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 .replace("<!--@imports-->", createImports(importPaths))
                 .replace("@entity_type", entityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", editorContainer.toString()) // TODO should contain prop actions
-                .replace("//@ready-callback", layout.code().toString() + "\n" + entityActionsStr.toString() + "\n" + propertyActionsStr.toString())
+                .replace("//@ready-callback", 
+                        layout.code().toString() + "\n" 
+                      + entityActionsStr.toString() + "\n" 
+                      + propertyActionsStr.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
                 
@@ -260,66 +272,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
 
-    }
-
-    public static void main(final String[] args) {
-        final SimpleMasterBuilder<TgPersistentEntityWithProperties> sm = new SimpleMasterBuilder<>();
-        final IMaster<TgPersistentEntityWithProperties> smConfig = sm.forEntity(TgPersistentEntityWithProperties.class)
-                // PROPERTY EDITORS
-                .addProp("stringProp").asSinglelineText()
-                .withAction("#validateDesc", TgPersistentEntityWithProperties.class)
-                .preAction(new IPreAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionSuccess(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionError(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).enabledWhen(EnabledState.ANY).icon("trending-up")
-                .also()
-
-                .addProp("stringProp").asMultilineText()
-                .also()
-                .addProp("dateProp").asDateTimePicker().skipValidation()
-                .also()
-                .addProp("booleanProp").asCheckbox().skipValidation()
-                .also()
-                .addProp("bigDecimalProp").asDecimal().skipValidation()
-                .also()
-                .addProp("integerProp").asSpinner().skipValidation()
-                .also()
-
-                // ENTITY CUSTOM ACTIONS
-                .addAction(MasterActions.REFRESH)
-                .preAction(new IPreAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionSuccess(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionError(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).enabledWhen(EnabledState.VIEW).shortDesc("Export")
-                .setLayoutFor(Device.DESKTOP, null, "[[]]")
-                .setLayoutFor(Device.TABLET, null, "[[]]")
-                .setLayoutFor(Device.TABLET, null, "[[]]")
-                .done();
-        System.out.println(smConfig.render().toString());
     }
 
 }

@@ -24,7 +24,6 @@ import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
@@ -78,7 +77,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssi
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
@@ -86,7 +84,6 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.resources.webui.EntityResource;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -175,101 +172,36 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .withProps(pair("desc", true),
                         pair("compositeProp", false),
                         pair("booleanProp", false))
-                /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export entity prop")
-                /*      */.longDesc("Export entity property")
+                .withAction(
+                        action(TgExportFunctionalEntity.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "self.setEditorValue4Property('requiredValidatedProp', functionalEntity, 'value');\n"
+                                + "self.setEditorValue4Property('entityProp', functionalEntity, 'parentEntity');\n"
+                                )) // self.retrieve()
+                        .postActionError(new PostActionError(""))
+                        .icon("trending-up")
+                        .shortDesc("Export")
+                        .longDesc("Export action")
+                        .build())
                 .also()
                 .addProp("entityProp.entityProp").asAutocompleter().withProps(pair("desc", true))
-                /*      */.withAction("#exportIntegerProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export integer prop")
-                //      */.longDesc("Export integer property") SHORT-CUT
                 .also()
                 .addProp("key").asSinglelineText()
-                /*      */.withAction("#exportCritOnlyEntityProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export crit only entity prop")
-                /*      */.longDesc("Export crit only entity property")
                 .also()
                 .addProp("bigDecimalProp").asDecimal()
-                /*      */.withAction("#exportBigDecimalProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export bigDecimal prop")
-                /*      */.longDesc("Export bigDecimal property")
                 .also()
                 .addProp("stringProp").asSinglelineText().skipValidation()
-                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export string prop")
-                /*      */.longDesc("Export string property")
                 .also()
                 .addProp("stringProp").asMultilineText()
-                /*      */.withAction("#exportMultiStringProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export multi string prop")
-                /*      */.longDesc("Export multi string property")
                 .also()
                 .addProp("dateProp").asDateTimePicker()
-                /*      */.withAction("#exportDateProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export date prop")
-                /*      */.longDesc("Export date property")
                 .also()
                 .addProp("booleanProp").asCheckbox()
-                /*      */.withAction("#exportBooleanProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export boolean prop")
-                /*      */.longDesc("Export boolean property")
                 .also()
                 .addProp("compositeProp").asAutocompleter()
-                /*      */.withAction("#exportCompositeProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export composite prop")
-                /*      */.longDesc("Export composite property")
                 .also()
                 .addProp("requiredValidatedProp").asSpinner()
-                /*      */.withAction("#exportRequiredValidatedProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export requiredValidated prop")
-                /*      */.longDesc("Export requiredValidated prop")
                 .also()
 
                 .addAction(MasterActions.REFRESH)
@@ -322,34 +254,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 // PROPERTY EDITORS
 
                 .addProp("colourProp").asColour()
-                /*      */.withAction("#exportColourProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.shortDesc("Export colour prop")
-                /*      */.longDesc("Export colour property").also()
-
+                .also()
                 .addProp("booleanProp").asCheckbox()
-                /*      */.withAction("#exportBooleanProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export boolean prop")
-                /*      */.longDesc("Export boolean property").also()
-
+                .also()
                 .addProp("stringProp").asSinglelineText().skipValidation()
-                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export string prop")
-                /*      */.longDesc("Export string property").also()
-
+                .also()
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
                 /*      */.shortDesc("REFRESH2")
