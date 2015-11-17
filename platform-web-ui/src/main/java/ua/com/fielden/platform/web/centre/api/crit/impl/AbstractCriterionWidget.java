@@ -30,10 +30,12 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  *
  */
 public abstract class AbstractCriterionWidget implements IRenderable, IImportable {
-    
+
     private static final String sufixFrom = " (From)";
     private static final String sufixTo = " (To)";
-    
+    private static final String sufixYes = " (Yes)";
+    private static final String sufixNo = " (No)";
+
     private final String propertyName;
     private final String widgetName;
     private final String widgetPath;
@@ -176,12 +178,22 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         //        }
         //        return generatedProperties;
 
+        //        final Pair<String, String> _firstTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
+        //        final Pair<String, String> firstTitleDesc = Pair.pair(_firstTitleDesc.getKey() + sufixFrom, _firstTitleDesc.getValue());
+        //
+        //        final Pair<String, String> _secondTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
+        //        final Pair<String, String> secondTitleDesc = Pair.pair(_secondTitleDesc.getKey() + sufixTo, _secondTitleDesc.getValue());
+
+        //        return new Pair<>(firstTitleDesc, secondTitleDesc);
+        return implementationOfGenerateDesc(sufixFrom, sufixTo, managedType, propertyName);
+    }
+
+    public static Pair<Pair<String, String>, Pair<String, String>> implementationOfGenerateDesc(final String firstSufix, final String secondSufix, final Class<?> managedType, final String propertyName) {
         final Pair<String, String> _firstTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
-        final Pair<String, String> firstTitleDesc = Pair.pair(_firstTitleDesc.getKey() + sufixFrom, _firstTitleDesc.getValue());
+        final Pair<String, String> firstTitleDesc = Pair.pair(_firstTitleDesc.getKey() + firstSufix, _firstTitleDesc.getValue());
 
         final Pair<String, String> _secondTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
-        final Pair<String, String> secondTitleDesc = Pair.pair(_secondTitleDesc.getKey() + sufixTo, _secondTitleDesc.getValue());
-
+        final Pair<String, String> secondTitleDesc = Pair.pair(_secondTitleDesc.getKey() + secondSufix, _secondTitleDesc.getValue());
         return new Pair<>(firstTitleDesc, secondTitleDesc);
     }
 
