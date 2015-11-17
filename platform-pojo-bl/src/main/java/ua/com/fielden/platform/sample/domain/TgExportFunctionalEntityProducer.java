@@ -26,6 +26,10 @@ public class TgExportFunctionalEntityProducer extends DefaultEntityProducerWithC
         if (getCentreContext() != null) {
             entity.setContext(getCentreContext());
         }
+        
+        if (getChosenProperty() != null) {
+            entity.setActionProperty(getChosenProperty());
+        }
         return entity;
     }
 }

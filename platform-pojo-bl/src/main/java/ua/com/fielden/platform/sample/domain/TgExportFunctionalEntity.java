@@ -23,15 +23,30 @@ public class TgExportFunctionalEntity extends AbstractFunctionalEntityWithCentre
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @MapTo
     @Title(value = "Parent Entity", desc = "Master entity for this functional entity")
     private TgPersistentEntityWithProperties parentEntity;
 
     @IsProperty
-    @MapTo
     @Title(value = "Title", desc = "Desc")
     private Integer value;
 
+    @IsProperty
+    @Title(value = "Chosen property", desc = "A master entity property that is related to this action instance.")
+    private String actionProperty;
+
+    @Observable
+    public TgExportFunctionalEntity setActionProperty(final String actionProperty) {
+        this.actionProperty = actionProperty;
+        return this;
+    }
+
+    public String getActionProperty() {
+        return actionProperty;
+    }
+
+    
+
+    
     @Observable
     public TgExportFunctionalEntity setValue(final Integer value) {
         this.value = value;

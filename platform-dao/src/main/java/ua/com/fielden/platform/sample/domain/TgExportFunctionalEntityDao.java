@@ -47,6 +47,8 @@ public class TgExportFunctionalEntityDao extends CommonEntityDao<TgExportFunctio
             throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
         }
         
+        System.out.println(format("IS CHOSEN PROPERTY PRESENT? %s", entity.getActionProperty()));
+        
         if (me.getRequiredValidatedProp() != null && me.getRequiredValidatedProp() < 300) {
             entity.setValue(300);
             entity.setParentEntity(co.findByKeyAndFetch(fetchAll(TgPersistentEntityWithProperties.class), "DEMO01"));
