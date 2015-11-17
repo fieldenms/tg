@@ -12,6 +12,7 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -52,6 +53,21 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         this.injector = injector;
     }
 
+    /**
+     * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
+     * 
+     * @param entityType
+     * @param entityProducerType
+     * @param injector
+     * @return
+     */
+    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
+            final Class<T> entityType,
+            final Class<? extends IEntityProducer<T>> entityProducerType,
+            final Injector injector) {
+        return new EntityMaster<T>(entityType, entityProducerType, null, injector);
+    }
+    
     private IMaster<T> createDefaultConfig(final Class<T> entityType) {
         return new NoUiMaster<T>(entityType);
     }

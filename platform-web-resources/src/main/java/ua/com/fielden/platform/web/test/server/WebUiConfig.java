@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
@@ -40,6 +41,8 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
+import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
+import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMasterProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
@@ -87,7 +90,6 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
@@ -203,6 +205,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("requiredValidatedProp").asSpinner()
                 .also()
+                .addProp("status").asAutocompleter()
+                    .withAction(
+                        action(TgCreatePersistentStatusAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "self.setEditorValue4Property('status', functionalEntity, 'status');\n"
+                                )) // self.retrieve()
+                        .postActionError(new PostActionError(""))
+                        .icon("trending-up")
+                        .shortDesc("Export")
+                        .longDesc("Export action")
+                        .build())
+                .also()
 
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
@@ -228,26 +243,33 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
-                        + "[[fmr], [fmr], [fmr], [fmr], ['flex']],"
-                        + "[[fmr], [fmr], [fmr], [fmr], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
+                        "      ['padding:20px', "
+                        + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
+                        + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
+                        + format("[['flex']],")
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + "    ]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
-                        + "[['flex']],"
+                        + "[['flex'], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                        + "]")
+                        .replace("fmr", fmr)
+                        .replace("actionMr", actionMr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
+                        + "[['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                        + "]")
+                        .replace("fmr", fmr)
+                        .replace("actionMr", actionMr))
                 .done();
 
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
@@ -347,10 +369,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         TgPersistentCompositeEntity.class,
                         null,
                         injector())).
-                addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(
-                        TgExportFunctionalEntity.class,
-                        TgExportFunctionalEntityProducer.class,
-                        null,
+                addMaster(TgExportFunctionalEntity.class, EntityMaster.noUiFunctionalMaster(TgExportFunctionalEntity.class, TgExportFunctionalEntityProducer.class, injector())).
+                addMaster(TgCreatePersistentStatusAction.class, new EntityMaster<TgCreatePersistentStatusAction>(
+                        TgCreatePersistentStatusAction.class,
+                        TgCreatePersistentStatusActionProducer.class,
+                        masterConfigForTgCreatePersistentStatusAction(), // TODO need to provide functional entity master configuration
                         injector())).
                 addMaster(TgStatusActivationFunctionalEntity.class, new EntityMaster<TgStatusActivationFunctionalEntity>(
                         TgStatusActivationFunctionalEntity.class,
@@ -499,6 +522,30 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[{colspan: 2}]]]")
                 .setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
 
+    }
+
+    private static IMaster<TgCreatePersistentStatusAction> masterConfigForTgCreatePersistentStatusAction() {
+        String layout = ""
+                + "['vertical', 'padding:20px', "
+                + "  ['vertical', "
+                + "      ['width:300px', 'flex'], "
+                + "      ['width:300px', 'flex']"
+                + "  ],"
+                + "  ['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]"
+                + "]";
+        final IMaster<TgCreatePersistentStatusAction> config =
+                new SimpleMasterBuilder<TgCreatePersistentStatusAction>().forEntity(TgCreatePersistentStatusAction.class)
+                .addProp("statusCode").asSinglelineText()
+                .also()
+                .addProp("desc").asMultilineText()
+                .also()
+                .addAction(MasterActions.REFRESH).shortDesc("CANCLE").longDesc("Cancles the action")
+                .addAction(MasterActions.SAVE)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(Device.TABLET, Optional.empty(), layout)
+                .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
+                .done();
+        return config;
     }
 
     public static class TgPersistentEntityWithProperties_UserParamAssigner implements IValueAssigner<SingleCritOtherValueMnemonic<User>, TgPersistentEntityWithProperties> {

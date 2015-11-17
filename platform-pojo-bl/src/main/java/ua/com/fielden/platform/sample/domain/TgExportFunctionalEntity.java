@@ -44,9 +44,6 @@ public class TgExportFunctionalEntity extends AbstractFunctionalEntityWithCentre
         return actionProperty;
     }
 
-    
-
-    
     @Observable
     public TgExportFunctionalEntity setValue(final Integer value) {
         this.value = value;
