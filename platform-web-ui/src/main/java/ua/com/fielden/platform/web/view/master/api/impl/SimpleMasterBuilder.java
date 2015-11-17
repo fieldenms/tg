@@ -171,7 +171,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             } else {
                 final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = widget.widget().action().get();
                 if (!config.isNoAction()) {
-                    final FunctionalActionElement el = new FunctionalActionElement(config, funcActionSeq++, FunctionalActionKind.PRIMARY_RESULT_SET);
+                    final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, funcActionSeq++, widget.propertyName);
                     importPaths.add(el.importPath());
                     editorContainer.add(widget.widget().render()
                             .add(el.render().clazz("property-action", "property-action-icon")));
@@ -195,7 +195,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             } else {
                 final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = (ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig) action;
                 if (!config.isNoAction()) {
-                    final FunctionalActionElement el = new FunctionalActionElement(config, funcActionSeq++, FunctionalActionKind.PRIMARY_RESULT_SET);
+                    final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(config, funcActionSeq++);
                     importPaths.add(el.importPath());
                     editorContainer.add(el.render().clazz("primary-action"));
                     primaryActionObjects.append(prefix + el.createActionObject());
