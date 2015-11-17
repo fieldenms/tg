@@ -185,7 +185,12 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         //        final Pair<String, String> secondTitleDesc = Pair.pair(_secondTitleDesc.getKey() + sufixTo, _secondTitleDesc.getValue());
 
         //        return new Pair<>(firstTitleDesc, secondTitleDesc);
-        return implementationOfGenerateDesc(sufixFrom, sufixTo, managedType, propertyName);
+        if(propertyType == boolean.class){
+            return implementationOfGenerateDesc(sufixYes, sufixNo, managedType, propertyName);
+        } else {
+            return implementationOfGenerateDesc(sufixFrom, sufixTo, managedType, propertyName);
+        }
+
     }
 
     public static Pair<Pair<String, String>, Pair<String, String>> implementationOfGenerateDesc(final String firstSufix, final String secondSufix, final Class<?> managedType, final String propertyName) {
@@ -202,9 +207,18 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     }
 
     public static Pair<String, String> generateSingleTitleDesc(final Class<?> root, final Class<?> managedType, final String propertyName) {
+        final boolean isEntityItself = "".equals(propertyName);
+        final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
         final Pair<String, String> _first = generateTitleDesc(root, managedType, propertyName).getKey();
         final String title = _first.getKey();
-        final Pair<String, String> first = Pair.pair(title.substring(0, title.length() - sufixFrom.length()), _first.getValue());
+        final Pair<String, String> first;
+
+        if (propertyType == boolean.class) {
+            first = Pair.pair(title.substring(0, title.length() - sufixYes.length()), _first.getValue());
+        } else {
+            first = Pair.pair(title.substring(0, title.length() - sufixFrom.length()), _first.getValue());
+        }
+
         return first;
     }
 }
