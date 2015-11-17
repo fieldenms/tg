@@ -5,6 +5,8 @@ import static java.lang.String.format;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
@@ -52,7 +54,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     /**
-     * Creates entity (aka primary) action for master.
+     * Creates an entity (aka primary) action for master.
      * 
      * @param entityActionConfig
      * @param numberOfAction
@@ -60,6 +62,19 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     public static FunctionalActionElement newEntityActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction) {
         final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET);
+        el.setForMaster(true);
+        return el;
+    }
+
+    /**
+     * Creates a property action for master.
+     * 
+     * @param entityActionConfig
+     * @param numberOfAction
+     * @return
+     */
+    public static FunctionalActionElement newPropertyActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction, final String propName) {
+        final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET, propName);
         el.setForMaster(true);
         return el;
     }
@@ -130,7 +145,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
         attrs.put("post-action-success", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
         attrs.put("post-action-error", "[[" + actionsHolderName + "." + numberOfAction + ".postActionError]]");
-        if (functionalActionKind == FunctionalActionKind.PROP) {
+        if (!StringUtils.isEmpty(chosenProperty)) {
             attrs.put("chosen-property", chosenProperty);
         }
 
